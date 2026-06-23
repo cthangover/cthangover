@@ -26,6 +26,7 @@ namespace Cthangover.Core.UI.Menu
 
             _slotList.SlotPressed += OnSlotPressed;
             _backBtn.Pressed += OnBackPressed;
+            _backBtn.Text = TranslationServer.Translate("settings/back");
             Visible = false;
         }
 
@@ -111,8 +112,8 @@ namespace Cthangover.Core.UI.Menu
             var dialog = new ConfirmationDialog();
             dialog.Title = TranslationServer.Translate("ui/save/overwrite_title");
             dialog.DialogText = TranslationServer.Translate("ui/save/overwrite_text");
-            dialog.OkButtonText = TranslationServer.Translate("settings/back");
-            dialog.CancelButtonText = TranslationServer.Translate("tools/close");
+            dialog.OkButtonText = TranslationServer.Translate("ui/save/save_button");
+            dialog.CancelButtonText = TranslationServer.Translate("ui/save/cancel_button");
             dialog.Exclusive = true;
             AddChild(dialog);
 

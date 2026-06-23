@@ -3,8 +3,8 @@
 [ext_resource type="PackedScene" uid="uid://bw5sfp66lf0jw" path="res://scenes/ui/ViewBox.tscn" id="1_viewbox"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/DialogCanvas.tscn" id="2_canvas"]
 [ext_resource type="PackedScene" uid="uid://d3m4jm0xk8ruc" path="res://scenes/ui/TopView.tscn" id="3_topview"]
-[ext_resource type="Script" uid="uid://doqnuvls7hy8w" path="res://Core/Scenes/SceneContextNode.cs" id="4_ctx"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/PlayerInventoryBag.tscn" id="5_bag"]
+[ext_resource type="PackedScene" path="res://scenes/ui/GameMenu.tscn" id="6_gamemenu"]
 
 [node name="Scene" type="Control" unique_id=610561430]
 layout_mode = 3
@@ -13,9 +13,6 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-
-[node name="SceneContextNode" type="Node" parent="." unique_id=1249318268]
-script = ExtResource("4_ctx")
 
 [node name="ModFirstPanel" type="Control" parent="." unique_id=1948176474]
 layout_mode = 1
@@ -42,6 +39,10 @@ anchors_preset = -1
 anchor_right = 0.5
 offset_top = 40.0
 offset_bottom = 300.0
+
+[node name="GameMenu" parent="." instance=ExtResource("6_gamemenu")]
+visible = false
+layout_mode = 1
 
 [node name="ModLastPanel" type="Control" parent="." unique_id=1901487756]
 layout_mode = 1

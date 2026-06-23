@@ -1,0 +1,11 @@
+{
+  "Scene": "MainMenu",
+  "Musics": [
+    {
+      "MusicType": "Ambient",
+      "MusicNames": [
+        "Serpent's Lament"
+      ]
+    }
+  ]
+}

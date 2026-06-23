@@ -8,6 +8,7 @@ using Cthangover.Core.Items;
 using Cthangover.Core.Quests;
 using Cthangover.Core.Relationship;
 using Cthangover.Core.Scenes;
+using Cthangover.Core.UI.Executable;
 using Cthangover.Core.Utils;
 using Godot;
 
@@ -23,6 +24,25 @@ namespace Cthangover.Core.Settings
             var safe = new string(fileName.Select(c =>
                 char.IsLetterOrDigit(c) || c == '_' || c == '-' ? c : '_').ToArray());
             return $"{SaveDir}/{safe}.json";
+        }
+
+        private static HashSet<string> CollectCompletedScenarioIds()
+        {
+            var result = new HashSet<string>();
+            var tree = (SceneTree)Engine.GetMainLoop();
+            if (tree == null)
+                return result;
+
+            var eventChain = tree.GetFirstNodeInGroup("main_event_chain") as ExecutableMainEventChain;
+            if (eventChain == null)
+                return result;
+
+            foreach (var child in eventChain.GetChildren())
+            {
+                if (child is ExecutableEvent evt && evt.IsOneRun && !evt.IsFirstRun)
+                    result.Add(evt.ID);
+            }
+            return result;
         }
 
         private static string GetScreenshotPath(string fileName)
@@ -73,6 +93,9 @@ namespace Cthangover.Core.Settings
                 Recipes    = gameData.Runtime.RecipeData.Data.ToList(),
                 CurrentSceneName = GetCurrentSceneName(),
                 SaveDateTime = DateTime.UtcNow,
+                GameTime = gameData.Runtime.Time.Tick,
+                CharacterCount = gameData.Runtime.CharacterData.Characters?.Count ?? 0,
+                CompletedScenarioIds = CollectCompletedScenarioIds(),
             };
 
             EnsureSaveDir();
@@ -142,6 +165,8 @@ namespace Cthangover.Core.Settings
 
             QuestFactory.Instance.SetAll(saveData.Quests);
 
+            runtime.LoadedCompletedScenarioIds = saveData.CompletedScenarioIds ?? new HashSet<string>();
+
             return true;
         }
 
@@ -182,6 +207,9 @@ namespace Cthangover.Core.Settings
                                             ProjectSettings.GlobalizePath(GetScreenshotPath(slotName))),
                                         IsEmpty = false,
                                         ScreenshotPath = GetScreenshotPath(slotName),
+                                        GameTime = saveData?.GameTime ?? 0,
+                                        CharacterCount = saveData?.CharacterCount ?? 0,
+                                        LampPercent = 0f,
                                     };
 
                                     existingSaves[slotName] = info;

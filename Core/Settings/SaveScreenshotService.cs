@@ -1,5 +1,7 @@
 using System;
 using System.Linq;
+using Cthangover.Core.Scenes;
+using Cthangover.Core.UI.View;
 using Cthangover.Core.Utils;
 using Godot;
 
@@ -21,15 +23,7 @@ namespace Cthangover.Core.Settings
 
             try
             {
-                var tree = (SceneTree)Engine.GetMainLoop();
-                if (tree == null)
-                    return;
-
-                var viewport = tree.Root;
-                if (viewport == null)
-                    return;
-
-                var image = viewport.GetTexture().GetImage();
+                var image = CaptureBackgroundImage();
                 if (image == null)
                     return;
 
@@ -65,6 +59,26 @@ namespace Cthangover.Core.Settings
             {
                 return null;
             }
+        }
+
+        private static Image CaptureBackgroundImage()
+        {
+            var viewBox = SceneContextNode.FindNode<ViewBox>("ViewBox");
+            if (viewBox?.Background?.Texture == null)
+                return CreateFallbackImage();
+
+            var image = viewBox.Background.Texture.GetImage();
+            if (image == null || image.IsEmpty())
+                return CreateFallbackImage();
+
+            return image;
+        }
+
+        private static Image CreateFallbackImage()
+        {
+            var image = Image.CreateEmpty(64, 64, false, Image.Format.Rgba8);
+            image.Fill(new Color(0.12f, 0.12f, 0.12f, 1));
+            return image;
         }
 
         private static Image ScaleImage(Image source, int width, int height)

@@ -8,6 +8,8 @@ namespace Cthangover.Core.Scenes
         public string After { get; set; }
         public string Condition { get; set; }
         public bool? LightUseTime { get; set; }
+        public bool SaveAllowed { get; set; }
+        public bool IsOneRun { get; set; }
         public string ModId { get; set; }
         public string FilePath { get; set; }
     }

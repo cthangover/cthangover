@@ -19,7 +19,7 @@ namespace Cthangover.Core.UI.Dialog
         public DialogBox   DialogBox { get; private set; }
         public DialogQueue Dialog    { get; set; }
 
-        public IActionCommand CurrentAction => GetByIndex(index);
+		public IActionCommand CurrentAction => GetByIndex(index);
 
         public bool IsWaitAnswer => IsWaitType(WaitType.WaitSelect);
         public bool IsWaitTime   => IsWaitType(WaitType.WaitTime);

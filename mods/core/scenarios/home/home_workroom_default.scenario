@@ -1,5 +1,6 @@
 scene: home_workroom
 priority: 10
+save_allowed: true
 ---
 light_set [{"x":0.45825243,"y":0.5865044,"radius":300,"influence":1,"color":"#ffff00"},{"x":0.5190939,"y":0.52787614,"radius":300,"influence":1,"color":"#ffff00"},{"x":0.77411,"y":0.45929205,"radius":300,"influence":1,"color":"#ffff00"},{"x":0.8699029,"y":0.4869469,"radius":300,"influence":1,"color":"#ffff00"}]
 select "Рабочий кабинет, тут тебя никто не будет отвлекать от исследований" key=rooms/workroom/prompt

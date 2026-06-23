@@ -1,9 +1,9 @@
 [gd_scene format=3 uid="uid://d3m4jm0xk8ruc"]
 
-[ext_resource type="Script" uid="uid://dxr0u22mgwkay" path="res://Core/UI/Tool/ToolBox.cs" id="1_toolbox"]
-[ext_resource type="Script" uid="uid://6a38jpevrxy4" path="res://Core/UI/Tool/TimeController.cs" id="2_time"]
-[ext_resource type="Script" uid="uid://dr8bnq2bdy8bd" path="res://Core/UI/Tool/ModIconLoader.cs" id="3_mod_icon"]
-[ext_resource type="Script" uid="uid://bf3qln30mdj5w" path="res://Core/UI/Lights/LampBehaviour.cs" id="4_lampbehaviour"]
+[ext_resource type="Script" uid="uid://dxr0u22mgwkay" path="res://Core/UI/Tool/ToolBox.cs" id="ToolBoxScript"]
+[ext_resource type="Script" uid="uid://6a38jpevrxy4" path="res://Core/UI/Tool/TimeController.cs" id="TimeControllerScript"]
+[ext_resource type="Script" uid="uid://dr8bnq2bdy8bd" path="res://Core/UI/Tool/ModIconLoader.cs" id="ModIconLoaderScript"]
+[ext_resource type="Script" uid="uid://bf3qln30mdj5w" path="res://Core/UI/Lights/LampBehaviour.cs" id="LampBehaviourScript"]
 
 [node name="TopView" type="Control" unique_id=1316944324]
 layout_mode = 3
@@ -12,7 +12,7 @@ anchor_right = 1.0
 offset_bottom = 40.0
 grow_horizontal = 2
 grow_vertical = 0
-script = ExtResource("1_toolbox")
+script = ExtResource("ToolBoxScript")
 
 [node name="Background" type="ColorRect" parent="." unique_id=542862483]
 layout_mode = 1
@@ -31,7 +31,7 @@ anchor_right = 0.062000003
 anchor_bottom = 1.8750001
 offset_right = 0.95999146
 grow_vertical = 2
-script = ExtResource("2_time")
+script = ExtResource("TimeControllerScript")
 
 [node name="TimeLabel" type="Label" parent="TimeController" unique_id=952812546]
 layout_mode = 1
@@ -65,7 +65,7 @@ size_flags_horizontal = 0
 size_flags_vertical = 4
 ignore_texture_size = true
 stretch_mode = 4
-script = ExtResource("3_mod_icon")
+script = ExtResource("ModIconLoaderScript")
 IconId = "map"
 
 [node name="BagButton" type="TextureButton" parent="Buttons" unique_id=418215445]
@@ -75,7 +75,7 @@ size_flags_horizontal = 0
 size_flags_vertical = 4
 ignore_texture_size = true
 stretch_mode = 4
-script = ExtResource("3_mod_icon")
+script = ExtResource("ModIconLoaderScript")
 IconId = "bag"
 
 [node name="SkillsButton" type="TextureButton" parent="Buttons" unique_id=1347720480]
@@ -85,7 +85,7 @@ size_flags_horizontal = 0
 size_flags_vertical = 4
 ignore_texture_size = true
 stretch_mode = 4
-script = ExtResource("3_mod_icon")
+script = ExtResource("ModIconLoaderScript")
 IconId = "skills"
 
 [node name="SettingsButton" type="TextureButton" parent="Buttons" unique_id=1906236872]
@@ -95,7 +95,7 @@ size_flags_horizontal = 0
 size_flags_vertical = 4
 ignore_texture_size = true
 stretch_mode = 4
-script = ExtResource("3_mod_icon")
+script = ExtResource("ModIconLoaderScript")
 IconId = "settings"
 
 [node name="CenterTools" type="Control" parent="." unique_id=1513615082]
@@ -107,7 +107,21 @@ offset_left = 2.2799683
 offset_right = 1.6799316
 offset_bottom = -1.0000076
 grow_vertical = 2
-script = ExtResource("2_time")
+script = ExtResource("TimeControllerScript")
+
+[node name="FloppyButton" type="TextureButton" parent="CenterTools" unique_id=400000101]
+visible = false
+custom_minimum_size = Vector2(60, 60)
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.02
+anchor_right = 0.22
+anchor_bottom = 1.0
+grow_vertical = 2
+ignore_texture_size = true
+stretch_mode = 4
+script = ExtResource("ModIconLoaderScript")
+IconId = "save"
 
 [node name="Lamp" type="TextureRect" parent="CenterTools" unique_id=40403627]
 layout_mode = 1
@@ -123,4 +137,4 @@ grow_horizontal = 2
 grow_vertical = 2
 expand_mode = 3
 stretch_mode = 5
-script = ExtResource("4_lampbehaviour")
+script = ExtResource("LampBehaviourScript")

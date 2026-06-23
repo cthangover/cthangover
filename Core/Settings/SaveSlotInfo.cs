@@ -10,5 +10,8 @@ namespace Cthangover.Core.Settings
         public string ScreenshotPath { get; set; }
         public bool HasScreenshot { get; set; }
         public bool IsEmpty { get; set; }
+        public long GameTime { get; set; }
+        public int CharacterCount { get; set; }
+        public float LampPercent { get; set; }
     }
 }

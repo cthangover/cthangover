@@ -37,7 +37,7 @@ tests/
 └── run_tests.ps1                   # Запуск xUnit-тестов
 ```
 
-Тестовые моды (`test_mod`, `test_mod_a`, `test_mod_b`) лежат в `mods/` и используются `ModTestSetup` и `ScenarioModMergeTests`.
+Тестовые моды (`test_mod.zip`, `test_mod_a.zip`, `test_mod_b.zip`) лежат в `mods/` и используются `ModTestSetup` и `ScenarioModMergeTests`.
 
 ---
 
@@ -140,9 +140,9 @@ dotnet test tests/cthangover.Tests/cthangover.Tests.csproj
 
 ```
 tests/
-mods/test_mod/
-mods/test_mod_a/
-mods/test_mod_b/
+mods/test_mod.zip
+mods/test_mod_a.zip
+mods/test_mod_b.zip
 ```
 
 Сборка игры не пострадает:

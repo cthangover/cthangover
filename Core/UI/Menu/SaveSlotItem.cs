@@ -4,67 +4,86 @@ using Godot;
 
 namespace Cthangover.Core.UI.Menu
 {
-    public partial class SaveSlotItem : ListItem<SaveSlotInfo>
-    {
-        [Export] private TextureRect screenshotRect;
-        [Export] private Label dateLabel;
-        [Export] private Label timeLabel;
-        [Export] private Label sceneLabel;
-        [Export] private Label emptyLabel;
-        [Export] private Button slotButton;
+	public partial class SaveSlotItem : ListItem<SaveSlotInfo>
+	{
+		private TextureRect screenshotRect;
+		private Label dateLabel;
+		private Label timeLabel;
+		private Label sceneLabel;
+		private Label emptyLabel;
+		private Button slotButton;
+		private Label statsLabel;
 
-        [Signal]
-        public delegate void SlotPressedEventHandler(string fileName);
+		[Signal]
+		public delegate void SlotPressedEventHandler(string fileName);
 
-        public override void Construct(SaveSlotInfo model)
-        {
-            base.Construct(model);
+		public override void _Ready()
+		{
+			screenshotRect = GetNode<TextureRect>("ScreenshotRect");
+			dateLabel = GetNode<Label>("DateLabel");
+			timeLabel = GetNode<Label>("TimeLabel");
+			sceneLabel = GetNode<Label>("SceneLabel");
+			emptyLabel = GetNode<Label>("EmptyLabel");
+			slotButton = GetNode<Button>("SlotButton");
+			statsLabel = GetNodeOrNull<Label>("StatsLabel");
+		}
 
-            if (model.IsEmpty)
-            {
-                screenshotRect.Visible = false;
-                dateLabel.Visible = false;
-                timeLabel.Visible = false;
-                sceneLabel.Visible = false;
-                emptyLabel.Visible = true;
-                emptyLabel.Text = TranslationServer.Translate("ui/save/empty");
-            }
-            else
-            {
-                emptyLabel.Visible = false;
-                screenshotRect.Visible = true;
-                dateLabel.Visible = true;
-                timeLabel.Visible = true;
-                sceneLabel.Visible = true;
+		public override void Construct(SaveSlotInfo model)
+		{
+			base.Construct(model);
 
-                var tex = SaveScreenshotService.LoadScreenshot(model.FileName);
-                if (tex != null)
-                    screenshotRect.Texture = tex;
+			if (model.IsEmpty)
+			{
+				screenshotRect.Visible = false;
+				dateLabel.Visible = false;
+				timeLabel.Visible = false;
+				sceneLabel.Visible = false;
+				emptyLabel.Visible = true;
+				if (statsLabel != null) statsLabel.Visible = false;
+				emptyLabel.Text = TranslationServer.Translate("ui/save/empty");
+			}
+			else
+			{
+				emptyLabel.Visible = false;
+				screenshotRect.Visible = true;
+				dateLabel.Visible = true;
+				timeLabel.Visible = true;
+				sceneLabel.Visible = true;
+				if (statsLabel != null) statsLabel.Visible = true;
 
-                dateLabel.Text = model.SaveTime != System.DateTime.MinValue
-                    ? model.SaveTime.ToLocalTime().ToString("d MMM yyyy")
-                    : "";
+				var tex = SaveScreenshotService.LoadScreenshot(model.FileName);
+				if (tex != null)
+					screenshotRect.Texture = tex;
 
-                timeLabel.Text = model.SaveTime != System.DateTime.MinValue
-                    ? model.SaveTime.ToLocalTime().ToString("HH:mm")
-                    : "";
+				var gameTimeObj = new TimeData(model.GameTime);
+				dateLabel.Text = TranslationServer.Translate("ui/save/game_day").ToString()
+					.Replace("{day}", (gameTimeObj.Days + 1).ToString())
+					.Replace("{time}", gameTimeObj.Text);
 
-                sceneLabel.Text = model.SceneName;
-            }
+				timeLabel.Text = model.SaveTime != System.DateTime.MinValue
+					? model.SaveTime.ToLocalTime().ToString("dd.MM.yy HH:mm")
+					: "";
 
-            slotButton.Pressed += OnPressed;
-        }
+				sceneLabel.Text = model.SceneName;
 
-        private void OnPressed()
-        {
-            EmitSignal(SignalName.SlotPressed, Model.FileName);
-        }
+				if (statsLabel != null)
+					statsLabel.Text = TranslationServer.Translate("ui/save/party_size").ToString()
+						.Replace("{count}", model.CharacterCount.ToString());
+			}
 
-        public override void Destruct()
-        {
-            if (slotButton != null && GodotObject.IsInstanceValid(slotButton))
-                slotButton.Pressed -= OnPressed;
-            QueueFree();
-        }
-    }
+			slotButton.Pressed += OnPressed;
+		}
+
+		private void OnPressed()
+		{
+			EmitSignal(SignalName.SlotPressed, Model.FileName);
+		}
+
+		public override void Destruct()
+		{
+			if (slotButton != null && GodotObject.IsInstanceValid(slotButton))
+				slotButton.Pressed -= OnPressed;
+			QueueFree();
+		}
+	}
 }

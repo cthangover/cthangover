@@ -18,5 +18,8 @@ namespace Cthangover.Core.Settings
         public List<string> Recipes { get; set; }
         public string CurrentSceneName { get; set; }
         public DateTime SaveDateTime { get; set; }
+        public long GameTime { get; set; }
+        public int CharacterCount { get; set; }
+        public HashSet<string> CompletedScenarioIds { get; set; } = new();
     }
 }

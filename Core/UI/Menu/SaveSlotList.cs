@@ -26,6 +26,7 @@ namespace Cthangover.Core.UI.Menu
         public override void _Ready()
         {
             _itemScene = GD.Load<PackedScene>("res://scenes/SaveSlotItem.tscn");
+            Resized += OnResized;
         }
 
         public void SetSlots(List<SaveSlotInfo> slots)
@@ -78,6 +79,12 @@ namespace Cthangover.Core.UI.Menu
                 item.SlotPressed += OnItemSlotPressed;
                 _items.Add(item);
             }
+        }
+
+        private void OnResized()
+        {
+            if (_slotModels != null && _items.Count == 0 && Size.X > 0 && Size.Y > 0)
+                Refresh();
         }
 
         private void OnItemSlotPressed(string fileName)

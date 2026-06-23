@@ -1,0 +1,49 @@
+{
+  "Scene": "default",
+  "Musics": [
+    {
+      "MusicType": "Ambient",
+      "MusicNames": [
+        "Abyssal Void",
+        "Airborne Melody",
+        "Binary Prelude",
+        "Cinders of Dawn",
+        "Circuit Phantom Drift",
+        "Cosmic Fragmentation",
+        "Crystalline Depths",
+        "Digital Silence Chamber",
+        "Diminished Echoes",
+        "Empty Sanctuary",
+        "Ethereal Resonance",
+        "Melancholic Journey",
+        "Mechanical Sonnet",
+        "Memory Fragment Alpha",
+        "Memory Fragment Beta",
+        "Memory Fragment Gamma",
+        "Nebula Pulse Echoes",
+        "Nostalgic Resonance",
+        "Quantum Archive",
+        "Spectral Harmonies",
+        "Twilight Interlude",
+        "Vanishing Echoes"
+      ]
+    },
+    {
+      "MusicType": "Combat",
+      "MusicNames": [
+        "Aura of Decay",
+        "Circuit Dreams II",
+        "Crimson Echoes",
+        "Crimson Horizon",
+        "Glass Symphony",
+        "Hex Doom Cart",
+        "Iron Resonance",
+        "Iron Resonance II",
+        "Luminous Twilight",
+        "Rusty Frequencies",
+        "Skull Resonance",
+        "Venom's Embrace"
+      ]
+    }
+  ]
+}

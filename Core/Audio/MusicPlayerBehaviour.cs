@@ -19,6 +19,7 @@ namespace Cthangover.Core.Audio
 
 		public override void _Ready()
 		{
+			AddToGroup("music_player");
 			TryFindAudioPlayer();
 		}
 
@@ -84,19 +85,81 @@ namespace Cthangover.Core.Audio
 
 		public void UpdateMusicType(string sceneName)
 		{
+			var previousType = playlistContext.LastMusicType;
 			InitPlaylists(sceneName);
 
 			if (!IsCanAutoPlay)
 				return;
 
 			var newType = string.Equals(sceneName, "Battle", System.StringComparison.OrdinalIgnoreCase) ? MusicType.Combat : MusicType.Ambient;
-			GameLogger.Log("AUDIO", $"Scene '{sceneName}' -> music type {newType} (was {playlistContext.LastMusicType})");
+			GameLogger.Log("AUDIO", $"Scene '{sceneName}' -> music type {newType} (was {previousType})");
 
-			if (newType != playlistContext.LastMusicType)
+			if (newType == previousType)
 			{
-				playlistContext.LastMusicType = newType;
+				if (!string.IsNullOrEmpty(playlistContext.LastMusicName))
+				{
+					var dict = playlistContext.Playlist?.Musics;
+					if (dict != null && dict.TryGetValue(newType, out var list) && list != null && list.Contains(playlistContext.LastMusicName))
+					{
+						GameLogger.Log("AUDIO", $"Keeping current track '{playlistContext.LastMusicName}' (found in scene playlist)");
+						return;
+					}
+				}
+				GameLogger.Log("AUDIO", $"Current track '{playlistContext.LastMusicName}' not in scene playlist, switching");
 				NextSound();
+				return;
 			}
+
+			if (newType == MusicType.Combat && previousType == MusicType.Ambient)
+			{
+				if (audioPlayer != null && audioPlayer.Playing)
+				{
+					playlistContext.SavedAmbientMusicName = playlistContext.LastMusicName;
+					playlistContext.SavedAmbientMusicTime = audioPlayer.GetPlaybackPosition();
+					GameLogger.Log("AUDIO", $"Saved ambient state: '{playlistContext.SavedAmbientMusicName}' at {playlistContext.SavedAmbientMusicTime:F1}s");
+				}
+				playlistContext.LastMusicType = newType;
+				StopMusic();
+				NextSound();
+				return;
+			}
+
+			if (newType == MusicType.Ambient && previousType == MusicType.Combat)
+			{
+				StopMusic();
+				playlistContext.LastMusicType = newType;
+
+				if (!string.IsNullOrEmpty(playlistContext.SavedAmbientMusicName) && audioPlayer != null)
+				{
+					var stream = MusicFactory.Instance.Get(playlistContext.SavedAmbientMusicName);
+					if (stream != null)
+					{
+						GameLogger.Log("AUDIO", $"Restoring ambient: '{playlistContext.SavedAmbientMusicName}' at {playlistContext.SavedAmbientMusicTime:F1}s");
+						audioPlayer.Stream = stream;
+						playlistContext.LastMusicName = playlistContext.SavedAmbientMusicName;
+						if (playlistContext.SavedAmbientMusicTime > 0)
+							audioPlayer.Play(playlistContext.SavedAmbientMusicTime);
+						else
+							audioPlayer.Play();
+						playlistContext.SavedAmbientMusicName = null;
+						playlistContext.SavedAmbientMusicTime = 0;
+						autoAdvanceCooldown = Time.GetTicksUsec() / 1_000_000.0 + 0.5;
+						return;
+					}
+					GameLogger.Log("AUDIO", $"Restore failed: stream not found for '{playlistContext.SavedAmbientMusicName}'", LogLevel.Error);
+					playlistContext.SavedAmbientMusicName = null;
+					playlistContext.SavedAmbientMusicTime = 0;
+				}
+				else
+				{
+					GameLogger.Log("AUDIO", "No saved ambient state to restore");
+				}
+				NextSound();
+				return;
+			}
+
+			playlistContext.LastMusicType = newType;
+			NextSound();
 		}
 
 		public MusicType GetMusicType(GodotSceneType scene)
@@ -116,7 +179,7 @@ namespace Cthangover.Core.Audio
 			int iteration = 0;
 			for (;;)
 			{
-				int index = (int)GD.Randi() % list.Count;
+				int index = (int)(GD.Randi() % (uint)list.Count);
 				var nextMusic = list[index];
 
 				if (list.Count == 1 || playlistContext.LastMusicName != nextMusic)
@@ -144,7 +207,9 @@ namespace Cthangover.Core.Audio
 				return;
 
 			playlistContext.Playlist = PlaylistFactory.Instance.CreatePlaylist(sceneName);
-			playlistContext.LastMusicType = MusicType.Ambient;
+
+			if (playlistContext.LastMusicType == MusicType.Force)
+				playlistContext.LastMusicType = MusicType.Ambient;
 
 			var trackCount = playlistContext.Playlist.Musics?.Count ?? 0;
 			GameLogger.Log("AUDIO", $"InitPlaylists scene='{sceneName}' tracks={trackCount} autoplay={IsCanAutoPlay}");

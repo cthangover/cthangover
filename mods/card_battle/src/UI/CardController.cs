@@ -25,6 +25,7 @@ namespace Cthangover.CardBattle.UI
         private bool dragValid;
         private float dragThreshold = 15f;
         private Vector2 pressPosition;
+        private Node _originalActionCardParent;
 
         public void FindPanels()
         {
@@ -274,6 +275,8 @@ namespace Cthangover.CardBattle.UI
 
                 currentActionCharacter = source;
                 var control = currentActionCharacter.GetControlNode();
+                _originalActionCardParent = control.GetParent();
+                control.Reparent(GetTree().Root);
                 control.ZIndex = 4096;
                 var pickTween = CreateTween();
                 pickTween.SetEase(Tween.EaseType.Out).SetTrans(Tween.TransitionType.Back);
@@ -350,6 +353,12 @@ namespace Cthangover.CardBattle.UI
 
                 if (valid)
                 {
+                    if (_originalActionCardParent != null)
+                    {
+                        currentActionCharacter.GetControlNode().Reparent(_originalActionCardParent);
+                        _originalActionCardParent = null;
+                    }
+
                     var audioService = SceneContextNode.Instance?.GetSceneRoot<AudioService>("AudioService");
                     audioService?.PlaySound("battle/card_drop", 4, Cthangover.Core.Audio.SoundType.CardEffect);
 
@@ -370,6 +379,11 @@ namespace Cthangover.CardBattle.UI
             if (currentActionCharacter != null)
             {
                 var control = currentActionCharacter.GetControlNode();
+                if (_originalActionCardParent != null)
+                {
+                    control.Reparent(_originalActionCardParent);
+                    _originalActionCardParent = null;
+                }
                 var resetTween = CreateTween();
                 resetTween.SetEase(Tween.EaseType.Out).SetTrans(Tween.TransitionType.Cubic);
                 resetTween.TweenProperty(control, "scale", Vector2.One, 0.15f);

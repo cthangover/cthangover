@@ -644,6 +644,8 @@ namespace Cthangover.Core.Mods
                     After = metadata.TryGetValue("after", out var after) ? after : null,
                     Condition = metadata.TryGetValue("condition", out var cond) ? cond : null,
                     LightUseTime = metadata.TryGetValue("light_use_time", out var l) && bool.TryParse(l, out var b) ? b : null,
+                    SaveAllowed = metadata.TryGetValue("save_allowed", out var sa) && bool.TryParse(sa, out var sab),
+                    IsOneRun = metadata.TryGetValue("is_one_run", out var ior) && bool.TryParse(ior, out var iorb),
                 };
 
                 if (!result.TryGetValue(sceneName, out var list))

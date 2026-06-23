@@ -22,6 +22,19 @@ namespace Cthangover.Core.Factories.Impls
 
 		public Playlist CreatePlaylist(string sceneName)
 		{
+			var playlist = CreatePlaylistInternal(sceneName);
+			if (playlist.Musics.Count > 0)
+				return playlist;
+
+			if (string.Equals(sceneName, "default", StringComparison.OrdinalIgnoreCase))
+				return playlist;
+
+			GameLogger.Log("AUDIO", $"No playlist for scene '{sceneName}', falling back to 'default'");
+			return CreatePlaylistInternal("default");
+		}
+
+		private Playlist CreatePlaylistInternal(string sceneName)
+		{
 			var playlist = new Playlist();
 			playlist.Scene = sceneName;
 			playlist.Musics = new Dictionary<MusicType, List<string>>();

@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using Cthangover.Core.Factories.Impls;
 using Cthangover.Core.Mods;
+using Cthangover.Core.Settings;
 using Cthangover.Core.UI.Dialog;
 using Cthangover.Core.UI.Event;
 using Cthangover.Core.UI.Executable;
 using Cthangover.Core.UI.Lights;
+using Cthangover.Core.UI.Tool;
 using Cthangover.Core.UI.View;
 using Cthangover.Core.Utils;
 using Godot;
@@ -24,6 +26,50 @@ namespace Cthangover.Core.Scenes
         private DialogBox dialogBox;
 
         public string CurrentSceneName => currentSceneName;
+
+        public static string GetCurrentSceneName()
+        {
+            var instance = SceneContextNode.FindNode<SceneManager>("SceneManager");
+            return instance?.CurrentSceneName;
+        }
+
+        public static bool IsSaveAllowedForCurrentScene()
+        {
+            var instance = SceneContextNode.FindNode<SceneManager>("SceneManager");
+            if (instance == null)
+                return false;
+
+            var sceneName = instance.CurrentSceneName;
+            if (string.IsNullOrEmpty(sceneName))
+                return false;
+
+            var allScenarios = ModManager.Instance.CollectScenarioDefinitions();
+            if (!allScenarios.TryGetValue(sceneName, out var scenarios))
+                return false;
+
+            foreach (var def in scenarios)
+            {
+                if (def.SaveAllowed)
+                    return true;
+            }
+            return false;
+        }
+
+        private void UpdateSaveIcon()
+        {
+            var toolBox = SceneContextNode.FindNode<ToolBox>("TopView");
+            toolBox?.UpdateSaveIconVisibility();
+        }
+
+        private void FilterCompletedScenarios(List<SceneEventInfo> composedEvents)
+        {
+            var runtime = GameData.Instance?.Runtime;
+            if (runtime == null || runtime.LoadedCompletedScenarioIds == null || runtime.LoadedCompletedScenarioIds.Count == 0)
+                return;
+
+            composedEvents.RemoveAll(e => runtime.LoadedCompletedScenarioIds.Contains(e.Id));
+            GameLogger.Log("SCENE", $"SwitchScene: filtered {runtime.LoadedCompletedScenarioIds.Count} completed scenario(s), {composedEvents.Count} remaining");
+        }
 
         public string PendingSceneName { get; set; }
 
@@ -101,6 +147,8 @@ namespace Cthangover.Core.Scenes
 
                 ApplySceneDefaults();
 
+                FilterCompletedScenarios(composedEvents);
+
                 var pendingEvents = new List<ExecutableEvent>();
                 foreach (var eventInfo in composedEvents)
                 {
@@ -145,6 +193,10 @@ namespace Cthangover.Core.Scenes
 
                 PlaySceneAmbient();
                 SceneSubscriptionRegistry.RunSubscriptions(sceneName, GetTree().CurrentScene);
+
+                UpdateSaveIcon();
+
+                GameData.Instance?.Runtime.ClearLoadState();
             }
             finally
             {
@@ -183,6 +235,7 @@ namespace Cthangover.Core.Scenes
                         After = scenario.After,
                         Condition = scenario.Condition,
                         LightUseTime = scenario.LightUseTime,
+                        IsOneRun = scenario.IsOneRun,
                     });
                 }
             }
@@ -394,8 +447,10 @@ namespace Cthangover.Core.Scenes
                 return new ScenarioEvent
                 {
                     ScenarioText = scenarioText,
+                    ScenarioId = info.Id,
                     Condition = info.Condition,
                     LightUseTime = info.LightUseTime,
+                    IsOneRun = info.IsOneRun,
                 };
             }
             

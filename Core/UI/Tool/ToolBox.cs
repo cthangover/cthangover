@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using Cthangover.Core.Scenes;
 using Cthangover.Core.UI.Inventory;
+using Cthangover.Core.UI.Menu;
 using Cthangover.Core.UI.Tool.LightEditor;
 using Cthangover.Core.Utils;
 using Godot;
@@ -10,6 +12,7 @@ namespace Cthangover.Core.UI.Tool
     public partial class ToolBox : Control
     {
         private Dictionary<string, Widget> tools;
+        private TextureButton _floppyButton;
 
         public override void _Ready()
         {
@@ -18,6 +21,9 @@ namespace Cthangover.Core.UI.Tool
                 {"MapWidget",   FindWidget<MapWidget>()},
                 {"BagWidget",   FindWidget<PlayerInventoryBagBehaviour>()},
             };
+
+            _floppyButton = GetNodeOrNull<TextureButton>("CenterTools/FloppyButton");
+            UpdateSaveIconVisibility();
 
             var buttons = GetNodeOrNull<HBoxContainer>("Buttons");
             if (buttons != null)
@@ -95,7 +101,12 @@ namespace Cthangover.Core.UI.Tool
         public void OnSettingsClick()
         {
             GameLogger.Log("TOOLBOX", "settings button clicked");
-            Switch("MenuWidget");
+            var gameMenu = SceneContextNode.FindNode<GameMenu>("GameMenu");
+            if (gameMenu != null)
+            {
+                gameMenu.RefreshSaveButton();
+                gameMenu.Visible = true;
+            }
         }
 
         public void OnBagClick()
@@ -138,6 +149,13 @@ namespace Cthangover.Core.UI.Tool
         private void OnLightEditorClick()
         {
             LightEditorWindow.Open();
+        }
+
+        public void UpdateSaveIconVisibility()
+        {
+            if (_floppyButton == null)
+                return;
+            _floppyButton.Visible = SceneManager.IsSaveAllowedForCurrentScene();
         }
 
     }

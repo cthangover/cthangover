@@ -23,7 +23,11 @@ namespace Cthangover.Core.UI.Executable
 
         public string Condition { get; set; }
 
+        public string ScenarioId { get; set; }
+
         public bool? LightUseTime { get; set; }
+
+        public override string ID => ScenarioId ?? base.ID;
 
         protected override void CreateDialog(DialogQueue dlg)
         {

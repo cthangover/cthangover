@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Cthangover.Core.Characters;
 using Cthangover.Core.Items;
 using Cthangover.Core.Relationship;
@@ -18,6 +19,13 @@ namespace Cthangover.Core.Settings
         public Inventory      Inventory      { get; set; } = new();
         public RecipeData     RecipeData     { get; set; } = new();
         public LampData       LampData       { get; set; } = new();
+
+        public HashSet<string> LoadedCompletedScenarioIds { get; set; }
+
+        public void ClearLoadState()
+        {
+            LoadedCompletedScenarioIds = null;
+        }
 
         public GodotSceneType CurrentScene
         {
