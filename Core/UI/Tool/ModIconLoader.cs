@@ -3,18 +3,18 @@ using Godot;
 
 namespace Cthangover.Core.UI.Tool
 {
-    public partial class ModIconLoader : TextureButton
-    {
-        [Export] public string IconId { get; set; }
+	public partial class ModIconLoader : TextureButton
+	{
+		[Export] public string IconId { get; set; }
 
-        public override void _Ready()
-        {
-            if (string.IsNullOrEmpty(IconId))
-                return;
+		public override void _Ready()
+		{
+			if (string.IsNullOrEmpty(IconId))
+				return;
 
-            var texture = UIIconFactory.Instance.Get(IconId);
-            if (texture != null)
-                TextureNormal = texture;
-        }
-    }
+			var texture = UIIconFactory.Instance.Get(IconId);
+			if (texture != null)
+				TextureNormal = texture;
+		}
+	}
 }

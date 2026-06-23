@@ -12,7 +12,7 @@ namespace Cthangover.Core.UI.Tool
     public partial class ToolBox : Control
     {
         private Dictionary<string, Widget> tools;
-        private TextureButton _floppyButton;
+        private TextureRect _saveIcon;
 
         public override void _Ready()
         {
@@ -22,7 +22,7 @@ namespace Cthangover.Core.UI.Tool
                 {"BagWidget",   FindWidget<PlayerInventoryBagBehaviour>()},
             };
 
-            _floppyButton = GetNodeOrNull<TextureButton>("CenterTools/FloppyButton");
+            _saveIcon = GetNodeOrNull<TextureRect>("CenterTools/Save");
             UpdateSaveIconVisibility();
 
             var buttons = GetNodeOrNull<HBoxContainer>("Buttons");
@@ -153,9 +153,9 @@ namespace Cthangover.Core.UI.Tool
 
         public void UpdateSaveIconVisibility()
         {
-            if (_floppyButton == null)
+            if (_saveIcon == null)
                 return;
-            _floppyButton.Visible = SceneManager.IsSaveAllowedForCurrentScene();
+            _saveIcon.Visible = SceneManager.IsSaveAllowedForCurrentScene();
         }
 
     }

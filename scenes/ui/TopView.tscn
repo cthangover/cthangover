@@ -1,9 +1,10 @@
 [gd_scene format=3 uid="uid://d3m4jm0xk8ruc"]
 
-[ext_resource type="Script" uid="uid://dxr0u22mgwkay" path="res://Core/UI/Tool/ToolBox.cs" id="ToolBoxScript"]
-[ext_resource type="Script" uid="uid://6a38jpevrxy4" path="res://Core/UI/Tool/TimeController.cs" id="TimeControllerScript"]
-[ext_resource type="Script" uid="uid://dr8bnq2bdy8bd" path="res://Core/UI/Tool/ModIconLoader.cs" id="ModIconLoaderScript"]
+[ext_resource type="Script" uid="uid://brtwe4dkubjxe" path="res://Core/UI/Menu/SaveIcon.cs" id="SaveIconScript"]
 [ext_resource type="Script" uid="uid://bf3qln30mdj5w" path="res://Core/UI/Lights/LampBehaviour.cs" id="LampBehaviourScript"]
+[ext_resource type="Script" uid="uid://dr8bnq2bdy8bd" path="res://Core/UI/Tool/ModIconLoader.cs" id="ModIconLoaderScript"]
+[ext_resource type="Script" uid="uid://6a38jpevrxy4" path="res://Core/UI/Tool/TimeController.cs" id="TimeControllerScript"]
+[ext_resource type="Script" uid="uid://dxr0u22mgwkay" path="res://Core/UI/Tool/ToolBox.cs" id="ToolBoxScript"]
 
 [node name="TopView" type="Control" unique_id=1316944324]
 layout_mode = 3
@@ -109,30 +110,34 @@ offset_bottom = -1.0000076
 grow_vertical = 2
 script = ExtResource("TimeControllerScript")
 
-[node name="FloppyButton" type="TextureButton" parent="CenterTools" unique_id=400000101]
-visible = false
-custom_minimum_size = Vector2(60, 60)
+[node name="Save" type="TextureRect" parent="CenterTools" unique_id=1223109404]
 layout_mode = 1
 anchors_preset = -1
-anchor_left = 0.02
-anchor_right = 0.22
-anchor_bottom = 1.0
+anchor_left = -0.24200001
+anchor_top = 0.122
+anchor_right = 0.14400001
+anchor_bottom = 0.905
+offset_left = 0.026004791
+offset_top = 0.007999897
+offset_right = -0.032001495
+offset_bottom = -0.008003235
+grow_horizontal = 2
 grow_vertical = 2
-ignore_texture_size = true
-stretch_mode = 4
-script = ExtResource("ModIconLoaderScript")
-IconId = "save"
+expand_mode = 3
+stretch_mode = 5
+script = ExtResource("SaveIconScript")
 
 [node name="Lamp" type="TextureRect" parent="CenterTools" unique_id=40403627]
 layout_mode = 1
 anchors_preset = -1
-anchor_left = 0.25500003
-anchor_right = 0.76500005
-anchor_bottom = 1.0
-offset_left = 10.984997
-offset_top = 9.0
-offset_right = -8.045006
-offset_bottom = -7.0
+anchor_left = 0.32700002
+anchor_top = 0.12200001
+anchor_right = 0.712
+anchor_bottom = 0.90500003
+offset_left = -0.031002045
+offset_top = -0.028000832
+offset_right = 0.06399536
+offset_bottom = 0.02999878
 grow_horizontal = 2
 grow_vertical = 2
 expand_mode = 3
