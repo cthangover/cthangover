@@ -1,0 +1,51 @@
+[gd_scene format=3 uid="uid://bw5sfp66lf0jw"]
+
+[ext_resource type="Script" uid="uid://qhlsegnxyhf4" path="res://Core/UI/View/ViewBox.cs" id="1_viewbox"]
+[ext_resource type="PackedScene" uid="uid://crkf1jqtm5b4a" path="res://scenes/ui/Lights.tscn" id="2_lights"]
+
+[node name="ViewBox" type="Control" unique_id=2077779400]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_viewbox")
+content = NodePath(".")
+
+[node name="Lights" parent="." unique_id=1047801239 instance=ExtResource("2_lights")]
+layout_mode = 1
+
+[node name="Background" type="TextureRect" parent="." unique_id=874946400]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Foreground" type="TextureRect" parent="." unique_id=2057736705]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Lastground" type="TextureRect" parent="." unique_id=1192221805]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5

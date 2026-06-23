@@ -1,0 +1,40 @@
+scene: start_scene
+priority: 10
+---
+light_use_time false
+background black
+foreground empty
+
+text "Эта история началась с того момента, как какой-то злобный демон решил уничтожить мир." key=prolog/intro1/line1
+text "Он использовал древний свиток абсолютного разрушения, чтобы запустить полный обнулятор реальности." key=prolog/intro1/line2
+text "Блядь, что за хуйню несёшь?" key=prolog/intro1/line3 second=book_1 hide_color=true
+text "Когда Поэт слагает свою жизнь на бумаге - последнее дело слушать книжных тяфкальников, мсье, создайте тишину, пожалуйста." key=prolog/intro1/line4 first=marao/what hide_color=true
+text "..." key=prolog/intro1/line5
+
+background_color black
+background town/prolog/intro1/cthulhu
+background_show_hide show duration=0.05 wait=true
+
+text "Кхм..." key=prolog/intro1/line6 first=marao/what hide_color=true
+text "Весь мир был на грани гибели." key=prolog/intro1/line7
+text "Этого демона было невозможно остановить." key=prolog/intro1/line8
+
+text "АААААА! Блядь! Я так больше не могу..." key=prolog/intro1/line9 second=book_2
+text "Хуепутало деревенское, ты использовал образ Древнего с моих страниц, и придумал какую то несусветную хуйню про демонов! Не втаптывай в грязь образы Великих! Это не ёбаные демоны!" key=prolog/intro1/line10 second=book_3
+text "Рога! Рога, блядь. Ты подрисовал ебаные рога! Как ты... да как ты смеешь?!" key=prolog/intro1/line11 second=book_3
+
+background town/prolog/intro1/home
+text "Замолчите своё хлебало сударь. Или что там у вас страницами хлопает..." key=prolog/intro1/line12 first=marao/what
+text "Я Аль-Азиф, трипиздоблядская ты мудоёбина!" key=prolog/intro1/line13 second=book_3
+text "Вообще похуй. Я пишу свои величественные мемуары, и мне срать на твоих древних-хуевних, истину и Зазифов." key=prolog/intro1/line14 first=marao/what
+text "Мой многостраничный дружок, ты пергамент на корешке, об который вытирают свои грязные руки 30-летние маги после подрочки. Не больше и не меньше. Захочу - сожгу тебя нахуй." key=prolog/intro1/line15 first=marao/what
+text "Мне нельзя навредить, мою сущность нельзя ни сжечь, ни поцарапать, я материализованная Истина! А ты просто озабоченный кусок говна!! Моё существо не имеет никакого отношения к магии." key=prolog/intro1/line16 second=book_1
+text "Не смогу сжечь? Тогда трахну. А потом вот этими вот листами жопу подотру." key=prolog/intro1/line17 first=marao/what
+text "..." key=prolog/intro1/line18
+text "Какое же невежественное ты уёбище... Ты просто не осознаёшь насколько ты ебанутый..." key=prolog/intro1/line19 second=book_2
+text "Похуй. Я - Автор, Творец! Буду писать так как чувствую, а чувствую я, что у меня привстаёт, и хочется срать." key=prolog/intro1/line20 first=marao/what
+text "Да хоть трижды усрись, ты меня окончательно взбесил!" key=prolog/intro1/line21 second=book_2
+text "Похуй на твою писанину. Нахуй тебя. В пизду Древних." key=prolog/intro1/line22 second=book_3
+text "Да вот только ты же сам всё эту хуйню и замутил. А описываешь какой то грандиозный пиздёж." key=prolog/intro1/line23 second=book_2
+text "У тебя память отшибло?" key=prolog/intro1/line24 second=book_4
+text "Я напомню. Начни с того момента, где ты в трущёбах голый лежишь на улице без сознания." key=prolog/intro1/line25 second=book_1

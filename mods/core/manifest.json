@@ -1,0 +1,6 @@
+{ 
+  "name": "Core",
+  "author": "ct",
+  "description": "Game core",
+  "sources": ["src/*.cs"]
+}

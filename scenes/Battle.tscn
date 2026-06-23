@@ -1,0 +1,73 @@
+[gd_scene format=3 uid="uid://e1ahs3aos3y0"]
+
+[ext_resource type="Script" uid="uid://dq85ubii8cfid" path="res://Core/Battle/Actions/BattleActionMachine.cs" id="BattleActionMachineScript"]
+[ext_resource type="Script" uid="uid://c1rwrejr5aoc0" path="res://Core/Battle/BattleSceneContext.cs" id="BattleSceneContextScript"]
+[ext_resource type="Script" uid="uid://cln2rvmofijtb" path="res://Core/Battle/BattleSpeedControl.cs" id="BattleSpeedControlScript"]
+[ext_resource type="PackedScene" uid="uid://bhkoi82ftv0wi" path="res://scenes/battle/Deadground.tscn" id="DeadgroundScene"]
+[ext_resource type="Script" uid="uid://doqnuvls7hy8w" path="res://Core/Scenes/SceneContextNode.cs" id="SceneContextNodeScript"]
+[ext_resource type="Script" uid="uid://icsu2hv2c68r" path="res://Core/UI/Lights/UiLightController.cs" id="UiLightControllerScript"]
+[ext_resource type="PackedScene" uid="uid://cq11ls8ja3lg0" path="res://scenes/battle/Winground.tscn" id="WingroundScene"]
+
+[node name="BattleScene" type="Control" unique_id=760066045]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("BattleSceneContextScript")
+
+[node name="SceneContextNode" type="Node" parent="." unique_id=2118966242]
+script = ExtResource("SceneContextNodeScript")
+
+[node name="BattleBg" type="TextureRect" parent="." unique_id=1553515841]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Panel" type="Control" parent="." unique_id=1818202398]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ToolPanel" type="Control" parent="." unique_id=16130515]
+layout_mode = 1
+anchor_top = 0.9
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="BattleActionMachine" type="Node" parent="ToolPanel" unique_id=459578957]
+script = ExtResource("BattleActionMachineScript")
+
+[node name="BattleSpeedControl" type="Control" parent="."]
+layout_mode = 0
+script = ExtResource("BattleSpeedControlScript")
+
+[node name="Deadground" parent="." unique_id=2064995106 instance=ExtResource("DeadgroundScene")]
+visible = false
+layout_mode = 1
+
+[node name="Winground" parent="." unique_id=652178152 instance=ExtResource("WingroundScene")]
+visible = false
+layout_mode = 1
+
+[node name="Lights" type="Control" parent="." unique_id=1021519456]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("UiLightControllerScript")

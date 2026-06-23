@@ -1,0 +1,37 @@
+[gd_scene format=3 uid="uid://djwv8elhu8d2"]
+
+[ext_resource type="Script" uid="uid://wxprfods74sg" path="res://Core/UI/Dialog/AnswerBox.cs" id="1_answerbox"]
+[ext_resource type="Script" uid="uid://dbrnsck0vtfb3" path="res://Core/UI/Dialog/AnswerItem.cs" id="2_5sei1"]
+
+[sub_resource type="PackedScene" id="PackedScene_fi1ub"]
+_bundled = {
+"conn_count": 0,
+"conns": PackedInt32Array(),
+"editable_instances": [],
+"id_paths": [],
+"names": PackedStringArray("AnswerItem", "custom_minimum_size", "layout_mode", "anchors_preset", "script", "Control", "Button", "anchor_right", "anchor_bottom", "grow_horizontal", "grow_vertical", "TextLabel", "theme_override_font_sizes/font_size", "horizontal_alignment", "vertical_alignment", "Label"),
+"node_count": 3,
+"node_ids": PackedInt32Array(1126845617, 1526114044, 647986268),
+"node_paths": [],
+"nodes": PackedInt32Array(-1, -1, 5, 0, -1, 4, 1, 0, 2, 1, 3, 2, 4, 3, 0, 0, 0, 6, 6, -1, 6, 2, 4, 3, 5, 7, 6, 8, 6, 9, 7, 10, 7, 0, 1, 0, 15, 11, -1, 9, 2, 4, 3, 5, 7, 6, 8, 6, 9, 7, 10, 7, 12, 8, 13, 4, 14, 4, 0),
+"variants": [Vector2(500, 50), 3, 0, ExtResource("2_5sei1"), 1, 15, 1.0, 2, 22],
+"version": 3
+}
+
+[node name="AnswerBox" type="Control" unique_id=1141083732]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_answerbox")
+itemScene = SubResource("PackedScene_fi1ub")
+
+[node name="Content" type="Control" parent="." unique_id=780512761]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2

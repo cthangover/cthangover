@@ -1,0 +1,6 @@
+{
+  "name": "home_basement",
+  "defaultBackground": "home/basement",
+  "defaultAmbient": "",
+  "defaultScenario": "scenarios/home/home_basement_default.scenario"
+}

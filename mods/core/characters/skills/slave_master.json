@@ -1,0 +1,8 @@
+﻿{
+  "Id": "slave_master",
+  "Name": "characters/skills/slave_master_name",
+  "Description": "characters/skills/slave_master",
+  "Image": "characters/skills/slave_master",
+  "Type": 1,
+  "Rare": 3
+}

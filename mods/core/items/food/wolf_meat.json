@@ -1,0 +1,9 @@
+﻿{
+  "Id": "food/wolf_meat",
+  "Name": "items/food/wolf_meat/name",
+  "Description": "items/food/wolf_meat/desc",
+  "Cost": 1,
+  "Sprite": "food/wolf_meat",
+  "ItemType": "Resource,Food",
+  "ItemAction": "null"
+}

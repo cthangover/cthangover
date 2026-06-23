@@ -1,0 +1,6 @@
+{
+  "name": "town_outskirts",
+  "defaultBackground": "town/outskirts",
+  "defaultAmbient": "",
+  "defaultScenario": "scenarios/town/town_outskirts_default.scenario"
+}

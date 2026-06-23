@@ -1,0 +1,15 @@
+scene: home_kitchen
+priority: 5
+---
+light_set [{"x":0.43052286,"y":0.5760054,"radius":500,"influence":1,"color":"#ffff00"},{"x":0.103702,"y":0.26946074,"radius":500,"influence":1,"color":"#ffff00"}]
+select "Комната оборудованная под кухню" key=rooms/kitchen/prompt
+option "Выйти" key=rooms/kitchen/opt_exit -> :exit
+option "Готовить" key=rooms/kitchen/opt_cook -> :cook
+
+:exit
+switch_scene home_vestibule
+end
+
+:cook
+action toggle_cooking_workbench
+end

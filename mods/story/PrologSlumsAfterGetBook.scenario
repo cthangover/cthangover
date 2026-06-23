@@ -1,0 +1,14 @@
+scene: start_scene
+light_use_time: false
+priority: 50
+---
+# PrologSlumsAfterGetBook - После получения книги
+background 00002-743888656
+
+action scene.remove_object name=prolog.book
+action quest.set_data_status quest_id=PrologQuest level=2
+
+text "Книга оказалась рецептурным сборником - Марао припоминал, что купил его накануне." key=prolog/slums_after/line1
+text "Уже темнеет. Нужно найти укрытие." key=prolog/slums_after/line2
+
+end

@@ -1,0 +1,23 @@
+scene: town_entry
+priority: 30
+condition: MeetingMurakamiQuest.hasTag("boss_battle") && MeetingMurakamiQuest.notHasTag("go_home")
+---
+background "town/meetingmurakami/00024-3950100873"
+text "- Уф-ф... — Марао вытер клинок. — Ну и тварь..." key=meeting_murakami/after_boss/whew first=marao/what
+
+text "." key=meeting_murakami/after_boss/dot1 second=murakami/fear_2
+text ".." key=meeting_murakami/after_boss/dot2 second=murakami/fear_2
+text "..." key=meeting_murakami/after_boss/dot3 second=murakami/fear_2
+text "- Вы... вы убили этого монстра?" key=meeting_murakami/after_boss/you_killed second=murakami/fear_1
+
+text "- Ага. Больше не побеспокоит." key=meeting_murakami/after_boss/yep first=marao/think
+text "[Марао помолчал, разглядывая девчонку.]" key=meeting_murakami/after_boss/silence
+text "- Ладно. — [вздохнул он.] — Идём со мной. Отведу в безопасное место." key=meeting_murakami/after_boss/come_with_me first=marao/relax
+
+background "town/meetingmurakami/00024-3950100873"
+text "[Они вышли на улицу. Город встретил их тишиной и запахом гари.]" key=meeting_murakami/after_boss/outside
+
+action quest.add_tag quest_id=MeetingMurakamiQuest tag=go_home
+action quest.set_data_status quest_id=MeetingMurakamiQuest level=-2
+
+end

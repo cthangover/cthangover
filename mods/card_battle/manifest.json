@@ -1,0 +1,7 @@
+{
+    "name": "CardBattle",
+    "author": "ct",
+    "description": "Card battle mechanics",
+    "sources": ["src/**/*.cs"],
+    "depends": ["core"]
+}

@@ -1,0 +1,6 @@
+{
+  "name": "home_livingroom",
+  "defaultBackground": "home/livingroom",
+  "defaultAmbient": "",
+  "defaultScenario": "scenarios/home/home_livingroom_default.scenario"
+}

@@ -1,0 +1,79 @@
+[gd_scene format=3 uid="uid://c6kll6en347h1"]
+
+[ext_resource type="Script" uid="uid://bkpfth5x606ge" path="res://Core/UI/Menu/SaveSlotItem.cs" id="SaveSlotItemScript"]
+
+[node name="SaveSlotItem" type="Control" unique_id=2135443384]
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("SaveSlotItemScript")
+
+[node name="Background" type="ColorRect" parent="." unique_id=255218239]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.12, 0.12, 0.12, 0.9)
+
+[node name="ScreenshotRect" type="TextureRect" parent="." unique_id=1290008068]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 0.75
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="DateLabel" type="Label" parent="." unique_id=408317888]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.02
+anchor_top = 0.77
+anchor_right = 0.98
+anchor_bottom = 0.86
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 12
+
+[node name="TimeLabel" type="Label" parent="." unique_id=698436659]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.02
+anchor_top = 0.87
+anchor_right = 0.98
+anchor_bottom = 0.97
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 12
+horizontal_alignment = 2
+
+[node name="SceneLabel" type="Label" parent="." unique_id=1968956898]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.02
+anchor_top = 0.87
+anchor_right = 0.5
+anchor_bottom = 0.97
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 10
+
+[node name="EmptyLabel" type="Label" parent="." unique_id=1262712091]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 14
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SlotButton" type="Button" parent="." unique_id=1877010914]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+flat = true

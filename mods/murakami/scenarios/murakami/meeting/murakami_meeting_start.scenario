@@ -1,0 +1,25 @@
+scene: town_entry
+priority: 10
+condition: MeetingMurakamiQuest.notHasTag("wolf_battle")
+---
+select "[Из темноты донеслось глухое рычание]" key=meeting_murakami/growl
+option "Вернуться к дому" key=meeting_murakami/opt_home -> :home
+option "Проверить переулок" key=meeting_murakami/opt_alley -> :alley
+
+:home
+switch_scene home_outside
+end
+
+:alley
+action quest.set_status quest_id=MeetingMurakamiQuest status=Progress
+background "town/meetingmurakami/00055-1920617752"
+text "[Голодный волк, забредший в город в поисках поживы, оскалил пасть, преграждая путь]" key=meeting_murakami/wolf_appear
+text "- Ох, ёбушки..." key=meeting_murakami/marao_scared first=marao/what
+text "[Сомнений не осталось: схватка неизбежна]" key=meeting_murakami/battle_inevitable
+
+action character.add_to_party type=Murakami
+action character.send_notification type=Murakami
+action battle.init scene=town_entry enemies=wolf_1,wolf_2 quest_id=MeetingMurakamiQuest new_tag=wolf_battle
+
+switch_scene Battle
+end

@@ -1,0 +1,128 @@
+[gd_scene format=3 uid="uid://cq11ls8ja3lg0"]
+
+[ext_resource type="Script" uid="uid://cdfoypwmwgvwk" path="res://Core/Battle/WingroundBehaviour.cs" id="1_win"]
+[ext_resource type="PackedScene" uid="uid://dx40qu1dj80in" path="res://scenes/battle/ExpReportCard.tscn" id="2_expcard"]
+[ext_resource type="PackedScene" path="res://Scenes/Battle/LootReportItem.tscn" id="3_lootitem"]
+
+[node name="Winground" type="Control" unique_id=1812297436 node_paths=PackedStringArray("lootTitle")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_win")
+lootTitle = NodePath("Content/LootTitle")
+expReportCardPrefab = ExtResource("2_expcard")
+lootReportItemPrefab = ExtResource("3_lootitem")
+
+[node name="TransitionBg" type="TextureRect" parent="." unique_id=1411801503]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Content" type="Control" parent="." unique_id=865412688]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="DimBg" type="ColorRect" parent="Content" unique_id=1956777181]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.7)
+
+[node name="CharExpContainer" type="HBoxContainer" parent="Content" unique_id=1416765042]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.03
+anchor_top = 0.05
+anchor_right = 0.42100003
+anchor_bottom = 0.344
+offset_right = -0.32006836
+offset_bottom = -0.25601196
+size_flags_horizontal = 4
+size_flags_vertical = 3
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="LootTitle" type="Label" parent="Content" unique_id=2075960163]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.65400004
+anchor_top = 0.544
+anchor_right = 0.95100003
+anchor_bottom = 0.58400005
+offset_left = -0.6800537
+offset_top = -0.056030273
+offset_right = -0.92004395
+offset_bottom = -0.016052246
+text = "ui/battle/victory/loot_title"
+
+[node name="LootScrollContainer" type="ScrollContainer" parent="Content" unique_id=2098696418]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.65400004
+anchor_top = 0.544
+anchor_right = 0.96000004
+anchor_bottom = 0.94200003
+offset_left = -0.6800537
+offset_top = -0.056030273
+offset_right = -0.20007324
+offset_bottom = 0.39196777
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_scroll_mode = 3
+
+[node name="LootContent" type="Control" parent="Content/LootScrollContainer" unique_id=969489928]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="CenterPanel" type="VBoxContainer" parent="Content" unique_id=385679072]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.31800002
+anchor_top = 0.26000002
+anchor_right = 0.68200004
+anchor_bottom = 0.55200005
+offset_left = -0.5600586
+offset_top = -0.24002075
+offset_right = 0.5599365
+offset_bottom = -0.24804688
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="TitleLabel" type="Label" parent="Content/CenterPanel" unique_id=583298800]
+auto_translate_mode = 1
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.3, 1, 0.3, 1)
+theme_override_font_sizes/font_size = 48
+text = "ui/battle/victory"
+horizontal_alignment = 1
+
+[node name="Spacer" type="Control" parent="Content/CenterPanel" unique_id=1854105230]
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+
+[node name="ContinueButton" type="Button" parent="Content/CenterPanel" unique_id=1307713785]
+auto_translate_mode = 1
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "ui/battle/victory/return"
+
+[connection signal="pressed" from="Content/CenterPanel/ContinueButton" to="." method="ToReturnScene"]

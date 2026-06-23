@@ -1,0 +1,206 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Core/UI/Menu/SettingsMenu.cs" id="SettingsMenuScript"]
+
+[node name="SettingsMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+script = ExtResource("SettingsMenuScript")
+
+[node name="Bg" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.65)
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -340.0
+offset_top = -260.0
+offset_right = 340.0
+offset_bottom = 260.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_bottom = 20
+
+[node name="VBox" type="VBoxContainer" parent="Panel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Title" type="Label" parent="Panel/Margin/VBox"]
+layout_mode = 2
+text = "Settings"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 26
+
+[node name="Tabs" type="TabContainer" parent="Panel/Margin/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+tab_alignment = 1
+
+[node name="General" type="VBoxContainer" parent="Panel/Margin/VBox/Tabs"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Spacer" type="Control" parent="Panel/Margin/VBox/Tabs/General"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 12)
+
+[node name="LangBox" type="HBoxContainer" parent="Panel/Margin/VBox/Tabs/General"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="LangLabel" type="Label" parent="Panel/Margin/VBox/Tabs/General/LangBox"]
+layout_mode = 2
+text = "Language"
+size_flags_horizontal = 3
+
+[node name="LangSelect" type="OptionButton" parent="Panel/Margin/VBox/Tabs/General/LangBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Audio" type="VBoxContainer" parent="Panel/Margin/VBox/Tabs"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="SoundsBox" type="VBoxContainer" parent="Panel/Margin/VBox/Tabs/Audio"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="ToggleRow" type="HBoxContainer" parent="Panel/Margin/VBox/Tabs/Audio/SoundsBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="SoundsLabel" type="Label" parent="Panel/Margin/VBox/Tabs/Audio/SoundsBox/ToggleRow"]
+layout_mode = 2
+text = "Sounds"
+size_flags_horizontal = 3
+
+[node name="SoundsToggle" type="CheckButton" parent="Panel/Margin/VBox/Tabs/Audio/SoundsBox/ToggleRow"]
+layout_mode = 2
+
+[node name="VolumeRow" type="HBoxContainer" parent="Panel/Margin/VBox/Tabs/Audio/SoundsBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="SoundsVolumeLabel" type="Label" parent="Panel/Margin/VBox/Tabs/Audio/SoundsBox/VolumeRow"]
+layout_mode = 2
+text = "Volume"
+
+[node name="SoundsVolume" type="HSlider" parent="Panel/Margin/VBox/Tabs/Audio/SoundsBox/VolumeRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+value = 100.0
+
+[node name="SoundsVolumeValue" type="Label" parent="Panel/Margin/VBox/Tabs/Audio/SoundsBox/VolumeRow"]
+layout_mode = 2
+text = "100%"
+custom_minimum_size = Vector2(48, 0)
+horizontal_alignment = 2
+
+[node name="Sep" type="HSeparator" parent="Panel/Margin/VBox/Tabs/Audio"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 8)
+
+[node name="MusicBox" type="VBoxContainer" parent="Panel/Margin/VBox/Tabs/Audio"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="ToggleRow2" type="HBoxContainer" parent="Panel/Margin/VBox/Tabs/Audio/MusicBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="MusicLabel" type="Label" parent="Panel/Margin/VBox/Tabs/Audio/MusicBox/ToggleRow2"]
+layout_mode = 2
+text = "Music"
+size_flags_horizontal = 3
+
+[node name="MusicToggle" type="CheckButton" parent="Panel/Margin/VBox/Tabs/Audio/MusicBox/ToggleRow2"]
+layout_mode = 2
+
+[node name="VolumeRow2" type="HBoxContainer" parent="Panel/Margin/VBox/Tabs/Audio/MusicBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="MusicVolumeLabel" type="Label" parent="Panel/Margin/VBox/Tabs/Audio/MusicBox/VolumeRow2"]
+layout_mode = 2
+text = "Volume"
+
+[node name="MusicVolume" type="HSlider" parent="Panel/Margin/VBox/Tabs/Audio/MusicBox/VolumeRow2"]
+layout_mode = 2
+size_flags_horizontal = 3
+value = 5.0
+
+[node name="MusicVolumeValue" type="Label" parent="Panel/Margin/VBox/Tabs/Audio/MusicBox/VolumeRow2"]
+layout_mode = 2
+text = "5%"
+custom_minimum_size = Vector2(48, 0)
+horizontal_alignment = 2
+
+[node name="Sep2" type="HSeparator" parent="Panel/Margin/VBox/Tabs/Audio"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 8)
+
+[node name="AmbientBox" type="VBoxContainer" parent="Panel/Margin/VBox/Tabs/Audio"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="ToggleRow3" type="HBoxContainer" parent="Panel/Margin/VBox/Tabs/Audio/AmbientBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="AmbientLabel" type="Label" parent="Panel/Margin/VBox/Tabs/Audio/AmbientBox/ToggleRow3"]
+layout_mode = 2
+text = "Ambient"
+size_flags_horizontal = 3
+
+[node name="AmbientToggle" type="CheckButton" parent="Panel/Margin/VBox/Tabs/Audio/AmbientBox/ToggleRow3"]
+layout_mode = 2
+
+[node name="VolumeRow3" type="HBoxContainer" parent="Panel/Margin/VBox/Tabs/Audio/AmbientBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="AmbientVolumeLabel" type="Label" parent="Panel/Margin/VBox/Tabs/Audio/AmbientBox/VolumeRow3"]
+layout_mode = 2
+text = "Volume"
+
+[node name="AmbientVolume" type="HSlider" parent="Panel/Margin/VBox/Tabs/Audio/AmbientBox/VolumeRow3"]
+layout_mode = 2
+size_flags_horizontal = 3
+value = 5.0
+
+[node name="AmbientVolumeValue" type="Label" parent="Panel/Margin/VBox/Tabs/Audio/AmbientBox/VolumeRow3"]
+layout_mode = 2
+text = "5%"
+custom_minimum_size = Vector2(48, 0)
+horizontal_alignment = 2
+
+[node name="BackBtn" type="Button" parent="Panel/Margin/VBox"]
+layout_mode = 2
+text = "Back"
+size_flags_horizontal = 8

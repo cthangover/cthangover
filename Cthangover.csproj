@@ -1,0 +1,41 @@
+<Project Sdk="Godot.NET.Sdk/4.6.3">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <RootNamespace>Cthangover</RootNamespace>
+    <AssemblyName>Cthangover</AssemblyName>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    <Nullable>disable</Nullable>
+    <LangVersion>12</LangVersion>
+    <DefineConstants>$(DefineConstants);LOG_BATTLE_UI;LOG_SCENE_REGISTRY;LOG_MODS_COMPILE;LOG_MODS_REGISTRY;DEBUG;DEVELOPMENT_BUILD;LOG_AI;LOG_AI_DEBUG;LOG_AUDIO;LOG_BATTLE;LOG_CACHE;LOG_CARD;LOG_CHAIN;LOG_COND;LOG_CONFIG;LOG_DIALOG;LOG_EVENT;LOG_GAME;LOG_GD_PLUGIN;LOG_ITEMS;LOG_LANG;LOG_LIGHT;LOG_QUEST;LOG_SAVE;LOG_SCENE;LOG_SCENE_REGISTRY;LOG_SERIALIZE;LOG_SHADER;LOG_STATUS;LOG_TEST;LOG_TOOLBOX;LOG_UI;LOG_VIEW;LOG_WIDGET;TOOLS</DefineConstants>
+    <DefineConstants Condition="'$(OS)' == 'Windows_NT'">$(DefineConstants);WINDOWS</DefineConstants>
+    <!--DefineConstants>LOG_FACTORY;LOG_BATTLE_UI;LOG_MODS;LOG_MODS_ZIP;LOG_LIGHT_TRACE;</DefineConstants-->
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.11.0" />
+    <PackageReference Include="System.Text.Json" Version="8.0.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="sdk\Cthangover.ModSDK\Cthangover.ModSDK.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="tests\Cthangover.Tests\**\*.cs" />
+    <Compile Include="mods\card_battle\src\ICard.cs" />
+    <Compile Include="sdk\Cthangover.ModSDK\Mods\IModFileProvider.cs" />
+    <Compile Include="sdk\Cthangover.ModSDK\Mods\IModInfo.cs" />
+    <Compile Include="sdk\Cthangover.ModSDK\Mods\ModInfo.cs" />
+    <None Include="tests\Cthangover.Tests\**\*.cs" />
+    <Compile Remove="mods\**\*" />
+    <None Include="mods\**\*" />
+    <Compile Remove="sdk\Cthangover.ModSDK\**\*.cs" />
+    <None Include="sdk\Cthangover.ModSDK\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="mods\cooking\src\items" />
+  </ItemGroup>
+  
+</Project>

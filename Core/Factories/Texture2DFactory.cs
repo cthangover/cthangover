@@ -1,0 +1,37 @@
+using System;
+using System.Collections.Generic;
+using Cthangover.Core.Mods;
+using Cthangover.Core.Utils;
+using Godot;
+
+namespace Cthangover.Core.Factories
+{
+    public abstract class Texture2DFactory : PrefabFactory<Texture2D>
+    {
+        protected Texture2DFactory(string factoryKey, int fallbackCacheSize)
+            : base(factoryKey, fallbackCacheSize) { }
+
+        protected override List<string> Extensions => ModConfig.Instance.TextureExtensions;
+        
+        protected override Texture2D ConvertFromBytes(string id, byte[] data, string extension)
+        {
+            var image = new Image();
+            if (extension?.Equals(".png", StringComparison.OrdinalIgnoreCase) == true)
+                image.LoadPngFromBuffer(data);
+            else if (extension?.Equals(".jpg", StringComparison.OrdinalIgnoreCase) == true ||
+                     extension?.Equals(".jpeg", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                image.LoadJpgFromBuffer(data);
+            }
+            else
+            {
+                GameLogger.Log("FACTORY", $"unsupported image format '{extension}' for '{id}'", LogLevel.Error);
+                return null;
+            }
+            var texture = ImageTexture.CreateFromImage(image);
+            image.Dispose();
+            return texture;
+        }
+
+    }
+}

@@ -1,0 +1,58 @@
+scene: town_entry
+priority: 20
+condition: MeetingMurakamiQuest.hasTag("wolf_battle") && MeetingMurakamiQuest.notHasTag("boss_battle")
+---
+background "town/meetingmurakami/00002-1920617752"
+text "[Волк определённо целился в этот дом — следы вели прямо к порогу]" key=meeting_murakami/after_wolf/tracks
+
+select "[Марао решил осмотреть жилище]" key=meeting_murakami/after_wolf/inspect
+option "Подойти к двери" key=meeting_murakami/after_wolf/opt_approach -> :approach
+
+:approach
+background "town/meetingmurakami/00014-1724512349"
+text "- Милая леди!" key=meeting_murakami/after_wolf/greeting first=marao/think
+text "- Что вы тут делаете в одиночестве?" key=meeting_murakami/after_wolf/alone first=marao/think
+text "." key=meeting_murakami/after_wolf/dot1
+text ".." key=meeting_murakami/after_wolf/dot2
+text "..." key=meeting_murakami/after_wolf/dot3
+text "- Помогите..." key=meeting_murakami/after_wolf/help second=murakami/fear_1
+text "- Оно там... внутри..." key=meeting_murakami/after_wolf/inside second=murakami/fear_2
+
+select "[Девушка дрожит от страха]" key=meeting_murakami/after_wolf/fear
+option "Войти" key=meeting_murakami/after_wolf/opt_enter -> :enter
+
+:enter
+light_set [{"x":0.8433963,"y":0.037922725,"radius":600,"influence":1,"color":"#ffff00"},{"x":0.29016176,"y":0.16111115,"radius":600,"influence":1,"color":"#ffff00"}]
+background "town/meetingmurakami/00079-2783395178"
+text "[Марао, не колеблясь, перешагнул порог]" key=meeting_murakami/after_wolf/enter
+text "- Так-так..." key=meeting_murakami/after_wolf/look_around first=marao/think
+
+background "town/meetingmurakami/00078-2783395178"
+light_set [{"x":0.8433963,"y":0.037922725,"radius":600,"influence":1,"color":"#ffff00"},{"x":0.29016176,"y":0.16111115,"radius":600,"influence":1,"color":"#ffff00"}]
+text "- ААА?!" key=meeting_murakami/after_wolf/scream second=murakami/fear_1
+text "- Почему вы го..." key=meeting_murakami/after_wolf/why second=murakami/fear_1
+text "- Милая леди, это долгая история. Потерпите, мне нужно здесь кое-что проверить." key=meeting_murakami/after_wolf/explain first=marao/what
+
+background "town/meetingmurakami/00136-3647329618"
+light_set
+text "- М-да..." key=meeting_murakami/after_wolf/hmm first=marao/think
+text "- Атмосфера тут, конечно, хреновая... — [он принюхался] — <s>жоп...</s>, кхм, нутром чую, чё-то не то..." key=meeting_murakami/after_wolf/atmosphere first=marao/think
+
+action character.add_to_party type=Murakami
+action character.send_notification type=Murakami
+
+text "- Они в той комнате..." key=meeting_murakami/after_wolf/they_inside second=murakami/fear_1
+
+select "" key=meeting_murakami/after_wolf/choose_enter
+option "Зайти в комнату" key=meeting_murakami/after_wolf/opt_enter_room -> :enter_room
+
+:enter_room
+background "town/meetingmurakami/00031-3535505844"
+text "[Марао замер, застигнутый врасплох кровавым блеском вервольфьих глаз.]" key=meeting_murakami/after_wolf/werewolf_gaze
+text "[Сама неизбежность нависла над ним в этот миг.]" key=meeting_murakami/after_wolf/inevitable
+text "- Твою ж мать... — только и выдохнул он." key=meeting_murakami/after_wolf/oh_shit first=marao/what
+
+action battle.init scene=town_entry enemies=wolf_2,werewolf_girl_1 quest_id=MeetingMurakamiQuest new_tag=boss_battle
+
+switch_scene Battle
+end

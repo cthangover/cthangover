@@ -1,0 +1,20 @@
+{
+  "Scene": "town_entry",
+  "Musics": [
+    {
+      "MusicType": "Ambient",
+      "MusicNames": [
+        "Abyssal Void",
+        "Cinders of Dawn"
+      ]
+    },
+    {
+      "MusicType": "Combat",
+      "MusicNames": [
+        "Aura of Decay",
+		"Circuit Dreams II",
+		"Iron Resonance II"
+      ]
+    }
+  ]
+}

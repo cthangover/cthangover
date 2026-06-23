@@ -1,0 +1,9 @@
+scene: home_bedroom
+priority: 10
+---
+select "Твоя спальня, тут можно поспать и набраться сил" key=rooms/bedroom/prompt
+option "Выйти" key=rooms/bedroom/opt_exit -> :exit
+
+:exit
+switch_scene home_vestibule
+end

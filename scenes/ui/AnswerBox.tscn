@@ -1,0 +1,26 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Core/UI/Dialog/AnswerBox.cs" id="1_answerbox"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/AnswerItem.tscn" id="2_answeritem"]
+
+[node name="AnswerBox" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_answerbox")
+itemScene = ExtResource("2_answeritem")
+content = NodePath("Content")
+
+[node name="Content" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchor_left = 0.6
+anchor_top = 0.35
+anchor_right = 0.95
+anchor_bottom = 0.65
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+alignment = 1

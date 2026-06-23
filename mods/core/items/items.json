@@ -1,0 +1,7 @@
+﻿{
+  "Items": [
+    ${food/ration},
+    ${food/wolf_meat},
+    ${resource/branches}
+  ]
+}

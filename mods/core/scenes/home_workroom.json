@@ -1,0 +1,6 @@
+{
+  "name": "home_workroom",
+  "defaultBackground": "home/workroom",
+  "defaultAmbient": "",
+  "defaultScenario": "scenarios/home/home_workroom_default.scenario"
+}

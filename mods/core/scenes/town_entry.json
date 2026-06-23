@@ -1,0 +1,6 @@
+{
+  "name": "town_entry",
+  "defaultBackground": ["town/town_entry_0", "town/town_entry_1", "town/town_entry_2", "town/town_entry_3", "town/town_entry_4"],
+  "defaultAmbient": "",
+  "defaultScenario": "scenarios/town/town_entry_default.scenario"
+}

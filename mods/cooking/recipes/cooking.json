@@ -1,0 +1,27 @@
+{
+  "Items": [
+    {
+      "Id": "recipe/wolf_meat_to_ration",
+      "Name": "recipe/wolf_meat_to_ration/name",
+      "Description": "recipe/wolf_meat_to_ration/desc",
+      "Type": "Cooking",
+      "Time": 15,
+      "Input": [
+        {
+          "Id": "food/wolf_meat",
+          "Count": 1
+        },
+        {
+          "Id": "resource/branches",
+          "Count": 2
+        }
+      ],
+      "Output": [
+        {
+          "Id": "food/ration",
+          "Count": 1
+        }
+      ]
+    }
+  ]
+}

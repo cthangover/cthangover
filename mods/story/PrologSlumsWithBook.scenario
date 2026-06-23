@@ -1,0 +1,13 @@
+scene: start_scene
+priority: 40
+condition: PrologQuest.DataStatus == 1
+---
+# PrologSlumsWithBook - Марaо находит книгу
+background town/prolog/slums/book_shop
+
+action scene.instantiate path=res://Scenes/Props/Book.tscn name=book
+
+text "Марао наткнулся на книжную лавку. Среди обгоревших страниц выделялась одна - она переливалась в свете утренней зари." key=prolog/slums_book/line1
+text "Он протянул руку, коснувшись переплёта..." key=prolog/slums_book/line2
+
+end

@@ -1,0 +1,15 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" uid="uid://e1ahs3aos3y0" path="res://Scenes/Battle.tscn" id="battle_scene"]
+[ext_resource type="Script" path="res://tests/CThangover.Tests.Integration/Battle/BattleTestSetup.cs" id="battle_setup_script"]
+[ext_resource type="Script" path="res://tests/CThangover.Tests.Integration/Battle/BattleTestDriver.cs" id="battle_driver_script"]
+
+[node name="BattleTestRoot" type="Node"]
+
+[node name="BattleTestSetup" type="Node" parent="."]
+script = ExtResource("battle_setup_script")
+
+[node name="BattleScene" parent="." instance=ExtResource("battle_scene")]
+
+[node name="BattleTestDriver" type="Node" parent="."]
+script = ExtResource("battle_driver_script")

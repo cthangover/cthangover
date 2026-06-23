@@ -1,0 +1,11 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" uid="uid://dt7j1qmg4la3f" path="res://Scenes/MainMenu.tscn" id="main_menu_scene"]
+[ext_resource type="Script" path="res://tests/CThangover.Tests.Integration/Autotest/MainMenuTestSetup.cs" id="menu_test_setup_script"]
+
+[node name="MainMenuTestRoot" type="Node"]
+
+[node name="MainMenuScene" parent="." instance=ExtResource("main_menu_scene")]
+
+[node name="MainMenuTestSetup" type="Node" parent="MainMenuScene"]
+script = ExtResource("menu_test_setup_script")

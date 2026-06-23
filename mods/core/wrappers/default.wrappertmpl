@@ -1,0 +1,30 @@
+using Godot;
+using System;
+using System.Linq;
+using System.Collections.Generic;
+
+public static class SceneBuilderScript
+{
+    private static Node _root;
+
+    public static T Get<T>(string name) where T : Node
+    {
+        return _root.GetNode<T>(name);
+    }
+
+    public static Node Get(string name)
+    {
+        return _root.GetNode(name);
+    }
+    
+    public static T FindNode<T>(string nodeName) where T : Node
+    {
+        return Cthangover.Core.Scenes.SceneContextNode.FindNode<T>(nodeName);
+    }
+
+    public static void Run(Node root)
+    {
+        _root = root;
+        {{USER_CODE}}
+    }
+}

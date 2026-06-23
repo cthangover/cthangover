@@ -1,0 +1,7 @@
+{
+    "name": "FFBattle",
+    "author": "ct",
+    "description": "Final Fantasy style battle system",
+    "sources": ["src/**/*.cs"],
+    "depends": ["core"]
+}

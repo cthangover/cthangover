@@ -1,0 +1,21 @@
+scene: start_scene
+priority: 1
+---
+light_set [{"x":0.29462293,"y":0.43369123,"radius":100,"influence":1,"color":"#ffff00"},{"x":0.29967362,"y":0.62050235,"radius":100,"influence":1,"color":"#ffff00"},{"x":0.49256954,"y":0.40350124,"radius":100,"influence":1,"color":"#ffff00"},{"x":0.5846468,"y":0.37935096,"radius":100,"influence":1,"color":"#ffff00"},{"x":0.33943588,"y":0.41643897,"radius":100,"influence":1,"color":"#ffff00"},{"x":0.43495983,"y":0.41557643,"radius":100,"influence":1,"color":"#ffff00"},{"x":0.30102944,"y":0.5208026,"radius":100,"influence":1,"color":"#ffff00"},{"x":0.67573905,"y":0.40436372,"radius":100,"influence":1,"color":"#ffff00"},{"x":0.3522381,"y":0.5113151,"radius":100,"influence":1,"color":"#ffff00"},{"x":0.6782009,"y":0.507865,"radius":150,"influence":1,"color":"#ffff00"}]
+background home/outside
+select "" key=home_outside/prompt
+option "Зайти в дом" key=home_outside/opt_enter -> :enter
+option "В город" key=home_outside/opt_town -> :town
+option "В лес" key=home_outside/opt_forest -> :forest
+
+:enter
+switch_scene home_vestibule
+end
+
+:town
+switch_scene town_entry
+end
+
+:forest
+switch_scene forest
+end

@@ -1,0 +1,13 @@
+{
+  "Items": [
+    {
+      "Id": "MeetingMurakamiQuest",
+      "Name": "quest/meeting/murakami",
+      "StatusToDescription": {
+        "0": "quest/meeting/murakami/0",
+        "1": "quest/meeting/murakami/1",
+        "2": "quest/meeting/murakami/2"
+      }
+    }
+  ]
+}

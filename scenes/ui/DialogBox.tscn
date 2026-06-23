@@ -1,0 +1,107 @@
+[gd_scene format=3 uid="uid://b8vnxfoixyust"]
+
+[ext_resource type="Script" uid="uid://b41bti3wq4m88" path="res://Core/UI/Dialog/DialogBox.cs" id="1_dialogbox"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/AnswerBox.tscn" id="2_answerbox"]
+
+[node name="DialogBox" type="Control" unique_id=702809053 node_paths=PackedStringArray("textField", "titleField", "titleBody", "firstAvatar", "secondAvatar")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_dialogbox")
+answerBoxScene = ExtResource("2_answerbox")
+textField = NodePath("DialogBody/TextField")
+titleField = NodePath("TitleBody/TitleField")
+titleBody = NodePath("TitleBody")
+firstAvatar = NodePath("FirstAvatar")
+secondAvatar = NodePath("SecondAvatar")
+
+[node name="DialogBody" type="ColorRect" parent="." unique_id=1510369637]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -300.0
+grow_horizontal = 2
+grow_vertical = 0
+color = Color(0, 0, 0, 0.85)
+
+[node name="TextField" type="Label" parent="DialogBody" unique_id=2065569930]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 10.0
+offset_right = -20.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 24
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="FirstAvatar" type="TextureRect" parent="." unique_id=1696535122]
+visible = false
+texture_filter = 1
+layout_mode = 1
+anchors_preset = -1
+anchor_top = 0.6
+anchor_right = 0.13
+anchor_bottom = 1.0
+offset_left = 90.0
+offset_top = -300.0
+offset_right = 90.0
+offset_bottom = -300.0
+grow_horizontal = 0
+grow_vertical = 0
+expand_mode = 1
+stretch_mode = 4
+
+[node name="SecondAvatar" type="TextureRect" parent="." unique_id=1913233391]
+visible = false
+texture_filter = 1
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.87
+anchor_top = 0.6
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -90.0
+offset_top = -300.0
+offset_right = -90.0
+offset_bottom = -300.0
+grow_horizontal = 0
+grow_vertical = 0
+expand_mode = 1
+stretch_mode = 4
+
+[node name="TitleBody" type="Control" parent="." unique_id=1986161675]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -400.0
+offset_top = -60.0
+offset_right = 400.0
+offset_bottom = 60.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TitleField" type="Label" parent="TitleBody" unique_id=2046072321]
+visible = false
+layout_mode = 1
+anchors_preset = -1
+anchor_left = -0.5
+anchor_right = 1.5
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 28
+horizontal_alignment = 1
+vertical_alignment = 1

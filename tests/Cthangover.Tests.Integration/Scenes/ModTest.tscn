@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://modtest00000000000000000000"]
+
+[ext_resource type="Script" path="res://tests/CThangover.Tests.Integration/Autotest/ModTestSetup.cs" id="1_setup"]
+
+[node name="ModTest" type="Node"]
+script = ExtResource("1_setup")

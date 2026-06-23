@@ -1,0 +1,10 @@
+scene: home_basement
+priority: 10
+---
+light_set [{"x":0.38576052,"y":0.31548673,"radius":700,"influence":0.5,"color":"#ffff00"},{"x":0.16893204,"y":0.20154873,"radius":700,"influence":0.5,"color":"#ffff00"},{"x":0.5864078,"y":0.3254425,"radius":700,"influence":0.5,"color":"#ffff00"},{"x":0.8116505,"y":0.27123895,"radius":700,"influence":0.5,"color":"#ffff00"}]
+select "Подвал" key=rooms/basement/prompt
+option "Выйти" key=rooms/basement/opt_exit -> :exit
+
+:exit
+switch_scene home_vestibule
+end

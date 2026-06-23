@@ -1,0 +1,55 @@
+[gd_scene format=3 uid="uid://dmcko8a8b3gdx"]
+
+[ext_resource type="Script" path="res://Core/Scenes/Events/Dinner/DinnerToolsBehaviour.cs" id="1_script"]
+
+[node name="DinnerTools" type="Control" unique_id=1316589160]
+layout_mode = 3
+anchors_preset = 0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_script")
+
+[node name="TxtCountTitle" type="Label" parent="." unique_id=1368732330]
+layout_mode = 0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 200.0
+offset_bottom = 40.0
+text = "Пайков:"
+
+[node name="TxtCount" type="Label" parent="." unique_id=2068744138]
+layout_mode = 0
+offset_left = 210.0
+offset_top = 16.0
+offset_right = 280.0
+offset_bottom = 40.0
+
+[node name="TxtEatToDayTitle" type="Label" parent="." unique_id=426094759]
+layout_mode = 0
+offset_left = 16.0
+offset_top = 48.0
+offset_right = 200.0
+offset_bottom = 72.0
+text = "Расход в день:"
+
+[node name="TxtEatToDay" type="Label" parent="." unique_id=315942619]
+layout_mode = 0
+offset_left = 210.0
+offset_top = 48.0
+offset_right = 280.0
+offset_bottom = 72.0
+
+[node name="TxtTotalCountOnDaysTitle" type="Label" parent="." unique_id=2118635082]
+layout_mode = 0
+offset_left = 16.0
+offset_top = 80.0
+offset_right = 200.0
+offset_bottom = 104.0
+text = "Хватит на дней:"
+
+[node name="TxtTotalCountOnDays" type="Label" parent="." unique_id=764561352]
+layout_mode = 0
+offset_left = 210.0
+offset_top = 80.0
+offset_right = 280.0
+offset_bottom = 104.0

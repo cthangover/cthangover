@@ -1,0 +1,9 @@
+﻿{
+  "Id": "food/ration",
+  "Name": "items/food/ration/name",
+  "Description": "items/food/ration/desc",
+  "Cost": 5,
+  "Sprite": "food/ration",
+  "ItemType": "Food",
+  "ItemAction": "null"
+}

@@ -1,0 +1,13 @@
+{
+  "Id": "Marao",
+  "Name": "characters/player/marao",
+  "Image": "characters/player/marao",
+  
+  "Level": 1,
+  "Point": 1,
+  "Health": 2000,
+  "Defence": 0,
+  "Attack": 500,
+  
+  "Actions": "physics/attack,physics/defence"
+}

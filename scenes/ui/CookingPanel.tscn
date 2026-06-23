@@ -1,0 +1,86 @@
+[gd_scene format=3 uid="uid://dcx8esny0w1oq"]
+
+[ext_resource type="Script" path="res://Core/Scenes/Events/Home/DinerRoom/CookingPanelBehaviour.cs" id="1_script"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/RecipeItem.tscn" id="2_recipe"]
+
+[node name="CookingPanel" type="Control" unique_id=1064111695]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+recipePrefab = ExtResource("2_recipe")
+
+[node name="Background" type="ColorRect" parent="." unique_id=555179764]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.85)
+
+[node name="LeftPanel" type="VBoxContainer" parent="." unique_id=1152362213]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 0.45
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = -16.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="ScrollContainer" type="ScrollContainer" parent="LeftPanel" unique_id=2013493814]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 3
+
+[node name="Content" type="VBoxContainer" parent="LeftPanel/ScrollContainer" unique_id=787895691]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="RightPanel" type="VBoxContainer" parent="." unique_id=447074215]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.55
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = -16.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="TxtDescription" type="RichTextLabel" parent="RightPanel" unique_id=77999135]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+bbcode_enabled = true
+fit_content = true
+
+[node name="ImgOutIcon" type="TextureRect" parent="RightPanel" unique_id=1580159752]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 4
+
+[node name="TxtOutCount" type="Label" parent="RightPanel" unique_id=615348403]
+layout_mode = 2
+
+[node name="BtnCook" type="Button" parent="RightPanel" unique_id=1623071096]
+layout_mode = 2
+text = "Готовить"
+
+[node name="BtnClose" type="Button" parent="RightPanel" unique_id=989050945]
+layout_mode = 2
+text = "Выйти"

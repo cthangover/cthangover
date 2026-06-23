@@ -1,0 +1,48 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Core/UI/Inventory/PlayerInventoryBagBehaviour.cs" id="1"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/InventoryItem.tscn" id="2"]
+
+[node name="PlayerInventoryBag" type="Control" node_paths=PackedStringArray("content")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+script = ExtResource("1")
+itemScene = ExtResource("2")
+content = NodePath("ScrollContainer/Content")
+columnCount = 8
+aspectHeight = 1.0
+itemsCellPadding = Vector2(2, 2)
+borderLeft = 4.0
+borderRight = 4.0
+borderTop = 4.0
+borderBottom = 4.0
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.85)
+mouse_filter = 2
+
+[node name="ScrollContainer" type="ScrollContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_scroll_mode = 3
+mouse_filter = 1
+
+[node name="Content" type="Control" parent="ScrollContainer"]
+layout_mode = 1
+custom_minimum_size = Vector2(400, 0)
+mouse_filter = 2

@@ -1,0 +1,44 @@
+[gd_scene format=3 uid="uid://dx40qu1dj80in"]
+
+[ext_resource type="Script" uid="uid://delddwitb7e77" path="res://Core/Battle/ExpReportCard.cs" id="ExpReportCardScript"]
+
+[node name="ExpReportCard" type="Control" unique_id=223866085]
+custom_minimum_size = Vector2(130, 130)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("ExpReportCardScript")
+icon = NodePath("Panel/Icon")
+nameLabel = NodePath("Panel/NameLabel")
+expLabel = NodePath("Panel/ExpLabel")
+
+[node name="Panel" type="VBoxContainer" parent="." unique_id=284918240]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 4
+alignment = 1
+
+[node name="Icon" type="TextureRect" parent="Panel" unique_id=149388562]
+custom_minimum_size = Vector2(100, 100)
+layout_mode = 2
+size_flags_horizontal = 4
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="Panel" unique_id=555712225]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 16
+horizontal_alignment = 1
+
+[node name="ExpLabel" type="Label" parent="Panel" unique_id=1019918817]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
+theme_override_font_sizes/font_size = 22
+horizontal_alignment = 1

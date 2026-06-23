@@ -1,0 +1,22 @@
+{
+  "texture_extensions": [".png", ".jpg", ".jpeg"],
+  "audio_extensions": [".ogg", ".wav"],
+  "shader_extensions": [".gdshader", ".gdshaderinclude"],
+  "texture_groups": ["ui", "backgrounds", "avatars", "icons", "items", "cards", "effects", "skills"],
+  "cache": {
+    "root": "user://mod_cache/",
+    "max_sizes": {
+      "avatars": 64,
+      "backgrounds": 64,
+      "items": 64,
+      "ui/icons": 64,
+      "ui": 64,
+      "music": 64,
+      "sounds": 64,
+      "effects": 64,
+      "actions": 128,
+      "characters": 128,
+      "recipes": 128
+    }
+  }
+}

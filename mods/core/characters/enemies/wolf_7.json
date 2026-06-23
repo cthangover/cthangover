@@ -1,0 +1,20 @@
+﻿{
+  "Id": "wolf_7",
+  "Name": "characters/enemies/wolf",
+  "Image": "characters/enemies/wolf_7",
+  "Behaviour": "base",
+
+  "Level": 1,
+  "Point": 1,
+  "Health": 15,
+  "Defence": 0,
+  "Attack": 4,
+  "Exp": 5,
+  "RecruitmentChance": 0,
+
+  "Actions": "physics/attack,physics/defence",
+  "Loot": [
+    { "ItemId": "food/wolf_meat", "MinCount": 1, "MaxCount": 1, "Probability": 100 },
+    { "ItemId": "resource/branches", "MinCount": 1, "MaxCount": 1, "Probability": 100 }
+  ]
+}

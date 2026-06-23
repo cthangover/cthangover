@@ -1,0 +1,466 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Cthangover.Core.Factories.Impls;
+using Cthangover.Core.Mods;
+using Cthangover.Core.UI.Dialog;
+using Cthangover.Core.UI.Event;
+using Cthangover.Core.UI.Executable;
+using Cthangover.Core.UI.Lights;
+using Cthangover.Core.UI.View;
+using Cthangover.Core.Utils;
+using Godot;
+
+namespace Cthangover.Core.Scenes
+{
+    public partial class SceneManager : Node
+    {
+        private Dictionary<string, List<SceneDefinition>> allScenes;
+        private string currentSceneName;
+        private bool isInitialized;
+
+        private ExecutableMainEventChain eventChain;
+        private SceneEventController eventController;
+        private DialogBox dialogBox;
+
+        public string CurrentSceneName => currentSceneName;
+
+        public string PendingSceneName { get; set; }
+
+        public override void _Ready()
+        {
+            Initialize();
+        }
+
+        public void Initialize()
+        {
+            if (isInitialized)
+                return;
+
+            ModManager.Instance.Initialize();
+            SceneEventRegistry.Initialize();
+            allScenes = ModManager.Instance.CollectSceneDefinitions();
+            isInitialized = true;
+
+            GameLogger.Log("SCENE", $"SceneManager initialized with {allScenes?.Count ?? 0} scene(s)");
+        }
+
+        public void SwitchScene(string sceneName)
+        {
+            if (!isInitialized)
+                Initialize();
+            
+            var lightController = SceneContextNode.FindNode<UiLightController>("Lights");
+            if (lightController != null)
+            {
+                lightController.ClearStaticLights();
+                lightController.SetupDepthMap(null);
+                lightController.SetupAlbedoMap(null);
+            }
+            
+            if (string.IsNullOrEmpty(sceneName))
+            {
+                GameLogger.Log("SCENE", "SwitchScene: sceneName is null or empty", LogLevel.Error);
+                return;
+            }
+
+            if (IsGodotScene(sceneName))
+            {
+                var sceneService = GetNode<GodotSceneService>("/root/GodotSceneService");
+                if (sceneService != null)
+                {
+                    var lower = sceneName.ToLowerInvariant();
+                    var sceneType = (lower == "mainmenu" || lower == "menu") ? GodotSceneType.MainMenu : GodotSceneType.Battle;
+                    sceneService.SwitchScene(sceneType);
+                }
+                return;
+            }
+
+            if (!string.IsNullOrEmpty(currentSceneName))
+                SceneSubscriptionRegistry.RunExitSubscriptions(currentSceneName, GetTree().CurrentScene);
+
+            GameLogger.Log("SCENE", $"SwitchScene: '{currentSceneName}' -> '{sceneName}'");
+
+            ResolveReferences();
+
+            FreezeActivity();
+            ClearCurrentEvents();
+
+            try
+            {
+                var composedEvents = ComposeEvents(sceneName);
+                if (composedEvents == null || composedEvents.Count == 0)
+                {
+                    currentSceneName = sceneName;
+                    ApplySceneDefaults();
+                    TryLoadDefaultScenario();
+                    return;
+                }
+
+                currentSceneName = sceneName;
+
+                ApplySceneDefaults();
+
+                var pendingEvents = new List<ExecutableEvent>();
+                foreach (var eventInfo in composedEvents)
+                {
+                    try
+                    {
+                        if (!ScenarioCondition.Evaluate(eventInfo.Condition))
+                        {
+                            GameLogger.Log("SCENE", $"SwitchScene: skipped '{eventInfo.Id}' (condition not met: {eventInfo.Condition})", LogLevel.Warning);
+                            continue;
+                        }
+
+                        var instance = CreateEventInstance(eventInfo);
+                        if (instance != null)
+                        {
+                            pendingEvents.Add(instance);
+                            GameLogger.Log("SCENE", $"SwitchScene: created event '{eventInfo.Id}'");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        GameLogger.Log("SCENE", $"SwitchScene: failed to create event '{eventInfo.Id}': {ex.Message}", LogLevel.Error);
+                    }
+                }
+                
+                GameLogger.Log("SCENE", $"SwitchScene: adding {pendingEvents.Count} pending event(s) to chain");
+
+                foreach (var instance in pendingEvents)
+                {
+                    if (eventChain == null)
+                    {
+                        GameLogger.Log("SCENE", $"  ERROR: eventChain is null, skipping event '{instance.GetType().Name}'", LogLevel.Error);
+                        continue;
+                    }
+                    eventChain.AddEvent(instance);
+                }
+
+                foreach (var musicPlayer in GetTree().GetNodesInGroup("music_player"))
+                {
+                    if (musicPlayer is Audio.MusicPlayerBehaviour cast)
+                        cast.UpdateMusicType(sceneName);
+                }
+
+                PlaySceneAmbient();
+                SceneSubscriptionRegistry.RunSubscriptions(sceneName, GetTree().CurrentScene);
+            }
+            finally
+            {
+                UnfreezeActivity();
+            }
+        }
+
+        private List<SceneEventInfo> ComposeEvents(string sceneName)
+        {
+            var allEvents = new List<SceneEventInfo>();
+            var seenIds = new HashSet<string>();
+
+            // 1. Collect C# events from registry
+            var registered = SceneEventRegistry.GetEvents(sceneName);
+            foreach (var evt in registered)
+            {
+                if (seenIds.Add(evt.Id))
+                    allEvents.Add(evt);
+            }
+
+            // 2. Collect .scenario file events from mods
+            var scenarioDefs = ModManager.Instance.CollectScenarioDefinitions();
+            if (scenarioDefs.TryGetValue(sceneName, out var scenarios))
+            {
+                foreach (var scenario in scenarios)
+                {
+                    var id = scenario.Name;
+                    if (!seenIds.Add(id))
+                        continue;
+
+                    allEvents.Add(new SceneEventInfo
+                    {
+                        Id = id,
+                        ScenarioPath = scenario.FilePath,
+                        Priority = scenario.Priority,
+                        After = scenario.After,
+                        Condition = scenario.Condition,
+                        LightUseTime = scenario.LightUseTime,
+                    });
+                }
+            }
+
+            // 3. Sort by priority + topological sort for 'after' dependencies
+            allEvents = SortEvents(allEvents);
+            
+            GameLogger.Log("SCENE", $"ComposeEvents '{sceneName}': {allEvents.Count} event(s)");
+
+            return allEvents;
+        }
+
+        private static List<SceneEventInfo> SortEvents(List<SceneEventInfo> events)
+        {
+            var visited = new HashSet<string>();
+            var result = new List<SceneEventInfo>();
+            var visiting = new HashSet<string>();
+
+            void Visit(SceneEventInfo info)
+            {
+                if (info.Id == null)
+                {
+                    if (!result.Contains(info))
+                        result.Add(info);
+                    return;
+                }
+
+                if (visited.Contains(info.Id))
+                    return;
+
+                if (visiting.Contains(info.Id))
+                {
+                    GameLogger.Log("SCENE", $"Circular dependency detected: {info.Id}", LogLevel.Warning);
+                    return;
+                }
+
+                if (!string.IsNullOrEmpty(info.After))
+                {
+                    var after = events.FirstOrDefault(e => e.Id == info.After);
+                    if (after != null)
+                    {
+                        visiting.Add(info.Id);
+                        Visit(after);
+                        visiting.Remove(info.Id);
+                    }
+                }
+
+                visited.Add(info.Id);
+                result.Add(info);
+            }
+
+            foreach (var info in events.OrderBy(e => e.Priority).ThenBy(e => e.Id))
+                Visit(info);
+
+            return result;
+        }
+
+        private static bool IsGodotScene(string sceneName)
+        {
+            var lower = sceneName.ToLowerInvariant();
+            return lower == "mainmenu" || lower == "menu" || lower == "battle";
+        }
+
+        private static readonly Random _bgRandom = new();
+
+        private void ApplySceneDefaults()
+        {
+            var defs = allScenes?.GetValueOrDefault(currentSceneName);
+            if (defs == null || defs.Count == 0)
+                return;
+
+            var def = defs[0];
+            if (def.DefaultBackground != null && def.DefaultBackground.Count > 0)
+            {
+                var index = def.DefaultBackground.Count > 1
+                    ? _bgRandom.Next(def.DefaultBackground.Count)
+                    : 0;
+                var bg = def.DefaultBackground[index];
+                if (!string.IsNullOrEmpty(bg))
+                {
+                    SceneContextNode.LastBackgroundID = bg;
+                    LoadDefaultBackground(bg);
+                }
+            }
+        }
+
+        private void LoadDefaultBackground(string backgroundId)
+        {
+            var texture = BackgroundFactory.Instance.Get(backgroundId);
+            if (texture == null)
+            {
+                GameLogger.Log("SCENE", $"LoadDefaultBackground: failed to load '{backgroundId}'", LogLevel.Error);
+                return;
+            }
+
+			var viewBox = GetViewBox();
+			if (viewBox != null)
+			{
+				if (GodotSceneService.IsTransitioning)
+					viewBox.SetBackgroundTexture(texture);
+				else
+					viewBox.TransitionBackground(texture);
+			}
+
+			var depthTex = BackgroundFactory.Instance.Get(backgroundId + "_depth");
+			var albedoTex = BackgroundFactory.Instance.Get(backgroundId + "_albedo");
+			var controller = UiLightController.Instance;
+			controller?.SetupDepthMap(depthTex);
+			controller?.SetupAlbedoMap(albedoTex);
+        }
+
+        private ViewBox GetViewBox()
+        {
+            var sceneRoot = GetTree()?.CurrentScene;
+            if (sceneRoot == null)
+                return null;
+
+            var scene = sceneRoot.FindChild("Scene", false, false);
+            if (scene == null)
+                return null;
+
+            return scene.GetNodeOrNull<ViewBox>("ViewBox");
+        }
+
+        private void TryLoadDefaultScenario()
+        {
+            var defs = allScenes?.GetValueOrDefault(currentSceneName);
+            if (defs == null || defs.Count == 0)
+                return;
+
+            var path = defs[0].DefaultScenario;
+            if (string.IsNullOrEmpty(path))
+            {
+                GameLogger.Log("SCENE", $"SwitchScene: no events and no defaultScenario for '{currentSceneName}'", LogLevel.Error);
+                return;
+            }
+
+            var text = ReadScenarioText(path);
+            if (text == null)
+            {
+                GameLogger.Log("SCENE", $"SwitchScene: defaultScenario '{path}' not found for '{currentSceneName}'", LogLevel.Error);
+                return;
+            }
+
+            var evt = new ScenarioEvent { ScenarioText = text };
+            eventChain?.AddEvent(evt);
+
+            GameLogger.Log("SCENE", $"SwitchScene: loaded defaultScenario '{path}' for '{currentSceneName}'");
+        }
+
+        private void PlaySceneAmbient()
+        {
+            var defs = allScenes?.GetValueOrDefault(currentSceneName);
+            if (defs == null || defs.Count == 0)
+                return;
+
+            var def = defs[0];
+            var ambientId = def.DefaultAmbient;
+            if (string.IsNullOrEmpty(ambientId))
+            {
+                var audioService = GetNodeOrNull<Audio.AudioService>("/root/AudioService");
+                audioService?.StopAmbient();
+                return;
+            }
+
+            var audio = GetNodeOrNull<Audio.AudioService>("/root/AudioService");
+            audio?.PlayAmbient(ambientId);
+        }
+
+        private ExecutableEvent CreateEventInstance(SceneEventInfo info)
+        {
+            if (!string.IsNullOrEmpty(info.ClassName))
+            {
+                var type = Type.GetType(info.ClassName);
+                if (type == null)
+                {
+                    type = AppDomain.CurrentDomain.GetAssemblies()
+                        .SelectMany(a => a.GetTypes())
+                        .FirstOrDefault(t => t.FullName == info.ClassName);
+                }
+
+                if (type == null)
+                {
+                    GameLogger.Log("SCENE", $"CreateEventInstance: type not found '{info.ClassName}'", LogLevel.Error);
+                    return null;
+                }
+
+                if (!typeof(ExecutableEvent).IsAssignableFrom(type))
+                {
+                    GameLogger.Log("SCENE", $"CreateEventInstance: '{info.ClassName}' is not an ExecutableEvent");
+                    return null;
+                }
+
+                var instance = (ExecutableEvent)Activator.CreateInstance(type);
+                if (instance is ScenarioEvent se && !string.IsNullOrEmpty(info.Condition))
+                    se.Condition = info.Condition;
+                return instance;
+            }
+
+            if (!string.IsNullOrEmpty(info.ScenarioPath))
+            {
+                var scenarioText = ReadScenarioText(info.ScenarioPath);
+                if (scenarioText == null)
+                {
+                    GameLogger.Log("SCENE", $"CreateEventInstance: cannot read scenario '{info.ScenarioPath}'", LogLevel.Error);
+                    return null;
+                }
+
+                return new ScenarioEvent
+                {
+                    ScenarioText = scenarioText,
+                    Condition = info.Condition,
+                    LightUseTime = info.LightUseTime,
+                };
+            }
+            
+            GameLogger.Log("SCENE", $"CreateEventInstance: no ClassName or ScenarioPath for '{info.Id}'");
+            return null;
+        }
+
+        private static string ReadScenarioText(string filePath)
+        {
+            // Try reading through a mod provider first
+            foreach (var kvp in ModRegistry.Instance.Mods)
+            {
+                var provider = kvp.Value.FileProvider;
+                var text = provider.ReadFileText(filePath);
+                if (text != null)
+                    return text;
+            }
+
+            // Fallback to Godot's FileAccess
+            var file = Godot.FileAccess.Open(filePath, Godot.FileAccess.ModeFlags.Read);
+            if (file != null)
+            {
+                var text = file.GetAsText();
+                file.Close();
+                return text;
+            }
+
+            return null;
+        }
+
+        private void ClearCurrentEvents()
+        {
+            eventChain?.ClearEvents();
+        }
+
+        private void FreezeActivity()
+        {
+            if (eventController != null)
+                eventController.IsActive = false;
+            if (dialogBox != null)
+                dialogBox.IsActive = false;
+        }
+
+        private void UnfreezeActivity()
+        {
+            if (eventController != null)
+                eventController.IsActive = true;
+            if (dialogBox != null)
+                dialogBox.IsActive = true;
+        }
+
+        private void ResolveReferences()
+        {
+            if (eventController == null || !IsInstanceValid(eventController))
+                eventController = GetNodeOrNull<SceneEventController>("/root/EventController");
+
+            if (eventChain == null || !IsInstanceValid(eventChain))
+                eventChain = GetTree()?.GetFirstNodeInGroup("main_event_chain") as ExecutableMainEventChain;
+
+            if (dialogBox == null || !IsInstanceValid(dialogBox))
+            {
+                var root = GetTree()?.Root;
+                if (root != null)
+                    dialogBox = SceneContextNode.FindNode<DialogBox>("DialogBox");
+            }
+        }
+    }
+}

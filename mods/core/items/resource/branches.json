@@ -1,0 +1,9 @@
+﻿{
+  "Id": "resource/branches",
+  "Name": "items/resource/branches/name",
+  "Description": "items/resource/branches/desc",
+  "Cost": 0,
+  "Sprite": "resource/branches",
+  "ItemType": "Resource",
+  "ItemAction": "null"
+}

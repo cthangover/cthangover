@@ -1,0 +1,14 @@
+scene: town_entry
+priority: 40
+---
+select "" key=town_entry/prompt
+option "Вернуться к дому" key=town_entry/opt_home -> :home
+option "На площадь" key=town_entry/opt_square -> :square
+
+:home
+switch_scene home_outside
+end
+
+:square
+switch_scene town_outskirts
+end

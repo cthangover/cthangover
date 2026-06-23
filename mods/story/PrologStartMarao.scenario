@@ -1,0 +1,26 @@
+scene: start_scene
+priority: 20
+---
+# PrologStartMarao - Марaо просыпается
+background town/prolog/start/town_slums
+title "Несколькими упущенными моментами ранее" key=prolog/title
+
+text "Будучи изрядно набуханным, Марао мирно лежал в переулке." key=prolog/line1
+text "Его обокрали до нитки, избили и выкинули в первой же подворотне." key=prolog/line2
+text "Во рту было нассано кошками, голова и жопа ныли от боли." key=prolog/line4
+
+action scene.instantiate path=res://Scenes/Props/Cloack.tscn name=cloack
+
+select "[Что делать?]" key=prolog/choose_path
+option "Вернуться к дому" key=prolog/opt_home -> :home
+option "Проверить переулок" key=prolog/opt_alley -> :alley
+
+:home
+switch_scene HomeOutside
+end
+
+:alley
+action quest.set_status quest_id=PrologQuest status=Progress
+action quest.set_data_status quest_id=PrologQuest level=0
+switch_scene TownSlumsProlog
+end

@@ -1,0 +1,6 @@
+{
+  "name": "home_vestibule",
+  "defaultBackground": "home/vestibule",
+  "defaultAmbient": "",
+  "defaultScenario": "scenarios/home/home_vestibule_default.scenario"
+}

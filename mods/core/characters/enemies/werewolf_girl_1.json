@@ -1,0 +1,22 @@
+﻿{
+  "Id": "werewolf_girl_1",
+  "Name": "characters/enemies/werewolf_girl",
+  "Image": "characters/enemies/werewolf_girl_1",
+  "Behaviour": "base",
+
+  "Level": 1,
+  "Point": 1,
+  "Health": 25,
+  "Defence": 0,
+  "Attack": 8,
+  "Exp": 50,
+
+  "Depravity": 5,
+  "Discipline": -10,
+  "RecruitmentChance": 50,
+
+  "Actions": "physics/attack,physics/defence",
+  "Loot": [
+    { "ItemId": "food/wolf_meat", "MinCount": 2, "MaxCount": 2, "Probability": 100 }
+  ]
+}

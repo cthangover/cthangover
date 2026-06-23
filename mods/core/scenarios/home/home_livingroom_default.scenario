@@ -1,0 +1,10 @@
+scene: home_livingroom
+priority: 10
+---
+light_set [{"x":0.32427186,"y":0.5831858,"radius":300,"influence":1,"color":"#ffff00"},{"x":0.11262136,"y":0.44159293,"radius":300,"influence":0.6,"color":"#ffff00"}]
+select "Гостинная" key=rooms/livingroom/prompt
+option "Выйти" key=rooms/livingroom/opt_exit -> :exit
+
+:exit
+switch_scene home_vestibule
+end

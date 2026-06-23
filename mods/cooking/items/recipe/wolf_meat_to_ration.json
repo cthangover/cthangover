@@ -1,0 +1,9 @@
+{
+  "Id": "recipe/wolf_meat_to_ration",
+  "Name": "items/recipe/wolf_meat_to_ration/name",
+  "Description": "items/recipe/wolf_meat_to_ration/desc",
+  "Cost": 1,
+  "Sprite": "recipe/cooking_recipe",
+  "ItemType": "Recipe,Used",
+  "ItemAction": "action/recipe/wolf_meat_to_ration"
+}

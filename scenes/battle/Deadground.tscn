@@ -1,0 +1,77 @@
+[gd_scene format=3 uid="uid://bhkoi82ftv0wi"]
+
+[ext_resource type="Script" uid="uid://dl1fkp5xw8do2" path="res://Core/Battle/DeadgroundBehaviour.cs" id="DeadgroundBehaviourController"]
+
+[node name="Deadground" type="Control" unique_id=1769284696]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("DeadgroundBehaviourController")
+
+[node name="TransitionBg" type="TextureRect" parent="." unique_id=2003806831]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Content" type="Control" parent="." unique_id=516317159]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="DimBg" type="ColorRect" parent="Content" unique_id=1040388089]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.7)
+
+[node name="CenterPanel" type="VBoxContainer" parent="Content" unique_id=695019244]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -100.0
+offset_right = 200.0
+offset_bottom = 100.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="TitleLabel" type="Label" parent="Content/CenterPanel" unique_id=1047371679]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
+theme_override_font_sizes/font_size = 48
+text = "ui/battle/defeat"
+horizontal_alignment = 1
+auto_translate = true
+
+[node name="Spacer" type="Control" parent="Content/CenterPanel" unique_id=1145465550]
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+
+[node name="MainMenuButton" type="Button" parent="Content/CenterPanel" unique_id=1265108975]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "ui/battle/endgame/to_main_menu"
+auto_translate = true
+
+[connection signal="pressed" from="Content/CenterPanel/MainMenuButton" to="." method="ToMainMenuClick"]

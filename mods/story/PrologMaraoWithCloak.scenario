@@ -1,0 +1,16 @@
+scene: start_scene
+priority: 30
+condition: PrologQuest.Status == 1
+---
+# PrologMaraoWithCloak - Марaо находит плащ
+background town/prolog/start/cloak_room
+
+action scene.remove_object name=prolog.cloack
+
+text "Марао нащупал в куче мусора старый плащ." key=prolog/cloak/line1
+text "Пахло от него отвратительно, но выбирать не приходилось." key=prolog/cloak/line2
+text "В кармане плаща что-то звякнуло..." key=prolog/cloak/line3
+
+action quest.set_data_status quest_id=PrologQuest level=1
+
+end

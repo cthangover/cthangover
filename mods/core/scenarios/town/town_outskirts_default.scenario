@@ -1,0 +1,14 @@
+scene: town_outskirts
+priority: 10
+---
+select "" key=town_outskirts/prompt
+option "Вернуться к дому" key=town_outskirts/opt_home -> :home
+option "В лес" key=town_outskirts/opt_forest -> :forest
+
+:home
+switch_scene home_outside
+end
+
+:forest
+switch_scene forest
+end

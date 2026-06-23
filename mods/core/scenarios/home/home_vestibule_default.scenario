@@ -1,0 +1,30 @@
+scene: home_vestibule
+priority: 40
+---
+light_set [{"x":0.32427186,"y":0.5831858,"radius":300,"influence":1,"color":"#ffff00"},{"x":0.11262136,"y":0.44159293,"radius":300,"influence":0.6,"color":"#ffff00"}]
+select "" key=vestibule/diner/prompt
+option "В рабочую комнату" key=vestibule/diner/opt_workroom -> :workroom
+option "В обеденную комнату" key=vestibule/diner/opt_dinerroom -> :kitchen
+option "В спальню" key=vestibule/diner/opt_bedroom -> :bedroom
+option "В подвал" key=vestibule/diner/opt_cellar -> :cellar
+option "На улицу" key=vestibule/diner/opt_outside -> :outside
+
+:workroom
+switch_scene home_workroom
+end
+
+:kitchen
+switch_scene home_kitchen
+end
+
+:bedroom
+switch_scene home_bedroom
+end
+
+:cellar
+switch_scene home_basement
+end
+
+:outside
+switch_scene home_outside
+end

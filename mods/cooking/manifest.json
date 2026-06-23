@@ -1,0 +1,11 @@
+{
+  "name": "Cooking",
+  "author": "ct",
+  "description": "Cooking mechanic - full autonomous mod",
+  "sources": ["src/*.cs"],
+  "subscriptions": [
+    { "scene": "home_kitchen", "template": "default", "code": "cooking_panel_init", "trigger": "on_enter", "priority": 10 },
+    { "scene": "home_kitchen", "template": "default", "code": "dinner_tools_show", "trigger": "on_enter", "priority": 20 },
+    { "scene": "home_kitchen", "template": "default", "code": "dinner_tools_hide", "trigger": "on_exit", "priority": 10 }
+  ]
+}

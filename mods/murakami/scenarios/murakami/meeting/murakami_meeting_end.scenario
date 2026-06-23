@@ -1,0 +1,17 @@
+scene: home_vestibule
+priority: 50
+condition: MeetingMurakamiQuest.Status == 1 && MeetingMurakamiQuest.hasTag("go_home")
+---
+text "- Пришли." key=meeting_murakami/end/arrived first=marao/smile
+text "[Марао толкнул дверь плечом, пропуская её вперёд. Петли жалобно скрипнули — дверь давно не открывали.]" key=meeting_murakami/end/door_open
+text "- Это... — [оглядел порог.] — Ну, можно и так сказать. Располагайся." key=meeting_murakami/end/make_yourself first=marao/think
+text "[Она переступила порог. Ботинки осторожно коснулись пола — будто не веря, что здесь правда можно ходить.]" key=meeting_murakami/end/step_in
+text "[Воздух тяжёлый, пахнет пылью и чем-то старым. Сквозь щели в стенах пробиваются узкие полосы света, выхватывая из темноты одинокие пылинки.]" key=meeting_murakami/end/dust
+text "[Тишина. Где-то сверху скрипнула доска — старый дом потихоньку просыпается, принимая нового жильца.]" key=meeting_murakami/end/silence
+text "- Уютно... — [тихо, почти себе под нос.]" key=meeting_murakami/end/cozy second=murakami/normal_2
+text "[Марао покосился на тощую сумку с припасами, которая висела на стене. Похоже, рвать жопу ради еды теперь придётся больше.]" key=meeting_murakami/end/supplies
+text "- Ну что, — [буркнул он, пряча взгляд.] — Это теперь и твоя хата." key=meeting_murakami/end/your_home first=marao/think
+
+action quest.set_status quest_id=MeetingMurakamiQuest status=End
+
+end
