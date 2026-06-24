@@ -29,6 +29,9 @@ namespace Cthangover.Core.Mods
 
         [JsonPropertyName("texture_groups")]
         public List<string> TextureGroups { get; set; } = new() { "ui", "backgrounds", "avatars", "icons", "items", "characters", "effects", "skills" };
+        
+        [JsonPropertyName("use_assembly_cache")]
+        public bool UseAssemblyCache { get; set; } = true;
 
         [JsonPropertyName("cache")]
         public CacheConfig Cache { get; set; } = new();
@@ -78,6 +81,7 @@ namespace Cthangover.Core.Mods
                 TextureExtensions = parsed.TextureExtensions ?? new List<string>();
                 ShaderExtensions = parsed.ShaderExtensions ?? new List<string>();
                 TextureGroups = parsed.TextureGroups ?? new List<string>();
+                UseAssemblyCache = parsed.UseAssemblyCache;
                 Cache = parsed.Cache ?? new CacheConfig();
 
                 GameLogger.Log("CONFIG", $"Loaded mod_config.json: {TextureExtensions.Count} texture ext, {ShaderExtensions.Count} shader ext, {TextureGroups.Count} texture groups");

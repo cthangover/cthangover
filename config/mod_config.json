@@ -1,4 +1,5 @@
 {
+  "use_assembly_cache": false,
   "texture_extensions": [".png", ".jpg", ".jpeg"],
   "audio_extensions": [".ogg", ".wav"],
   "shader_extensions": [".gdshader", ".gdshaderinclude"],

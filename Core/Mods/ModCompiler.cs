@@ -66,7 +66,7 @@ namespace Cthangover.Core.Mods
                         foreach (var (path, _) in sourceFiles)
                             GameLogger.Log("MODS_COMPILE", $"  {path}", LogLevel.Debug);
 
-                        var assembly = ModCompiler.Compile(modInfo.Id, sourceFiles);
+                        var assembly = Compile(modInfo.Id, sourceFiles);
                         if (assembly != null)
                         {
                             compiled.Add(modInfo.Id);
@@ -190,11 +190,17 @@ namespace Cthangover.Core.Mods
             
             var hash = ComputeHash(sourceList);
             var cachedPath = Path.Combine(CacheRoot, $"{modId}_{hash}.dll");
-
+            
             if (File.Exists(cachedPath))
             {
-                GameLogger.Log("MODS_COMPILE", $"ModCompiler.Compile: loading cached {cachedPath}");
-                return ModAssemblyLoader.LoadFromBytes(File.ReadAllBytes(cachedPath));
+                if (ModConfig.Instance.UseAssemblyCache)
+                {
+                    GameLogger.Log("MODS_COMPILE", $"ModCompiler.Compile: loading cached {cachedPath}");
+                    return ModAssemblyLoader.LoadFromBytes(File.ReadAllBytes(cachedPath));
+                }
+                
+                File.Delete(cachedPath);
+                GameLogger.Log("MODS_COMPILE", $"ModCompiler.Compile: cached {cachedPath} need delete by settings 'use_assembly_cache'", LogLevel.Warning);
             }
 
             var parseOptions = new CSharpParseOptions();

@@ -204,7 +204,7 @@ namespace Cthangover.Core.UI.Dialog
                 dialogQueue.Clear();
             }
 
-		if (DialogBox != null)
+            if (DialogBox != null)
 			{
 				DialogBox.Locker = null;
 				DialogBox.Hide();
