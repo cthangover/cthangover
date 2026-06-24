@@ -107,6 +107,8 @@ namespace Cthangover.Core.UI.Executable
 			dialog.RunDialog();
 		}
 
+		public bool HasEvents => allEvents.Count > 0;
+
 		public void Stop()
 		{
 			isActive = false;

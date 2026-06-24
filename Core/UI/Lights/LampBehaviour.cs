@@ -1,12 +1,12 @@
-using Cthangover.Core.Factories.Impls;
 using Cthangover.Core.Scenes;
 using Cthangover.Core.Settings;
+using Cthangover.Core.UI.Tool;
 using Cthangover.Core.Utils;
 using Godot;
 
 namespace Cthangover.Core.UI.Lights
 {
-	public partial class LampBehaviour : TextureRect
+	public partial class LampBehaviour : TextureRectModIconLoader
 	{
 		private UiLightController controller;
 		private Vector2 dragPosition;
@@ -44,15 +44,10 @@ namespace Cthangover.Core.UI.Lights
 
 		public override void _Ready()
 		{
+			base._Ready();
 			MouseFilter = MouseFilterEnum.Stop;
 			controller = SceneContextNode.FindNode<UiLightController>("Lights");
-
 			GameLogger.Log("LIGHT", $"Lamp._Ready: controller={(controller != null ? "OK" : "NULL")}", LogLevel.Debug);
-
-			if (Texture == null)
-				Texture = UIIconFactory.Instance.Get("lamp");
-
-			GameLogger.Log("LIGHT", $"Lamp._Ready: Texture={(Texture != null ? "OK" : "NULL")}", LogLevel.Debug);
 		}
 
 		public override void _GuiInput(InputEvent @event)

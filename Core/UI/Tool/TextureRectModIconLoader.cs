@@ -3,7 +3,7 @@ using Godot;
 
 namespace Cthangover.Core.UI.Tool
 {
-	public partial class ModIconLoader : TextureButton
+	public partial class TextureRectModIconLoader : TextureRect
 	{
 		[Export] public string IconId { get; set; }
 
@@ -14,7 +14,7 @@ namespace Cthangover.Core.UI.Tool
 
 			var texture = UIIconFactory.Instance.Get(IconId);
 			if (texture != null)
-				TextureNormal = texture;
+				Texture = texture;
 		}
 	}
 }

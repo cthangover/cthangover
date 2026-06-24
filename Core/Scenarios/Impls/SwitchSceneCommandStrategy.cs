@@ -5,9 +5,10 @@ using Cthangover.Core.UI.Dialog;
 
 namespace Cthangover.Core.Scenarios
 {
-    public class SwitchSceneCommandStrategy : IScenarioCommandStrategy
+    public class SwitchSceneCommandStrategy : IScenarioCommandStrategy, ICommandReferenceMetadata
     {
         public string Command => "switch_scene";
+        public PositionalReferenceKind Positional0Kind => PositionalReferenceKind.Scene;
 
         public void Execute(DialogQueue dlg, List<string> positional, Dictionary<string, string> named, string arrowTarget, ILocalizationProvider locale)
         {

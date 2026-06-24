@@ -43,7 +43,7 @@ namespace Cthangover.Core.Factories
                 return null;
 
             var result = _cache.Get(id);
-            if (result == null)
+            if (result == null && !id.EndsWith("_albedo", StringComparison.OrdinalIgnoreCase) && !id.EndsWith("_depth", StringComparison.OrdinalIgnoreCase))
                 GameLogger.Log("FACTORY", $"resource from factory '{GetType().Name}' with id '{id}' - can't get in group '{GroupName}'!", LogLevel.Error);
             
             return result;

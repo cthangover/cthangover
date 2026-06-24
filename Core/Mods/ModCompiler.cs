@@ -70,7 +70,7 @@ namespace Cthangover.Core.Mods
                         if (assembly != null)
                         {
                             compiled.Add(modInfo.Id);
-                            ModAssemblyLoader.RegisterAssembly(assembly);
+                            ModAssemblyLoader.RegisterAssembly(assembly, modInfo.Id);
 
                             GameLogger.Log("MODS_COMPILE", $"ModCompiler.LoadModCode: Compiled and loaded code for mod '{modInfo.Id}', {sourceFiles.Count} source file(s)");
                         }

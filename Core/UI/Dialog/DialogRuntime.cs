@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
+using Cthangover.Core.Scenes;
 using Cthangover.Core.UI.Dialog.Action;
+using Cthangover.Core.UI.Event;
 using Cthangover.Core.Utils;
 
 namespace Cthangover.Core.UI.Dialog
@@ -233,6 +235,13 @@ namespace Cthangover.Core.UI.Dialog
             endDialogQueue = null;
             index          = 0;
 
+            if (DialogBox != null)
+            {
+                var ec = SceneContextNode.FindNode<SceneEventController>("/root/EventController");
+                if (ec == null)
+                    ec = DialogBox.GetNodeOrNull<SceneEventController>("/root/EventController");
+                ec?.EndDialog(Dialog, this, DialogBox.Locker);
+            }
         }
 
     }

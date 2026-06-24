@@ -1,5 +1,6 @@
 {
   "name": "Tools",
   "author": "ct",
-  "description": "Development tools localization"
+  "description": "Development tools",
+  "sources": ["src/**/*.cs"]
 }

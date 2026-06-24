@@ -15,7 +15,7 @@ using Godot;
 
 namespace Cthangover.Core.Scenes
 {
-    public partial class SceneManager : Node
+    public partial class SceneManager : Node, IOnDialogEndEvent
     {
         private Dictionary<string, List<SceneDefinition>> allScenes;
         private string currentSceneName;
@@ -73,9 +73,14 @@ namespace Cthangover.Core.Scenes
 
         public string PendingSceneName { get; set; }
 
+        public static bool IsTestPlayActive { get; set; }
+        public static string TestScenarioText { get; set; }
+
         public override void _Ready()
         {
             Initialize();
+            var ec = GetNodeOrNull<SceneEventController>("/root/EventController");
+            ec?.AddDialogEndEventListener(this);
         }
 
         public void Initialize()
@@ -89,6 +94,17 @@ namespace Cthangover.Core.Scenes
             isInitialized = true;
 
             GameLogger.Log("SCENE", $"SceneManager initialized with {allScenes?.Count ?? 0} scene(s)");
+        }
+
+        int IEventPriority.Priority => 0;
+
+        void IOnDialogEndEvent.OnDialogEnd(DialogQueue dialog, DialogRuntime runtime, ExecutableEvent executableEvent)
+        {
+            if (IsTestPlayActive)
+            {
+                GameLogger.Log("SCENE", "TEST-PLAY OnDialogEnd: dialog finished");
+                IsTestPlayActive = false;
+            }
         }
 
         public void SwitchScene(string sceneName)
@@ -108,6 +124,20 @@ namespace Cthangover.Core.Scenes
             {
                 GameLogger.Log("SCENE", "SwitchScene: sceneName is null or empty", LogLevel.Error);
                 return;
+            }
+
+            if (IsTestPlayActive)
+            {
+                var lowerTest = sceneName.ToLowerInvariant();
+                if (lowerTest == "mainmenu" || lowerTest == "menu")
+                {
+                    IsTestPlayActive = false;
+                }
+                else if (string.IsNullOrEmpty(TestScenarioText))
+                {
+                    GameLogger.Log("SCENE", $"SwitchScene: test play redirect '{sceneName}' -> 'mainmenu'");
+                    sceneName = "mainmenu";
+                }
             }
 
             if (IsGodotScene(sceneName))
@@ -139,7 +169,8 @@ namespace Cthangover.Core.Scenes
                 {
                     currentSceneName = sceneName;
                     ApplySceneDefaults();
-                    TryLoadDefaultScenario();
+                    if (!IsTestPlayActive)
+                        TryLoadDefaultScenario();
                     return;
                 }
 
@@ -206,6 +237,14 @@ namespace Cthangover.Core.Scenes
 
         private List<SceneEventInfo> ComposeEvents(string sceneName)
         {
+            if (IsTestPlayActive && !string.IsNullOrEmpty(TestScenarioText))
+            {
+                var evt = new ScenarioEvent { ScenarioText = TestScenarioText, IsOneRun = true };
+                TestScenarioText = null;
+                eventChain?.AddEvent(evt);
+                return new List<SceneEventInfo>();
+            }
+
             var allEvents = new List<SceneEventInfo>();
             var seenIds = new HashSet<string>();
 

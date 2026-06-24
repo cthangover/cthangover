@@ -1,23 +1,14 @@
 using System.Collections.Generic;
 using System.Text.Json;
 using Cthangover.Core.Factories.Impls;
-using Cthangover.Core.Mods;
 using Cthangover.Core.UI.Lights;
+using Cthangover.Tools.Services;
 using Godot;
 
 namespace Cthangover.Core.UI.Tool.LightEditor
 {
-	public partial class LightEditorWindow : Window
+	public partial class LightEditorWindow : ToolWindow
 	{
-		public static LightEditorWindow Open()
-		{
-			var window = new LightEditorWindow();
-			var tree = Godot.Engine.GetMainLoop() as SceneTree;
-			tree?.Root.AddChild(window);
-			window.PopupCentered(new Vector2I(1200, 750));
-			return window;
-		}
-
 		private LightEditorController controller;
 
 		private ItemList backgroundList;
@@ -36,19 +27,14 @@ namespace Cthangover.Core.UI.Tool.LightEditor
 
 		private readonly List<string> bgIds = new();
 
-        public LightEditorWindow()
-        {
-            Title = TranslationServer.Translate("tools/light_editor/title");
-			Unresizable = false;
-			Size = new Vector2I(1200, 750);
-			CloseRequested += QueueFree;
-
+		public LightEditorWindow() : base("tools/light_editor/title")
+		{
 			controller = new LightEditorController();
 			BuildUI();
 			LoadBackgroundList();
 		}
 
-		public override void _ExitTree()
+		protected override void Cleanup()
 		{
 			foreach (var h in handles)
 				h.QueueFree();
@@ -74,11 +60,7 @@ namespace Cthangover.Core.UI.Tool.LightEditor
 
 		private void BuildUI()
 		{
-			var outerVBox = new VBoxContainer();
-			outerVBox.AnchorRight = 1f;
-			outerVBox.AnchorBottom = 1f;
-			outerVBox.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-			outerVBox.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
+			var outerVBox = CreateFillContainer();
 			AddChild(outerVBox);
 
 			var mainHBox = new HBoxContainer();
@@ -86,65 +68,57 @@ namespace Cthangover.Core.UI.Tool.LightEditor
 			mainHBox.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
 			outerVBox.AddChild(mainHBox);
 
-			var sidebar = new PanelContainer();
-			sidebar.CustomMinimumSize = new Vector2(280, 0);
-			sidebar.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
+			var sidebarVBox = new VBoxContainer();
+			var sidebar = CreateSidebar(sidebarVBox);
 			mainHBox.AddChild(sidebar);
 
-			var sidebarScroll = new ScrollContainer();
-			sidebarScroll.HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled;
-			sidebar.AddChild(sidebarScroll);
+			sidebarVBox.AddChild(new Label { Text = TranslationServer.Translate("tools/light_editor/background") });
 
-			var sidebarVBox = new VBoxContainer();
-			sidebarScroll.AddChild(sidebarVBox);
+			backgroundList = new ItemList();
+			backgroundList.CustomMinimumSize = new Vector2(0, 140);
+			backgroundList.ItemSelected += OnBackgroundSelected;
+			sidebarVBox.AddChild(backgroundList);
 
-            sidebarVBox.AddChild(new Label { Text = TranslationServer.Translate("tools/light_editor/background") });
+			sidebarVBox.AddChild(new Label { Text = TranslationServer.Translate("tools/light_editor/static_lights") });
 
-            backgroundList = new ItemList();
-            backgroundList.CustomMinimumSize = new Vector2(0, 140);
-            backgroundList.ItemSelected += OnBackgroundSelected;
-            sidebarVBox.AddChild(backgroundList);
+			lightListPanel = new VBoxContainer();
+			sidebarVBox.AddChild(lightListPanel);
 
-            sidebarVBox.AddChild(new Label { Text = TranslationServer.Translate("tools/light_editor/static_lights") });
+			addLightBtn = new Button { Text = TranslationServer.Translate("tools/light_editor/add_light") };
+			addLightBtn.Pressed += OnAddLight;
+			sidebarVBox.AddChild(addLightBtn);
 
-            lightListPanel = new VBoxContainer();
-            sidebarVBox.AddChild(lightListPanel);
+			sidebarVBox.AddChild(new Label { Text = TranslationServer.Translate("tools/light_editor/selected_props") });
 
-            addLightBtn = new Button { Text = TranslationServer.Translate("tools/light_editor/add_light") };
-            addLightBtn.Pressed += OnAddLight;
-            sidebarVBox.AddChild(addLightBtn);
+			var radiusHBox = new HBoxContainer();
+			radiusHBox.AddChild(new Label { Text = TranslationServer.Translate("tools/light_editor/radius") });
+			radiusEdit = new LineEdit { Text = "300" };
+			radiusEdit.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+			radiusEdit.TextChanged += OnRadiusChanged;
+			radiusHBox.AddChild(radiusEdit);
+			sidebarVBox.AddChild(radiusHBox);
 
-            sidebarVBox.AddChild(new Label { Text = TranslationServer.Translate("tools/light_editor/selected_props") });
+			var infHBox = new HBoxContainer();
+			infHBox.AddChild(new Label { Text = TranslationServer.Translate("tools/light_editor/influence") });
+			influenceEdit = new LineEdit { Text = "1" };
+			influenceEdit.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+			influenceEdit.TextChanged += OnInfluenceChanged;
+			infHBox.AddChild(influenceEdit);
+			sidebarVBox.AddChild(infHBox);
 
-            var radiusHBox = new HBoxContainer();
-            radiusHBox.AddChild(new Label { Text = TranslationServer.Translate("tools/light_editor/radius") });
-            radiusEdit = new LineEdit { Text = "300" };
-            radiusEdit.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-            radiusEdit.TextChanged += OnRadiusChanged;
-            radiusHBox.AddChild(radiusEdit);
-            sidebarVBox.AddChild(radiusHBox);
+			var colorHBox = new HBoxContainer();
+			colorHBox.AddChild(new Label { Text = TranslationServer.Translate("tools/light_editor/color") });
+			colorPicker = new ColorPickerButton { Color = Colors.Yellow };
+			colorPicker.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+			colorPicker.ColorChanged += OnColorChanged;
+			colorHBox.AddChild(colorPicker);
+			sidebarVBox.AddChild(colorHBox);
 
-            var infHBox = new HBoxContainer();
-            infHBox.AddChild(new Label { Text = TranslationServer.Translate("tools/light_editor/influence") });
-            influenceEdit = new LineEdit { Text = "1" };
-            influenceEdit.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-            influenceEdit.TextChanged += OnInfluenceChanged;
-            infHBox.AddChild(influenceEdit);
-            sidebarVBox.AddChild(infHBox);
+			var importBtn = new Button { Text = TranslationServer.Translate("tools/light_editor/import_json") };
+			importBtn.Pressed += OnImport;
+			sidebarVBox.AddChild(importBtn);
 
-            var colorHBox = new HBoxContainer();
-            colorHBox.AddChild(new Label { Text = TranslationServer.Translate("tools/light_editor/color") });
-            colorPicker = new ColorPickerButton { Color = Colors.Yellow };
-            colorPicker.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-            colorPicker.ColorChanged += OnColorChanged;
-            colorHBox.AddChild(colorPicker);
-            sidebarVBox.AddChild(colorHBox);
-
-            var importBtn = new Button { Text = TranslationServer.Translate("tools/light_editor/import_json") };
-            importBtn.Pressed += OnImport;
-            sidebarVBox.AddChild(importBtn);
-
-            sidebarVBox.AddChild(new Label { Text = TranslationServer.Translate("tools/light_editor/norm_coords") });
+			sidebarVBox.AddChild(new Label { Text = TranslationServer.Translate("tools/light_editor/norm_coords") });
 
 			var previewContainer = new PanelContainer();
 			previewContainer.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
@@ -186,17 +160,10 @@ namespace Cthangover.Core.UI.Tool.LightEditor
 			bgIds.Clear();
 			backgroundList.Clear();
 
-			var files = ModManager.Instance.CollectFileList("backgrounds");
-			foreach (var kvp in files)
-			{
-				var id = kvp.Key;
-				if (id.EndsWith(".png") || id.EndsWith(".jpg") || id.EndsWith(".jpeg") || id.EndsWith(".webp"))
-				{
-					var name = id.Substring(0, id.LastIndexOf('.'));
-					bgIds.Add(name);
-					backgroundList.AddItem(name);
-				}
-			}
+			var ids = ModResourceService.GetBackgroundIds();
+			bgIds.AddRange(ids);
+			foreach (var id in ids)
+				backgroundList.AddItem(id);
 		}
 
 		private void OnBackgroundSelected(long index)

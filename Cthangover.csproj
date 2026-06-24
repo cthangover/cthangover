@@ -32,6 +32,8 @@
     <None Include="mods\**\*" />
     <Compile Remove="sdk\Cthangover.ModSDK\**\*.cs" />
     <None Include="sdk\Cthangover.ModSDK\**\*.cs" />
+    <Compile Remove="addons\**\*.cs" />
+    <None Include="addons\**\*.cs" />
   </ItemGroup>
 
   <ItemGroup>

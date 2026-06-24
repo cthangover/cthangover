@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Cthangover.Core.Scenes;
 using Cthangover.Core.UI.Inventory;
 using Cthangover.Core.UI.Menu;
-using Cthangover.Core.UI.Tool.LightEditor;
+using Cthangover.Core.UI.Tool;
 using Cthangover.Core.Utils;
 using Godot;
 
@@ -32,7 +32,7 @@ namespace Cthangover.Core.UI.Tool
                 ConnectButton(buttons, "BagButton", OnBagClick);
                 ConnectButton(buttons, "SkillsButton", OnSkillsClick);
                 ConnectButton(buttons, "SettingsButton", OnSettingsClick);
-                AddLightEditorButton(buttons);
+                AddToolButtons(buttons);
             }
         }
 
@@ -133,22 +133,26 @@ namespace Cthangover.Core.UI.Tool
             Switch("MapWidget");
         }
 
-        private void AddLightEditorButton(HBoxContainer container)
+        private void AddToolButtons(HBoxContainer container)
         {
-            var btn = new TextureButton
+            foreach (var buttonDef in ToolBoxButtonFactory.Instance.GetVisible())
             {
-                CustomMinimumSize = new Vector2(60, 60),
-                SizeFlagsVertical = Control.SizeFlags.ShrinkCenter,
-                IgnoreTextureSize = true,
-                StretchMode = TextureButton.StretchModeEnum.KeepAspectCentered
-            };
-            btn.Pressed += OnLightEditorClick;
-            container.AddChild(btn);
-        }
-
-        private void OnLightEditorClick()
-        {
-            LightEditorWindow.Open();
+                var btn = new TextureButton
+                {
+                    CustomMinimumSize = new Vector2(60, 60),
+                    SizeFlagsVertical = Control.SizeFlags.ShrinkCenter,
+                    IgnoreTextureSize = true,
+                    StretchMode = TextureButton.StretchModeEnum.KeepAspectCentered
+                };
+                var toolId = buttonDef.ToolId;
+                btn.Pressed += () =>
+                {
+                    var tool = ToolFactory.Instance.Get(toolId);
+                    if (tool != null)
+                        ToolWindow.ShowWindow(tool.CreateWindow());
+                };
+                container.AddChild(btn);
+            }
         }
 
         public void UpdateSaveIconVisibility()

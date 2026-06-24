@@ -1,4 +1,5 @@
 scene: home_bedroom
+save_allowed: true
 priority: 10
 ---
 select "Твоя спальня, тут можно поспать и набраться сил" key=rooms/bedroom/prompt

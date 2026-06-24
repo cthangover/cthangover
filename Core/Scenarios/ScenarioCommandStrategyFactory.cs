@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using Cthangover.Core.Utils;
 
@@ -19,6 +20,18 @@ namespace Cthangover.Core.Scenarios
         {
             Strategies.TryGetValue(command, out var strategy);
             return strategy;
+        }
+
+        public static IEnumerable<string> GetAllCommandNames()
+        {
+            return Strategies.Keys;
+        }
+
+        public static ICommandReferenceMetadata GetReferenceMetadata(string command)
+        {
+            if (Strategies.TryGetValue(command, out var strategy) && strategy is ICommandReferenceMetadata meta)
+                return meta;
+            return null;
         }
 
         public static void RegisterAssembly(Assembly assembly)

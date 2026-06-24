@@ -3,17 +3,8 @@ using Godot;
 
 namespace Cthangover.Core.UI.Tool.SceneBuilder
 {
-    public partial class SceneBuilderWindow : Window
+    public partial class SceneBuilderWindow : ToolWindow
     {
-        public static SceneBuilderWindow Open()
-        {
-            var window = new SceneBuilderWindow();
-            var tree = Godot.Engine.GetMainLoop() as SceneTree;
-            tree?.Root.AddChild(window);
-            window.PopupCentered(new Vector2I(1400, 900));
-            return window;
-        }
-
         private SceneBuilderController _controller;
 
         private OptionButton _sceneDropdown;
@@ -28,13 +19,8 @@ namespace Cthangover.Core.UI.Tool.SceneBuilder
         private List<(string DisplayName, string Content)> _wrappers;
         private int _selectedWrapperIndex;
 
-        public SceneBuilderWindow()
+        public SceneBuilderWindow() : base("tools/scene_builder/title")
         {
-            Title = TranslationServer.Translate("tools/scene_builder/title");
-            Unresizable = false;
-            Size = new Vector2I(1400, 900);
-            CloseRequested += QueueFree;
-
             _controller = new SceneBuilderController();
             BuildUI();
             PopulateSceneList();
@@ -43,15 +29,10 @@ namespace Cthangover.Core.UI.Tool.SceneBuilder
 
         private void BuildUI()
         {
-            var outerVBox = new VBoxContainer();
-            outerVBox.AnchorRight = 1f;
-            outerVBox.AnchorBottom = 1f;
-            outerVBox.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-            outerVBox.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
+            var outerVBox = CreateFillContainer();
             AddChild(outerVBox);
 
-            var toolbar = new HBoxContainer();
-            toolbar.AddThemeConstantOverride("separation", 8);
+            var toolbar = CreateToolbar();
             outerVBox.AddChild(toolbar);
 
             toolbar.AddChild(new Label { Text = TranslationServer.Translate("tools/scene_builder/scene") });
@@ -73,13 +54,9 @@ namespace Cthangover.Core.UI.Tool.SceneBuilder
             mainHBox.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
             outerVBox.AddChild(mainHBox);
 
-            var leftPanel = new PanelContainer();
-            leftPanel.CustomMinimumSize = new Vector2(280, 0);
-            leftPanel.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
-            mainHBox.AddChild(leftPanel);
-
             var leftVBox = new VBoxContainer();
-            leftPanel.AddChild(leftVBox);
+            var leftPanel = CreateSidebar(leftVBox);
+            mainHBox.AddChild(leftPanel);
 
             leftVBox.AddChild(new Label { Text = TranslationServer.Translate("tools/scene_builder/hierarchy") });
 
@@ -105,13 +82,9 @@ namespace Cthangover.Core.UI.Tool.SceneBuilder
             viewportContainer.AddChild(_viewport);
             previewContainer.AddChild(viewportContainer);
 
-            var rightPanel = new PanelContainer();
-            rightPanel.CustomMinimumSize = new Vector2(380, 0);
-            rightPanel.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
-            mainHBox.AddChild(rightPanel);
-
             var rightVBox = new VBoxContainer();
-            rightPanel.AddChild(rightVBox);
+            var rightPanel = CreateSidebar(rightVBox, 380);
+            mainHBox.AddChild(rightPanel);
 
             rightVBox.AddChild(new Label { Text = TranslationServer.Translate("tools/scene_builder/code") });
 
@@ -146,17 +119,6 @@ namespace Cthangover.Core.UI.Tool.SceneBuilder
             _outputLabel.CustomMinimumSize = new Vector2(0, 80);
             _outputLabel.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
             rightVBox.AddChild(_outputLabel);
-        }
-
-        private static Font GetMonospaceFont()
-        {
-            try
-            {
-                if (ResourceLoader.Exists("res://assets/fonts/RobotoMono.ttf"))
-                    return ResourceLoader.Load<FontFile>("res://assets/fonts/RobotoMono.ttf");
-            }
-            catch { }
-            return ThemeDB.FallbackFont;
         }
 
         private void PopulateSceneList()

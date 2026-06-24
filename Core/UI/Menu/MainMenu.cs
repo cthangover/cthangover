@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using Cthangover.Core.Scenes;
-using Cthangover.Core.UI.Tool.LightEditor;
-using Cthangover.Core.UI.Tool.SceneBuilder;
+using Cthangover.Core.UI.Tool;
 using Cthangover.Core.Utils;
 using Godot;
 
@@ -69,10 +68,12 @@ namespace Cthangover.Core.UI.Menu
             vbox.AddChild(new Label { Text = TranslationServer.Translate("tools/select_tool") });
 
             var dropdown = new OptionButton();
-            dropdown.AddItem(TranslationServer.Translate("tools/light_editor/title"));
-            dropdown.SetItemMetadata(0, "light_editor");
-            dropdown.AddItem(TranslationServer.Translate("tools/scene_builder/title"));
-            dropdown.SetItemMetadata(1, "scene_builder");
+            var tools = ToolFactory.Instance.GetAll();
+            foreach (var tool in tools)
+            {
+                dropdown.AddItem(TranslationServer.Translate(tool.LocaleKey));
+                dropdown.SetItemMetadata(dropdown.ItemCount - 1, tool.Id);
+            }
             dropdown.Selected = 0;
             dropdown.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
             vbox.AddChild(dropdown);
@@ -85,10 +86,9 @@ namespace Cthangover.Core.UI.Menu
             launchBtn.Pressed += () =>
             {
                 var meta = dropdown.GetItemMetadata(dropdown.Selected).AsString();
-                if (meta == "light_editor")
-                    LightEditorWindow.Open();
-                else if (meta == "scene_builder")
-                    SceneBuilderWindow.Open();
+                var tool = ToolFactory.Instance.Get(meta);
+                if (tool != null)
+                    ToolWindow.ShowWindow(tool.CreateWindow());
                 panel.QueueFree();
             };
             btnHBox.AddChild(launchBtn);

@@ -67,7 +67,7 @@ namespace SceneManagerAddon
                 }
             }
 
-            var tab = GetParent<Control>()?.GetParent<TabContainer>();
+            var tab = GetParent<TabContainer>();
             if (tab != null)
             {
                 for (int i = 0; i < tab.GetTabCount(); i++)

@@ -1,8 +1,8 @@
 [gd_scene format=3 uid="uid://d3m4jm0xk8ruc"]
 
-[ext_resource type="Script" uid="uid://brtwe4dkubjxe" path="res://Core/UI/Menu/SaveIcon.cs" id="SaveIconScript"]
+[ext_resource type="Script" uid="uid://brtwe4dkubjxe" path="res://Core/UI/Tool/TextureRectModIconLoader.cs" id="TextureRectModIconLoaderScript"]
 [ext_resource type="Script" uid="uid://bf3qln30mdj5w" path="res://Core/UI/Lights/LampBehaviour.cs" id="LampBehaviourScript"]
-[ext_resource type="Script" uid="uid://dr8bnq2bdy8bd" path="res://Core/UI/Tool/ModIconLoader.cs" id="ModIconLoaderScript"]
+[ext_resource type="Script" uid="uid://c0u0adtwmfjbx" path="res://Core/UI/Tool/ButtonModIconLoader.cs" id="ButtonModIconLoaderScript"]
 [ext_resource type="Script" uid="uid://6a38jpevrxy4" path="res://Core/UI/Tool/TimeController.cs" id="TimeControllerScript"]
 [ext_resource type="Script" uid="uid://dxr0u22mgwkay" path="res://Core/UI/Tool/ToolBox.cs" id="ToolBoxScript"]
 
@@ -66,7 +66,7 @@ size_flags_horizontal = 0
 size_flags_vertical = 4
 ignore_texture_size = true
 stretch_mode = 4
-script = ExtResource("ModIconLoaderScript")
+script = ExtResource("ButtonModIconLoaderScript")
 IconId = "map"
 
 [node name="BagButton" type="TextureButton" parent="Buttons" unique_id=418215445]
@@ -76,7 +76,7 @@ size_flags_horizontal = 0
 size_flags_vertical = 4
 ignore_texture_size = true
 stretch_mode = 4
-script = ExtResource("ModIconLoaderScript")
+script = ExtResource("ButtonModIconLoaderScript")
 IconId = "bag"
 
 [node name="SkillsButton" type="TextureButton" parent="Buttons" unique_id=1347720480]
@@ -86,7 +86,7 @@ size_flags_horizontal = 0
 size_flags_vertical = 4
 ignore_texture_size = true
 stretch_mode = 4
-script = ExtResource("ModIconLoaderScript")
+script = ExtResource("ButtonModIconLoaderScript")
 IconId = "skills"
 
 [node name="SettingsButton" type="TextureButton" parent="Buttons" unique_id=1906236872]
@@ -96,7 +96,7 @@ size_flags_horizontal = 0
 size_flags_vertical = 4
 ignore_texture_size = true
 stretch_mode = 4
-script = ExtResource("ModIconLoaderScript")
+script = ExtResource("ButtonModIconLoaderScript")
 IconId = "settings"
 
 [node name="CenterTools" type="Control" parent="." unique_id=1513615082]
@@ -125,7 +125,8 @@ grow_horizontal = 2
 grow_vertical = 2
 expand_mode = 3
 stretch_mode = 5
-script = ExtResource("SaveIconScript")
+script = ExtResource("TextureRectModIconLoaderScript")
+IconId = "save"
 
 [node name="Lamp" type="TextureRect" parent="CenterTools" unique_id=40403627]
 layout_mode = 1
@@ -143,3 +144,4 @@ grow_vertical = 2
 expand_mode = 3
 stretch_mode = 5
 script = ExtResource("LampBehaviourScript")
+IconId = "lamp"

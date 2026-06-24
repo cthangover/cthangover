@@ -26,7 +26,7 @@ namespace Cthangover.Core.Mods
             }
         }
 
-        public static void RegisterAssembly(Assembly assembly)
+        public static void RegisterAssembly(Assembly assembly, string modId)
         {
             Actions.ScenarioActionFactory.Instance.RegisterAssembly(assembly);
             Scenarios.ScenarioCommandStrategyFactory.RegisterAssembly(assembly);
@@ -34,6 +34,9 @@ namespace Cthangover.Core.Mods
             Items.ItemActionFactory.RegisterAssembly(assembly);
             Battle.BattleCoreRegistry.Instance.RegisterAssembly(assembly);
             Relationship.RecruitBehaviourRegistry.Instance.RegisterAssembly(assembly);
+            UI.Tool.ToolFactory.Instance.RegisterAssembly(assembly);
+            UI.Tool.ToolBoxButtonFactory.Instance.RegisterAssembly(assembly);
+            ModInitializerRegistry.RegisterAssembly(assembly, modId);
         }
 
         public static void LoadPrecompiledDlls(IEnumerable<IModInfo> mods)
@@ -61,7 +64,7 @@ namespace Cthangover.Core.Mods
                         var assembly = LoadFromBytes(bytes);
                         if (assembly != null)
                         {
-                            RegisterAssembly(assembly);
+                            RegisterAssembly(assembly, mod.Id);
                             GameLogger.Log("MODS_ASSEMBLY", $"ModAssemblyLoader.LoadPrecompiledDlls: loaded precompiled DLL '{filePath}' from mod '{mod.Id}'");
                         }
                     }

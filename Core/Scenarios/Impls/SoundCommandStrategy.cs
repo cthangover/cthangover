@@ -4,9 +4,10 @@ using Cthangover.Core.UI.Dialog;
 
 namespace Cthangover.Core.Scenarios
 {
-    public class SoundCommandStrategy : IScenarioCommandStrategy
+    public class SoundCommandStrategy : IScenarioCommandStrategy, ICommandReferenceMetadata
     {
         public string Command => "sound";
+        public PositionalReferenceKind Positional0Kind => PositionalReferenceKind.Sound;
 
         public void Execute(DialogQueue dlg, List<string> positional, Dictionary<string, string> named, string arrowTarget, ILocalizationProvider locale)
         {
