@@ -17,21 +17,16 @@
     <PackageReference Include="System.Text.Json" Version="8.0.6" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="sdk\Cthangover.ModSDK\Cthangover.ModSDK.csproj" />
-  </ItemGroup>
+
 
   <ItemGroup>
     <Compile Remove="tests\Cthangover.Tests\**\*.cs" />
     <Compile Include="mods\card_battle\src\ICard.cs" />
-    <Compile Include="sdk\Cthangover.ModSDK\Mods\IModFileProvider.cs" />
-    <Compile Include="sdk\Cthangover.ModSDK\Mods\IModInfo.cs" />
-    <Compile Include="sdk\Cthangover.ModSDK\Mods\ModInfo.cs" />
+
     <None Include="tests\Cthangover.Tests\**\*.cs" />
     <Compile Remove="mods\**\*" />
     <None Include="mods\**\*" />
-    <Compile Remove="sdk\Cthangover.ModSDK\**\*.cs" />
-    <None Include="sdk\Cthangover.ModSDK\**\*.cs" />
+
     <Compile Remove="addons\**\*.cs" />
     <None Include="addons\**\*.cs" />
   </ItemGroup>
