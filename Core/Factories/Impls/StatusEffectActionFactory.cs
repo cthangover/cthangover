@@ -5,6 +5,15 @@ using Cthangover.Core.Utils;
 
 namespace Cthangover.Core.Factories.Impls
 {
+    /// <summary>
+    /// Reflection-based plugin registry for status effect behaviour
+    /// classes, mirroring the pattern used by <c>ItemActionFactory</c>.
+    /// Each <c>IStatusActions</c> implementation corresponds to a status
+    /// effect ID referenced in battle data JSON — the factory auto-discovers
+    /// them at startup so mod authors can add new status effects (e.g.
+    /// poison, burn, freeze) by implementing the interface in their
+    /// assembly without touching core code.
+    /// </summary>
     public class StatusEffectActionFactory
     {
         private readonly Dictionary<string, IStatusActions> actions;

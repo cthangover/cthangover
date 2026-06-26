@@ -3,6 +3,15 @@ using Cthangover.Core.Characters;
 
 namespace Cthangover.Core.Battle.Actions
 {
+    /// <summary>
+    /// Central action-execution dispatcher. Resolves an action ID to an
+    /// IActionExecutor in two tiers: first the active provider (set by
+    /// the current IBattleCore, allowing per-battle-engine overrides),
+    /// then a global fallback registry. This two-level lookup lets mods
+    /// supply custom executors for specific battle cores without replacing
+    /// the global ones. Execute returns ChangedAttributes to allow the
+    /// caller to inspect the result (success/failure, stat deltas).
+    /// </summary>
     public class ActionExecutorHub
     {
         public static readonly ActionExecutorHub Instance = new();

@@ -1,8 +1,14 @@
-
 using Cthangover.Core.Factories.Impls;
 
 namespace Cthangover.Core.UI.Dialog.Action.Impls
 {
+    /// <summary>
+    /// The primary dialog text display action. Sets the text and both avatar slots
+    /// (left/right) on the DialogBox. WaitType is WaitClick so the dialog pauses
+    /// for player input before advancing. Avatars are resolved through AvatarFactory
+    /// by string ID; a null/empty avatar hides that slot. When UseProcessText is
+    /// true, runtime variables (${var}) are substituted before display.
+    /// </summary>
     public class ActionText : ActionCommand
     {
         public string Text { get; set; }

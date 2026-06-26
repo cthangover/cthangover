@@ -7,8 +7,17 @@ using Godot;
 
 namespace Cthangover.Core.UI.Executable
 {
-
-		public partial class ExecutableMainEventChain : Control, IExecutableEventChain, IOnUpdateEvent
+    /// <summary>
+    /// The primary event chain for a scene. Registers as IOnUpdateEvent and
+    /// polls all registered ExecutableEvents every 0.5s. On _Ready, auto-collects
+    /// child ExecutableEvent nodes and handles deferred scene switches (pending
+    /// scene name from SceneManager). Exposes LastBackgroundID so action commands
+    /// can remember which background was active for scene restore on revisit.
+    /// AddEvent/RemoveEvent/ClearEvents allow dynamic event management via code.
+    /// Events are checked in insertion order; the first satisfying both IsOneRun
+    /// and CheckConditions gets executed.
+    /// </summary>
+    public partial class ExecutableMainEventChain : Control, IExecutableEventChain, IOnUpdateEvent
 	{
 		private bool isActive = true;
 		private List<ExecutableEvent> allEvents = new();

@@ -5,6 +5,17 @@ using Godot;
 
 namespace Cthangover.Core.Audio
 {
+    /// <summary>
+    /// Low-level Ogg Vorbis page parser. Reads raw OGG container bytes and
+    /// produces an <c>OggPacketSequence</c> that Godot's
+    /// <c>AudioStreamOggVorbis</c> can consume directly.
+    /// Handles multi-page continuation (a packet split across page
+    /// boundaries via the continuation flag), extracts granule positions
+    /// for accurate seeking, and reads the Vorbis identification header
+    /// to recover the sampling rate. Falls back to 44100 Hz if the header
+    /// is absent or unparseable. Returns <c>null</c> on any corruption,
+    /// logging the offset of the invalid page.
+    /// </summary>
     public static class OggPacketParser
     {
         private const int OGG_PAGE_HEADER_SIZE = 27;

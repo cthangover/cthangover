@@ -5,6 +5,15 @@ using Godot;
 
 namespace Cthangover.Core.UI.Menu
 {
+    /// <summary>
+    /// Save/load slot browser. Operates in dual mode (save vs. load) set by
+    /// OpenForSave/OpenForLoad. In load mode, clicking an occupied slot loads
+    /// the game and transitions to BaseScene with the saved scene name as
+    /// pending. In save mode, clicking an empty slot captures a screenshot
+    /// then saves; clicking an occupied slot shows an overwrite confirmation
+    /// dialog. RefreshSlots is called deferred to ensure the UI is visible
+    /// before populating (avoids layout glitches from invisible children).
+    /// </summary>
     public partial class SaveLoadMenu : Control
     {
         private Label _titleLabel;

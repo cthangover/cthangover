@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Cthangover.Core.Factories;
+using Cthangover.Core.Interactive;
 using Cthangover.Core.Scenes;
 using Cthangover.Core.Mods.Providers;
 using Godot;
@@ -13,9 +14,54 @@ using Cthangover.Core.Utils;
 
 namespace Cthangover.Core.Mods
 {
+    /// <summary>
+    /// Central hub for all mod resource access. Every factory, every
+    /// scene loader, every asset resolver ultimately goes through
+    /// <c>ModManager</c> to find and read files. It wraps
+    /// <c>ModRegistry</c> and adds a layer of domain-specific
+    /// collection methods with their own caching.
+    ///
+    /// <b>File collection layer</b> — <c>CollectFileList</c> scans all
+    /// mods for files under a named group directory (e.g. "avatars",
+    /// "music"). Results are cached per group so factories don't
+    /// re-scan on every request. Later-loaded mods' files override
+    /// earlier ones — the last mod to define a file wins.
+    ///
+    /// <b>JSON data layer</b> — <c>CollectJsonGroup</c> reads every
+    /// <c>.json</c> file in a directory across all mods, deserialises
+    /// the <c>FileData&lt;T&gt;</c> envelope, and builds an ID-indexed
+    /// dictionary. This is the backbone of every <c>FileFactory&lt;T&gt;</c>
+    /// and many <c>ICacheLoader</c>-based factories.
+    ///
+    /// <b>Asset resolution layer</b> — <c>CollectTextures</c>,
+    /// <c>CollectShaders</c>, <c>ResolveTexture</c>, <c>ResolveShader</c>
+    /// go beyond raw file listing: they merge files from multiple
+    /// texture groups, strip extensions, handle Godot resource loading
+    /// from folder mods vs zip extraction for shaders, and maintain
+    /// resolved-resource caches that survive across cache clears.
+    ///
+    /// <b>Include resolution</b> — <c>ExpandModIncludes</c> processes
+    /// <c>${path}</c> macros recursively with circular-reference
+    /// detection, enabling mod JSON files to compose and share data
+    /// fragments without duplicating content.
+    ///
+    /// <b>Scene/scenario collection</b> — <c>CollectSceneDefinitions</c>
+    /// and <c>CollectScenarioDefinitions</c> recursively walk the
+    /// "scenes" and "scenarios" directories, parsing JSON and
+    /// <c>.scenario</c> metadata respectively, building the data
+    /// structures that drive the scene loading and dialog systems.
+    ///
+    /// On <c>Reload</c>, every cache is flushed so that hot-reloaded
+    /// mods are picked up without restarting the game. The
+    /// <c>resolvedTextureCache</c> and <c>resolvedShaderCache</c>
+    /// entries are validated with <c>GodotObject.IsInstanceValid</c>
+    /// because Godot resources can be freed by the engine and the C#
+    /// wrapper becomes a dangling pointer.
+    /// </summary>
     public class ModManager
     {
         private static readonly Lazy<ModManager> instance = new(() => new ModManager());
+        /// <summary>Thread-safe singleton.</summary>
         public static ModManager Instance => instance.Value;
 
         private ModRegistry registry;
@@ -25,15 +71,22 @@ namespace Cthangover.Core.Mods
             registry = ModRegistry.Instance;
         }
 
+        /// <summary>True if <c>ModRegistry</c> has completed its discovery scan.</summary>
         public bool IsInitialized => ModRegistry.Instance.IsInitialized;
 
+        /// <summary>Read-only snapshot of currently loaded mods, keyed by mod ID.</summary>
         public IReadOnlyDictionary<string, IModInfo> Mods => registry.Mods;
 
+        /// <summary>Idempotent: triggers mod discovery if not yet done.</summary>
         public void Initialize()
         {
             registry.Initialize();
         }
 
+        /// <summary>
+        /// Flushes every internal cache then re-runs mod discovery.
+        /// Call after adding or removing mod files at runtime.
+        /// </summary>
         public void Reload()
         {
             ClearCaches();
@@ -51,19 +104,26 @@ namespace Cthangover.Core.Mods
             textureFileCache = null;
             resolvedTextureCache.Clear();
             wrapperCache.Clear();
+            interactiveDefCache.Clear();
         }
 
+        /// <summary>Looks up a mod by ID. Implicitly triggers discovery if needed.</summary>
         public IModInfo GetMod(string id)
         {
             return registry.GetMod(id);
         }
 
+        /// <summary>Checks whether a file exists within a specific mod.</summary>
         public bool FileExists(string modId, string path)
         {
             var mod = GetMod(modId);
             return mod?.FileProvider?.FileExists(path) ?? false;
         }
 
+        /// <summary>
+        /// Lists files and directories immediately under the given path
+        /// within a mod. Directories have a trailing <c>/</c>.
+        /// </summary>
         public IEnumerable<string> ListFiles(string modId, string directory = "")
         {
             var mod = GetMod(modId);
@@ -73,6 +133,7 @@ namespace Cthangover.Core.Mods
             return mod.FileProvider.ListFiles(directory);
         }
 
+        /// <summary>Reads a text file from a mod as UTF-8, or null if not found.</summary>
         public string ReadFileText(string modId, string path)
         {
             var mod = GetMod(modId);
@@ -82,6 +143,7 @@ namespace Cthangover.Core.Mods
             return mod.FileProvider.ReadFileText(path);
         }
 
+        /// <summary>Reads a binary file from a mod as a byte array, or null if not found.</summary>
         public byte[] ReadFileBinary(string modId, string path)
         {
             var mod = GetMod(modId);
@@ -91,6 +153,7 @@ namespace Cthangover.Core.Mods
             return mod.FileProvider.ReadFileBinary(path);
         }
 
+        /// <summary>Opens a seekable stream to a file inside a mod.</summary>
         public Stream OpenStream(string modId, string path)
         {
             var mod = GetMod(modId);
@@ -100,6 +163,10 @@ namespace Cthangover.Core.Mods
             return mod.FileProvider.OpenStream(path);
         }
 
+        /// <summary>
+        /// Returns an absolute filesystem path for a mod file, or null
+        /// for zip mods (where no real path exists).
+        /// </summary>
         public string GetFileSystemPath(string modId, string path)
         {
             var mod = GetMod(modId);
@@ -109,6 +176,11 @@ namespace Cthangover.Core.Mods
             return mod.FileProvider.GetFileSystemPath(path);
         }
 
+        /// <summary>
+        /// Reads a text file and expands <c>${include}</c> macros
+        /// recursively with circular-reference detection. Returns the
+        /// fully-expanded text, or null on any failure.
+        /// </summary>
         public string ReadResolvedText(string modId, string path)
         {
             var mod = GetMod(modId);
@@ -131,6 +203,10 @@ namespace Cthangover.Core.Mods
             }
         }
 
+        /// <summary>
+        /// Same as <c>ReadResolvedText(string, string)</c> but uses an
+        /// externally-provided provider instead of looking up the mod.
+        /// </summary>
         public string ReadResolvedText(string modId, string path, IModFileProvider providerOverride)
         {
             var content = providerOverride.ReadFileText(path);
@@ -149,6 +225,10 @@ namespace Cthangover.Core.Mods
             }
         }
 
+        /// <summary>
+        /// Reads a JSON file from a mod, resolves includes, and
+        /// deserialises it into <typeparamref name="T"/>.
+        /// </summary>
         public T ReadJson<T>(string modId, string path) where T : class
         {
             var text = ReadResolvedText(modId, path);
@@ -169,6 +249,12 @@ namespace Cthangover.Core.Mods
 
         private readonly Dictionary<string, Dictionary<string, FileEntry>> fileListCache = new();
 
+        /// <summary>
+        /// Scans all mods for files under a named group directory
+        /// (e.g. "avatars", "music"). Results are cached; later
+        /// mods override earlier ones. Used by <c>PrefabFactory</c>
+        /// as the first stage of asset lookup.
+        /// </summary>
         public Dictionary<string, FileEntry> CollectFileList(string group)
         {
             Initialize();
@@ -203,6 +289,11 @@ namespace Cthangover.Core.Mods
 
         private Dictionary<string, FileEntry> shaderFileCache;
 
+        /// <summary>
+        /// Scans the "shaders" group across all mods, filters to
+        /// <c>.gdshader</c> files only (excluding includes), and
+        /// strips the extension to produce short shader names.
+        /// </summary>
         public Dictionary<string, FileEntry> CollectShaders()
         {
             Initialize();
@@ -230,6 +321,13 @@ namespace Cthangover.Core.Mods
 
         private readonly Dictionary<string, Shader> resolvedShaderCache = new();
 
+        /// <summary>
+        /// Resolves a shader name to a Godot <c>Shader</c> resource.
+        /// First checks the resolved cache (validating with
+        /// <c>IsInstanceValid</c>), then the on-disk cache, then
+        /// loads directly for folder mods or extracts from zip for
+        /// zip mods.
+        /// </summary>
         public Shader ResolveShader(string shaderName)
         {
             if (resolvedShaderCache.TryGetValue(shaderName, out var cached) && GodotObject.IsInstanceValid(cached))
@@ -284,6 +382,12 @@ namespace Cthangover.Core.Mods
 
         private Dictionary<string, FileEntry> textureFileCache;
 
+        /// <summary>
+        /// Scans every texture group in <c>ModConfig.TextureGroups</c>
+        /// across all mods, merges files into a flat namespace by
+        /// stripping extensions, and logs conflicts where two mods
+        /// define the same texture name.
+        /// </summary>
         public Dictionary<string, FileEntry> CollectTextures()
         {
             Initialize();
@@ -321,6 +425,11 @@ namespace Cthangover.Core.Mods
 
         private readonly Dictionary<string, Texture2D> resolvedTextureCache = new();
 
+        /// <summary>
+        /// Resolves a texture name to a Godot <c>Texture2D</c>.
+        /// Decodes the image from raw bytes, wraps it in an
+        /// <c>ImageTexture</c>, and caches the result.
+        /// </summary>
         public Texture2D ResolveTexture(string textureName)
         {
             if (resolvedTextureCache.TryGetValue(textureName, out var cached) && GodotObject.IsInstanceValid(cached))
@@ -399,6 +508,13 @@ namespace Cthangover.Core.Mods
 
         private readonly Dictionary<string, object> jsonGroupCache = new();
 
+        /// <summary>
+        /// Scans a named directory across all mods for <c>.json</c>
+        /// files, deserialises each as <c>FileData&lt;T&gt;</c>, and
+        /// returns a flat ID-indexed dictionary. Later mods override
+        /// earlier ones for duplicate IDs. The backbone of every
+        /// <c>FileFactory&lt;T&gt;</c>.
+        /// </summary>
         public Dictionary<string, T> CollectJsonGroup<T>(string directory) where T : class, IIdentifiable
         {
             Initialize();
@@ -510,6 +626,13 @@ namespace Cthangover.Core.Mods
 
         private readonly Dictionary<string, Dictionary<string, List<SceneDefinition>>> sceneDefCache = new();
 
+        /// <summary>
+        /// Recursively walks the "scenes" directory across all mods
+        /// and deserialises every <c>.json</c> file as a
+        /// <c>SceneDefinition</c>. Returns a dictionary keyed by
+        /// scene name — multiple mods can contribute definitions
+        /// for the same scene (they accumulate in a list).
+        /// </summary>
         public Dictionary<string, List<SceneDefinition>> CollectSceneDefinitions()
         {
             Initialize();
@@ -585,7 +708,13 @@ namespace Cthangover.Core.Mods
 
         private readonly Dictionary<string, Dictionary<string, List<ScenarioDefinition>>> scenarioDefCache = new();
         private readonly Dictionary<string, List<WrapperDefinition>> wrapperCache = new();
+        private readonly Dictionary<string, Dictionary<string, InteractiveDefinition>> interactiveDefCache = new();
 
+        /// <summary>
+        /// Recursively walks the "scenarios" directory across all
+        /// mods, parses <c>.scenario</c> file metadata headers, and
+        /// returns scenario definitions grouped by target scene name.
+        /// </summary>
         public Dictionary<string, List<ScenarioDefinition>> CollectScenarioDefinitions()
         {
             Initialize();
@@ -659,6 +788,11 @@ namespace Cthangover.Core.Mods
             }
         }
 
+        /// <summary>
+        /// Recursively collects <c>.wrappertmpl</c> files from the
+        /// "wrappers" directory across all mods. Each template is
+        /// stored as raw text — parsing happens at instantiation time.
+        /// </summary>
         public List<WrapperDefinition> CollectWrapperTemplates()
         {
             Initialize();
@@ -706,6 +840,84 @@ namespace Cthangover.Core.Mods
                     Name = name,
                     Content = text
                 });
+            }
+        }
+
+        /// <summary>
+        /// Recursively walks the "interactives" directory across all mods,
+        /// deserialises every <c>.json</c> file via the <c>FileData&lt;InteractiveDefinition&gt;</c>
+        /// envelope, and returns a flat dictionary keyed by definition ID.
+        /// Later mods override earlier ones for duplicate IDs.
+        /// Each definition's <c>ModId</c> property is set to its owning mod.
+        /// </summary>
+        public Dictionary<string, InteractiveDefinition> CollectInteractives()
+        {
+            Initialize();
+
+            const string cacheKey = "__interactives__";
+            if (interactiveDefCache.TryGetValue(cacheKey, out var cached))
+                return cached;
+
+            var result = new Dictionary<string, InteractiveDefinition>();
+
+            foreach (var kvp in Mods)
+            {
+                var modId = kvp.Key;
+                var provider = kvp.Value.FileProvider;
+
+                CollectInteractiveDefsRecursive(provider, modId, "interactives", result);
+            }
+
+            interactiveDefCache[cacheKey] = result;
+            GameLogger.Log("MODS", $"CollectInteractives -> {result.Count} definition(s)");
+            return result;
+        }
+
+        private void CollectInteractiveDefsRecursive(IModFileProvider provider, string modId, string dir, Dictionary<string, InteractiveDefinition> result)
+        {
+            foreach (var entry in provider.ListFiles(dir))
+            {
+                if (entry.EndsWith("/"))
+                {
+                    var subDir = entry.TrimEnd('/');
+                    CollectInteractiveDefsRecursive(provider, modId, subDir, result);
+                    continue;
+                }
+
+                if (!entry.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                var text = ReadResolvedText(modId, entry, provider);
+                if (text == null)
+                    continue;
+
+                try
+                {
+                    var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                    var fileData = JsonSerializer.Deserialize<FileData<InteractiveDefinition>>(text, options);
+                    if (fileData?.Items == null || fileData.Items.Count == 0)
+                        continue;
+
+                    foreach (var item in fileData.Items)
+                    {
+                        if (string.IsNullOrEmpty(item.ID))
+                            continue;
+
+                        item.ModId = modId;
+
+                        if (result.ContainsKey(item.ID))
+                        {
+                            GameLogger.Log("MODS", $"interactive '{item.ID}' from mod '{modId}' overrides previous definition", LogLevel.Warning);
+                        }
+
+                        result[item.ID] = item;
+                        GameLogger.Log("MODS", $"interactive '{item.ID}' from mod '{modId}' ({entry})");
+                    }
+                }
+                catch (JsonException ex)
+                {
+                    GameLogger.Log("MODS", $"JSON parse failed for interactive '{modId}/{entry}': {ex.Message}", LogLevel.Error);
+                }
             }
         }
 

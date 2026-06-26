@@ -6,6 +6,16 @@ using Godot;
 
 namespace Cthangover.Core.Factories.Impls
 {
+    /// <summary>
+    /// Factory for <c>PackedScene</c> visual effects. Overrides
+    /// <c>LoadFromMods</c> to use <c>ResourceLoader.Load</c> from the file
+    /// system instead of <c>ConvertFromBytes</c>, because Godot's scene
+    /// format is a proprietary binary blob that cannot be reconstructed
+    /// from raw bytes in managed code. This imposes a hard constraint:
+    /// effect scenes are only loadable from <b>folder mods</b> — zip mods
+    /// skip them with a warning — so mod authors distributing visual effects
+    /// must ship them unpacked.
+    /// </summary>
     public class EffectFactory : PrefabFactory<PackedScene>
     {
         private static readonly Lazy<EffectFactory> instance = new(() => new EffectFactory());

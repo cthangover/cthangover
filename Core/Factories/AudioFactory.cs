@@ -7,6 +7,14 @@ using Godot;
 
 namespace Cthangover.Core.Factories
 {
+    /// <summary>
+    /// Base factory for loading audio streams from mod archives.
+    /// <c>.ogg</c> files are parsed through <c>OggPacketParser</c> to
+    /// produce <c>AudioStreamOggVorbis</c> (Godot needs the raw packet
+    /// sequence, not just file bytes). <c>.wav</c> files are loaded
+    /// directly into <c>AudioStreamWav</c>. Inherits the mod-aware
+    /// caching and fallback logic from <c>PrefabFactory</c>.
+    /// </summary>
     public abstract class AudioFactory : PrefabFactory<AudioStream>
     {
         protected AudioFactory(string factoryKey, int fallbackCacheSize)

@@ -7,6 +7,19 @@ using Godot;
 
 namespace Cthangover.Core.Factories.Impls
 {
+    /// <summary>
+    /// Factory for battle action cards equipped by characters. Returns a
+    /// <b>copy</b> of the cached <c>ActionCharacter</c> on every <c>Get</c>
+    /// call — action cards carry mutable battle state (cooldowns, modifiers)
+    /// and must never be shared across character instances. Properties are
+    /// parsed from a compact <c>key=value</c> string list rather than a full
+    /// JSON object, keeping mod JSON terse for authored content.
+    ///
+    /// Images are loaded via <c>TextureUtils.LoadFromModGroup</c> — not
+    /// through a texture factory — because action character assets live
+    /// inside the same <c>"characters"</c> group as their JSON definitions,
+    /// making co-location of data and art the default mod layout.
+    /// </summary>
     public class ActionCharacterFactory : ICacheLoader<string, ActionCharacter>
     {
         private static readonly Lazy<ActionCharacterFactory> lazy = new(() => new ActionCharacterFactory());

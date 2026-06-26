@@ -8,6 +8,20 @@ using Cthangover.Core.Utils;
 
 namespace Cthangover.Core.Factories.Impls
 {
+	/// <summary>
+	/// Assembles <c>Playlist</c> objects from JSON files under
+	/// <c>music/playlists/</c> across all loaded mods. Each playlist maps
+	/// music tracks to a scene name and categorises them by
+	/// <c>MusicType</c> (ambient, combat, tension, etc.). If a scene has no
+	/// dedicated playlist the factory falls back to <c>"default"</c>,
+	/// guaranteeing that music never cuts to silence when entering an
+	/// unconfigured scene.
+	///
+	/// The merge-across-mods strategy means later-loaded mods <b>append</b>
+	/// their tracks to an existing playlist rather than replacing it,
+	/// allowing mod authors to add music variations to stock scenes without
+	/// editing the base game files.
+	/// </summary>
 	public class PlaylistFactory
 	{
 		private static readonly Lazy<PlaylistFactory> instance = new(() => new PlaylistFactory());

@@ -1,8 +1,10 @@
-using Cthangover.Core.UI.Dialog.Action;
-using Godot;
 
 namespace Cthangover.Core.UI.Dialog.Action.Impls
 {
+    /// <summary>
+    /// Sets the dialog box title text. A null title hides the title bar.
+    /// NoWait — title updates are instant visual changes.
+    /// </summary>
     public class ActionTitle : ActionCommand
     {
         public string TitleText { get; set; }

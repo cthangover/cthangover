@@ -4,6 +4,17 @@ using Godot;
 
 namespace Cthangover.Core.UI.Dialog.Action
 {
+    /// <summary>
+    /// Base for all dialog actions with a lifecycle of Construct → Run → Destruct.
+    /// Each action gets an auto-generated GUID for targeting by GoTo/If commands.
+    /// The three timing enums control when Construct and Destruct fire relative to
+    /// the action's lifecycle and queue life, enabling both immediate teardown
+    /// (OnEndAction) and deferred cleanup (OnEndQueue). WaitType determines whether
+    /// the runtime pauses here (WaitClick/Select/Time/Event) or advances immediately
+    /// (NoWait). DelayedDestruct is a set of action IDs whose Destruct should be
+    /// called after this action's own destruct — used for cross-action cleanup
+    /// dependencies where one action's visual state must outlast another.
+    /// </summary>
     public abstract class ActionCommand : IActionCommand
     {
         public string ID { get; set; }

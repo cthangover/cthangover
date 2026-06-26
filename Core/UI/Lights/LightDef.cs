@@ -3,6 +3,13 @@ using Godot;
 
 namespace Cthangover.Core.UI.Lights
 {
+    /// <summary>
+    /// Serializable light definition for JSON scene lighting. Coordinates are
+    /// viewport-relative (0.0–1.0) so scenes adapt to different resolutions.
+    /// ToPixelPos/FromPixelPos convert between normalized space and pixel space
+    /// using a reference viewport size. Color is stored as a hex string for
+    /// human-readable JSON editing.
+    /// </summary>
 	public class LightDef
 	{
 		[JsonPropertyName("x")]

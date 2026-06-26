@@ -3,6 +3,12 @@ using Cthangover.Core.Utils;
 
 namespace Cthangover.Core.UI.Dialog.Action.Impls
 {
+    /// <summary>
+    /// Bridges the dialog system to the broader scenario action system
+    /// (ScenarioActionFactory). Resolves an action by name and runs it with a
+    /// ScenarioActionContext wrapping the dialog runtime. Wraps execution in
+    /// try/catch so a faulty scenario action doesn't crash the dialog queue.
+    /// </summary>
     public class ActionScenario : ActionCommand
     {
         public string ActionName { get; set; }

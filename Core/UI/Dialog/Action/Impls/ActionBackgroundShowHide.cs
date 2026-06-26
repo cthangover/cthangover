@@ -3,6 +3,13 @@ using Godot;
 
 namespace Cthangover.Core.UI.Dialog.Action.Impls
 {
+    /// <summary>
+    /// Tween-driven background fade in/out. Animates the modulate alpha of the
+    /// dialog box's parent Control over Duration seconds. Creates and manages
+    /// its own Tween internally, killing any previous tween before starting a
+    /// new one to prevent overlap. Can optionally set WaitType to WaitTime with
+    /// a matching duration so the dialog pauses during the transition.
+    /// </summary>
     public class ActionBackgroundShowHide : ActionCommand
     {
         public BackgroundActionType ActionType { get; set; } = BackgroundActionType.Show;

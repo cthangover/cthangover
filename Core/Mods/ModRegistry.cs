@@ -8,9 +8,23 @@ using Cthangover.Core.Utils;
 
 namespace Cthangover.Core.Mods
 {
+    /// <summary>
+    /// Mod discovery and index. Scans <c>user://mods/</c> (falling back to
+    /// <c>res://mods/</c>) on first <c>Initialize</c>, creates the
+    /// appropriate <c>IModFileProvider</c> per entry (folder vs zip), reads
+    /// <c>manifest.json</c> from each, and stores the result.
+    ///
+    /// After discovery, delegates to <c>ModAssemblyLoader</c> for
+    /// precompiled DLLs and then to <c>ModCompiler</c> for source-based
+    /// mods — the ordering matters because source mods may depend on APIs
+    /// defined in precompiled DLLs. <c>Reload</c> clears state and
+    /// re-runs discovery; <c>ModManager</c> hooks this to also flush its
+    /// own caches.
+    /// </summary>
     public class ModRegistry : IModRegistry
     {
         private static readonly Lazy<ModRegistry> instance = new(() => new ModRegistry());
+        /// <summary>Thread-safe singleton.</summary>
         public static ModRegistry Instance => instance.Value;
 
         private readonly Dictionary<string, IModInfo> mods = new();
@@ -21,10 +35,18 @@ namespace Cthangover.Core.Mods
             Mods = mods;
         }
 
+        /// <summary>True once discovery has run at least once.</summary>
         public bool IsInitialized => initialized;
 
+        /// <inheritdoc />
         public IReadOnlyDictionary<string, IModInfo> Mods { get; }
 
+        /// <summary>
+        /// Idempotent bootstrap: scans the mods directory, creates
+        /// providers, reads manifests, loads precompiled DLLs, then
+        /// compiles source-based mods. Returns immediately on
+        /// subsequent calls.
+        /// </summary>
         public void Initialize()
         {
             if (initialized)
@@ -52,6 +74,11 @@ namespace Cthangover.Core.Mods
                 GameLogger.Log("MODS_REGISTRY", $"  [{kvp.Key}] '{kvp.Value.Name}' provider={kvp.Value.FileProvider.GetType().Name}", LogLevel.Debug);
         }
 
+        /// <summary>
+        /// Discards all loaded mods and re-runs discovery. The caller
+        /// (typically <c>ModManager.Reload</c>) is responsible for
+        /// additionally flushing asset caches.
+        /// </summary>
         public void Reload()
         {
             initialized = false;
@@ -59,6 +86,10 @@ namespace Cthangover.Core.Mods
             Initialize();
         }
 
+        /// <summary>
+        /// Looks up a mod by ID. Triggers <c>Initialize</c> if not
+        /// yet done, so callers don't need a separate guard.
+        /// </summary>
         public IModInfo GetMod(string id)
         {
             Initialize();

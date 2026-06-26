@@ -1,6 +1,12 @@
 namespace Cthangover.Core.Audio
 {
 
+    /// <summary>
+    /// Contract for the central audio service. Separates per-bus playback
+    /// (music, ambient, SFX) and volume/enabled control. The PlaySound
+    /// overload with <c>variations</c> picks a random suffix from 1..N,
+    /// enabling sound variation without explicit variant IDs in callers.
+    /// </summary>
     public interface IAudioService
     {
         void PlayMusic(string id, MusicType musicType);

@@ -6,6 +6,16 @@ using Cthangover.Core.Utils;
 
 namespace Cthangover.Core.Actions
 {
+    /// <summary>
+    /// Singleton registry that discovers and indexes all IScenarioAction
+    /// implementations via reflection. Actions are keyed by their Name property
+    /// (e.g. "quest.set_status"). The factory uses Lazy&lt;T&gt; for thread-safe
+    /// initialization via Reflections.FindAndCreate which scans all loaded
+    /// assemblies. RegisterAssembly allows mods to inject custom actions at
+    /// runtime — deduplication by Name ensures mods can override core actions
+    /// by registering first. The factory is consumed by ActionScenario (dialog
+    /// action) which bridges the dialog system to these atomic scenario commands.
+    /// </summary>
     public class ScenarioActionFactory
     {
         private static readonly Lazy<ScenarioActionFactory> instance = new(() => new ScenarioActionFactory());

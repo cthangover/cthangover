@@ -7,6 +7,17 @@ using Godot;
 
 namespace Cthangover.Core.Audio
 {
+    /// <summary>
+    /// Singleton audio hub that owns three independent buses (Music, SFX, Ambient),
+    /// creating them at runtime if the audio setup lacks them. For sound effects,
+    /// AudioStreamPlayer nodes are pooled by SoundType so overlapping sounds
+    /// within the same category are cut off, while different categories stack.
+    /// Settings are polled each frame rather than event-driven, detecting
+    /// volume/enabled changes cheaply.
+    /// Exposes LinearToDb as a public static helper used elsewhere (e.g. UI sliders).
+    /// GetExpLevel / GetLowLevel provide logarithmic vs linear volume scaling
+    /// for contexts that need one or the other.
+    /// </summary>
     public partial class AudioService : Node, IAudioService
     {
         private AudioStreamPlayer musicPlayer;

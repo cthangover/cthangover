@@ -3,10 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Cthangover.Core.Utils;
-using Godot;
 
 namespace Cthangover.Core.UI.Tool
 {
+    /// <summary>
+    /// Singleton registry for modding/dev tools (IToolProvider implementations).
+    /// Discovers tools via reflection on construction; supports RegisterAssembly
+    /// for mod-injected tools. Deduplicates by Id. Get/GetAll provide lookup
+    /// for the tools dropdown in MainMenu.
+    /// </summary>
     public class ToolFactory
     {
         public static readonly ToolFactory Instance = new();
@@ -32,7 +37,10 @@ namespace Cthangover.Core.UI.Tool
                         var tool = (IToolProvider)Activator.CreateInstance(type);
                         Register(tool);
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        GameLogger.Log("TOOLS", $"ToolFactory: failed to create instance of '{type.FullName}': {ex.Message}", LogLevel.Error);
+                    }
                 }
             }
         }

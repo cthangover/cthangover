@@ -3,6 +3,16 @@ using Godot;
 
 namespace Cthangover.Core.UI
 {
+    /// <summary>
+    /// Base widget with a lazy construct/destruct lifecycle around Show/Hide.
+    /// On first Show(), OnceConstruct() fires once via EnsureConstructed — subsequent
+    /// Show/Hide calls trigger ShowConstruct/HideDestruct instead, allowing repeated
+    /// state reset without full reconstruction. Overrides Godot's built-in Visible
+    /// property to intercept visibility changes and route them through the lifecycle.
+    /// Maintains an independent isVisible flag because Godot's visibility has quirks
+    /// (e.g. parent visibility propagation) that would break the state machine.
+    /// The #if TOOLS _ValidateProperty syncs the editor inspector with the override.
+    /// </summary>
     public abstract partial class Widget : Control, IWidget
     {
         private bool isConstructed;

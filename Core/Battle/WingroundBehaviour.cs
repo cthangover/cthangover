@@ -15,6 +15,19 @@ using Godot;
 
 namespace Cthangover.Core.Battle
 {
+    /// <summary>
+    /// Victory screen widget (extends TransitionWidget for fade-in).
+    /// On Show it: awards tracked EXP to each surviving character in the
+    /// battle set, builds a 4-slot EXP report card row (with placeholders
+    /// for missing slots to keep layout stable), rolls loot from defeated
+    /// enemies using per-item probability/range, lays out loot in a grid
+    /// whose cell size is computed from the container width and
+    /// lootAspectHeight, adds items to inventory, and processes character
+    /// recruitment via RecruitBehaviourRegistry. A "return" button sets
+    /// the pending scene and reloads BaseScene — the actual destination
+    /// scene (town_entry or the quest's ReturnScene) is injected by
+    /// the scene manager.
+    /// </summary>
 	public partial class WingroundBehaviour : TransitionWidget
 	{
 		[Export] private Label txtInfo;

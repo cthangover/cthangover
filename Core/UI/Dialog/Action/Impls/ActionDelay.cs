@@ -3,6 +3,12 @@ using Godot;
 
 namespace Cthangover.Core.UI.Dialog.Action.Impls
 {
+    /// <summary>
+    /// Waits for a fixed duration. When HiddenMode is true, hides the dialog
+    /// body for the duration (for dramatic pauses or cutscene beats). ShowText,
+    /// if set, displays a temporary message during the wait. DoDestruct is a
+    /// no-op because body visibility is implicitly restored on next Show.
+    /// </summary>
     public class ActionDelay : ActionCommand
     {
         public bool HiddenMode { get; set; }

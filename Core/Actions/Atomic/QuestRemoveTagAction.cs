@@ -1,5 +1,10 @@
 namespace Cthangover.Core.Actions.Atomic
 {
+    /// <summary>
+    /// Removes a string tag from a quest. Paired with QuestAddTagAction for
+    /// reversible quest state. Used in branching scenarios where a tag marks
+    /// a temporary condition that should be cleared when resolved.
+    /// </summary>
     public class QuestRemoveTagAction : IScenarioAction
     {
         public string Name => "quest.remove_tag";

@@ -4,7 +4,14 @@ using Godot;
 
 namespace Cthangover.Core.Characters
 {
-    
+    /// <summary>
+    /// A battle action available to a character (e.g. "Attack", "Heal"). Carries
+    /// a PropertyData bag keyed by well-known string constants (Attack, Defence,
+    /// Heal, Turn, RequiredPoint) rather than typed properties — this allows
+    /// mods to add custom action parameters without schema changes. Copy()
+    /// deep-clones Properties to prevent shared state between character instances
+    /// that may modify action data at runtime (e.g. temporary buffs).
+    /// </summary>
     public class ActionCharacter : IIdentifiable
     {
         public const string ATTRIBUTE_REQUIRED_POINT = "RequiredPoint";

@@ -6,7 +6,15 @@ using Godot;
 
 namespace Cthangover.Core.UI.Menu
 {
-
+    /// <summary>
+    /// Title screen main menu. On _Ready, checks GameLogger.CompilationErrors
+    /// and shows a popup if any mods failed to compile — this is the first
+    /// opportunity to inform the player about broken mods. New Game initializes
+    /// the SceneManager and loads BaseScene with "start_scene" as the pending
+    /// scene to enter. The Tools button dynamically builds a tool-selection
+    /// Window from ToolFactory at click time, avoiding hardcoding tool references.
+    /// SettingsMenu and SaveLoadMenu are created at ready time but hidden.
+    /// </summary>
     public partial class MainMenu : Control
     {
         private SettingsMenu _settingsMenu;

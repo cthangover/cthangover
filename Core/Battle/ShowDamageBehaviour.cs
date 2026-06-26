@@ -2,6 +2,14 @@ using Godot;
 
 namespace Cthangover.Core.Battle
 {
+    /// <summary>
+    /// Floating damage-number overlay. Self-contained: creates its own Label
+    /// in _Ready, floats upward with random horizontal drift, fades alpha,
+    /// then QueueFrees itself. Static factory methods (SpawnDamage,
+    /// SpawnDefence) instantiate and parent it in one call — damage is red,
+    /// heal is green, defence is blue. MouseFilter is Ignore so clicks pass
+    /// through to cards underneath.
+    /// </summary>
     public partial class ShowDamageBehaviour : Control
     {
         private Label _label;

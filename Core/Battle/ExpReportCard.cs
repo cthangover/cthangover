@@ -2,6 +2,12 @@ using Godot;
 
 namespace Cthangover.Core.Battle
 {
+    /// <summary>
+    /// Single character EXP report in the victory screen. Displays the
+    /// character icon, localized name, and "+N" EXP value. Uses the same
+    /// ResolveMissingNodes pattern as LootReportItem for robustness
+    /// against missing scene links.
+    /// </summary>
 	public partial class ExpReportCard : Control
 	{
 		[Export] private TextureRect icon;

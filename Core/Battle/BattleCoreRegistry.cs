@@ -5,6 +5,14 @@ using System.Reflection;
 
 namespace Cthangover.Core.Battle
 {
+    /// <summary>
+    /// Pluggable battle-core registry. Scans assemblies for non-abstract
+    /// IBattleCore implementations, registers them by ID (each core
+    /// self-identifies), and activates one by ID. GetActive constructs a
+    /// fresh instance every call — battle cores are stateless between
+    /// battles. Falls back to the first registered core if no active
+    /// ID was set, enabling mods to ship drop-in battle engines.
+    /// </summary>
     public class BattleCoreRegistry
     {
         public static readonly BattleCoreRegistry Instance = new();

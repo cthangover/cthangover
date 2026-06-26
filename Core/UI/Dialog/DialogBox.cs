@@ -10,6 +10,17 @@ using Godot;
 
 namespace Cthangover.Core.UI.Dialog
 {
+    /// <summary>
+    /// The visible dialog UI: dual avatars with shader-based hide-color mode,
+    /// answer box spawning, and click/keyboard advance. Validates that no existing
+    /// dialog locker is running before accepting a new queue, ensuring only one
+    /// dialog can occupy the box at a time. OnUpdate is throttle-gated (100ms min
+    /// interval) to avoid CPU waste on the advance check. Integrates with the audio
+    /// system for skip sounds on mouse click. Uses the same Widget lifecycle but
+    /// overrides HideDestruct to reset avatar textures and release the locker.
+    /// The shader material for avatars is resolved through the mod system on _Ready,
+    /// supporting mod-provided avatar effects.
+    /// </summary>
 	public partial class DialogBox : Widget, IDialogBox, IOnUpdateEvent
 	{
 		[Export] private PackedScene answerBoxScene;

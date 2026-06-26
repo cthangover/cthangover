@@ -2,6 +2,13 @@ using Godot;
 
 namespace Cthangover.Core.UI.Animation
 {
+    /// <summary>
+    /// Lightweight, code-only alternative to EffectAnimator that does NOT require
+    /// a shader. Constructs an AtlasTexture and shifts its Region rect each frame
+    /// to scroll through a horizontal spritesheet. Designed for runtime spawning
+    /// via the static SpawnOn factory — it anchors to fill the target Control and
+    /// self-destructs when playback finishes, requiring no scene file setup.
+    /// </summary>
     public partial class EffectAnimNode : TextureRect
     {
         private AtlasTexture atlas;

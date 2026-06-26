@@ -3,7 +3,14 @@ using Godot;
 
 namespace Cthangover.Core.UI.Executable
 {
-
+    /// <summary>
+    /// Abstract chain base: manages a list of ExecutableEvents and exposes
+    /// Play()/Stop()/IsActive for external control. GetNext() is abstract so
+    /// subclasses define their own selection strategy (sequential, conditional,
+    /// random). Play() calls RunDialog() on the next event, which internally
+    /// calls SetDialogQueueAndRun with `this` as the locker — the chain is
+    /// blocked until the dialog finishes.
+    /// </summary>
     public abstract partial class ExecutableEventChainBase : Godot.Node, IExecutableEventChain
     {
 

@@ -2,6 +2,16 @@ using System;
 
 namespace Cthangover.Core.Characters
 {
+    /// <summary>
+    /// Mutable stat with event-driven change tracking. Value is the current
+    /// (potentially modified) value; BaseValue is the unmodified maximum.
+    /// Percent gives the 0–1 ratio for health bars and stat displays. The
+    /// OnChange delegate fires on every Value set — even if the value hasn't
+    /// changed — making it a notification mechanism rather than a diff detector.
+    /// This is important for UI that must react to "was modified" events
+    /// regardless of whether the value actually changed (e.g. a heal that
+    /// fizzles at full health should still trigger visual feedback).
+    /// </summary>
     [Serializable]
     public class Attribute
     {

@@ -3,7 +3,14 @@ using Godot;
 
 namespace Cthangover.Core.UI.Base
 {
-	public partial class ModSpriteLoader : Node
+    /// <summary>
+    /// Editor-configured texture indirection: resolves a TextureId string through
+    /// UITextureFactory and applies the result to the parent TextureRect. This
+    /// allows artists to reference textures by logical ID in the Godot inspector
+    /// instead of hardcoding paths, and mods can override which texture a given ID
+    /// resolves to.
+    /// </summary>
+    public partial class ModSpriteLoader : Node
 	{
 		[Export] public string TextureId { get; set; }
 

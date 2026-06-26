@@ -10,7 +10,18 @@ using Cthangover.Core.Utils;
 
 namespace Cthangover.Core.Actions
 {
-		internal class BattleServiceImpl : IBattleService
+    /// <summary>
+    /// Constructs BattleData from scenario parameters and stores it in
+    /// GameData.Instance.Runtime.BattleData. Captures the current background
+    /// texture (via BackgroundFactory using SceneContextNode.LastBackgroundID)
+    /// so the battle scene has the correct visual context. Also captures the
+    /// depth/albedo maps from UiLightController for lighting consistency.
+    /// If a questId is provided, binds the quest to the battle and optionally
+    /// sends a notification for the new tag. Active battle core is resolved
+    /// from BattleCoreRegistry — wrapped in try/catch because the registry
+    /// may not be initialized when called from non-battle contexts.
+    /// </summary>
+    internal class BattleServiceImpl : IBattleService
 	{
 		public void Init(string sceneType, string enemies, string questId = null, string newTag = null)
 		{

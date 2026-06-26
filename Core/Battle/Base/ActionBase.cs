@@ -5,6 +5,13 @@ using Cthangover.Core.Utils;
 namespace Cthangover.Core.Characters
 {
 
+    /// <summary>
+    /// Convenience base for IActionExecutor implementations. Provides
+    /// CheckRequiredAndUsePoint which validates that the user has enough
+    /// "Point" attribute (a generic action-point / mana pool) before
+    /// deducting it — returning false lets the action fail gracefully.
+    /// ID is abstract so each action declares its own identity.
+    /// </summary>
     public abstract class ActionBase : IActionExecutor
     {
         

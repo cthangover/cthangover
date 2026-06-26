@@ -4,6 +4,12 @@ using Godot;
 
 namespace Cthangover.Core.UI.Inventory
 {
+    /// <summary>
+    /// Renders a single inventory slot: item icon from Model.Item.Sprite and
+    /// stack count. Suppresses the count label for single items (clean display).
+    /// Destruct calls QueueFree to fully remove the node — the ColumnCellListWidget
+    /// rebuilds all items on refresh rather than recycling.
+    /// </summary>
     public partial class InventoryItemBehaviour : ListItem<IItemContainer>
     {
         [Export] private TextureRect imgIcon;

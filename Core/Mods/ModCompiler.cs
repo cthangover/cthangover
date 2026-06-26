@@ -12,9 +12,49 @@ using Microsoft.CodeAnalysis.CSharp;
 
 namespace Cthangover.Core.Mods
 {
+    /// <summary>
+    /// Roslyn-based C# compiler for mod source files. The compilation
+    /// pipeline is:
+    ///
+    /// 1. <b>Source collection</b> — walks each mod's declared source
+    ///    patterns (from <c>manifest.json</c>'s <c>sources</c> list),
+    ///    matching <c>.cs</c> files. Falls back to scanning the entire
+    ///    mod root if no patterns are declared, so a mod that just
+    ///    drops <c>.cs</c> files anywhere still compiles.
+    ///
+    /// 2. <b>Topological sort</b> — orders mods by their
+    ///    <c>depends</c> declarations so that a mod referencing another
+    ///    mod's types compiles after its dependency. Circular
+    ///    dependencies log a warning and break the cycle rather than
+    ///    deadlocking.
+    ///
+    /// 3. <b>Assembly reference discovery</b> — scans every loaded
+    ///    assembly's directory and the Godot build output directory
+    ///    for <c>.dll</c> files, adding them as metadata references
+    ///    so that mod code can call into any type in the game.
+    ///
+    /// 4. <b>SHA-256 output caching</b> — the compilation output is
+    ///    stored at <c>user://mod_cache/assemblies/{modId}_{hash}.dll</c>.
+    ///    On subsequent loads the hash is recomputed from source files;
+    ///    if it matches a cached DLL, recompilation is skipped
+    ///    entirely. The <c>use_assembly_cache</c> config toggle can
+    ///    force recompilation even when a cached DLL exists.
+    ///
+    /// 5. <b>Registration</b> — successful assemblies are passed to
+    ///    <c>ModAssemblyLoader.RegisterAssembly</c>, which fans them
+    ///    out to every reflection-based plugin registry in the game.
+    ///
+    /// <c>CompileString</c> is a separate entry point for ad-hoc code
+    /// compilation (used by tools and the in-game script editor).
+    /// </summary>
     public static class ModCompiler
     {
         
+        /// <summary>
+        /// Absolute path to the assembly cache directory
+        /// (<c>user://mod_cache/assemblies/</c>). Resolved once at
+        /// static init time with a fallback to the OS temp folder.
+        /// </summary>
         public static readonly string CacheRoot;
 
         static ModCompiler()
@@ -32,6 +72,12 @@ namespace Cthangover.Core.Mods
 
         }
 
+        /// <summary>
+        /// Compiles all mods that declare source files in their
+        /// manifest. Mods are sorted topologically by dependencies
+        /// before compilation. Results are cached on disk by SHA-256
+        /// content hash.
+        /// </summary>
         public static void LoadModCode(IDictionary<string, IModInfo> mods)
         {
             GameLogger.CompilationErrors.Clear();
@@ -182,6 +228,11 @@ namespace Cthangover.Core.Mods
             return result;
         }
         
+        /// <summary>
+        /// Compiles a set of source files into an in-memory assembly.
+        /// First checks the SHA-256 output cache; skips compilation
+        /// if a cached DLL exists and <c>UseAssemblyCache</c> is true.
+        /// </summary>
         public static Assembly Compile(string modId, IEnumerable<(string FilePath, string Source)> sources)
         {
             var sourceList = sources.ToList();
@@ -246,6 +297,12 @@ namespace Cthangover.Core.Mods
             return ModAssemblyLoader.LoadFromBytes(ms.ToArray());
         }
 
+        /// <summary>
+        /// Compiles an arbitrary C# string into an assembly. Used by
+        /// tools and the in-game script editor; does not check the
+        /// output cache. Returns a <c>CompileResult</c> with errors
+        /// on failure.
+        /// </summary>
         public static CompileResult CompileString(string code, string scriptId)
         {
             var syntaxTree = CSharpSyntaxTree.ParseText(code,
@@ -416,6 +473,10 @@ namespace Cthangover.Core.Mods
             return Convert.ToHexString(hashBytes).Substring(0, 16).ToLowerInvariant();
         }
 
+        /// <summary>
+        /// Deletes all cached compilation output for a specific mod.
+        /// Returns true if any files were deleted.
+        /// </summary>
         public static bool InvalidateCache(string modId)
         {
             if (!Directory.Exists(CacheRoot))

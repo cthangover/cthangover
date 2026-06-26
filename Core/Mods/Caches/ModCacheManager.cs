@@ -5,30 +5,57 @@ using Godot;
 
 namespace Cthangover.Core.Mods.Caches
 {
+    /// <summary>
+    /// On-disk cache manager for shader files extracted from zip mods.
+    /// Godot's <c>GD.Load&lt;Shader&gt;</c> requires a real filesystem
+    /// path — it cannot read shader source from a byte array or a zip
+    /// stream — so shaders shipped inside zip mods must be extracted to
+    /// <c>user://mod_cache/shaders/</c> before loading.
+    ///
+    /// The extraction step also copies <c>.gdshaderinclude</c> files
+    /// alongside their owning <c>.gdshader</c>, because Godot resolves
+    /// shader includes relative to the shader file's location on disk.
+    /// Without this co-location, any shader using an include directive
+    /// would fail to compile.
+    ///
+    /// Extraction is idempotent — <c>IsShaderCached</c> checks before
+    /// writing — so repeated calls during development don't overwrite
+    /// unchanged files and trigger unnecessary shader recompilation.
+    /// </summary>
     public static class ModCacheManager
     {
         private const string ShaderGroupDir = "shaders";
 
+        /// <summary>Returns the globalised cache root path from <c>ModConfig</c>.</summary>
         public static string GetCacheRoot()
         {
             return ProjectSettings.GlobalizePath(ModConfig.Instance.Cache.Root);
         }
 
+        /// <summary>Directory path where a specific shader's files are cached.</summary>
         public static string GetShaderCacheDir(string shaderName)
         {
             return Path.Combine(GetCacheRoot(), ShaderGroupDir, shaderName);
         }
 
+        /// <summary>Full file path where a specific shader is expected to be cached.</summary>
         public static string GetShaderCachePath(string shaderName)
         {
             return Path.Combine(GetShaderCacheDir(shaderName), shaderName + ".gdshader");
         }
 
+        /// <summary>True if the shader already exists in the on-disk cache.</summary>
         public static bool IsShaderCached(string shaderName)
         {
             return File.Exists(GetShaderCachePath(shaderName));
         }
 
+        /// <summary>
+        /// Extracts shader files from a mod (typically a zip mod) to the
+        /// on-disk cache so Godot can load them. Shader includes are
+        /// copied alongside each shader because Godot resolves include
+        /// directives relative to the shader's location.
+        /// </summary>
         public static void ExtractShaders(string modId, IModFileProvider provider)
         {
             var files = provider.ListFiles(ShaderGroupDir);

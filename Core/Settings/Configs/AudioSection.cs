@@ -3,6 +3,12 @@ using System.Text.Json.Serialization;
 
 namespace Cthangover.Core.Settings.Configs
 {
+    /// <summary>
+    /// Serialisable audio preferences with independent volume (0–100, integer)
+    /// and enabled toggle for each bus. Defaults: sounds at full volume,
+    /// music and ambient at 5% — deliberate imbalance so SFX punch through
+    /// by default while background layers are subtle.
+    /// </summary>
     [Serializable]
     public class AudioSection
     {

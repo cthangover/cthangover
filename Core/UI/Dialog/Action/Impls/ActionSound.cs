@@ -1,10 +1,13 @@
 using Cthangover.Core.Audio;
 using Cthangover.Core.Scenes;
-using Cthangover.Core.UI.Dialog.Action;
-using Godot;
 
 namespace Cthangover.Core.UI.Dialog.Action.Impls
 {
+    /// <summary>
+    /// Plays a sound through the AudioService using the UI sound channel (SoundType.UI).
+    /// NoWait so the sound plays and the dialog continues immediately — no
+    /// synchronization with audio completion.
+    /// </summary>
     public class ActionSound : ActionCommand
     {
         public string Sound { get; set; }

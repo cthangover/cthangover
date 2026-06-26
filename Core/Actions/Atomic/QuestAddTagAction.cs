@@ -1,5 +1,11 @@
 namespace Cthangover.Core.Actions.Atomic
 {
+    /// <summary>
+    /// Adds a string tag to a quest. Tags are used for conditional logic in
+    /// scenario scripts — a quest can be checked for tag presence to branch
+    /// dialog. The tag is added via QuestBase.AddTag, which likely stores it
+    /// in the quest's save data.
+    /// </summary>
     public class QuestAddTagAction : IScenarioAction
     {
         public string Name => "quest.add_tag";

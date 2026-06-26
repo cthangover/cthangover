@@ -3,6 +3,13 @@ using Cthangover.Core.UI.Lights;
 
 namespace Cthangover.Core.UI.Dialog.Action.Impls
 {
+    /// <summary>
+    /// Applies static lights from a JSON string to the UiLightController.
+    /// An empty or null string clears all static lights. The JSON is deserialized
+    /// into LightDef objects with viewport-relative coordinates, which are then
+    /// converted to pixel positions. Supports up to 10 static lights plus the
+    /// player's dynamic lamp.
+    /// </summary>
 	public class ActionLightSet : ActionCommand
 	{
 		public string LightsJson { get; set; }

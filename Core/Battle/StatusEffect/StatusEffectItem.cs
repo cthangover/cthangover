@@ -5,6 +5,15 @@ using Godot;
 namespace Cthangover.Core.Cards.StatusEffect
 {
 
+    /// <summary>
+    /// Runtime instance of a status effect. Constructed from
+    /// StatusEffectInfo with the Actions behaviour resolved via
+    /// StatusEffectActionFactory. Icon is loaded from the "characters"
+    /// mod group via TextureUtils — effects share the same icon pool
+    /// as characters. Copy() is a shallow clone of primitives and
+    /// references (Actions is a shared singleton, not cloned) suitable
+    /// for StatusEffectQueue duplication.
+    /// </summary>
     public class StatusEffectItem : IStatusEffect
     {
         public string ID { get; private set; }

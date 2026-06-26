@@ -6,6 +6,16 @@ using Cthangover.Core.Utils;
 
 namespace Cthangover.Core.Actions
 {
+    /// <summary>
+    /// Concrete IActionContext wired to a DialogRuntime. Each service property
+    /// is instantiated inline (no DI container) — this is intentional: scenario
+    /// actions are short-lived commands, so creating new service instances per
+    /// context is cheap and avoids shared state. GetParam delegates to the
+    /// dialog runtime's variable store, bridging the dialog DSL's "set" variables
+    /// to the atomic action system. The Inventory reference is try-caught because
+    /// it may not exist at the moment of context creation (e.g. before game data
+    /// is fully loaded).
+    /// </summary>
     internal class ScenarioActionContext : IActionContext
     {
         private readonly DialogRuntime runtime;

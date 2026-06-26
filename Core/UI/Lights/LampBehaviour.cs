@@ -6,6 +6,16 @@ using Godot;
 
 namespace Cthangover.Core.UI.Lights
 {
+    /// <summary>
+    /// Draggable lamp UI element for the player's portable light source.
+    /// Input handling exists in both _GuiInput (bubbled) and _Input (global)
+    /// to catch drags that start on the lamp but continue outside its rect.
+    /// When the lamp is hidden, it resets position to offscreen (-1000,-1000)
+    /// to disable the light in the shader. GetLightParams() is a static helper
+    /// so the light controller can query lamp parameters without coupling to
+    /// the behaviour instance. Inherits from TextureRectModIconLoader for
+    /// mod-provided lamp icon textures.
+    /// </summary>
 	public partial class LampBehaviour : TextureRectModIconLoader
 	{
 		private UiLightController controller;

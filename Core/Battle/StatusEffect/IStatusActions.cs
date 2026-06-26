@@ -2,6 +2,16 @@ using Cthangover.Core.Characters;
 
 namespace Cthangover.Core.Cards.StatusEffect
 {
+    /// <summary>
+    /// Behaviour hooks for a status effect type. Each hook receives the
+    /// owning character so a single IStatusActions instance can be
+    /// shared across multiple characters. OnDealDamage / OnTakeDamage
+    /// use ref int to let effects amplify or reduce damage before it
+    /// is applied. ModifyAttributes is a passive stat modifier called
+    /// independently of turn phases. OnFinalAction fires once when the
+    /// effect expires. All hooks have empty default semantics — effects
+    /// override only the hooks they care about.
+    /// </summary>
     public interface IStatusActions
     {
         string ID { get; }

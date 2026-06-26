@@ -3,6 +3,16 @@ using Godot;
 
 namespace Cthangover.Core.UI.Tool
 {
+    /// <summary>
+    /// Base for tool popup windows with dirty-state tracking. When dirty, the
+    /// title gains a "*" prefix — a common editor convention. CloseRequested
+    /// shows an unsaved-changes confirmation if dirty. ShowUnsavedDialog and
+    /// ConfirmDiscardUnsaved provide two patterns: callback-based and return-value-
+    /// based, for different use cases. Provides convenience factory methods for
+    /// common layout widgets (CreateFillContainer, CreateToolbar, CreateSidebar)
+    /// to reduce boilerplate in tool implementations. GetMonospaceFont() falls
+    /// back to ThemeDB.FallbackFont if the bundled monospace font is missing.
+    /// </summary>
     public abstract partial class ToolWindow : Window
     {
         public static T Open<T>() where T : ToolWindow, new()

@@ -8,6 +8,22 @@ using Godot;
 
 namespace Cthangover.Core.Factories.Impls
 {
+    /// <summary>
+    /// Factory for full character definitions — party members, enemies, NPCs —
+    /// each carrying stats, recruited actions, loot tables, and a portrait.
+    /// Returns a <b>copy</b> of the cached <c>Character</c> on every <c>Get</c>
+    /// call because <c>Character.Attributes</c> mutate during gameplay (health
+    /// changes, stat buffs/debuffs). Sharing a single instance would cause
+    /// one battle's damage to bleed into every other reference.
+    ///
+    /// Character actions are stored as comma-separated IDs in JSON and resolved
+    /// through <c>ActionCharacterFactory</c> — this two-level dependency chain
+    /// keeps the character JSON compact while allowing actions to be authored
+    /// and balanced independently. Attribute fields that are missing or zero in
+    /// the JSON receive nonzero fallback values (e.g. <c>Fullness = 100</c>,
+    /// <c>Health</c> and <c>Point</c> default to 1) so that incomplete mod
+    /// data doesn't produce unplayable characters.
+    /// </summary>
     public class CharacterFactory : ICacheLoader<string, Character>
     {
         private static readonly Lazy<CharacterFactory> lazy = new(() => new CharacterFactory());

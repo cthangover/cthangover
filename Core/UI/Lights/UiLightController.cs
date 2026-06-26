@@ -9,6 +9,19 @@ using Godot;
 
 namespace Cthangover.Core.UI.Lights
 {
+    /// <summary>
+    /// Singleton 2D lighting controller that drives a multi-light shader system.
+    /// Maintains up to 11 lights: index 0 is the player's lamp, indices 1-10 are
+    /// static scene lights. Pushes uniform arrays (positions, colors, radii,
+    /// influence) to all registered ShaderMaterials — the ViewBox background/
+    /// foreground plus any externally registered materials. The time-of-day
+    /// system blends four phases (morning/day/evening/night) via a Vector4 weights
+    /// uniform, with smooth transitions between phases. DarkMode overrides time
+    /// with full-night weights. Materials are discovered lazily via SceneContextNode
+    /// and cached, with a registration system for extra materials (e.g. mod-added
+    /// sprites that need lighting). _EnterTree manages singleton enforcement
+    /// with duplicate warnings, not assertions, to avoid blocking scene reloads.
+    /// </summary>
     public partial class UiLightController : Control, IOnTimeEvent
     {
         public static UiLightController Instance { get; private set; }
@@ -57,10 +70,17 @@ namespace Cthangover.Core.UI.Lights
             }
         }
 
-        public override void _EnterTree()
-        {
-            Instance = this;
-        }
+		public override void _EnterTree()
+		{
+			if (Instance != null && GodotObject.IsInstanceValid(Instance))
+			{
+				var scene = GetTree()?.CurrentScene?.Name ?? "?";
+				var existingPath = Instance.GetPath().ToString();
+				var myPath = GetPath().ToString();
+				GameLogger.Log("DUPLICATE", $"UiLightController._EnterTree: Instance ALREADY SET by '{existingPath}', overwriting with duplicate at '{myPath}' on scene '{scene}'", LogLevel.Error);
+			}
+			Instance = this;
+		}
 
         public override void _ExitTree()
         {

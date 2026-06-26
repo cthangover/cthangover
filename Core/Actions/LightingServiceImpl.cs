@@ -2,6 +2,12 @@ using Cthangover.Core.UI.Lights;
 
 namespace Cthangover.Core.Actions
 {
+    /// <summary>
+    /// Thin wrapper around UiLightController.Instance. ClearDepthMap sets both
+    /// depth and albedo to null simultaneously — partial clearing would leave
+    /// the shader in an inconsistent state. SetUseTime delegates to the
+    /// controller's IsUseLight property.
+    /// </summary>
     internal class LightingServiceImpl : ILightingService
     {
         public void ClearDepthMap()

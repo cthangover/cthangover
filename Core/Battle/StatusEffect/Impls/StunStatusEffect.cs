@@ -2,6 +2,13 @@ using Cthangover.Core.Characters;
 
 namespace Cthangover.Core.Cards.StatusEffect.Impls
 {
+    /// <summary>
+    /// Stun behaviour set — intentionally all no-ops. The stun condition
+    /// is checked separately via StatusEffectQueue.HasStun() rather than
+    /// through action hooks, so the Actions implementation is empty.
+    /// Exists as a concrete type so the factory can resolve "basic/stun"
+    /// to a valid instance.
+    /// </summary>
     public class StunStatusEffect : IStatusActions
     {
         public string ID => "basic/stun";

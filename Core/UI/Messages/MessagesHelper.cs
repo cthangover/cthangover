@@ -4,7 +4,14 @@ using Godot;
 
 namespace Cthangover.Core.UI.Messages
 {
-
+    /// <summary>
+    /// Static factory for floating UI messages (like "Quest updated" or item
+    /// pickup notifications). Manages a cycling position index of 0-5 so
+    /// consecutive messages stack vertically without overlapping. Each message
+    /// is instantiated from Message.tscn and parented to the Background node
+    /// (found via scene tree search). Messages auto-fade and self-destruct
+    /// via UiMessage's OnUpdate.
+    /// </summary>
     public static class MessagesHelper
     {
         private const int maxMessageIndex = 5;

@@ -7,6 +7,16 @@ using Cthangover.Core.Utils;
 
 namespace Cthangover.Core.Factories.Impls
 {
+    /// <summary>
+    /// Factory for crafting recipes. Uses <c>BoundedCache</c> because the
+    /// crafting UI may repeatedly query recipes during scrolling and the
+    /// ingredient resolution (through <c>ItemFactory</c>) is non-trivial.
+    /// Recipes are treated as immutable value objects — <c>Get</c> returns
+    /// the cached instance directly without copying. Missing ingredient
+    /// items emit an error and skip that ingredient rather than failing the
+    /// whole recipe, so a mod author's typo in one input doesn't silently
+    /// break the crafting UI for unrelated recipes.
+    /// </summary>
     public class RecipeFactory : ICacheLoader<string, IRecipe>
     {
         private static readonly Lazy<RecipeFactory> lazy = new(() => new RecipeFactory());

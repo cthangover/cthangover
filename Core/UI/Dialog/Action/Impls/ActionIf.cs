@@ -3,6 +3,11 @@ using Cthangover.Core.Utils;
 
 namespace Cthangover.Core.UI.Dialog.Action.Impls
 {
+    /// <summary>
+    /// Conditional branch: evaluates a Func&lt;bool&gt; and jumps to TrueGoTo or
+    /// FalseGoTo based on the result. If the chosen target is null/empty, falls
+    /// through to Next(). NoWait so branching is transparent to the player.
+    /// </summary>
     public class ActionIf : ActionCommand
     {
         public Func<bool> Condition { get; set; }

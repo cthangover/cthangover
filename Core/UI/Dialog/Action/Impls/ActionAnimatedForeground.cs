@@ -7,6 +7,15 @@ using Godot;
 
 namespace Cthangover.Core.UI.Dialog.Action.Impls
 {
+    /// <summary>
+    /// Frame-animates the scene foreground by swapping ViewBox textures at a
+    /// configurable speed. Loads frames from SpriteIDs on construction
+    /// (OnStartQueue). Unlike AnimationController which crossfades, this does
+    /// hard cuts — simpler but acceptable for foreground effects. The speed
+    /// switches to NextFrameSpeed after the first frame so first-frame delay
+    /// can differ from subsequent frames. Registers as IOnUpdateEvent for
+    /// per-frame advancement. Non-looping mode auto-stops at last frame.
+    /// </summary>
     public class ActionAnimatedForeground : ActionCommand, IOnUpdateEvent
     {
         public int Priority => 0;

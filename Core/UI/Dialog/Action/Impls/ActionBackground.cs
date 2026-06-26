@@ -7,6 +7,16 @@ using Godot;
 
 namespace Cthangover.Core.UI.Dialog.Action.Impls
 {
+    /// <summary>
+    /// Sets the scene background on the ViewBox, including depth and albedo maps
+    /// for the lighting system. Resolves textures through BackgroundFactory on
+    /// construction (OnStartQueue) — depth and albedo are loaded from the same
+    /// sprite ID with "_depth" / "_albedo" suffixes. Kills any in-progress
+    /// background transition before setting the new texture. Textures are nulled
+    /// after application to prevent stale reuse across dialog restarts.
+    /// Sets SceneContextNode.LastBackgroundID so the scene manager can restore
+    /// the correct background on scene revisit.
+    /// </summary>
     public class ActionBackground : ActionCommand
     {
         public string SpriteID { get; set; }

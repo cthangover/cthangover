@@ -3,6 +3,15 @@ using Godot;
 
 namespace Cthangover.Core.UI.Base.Lists
 {
+    /// <summary>
+    /// Shader-based scene transition: animates a "progress" uniform on the
+    /// background's ShaderMaterial via a Godot Tween, then reveals content after
+    /// a configurable delay. The shader is resolved through the mod system
+    /// (ModManager.ResolveShader), allowing mods to replace the transition effect.
+    /// Uses an easeInOut curve for the progress ramp. Material is duplicated on
+    /// first use so each instance gets its own shader parameters. On tree exit,
+    /// the duplicated material is disposed to avoid leaks.
+    /// </summary>
     public abstract partial class TransitionWidget : Widget
     {
         private static readonly StringName ProgressParam = "progress";

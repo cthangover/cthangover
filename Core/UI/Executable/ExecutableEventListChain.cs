@@ -4,7 +4,14 @@ using Godot;
 
 namespace Cthangover.Core.UI.Executable
 {
-
+    /// <summary>
+    /// Sequential list-based chain: polls GetNext() on a timer (default 1s),
+    /// removes the returned event from the list, and runs its dialog. Once an
+    /// event runs, it's consumed — the chain shrinks until empty. Respects
+    /// IsOneRun (skips already-run events) and CheckConditions (skips events
+    /// whose conditions fail). Use for ordered event sequences where each event
+    /// should play once in order.
+    /// </summary>
     public partial class ExecutableEventListChain : ExecutableEventChainBase
     {
 

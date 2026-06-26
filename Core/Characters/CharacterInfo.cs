@@ -5,7 +5,15 @@ using Cthangover.Core.Factories;
 
 namespace Cthangover.Core.Characters
 {
-
+    /// <summary>
+    /// JSON-serializable character descriptor loaded from data files. Flat
+    /// structure — stats are individual int properties rather than nested
+    /// objects — because JSON files authored by designers are easier to read
+    /// and edit as flat key-value pairs. The Actions field is a string (not a
+    /// list) because it carries IDs joined by a separator, parsed by the factory
+    /// at load time. CharacterInfo is the serialization DTO; Character is the
+    /// runtime model constructed from it by CharacterFactory.
+    /// </summary>
     [Serializable]
     public class CharacterInfo : IIdentifiable
     {

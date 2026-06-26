@@ -4,8 +4,17 @@ using Godot;
 
 namespace Cthangover.Core.Scenes
 {
+    /// <summary>
+    /// Utility that recursively collects all <c>.tscn</c> files under
+    /// <c>res://scenes</c> and returns them sorted by name. Used by
+    /// tooling and scene selection UI.
+    /// </summary>
     public static class ModScenes
     {
+        /// <summary>
+        /// Returns all .tscn files under res://scenes as (Name, Path)
+        /// tuples, sorted alphabetically by name.
+        /// </summary>
         public static List<(string Name, string Path)> CollectTscnFiles()
         {
             var result = new List<(string, string)>();

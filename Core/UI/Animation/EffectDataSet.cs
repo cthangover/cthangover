@@ -3,7 +3,13 @@ using Godot;
 
 namespace Cthangover.Core.UI.Animation
 {
-    
+    /// <summary>
+    /// Editor-configured bridge between a frame Texture2D array and an AnimationController.
+    /// Converts Godot's typed Array into a List, wires the NextCycle event, and starts
+    /// playback. When the animation completes one cycle, it detaches the handler and
+    /// self-destructs — the "fire and forget" glue between artist-authored data and
+    /// the animation runtime.
+    /// </summary>
     public partial class EffectDataSet : Control
     {
         

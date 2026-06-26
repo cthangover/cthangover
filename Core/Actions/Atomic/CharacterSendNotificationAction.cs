@@ -1,5 +1,10 @@
 namespace Cthangover.Core.Actions.Atomic
 {
+    /// <summary>
+    /// Shows a "character joined" UI notification without actually adding them
+    /// to the party. Used when the recruitment happens via a different mechanism
+    /// but the player still needs to see the visual confirmation.
+    /// </summary>
     public class CharacterSendNotificationAction : IScenarioAction
     {
         public string Name => "character.send_notification";

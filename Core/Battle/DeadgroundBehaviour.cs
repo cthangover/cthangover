@@ -8,6 +8,12 @@ using Godot;
 
 namespace Cthangover.Core.Battle
 {
+    /// <summary>
+    /// Defeat screen widget. Minimal compared to WingroundBehaviour —
+    /// only sets the deadground background texture (resolved from mods)
+    /// and offers a Main Menu button that clears BattleData and reloads
+    /// the menu scene. No loot, no EXP.
+    /// </summary>
     public partial class DeadgroundBehaviour : TransitionWidget
     {
         public void ToMainMenuClick()

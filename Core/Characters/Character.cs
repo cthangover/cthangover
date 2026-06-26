@@ -5,7 +5,15 @@ using Godot;
 
 namespace Cthangover.Core.Characters
 {
-
+    /// <summary>
+    /// Core character data model used in both the character factory and battle
+    /// runtime. The Behaviour string is an extensibility hook — it names a
+    /// behaviour class not defined here, resolved externally (likely by the AI
+    /// or battle system). RecruitmentChance is the percentage for the recruit
+    /// system. Copy() deep-clones Attributes and StatusEffectQueue with the new
+    /// character reference — battle needs isolated copies so stat changes and
+    /// status effects during combat don't mutate the template data.
+    /// </summary>
     public class Character : IIdentifiable
     {
         public string             ID                { get; set; }

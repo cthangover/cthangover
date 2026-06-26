@@ -8,6 +8,17 @@ using Godot;
 
 namespace Cthangover.Core.UI.Executable
 {
+    /// <summary>
+    /// ExecutableEvent backed by a scenario file (.scenario). Converts scenario
+    /// text using ScenarioConverter and appends the resulting actions to the
+    /// dialog queue. Resolves the scenario path via convention: if ScenarioPath
+    /// is set, uses that; otherwise derives the path from the class name
+    /// (stripping "Event" suffix, mapping to res://mods/core/scenarios/).
+    /// CustomMappings allows code to register arbitrary class-to-path bindings
+    /// for mod-provided scenarios. Supports inline ScenarioText for embedded
+    /// scenarios that don't need a separate file. Checks conditions through
+    /// ScenarioCondition.Evaluate before triggering.
+    /// </summary>
     public partial class ScenarioEvent : ExecutableEvent
     {
         private static readonly Dictionary<string, string> CustomMappings = new();

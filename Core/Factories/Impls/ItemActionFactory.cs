@@ -6,6 +6,20 @@ using Godot;
 
 namespace Cthangover.Core.Items
 {
+    /// <summary>
+    /// Reflection-based plugin registry for item action behaviours.
+    /// On construction, scans every loaded assembly for <c>IItemAction</c>
+    /// implementations via <c>Reflections.FindAndCreate</c> and indexes
+    /// them by <c>ID</c>. This means a mod DLL can introduce a new item
+    /// action simply by containing a public class that implements the
+    /// interface — no registration code needed. <c>RegisterAssembly</c>
+    /// handles the hot-reload case when a mod assembly is compiled or
+    /// loaded at runtime.
+    ///
+    /// The <c>"null"</c> ID string is treated as a no-op action (the
+    /// fallback for items that don't have an on-use effect), avoiding
+    /// the need for a sentinel <c>NullItemAction</c> class.
+    /// </summary>
     public class ItemActionFactory
     {
         

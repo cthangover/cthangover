@@ -1,5 +1,11 @@
 namespace Cthangover.Core.Actions.Atomic
 {
+    /// <summary>
+    /// Sets the global state of a quest (e.g. "Active", "Completed", "Failed").
+    /// The "status" param is parsed via Enums&lt;QuestStatus&gt;.Parse which is
+    /// case-sensitive — invalid status strings are caught by QuestServiceImpl's
+    /// TryGet pattern and logged as errors rather than crashing the dialog.
+    /// </summary>
     public class QuestSetStatusAction : IScenarioAction
     {
         public string Name => "quest.set_status";

@@ -2,6 +2,16 @@ using System;
 
 namespace Cthangover.Core.Characters
 {
+    /// <summary>
+    /// The complete stat block for a character. Health/Defence/Attack/Strength/
+    /// Magic/Point use the Attribute wrapper (current + base + change events).
+    /// Discipline, Depravity, and Fullness are raw ints with no events — they
+    /// represent persistent character traits that change less frequently and
+    /// don't need real-time UI binding. Initial values (-5, -5, 100) suggest
+    /// Discipline/Depravity use a bipolar scale centered at 0, while Fullness
+    /// starts full and depletes. Copy() deep-clones all Attributes to avoid
+    /// shared mutable state.
+    /// </summary>
     [Serializable]
     public class CharacterAttributes
     {

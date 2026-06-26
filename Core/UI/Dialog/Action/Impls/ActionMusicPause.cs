@@ -1,10 +1,12 @@
 using Cthangover.Core.Audio;
 using Cthangover.Core.Scenes;
-using Cthangover.Core.UI.Dialog.Action;
-using Godot;
 
 namespace Cthangover.Core.UI.Dialog.Action.Impls
 {
+    /// <summary>
+    /// Pauses background music playback via AudioService without stopping the
+    /// track. Can be resumed with ActionMusicPlay.
+    /// </summary>
     public class ActionMusicPause : ActionCommand
     {
         public override WaitType WaitType { get; set; } = WaitType.NoWait;

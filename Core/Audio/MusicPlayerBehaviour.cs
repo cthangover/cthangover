@@ -6,6 +6,19 @@ using Godot;
 
 namespace Cthangover.Core.Audio
 {
+    /// <summary>
+    /// Autonomous music player that drives playlist auto-advance and
+    /// scene-aware track switching. It finds the AudioService's MusicPlayer
+    /// via the scene tree (not injected), initialises playlists lazily,
+    /// and advances to a random track when playback ends.
+    /// The core complexity is the Combat ↔ Ambient handoff:
+    /// when entering combat, the current ambient track and time are saved;
+    /// when leaving combat, they're restored — creating a seamless
+    /// interruption model. FadeMusic uses a Tween with a 1s delay
+    /// followed by a 6s volume ramp.
+    /// Disabling auto-play preserves the last track/time; re-enabling
+    /// resumes from the saved point.
+    /// </summary>
 	public partial class MusicPlayerBehaviour : Node
 	{
 		private AudioStreamPlayer audioPlayer;

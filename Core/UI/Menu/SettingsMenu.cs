@@ -5,6 +5,15 @@ using Godot;
 
 namespace Cthangover.Core.UI.Menu
 {
+    /// <summary>
+    /// Audio and language settings panel with tabbed layout. Uses an _initialized
+    /// guard to prevent save-triggered callbacks from firing during UI population
+    /// (LoadSettingsToUI → widget changes → callbacks → premature saves).
+    /// Language changes call LocaleLoader.LoadCurrentLanguage() for immediate
+    /// effect, then emit LanguageChanged so parent menus can refresh their
+    /// translated button text. Sliders become non-editable when their toggle is
+    /// off, enforcing the "disabled means off" semantics visually.
+    /// </summary>
     public partial class SettingsMenu : Control
     {
         [Signal]

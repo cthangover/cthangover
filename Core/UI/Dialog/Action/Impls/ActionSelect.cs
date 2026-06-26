@@ -4,6 +4,14 @@ using Godot;
 
 namespace Cthangover.Core.UI.Dialog.Action.Impls
 {
+    /// <summary>
+    /// Presents player choices by spawning answer variants in the DialogBox.
+    /// WaitType is WaitSelect so the dialog pauses until the player picks an
+    /// option (which triggers DialogBox.SelectVariant → Runtime.TryGoTo).
+    /// Each variant's text is processed through variable substitution before
+    /// display. Also sets an accompanying text message to contextualize the
+    /// choice (e.g. "What will you do?").
+    /// </summary>
     public class ActionSelect : ActionCommand
     {
         public List<SelectVariant> Variants { get; set; }

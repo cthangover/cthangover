@@ -6,6 +6,20 @@ using Cthangover.Core.Utils;
 
 namespace Cthangover.Core.Factories
 {
+    /// <summary>
+    /// Core binary-asset factory with LRU-bounded caching and multi-extension
+    /// mod file scanning. Implements <c>ICacheLoader</c> so that cache misses
+    /// trigger a fresh scan of all mods — each registered file extension is
+    /// tried in order and the first matching asset wins. The <c>factoryKey</c>
+    /// passed to the constructor is used to look up a cache size override from
+    /// <c>ModConfig</c>, allowing per-asset-type memory budgeting without
+    /// hard-coding sizes per subclass. Subclasses implement
+    /// <c>ConvertFromBytes</c> to transform raw file data into Godot resources.
+    ///
+    /// Falls back silently for <c>_albedo</c> / <c>_depth</c> suffix lookups
+    /// (normal-map companion textures that may legitimately not exist for every
+    /// sprite), avoiding log noise for optional secondary textures.
+    /// </summary>
     public abstract class PrefabFactory<T> : IPrefabFactory<T>, ICacheLoader<string, T> where T : class
     {
         private readonly BoundedCache<string, T> _cache;

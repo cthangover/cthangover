@@ -4,6 +4,15 @@ using Godot;
 
 namespace Cthangover.Core.UI.Menu
 {
+    /// <summary>
+    /// Save slot grid layout with configurable column/row count and padding.
+    /// Does NOT use the ListWidget/ColumnCellListWidget framework — manually
+    /// calculates cell dimensions from the control size and instantiates
+    /// SaveSlotItem prefabs in a flat grid. This is intentional: the save grid
+    /// has a fixed visual size and doesn't need scrolling or dynamic content
+    /// sizing. OnResize refreshes if slots were cleared (e.g. initial render
+    /// when size wasn't known yet).
+    /// </summary>
     public partial class SaveSlotList : Control
     {
         private PackedScene _itemScene;

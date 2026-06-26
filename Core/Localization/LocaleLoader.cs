@@ -7,6 +7,25 @@ using Godot;
 
 namespace Cthangover.Core.Localization
 {
+    /// <summary>
+    /// Static loader that assembles Godot <c>Translation</c> resources
+    /// from <c>.properties</c> files distributed across mods. Chose the
+    /// <c>.properties</c> format (plain <c>key=value</c>) over Godot's
+    /// CSV translation format because it requires no editor round-trip
+    /// and is trivially editable by mod authors in any text editor.
+    ///
+    /// Merges entries from <b>all</b> loaded mods into a single
+    /// <c>Translation</c> — later values overwrite earlier ones via
+    /// <c>Dictionary</c> assignment — so mods can selectively override
+    /// base game strings without copying the entire locale file.
+    /// File matching is by suffix (<c>_{locale}.properties</c>) allowing
+    /// mods to organise translations however they like as long as the
+    /// filename ends with the correct locale code.
+    ///
+    /// On locale switch, the previous <c>Translation</c> is removed from
+    /// <c>TranslationServer</c> and disposed to avoid leaking Godot
+    /// resource handles across language changes.
+    /// </summary>
     public static class LocaleLoader
     {
         private static readonly Dictionary<string, string> LangToLocale = new()

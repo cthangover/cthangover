@@ -2,7 +2,14 @@ using Godot;
 
 namespace Cthangover.Core.UI.Event
 {
-
+    /// <summary>
+    /// Stateless input abstraction that maps mouse to a virtual single-touch source.
+    /// Tracks mouse-down state between frames to derive touch phases (Began/Moved/
+    /// Ended/Stationary), enabling touch-aware code to work with mouse-only devices.
+    /// Provides both UI-space (UITouchPosition) and screen-space (TouchPosition)
+    /// coordinate access. Update() must be called each frame to refresh the
+    /// wasMouseDownLastFrame flag.
+    /// </summary>
     public static class DeviceInput
     {
         public static int CurrentTouchIndex { get; set; }

@@ -4,6 +4,14 @@ using Godot;
 
 namespace Cthangover.Core.UI.Menu
 {
+    /// <summary>
+    /// In-game pause menu: save/load/settings/quit. Instantiates SettingsMenu
+    /// and SaveLoadMenu as children on _Ready, keeping them invisible until
+    /// needed — avoids loading delays when the player opens the menu.
+    /// RefreshSaveButton dynamically disables save if the current scene doesn't
+    /// allow saves (checked via SceneManager.IsSaveAllowedForCurrentScene).
+    /// Button text is translated with a refresh-on-language-change subscription.
+    /// </summary>
     public partial class GameMenu : Control
     {
         private SettingsMenu _settingsMenu;

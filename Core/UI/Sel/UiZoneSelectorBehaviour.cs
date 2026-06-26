@@ -7,7 +7,16 @@ using Godot;
 
 namespace Cthangover.Core.UI.Sel
 {
-
+    /// <summary>
+    /// Interactive clickable zone that triggers an ExecutableEvent. Uses smooth
+    /// color interpolation (lerp) for hover highlight rather than instant
+    /// modulate changes — the OnUpdate loop blends the image modulate toward
+    /// the target color at a configurable speed. On click, resolves the
+    /// ExecutableEvent by ID using a recursive tree search if the exported
+    /// reference is null (lazy binding). The dual Modulate/MouseFilter approach
+    /// means the highlight is purely cosmetic — the zone is always clickable
+    /// even when not visibly highlighted.
+    /// </summary>
     public partial class UiZoneSelectorBehaviour : Control, IOnUpdateEvent
     {
 

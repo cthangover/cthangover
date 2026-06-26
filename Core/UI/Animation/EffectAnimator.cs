@@ -3,7 +3,13 @@ using Godot;
 
 namespace Cthangover.Core.UI.Animation
 {
-
+    /// <summary>
+    /// Shader-driven frame animation: drives _FrameIndex and _FrameCount uniforms
+    /// on the TextureRect's ShaderMaterial rather than swapping textures. This means
+    /// all animation frames live in a single GPU texture atlas and the shader selects
+    /// the visible frame. Auto-destroys (QueueFree) after totalDuration elapses,
+    /// making it suitable for fire-and-forget VFX that don't need external cleanup.
+    /// </summary>
     public partial class EffectAnimator : Control, IOnUpdateEvent
     {
 

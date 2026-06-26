@@ -1,0 +1,703 @@
+# DOCUMENTATION PLAN: cthangover
+# Format:
+#   # GROUP: GroupName
+#   ## Description: Brief description of the system
+#   ### relative\path\to\file.ext  (relative to C:\projects\godotcthangover\)
+#   # ENDGROUP
+# Each line starting with ### is a file to document.
+# Lines starting with # are comments/headers.
+
+################################################################################
+# GROUP: ProjectConfig
+## Description: Project configuration, build system, entry points
+### project.godot
+### Cthangover.csproj
+### Cthangover.sln
+### export_presets.cfg
+### config\game_config.json
+### config\mod_config.json
+### README_RU.md
+### LICENSE
+# ENDGROUP
+
+################################################################################
+# GROUP: ModSystem
+## Description: Mod loading, merging, caching, C# compilation (Roslyn), file providers (folder/ZIP), scene resolution, conflict resolution
+### Core\Mods\ModManager.cs
+### Core\Mods\ModRegistry.cs
+### Core\Mods\ModCompiler.cs
+### Core\Mods\ModAssemblyLoader.cs
+### Core\Mods\ModManifest.cs
+### Core\Mods\ModInfo.cs
+### Core\Mods\ModScenes.cs
+### Core\Mods\ModConfig.cs
+### Core\Mods\CacheConfig.cs
+### Core\Mods\SubscriptionEntry.cs
+### Core\Mods\WrapperDefinition.cs
+### Core\Mods\CompileResult.cs
+### Core\Mods\IModInfo.cs
+### Core\Mods\IModRegistry.cs
+### Core\Mods\IModFileProvider.cs
+### Core\Mods\IModInitializer.cs
+### Core\Mods\ModFileEntry.cs
+### Core\Mods\FileData.cs
+### Core\Mods\Providers\FolderModFileProvider.cs
+### Core\Mods\Providers\ZipModFileProvider.cs
+### Core\Mods\Caches\ModCacheManager.cs
+### Core\Mods\ModInitializerRegistry.cs
+# ENDGROUP
+
+################################################################################
+# GROUP: ScenarioDSL
+## Description: Custom DSL parser for .scenario text files; 26 command strategies (text, ptext, title, background, foreground, effect, animation, sound, music, light, set, goto, delay, end, etc.); extensible via mods
+### Core\Scenarios\ScenarioParser.cs
+### Core\Scenarios\ScenarioLoader.cs
+### Core\Scenarios\ScenarioConverter.cs
+### Core\Scenarios\ScenarioCommandStrategyFactory.cs
+### Core\Scenarios\IScenarioCommandStrategy.cs
+### Core\Scenarios\ICommandReferenceMetadata.cs
+### Core\Scenarios\Impls\TextCommandStrategy.cs
+### Core\Scenarios\Impls\PTextCommandStrategy.cs
+### Core\Scenarios\Impls\TitleCommandStrategy.cs
+### Core\Scenarios\Impls\BackgroundCommandStrategy.cs
+### Core\Scenarios\Impls\BackgroundColorCommandStrategy.cs
+### Core\Scenarios\Impls\BackgroundShowHideCommandStrategy.cs
+### Core\Scenarios\Impls\ForegroundCommandStrategy.cs
+### Core\Scenarios\Impls\ShowDialogCommandStrategy.cs
+### Core\Scenarios\Impls\HideDialogCommandStrategy.cs
+### Core\Scenarios\Impls\SwitchSceneCommandStrategy.cs
+### Core\Scenarios\Impls\ActionCommandStrategy.cs
+### Core\Scenarios\Impls\EffectCommandStrategy.cs
+### Core\Scenarios\Impls\AnimationCommandStrategy.cs
+### Core\Scenarios\Impls\SoundCommandStrategy.cs
+### Core\Scenarios\Impls\MusicCommandStrategy.cs
+### Core\Scenarios\Impls\MusicPlayCommandStrategy.cs
+### Core\Scenarios\Impls\MusicPauseCommandStrategy.cs
+### Core\Scenarios\Impls\LightSetCommandStrategy.cs
+### Core\Scenarios\Impls\LightUseTimeCommandStrategy.cs
+### Core\Scenarios\Impls\SetCommandStrategy.cs
+### Core\Scenarios\Impls\EndCommandStrategy.cs
+### Core\Scenarios\Impls\GotoCommandStrategy.cs
+### Core\Scenarios\Impls\DelayCommandStrategy.cs
+### Core\Scenarios\Impls\EmptyCommandStrategy.cs
+# ENDGROUP
+
+################################################################################
+# GROUP: ScenarioActions
+## Description: C# action services (SDK for mod authors) called from DSL scenarios; atomic actions for battle, quest, character, lighting, scene nodes, UI toggles
+### Core\Actions\IScenarioAction.cs
+### Core\Actions\IActionContext.cs
+### Core\Actions\IQuestService.cs
+### Core\Actions\ICharacterService.cs
+### Core\Actions\IBattleService.cs
+### Core\Actions\ILightingService.cs
+### Core\Actions\ISceneNodeService.cs
+### Core\Actions\ScenarioActionFactory.cs
+### Core\Actions\ScenarioActionContext.cs
+### Core\Actions\QuestServiceImpl.cs
+### Core\Actions\CharacterServiceImpl.cs
+### Core\Actions\BattleServiceImpl.cs
+### Core\Actions\LightingServiceImpl.cs
+### Core\Actions\SceneNodeServiceImpl.cs
+### Core\Actions\Atomic\BattleInitAction.cs
+### Core\Actions\Atomic\BattleSetCoreAction.cs
+### Core\Actions\Atomic\CharacterAddToPartyAction.cs
+### Core\Actions\Atomic\CharacterSendNotificationAction.cs
+### Core\Actions\Atomic\QuestSendNotificationAction.cs
+### Core\Actions\Atomic\QuestSetStatusAction.cs
+### Core\Actions\Atomic\QuestSetDataStatusAction.cs
+### Core\Actions\Atomic\QuestAddTagAction.cs
+### Core\Actions\Atomic\QuestRemoveTagAction.cs
+### Core\Actions\Atomic\LightingClearMapAction.cs
+### Core\Actions\Atomic\SceneInstantiateAction.cs
+### Core\Actions\Atomic\SceneRemoveObjectAction.cs
+### Core\Actions\Atomic\TogglePanelAction.cs
+# ENDGROUP
+
+################################################################################
+# GROUP: DialogueSystem
+## Description: Visual novel dialogue with avatar slots, answer/choice boxes, text display, queue management; 29 dialog action implementations for all DSL commands
+### Core\UI\Dialog\DialogBox.cs
+### Core\UI\Dialog\DialogCanvas.cs
+### Core\UI\Dialog\DialogQueue.cs
+### Core\UI\Dialog\DialogRuntime.cs
+### Core\UI\Dialog\IDialogBox.cs
+### Core\UI\Dialog\AnswerBox.cs
+### Core\UI\Dialog\AnswerItem.cs
+### Core\UI\Dialog\Action\ActionCommand.cs
+### Core\UI\Dialog\Action\ActionType.cs
+### Core\UI\Dialog\Action\ConstructType.cs
+### Core\UI\Dialog\Action\DestructType.cs
+### Core\UI\Dialog\Action\WaitType.cs
+### Core\UI\Dialog\Action\IActionCommand.cs
+### Core\UI\Dialog\Action\IActionDestruct.cs
+### Core\UI\Dialog\Action\Impls\ActionText.cs
+### Core\UI\Dialog\Action\Impls\ActionSelect.cs
+### Core\UI\Dialog\Action\Impls\ActionBackground.cs
+### Core\UI\Dialog\Action\Impls\ActionBackgroundColor.cs
+### Core\UI\Dialog\Action\Impls\ActionBackgroundShowHide.cs
+### Core\UI\Dialog\Action\Impls\ActionForeground.cs
+### Core\UI\Dialog\Action\Impls\ActionAnimatedForeground.cs
+### Core\UI\Dialog\Action\Impls\ActionEffect.cs
+### Core\UI\Dialog\Action\Impls\ActionEmpty.cs
+### Core\UI\Dialog\Action\Impls\ActionEnd.cs
+### Core\UI\Dialog\Action\Impls\ActionDelay.cs
+### Core\UI\Dialog\Action\Impls\ActionGoTo.cs
+### Core\UI\Dialog\Action\Impls\ActionIf.cs
+### Core\UI\Dialog\Action\Impls\ActionShowDialog.cs
+### Core\UI\Dialog\Action\Impls\ActionHideDialog.cs
+### Core\UI\Dialog\Action\Impls\ActionSwitchScene.cs
+### Core\UI\Dialog\Action\Impls\ActionMusic.cs
+### Core\UI\Dialog\Action\Impls\ActionMusicPlay.cs
+### Core\UI\Dialog\Action\Impls\ActionMusicPause.cs
+### Core\UI\Dialog\Action\Impls\ActionSound.cs
+### Core\UI\Dialog\Action\Impls\ActionLightSet.cs
+### Core\UI\Dialog\Action\Impls\ActionLightUseTime.cs
+### Core\UI\Dialog\Action\Impls\ActionRun.cs
+### Core\UI\Dialog\Action\Impls\ActionScenario.cs
+### Core\UI\Dialog\Action\Impls\ActionSet.cs
+### Core\UI\Dialog\Action\Impls\ActionTitle.cs
+### Core\UI\Dialog\Action\Impls\ActionTimedUpdate.cs
+### Core\UI\Dialog\Action\Impls\SelectVariant.cs
+### Core\UI\Dialog\Action\Impls\BackgroundActionType.cs
+### scenes\ui\DialogBox.tscn
+### scenes\ui\DialogCanvas.tscn
+### scenes\ui\AnswerBox.tscn
+### scenes\ui\AnswerItem.tscn
+### scenes\AnswerBox.tscn
+### scenes\AnswerItem.tscn
+# ENDGROUP
+
+################################################################################
+# GROUP: CharacterSystem
+## Description: RPG character data model with 6 attributes (Health, Attack, Defence, Strength, Magic, Point), levels, EXP, party management, loot, action characters for battle
+### Core\Characters\Character.cs
+### Core\Characters\CharacterData.cs
+### Core\Characters\CharacterInfo.cs
+### Core\Characters\CharacterAttributes.cs
+### Core\Characters\CharacterSet.cs
+### Core\Characters\ActionCharacter.cs
+### Core\Characters\ActionCharacterInfo.cs
+### Core\Characters\ActionCharacterType.cs
+### Core\Characters\Attribute.cs
+### Core\Characters\ChangedAttributes.cs
+### Core\Characters\ChangeAttribute.cs
+### Core\Characters\LootEntry.cs
+### mods\core\characters\characters.json
+### mods\core\characters\enemies.json
+### mods\core\characters\actions.json
+### mods\core\characters\player\marao.json
+### mods\core\characters\enemies\wolf_1.json
+### mods\core\characters\enemies\wolf_2.json
+### mods\core\characters\enemies\wolf_3.json
+### mods\core\characters\enemies\wolf_4.json
+### mods\core\characters\enemies\wolf_5.json
+### mods\core\characters\enemies\wolf_6.json
+### mods\core\characters\enemies\wolf_7.json
+### mods\core\characters\enemies\wolf_8.json
+### mods\core\characters\enemies\wolf_9.json
+### mods\core\characters\enemies\wolf_10.json
+### mods\core\characters\enemies\werewolf_girl_1.json
+### mods\murakami\characters\characters.json
+### mods\murakami\characters\player\murakami.json
+# ENDGROUP
+
+################################################################################
+# GROUP: InventoryAndCrafting
+## Description: Item management, inventory containers, recipes, crafting/workbench, item actions, nutrition/hunger system
+### Core\Items\Inventory.cs
+### Core\Items\IInventory.cs
+### Core\Items\Item.cs
+### Core\Items\ItemInfo.cs
+### Core\Items\IItem.cs
+### Core\Items\IItemAction.cs
+### Core\Items\ItemContainer.cs
+### Core\Items\IItemContainer.cs
+### Core\Items\ItemType.cs
+### Core\Items\Recipe.cs
+### Core\Items\RecipeInfo.cs
+### Core\Items\IRecipe.cs
+### Core\Items\Ingredient.cs
+### Core\Items\IngredientInfo.cs
+### Core\Items\IIngredient.cs
+### Core\Items\WorkbenchType.cs
+### Core\UI\Inventory\PlayerInventoryBagBehaviour.cs
+### Core\UI\Inventory\InventoryBagBehaviour.cs
+### Core\UI\Inventory\InventoryItemBehaviour.cs
+### mods\cooking\src\NutritionBehaviour.cs
+### mods\cooking\src\ui\RationStatisticsPanel.cs
+### mods\cooking\src\ui\workbench\WorkbenchPanel.cs
+### mods\cooking\src\ui\workbench\RecipeItemBehaviour.cs
+### mods\cooking\src\ui\workbench\RecipeIconItemBehaviour.cs
+### mods\cooking\src\ui\workbench\ToggleCookingPanelAction.cs
+### mods\cooking\src\items\actions\WolfMeatToRation.cs
+### mods\cooking\subscriptions\cooking_panel_init.cs
+### mods\cooking\subscriptions\dinner_tools_show.cs
+### mods\cooking\subscriptions\dinner_tools_hide.cs
+### mods\core\items\items.json
+### mods\core\items\food\wolf_meat.json
+### mods\core\items\food\ration.json
+### mods\core\items\resource\branches.json
+### mods\cooking\items\items.json
+### mods\cooking\items\recipe\wolf_meat_to_ration.json
+### mods\cooking\recipes\cooking.json
+### scenes\ui\PlayerInventoryBag.tscn
+### scenes\ui\InventoryItem.tscn
+### scenes\ui\CookingPanel.tscn
+### scenes\ui\DinnerTools.tscn
+# ENDGROUP
+
+################################################################################
+# GROUP: QuestSystem
+## Description: Quest tracking with statuses, tags, conditions, quest data; atomic actions for quest manipulation
+### Core\Quests\QuestBase.cs
+### Core\Quests\QuestDefinition.cs
+### Core\Quests\QuestData.cs
+### Core\Quests\QuestStatus.cs
+### Core\Quests\QuestFactory.cs
+### Core\Quests\IQuest.cs
+### Core\Quests\IQuestExtensions.cs
+### mods\core\quests\quests.json
+### mods\murakami\quests\quests.json
+# ENDGROUP
+
+################################################################################
+# GROUP: SkillsSystem
+## Description: Collectible skill cards with types (Active/Passive/ForCharacter) and 5 rarity levels (Common/Uncommon/Rare/Epic/Legendary); card UI with rarity-colored frames
+### Core\Skills\SkillInfo.cs
+### Core\Skills\SkillData.cs
+### Core\Skills\SkillType.cs
+### Core\Skills\RareType.cs
+### Core\Skills\SkillName.cs
+### Core\Skills\SkillCardBehaviour.cs
+### Core\Skills\SkillCardFrameBehaviour.cs
+### Core\Skills\SkillCardClickEvent.cs
+### Core\Skills\SkillWidget.cs
+### mods\core\characters\skills.json
+### mods\core\characters\skills\slave_master.json
+# ENDGROUP
+
+################################################################################
+# GROUP: RelationshipSystem
+## Description: Post-battle enemy recruitment with relationship attributes (hunger, etc.), recruitment chance, tick-based updates; enslave condition
+### Core\Relationship\Recruit.cs
+### Core\Relationship\RecruitingData.cs
+### Core\Relationship\RecruitBehaviourRegistry.cs
+### Core\Relationship\RecruitTickController.cs
+### Core\Relationship\IRecruitBehaviour.cs
+### Core\Relationship\IRecruitCondition.cs
+### mods\core\src\EnslaveCondition.cs
+# ENDGROUP
+
+################################################################################
+# GROUP: BattleSystem
+## Description: Abstract battle framework supporting multiple implementations (card battle, FF-style); status effects, action machines, damage display, loot/EXP reports, AI strategies
+### Core\Battle\BattleSceneContext.cs
+### Core\Battle\BattleCoreRegistry.cs
+### Core\Battle\BattleSpeedControl.cs
+### Core\Battle\Actions\BattleActionMachine.cs
+### Core\Battle\Actions\ActionExecutorHub.cs
+### Core\Battle\Actions\IActionExecutor.cs
+### Core\Battle\Actions\IActionExecutorProvider.cs
+### Core\Battle\Actions\IBattleAction.cs
+### Core\Battle\Actions\StopMachineDelegate.cs
+### Core\Battle\Base\ActionBase.cs
+### Core\Battle\Adapters\IBattleCore.cs
+### Core\Battle\Adapters\IBattleContext.cs
+### Core\Battle\Adapters\IBattleSide.cs
+### Core\Battle\Adapters\IBattleAnimation.cs
+### Core\Battle\Adapters\IBattleAnimationPlayer.cs
+### Core\Battle\Adapters\BattleContextImpl.cs
+### Core\Battle\Adapters\AnimationRegistry.cs
+### Core\Battle\WingroundBehaviour.cs
+### Core\Battle\DeadgroundBehaviour.cs
+### Core\Battle\ShowDamageBehaviour.cs
+### Core\Battle\LootReportItem.cs
+### Core\Battle\ExpReportCard.cs
+### Core\Battle\StatusEffect\StatusEffectInfo.cs
+### Core\Battle\StatusEffect\StatusEffectItem.cs
+### Core\Battle\StatusEffect\StatusEffectQueue.cs
+### Core\Battle\StatusEffect\StatusEffectType.cs
+### Core\Battle\StatusEffect\IStatusEffect.cs
+### Core\Battle\StatusEffect\IStatusActions.cs
+### Core\Battle\StatusEffect\Impls\StunStatusEffect.cs
+### scenes\Battle.tscn
+### scenes\battle\Winground.tscn
+### scenes\battle\Deadground.tscn
+### scenes\battle\LootReportItem.tscn
+### scenes\battle\ExpReportCard.tscn
+# ENDGROUP
+
+################################################################################
+# GROUP: BattleCardImplementation
+## Description: Card-based battle implementation (mod) — cards, physics actions (attack/defence/damage/stun), AI strategies, card UI (controller, panels, nodes, animations)
+### mods\card_battle\src\CardBattleCore.cs
+### mods\card_battle\src\ICard.cs
+### mods\card_battle\src\Actions\AbstractBattleAction.cs
+### mods\card_battle\src\Actions\ActionPhase.cs
+### mods\card_battle\src\Actions\CardBattleActionProvider.cs
+### mods\card_battle\src\Actions\PhysicsAttackAction.cs
+### mods\card_battle\src\Actions\PhysicsDefenceAction.cs
+### mods\card_battle\src\Actions\PhysicsDamageActionCard.cs
+### mods\card_battle\src\Actions\PhysicsDefenceActionCard.cs
+### mods\card_battle\src\Actions\PhysicsStunActionCard.cs
+### mods\card_battle\src\Player\CardActionStrategyFactory.cs
+### mods\card_battle\src\Player\ICardActionStrategy.cs
+### mods\card_battle\src\Player\AttackToEnemyStrategy.cs
+### mods\card_battle\src\Player\StunToEnemyStrategy.cs
+### mods\card_battle\src\Player\SupportStrategy.cs
+### mods\card_battle\src\Player\SelfStrategy.cs
+### mods\card_battle\src\UI\CardController.cs
+### mods\card_battle\src\UI\BattleCardPanel.cs
+### mods\card_battle\src\UI\ActionCardNode.cs
+### mods\card_battle\src\UI\CharacterCardNode.cs
+### mods\card_battle\src\UI\EndTurnButton.cs
+### mods\card_battle\src\UI\CardDeathAnimation.cs
+### mods\card_battle\src\StatusEffect\StunStatusEffect.cs
+### mods\card_battle\src\StatusEffect\StatusEffectQueue.cs
+### mods\card_battle\src\StatusEffect\StatusEffectItem.cs
+### mods\card_battle\src\StatusEffect\IStatusEffect.cs
+### mods\card_battle\src\StatusEffect\IStatusActions.cs
+# ENDGROUP
+
+################################################################################
+# GROUP: BattleFFImplementation
+## Description: Final Fantasy-style battle implementation (mod) — damage/defence/stun/item executors, attack/defend/item animations, FF-specific UI (controller, widgets, panels)
+### mods\ff_battle\src\FFBattleCore.cs
+### mods\ff_battle\src\Actions\FFActionProvider.cs
+### mods\ff_battle\src\Actions\FFDamageExecutor.cs
+### mods\ff_battle\src\Actions\FFDefenceExecutor.cs
+### mods\ff_battle\src\Actions\FFStunExecutor.cs
+### mods\ff_battle\src\Actions\FFItemExecutor.cs
+### mods\ff_battle\src\Actions\FFAbstractAnimation.cs
+### mods\ff_battle\src\Actions\FFAttackAnimation.cs
+### mods\ff_battle\src\Actions\FFDefendAnimation.cs
+### mods\ff_battle\src\Actions\FFItemAnimation.cs
+### mods\ff_battle\src\UI\FFBattleController.cs
+### mods\ff_battle\src\UI\FFCharacterWidget.cs
+### mods\ff_battle\src\UI\FFEnemyPanel.cs
+### mods\ff_battle\src\UI\FFPlayerPanel.cs
+### mods\ff_battle\src\UI\FFMenuPanel.cs
+# ENDGROUP
+
+################################################################################
+# GROUP: SceneManagement
+## Description: Scene transitions, scene definitions from mod JSON, scene conditions (flags, quest props, binary/unary expressions), scene events, wrapper template subscription injection
+### Core\Scenes\SceneManager.cs
+### Core\Scenes\SceneContextNode.cs
+### Core\Scenes\GodotSceneService.cs
+### Core\Scenes\GodotSceneType.cs
+### Core\Scenes\SceneDefinition.cs
+### Core\Scenes\ScenarioDefinition.cs
+### Core\Scenes\SceneEventInfo.cs
+### Core\Scenes\SceneEventAttribute.cs
+### Core\Scenes\SceneEventRegistry.cs
+### Core\Scenes\SceneSubscriptionRegistry.cs
+### Core\Scenes\SubscriptionInfo.cs
+### Core\Scenes\ScenarioCondition.cs
+### Core\Scenes\ConditionParser.cs
+### Core\Scenes\ConditionNode.cs
+### Core\Scenes\BinaryExpr.cs
+### Core\Scenes\UnaryExpr.cs
+### Core\Scenes\FlagCondition.cs
+### Core\Scenes\QuestMethodCondition.cs
+### Core\Scenes\QuestPropCondition.cs
+### mods\core\scenes\start_scene.json
+### mods\core\scenes\home_vestibule.json
+### mods\core\scenes\home_workroom.json
+### mods\core\scenes\home_bedroom.json
+### mods\core\scenes\home_kitchen.json
+### mods\core\scenes\home_livingroom.json
+### mods\core\scenes\home_outside.json
+### mods\core\scenes\home_basement.json
+### mods\core\scenes\town_entry.json
+### mods\core\scenes\tow_outskirts.json
+### mods\core\wrappers\default.wrappertmpl
+### scenes\BaseScene.tscn
+### scenes\ui\Scene.tscn
+# ENDGROUP
+
+################################################################################
+# GROUP: AudioSystem
+## Description: Music playback with playlists, SFX, ambient sounds, bus mixing, OGG packet parsing; 34 music tracks, 4 playlists
+### Core\Audio\AudioService.cs
+### Core\Audio\IAudioService.cs
+### Core\Audio\MusicPlayerBehaviour.cs
+### Core\Audio\Playlist.cs
+### Core\Audio\PlaylistContext.cs
+### Core\Audio\PlaylistItemInfo.cs
+### Core\Audio\PlaylistMusicEntry.cs
+### Core\Audio\MusicSceneItem.cs
+### Core\Audio\MusicType.cs
+### Core\Audio\SoundType.cs
+### Core\Audio\MixerType.cs
+### Core\Audio\OggPacketParser.cs
+### mods\core\music\playlists\default.json
+### mods\core\music\playlists\battle.json
+### mods\core\music\playlists\mainmenu.json
+### mods\core\music\playlists\town_entry.json
+# ENDGROUP
+
+################################################################################
+# GROUP: Lighting2D
+## Description: 2D lighting with depth maps, 4 time-of-day phases (night/morning/day/evening), static light sources, draggable player lamp
+### Core\UI\Lights\UiLightController.cs
+### Core\UI\Lights\LampBehaviour.cs
+### Core\UI\Lights\LightDef.cs
+### mods\interface\shaders\timed_sprite.gdshader
+### scenes\ui\Lights.tscn
+# ENDGROUP
+
+################################################################################
+# GROUP: SaveAndSettings
+## Description: JSON-based save/load with slots and screenshots; game data singleton; settings (volume, language); time/calendar system; save/load UI menus
+### Core\Settings\GameData.cs
+### Core\Settings\SaveService.cs
+### Core\Settings\SaveData.cs
+### Core\Settings\SaveSlotInfo.cs
+### Core\Settings\SaveScreenshotService.cs
+### Core\Settings\RuntimeData.cs
+### Core\Settings\SettingsData.cs
+### Core\Settings\TimeData.cs
+### Core\Settings\PhaseType.cs
+### Core\Settings\CharacterType.cs
+### Core\Settings\CharacterInfoData.cs
+### Core\Settings\BattleData.cs
+### Core\Settings\RecipeData.cs
+### Core\Settings\LampData.cs
+### Core\Settings\CItem.cs
+### Core\Settings\PlayerCardInitializer.cs
+### Core\Settings\GameConfig.cs
+### Core\Settings\Configs\AudioSection.cs
+### Core\Settings\Configs\LoggingSection.cs
+### Core\UI\Menu\SaveLoadMenu.cs
+### Core\UI\Menu\SaveSlotItem.cs
+### Core\UI\Menu\SaveSlotList.cs
+### Core\UI\Menu\SaveIcon.cs
+### Core\UI\Menu\SettingsMenu.cs
+### Core\UI\Menu\MainMenu.cs
+### Core\UI\Menu\GameMenu.cs
+### Core\UI\Menu\EmptyBlackBehaviour.cs
+### scenes\MainMenu.tscn
+### scenes\SaveLoadMenu.tscn
+### scenes\SaveSlotItem.tscn
+### scenes\SettingsMenu.tscn
+### scenes\ui\GameMenu.tscn
+# ENDGROUP
+
+################################################################################
+# GROUP: AnimationSystem
+## Description: Multi-type animation: frame-based with crossfade, shader-based sprite-sheet playback, effect controllers, Live2D Cubism stubs
+### Core\UI\Animation\AnimationController.cs
+### Core\UI\Animation\EffectAnimator.cs
+### Core\UI\Animation\EffectAnimNode.cs
+### Core\UI\Animation\EffectController.cs
+### Core\UI\Animation\EffectDataSet.cs
+### Core\UI\Animation\CubismStubs.cs
+### Core\UI\Animation\CubismParameter.cs
+# ENDGROUP
+
+################################################################################
+# GROUP: ShaderSystem
+## Description: Custom shader management — scene transition (Perlin noise dissolve), pixel art post-processing, avatar rendering, effect animation, per-sprite pixel art; mod-based shader replacement
+### Core\Shaders\ShaderModReplacer.cs
+### Core\Shaders\PixelArtPostProcess.cs
+### mods\interface\shaders\timed_sprite.gdshader
+### mods\interface\shaders\scene_transition.gdshader
+### mods\interface\shaders\pixel_art_post_process.gdshader
+### mods\interface\shaders\pixel_art.gdshader
+### mods\interface\shaders\effect_anim.gdshader
+### mods\interface\shaders\default.gdshader
+### mods\interface\shaders\avatar.gdshader
+# ENDGROUP
+
+################################################################################
+# GROUP: UIFramework
+## Description: Reusable UI infrastructure — base widgets, lists (vertical, column/cell), theme, sprite loading, event system (pointer, drag, scroll, timer, update), executable event chains, view navigation with zoom, messages, zone selector
+### Core\UI\Base\InputHandlerNode.cs
+### Core\UI\Base\ModBakedTheme.cs
+### Core\UI\Base\ModSpriteLoader.cs
+### Core\UI\Base\Lists\Widget.cs
+### Core\UI\Base\Lists\ListWidget.cs
+### Core\UI\Base\Lists\ModWidget.cs
+### Core\UI\Base\Lists\TransitionWidget.cs
+### Core\UI\Base\Lists\ListItem.cs
+### Core\UI\Base\Lists\Border.cs
+### Core\UI\Base\Lists\IWidget.cs
+### Core\UI\Base\Lists\IListWidget.cs
+### Core\UI\Base\Lists\IListItem.cs
+### Core\UI\Base\Lists\ICellListWidget.cs
+### Core\UI\Base\Lists\Impls\VerticalListWidget.cs
+### Core\UI\Base\Lists\Impls\ColumnCellListWidget.cs
+### Core\UI\Event\SceneEventController.cs
+### Core\UI\Event\EventContext.cs
+### Core\UI\Event\DeviceInput.cs
+### Core\UI\Event\PointerEventType.cs
+### Core\UI\Event\TouchPhase.cs
+### Core\UI\Event\IOnDialogStartEvent.cs
+### Core\UI\Event\IOnDialogEndEvent.cs
+### Core\UI\Event\IOnDragEvent.cs
+### Core\UI\Event\IOnPointerClickEvent.cs
+### Core\UI\Event\IOnPointerDownEvent.cs
+### Core\UI\Event\IOnPointerUpEvent.cs
+### Core\UI\Event\IOnRayEvent.cs
+### Core\UI\Event\IOnScrollEvent.cs
+### Core\UI\Event\IOnTimerEvent.cs
+### Core\UI\Event\IOnUpdateEvent.cs
+### Core\UI\Event\IOnUIClickEvent.cs
+### Core\UI\Event\IEventPriority.cs
+### Core\UI\Executable\ExecutableEvent.cs
+### Core\UI\Executable\ExecutableEventChainBase.cs
+### Core\UI\Executable\ExecutableEventListChain.cs
+### Core\UI\Executable\ExecutableMainEventChain.cs
+### Core\UI\Executable\ScenarioEvent.cs
+### Core\UI\Executable\RunEventBehaviour.cs
+### Core\UI\Executable\IdentifiableEventObjectBehaviour.cs
+### Core\UI\Executable\IEventObject.cs
+### Core\UI\Executable\IExecutableEventChain.cs
+### Core\UI\View\ViewBox.cs
+### Core\UI\View\ViewBoxNavigator.cs
+### Core\UI\View\ZoomViewBoxController.cs
+### Core\UI\View\AlignType.cs
+### Core\UI\Messages\UiMessage.cs
+### Core\UI\Messages\MessagesHelper.cs
+### Core\UI\Sel\UiZoneSelectorBehaviour.cs
+### scenes\ui\TopView.tscn
+### scenes\ui\ViewBox.tscn
+### scenes\ui\Message.tscn
+### scenes\ui\theme.tres
+# ENDGROUP
+
+################################################################################
+# GROUP: Localization
+## Description: Multi-language support via Godot TranslationServer; .properties file loading
+### Core\Localization\LocaleLoader.cs
+### Core\Localization\ILocalizationProvider.cs
+### Core\Localization\GodotTranslationProvider.cs
+# ENDGROUP
+
+################################################################################
+# GROUP: Factories
+## Description: Factory pattern for loading all game data from JSON mod files; 17+ specialized factories (characters, items, recipes, skills, effects, playlists, music, sounds, backgrounds, avatars, icons, textures, sprites, prefabs, status effects)
+### Core\Factories\IFileFactory.cs
+### Core\Factories\FileFactory.cs
+### Core\Factories\IFileSerializer.cs
+### Core\Factories\IIdentifiable.cs
+### Core\Factories\IPrefabFactory.cs
+### Core\Factories\PrefabFactory.cs
+### Core\Factories\Texture2DFactory.cs
+### Core\Factories\AudioFactory.cs
+### Core\Factories\Impls\CharacterFactory.cs
+### Core\Factories\Impls\ActionCharacterFactory.cs
+### Core\Factories\Impls\ItemFactory.cs
+### Core\Factories\Impls\ItemActionFactory.cs
+### Core\Factories\Impls\RecipeFactory.cs
+### Core\Factories\Impls\SkillFactory.cs
+### Core\Factories\Impls\StatusEffectInfoFactory.cs
+### Core\Factories\Impls\StatusEffectActionFactory.cs
+### Core\Factories\Impls\EffectFactory.cs
+### Core\Factories\Impls\PlaylistFactory.cs
+### Core\Factories\Impls\MusicFactory.cs
+### Core\Factories\Impls\SoundFactory.cs
+### Core\Factories\Impls\BackgroundFactory.cs
+### Core\Factories\Impls\AvatarFactory.cs
+### Core\Factories\Impls\Avatars.cs
+### Core\Factories\Impls\UIIconFactory.cs
+### Core\Factories\Impls\UITextureFactory.cs
+### Core\Factories\Impls\ItemSpriteFactory.cs
+# ENDGROUP
+
+################################################################################
+# GROUP: DevTools
+## Description: In-editor development tools — WYSIWYG scene builder, light editor (place/configure 2D lights), scenario text editor; in-game time controller and map widget
+### Core\UI\Tool\ToolBox.cs
+### Core\UI\Tool\ToolWindow.cs
+### Core\UI\Tool\ToolFactory.cs
+### Core\UI\Tool\ToolBoxButtonFactory.cs
+### Core\UI\Tool\TimeController.cs
+### Core\UI\Tool\MapWidget.cs
+### Core\UI\Tool\IToolBoxButton.cs
+### Core\UI\Tool\IToolProvider.cs
+### Core\UI\Tool\TextureRectModIconLoader.cs
+### Core\UI\Tool\ButtonModIconLoader.cs
+### mods\tools\src\Services\ModResourceService.cs
+### mods\tools\src\Services\ScenarioFileService.cs
+### mods\tools\src\Services\ScenarioSyntaxService.cs
+### mods\tools\src\SceneBuilder\SceneBuilderWindow.cs
+### mods\tools\src\SceneBuilder\SceneBuilderController.cs
+### mods\tools\src\SceneBuilder\SceneBuilderToolProvider.cs
+### mods\tools\src\LightEditor\LightEditorWindow.cs
+### mods\tools\src\LightEditor\LightEditorController.cs
+### mods\tools\src\LightEditor\LightEditorHandle.cs
+### mods\tools\src\LightEditor\LightEditorToolProvider.cs
+### mods\tools\src\ScenarioEditor\ScenarioEditorWindow.cs
+### mods\tools\src\ScenarioEditor\ScenarioEditorToolProvider.cs
+# ENDGROUP
+
+################################################################################
+# GROUP: EditorPluginSceneManager
+## Description: Godot editor plugin — visualizes the scene graph across all mods, validates scene connections, parses scenario files, shows errors
+### addons\scene_manager\SceneManagerPlugin.cs
+### addons\scene_manager\MainPanel.cs
+### addons\scene_manager\Views\GraphView.cs
+### addons\scene_manager\Views\SceneTreePanel.cs
+### addons\scene_manager\Views\ValidationPanel.cs
+### addons\scene_manager\Views\ScenarioTextPanel.cs
+### addons\scene_manager\Views\SceneSelectedHandler.cs
+### addons\scene_manager\Views\ScenarioSelectedHandler.cs
+### addons\scene_manager\Views\ScenarioLinkHandler.cs
+### addons\scene_manager\Views\ErrorSelectedHandler.cs
+### addons\scene_manager\Services\SceneDataLoader.cs
+### addons\scene_manager\Services\SceneValidator.cs
+### addons\scene_manager\Services\ScenarioParser.cs
+### addons\scene_manager\Services\ResourceResolver.cs
+### addons\scene_manager\Models\SceneDefInfo.cs
+### addons\scene_manager\Models\ScenarioDefInfo.cs
+### addons\scene_manager\Models\ModSceneInfo.cs
+### addons\scene_manager\Models\ValidationMessage.cs
+### addons\scene_manager\Models\SeverityLevel.cs
+### addons\scene_manager\plugin.cfg
+# ENDGROUP
+
+################################################################################
+# GROUP: Utilities
+## Description: General-purpose utilities — logging, bounded cache, reflection helpers, rectangle/vector/list/enum extensions, string parsing, texture utils, JSON converters
+### Core\Utils\GameLogger.cs
+### Core\Utils\LogLevel.cs
+### Core\Utils\BoundedCache.cs
+### Core\Utils\ICacheLoader.cs
+### Core\Utils\Reflections.cs
+### Core\Utils\RectUtils.cs
+### Core\Utils\Vectors.cs
+### Core\Utils\Lists.cs
+### Core\Utils\Enums.cs
+### Core\Utils\StringParsing.cs
+### Core\Utils\TextureUtils.cs
+### Core\Utils\PropertyData.cs
+### Core\Utils\StringOrArrayConverter.cs
+### Core\Utils\FlagsStringEnumConverter.cs
+# ENDGROUP
+
+################################################################################
+# GROUP: Tests
+## Description: Unit tests (xUnit) for scenarios, actions, items, quests, utils; integration/autotests (in-Godot) for battle, audio, dialog; test setups and scenes
+### tests\Cthangover.Tests\GlobalUsings.cs
+### tests\Cthangover.Tests\Scenarios\ScenarioParserTests.cs
+### tests\Cthangover.Tests\Scenarios\ScenarioModMergeTests.cs
+### tests\Cthangover.Tests\Actions\ScenarioActionFactoryTests.cs
+### tests\Cthangover.Tests\Items\ItemTypeTests.cs
+### tests\Cthangover.Tests\Items\ItemContainerTests.cs
+### tests\Cthangover.Tests\Quests\QuestDataTests.cs
+### tests\Cthangover.Tests\Quests\QuestBaseTests.cs
+### tests\Cthangover.Tests\Utils\ListsTests.cs
+### tests\Cthangover.Tests\Utils\StringParsingTests.cs
+### tests\Cthangover.Tests.Integration\Autotest\ConsoleTestRunner.cs
+### tests\Cthangover.Tests.Integration\Autotest\ModTestSetup.cs
+### tests\Cthangover.Tests.Integration\Autotest\MainMenuTestSetup.cs
+### tests\Cthangover.Tests.Integration\Autotest\DialogAutoDriver.cs
+### tests\Cthangover.Tests.Integration\Battle\BattleTestSetup.cs
+### tests\Cthangover.Tests.Integration\Audio\MusicInitializerTest.cs
+### tests\Cthangover.Tests.Integration\Scenes\MainMenuTestScene.tscn
+### tests\Cthangover.Tests.Integration\Scenes\BattleTestScene.tscn
+### tests\Cthangover.Tests.Integration\Scenes\ModTest.tscn
+# ENDGROUP

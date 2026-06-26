@@ -2,7 +2,13 @@ using Godot;
 
 namespace Cthangover.Core.UI.View
 {
-
+    /// <summary>
+    /// Static utility that calculates content positioning offsets for the 9-point
+    /// AlignType grid. Uses the viewport's visible rect as the camera/view area
+    /// and computes offsets so the content aligns correctly within it. The
+    /// CenterCenter case negates X because the content position is treated as
+    /// a negative offset from top-left in Godot's coordinate space.
+    /// </summary>
     public static class ViewBoxNavigator
     {
 

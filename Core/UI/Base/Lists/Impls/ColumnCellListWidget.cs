@@ -2,6 +2,15 @@ using Godot;
 
 namespace Cthangover.Core.UI.Base.Lists.Impls
 {
+    /// <summary>
+    /// Grid-based list layout with configurable column count, aspect-ratio cells,
+    /// and border/padding offsets. Cell dimensions are computed dynamically from
+    /// the content area width, so they scale with the parent. GetContentSize
+    /// calculates the total scrollable height from item count and cell geometry,
+    /// enabling vertical scrolling through a grid. PutToLayout positions items
+    /// by flat-index-to-grid conversion. The isScaledCanvas flag supports
+    /// resolution-independent layouts.
+    /// </summary>
     public abstract partial class ColumnCellListWidget<TItem, TModel> : ListWidget<TItem, TModel>, ICellListWidget<TItem, TModel>
         where TItem : Control, IListItem<TModel>
     {
@@ -19,7 +28,7 @@ namespace Cthangover.Core.UI.Base.Lists.Impls
 
         private Vector2 GetCellSize(Vector2 contentSize)
         {
-            var size = isScaledCanvas ? contentSize : contentSize;
+            var size = contentSize;
             var effectiveWidth = size.X - contentBorder.left - contentBorder.right;
             var cellWidth = (effectiveWidth - (columnCount - 1) * ItemsCellPadding.X) / columnCount;
             var cellHeight = cellWidth * aspectHeight;
@@ -30,7 +39,7 @@ namespace Cthangover.Core.UI.Base.Lists.Impls
         {
             get
             {
-                var size = isScaledCanvas ? Content.Size : Content.Size;
+                var size = Content.Size;
                 return new Vector2I(
                     columnCount,
                     Mathf.FloorToInt((size.Y - contentBorder.top - contentBorder.bottom) / (CellSize.Y + ItemsCellPadding.Y))

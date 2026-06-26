@@ -11,7 +11,22 @@ using Godot;
 
 namespace Cthangover.Core.Battle
 {
-	public partial class BattleSceneContext : Node
+    /// <summary>
+    /// Singleton scene-root for battle, wired as a self-registering Node
+    /// (sets Instance on _EnterTree, clears on _ExitTree). On _Ready it
+    /// assembles player characters from CharacterData.BattleSet, enemy
+    /// cards from Runtime.BattleData, resolves the active IBattleCore
+    /// via BattleCoreRegistry, and defers Init+Start to the next frame
+    /// so the scene tree is fully built before core logic runs.
+    /// Tracks PlayerExpGained (per-character, split evenly among survivors)
+    /// and DefeatedEnemies for the victory/loot screen. Exposes
+    /// OnCharacterDied and OnBattleCleared events so external systems
+    /// (e.g. quests, the action machine) can react without coupling.
+    /// ShowWinground / ShowDeadground are mutually exclusive end-of-battle
+    /// paths — both set IsDestroyed to prevent double-triggering and
+    /// reset battle speed before clearing state.
+    /// </summary>
+    public partial class BattleSceneContext : Node
 	{
 		public static BattleSceneContext Instance { get; private set; }
 
@@ -40,6 +55,13 @@ namespace Cthangover.Core.Battle
 
 		public override void _EnterTree()
 		{
+			if (Instance != null && GodotObject.IsInstanceValid(Instance))
+			{
+				var scene = GetTree()?.CurrentScene?.Name ?? "?";
+				var existingPath = Instance.GetPath().ToString();
+				var myPath = GetPath().ToString();
+				GameLogger.Log("DUPLICATE", $"BattleSceneContext._EnterTree: Instance ALREADY SET by '{existingPath}', overwriting with duplicate at '{myPath}' on scene '{scene}'", LogLevel.Error);
+			}
 			Instance = this;
 		}
 

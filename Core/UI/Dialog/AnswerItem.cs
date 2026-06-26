@@ -5,7 +5,13 @@ using Godot;
 
 namespace Cthangover.Core.UI.Dialog
 {
-    
+    /// <summary>
+    /// Renders a single dialog choice option. Walks up the scene tree in _Ready
+    /// to find the nearest IDialogBox parent — this avoids coupling to a specific
+    /// dialog implementation and lets answer items work regardless of nesting depth.
+    /// On click, calls SelectVariant on the found dialog box, passing the bound
+    /// SelectVariant model (which carries the GoTo target and display text).
+    /// </summary>
     public partial class AnswerItem : ListItem<SelectVariant>
     {
 

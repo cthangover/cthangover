@@ -6,6 +6,15 @@ using Godot;
 
 namespace Cthangover.Core.UI.Inventory
 {
+    /// <summary>
+    /// The player's personal inventory bag. Subscribes to GameData.Instance.Runtime.
+    /// Inventory.Change for auto-refresh — when the inventory mutates, the bag
+    /// calls Refresh() to rebuild items. Overrides Show to update the content
+    /// size from the ScrollContainer before displaying, ensuring the grid width
+    /// matches the viewport. Accepts all GuiInput to prevent clicks from falling
+    /// through to underlying scene objects. On _ExitTree, unsubscribes from the
+    /// change event to prevent leaks.
+    /// </summary>
     public partial class PlayerInventoryBagBehaviour : ColumnCellListWidget<InventoryItemBehaviour, IItemContainer>
     {
         public override void _Ready()

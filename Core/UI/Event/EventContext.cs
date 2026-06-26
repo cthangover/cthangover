@@ -1,6 +1,11 @@
 namespace Cthangover.Core.UI.Event
 {
-
+    /// <summary>
+    /// Mutable context propagated through the input event chain. StopEvent aborts
+    /// all further processing; StopSpreading prevents siblings from receiving the
+    /// event. Selected and UIClicked carry the target node references for downstream
+    /// handlers. Used as a "bag of flags" to coordinate between input pipeline stages.
+    /// </summary>
     public class EventContext
     {
         private bool stopSpreading   = false;

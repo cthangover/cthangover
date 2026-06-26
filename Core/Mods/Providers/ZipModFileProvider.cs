@@ -6,14 +6,40 @@ using Cthangover.Core.Utils;
 
 namespace Cthangover.Core.Mods.Providers
 {
+    /// <summary>
+    /// Mod file provider backed by a <c>.zip</c> archive. On construction
+    /// the entire zip entry table is flattened into a case-insensitive
+    /// dictionary — this trades startup memory for O(1) lookups on every
+    /// subsequent file access call, which dominates because factories
+    /// repeatedly check file existence during cache-population scans.
+    ///
+    /// <c>ListFiles</c> simulates a shallow directory listing by parsing
+    /// the flat zip entry list: entries whose relative path contains a
+    /// <c>/</c> after the prefix become synthetic directory entries
+    /// (trailing <c>/</c>), while entries at the prefix level become
+    /// file entries. This preserves the same recursive-walk interface
+    /// that <c>FolderModFileProvider</c> provides natively.
+    ///
+    /// <c>GetFileSystemPath</c> always returns <c>null</c> — Godot
+    /// cannot load resources or scenes directly from within a zip, so
+    /// callers that need filesystem paths (e.g. <c>EffectFactory</c>,
+    /// shader loading) must extract files to the cache or skip zip mods
+    /// entirely.
+    /// </summary>
     public class ZipModFileProvider : IModFileProvider
     {
         private readonly ZipArchive archive;
         private readonly string zipPath;
         private readonly Dictionary<string, ZipArchiveEntry> entryLookup;
         
+        /// <inheritdoc />
         public string Mod { get; }
         
+        /// <summary>
+        /// Opens the zip archive and builds an O(1) case-insensitive
+        /// lookup dictionary from every entry's full path. The zip
+        /// remains open until <c>Dispose</c> is called.
+        /// </summary>
         public ZipModFileProvider(string zipPath, string modName)
         {
             this.zipPath = zipPath;

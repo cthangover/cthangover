@@ -3,6 +3,12 @@ using System;
 namespace Cthangover.Core.Audio
 {
 
+    /// <summary>
+    /// Serializable scene-to-music mapping with an explicit Index for
+    /// ordering. Defaults to <c>Ambient</c> type. Used for serialised
+    /// music configs that need a deterministic per-scene track order
+    /// rather than random selection.
+    /// </summary>
     [Serializable]
     public class MusicSceneItem
     {

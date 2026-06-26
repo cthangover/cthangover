@@ -4,6 +4,15 @@ using Godot;
 namespace Cthangover.Core.Battle.Actions
 {
 
+    /// <summary>
+    /// Sequential action queue that processes one IBattleAction per frame
+    /// until it signals completion (DoAction returns true), then moves to
+    /// the next. Fires OnStopMachine when the queue drains naturally or
+    /// is explicitly stopped — used by battle cores to detect when a turn's
+    /// animation sequence is finished. Actions can be added before or during
+    /// processing; the machine starts automatically once at least one action
+    /// is queued and no current action is running.
+    /// </summary>
 	public partial class BattleActionMachine : Node
 	{
 

@@ -8,7 +8,16 @@ using Godot;
 
 namespace Cthangover.Core.UI.Tool
 {
-
+    /// <summary>
+    /// Main toolbar/HUD container. Manages a set of named Widget instances
+    /// (map, inventory bag, skills, cards) and toggles between them via Switch(),
+    /// auto-hiding all others. Buttons are wired by name from an "Buttons"
+    /// HBoxContainer child, supporting both regular Buttons and TextureButtons.
+    /// AddToolButtons dynamically creates buttons for mod-registered tools from
+    /// ToolBoxButtonFactory. Updates the save icon visibility based on
+    /// SceneManager.IsSaveAllowedForCurrentScene. FindWidget uses recursive
+    /// tree search so widgets can be placed anywhere in the scene hierarchy.
+    /// </summary>
     public partial class ToolBox : Control
     {
         private Dictionary<string, Widget> tools;

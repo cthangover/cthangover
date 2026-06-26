@@ -7,7 +7,19 @@ using Cthangover.Core.Utils;
 
 namespace Cthangover.Core.UI.Dialog
 {
-
+    /// <summary>
+    /// Dialog execution engine: manages the action queue with goto-based branching
+    /// and variable substitution. Run() iterates actions in a tight loop, breaking
+    /// only on wait points (WaitClick/Select/Time/Event). Text variables use the
+    /// "${name}" syntax and are resolved via GetVariable/SetVariable — values are
+    /// stored in a simple Dictionary, not a cascading scope, keeping lookups O(1).
+    /// GoTo searches the queue linearly by action ID and jumps the index; the
+    /// source action's destruct fires on jump. The isLastGoTo flag prevents double
+    /// advancement when a GoTo is the last action in its branch. End() processes
+    /// an optional cleanup queue (endDialogQueue) before tearing down, and raises
+    /// the dialog-end event via the SceneEventController for chaining.
+    /// Infinite loop protection caps at 100k iterations per Run call.
+    /// </summary>
     public class DialogRuntime
     {
 

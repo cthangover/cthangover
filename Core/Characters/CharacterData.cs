@@ -9,6 +9,18 @@ using Godot;
 
 namespace Cthangover.Core.Characters
 {
+    /// <summary>
+    /// Runtime character roster — owns the party composition and per-character
+    /// progression data. BattleSet tracks which characters are in the active
+    /// party for combat. Characters dictionary maps CharacterType → CharacterInfoData
+    /// where CharacterInfoData carries the runtime-copied version of the template
+    /// Character (via CharacterFactory). Constructor auto-adds Marao as the
+    /// default starter — this hardcoding means the game always begins with at
+    /// least one party member. AddCharacterToParty both registers the character
+    /// and adds to BattleSet, while SendAddNotification produces the UI message
+    /// via MessagesHelper, using TranslationServer for localized character names
+    /// — names come from CharacterFactory templates, not hardcoded strings.
+    /// </summary>
 	public class CharacterData
 	{
 		public ISet<CharacterType> BattleSet = new HashSet<CharacterType>();

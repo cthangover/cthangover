@@ -44,7 +44,7 @@ namespace Cthangover.Core.UI.Tool.LightEditor
 		public void SetBackgroundForPreview(Texture2D texture, ShaderMaterial material)
 		{
 			if (material != null)
-				material.SetShaderParameter("depth_mask", texture);
+				material.SetShaderParameter("background_map", texture);
 		}
 
 		public void SetDepthForPreview(Texture2D texture, ShaderMaterial material)

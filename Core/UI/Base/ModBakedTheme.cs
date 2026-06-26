@@ -3,6 +3,16 @@ using Godot;
 
 namespace Cthangover.Core.UI.Base
 {
+    /// <summary>
+    /// Runtime theme baker: builds a Godot Theme from mod-loaded textures at scene
+    /// ready time and applies it to the parent Control. Cuts StyleBoxTexture regions
+    /// from a shared GUI sprite atlas for Button states (normal/hover/pressed/disabled),
+    /// Panel backgrounds, LineEdit, Sliders, and popups. Uses UITextureFactory to
+    /// resolve textures through the mod system, so the entire UI skin can be replaced
+    /// by mods without touching scene files. Font colors are configured separately
+    /// from the StyleBox colors, giving an intentional separation between surface
+    /// tint and text readability.
+    /// </summary>
     public partial class ModBakedTheme : Node
     {
         public override void _Ready()

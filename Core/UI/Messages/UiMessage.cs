@@ -4,7 +4,14 @@ using Godot;
 
 namespace Cthangover.Core.UI.Messages
 {
-
+    /// <summary>
+    /// Floating text message with auto-fade. Appears at a vertical position,
+    /// stays visible for 3 seconds, then fades over 2/Speed seconds. Self-
+    /// destructs (QueueFree) when fully transparent. Registers with
+    /// SceneEventController for per-frame updates; unregisters on tree exit
+    /// to prevent leaks. Speed affects only the fade duration, not the display
+    /// duration, so faster speed = shorter fade = message disappears more quickly.
+    /// </summary>
     public partial class UiMessage : Control, IOnUpdateEvent
     {
 

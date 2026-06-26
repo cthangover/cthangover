@@ -5,6 +5,13 @@ using Godot;
 
 namespace Cthangover.Core.UI.Dialog.Action.Impls
 {
+    /// <summary>
+    /// Sets the scene foreground texture on the ViewBox. Resolves SpriteID through
+    /// BackgroundFactory on construction (OnStartQueue) so the texture is loaded
+    /// before the dialog starts. Sets the texture to null after applying it —
+    /// ActionCommand instances may be reused by the runtime, and nulling prevents
+    /// double-applying stale references.
+    /// </summary>
     public class ActionForeground : ActionCommand
     {
         public string SpriteID { get; set; }

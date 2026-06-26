@@ -6,7 +6,16 @@ using Godot;
 
 namespace Cthangover.Core.UI.Dialog
 {
-    
+    /// <summary>
+    /// Fluent builder for dialog sequences. Each method creates an action of the
+    /// corresponding type, appends it to the Queue, and returns the action for
+    /// optional further configuration. The API vocabulary mirrors the scenario DSL
+    /// commands (Text, Title, Background, Music, Sound, Delay, GoTo, If, Select,
+    /// SwitchScene, etc.), making the C# API feel like a script. RuntimeObjectList
+    /// is a separate list of IActionDestruct objects that must be cleaned up when
+    /// the dialog ends but are not part of the sequential queue (e.g. spawned
+    /// resources, scheduled callbacks).
+    /// </summary>
     public class DialogQueue
     {
 
@@ -251,6 +260,34 @@ namespace Cthangover.Core.UI.Dialog
                 action.WaitType = WaitType.WaitTime;
                 action.WaitTime = duration;
             }
+            Queue.Add(action);
+            return action;
+        }
+
+        public ActionInteractiveAdd InteractiveAdd(string definitionId)
+        {
+            var action = new ActionInteractiveAdd { DefinitionId = definitionId };
+            Queue.Add(action);
+            return action;
+        }
+
+        public ActionInteractiveRemove InteractiveRemove(string definitionId)
+        {
+            var action = new ActionInteractiveRemove { DefinitionId = definitionId };
+            Queue.Add(action);
+            return action;
+        }
+
+        public ActionInteractiveClear InteractiveClear()
+        {
+            var action = new ActionInteractiveClear();
+            Queue.Add(action);
+            return action;
+        }
+
+        public ActionInteractiveSet InteractiveSet(string definitionId, string property, string value)
+        {
+            var action = new ActionInteractiveSet { DefinitionId = definitionId, Property = property, Value = value };
             Queue.Add(action);
             return action;
         }

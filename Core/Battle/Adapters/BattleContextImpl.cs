@@ -3,6 +3,13 @@ using Godot;
 
 namespace Cthangover.Core.Battle
 {
+    /// <summary>
+    /// Default IBattleContext wired to the current BattleSceneContext.
+    /// ApplyDamage clamps at 0 (no negative health from defence overflow),
+    /// EndBattle delegates to ShowWinground/ShowDeadground on the scene
+    /// context. ScheduleAnimation and EndTurn are stubs — specific battle
+    /// cores are expected to override or supplement this behaviour.
+    /// </summary>
     public class BattleContextImpl : IBattleContext
     {
         private readonly BattleSceneContext _sceneContext;

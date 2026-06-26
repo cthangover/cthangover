@@ -4,6 +4,13 @@ using Godot;
 
 namespace Cthangover.Core.Battle
 {
+    /// <summary>
+    /// In-battle speed toggle bar (x1/x4/x8). Directly sets
+    /// Engine.TimeScale to globally accelerate the entire game loop —
+    /// not just animations. Persists the choice to GameData.Settings
+    /// so it survives scene reloads. ResetToNormal restores 1x without
+    /// saving, used when battle ends.
+    /// </summary>
 	public partial class BattleSpeedControl : Control
 	{
 		private readonly Dictionary<int, Button> _buttons = new();

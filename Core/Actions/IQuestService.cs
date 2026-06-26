@@ -2,6 +2,13 @@
 
 namespace Cthangover.Core.Actions
 {
+    /// <summary>
+    /// Quest manipulation contract for scenario actions. Provides full CRUD over
+    /// quest state: Get by ID, status change (parsed via Enums&lt;QuestStatus&gt;),
+    /// data-level status tracking, tag management, and UI notification dispatch.
+    /// Separates quest.Status (global state like Active/Completed) from
+    /// quest.Data.Status (incremental progress within the quest).
+    /// </summary>
     public interface IQuestService
     {
         IQuest Get(string id);

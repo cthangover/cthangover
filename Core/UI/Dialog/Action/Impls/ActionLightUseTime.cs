@@ -4,6 +4,10 @@ using Cthangover.Core.UI.Lights;
 
 namespace Cthangover.Core.UI.Dialog.Action.Impls
 {
+    /// <summary>
+    /// Toggles the light controller's time-of-day mode. When UseTime is false,
+    /// static lighting is used; when true, lighting responds to the in-game clock.
+    /// </summary>
     public class ActionLightUseTime : ActionCommand
     {
         public bool UseTime { get; set; } = true;

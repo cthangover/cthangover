@@ -1,5 +1,12 @@
 namespace Cthangover.Core.Factories.Impls
 {
+    /// <summary>
+    /// Compile-time catalog of avatar IDs used by scenario scripts.
+    /// Each nested class maps a character name to a set of emotional states,
+    /// forming a type-safe alternative to raw string lookups — a typo in
+    /// a constant produces a build error, whereas a typo in a string literal
+    /// silently returns a null texture at runtime.
+    /// </summary>
     public static class Avatars
     {
         public static class Book

@@ -4,6 +4,13 @@ using Godot;
 
 namespace Cthangover.Core.UI.Dialog.Action.Impls
 {
+    /// <summary>
+    /// Spawns a visual effect from the EffectFactory by ID. The spawned node
+    /// persists until the action is destructed. Uses DestructType.OnDelayed
+    /// because the effect must outlive the action's run — the effect node's own
+    /// animation or lifetime controls when it disappears. DoRun is a no-op
+    /// because construction handles spawning.
+    /// </summary>
     public class ActionEffect : ActionCommand
     {
         public string EffectID { get; set; }

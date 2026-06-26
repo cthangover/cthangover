@@ -4,6 +4,12 @@ using Godot;
 
 namespace Cthangover.Core.UI.Dialog
 {
+    /// <summary>
+    /// Dialog box contract: exposes the runtime for inspection, avatar/text/title
+    /// setters for action commands to push visual state, and SetDialogQueueAndRun
+    /// for starting a dialog sequence. SelectVariant is called by answer items
+    /// when the player picks a choice.
+    /// </summary>
     public interface IDialogBox : IWidget
     {
         DialogRuntime Runtime { get; }

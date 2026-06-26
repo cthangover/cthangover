@@ -7,5 +7,6 @@ title "test" key=prolog/test
 
 text "проверка" key=prolog/test2
 text "проверка2" key=prolog/test3
+switch_scene home_bedroom
 
 end

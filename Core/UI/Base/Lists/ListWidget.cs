@@ -3,6 +3,15 @@ using Godot;
 
 namespace Cthangover.Core.UI.Base.Lists
 {
+    /// <summary>
+    /// Abstract model-driven list: instantiates items from a PackedScene prefab
+    /// for each model in CreateModels(), then delegates positioning to the abstract
+    /// PutToLayout (defined by layout subclasses like ColumnCellListWidget or
+    /// VerticalListWidget). Refresh() tears down and rebuilds the list in place
+    /// for reactive updates. The virtual Create/Init hooks let subclasses inject
+    /// extra setup between instantiation and model binding without overriding
+    /// CreateContent.
+    /// </summary>
     public abstract partial class ListWidget<T, M> : Widget, IListWidget<T, M>
         where T : Control, IListItem<M>
     {

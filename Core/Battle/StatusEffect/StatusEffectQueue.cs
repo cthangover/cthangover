@@ -7,6 +7,18 @@ using Godot;
 namespace Cthangover.Core.Cards.StatusEffect
 {
     
+    /// <summary>
+    /// Per-character status-effect pipeline. Manages a list of active
+    /// effects, advancing their timers on turn boundaries and removing
+    /// expired ones after firing OnFinalAction. Add resolves the effect
+    /// info via the factory and calls OnApply immediately. OnTurnStart
+    /// iterates backwards to safely remove expired effects during
+    /// traversal. OnDealDamage / OnTakeDamage pipe through every active
+    /// effect via ref parameters, enabling multiplicative stacking.
+    /// ActiveStatusEffects returns a defensive copy so external code
+    /// cannot mutate the internal list. Copy creates a deep clone for
+    /// character duplication, re-firing OnApply on the new owner.
+    /// </summary>
     public class StatusEffectQueue
     {
         private readonly List<IStatusEffect> activeStatusEffectData;

@@ -1,11 +1,18 @@
-using System;
 using Cthangover.Core.Scenes;
-using Cthangover.Core.UI.Dialog.Action;
 using Cthangover.Core.UI.Event;
 using Godot;
 
 namespace Cthangover.Core.UI.Dialog.Action.Impls
 {
+    /// <summary>
+    /// Timeline-based update action: registers itself as an IOnUpdateEvent
+    /// subscriber and fires OnUpdateCallback(float t) each frame with a normalized
+    /// progress value (0→1) over WaitTime seconds. WaitType is WaitEvent so the
+    /// dialog runtime pauses until elapsed >= WaitTime, at which point isRunning
+    /// flips to false and the runtime advances. OnStartCallback/OnFinishCallback
+    /// bracket the animation for setup/teardown. Fixed 60fps step for deterministic
+    /// progress regardless of actual frame rate.
+    /// </summary>
     public class ActionTimedUpdate : ActionCommand, IOnUpdateEvent
     {
         public int Priority => 0;

@@ -2,7 +2,11 @@ using System.Collections.Generic;
 
 namespace Cthangover.Core.UI.Dialog.Action
 {
-
+    /// <summary>
+    /// Full dialog action contract: extends IActionDestruct with construction,
+    /// execution (Run), and queryable state (WaitType, timing enums, delayed-destruct
+    /// dependencies). The ID property enables cross-action references (GoTo, If).
+    /// </summary>
     public interface IActionCommand : IActionDestruct
     {
 

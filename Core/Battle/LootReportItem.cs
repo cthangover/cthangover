@@ -2,6 +2,13 @@ using Godot;
 
 namespace Cthangover.Core.Battle
 {
+    /// <summary>
+    /// A single loot cell in the victory grid. Shows icon with an optional
+    /// "xN" count label (hidden when count is 1). ResolveMissingNodes
+    /// supports both editor-assigned exports and runtime lookups so the
+    /// prefab works with incomplete scene wiring. TooltipText is set to
+    /// the localized item name for hover.
+    /// </summary>
 	public partial class LootReportItem : Control
 	{
 		[Export] private TextureRect icon;

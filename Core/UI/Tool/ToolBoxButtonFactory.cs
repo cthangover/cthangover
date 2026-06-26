@@ -6,6 +6,13 @@ using Cthangover.Core.Utils;
 
 namespace Cthangover.Core.UI.Tool
 {
+    /// <summary>
+    /// Singleton registry for dynamically-discovered toolbar button definitions.
+    /// Scans assemblies via Reflections.FindAndCreate on construction, loading
+    /// all IToolBoxButton implementations. Supports RegisterAssembly for mods
+    /// to inject their own buttons at runtime. GetVisible() filters by each
+    /// button's IsVisible() method, so buttons can conditionally hide.
+    /// </summary>
     public class ToolBoxButtonFactory
     {
         public static readonly ToolBoxButtonFactory Instance = new();
@@ -31,7 +38,10 @@ namespace Cthangover.Core.UI.Tool
                         var button = (IToolBoxButton)Activator.CreateInstance(type);
                         Register(button);
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        GameLogger.Log("TOOLS", $"ToolBoxButtonFactory: failed to create instance of '{type.FullName}': {ex.Message}", LogLevel.Error);
+                    }
                 }
             }
         }

@@ -7,7 +7,16 @@ using Godot;
 
 namespace Cthangover.Core.UI.Event
 {
-    
+    /// <summary>
+    /// Central event bus for the UI subsystem. Maintains priority-sorted subscriber
+    /// lists for Update, TimerTick, DialogStart, and DialogEnd events. When
+    /// subscribers are added or removed, the list is re-sorted by Priority
+    /// (ascending — lower value = earlier execution). Runs at ProcessPriority.MaxValue
+    /// to execute before other nodes. Timer ticks fire at 1-second intervals from
+    /// an accumulator to avoid drift. Each tick subscriber is wrapped in try/catch
+    /// to prevent one faulty handler from breaking all others. IsActive lets the
+    /// bus be paused mid-scene without unregistering all listeners.
+    /// </summary>
     public partial class SceneEventController : Node
     {
         

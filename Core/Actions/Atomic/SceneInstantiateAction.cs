@@ -1,5 +1,12 @@
 namespace Cthangover.Core.Actions.Atomic
 {
+    /// <summary>
+    /// Instantiates a PackedScene into the current scene tree at runtime.
+    /// The "path" is a Godot resource path (e.g. "res://scenes/SomeObject.tscn"),
+    /// "name" sets the node's Name property. The instantiated node becomes a
+    /// child of SceneContextNode.Instance (the current scene root), making it
+    /// visible immediately.
+    /// </summary>
     public class SceneInstantiateAction : IScenarioAction
     {
         public string Name => "scene.instantiate";

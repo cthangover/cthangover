@@ -17,8 +17,6 @@ text "[Голодный волк, забредший в город в поиск
 text "- Ох, ёбушки..." key=meeting_murakami/marao_scared first=marao/what
 text "[Сомнений не осталось: схватка неизбежна]" key=meeting_murakami/battle_inevitable
 
-action character.add_to_party type=Murakami
-action character.send_notification type=Murakami
 action battle.init scene=town_entry enemies=wolf_1,wolf_2 quest_id=MeetingMurakamiQuest new_tag=wolf_battle
 
 switch_scene Battle

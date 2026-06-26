@@ -6,7 +6,16 @@ using Godot;
 
 namespace Cthangover.Core.UI.Executable
 {
-
+    /// <summary>
+    /// Base for auto-triggering dialog events. Runs once per 0.5-second poll
+    /// when active. Checks that the DialogBox is free (IsRunning == false)
+    /// before building and executing a dialog queue. IsOneRun prevents
+    /// re-triggering after first execution; CanRepeat allows the event to fire
+    /// again on subsequent scenes/visits. If the node is NOT a child of an
+    /// IExecutableEventChain, it registers with the SceneEventController for
+    /// standalone polling. CheckConditions is virtual — ScenarioEvent overrides
+    /// it to evaluate script conditions.
+    /// </summary>
     public partial class ExecutableEvent : Node, IOnUpdateEvent
     {
         protected DialogBox dialogBox;

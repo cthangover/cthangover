@@ -150,6 +150,7 @@ namespace Cthangover.Core.Scenes
 			if (tree == null)
 				return;
 
+			SceneContextNode.Instance?.ClearData();
 			tree.ChangeSceneToFile(pendingScenePath);
 
 			CallDeferred(nameof(PatchShaderMaterialsAfterLoad));

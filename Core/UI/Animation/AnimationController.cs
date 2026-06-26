@@ -6,7 +6,15 @@ using Godot;
 
 namespace Cthangover.Core.UI.Animation
 {
-    
+    /// <summary>
+    /// Frame-by-frame sprite animation via crossfade between two TextureRect nodes.
+    /// Rather than using a spritesheet, it keeps a "current" and "next" texture and
+    /// lerps their modulate between transparent and opaque, creating smooth transitions.
+    /// A built-in wait/waitPercent mechanism holds the "next" frame fully visible for
+    /// a configurable interval before advancing, producing a paced flip-book effect.
+    /// Exposes NextFrame/NextCycle events so external systems can sequence or react
+    /// to animation milestones without polling.
+    /// </summary>
     public partial class AnimationController : Control, IOnUpdateEvent
     {
 

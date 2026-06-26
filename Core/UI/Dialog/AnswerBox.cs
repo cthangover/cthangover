@@ -1,12 +1,17 @@
 using System.Collections.Generic;
-using Cthangover.Core.UI.Base.Lists;
 using Cthangover.Core.UI.Base.Lists.Impls;
 using Cthangover.Core.UI.Dialog.Action.Impls;
 using Godot;
 
 namespace Cthangover.Core.UI.Dialog
 {
-
+    /// <summary>
+    /// Answer choice container: extends VerticalListWidget but deliberately
+    /// overrides PutToLayout to do nothing — the prefab-based layout system
+    /// handles positioning internally, and the base ColumnCellListWidget layout
+    /// would conflict. Content size is computed as count * 60px height, creating
+    /// a fixed-height per-option layout. Self-destructs on hide.
+    /// </summary>
     public partial class AnswerBox : VerticalListWidget<AnswerItem, SelectVariant>
     {
 

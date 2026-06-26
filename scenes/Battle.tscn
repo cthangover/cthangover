@@ -4,7 +4,6 @@
 [ext_resource type="Script" uid="uid://c1rwrejr5aoc0" path="res://Core/Battle/BattleSceneContext.cs" id="BattleSceneContextScript"]
 [ext_resource type="Script" uid="uid://cln2rvmofijtb" path="res://Core/Battle/BattleSpeedControl.cs" id="BattleSpeedControlScript"]
 [ext_resource type="PackedScene" uid="uid://bhkoi82ftv0wi" path="res://scenes/battle/Deadground.tscn" id="DeadgroundScene"]
-[ext_resource type="Script" uid="uid://doqnuvls7hy8w" path="res://Core/Scenes/SceneContextNode.cs" id="SceneContextNodeScript"]
 [ext_resource type="Script" uid="uid://icsu2hv2c68r" path="res://Core/UI/Lights/UiLightController.cs" id="UiLightControllerScript"]
 [ext_resource type="PackedScene" uid="uid://cq11ls8ja3lg0" path="res://scenes/battle/Winground.tscn" id="WingroundScene"]
 
@@ -16,9 +15,6 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("BattleSceneContextScript")
-
-[node name="SceneContextNode" type="Node" parent="." unique_id=2118966242]
-script = ExtResource("SceneContextNodeScript")
 
 [node name="BattleBg" type="TextureRect" parent="." unique_id=1553515841]
 layout_mode = 1

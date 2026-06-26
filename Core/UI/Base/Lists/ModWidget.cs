@@ -2,6 +2,13 @@ using Godot;
 
 namespace Cthangover.Core.UI
 {
+    /// <summary>
+    /// Lightweight alternative to Widget for mod-authored controls. Has a simpler
+    /// lifecycle — just Construct() on first access and Destruct() on tree exit —
+    /// without the visibility interception and Show/Hide pipeline that Widget
+    /// carries. Use when the heavy Widget state machine would be overkill or
+    /// when the control's visibility is managed by Godot's native system.
+    /// </summary>
     public abstract partial class ModWidget : Control
     {
         private bool _constructed;
