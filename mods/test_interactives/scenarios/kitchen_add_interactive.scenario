@@ -1,5 +1,5 @@
 scene: start_scene
-priority: 0
+priority: 10
 is_one_run: true
 ---
 
