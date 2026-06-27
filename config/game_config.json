@@ -7,7 +7,7 @@
     "musics_volume": 5,
     "ambient_volume": 5
   },
-  "language": "ru-ru",
+  "language": "en-en",
   "logging": {
     "enabled": true,
     "console_enabled": true,
