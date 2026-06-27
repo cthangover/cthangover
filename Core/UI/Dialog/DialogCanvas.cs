@@ -16,6 +16,7 @@ namespace Cthangover.Core.UI.Dialog
 		public override void _Ready()
 		{
 			dialogBox ??= GetNodeOrNull<DialogBox>("DialogBox");
+			MouseFilter = MouseFilterEnum.Ignore;
 		}
 	}
 

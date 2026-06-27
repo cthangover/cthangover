@@ -1,0 +1,28 @@
+{
+  "Items": [{
+    "id": "kitchen_lamp",
+    "texture": "lamp",
+    "layer": "foreground",
+    "zIndex": 10,
+    "hitArea": {
+      "type": "rect",
+      "x": 0.68,
+      "y": 0.40,
+      "width": 0.08,
+      "height": 0.08
+    },
+    "highlight": {
+      "color": "#FFFF0033",
+      "scale": 1.1,
+      "duration": 0.12
+    },
+    "cursor": "PointingHand",
+    "actions": {
+      "onClick": {
+        "scenario": "scenarios/kitchen_clicked.scenario"
+      },
+      "onHoverEnter": "set cursor_hint=Кликни_лампу",
+      "onHoverLeave": "set cursor_hint="
+    }
+  }]
+}

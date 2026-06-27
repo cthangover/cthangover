@@ -6,8 +6,8 @@ using Godot;
 
 namespace Cthangover.Core.UI.Lights
 {
-    /// <summary>
-    /// Draggable lamp UI element for the player's portable light source.
+	/// <summary>
+	/// Draggable lamp UI element for the player's portable light source.
     /// Input handling exists in both _GuiInput (bubbled) and _Input (global)
     /// to catch drags that start on the lamp but continue outside its rect.
     /// When the lamp is hidden, it resets position to offscreen (-1000,-1000)

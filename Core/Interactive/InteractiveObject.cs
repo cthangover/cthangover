@@ -8,18 +8,13 @@ using Godot;
 namespace Cthangover.Core.Interactive
 {
 	/// <summary>
-	/// Runtime node for an interactive scene object. Inherits <c>Control</c> for
-	/// UI-tree compatibility and implements <c>IEventObject</c> for automatic
-	/// lifecycle cleanup by <c>SceneContextNode</c> on scene changes.
+	/// Runtime node for an interactive scene object. The Control fills its parent
+	/// (the interactive layer container) and displays a full-screen texture with
+	/// alpha. The collider (rect, circle, or polygon) defines the clickable region
+	/// in normalised viewport coordinates, converted to pixels at runtime.
 	///
-	/// Hit detection uses <c>_HasPoint</c> overrides supporting rect, circle
-	/// and polygon shapes. A child <c>TextureRect</c> provides the visual
-	/// representation with an optional shader-based highlight on hover.
-	/// Position and size are computed from normalised definition coordinates
-	/// relative to <c>ViewBox.Content</c> logical size.
-	///
-	/// Callbacks for hover/click actions are injected by <c>InteractiveManager</c>
-	/// to bridge with the scenario/dialog system.
+	/// Hit detection uses <c>_HasPoint</c> overrides verified against global
+	/// mouse position and the pixel-space collider geometry.
 	/// </summary>
 	public partial class InteractiveObject : Control, IEventObject
 	{
@@ -34,16 +29,11 @@ namespace Cthangover.Core.Interactive
 		/// <summary>Whether the object responds to mouse input.</summary>
 		public bool IsEnabled { get; set; } = true;
 
-		/// <summary>True while the pointer is within the hit area.</summary>
+		/// <summary>True while the pointer is within the collider.</summary>
 		public bool IsHovered { get; private set; }
 
-		/// <summary>Called when the pointer enters the hit area. DSL string from definition passed as argument.</summary>
 		internal Action<string> OnHoverEnterCallback { get; set; }
-
-		/// <summary>Called when the pointer leaves the hit area. DSL string from definition passed as argument.</summary>
 		internal Action<string> OnHoverLeaveCallback { get; set; }
-
-		/// <summary>Called on left-click. The definition ID is passed as argument.</summary>
 		internal Action<string> OnClickCallback { get; set; }
 
 		private TextureRect _visual;
@@ -51,9 +41,11 @@ namespace Cthangover.Core.Interactive
 		private Tween _highlightTween;
 
 		private HitAreaType _hitType = HitAreaType.Rect;
-		private float _hitRadius;
-		private Vector2[] _hitPolygon;
-		private Vector2 _pixelSize;
+		private float _hitRadiusPx;
+		private Vector2[] _hitPolygonPx;
+		private Rect2 _hitRectPx;
+
+		private Vector2 _contentSize;
 
 		private Color _highlightColor = _transparent;
 		private float _highlightScale = 1f;
@@ -66,10 +58,6 @@ namespace Cthangover.Core.Interactive
 		private Label _debugLabel;
 		private bool _visualReady;
 
-		/// <summary>
-		/// Ensures visual children exist and signals are wired. Idempotent —
-		/// safe to call from both <c>_Ready</c> and <c>Configure</c>.
-		/// </summary>
 		public override void _Ready()
 		{
 			MouseFilter = MouseFilterEnum.Stop;
@@ -79,35 +67,34 @@ namespace Cthangover.Core.Interactive
 
 			MouseEntered += OnMouseEntered;
 			MouseExited += OnMouseExited;
+
+			GameLogger.Log("INTERACTIVE", $"_Ready: id='{ID}' size=({Size.X:F0}x{Size.Y:F0}) visible={Visible} enabled={IsEnabled}");
 		}
 
 		/// <summary>
-		/// Applies a definition to this instance, computing pixel coordinates
-		/// from normalised values and loading textures, hit-area shapes,
-		/// highlight settings and action bindings.
+		/// Applies a definition to this instance. The Control is made full-screen
+		/// within its parent, the texture fills the entire area, and the collider
+		/// geometry is computed from normalised coordinates multiplied by the
+		/// logical viewport size.
 		/// </summary>
-		/// <param name="def">The definition to apply.</param>
-		/// <param name="contentSize">Logical pixel size of the parent container (typically <c>ViewBox.Content.Size</c>).</param>
 		public void Configure(InteractiveDefinition def, Vector2 contentSize)
 		{
 			if (def == null)
 				return;
 
 			DefinitionId = def.ID;
+			_contentSize = contentSize;
 
 			EnsureVisualReady();
 
-			_pixelSize = def.Size * contentSize;
-			var pixelPos = def.Position * contentSize;
-			var anchorOffset = def.Anchor * _pixelSize;
-			Position = pixelPos - anchorOffset;
-			Size = _pixelSize;
+			AnchorLeft = 0f;
+			AnchorTop = 0f;
+			AnchorRight = 1f;
+			AnchorBottom = 1f;
+
 			ZIndex = def.ZIndex;
 			Visible = def.Visible;
 			IsEnabled = def.Enabled;
-
-			_visual.Size = _pixelSize * def.Scale;
-			_visual.Position = (_pixelSize - _visual.Size) / 2f;
 
 			if (!string.IsNullOrEmpty(def.Texture))
 			{
@@ -116,7 +103,7 @@ namespace Cthangover.Core.Interactive
 					_visual.Texture = tex;
 			}
 
-			ApplyHitArea(def.HitArea);
+			ApplyHitArea(def.HitArea, contentSize);
 
 			if (def.Highlight != null)
 			{
@@ -129,39 +116,52 @@ namespace Cthangover.Core.Interactive
 			_onHoverLeaveDsl = def.Actions?.OnHoverLeave;
 
 			SetCursor(def.Cursor);
+
+			GameLogger.Log("INTERACTIVE", $"Configure: id='{def.ID}' fullScreen contentSize=({contentSize.X:F0},{contentSize.Y:F0}) hitType={_hitType}");
 		}
 
 		/// <summary>
-		/// Overrides Godot's hit-test to support non-rectangular shapes.
-		/// Point is in local coordinates.
+		/// Checks whether the global mouse position falls within the collider
+		/// geometry in pixel space. Bypasses Godot's local coordinate issues.
 		/// </summary>
 		public override bool _HasPoint(Vector2 point)
 		{
 			if (!IsEnabled || !Visible)
 				return false;
 
-			var localPoint = point - Size / 2f;
+			var globalMouse = GetGlobalMousePosition();
+			var globalPos = GlobalPosition;
 
 			switch (_hitType)
 			{
+				case HitAreaType.Rect:
+				{
+					var rect = new Rect2(globalPos + _hitRectPx.Position, _hitRectPx.Size);
+					return rect.HasPoint(globalMouse);
+				}
 				case HitAreaType.Circle:
-					return localPoint.Length() <= _hitRadius;
+				{
+					var center = globalPos + new Vector2(_hitRectPx.Position.X + _hitRectPx.Size.X / 2f, _hitRectPx.Position.Y + _hitRectPx.Size.Y / 2f);
+					return (globalMouse - center).Length() <= _hitRadiusPx;
+				}
 				case HitAreaType.Polygon:
-					return _hitPolygon != null && Geometry2D.IsPointInPolygon(localPoint, _hitPolygon);
-				default:
-					return true;
+				{
+					if (_hitPolygonPx == null || _hitPolygonPx.Length < 3)
+						return false;
+					var local = globalMouse - globalPos;
+					return Geometry2D.IsPointInPolygon(local, _hitPolygonPx);
+				}
 			}
+
+			return false;
 		}
 
-		/// <summary>Cleans up the node and removes it from the scene tree. Called by <c>SceneContextNode</c> on scene change.</summary>
 		public void Destruct()
 		{
 			SceneContextNode.Instance?.RemoveEventObject(ID);
 			QueueFree();
 		}
 
-		/// <summary>Shows or hides the debug overlay for this object.</summary>
-		/// <param name="show">If true, creates and reveals the debug bounds rect.</param>
 		public void UpdateDebugVisual(bool show)
 		{
 			if (show)
@@ -174,8 +174,6 @@ namespace Cthangover.Core.Interactive
 						MouseFilter = MouseFilterEnum.Ignore,
 						ZIndex = 100
 					};
-					_debugRect.Size = Size;
-					_debugRect.Position = Vector2.Zero;
 					AddChild(_debugRect);
 				}
 
@@ -191,6 +189,8 @@ namespace Cthangover.Core.Interactive
 					AddChild(_debugLabel);
 				}
 
+				_debugRect.Position = _hitRectPx.Position;
+				_debugRect.Size = _hitRectPx.Size;
 				_debugRect.Visible = true;
 				_debugRect.Color = IsHovered
 					? new Color(1f, 1f, 0f, 0.35f)
@@ -234,33 +234,63 @@ namespace Cthangover.Core.Interactive
 				Name = "Visual",
 				ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
 				StretchMode = TextureRect.StretchModeEnum.Scale,
-				MouseFilter = MouseFilterEnum.Ignore
+				MouseFilter = MouseFilterEnum.Ignore,
+				AnchorRight = 1f,
+				AnchorBottom = 1f
 			};
 			AddChild(_visual);
 
 			SetupHighlightMaterial();
 		}
 
-		private void ApplyHitArea(HitAreaDefinition hitDef)
+		private void ApplyHitArea(HitAreaDefinition hitDef, Vector2 contentSize)
 		{
 			_hitType = HitAreaType.Rect;
+			var vpW = contentSize.X;
+			var vpH = contentSize.Y;
+
 			if (hitDef == null)
+			{
+				_hitRectPx = new Rect2(0, 0, vpW, vpH);
 				return;
+			}
 
 			switch (hitDef.Type?.ToLowerInvariant())
 			{
 				case "circle":
 					_hitType = HitAreaType.Circle;
-					_hitRadius = hitDef.Radius * Mathf.Min(_pixelSize.X, _pixelSize.Y) * 0.5f;
+					_hitRadiusPx = hitDef.Radius * Mathf.Min(vpW, vpH);
+					var cx = hitDef.X * vpW;
+					var cy = hitDef.Y * vpH;
+					_hitRectPx = new Rect2(cx - _hitRadiusPx, cy - _hitRadiusPx, _hitRadiusPx * 2f, _hitRadiusPx * 2f);
 					break;
+
 				case "polygon":
 					_hitType = HitAreaType.Polygon;
 					if (hitDef.Vertices != null && hitDef.Vertices.Length >= 3)
 					{
-						_hitPolygon = new Vector2[hitDef.Vertices.Length];
+						_hitPolygonPx = new Vector2[hitDef.Vertices.Length];
+						float minX = float.MaxValue, minY = float.MaxValue, maxX = float.MinValue, maxY = float.MinValue;
 						for (var i = 0; i < hitDef.Vertices.Length; i++)
-							_hitPolygon[i] = hitDef.Vertices[i] * _pixelSize - _pixelSize / 2f;
+						{
+							var v = new Vector2(hitDef.Vertices[i].X * vpW, hitDef.Vertices[i].Y * vpH);
+							_hitPolygonPx[i] = v;
+							minX = Mathf.Min(minX, v.X);
+							minY = Mathf.Min(minY, v.Y);
+							maxX = Mathf.Max(maxX, v.X);
+							maxY = Mathf.Max(maxY, v.Y);
+						}
+						_hitRectPx = new Rect2(minX, minY, maxX - minX, maxY - minY);
 					}
+					break;
+
+				default:
+					_hitType = HitAreaType.Rect;
+					var rx = hitDef.X * vpW;
+					var ry = hitDef.Y * vpH;
+					var rw = hitDef.Width * vpW;
+					var rh = hitDef.Height * vpH;
+					_hitRectPx = new Rect2(rx, ry, rw, rh);
 					break;
 			}
 		}
@@ -276,6 +306,8 @@ namespace Cthangover.Core.Interactive
 
 		private void OnMouseEntered()
 		{
+			GameLogger.Log("INTERACTIVE", $"OnMouseEntered: id='{ID}' enabled={IsEnabled} hitType={_hitType}");
+
 			if (!IsEnabled)
 				return;
 
@@ -287,6 +319,8 @@ namespace Cthangover.Core.Interactive
 
 		private void OnMouseExited()
 		{
+			GameLogger.Log("INTERACTIVE", $"OnMouseExited: id='{ID}'");
+
 			if (!IsEnabled)
 				return;
 
@@ -308,7 +342,7 @@ namespace Cthangover.Core.Interactive
 			_highlightTween = CreateTween();
 			_highlightTween.SetParallel(true);
 
-			_highlightTween.TweenProperty(_visual, "scale", Vector2.One * targetScale, _highlightDuration);
+			_highlightTween.TweenProperty(this, "scale", Vector2.One * targetScale, _highlightDuration);
 
 			if (_highlightColor.A > 0f)
 			{
@@ -325,12 +359,10 @@ namespace Cthangover.Core.Interactive
 			}
 		}
 
-		/// <summary>
-		/// Handles left-click input on the hit area. Fires the click callback
-		/// defined by <c>InteractiveManager</c> and consumes the event.
-		/// </summary>
 		public override void _GuiInput(InputEvent @event)
 		{
+			GameLogger.Log("INTERACTIVE", $"_GuiInput: id='{ID}' event={@event.GetType().Name} enabled={IsEnabled}");
+
 			if (!IsEnabled)
 				return;
 

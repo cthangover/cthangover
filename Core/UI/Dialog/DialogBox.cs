@@ -38,6 +38,8 @@ namespace Cthangover.Core.UI.Dialog
 
 		public override void _Ready()
 		{
+			MouseFilter = MouseFilterEnum.Ignore;
+
 			if (Body == null)
 			{
 				var found = FindChild("DialogBody", true, false);

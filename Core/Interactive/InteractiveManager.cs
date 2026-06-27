@@ -44,16 +44,14 @@ namespace Cthangover.Core.Interactive
 		}
 
 		/// <summary>
-		/// Tears down the singleton, calling <c>ClearAll</c>.
+		/// Tears down active objects but keeps the singleton alive.
 		/// Called by <c>SceneContextNode.ClearData</c> on scene change.
+		/// The manager instance persists for the full game session; only
+		/// the tracked objects are cleaned up on each scene transition.
 		/// </summary>
 		public static void Shutdown()
 		{
-			if (_instance != null)
-			{
-				_instance.ClearAll();
-				_instance = null;
-			}
+			_instance?.ClearAll();
 		}
 
 		/// <summary>
@@ -108,13 +106,19 @@ namespace Cthangover.Core.Interactive
 			var layerContainer = viewBox.GetInteractiveLayer(def.Layer);
 			if (layerContainer == null)
 			{
-				GameLogger.Log("INTERACTIVE", $"Add: layer '{def.Layer}' not found, using foreground", LogLevel.Warning);
+				GameLogger.Log("INTERACTIVE", $"Add: layer '{def.Layer}' not found, trying foreground", LogLevel.Warning);
 				layerContainer = viewBox.GetInteractiveLayer("foreground");
 			}
 
-			var contentSize = viewBox.Content?.Size ?? Vector2.Zero;
-			if (contentSize == Vector2.Zero)
-				contentSize = new Vector2(1920f, 1024f);
+			if (layerContainer == null)
+			{
+				GameLogger.Log("INTERACTIVE", "Add: no interactive layer containers available (ViewBox layers not ready?)", LogLevel.Error);
+				return null;
+			}
+
+			var contentSize = viewBox.LogicalSize != Vector2I.Zero
+				? new Vector2(viewBox.LogicalSize.X, viewBox.LogicalSize.Y)
+				: viewBox.Content?.Size ?? new Vector2(1920f, 1024f);
 
 			var obj = new InteractiveObject
 			{
@@ -131,7 +135,7 @@ namespace Cthangover.Core.Interactive
 
 			_objects[definitionId] = obj;
 
-			GameLogger.Log("INTERACTIVE", $"Add: '{definitionId}' created on layer '{def.Layer}' at pos=({obj.Position.X:F0},{obj.Position.Y:F0}) size=({obj.Size.X:F0}x{obj.Size.Y:F0})");
+			GameLogger.Log("INTERACTIVE", $"Add: '{definitionId}' created on layer '{def.Layer}' fullscreen={contentSize.X:F0}x{contentSize.Y:F0} hitType={def.HitArea?.Type ?? "rect"}");
 			return obj;
 		}
 
@@ -212,6 +216,21 @@ namespace Cthangover.Core.Interactive
 			if (def?.Actions?.OnClick == null)
 			{
 				GameLogger.Log("INTERACTIVE", $"ExecuteClick: no action defined for '{definitionId}'");
+				return;
+			}
+
+			var clickAction = def.Actions.OnClick;
+
+			var hasScenario = !string.IsNullOrEmpty(clickAction.Scenario);
+			var hasCommands = clickAction.Commands != null && clickAction.Commands.Length > 0;
+
+			if (!hasScenario && !hasCommands)
+				return;
+
+			if (!hasScenario && hasCommands)
+			{
+				var inlineDsl = string.Join("\n", clickAction.Commands);
+				ExecuteInlineCommands(inlineDsl);
 				return;
 			}
 

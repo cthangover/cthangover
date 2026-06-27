@@ -22,7 +22,14 @@ namespace Cthangover.Core.UI.Dialog.Action.Impls
 				return;
 			}
 
-			InteractiveManager.Instance?.Add(DefinitionId);
+			var mgr = InteractiveManager.Instance;
+			if (mgr == null)
+			{
+				GameLogger.Log("INTERACTIVE", "ActionInteractiveAdd: InteractiveManager not initialized yet", LogLevel.Error);
+				return;
+			}
+
+			mgr.Add(DefinitionId);
 		}
 	}
 }

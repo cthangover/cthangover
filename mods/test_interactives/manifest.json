@@ -1,0 +1,6 @@
+{
+  "name": "Test Interactives",
+  "author": "ct",
+  "description": "Test mod demonstrating the interactive object system — clickable elements on scene with highlight",
+  "depends": ["core", "interface"]
+}

@@ -6,9 +6,8 @@ namespace Cthangover.Core.Interactive
 {
 	/// <summary>
 	/// JSON-driven definition of an interactive scene object loaded from mods.
-	/// Position, size and hit-area coordinates are normalised (0..1) relative
-	/// to <c>ViewBox.Content</c> size, making them resolution-independent.
-	/// Textures are resolved through <c>ModManager.ResolveTexture</c>.
+	/// The texture is always full-screen (alpha determines visibility outside the collider).
+	/// The collider defines the clickable region in normalised 0..1 viewport coordinates.
 	/// JSON files follow the <c>{"Items": [...]}</c> envelope for
 	/// <c>ModManager.CollectJsonGroup</c> compatibility.
 	/// </summary>
@@ -22,29 +21,13 @@ namespace Cthangover.Core.Interactive
 		[JsonIgnore]
 		public string ModId { get; set; }
 
-		/// <summary>Texture key resolved via <c>ModManager.ResolveTexture</c> (e.g. "interactive/door").</summary>
+		/// <summary>Texture key resolved via <c>ModManager.ResolveTexture</c>. Full-screen with alpha.</summary>
 		[JsonPropertyName("texture")]
 		public string Texture { get; set; }
 
 		/// <summary>Visual layer: "background", "foreground" or "ui". Defaults to "foreground".</summary>
 		[JsonPropertyName("layer")]
 		public string Layer { get; set; } = "foreground";
-
-		/// <summary>Normalised position of the object's anchor point (0..1).</summary>
-		[JsonPropertyName("position")]
-		public Vector2 Position { get; set; }
-
-		/// <summary>Normalised size of the bounding box (0..1). Used for both visual scaling and hit-area bounds.</summary>
-		[JsonPropertyName("size")]
-		public Vector2 Size { get; set; } = Vector2.One;
-
-		/// <summary>Anchor point within the object (0..1). (0,0) = top-left, (0.5,0.5) = centre.</summary>
-		[JsonPropertyName("anchor")]
-		public Vector2 Anchor { get; set; } = new(0.5f, 0.5f);
-
-		/// <summary>Visual scale multiplier applied to the texture. Defaults to (1,1).</summary>
-		[JsonPropertyName("scale")]
-		public Vector2 Scale { get; set; } = Vector2.One;
 
 		/// <summary>Z-index for ordering within the layer. Higher = on top.</summary>
 		[JsonPropertyName("zIndex")]
@@ -62,7 +45,7 @@ namespace Cthangover.Core.Interactive
 		[JsonPropertyName("cursor")]
 		public string Cursor { get; set; }
 
-		/// <summary>Hit-area shape configuration. If omitted, the full bounding rect is used.</summary>
+		/// <summary>Collider shape and position in normalised viewport coordinates (0..1).</summary>
 		[JsonPropertyName("hitArea")]
 		public HitAreaDefinition HitArea { get; set; }
 
@@ -76,9 +59,8 @@ namespace Cthangover.Core.Interactive
 	}
 
 	/// <summary>
-	/// Shape and dimensions of the clickable area within the object's bounding box.
-	/// All coordinates are normalised within the object (0..1), where (0,0) is
-	/// the top-left corner and (1,1) is the bottom-right.
+	/// Shape and position of the clickable collider in normalised viewport
+	/// coordinates (0..1), where (0,0) is the top-left corner and (1,1) is bottom-right.
 	/// </summary>
 	public class HitAreaDefinition
 	{
@@ -86,27 +68,41 @@ namespace Cthangover.Core.Interactive
 		[JsonPropertyName("type")]
 		public string Type { get; set; } = "rect";
 
-		/// <summary>Circle radius, normalised to half the smaller object dimension (0..0.5).</summary>
-		[JsonPropertyName("radius")]
-		public float Radius { get; set; } = 0.5f;
+		/// <summary>X position of the collider origin (top-left for rect, centre for circle). Normalised 0..1.</summary>
+		[JsonPropertyName("x")]
+		public float X { get; set; }
 
-		/// <summary>
-		/// Polygon vertices as an array of normalised Vector2 points.
-		/// Only used when <c>Type</c> is <c>"polygon"</c>.
-		/// </summary>
+		/// <summary>Y position of the collider origin. Normalised 0..1.</summary>
+		[JsonPropertyName("y")]
+		public float Y { get; set; }
+
+		/// <summary>Width for rect type. Normalised 0..1.</summary>
+		[JsonPropertyName("width")]
+		public float Width { get; set; } = 0.1f;
+
+		/// <summary>Height for rect type. Normalised 0..1.</summary>
+		[JsonPropertyName("height")]
+		public float Height { get; set; } = 0.1f;
+
+		/// <summary>Radius for circle type. Normalised 0..1 (relative to viewport min dimension).</summary>
+		[JsonPropertyName("radius")]
+		public float Radius { get; set; } = 0.05f;
+
+		/// <summary>Polygon vertices as an array of normalised Vector2 points. Only for "polygon" type.</summary>
 		[JsonPropertyName("vertices")]
+		[JsonConverter(typeof(Vector2ArrayJsonConverter))]
 		public Vector2[] Vertices { get; set; }
 	}
 
 	/// <summary>
-	/// Highlight effect applied when the pointer hovers over the object.
-	/// Uses a shader-based colour modulation on the texture.
+	/// Highlight effect applied when the pointer hovers over the collider.
+	/// Uses a shader-based colour modulation on the full-screen texture.
 	/// </summary>
 	public class HighlightDefinition
 	{
-		/// <summary>Modulate colour mixed into the texture (RGBA). Alpha controls blend strength.</summary>
+		/// <summary>Modulate colour as a hex string (e.g. "#FFFF0033"). Parsed to Godot.Color at runtime.</summary>
 		[JsonPropertyName("color")]
-		public Color Color { get; set; } = new(1f, 1f, 0f, 0.3f);
+		public string ColorHex { get; set; } = "#FFFF0033";
 
 		/// <summary>Pulse scale multiplier applied during hover (e.g. 1.02 = 2% bigger).</summary>
 		[JsonPropertyName("scale")]
@@ -115,20 +111,37 @@ namespace Cthangover.Core.Interactive
 		/// <summary>Duration in seconds of the hover/unhover animation.</summary>
 		[JsonPropertyName("duration")]
 		public float Duration { get; set; } = 0.15f;
+
+		/// <summary>Parsed Godot.Color from ColorHex. Computed at load time, not serialised.</summary>
+		[JsonIgnore]
+		public Color Color => ParseColor(ColorHex);
+
+		private static Color ParseColor(string hex)
+		{
+			if (string.IsNullOrEmpty(hex))
+				return new Color(1f, 1f, 0f, 0.3f);
+
+			try
+			{
+				return new Color(hex);
+			}
+			catch
+			{
+				return new Color(1f, 1f, 0f, 0.3f);
+			}
+		}
 	}
 
 	/// <summary>
 	/// Actions dispatched on pointer events.
-	/// Each action can reference a <c>.scenario</c> file, inline DSL commands,
-	/// or both (scenario executes first).
 	/// </summary>
 	public class InteractiveActionDefinition
 	{
-		/// <summary>Action executed on left-click. Can reference a scenario and/or inline commands.</summary>
+		/// <summary>Action executed on left-click.</summary>
 		[JsonPropertyName("onClick")]
 		public ClickAction OnClick { get; set; }
 
-		/// <summary>Inline DSL commands executed on mouse enter (e.g. "set cursor_hint=door").</summary>
+		/// <summary>Inline DSL commands executed on mouse enter.</summary>
 		[JsonPropertyName("onHoverEnter")]
 		public string OnHoverEnter { get; set; }
 
@@ -138,12 +151,12 @@ namespace Cthangover.Core.Interactive
 	}
 
 	/// <summary>
-	/// Click action descriptor. Supports both a referenced <c>.scenario</c> file
-	/// and inline DSL commands, executed in that order.
+	/// Click action descriptor. Supports a referenced <c>.scenario</c> file
+	/// and/or inline DSL commands.
 	/// </summary>
 	public class ClickAction
 	{
-		/// <summary>Path to a <c>.scenario</c> file within a mod (e.g. "scenarios/door_clicked.scenario").</summary>
+		/// <summary>Path to a <c>.scenario</c> file within a mod.</summary>
 		[JsonPropertyName("scenario")]
 		public string Scenario { get; set; }
 

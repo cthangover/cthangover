@@ -4,15 +4,15 @@ using Godot;
 
 namespace Cthangover.Core.UI.Menu
 {
-    /// <summary>
-    /// A single save slot card in the save/load grid. Extends ListItem with
-    /// SaveSlotInfo as the model. Renders differently for empty vs. occupied
-    /// slots: empty slots show a placeholder label; occupied slots display the
-    /// screenshot, in-game date (from TimeData), real-world save timestamp, and
-    /// scene name. The stats label shows party size. Button click emits SlotPressed
-    /// with the file name for parent handling. Destruct disconnects the button
-    /// signal before QueueFree to avoid phantom callbacks.
-    /// </summary>
+	/// <summary>
+	/// A single save slot card in the save/load grid. Extends ListItem with
+	/// SaveSlotInfo as the model. Renders differently for empty vs. occupied
+	/// slots: empty slots show a placeholder label; occupied slots display the
+	/// screenshot, in-game date (from TimeData), real-world save timestamp, and
+	/// scene name. The stats label shows party size. Button click emits SlotPressed
+	/// with the file name for parent handling. Destruct disconnects the button
+	/// signal before QueueFree to avoid phantom callbacks.
+	/// </summary>
 	public partial class SaveSlotItem : ListItem<SaveSlotInfo>
 	{
 		private TextureRect screenshotRect;

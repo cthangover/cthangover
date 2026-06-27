@@ -9,11 +9,8 @@ namespace Cthangover.Core.Interactive
 {
 	/// <summary>
 	/// Fluent builder for creating interactive objects programmatically from
-	/// wrapper-template C# code. Provides a chainable API for setting visual
-	/// properties, hit-area geometry, highlight effects, and callbacks.
-	///
-	/// Call <c>Build()</c> to finalise and register the object with
-	/// <c>InteractiveManager</c>.
+	/// wrapper-template C# code. The texture is always full-screen with alpha;
+	/// the collider defines the clickable region in normalised viewport coordinates.
 	/// </summary>
 	public class InteractiveObjectBuilder
 	{
@@ -23,17 +20,14 @@ namespace Cthangover.Core.Interactive
 		private string _layer = "foreground";
 		private string _texture;
 		private Texture2D _textureDirect;
-		private Vector2 _position;
-		private Vector2 _size = new(0.1f, 0.1f);
-		private Vector2 _anchor = new(0.5f, 0.5f);
-		private Vector2 _scale = Vector2.One;
 		private int _zIndex;
 		private bool _enabled = true;
 		private bool _visible = true;
 		private string _cursor;
 
 		private HitAreaType _hitType = HitAreaType.Rect;
-		private float _hitRadius = 0.5f;
+		private float _hitX, _hitY, _hitW = 0.1f, _hitH = 0.1f;
+		private float _hitRadius = 0.05f;
 		private Vector2[] _hitVertices;
 
 		private Color _highlightColor = new(1f, 1f, 0f, 0.3f);
@@ -43,7 +37,6 @@ namespace Cthangover.Core.Interactive
 		private Action<string> _onClick;
 		private Action<string> _onHoverEnter;
 		private Action<string> _onHoverLeave;
-
 		private string _onHoverEnterDsl;
 		private string _onHoverLeaveDsl;
 
@@ -56,23 +49,11 @@ namespace Cthangover.Core.Interactive
 		/// <summary>Sets the visual layer ("background", "foreground" or "ui"). Default is "foreground".</summary>
 		public InteractiveObjectBuilder SetLayer(string layer) { _layer = layer; return this; }
 
-		/// <summary>Sets the texture by key (resolved via ModManager.ResolveTexture).</summary>
+		/// <summary>Sets the full-screen texture key (resolved via ModManager.ResolveTexture).</summary>
 		public InteractiveObjectBuilder SetTexture(string textureKey) { _texture = textureKey; return this; }
 
-		/// <summary>Sets the texture directly from a Godot Texture2D reference.</summary>
+		/// <summary>Sets the full-screen texture directly.</summary>
 		public InteractiveObjectBuilder SetTexture(Texture2D texture) { _textureDirect = texture; return this; }
-
-		/// <summary>Sets normalised position (0..1 relative to ViewBox.Content).</summary>
-		public InteractiveObjectBuilder SetPosition(float x, float y) { _position = new Vector2(x, y); return this; }
-
-		/// <summary>Sets normalised size (0..1 relative to ViewBox.Content).</summary>
-		public InteractiveObjectBuilder SetSize(float width, float height) { _size = new Vector2(width, height); return this; }
-
-		/// <summary>Sets the anchor point within the object (0..1). (0.5, 0.5) = centre.</summary>
-		public InteractiveObjectBuilder SetAnchor(float x, float y) { _anchor = new Vector2(x, y); return this; }
-
-		/// <summary>Sets the visual scale multiplier. Default is (1,1).</summary>
-		public InteractiveObjectBuilder SetScale(float x, float y) { _scale = new Vector2(x, y); return this; }
 
 		/// <summary>Sets the Z-index for ordering within the layer.</summary>
 		public InteractiveObjectBuilder SetZIndex(int z) { _zIndex = z; return this; }
@@ -86,16 +67,31 @@ namespace Cthangover.Core.Interactive
 		/// <summary>Sets the mouse cursor shape (Godot CursorShape enum name, e.g. "PointingHand").</summary>
 		public InteractiveObjectBuilder SetCursor(string cursor) { _cursor = cursor; return this; }
 
-		/// <summary>Sets a rectangular hit area. This is the default.</summary>
-		public InteractiveObjectBuilder SetHitRect() { _hitType = HitAreaType.Rect; return this; }
+		/// <summary>Sets a rectangular collider at normalised viewport coordinates (0..1).</summary>
+		public InteractiveObjectBuilder SetHitRect(float x, float y, float width, float height)
+		{
+			_hitType = HitAreaType.Rect;
+			_hitX = x; _hitY = y; _hitW = width; _hitH = height;
+			return this;
+		}
 
-		/// <summary>Sets a circular hit area with the given normalised radius (0..0.5).</summary>
-		public InteractiveObjectBuilder SetHitCircle(float radius = 0.5f) { _hitType = HitAreaType.Circle; _hitRadius = radius; return this; }
+		/// <summary>Sets a circular collider centred at normalised coordinates with normalised radius.</summary>
+		public InteractiveObjectBuilder SetHitCircle(float x, float y, float radius)
+		{
+			_hitType = HitAreaType.Circle;
+			_hitX = x; _hitY = y; _hitRadius = radius;
+			return this;
+		}
 
-		/// <summary>Sets a polygon hit area from an array of normalised vertices (0..1).</summary>
-		public InteractiveObjectBuilder SetHitPolygon(Vector2[] vertices) { _hitType = HitAreaType.Polygon; _hitVertices = vertices; return this; }
+		/// <summary>Sets a polygon collider from an array of normalised vertices (0..1).</summary>
+		public InteractiveObjectBuilder SetHitPolygon(Vector2[] vertices)
+		{
+			_hitType = HitAreaType.Polygon;
+			_hitVertices = vertices;
+			return this;
+		}
 
-		/// <summary>Configures the highlight effect colour, pulse scale and animation duration.</summary>
+		/// <summary>Configures the highlight effect.</summary>
 		public InteractiveObjectBuilder WithHighlight(Color color, float scale = 1.02f, float duration = 0.15f)
 		{
 			_highlightColor = color;
@@ -104,19 +100,19 @@ namespace Cthangover.Core.Interactive
 			return this;
 		}
 
-		/// <summary>Sets the click callback. Receives the object's ID as parameter.</summary>
+		/// <summary>Sets the click callback. Receives the object's ID.</summary>
 		public InteractiveObjectBuilder OnClick(Action<string> callback) { _onClick = callback; return this; }
 
-		/// <summary>Sets the hover-enter callback. Receives the DSL command string.</summary>
+		/// <summary>Sets the hover-enter callback.</summary>
 		public InteractiveObjectBuilder OnHoverEnter(Action<string> callback) { _onHoverEnter = callback; return this; }
 
-		/// <summary>Sets the hover-leave callback. Receives the DSL command string.</summary>
+		/// <summary>Sets the hover-leave callback.</summary>
 		public InteractiveObjectBuilder OnHoverLeave(Action<string> callback) { _onHoverLeave = callback; return this; }
 
-		/// <summary>Sets the inline DSL command executed on hover enter.</summary>
+		/// <summary>Sets inline DSL command executed on hover enter.</summary>
 		public InteractiveObjectBuilder SetHoverEnterDsl(string dsl) { _onHoverEnterDsl = dsl; return this; }
 
-		/// <summary>Sets the inline DSL command executed on hover leave.</summary>
+		/// <summary>Sets inline DSL command executed on hover leave.</summary>
 		public InteractiveObjectBuilder SetHoverLeaveDsl(string dsl) { _onHoverLeaveDsl = dsl; return this; }
 
 		/// <summary>
@@ -139,7 +135,9 @@ namespace Cthangover.Core.Interactive
 				return null;
 			}
 
-			var contentSize = viewBox.Content?.Size ?? new Vector2(1920f, 1024f);
+			var contentSize = viewBox.LogicalSize != Vector2I.Zero
+				? new Vector2(viewBox.LogicalSize.X, viewBox.LogicalSize.Y)
+				: viewBox.Content?.Size ?? new Vector2(1920f, 1024f);
 
 			var obj = new InteractiveObject
 			{
@@ -149,40 +147,7 @@ namespace Cthangover.Core.Interactive
 
 			layerContainer.AddChild(obj);
 
-			var pixelPos = _position * contentSize;
-			var pixelSize = _size * contentSize;
-			var anchorOffset = _anchor * pixelSize;
-			obj.Position = pixelPos - anchorOffset;
-			obj.Size = pixelSize;
-			obj.ZIndex = _zIndex;
-			obj.Visible = _visible;
-			obj.IsEnabled = _enabled;
-
-			var def = new InteractiveDefinition
-			{
-				ID = _id,
-				Texture = _texture,
-				Layer = _layer,
-				Size = _size,
-				Anchor = _anchor,
-				Scale = _scale,
-				ZIndex = _zIndex,
-				Enabled = _enabled,
-				Visible = _visible,
-				Cursor = _cursor,
-				HitArea = new HitAreaDefinition
-				{
-					Type = _hitType.ToString().ToLowerInvariant(),
-					Radius = _hitRadius,
-					Vertices = _hitVertices
-				},
-				Highlight = new HighlightDefinition
-				{
-					Color = _highlightColor,
-					Scale = _highlightScale,
-					Duration = _highlightDuration
-				}
-			};
+			var def = BuildDefinition();
 
 			obj.Configure(def, contentSize);
 
@@ -206,6 +171,50 @@ namespace Cthangover.Core.Interactive
 
 			GameLogger.Log("INTERACTIVE", $"InteractiveObjectBuilder.Build: '{_id}' created");
 			return obj;
+		}
+
+		private InteractiveDefinition BuildDefinition()
+		{
+			var hitArea = new HitAreaDefinition
+			{
+				Type = _hitType.ToString().ToLowerInvariant()
+			};
+
+			switch (_hitType)
+			{
+				case HitAreaType.Rect:
+					hitArea.X = _hitX;
+					hitArea.Y = _hitY;
+					hitArea.Width = _hitW;
+					hitArea.Height = _hitH;
+					break;
+				case HitAreaType.Circle:
+					hitArea.X = _hitX;
+					hitArea.Y = _hitY;
+					hitArea.Radius = _hitRadius;
+					break;
+				case HitAreaType.Polygon:
+					hitArea.Vertices = _hitVertices;
+					break;
+			}
+
+			return new InteractiveDefinition
+			{
+				ID = _id,
+				Texture = _texture,
+				Layer = _layer,
+				ZIndex = _zIndex,
+				Enabled = _enabled,
+				Visible = _visible,
+				Cursor = _cursor,
+				HitArea = hitArea,
+				Highlight = new HighlightDefinition
+				{
+					ColorHex = $"#{_highlightColor.ToHtml(false)}",
+					Scale = _highlightScale,
+					Duration = _highlightDuration
+				}
+			};
 		}
 	}
 }

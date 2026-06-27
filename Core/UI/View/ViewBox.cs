@@ -28,6 +28,9 @@ namespace Cthangover.Core.UI.View
 
 		public Control Content => content;
 
+		/// <summary>Logical resolution of the content area (default 1920x1024). Used for normalised coordinate calculations.</summary>
+		public Vector2I LogicalSize => defaultResolution;
+
 		public TextureRect Background { get; private set; }
 		public TextureRect Foreground { get; private set; }
 
@@ -48,15 +51,7 @@ namespace Cthangover.Core.UI.View
 			Background ??= GetNodeOrNull<TextureRect>("Background");
 			Foreground ??= GetNodeOrNull<TextureRect>("Foreground");
 
-			if (content != null)
-			{
-				InteractiveLayerBackground = CreateLayer("InteractiveLayer_Background", 1);
-				InteractiveLayerForeground = CreateLayer("InteractiveLayer_Foreground", 3);
-				InteractiveLayerUI = CreateLayer("InteractiveLayer_UI", 5);
-			}
-
 			var timedShader = ModManager.Instance.ResolveShader("timed_sprite");
-			GameLogger.Log("LIGHT", $"ViewBox._Ready: timedShader={(timedShader != null ? "OK" : "NULL")}, Bg={(Background != null ? "OK" : "NULL")}, Fg={(Foreground != null ? "OK" : "NULL")}", LogLevel.Debug);
 
 			if (timedShader != null)
 			{
@@ -78,30 +73,33 @@ namespace Cthangover.Core.UI.View
 
 		/// <summary>
 		/// Returns the interactive layer container for the given logical layer name.
+		/// Creates the layer lazily as a direct child of ViewBox if it doesn't exist yet.
 		/// </summary>
 		/// <param name="layerName">"background", "foreground" or "ui".</param>
-		/// <returns>The matching Control container, or <c>InteractiveLayerForeground</c> as fallback.</returns>
+		/// <returns>The matching Control container.</returns>
 		public Control GetInteractiveLayer(string layerName)
 		{
-			return layerName?.ToLowerInvariant() switch
+			var result = layerName?.ToLowerInvariant() switch
 			{
-				"background" => InteractiveLayerBackground,
-				"foreground" => InteractiveLayerForeground,
-				"ui" => InteractiveLayerUI,
-				_ => InteractiveLayerForeground
+				"background" => InteractiveLayerBackground ??= CreateLayerDirect("InteractiveLayer_Background", 1),
+				"foreground" => InteractiveLayerForeground ??= CreateLayerDirect("InteractiveLayer_Foreground", 3),
+				"ui" => InteractiveLayerUI ??= CreateLayerDirect("InteractiveLayer_UI", 5),
+				_ => InteractiveLayerForeground ??= CreateLayerDirect("InteractiveLayer_Foreground", 3)
 			};
+
+			return result;
 		}
 
-		private Control CreateLayer(string name, int zIndex)
+		private Control CreateLayerDirect(string name, int zIndex)
 		{
 			var layer = new Control
 			{
 				Name = name,
 				MouseFilter = MouseFilterEnum.Ignore,
-				ZIndex = zIndex
+				ZIndex = zIndex,
+				Size = new Vector2(defaultResolution.X, defaultResolution.Y)
 			};
-			layer.SetAnchorsPreset(LayoutPreset.FullRect);
-			content.AddChild(layer);
+			AddChild(layer);
 			return layer;
 		}
 
