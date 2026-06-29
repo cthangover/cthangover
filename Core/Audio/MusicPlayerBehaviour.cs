@@ -74,8 +74,7 @@ namespace Cthangover.Core.Audio
 			if (playlistContext.LastMusicName != null && audioPlayer != null)
 			{
 				audioPlayer.Stream = MusicFactory.Instance.Get(playlistContext.LastMusicName);
-				if (playlistContext.LastMusicTime > 0)
-					audioPlayer.Play((float)playlistContext.LastMusicTime);
+				audioPlayer.Play();
 			}
 		}
 
@@ -147,13 +146,22 @@ namespace Cthangover.Core.Audio
 					var stream = MusicFactory.Instance.Get(playlistContext.SavedAmbientMusicName);
 					if (stream != null)
 					{
-						GameLogger.Log("AUDIO", $"Restoring ambient: '{playlistContext.SavedAmbientMusicName}' at {playlistContext.SavedAmbientMusicTime:F1}s");
+						var savedTime = (double)playlistContext.SavedAmbientMusicTime;
+						GameLogger.Log("AUDIO", $"Restoring ambient: '{playlistContext.SavedAmbientMusicName}' was at {savedTime:F1}s");
+
+						if (savedTime > 0.5f)
+						{
+							var trimmed = OggPacketParser.CreateTrimmedStream(stream, savedTime);
+							if (trimmed != null)
+							{
+								stream = trimmed;
+								GameLogger.Log("AUDIO", $"Trimmed stream created — playing from 0 (effective start {savedTime:F1}s)");
+							}
+						}
+
 						audioPlayer.Stream = stream;
 						playlistContext.LastMusicName = playlistContext.SavedAmbientMusicName;
-						if (playlistContext.SavedAmbientMusicTime > 0)
-							audioPlayer.Play(playlistContext.SavedAmbientMusicTime);
-						else
-							audioPlayer.Play();
+						audioPlayer.Play();
 						playlistContext.SavedAmbientMusicName = null;
 						playlistContext.SavedAmbientMusicTime = 0;
 						autoAdvanceCooldown = Time.GetTicksUsec() / 1_000_000.0 + 0.5;

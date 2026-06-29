@@ -20,7 +20,93 @@ namespace Cthangover.Core.Audio
     {
         private const int OGG_PAGE_HEADER_SIZE = 27;
 
-        public static OggPacketSequence CreateFromOggBytes(byte[] data)
+		/// <summary>
+		/// Creates a new <c>AudioStreamOggVorbis</c> with audio data
+		/// starting from the given time. Header packets (identification,
+		/// comment, setup) are preserved. Granule positions are normalised
+		/// so <c>Play(0)</c> starts at the target time without the O(N)
+		/// seek penalty that <c>Play(fromPosition)</c> incurs on a full
+		/// OGG stream.
+		/// Returns <c>null</c> if the stream cannot be trimmed (e.g. not
+		/// an OGG, too short, or corrupted).
+		/// </summary>
+		public static AudioStreamOggVorbis CreateTrimmedStream(
+			AudioStream source, double startTimeSeconds)
+		{
+			if (source is not AudioStreamOggVorbis ogg || ogg.PacketSequence == null)
+				return null;
+
+			var seq = ogg.PacketSequence;
+			var packetData = seq.PacketData;
+			var granulePositions = seq.GranulePositions;
+			var samplingRate = seq.SamplingRate;
+			const int HEADER_COUNT = 3;
+
+			if (packetData == null || packetData.Count <= HEADER_COUNT)
+				return null;
+			if (granulePositions == null || granulePositions.Length < packetData.Count)
+				return null;
+			if (startTimeSeconds <= 0 || samplingRate <= 0)
+				return null;
+
+			int startPacketIndex = -1;
+			long baseGranule = 0;
+
+			for (int i = HEADER_COUNT; i < packetData.Count; i++)
+			{
+				if (i >= granulePositions.Length)
+					break;
+
+				long granule = granulePositions[i];
+				if (granule < 0)
+					continue;
+
+				double timeSeconds = (double)granule / samplingRate;
+				if (timeSeconds >= startTimeSeconds)
+				{
+					startPacketIndex = i;
+					baseGranule = granule;
+					break;
+				}
+			}
+
+			if (startPacketIndex < 0)
+				return null;
+
+			var trimmedPacketData = new Godot.Collections.Array<Godot.Collections.Array>();
+			var trimmedGranulePositions = new long[packetData.Count - startPacketIndex + HEADER_COUNT];
+
+			for (int i = 0; i < HEADER_COUNT; i++)
+			{
+				trimmedPacketData.Add(packetData[i]);
+				trimmedGranulePositions[i] = 0;
+			}
+
+			for (int i = startPacketIndex; i < packetData.Count; i++)
+			{
+				int trimmedIdx = HEADER_COUNT + (i - startPacketIndex);
+				trimmedPacketData.Add(packetData[i]);
+
+				if (i < granulePositions.Length)
+				{
+					long granule = granulePositions[i];
+					trimmedGranulePositions[trimmedIdx] = granule >= 0
+						? granule - baseGranule
+						: -1;
+				}
+			}
+
+			var trimmedSeq = new OggPacketSequence();
+			trimmedSeq.PacketData = trimmedPacketData;
+			trimmedSeq.GranulePositions = trimmedGranulePositions;
+			trimmedSeq.SamplingRate = samplingRate;
+
+			var trimmedStream = new AudioStreamOggVorbis();
+			trimmedStream.PacketSequence = trimmedSeq;
+			return trimmedStream;
+		}
+
+		public static OggPacketSequence CreateFromOggBytes(byte[] data)
         {
             if (data == null || data.Length < OGG_PAGE_HEADER_SIZE)
             {
