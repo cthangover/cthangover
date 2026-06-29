@@ -4,8 +4,8 @@
     "musics_enabled": true,
     "ambient_enabled": true,
     "sounds_volume": 100,
-    "musics_volume": 5,
-    "ambient_volume": 5
+    "musics_volume": 15,
+    "ambient_volume": 100
   },
   "language": "en-en",
   "logging": {

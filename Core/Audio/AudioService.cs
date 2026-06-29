@@ -131,7 +131,14 @@ namespace Cthangover.Core.Audio
             ambientPlayer = new AudioStreamPlayer();
             ambientPlayer.Name = "AmbientPlayer";
             ambientPlayer.Bus = AmbientBusName;
+            ambientPlayer.Finished += OnAmbientFinished;
             AddChild(ambientPlayer);
+        }
+
+        private void OnAmbientFinished()
+        {
+            if (ambientPlayer?.Stream != null)
+                ambientPlayer.Play();
         }
 
         private AudioStreamPlayer GetOrCreateSoundPlayer(SoundType type)
@@ -184,7 +191,7 @@ namespace Cthangover.Core.Audio
             if (ambientPlayer == null)
                 return;
 
-            var stream = MusicFactory.Instance?.Get(id);
+            var stream = SoundFactory.Instance?.Get(id);
             if (stream == null)
             {
                 GameLogger.Log("AUDIO", $"AudioService.PlayAmbient: stream not found for '{id}'", LogLevel.Error);

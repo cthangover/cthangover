@@ -50,6 +50,8 @@ namespace Cthangover.Tools.InteractiveEditor
 		private VBoxContainer _vertexList;
 		private Button _addVertexBtn;
 
+		private bool _suppressingSidebarEvents;
+
 		public InteractiveEditorWindow() : base("tools/interactive_editor/title")
 		{
 			Title = "Interactive Editor";
@@ -95,7 +97,7 @@ namespace Cthangover.Tools.InteractiveEditor
 			_preview = new TextureRect
 			{
 				ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
-				StretchMode = TextureRect.StretchModeEnum.Scale,
+				StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
 				MouseFilter = Control.MouseFilterEnum.Ignore,
 				AnchorRight = 1f,
 				AnchorBottom = 1f
@@ -108,6 +110,12 @@ namespace Cthangover.Tools.InteractiveEditor
 				Visible = false
 			};
 			_previewContainer.AddChild(_colliderOverlay);
+
+			_previewContainer.Resized += () =>
+			{
+				RebuildHandles();
+				UpdateColliderOverlay();
+			};
 
 			_jsonEdit = new TextEdit { CustomMinimumSize = new Vector2(0, 150) };
 			_jsonEdit.AddThemeFontOverride("font", GetMonospaceFont());
@@ -258,6 +266,7 @@ namespace Cthangover.Tools.InteractiveEditor
 			{
 				_preview.Texture = tex;
 			}
+			OnParamChanged();
 		}
 
 		private void OnHitTypeChanged(long index)
@@ -277,12 +286,28 @@ namespace Cthangover.Tools.InteractiveEditor
 
 		private void OnParamChanged()
 		{
+			if (_suppressingSidebarEvents)
+			{
+				GameLogger.Log("INTERACTIVE_EDITOR", "OnParamChanged suppressed");
+				return;
+			}
+
+			GameLogger.Log("INTERACTIVE_EDITOR", $"OnParamChanged hitType={_controller.HitType} bgSize=({_previewContainer.Size.X:F0}x{_previewContainer.Size.Y:F0})");
 			ReadSidebarToController();
 			RebuildHandles();
 			UpdateColliderOverlay();
 			RefreshJson();
 			SetDirty();
 			UpdateVertexList();
+		}
+
+		/// <summary>Lightweight update during handle drag. Does NOT rebuild handles.</summary>
+		private void OnDragUpdate()
+		{
+			GameLogger.Log("INTERACTIVE_EDITOR", $"OnDragUpdate hitType={_controller.HitType}");
+			UpdateColliderOverlay();
+			RefreshJson();
+			SetDirty();
 		}
 
 		private void ReadSidebarToController()
@@ -317,39 +342,88 @@ namespace Cthangover.Tools.InteractiveEditor
 			_controller.OnHoverLeave = _hoverLeave.Text.Trim();
 		}
 
+		/// <summary>
+		/// Calculates where the background texture is rendered within _previewContainer,
+		/// maintaining aspect ratio. Uses 1920x1024 as fallback when no texture is loaded.
+		/// </summary>
+		private Rect2 GetBackgroundRect()
+		{
+			var cw = _previewContainer.Size.X;
+			var ch = _previewContainer.Size.Y;
+			if (cw <= 0 || ch <= 0) return new Rect2();
+
+			var texSize = new Vector2(1920, 1024);
+			var tex = _preview.Texture;
+			if (tex != null)
+			{
+				var ts = tex.GetSize();
+				if (ts.X > 0 && ts.Y > 0) texSize = ts;
+			}
+
+			var scale = Mathf.Min(cw / texSize.X, ch / texSize.Y);
+			var rw = texSize.X * scale;
+			var rh = texSize.Y * scale;
+			var ox = (cw - rw) / 2f;
+			var oy = (ch - rh) / 2f;
+			return new Rect2(ox, oy, rw, rh);
+		}
+
+		private Vector2 NormToPixel(Vector2 norm)
+		{
+			var bg = GetBackgroundRect();
+			return bg.Position + norm * bg.Size;
+		}
+
+		private Vector2 PixelToNorm(Vector2 pixel)
+		{
+			var bg = GetBackgroundRect();
+			if (bg.Size.X <= 0 || bg.Size.Y <= 0) return Vector2.Zero;
+			return new Vector2(
+				(pixel.X - bg.Position.X) / bg.Size.X,
+				(pixel.Y - bg.Position.Y) / bg.Size.Y);
+		}
+
 		private void WriteControllerToSidebar()
 		{
-			_idEdit.Text = _controller.Id;
-			_textureEdit.Text = _controller.Texture;
+			_suppressingSidebarEvents = true;
+			try
+			{
+				_idEdit.Text = _controller.Id;
+				_textureEdit.Text = _controller.Texture;
 
-			for (int i = 0; i < _layerSelect.ItemCount; i++)
-				if (_layerSelect.GetItemText(i) == _controller.Layer)
-					_layerSelect.Select(i);
+				for (int i = 0; i < _layerSelect.ItemCount; i++)
+					if (_layerSelect.GetItemText(i) == _controller.Layer)
+						_layerSelect.Select(i);
 
-			for (int i = 0; i < _hitTypeSelect.ItemCount; i++)
-				if (_hitTypeSelect.GetItemText(i) == _controller.HitType)
-					_hitTypeSelect.Select(i);
+				for (int i = 0; i < _hitTypeSelect.ItemCount; i++)
+					if (_hitTypeSelect.GetItemText(i) == _controller.HitType)
+						_hitTypeSelect.Select(i);
 
-			_rectX.Text = _controller.RectX.ToString("F3", System.Globalization.CultureInfo.InvariantCulture);
-			_rectY.Text = _controller.RectY.ToString("F3", System.Globalization.CultureInfo.InvariantCulture);
-			_rectW.Text = _controller.RectW.ToString("F3", System.Globalization.CultureInfo.InvariantCulture);
-			_rectH.Text = _controller.RectH.ToString("F3", System.Globalization.CultureInfo.InvariantCulture);
+				_rectX.Text = _controller.RectX.ToString("F3", System.Globalization.CultureInfo.InvariantCulture);
+				_rectY.Text = _controller.RectY.ToString("F3", System.Globalization.CultureInfo.InvariantCulture);
+				_rectW.Text = _controller.RectW.ToString("F3", System.Globalization.CultureInfo.InvariantCulture);
+				_rectH.Text = _controller.RectH.ToString("F3", System.Globalization.CultureInfo.InvariantCulture);
 
-			_circleX.Text = _controller.CircleX.ToString("F3", System.Globalization.CultureInfo.InvariantCulture);
-			_circleY.Text = _controller.CircleY.ToString("F3", System.Globalization.CultureInfo.InvariantCulture);
-			_circleR.Text = _controller.CircleRadius.ToString("F3", System.Globalization.CultureInfo.InvariantCulture);
+				_circleX.Text = _controller.CircleX.ToString("F3", System.Globalization.CultureInfo.InvariantCulture);
+				_circleY.Text = _controller.CircleY.ToString("F3", System.Globalization.CultureInfo.InvariantCulture);
+				_circleR.Text = _controller.CircleRadius.ToString("F3", System.Globalization.CultureInfo.InvariantCulture);
 
-			_rectParams.Visible = _controller.HitType == "rect";
-			_circleParams.Visible = _controller.HitType == "circle";
-			_polyParams.Visible = _controller.HitType == "polygon";
+				_rectParams.Visible = _controller.HitType == "rect";
+				_circleParams.Visible = _controller.HitType == "circle";
+				_polyParams.Visible = _controller.HitType == "polygon";
 
-			_highlightColorBtn.Color = new Color(_controller.HighlightColorHex);
-			_highlightScaleEdit.Text = _controller.HighlightScale.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
+				_highlightColorBtn.Color = new Color(_controller.HighlightColorHex);
+				_highlightScaleEdit.Text = _controller.HighlightScale.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
 
-			_clickScenario.Text = _controller.OnClickScenario;
-			_clickCommands.Text = _controller.OnClickCommands;
-			_hoverEnter.Text = _controller.OnHoverEnter;
-			_hoverLeave.Text = _controller.OnHoverLeave;
+				_clickScenario.Text = _controller.OnClickScenario;
+				_clickCommands.Text = _controller.OnClickCommands;
+				_hoverEnter.Text = _controller.OnHoverEnter;
+				_hoverLeave.Text = _controller.OnHoverLeave;
+			}
+			finally
+			{
+				_suppressingSidebarEvents = false;
+			}
 		}
 
 		private void RebuildHandles()
@@ -358,13 +432,14 @@ namespace Cthangover.Tools.InteractiveEditor
 				h.QueueFree();
 			_handles.Clear();
 
-			var containerW = _previewContainer.Size.X;
-			var containerH = _previewContainer.Size.Y;
-			if (containerW <= 0 || containerH <= 0) return;
+			var bg = GetBackgroundRect();
+			if (bg.Size.X <= 0 || bg.Size.Y <= 0)
+			{
+				GameLogger.Log("INTERACTIVE_EDITOR", "RebuildHandles skipped: bg size <= 0");
+				return;
+			}
 
-			var refSize = Mathf.Min(containerW, containerH);
-			var offsetX = (containerW - refSize) / 2f;
-			var offsetY = (containerH - refSize) / 2f;
+			GameLogger.Log("INTERACTIVE_EDITOR", $"RebuildHandles hitType={_controller.HitType} bg=({bg.Position.X:F0},{bg.Position.Y:F0} {bg.Size.X:F0}x{bg.Size.Y:F0})");
 
 			var globalTopLeft = _previewContainer.GlobalPosition;
 
@@ -372,50 +447,47 @@ namespace Cthangover.Tools.InteractiveEditor
 			{
 				case "rect":
 				{
-					var rx = offsetX + _controller.RectX * refSize;
-					var ry = offsetY + _controller.RectY * refSize;
-					var rw = _controller.RectW * refSize;
-					var rh = _controller.RectH * refSize;
+					var topLeft = NormToPixel(new Vector2(_controller.RectX, _controller.RectY));
+					var bottomRight = NormToPixel(new Vector2(
+						_controller.RectX + _controller.RectW,
+						_controller.RectY + _controller.RectH));
 
-					AddHandleAt(globalTopLeft + new Vector2(rx, ry), _rectColor, 0, pos =>
+					AddHandleAt(globalTopLeft + topLeft, _rectColor, 0, pos =>
 					{
-						_controller.RectX = Mathf.Clamp((pos.X - globalTopLeft.X - offsetX) / refSize, 0f, 1f);
-						_controller.RectY = Mathf.Clamp((pos.Y - globalTopLeft.Y - offsetY) / refSize, 0f, 1f);
-						OnParamChanged();
-						WriteControllerToSidebar();
+						var norm = PixelToNorm(pos - globalTopLeft);
+						_controller.RectX = Mathf.Clamp(norm.X, 0f, 1f);
+						_controller.RectY = Mathf.Clamp(norm.Y, 0f, 1f);
+						OnDragUpdate();
 					});
-					AddHandleAt(globalTopLeft + new Vector2(rx + rw, ry + rh), _rectColor, 1, pos =>
+					AddHandleAt(globalTopLeft + bottomRight, _rectColor, 1, pos =>
 					{
-						var newX = (pos.X - globalTopLeft.X - offsetX) / refSize;
-						var newY = (pos.Y - globalTopLeft.Y - offsetY) / refSize;
-						_controller.RectW = Mathf.Max(0.01f, newX - _controller.RectX);
-						_controller.RectH = Mathf.Max(0.01f, newY - _controller.RectY);
-						OnParamChanged();
-						WriteControllerToSidebar();
+						var norm = PixelToNorm(pos - globalTopLeft);
+						_controller.RectW = Mathf.Max(0.01f, norm.X - _controller.RectX);
+						_controller.RectH = Mathf.Max(0.01f, norm.Y - _controller.RectY);
+						OnDragUpdate();
 					});
 					break;
 				}
 				case "circle":
 				{
-					var cx = offsetX + _controller.CircleX * refSize;
-					var cy = offsetY + _controller.CircleY * refSize;
-					var cr = _controller.CircleRadius * refSize;
+					var refDim = Mathf.Min(bg.Size.X, bg.Size.Y);
+					var center = NormToPixel(new Vector2(_controller.CircleX, _controller.CircleY));
+					var radiusPx = _controller.CircleRadius * refDim;
 
-					AddHandleAt(globalTopLeft + new Vector2(cx, cy), _circleColor, 0, pos =>
+					AddHandleAt(globalTopLeft + center, _circleColor, 0, pos =>
 					{
-						_controller.CircleX = Mathf.Clamp((pos.X - globalTopLeft.X - offsetX) / refSize, 0f, 1f);
-						_controller.CircleY = Mathf.Clamp((pos.Y - globalTopLeft.Y - offsetY) / refSize, 0f, 1f);
-						OnParamChanged();
-						WriteControllerToSidebar();
+						var norm = PixelToNorm(pos - globalTopLeft);
+						_controller.CircleX = Mathf.Clamp(norm.X, 0f, 1f);
+						_controller.CircleY = Mathf.Clamp(norm.Y, 0f, 1f);
+						OnDragUpdate();
 					});
-					AddHandleAt(globalTopLeft + new Vector2(cx + cr, cy), _circleColor, 1, pos =>
+					AddHandleAt(globalTopLeft + new Vector2(center.X + radiusPx, center.Y), _circleColor, 1, pos =>
 					{
-						var dx = pos.X - (globalTopLeft.X + cx);
-						var dy = pos.Y - (globalTopLeft.Y + cy);
-						var dist = Mathf.Sqrt(dx * dx + dy * dy);
-						_controller.CircleRadius = Mathf.Max(0.005f, dist / refSize);
-						OnParamChanged();
-						WriteControllerToSidebar();
+						var local = pos - globalTopLeft;
+						var centerPx = NormToPixel(new Vector2(_controller.CircleX, _controller.CircleY));
+						var dist = (local - centerPx).Length();
+						_controller.CircleRadius = Mathf.Max(0.005f, dist / refDim);
+						OnDragUpdate();
 					});
 					break;
 				}
@@ -425,14 +497,13 @@ namespace Cthangover.Tools.InteractiveEditor
 					{
 						var idx = i;
 						var v = _controller.PolygonVertices[i];
-						AddHandleAt(globalTopLeft + new Vector2(offsetX + v.X * refSize, offsetY + v.Y * refSize), _vertexColor, i, pos =>
+						AddHandleAt(globalTopLeft + NormToPixel(v), _vertexColor, i, pos =>
 						{
+							var norm = PixelToNorm(pos - globalTopLeft);
 							_controller.SetPolygonVertex(idx, new Vector2(
-								Mathf.Clamp((pos.X - globalTopLeft.X - offsetX) / refSize, 0f, 1f),
-								Mathf.Clamp((pos.Y - globalTopLeft.Y - offsetY) / refSize, 0f, 1f)
-							));
-							OnParamChanged();
-							WriteControllerToSidebar();
+								Mathf.Clamp(norm.X, 0f, 1f),
+								Mathf.Clamp(norm.Y, 0f, 1f)));
+							OnDragUpdate();
 						});
 					}
 					break;
@@ -442,68 +513,79 @@ namespace Cthangover.Tools.InteractiveEditor
 
 		private void UpdateColliderOverlay()
 		{
-			var containerW = _previewContainer.Size.X;
-			var containerH = _previewContainer.Size.Y;
-			if (containerW <= 0 || containerH <= 0)
+			var bg = GetBackgroundRect();
+			if (bg.Size.X <= 0 || bg.Size.Y <= 0)
 			{
 				_colliderOverlay.Visible = false;
 				return;
 			}
-
-			var refSize = Mathf.Min(containerW, containerH);
-			var offsetX = (containerW - refSize) / 2f;
-			var offsetY = (containerH - refSize) / 2f;
 
 			_colliderOverlay.Visible = true;
 
 			switch (_controller.HitType)
 			{
 				case "rect":
-					_colliderOverlay.Position = new Vector2(offsetX + _controller.RectX * refSize, offsetY + _controller.RectY * refSize);
-					_colliderOverlay.Size = new Vector2(_controller.RectW * refSize, _controller.RectH * refSize);
+					_colliderOverlay.Position = NormToPixel(
+						new Vector2(_controller.RectX, _controller.RectY));
+					_colliderOverlay.Size = new Vector2(
+						_controller.RectW * bg.Size.X, _controller.RectH * bg.Size.Y);
 					_colliderOverlay.Color = _colliderOverlayColor;
 					break;
 				case "circle":
-					var r = _controller.CircleRadius * refSize;
-					_colliderOverlay.Position = new Vector2(offsetX + _controller.CircleX * refSize - r, offsetY + _controller.CircleY * refSize - r);
+				{
+					var r = _controller.CircleRadius * Mathf.Min(bg.Size.X, bg.Size.Y);
+					var center = NormToPixel(
+						new Vector2(_controller.CircleX, _controller.CircleY));
+					_colliderOverlay.Position = center - new Vector2(r, r);
 					_colliderOverlay.Size = new Vector2(r * 2f, r * 2f);
 					_colliderOverlay.Color = _colliderOverlayColor;
 					break;
+				}
 				case "polygon":
+				{
 					if (_controller.PolygonVertices.Count > 0)
 					{
-						float minX = float.MaxValue, minY = float.MaxValue, maxX = float.MinValue, maxY = float.MinValue;
+						float minX = float.MaxValue, minY = float.MaxValue,
+							maxX = float.MinValue, maxY = float.MinValue;
 						foreach (var v in _controller.PolygonVertices)
 						{
-							var px = offsetX + v.X * refSize;
-							var py = offsetY + v.Y * refSize;
-							minX = Mathf.Min(minX, px);
-							minY = Mathf.Min(minY, py);
-							maxX = Mathf.Max(maxX, px);
-							maxY = Mathf.Max(maxY, py);
+							var p = NormToPixel(v);
+							minX = Mathf.Min(minX, p.X);
+							minY = Mathf.Min(minY, p.Y);
+							maxX = Mathf.Max(maxX, p.X);
+							maxY = Mathf.Max(maxY, p.Y);
 						}
 						_colliderOverlay.Position = new Vector2(minX, minY);
 						_colliderOverlay.Size = new Vector2(maxX - minX, maxY - minY);
 						_colliderOverlay.Color = _colliderOverlayColor;
 					}
 					break;
+				}
 			}
 		}
 
 		private void AddHandleAt(Vector2 globalPos, Color color, int index, Action<Vector2> onDrag)
 		{
 			var handle = new InteractiveEditorHandle(color, index);
-			handle.GlobalPosition = globalPos - handle.Size / 2;
 			handle.DragUpdate = center =>
 			{
+				GameLogger.Log("INTERACTIVE_EDITOR", $"DragUpdate idx={index} center=({center.X:F0},{center.Y:F0})");
 				onDrag(center);
 			};
 			handle.Clicked = () =>
 			{
 				SelectHandle(index);
 			};
+			handle.DragEnd = () =>
+			{
+				GameLogger.Log("INTERACTIVE_EDITOR", $"DragEnd idx={index} syncing sidebar");
+				_suppressingSidebarEvents = true;
+				WriteControllerToSidebar();
+				_suppressingSidebarEvents = false;
+			};
 			handle.MouseDefaultCursorShape = Control.CursorShape.PointingHand;
 			_previewContainer.AddChild(handle);
+			handle.GlobalPosition = globalPos - handle.Size / 2;
 			_handles.Add(handle);
 		}
 
