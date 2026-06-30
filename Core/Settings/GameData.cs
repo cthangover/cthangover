@@ -26,6 +26,8 @@ namespace Cthangover.Core.Settings
 			GameLogger.Init();
 		}
 
+        private readonly TimeTickController _timeTickController = new();
+
         public SettingsData Settings { get; private set; } = new();
         public RuntimeData Runtime { get; private set; } = new();
 
@@ -33,6 +35,7 @@ namespace Cthangover.Core.Settings
         {
             Settings.Load();
             LocaleLoader.LoadCurrentLanguage();
+            _timeTickController.EnsureRegistered(this);
             GameLogger.Log("GAME", $"Game initialized, version={ProjectSettings.GetSetting("application/config/version")}");
         }
     }

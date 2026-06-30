@@ -175,14 +175,13 @@ namespace Cthangover.Core.UI.Lights
 
         public void OnTimerTick()
         {
-            if (lampBehaviour == null)
-                lampBehaviour = FindLampChild();
+	        lampBehaviour ??= FindLampChild();
 
             if (lampBehaviour != null)
             {
                 var time = GameData.Instance?.Runtime?.Time;
-                int hours = time?.Hours ?? 0;
-                bool newVis = DarkMode || !(hours >= 6 && hours < 22);
+                var hours = time?.Hours ?? 0;
+                var newVis = DarkMode || !(hours >= 6 && hours < 22);
                 lampBehaviour.Visible = newVis;
             }
 

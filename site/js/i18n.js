@@ -5,6 +5,7 @@ const I18N = {
     nav_features: "Возможности",
     nav_arch: "Архитектура",
     nav_screenshots: "Скриншоты",
+    nav_videos: "Видео",
     nav_story: "Сюжет",
     nav_systems: "Системы",
     nav_github: "GitHub",
@@ -50,6 +51,9 @@ const I18N = {
 
     screenshots_title: "Скриншоты",
     screenshot_n: "Скриншот",
+
+    videos_title: "Видео",
+    video_lighting_title: "Освещение и время суток",
 
     story_title: "Сюжет",
     story_p1: "Cthangover (Cthulhu + Hangover) — это история о том, как великий Аль-Азиф, известный как «Книга Мертвых», встретил своего единственного и непобедимого врага — хронического алкоголика.",
@@ -131,6 +135,7 @@ const I18N = {
     nav_features: "Features",
     nav_arch: "Architecture",
     nav_screenshots: "Screenshots",
+    nav_videos: "Videos",
     nav_story: "Story",
     nav_systems: "Systems",
     nav_github: "GitHub",
@@ -176,6 +181,9 @@ const I18N = {
 
     screenshots_title: "Screenshots",
     screenshot_n: "Screenshot",
+
+    videos_title: "Videos",
+    video_lighting_title: "Lighting & Time of Day",
 
     story_title: "Story",
     story_p1: "Cthangover (Cthulhu + Hangover) is the story of how the great Al-Azif, also known as the Book of the Dead, met its one and only invincible enemy — a chronic alcoholic.",
@@ -257,6 +265,7 @@ const I18N = {
     nav_features: "功能特点",
     nav_arch: "架构",
     nav_screenshots: "截图",
+    nav_videos: "视频",
     nav_story: "剧情",
     nav_systems: "系统",
     nav_github: "GitHub",
@@ -302,6 +311,9 @@ const I18N = {
 
     screenshots_title: "截图",
     screenshot_n: "截图",
+
+    videos_title: "视频",
+    video_lighting_title: "光照与时间系统",
 
     story_title: "剧情",
     story_p1: "Cthangover（克苏鲁 + 宿醉）讲述了伟大的阿尔-阿吉夫（亦称「死者之书」）遇到它唯一不可战胜的敌人——一个慢性酒精中毒者的故事。",
@@ -383,6 +395,7 @@ const I18N = {
     nav_features: "機能",
     nav_arch: "アーキテクチャ",
     nav_screenshots: "スクリーンショット",
+    nav_videos: "動画",
     nav_story: "ストーリー",
     nav_systems: "システム",
     nav_github: "GitHub",
@@ -428,6 +441,9 @@ const I18N = {
 
     screenshots_title: "スクリーンショット",
     screenshot_n: "スクリーンショット",
+
+    videos_title: "動画",
+    video_lighting_title: "ライティングと時間帯",
 
     story_title: "ストーリー",
     story_p1: "Cthangover（クトゥルフ + 二日酔い）は、偉大なるアル・アジフ、別名「死者の書」が、唯一無敵の敵——慢性アルコール中毒者——に出会った物語です。",
@@ -509,6 +525,7 @@ const I18N = {
     nav_features: "기능",
     nav_arch: "아키텍처",
     nav_screenshots: "스크린샷",
+    nav_videos: "비디오",
     nav_story: "스토리",
     nav_systems: "시스템",
     nav_github: "GitHub",
@@ -554,6 +571,9 @@ const I18N = {
 
     screenshots_title: "스크린샷",
     screenshot_n: "스크린샷",
+
+    videos_title: "비디오",
+    video_lighting_title: "조명과 시간",
 
     story_title: "스토리",
     story_p1: "Cthangover(크툴루 + 숙취)는 위대한 알-아지프, 일명 '죽은 자의 책'이 유일무이한 무적의 적 — 만성 알코올 중독자 — 를 만난 이야기입니다.",
@@ -635,6 +655,7 @@ const I18N = {
     nav_features: "Tính năng",
     nav_arch: "Kiến trúc",
     nav_screenshots: "Ảnh chụp",
+    nav_videos: "Video",
     nav_story: "Cốt truyện",
     nav_systems: "Hệ thống",
     nav_github: "GitHub",
@@ -680,6 +701,9 @@ const I18N = {
 
     screenshots_title: "Ảnh chụp màn hình",
     screenshot_n: "Ảnh chụp",
+
+    videos_title: "Video",
+    video_lighting_title: "Ánh sáng & Thời gian",
 
     story_title: "Cốt truyện",
     story_p1: "Cthangover (Cthulhu + Nôn nao) là câu chuyện về cách Al-Azif vĩ đại, còn được gọi là 'Cuốn sách của Người chết', gặp kẻ thù bất khả chiến bại duy nhất của mình — một kẻ nghiện rượu mãn tính.",
@@ -761,6 +785,7 @@ const I18N = {
     nav_features: "Características",
     nav_arch: "Arquitectura",
     nav_screenshots: "Capturas",
+    nav_videos: "Videos",
     nav_story: "Historia",
     nav_systems: "Sistemas",
     nav_github: "GitHub",
@@ -806,6 +831,9 @@ const I18N = {
 
     screenshots_title: "Capturas de Pantalla",
     screenshot_n: "Captura",
+
+    videos_title: "Videos",
+    video_lighting_title: "Iluminación y Hora del Día",
 
     story_title: "Historia",
     story_p1: "Cthangover (Cthulhu + Resaca) es la historia de cómo el gran Al-Azif, también conocido como el 'Libro de los Muertos', conoció a su único e invencible enemigo — un alcohólico crónico.",

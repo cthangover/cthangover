@@ -8,6 +8,14 @@
     "ambient_volume": 100
   },
   "language": "en-en",
+  "display": {
+    "window_mode": 3,
+    "resolution_width": 1920,
+    "resolution_height": 1080,
+    "current_screen": 0,
+    "vsync_enabled": false,
+    "scale": 1
+  },
   "logging": {
     "enabled": true,
     "console_enabled": true,

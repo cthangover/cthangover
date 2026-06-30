@@ -8,8 +8,22 @@ namespace Cthangover.Core.Actions.Atomic
     /// </summary>
     public class QuestSetStatusAction : IScenarioAction
     {
+        /// <summary>
+        /// Registered as "quest.set_status" — sets the global lifecycle
+        /// state of a quest (Active, Completed, Failed, etc.). The
+        /// "status" dialog variable is parsed via
+        /// Enums&lt;QuestStatus&gt;.Parse — case-sensitive and must match
+        /// a QuestStatus enum value exactly. Invalid status strings are
+        /// caught by QuestServiceImpl and logged as errors without
+        /// crashing the dialog.
+        /// </summary>
         public string Name => "quest.set_status";
 
+        /// <summary>
+        /// Reads "quest_id" and "status" from dialog variables and
+        /// delegates to ctx.Quests.SetStatus. Missing quests are silently
+        /// skipped. Invalid status values are logged and ignored.
+        /// </summary>
         public void Run(IActionContext ctx)
         {
             var questId = ctx.GetParam("quest_id");

@@ -321,64 +321,72 @@ namespace Cthangover.Core.Mods
 
         private readonly Dictionary<string, Shader> resolvedShaderCache = new();
 
-        /// <summary>
-        /// Resolves a shader name to a Godot <c>Shader</c> resource.
-        /// First checks the resolved cache (validating with
-        /// <c>IsInstanceValid</c>), then the on-disk cache, then
-        /// loads directly for folder mods or extracts from zip for
-        /// zip mods.
-        /// </summary>
-        public Shader ResolveShader(string shaderName)
-        {
-            if (resolvedShaderCache.TryGetValue(shaderName, out var cached) && GodotObject.IsInstanceValid(cached))
-                return cached;
+		/// <summary>
+		/// Resolves a shader name to a Godot <c>Shader</c> resource.
+		/// First checks the resolved cache (validating with
+		/// <c>IsInstanceValid</c>), then the on-disk cache, then
+		/// loads directly for folder mods or extracts from zip for
+		/// zip mods.
+		/// </summary>
+		public Shader ResolveShader(string shaderName)
+		{
+			var cached = TryGetCachedShader(shaderName);
+			if (cached != null)
+				return cached;
 
-            if (ModCacheManager.IsShaderCached(shaderName))
-            {
-                var cachedPath = ModCacheManager.GetShaderCachePath(shaderName);
-                var cachedShader = GD.Load<Shader>(cachedPath);
-                if (cachedShader != null)
-                {
-                    resolvedShaderCache[shaderName] = cachedShader;
-                    return cachedShader;
-                }
-            }
+			if (ModCacheManager.IsShaderCached(shaderName))
+			{
+				var cachedPath = ModCacheManager.GetShaderCachePath(shaderName);
+				var cachedShader = GD.Load<Shader>(cachedPath);
+				if (cachedShader != null)
+				{
+					resolvedShaderCache[shaderName] = cachedShader;
+					return cachedShader;
+				}
+			}
 
-            var shaders = CollectShaders();
-            if (!shaders.TryGetValue(shaderName, out var entry))
-                return null;
+			var shaders = CollectShaders();
+			if (!shaders.TryGetValue(shaderName, out var entry))
+				return null;
 
-            var mod = GetMod(entry.ModId);
-            if (mod == null)
-                return null;
+			var mod = GetMod(entry.ModId);
+			if (mod == null)
+				return null;
 
-            if (mod.FileProvider is FolderModFileProvider)
-            {
-                var fsPath = mod.FileProvider.GetFileSystemPath(entry.FullPath);
-                if (fsPath == null)
-                    return null;
+			if (mod.FileProvider is FolderModFileProvider)
+			{
+				var fsPath = mod.FileProvider.GetFileSystemPath(entry.FullPath);
+				if (fsPath == null)
+					return null;
 
-                var shader = GD.Load<Shader>(fsPath);
-                if (shader != null)
-                    resolvedShaderCache[shaderName] = shader;
-                return shader;
-            }
+				var shader = GD.Load<Shader>(fsPath);
+				if (shader != null)
+					resolvedShaderCache[shaderName] = shader;
+				return shader;
+			}
 
-            ModCacheManager.ExtractShaders(entry.ModId, mod.FileProvider);
+			ModCacheManager.ExtractShaders(entry.ModId, mod.FileProvider);
 
-            if (ModCacheManager.IsShaderCached(shaderName))
-            {
-                var extractedPath = ModCacheManager.GetShaderCachePath(shaderName);
-                var extractedShader = GD.Load<Shader>(extractedPath);
-                if (extractedShader != null)
-                    resolvedShaderCache[shaderName] = extractedShader;
-                return extractedShader;
-            }
+			if (ModCacheManager.IsShaderCached(shaderName))
+			{
+				var extractedPath = ModCacheManager.GetShaderCachePath(shaderName);
+				var extractedShader = GD.Load<Shader>(extractedPath);
+				if (extractedShader != null)
+					resolvedShaderCache[shaderName] = extractedShader;
+				return extractedShader;
+			}
 
-            GameLogger.Log("MODS", $"ResolveShader: '{shaderName}' failed to extract from mod '{entry.ModId}'", LogLevel.Error);
+			GameLogger.Log("MODS", $"ResolveShader: '{shaderName}' failed to extract from mod '{entry.ModId}'", LogLevel.Error);
 
-            return null;
-        }
+			return null;
+		}
+
+		public Shader TryGetCachedShader(string shaderName)
+		{
+			if (resolvedShaderCache.TryGetValue(shaderName, out var cached) && GodotObject.IsInstanceValid(cached))
+				return cached;
+			return null;
+		}
 
         private Dictionary<string, FileEntry> textureFileCache;
 
@@ -432,7 +440,8 @@ namespace Cthangover.Core.Mods
         /// </summary>
         public Texture2D ResolveTexture(string textureName)
         {
-            if (resolvedTextureCache.TryGetValue(textureName, out var cached) && GodotObject.IsInstanceValid(cached))
+            var cached = TryGetCachedTexture(textureName);
+            if (cached != null)
                 return cached;
 
             var textures = CollectTextures();
@@ -473,6 +482,13 @@ namespace Cthangover.Core.Mods
                 resolvedTextureCache[textureName] = texture;
 
             return texture;
+        }
+
+        public Texture2D TryGetCachedTexture(string textureName)
+        {
+            if (resolvedTextureCache.TryGetValue(textureName, out var cached) && GodotObject.IsInstanceValid(cached))
+                return cached;
+            return null;
         }
 
         private static void CollectGroupFiles(IModFileProvider provider, string modId, string dir, string prefix, Dictionary<string, FileEntry> result)

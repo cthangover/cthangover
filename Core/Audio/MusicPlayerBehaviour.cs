@@ -24,7 +24,15 @@ namespace Cthangover.Core.Audio
 		private AudioStreamPlayer audioPlayer;
 		private readonly PlaylistContext playlistContext = new();
 
-		public bool IsCanAutoPlay { get; set; } = true;
+        /// <summary>
+        /// Top-level toggle for the entire auto-advance state machine.
+        /// When <c>false</c>, <c>NextSound</c> is skipped, no new
+        /// tracks are selected, and <c>UpdateMusicType</c> does not
+        /// trigger a switch. Set by <c>EnabledAutoPlay</c> /
+        /// <c>DisabledAutoPlay</c> and also forced to <c>false</c>
+        /// when a playlist has no tracks.
+        /// </summary>
+        public bool IsCanAutoPlay { get; set; } = true;
 
 		private Tween fadeTween;
 		private bool playlistsInited;
@@ -64,8 +72,16 @@ namespace Cthangover.Core.Audio
 			}
 		}
 
-		public void EnabledAutoPlay()
-		{
+        /// <summary>
+        /// Re-enables auto-play after it was disabled. Stops current
+        /// playback and, if a <c>LastMusicName</c> is saved, restores
+        /// that track from <c>MusicFactory</c> — effectively resuming
+        /// the previously-interrupted song. If no track is saved the
+        /// auto-advance loop in <c>_Process</c> will pick the next
+        /// random track within 0.5s.
+        /// </summary>
+        public void EnabledAutoPlay()
+        {
 			GameLogger.Log("AUDIO", "Autoplay enabled");
 
 			IsCanAutoPlay = true;
@@ -78,8 +94,14 @@ namespace Cthangover.Core.Audio
 			}
 		}
 
-		public void DisabledAutoPlay()
-		{
+        /// <summary>
+        /// Disables auto-play and saves the current playback position
+        /// into <c>PlaylistContext.LastMusicTime</c> so it can be
+        /// restored later via <c>EnabledAutoPlay</c>. Stops playback
+        /// immediately after saving.
+        /// </summary>
+        public void DisabledAutoPlay()
+        {
 			GameLogger.Log("AUDIO", "Autoplay disabled");
 
 			IsCanAutoPlay = false;
@@ -90,13 +112,41 @@ namespace Cthangover.Core.Audio
 			StopMusic();
 		}
 
-		public void UpdateMusicType(GodotSceneType scene)
-		{
+        /// <summary>
+        /// Overload that delegates to
+        /// <c>UpdateMusicType(scene.ToString())</c>.
+        /// </summary>
+        public void UpdateMusicType(GodotSceneType scene)
+        {
 			UpdateMusicType(scene.ToString());
 		}
 
-		public void UpdateMusicType(string sceneName)
-		{
+        /// <summary>
+        /// Scene-transition entry point that orchestrates the
+        /// Combat ↔ Ambient music handoff. Re-initialises the
+        /// playlist for the new scene and determines the appropriate
+        /// <see cref="MusicType"/>:
+        /// <list type="bullet">
+        /// <item>If the type is unchanged and the current track exists
+        /// in the new playlist, playback continues uninterrupted.</item>
+        /// <item>If the type is unchanged but the track is absent from
+        /// the new playlist, a new random track is picked.</item>
+        /// <item>When transitioning <b>Ambient → Combat</b>: the
+        /// current ambient track name and playback position are saved
+        /// to <c>PlaylistContext</c> so they can be restored after
+        /// combat ends.</item>
+        /// <item>When transitioning <b>Combat → Ambient</b>: the
+        /// saved ambient state is restored. If the saved time is past
+        /// 0.5s, <c>OggPacketParser.CreateTrimmedStream</c> is used to
+        /// create a truncated OGG stream starting from the saved
+        /// position — this avoids the O(N) seek penalty of
+        /// <c>Play(fromPosition)</c> on large OGG files.</item>
+        /// </list>
+        /// When auto-play is disabled the entire method is a no-op
+        /// except for playlist initialisation.
+        /// </summary>
+        public void UpdateMusicType(string sceneName)
+        {
 			var previousType = playlistContext.LastMusicType;
 			InitPlaylists(sceneName);
 
@@ -183,13 +233,28 @@ namespace Cthangover.Core.Audio
 			NextSound();
 		}
 
-		public MusicType GetMusicType(GodotSceneType scene)
-		{
+        /// <summary>
+        /// Resolves the music type for a scene enum value: returns
+        /// <c>MusicType.Combat</c> for <c>GodotSceneType.Battle</c>,
+        /// otherwise <c>MusicType.Ambient</c>. Used by external systems
+        /// that need to know the music category without entering the
+        /// full scene-transition flow.
+        /// </summary>
+        public MusicType GetMusicType(GodotSceneType scene)
+        {
 			return scene == GodotSceneType.Battle ? MusicType.Combat : MusicType.Ambient;
 		}
 
-		public void NextSound()
-		{
+        /// <summary>
+        /// Picks a random track from the current playlist's
+        /// <c>LastMusicType</c> bucket, avoiding the immediately
+        /// previous track when the bucket has more than one entry.
+        /// Stops the current player and starts the new track via
+        /// <c>PlayMusic</c>. Skips silently when auto-play is
+        /// disabled or the playlist is empty.
+        /// </summary>
+        public void NextSound()
+        {
 			if (!IsCanAutoPlay)
 				return;
 
@@ -217,13 +282,26 @@ namespace Cthangover.Core.Audio
 			}
 		}
 
-		public void InitPlaylists(GodotSceneType scene)
-		{
+        /// <summary>
+        /// Overload that delegates to
+        /// <c>InitPlaylists(scene.ToString())</c>.
+        /// </summary>
+        public void InitPlaylists(GodotSceneType scene)
+        {
 			InitPlaylists(scene.ToString());
 		}
 
-		public void InitPlaylists(string sceneName)
-		{
+        /// <summary>
+        /// Builds the playlist for a scene via
+        /// <c>PlaylistFactory.CreatePlaylist</c>. If the playlist for
+        /// the same scene is already loaded the call is a no-op. Forces
+        /// <c>LastMusicType</c> from <c>Force</c> to <c>Ambient</c> so
+        /// transient forced tracks don't persist across scenes. If the
+        /// resulting playlist has no tracks, disables auto-play
+        /// entirely.
+        /// </summary>
+        public void InitPlaylists(string sceneName)
+        {
 			if (playlistContext.Playlist != null && playlistContext.Playlist.Scene == sceneName)
 				return;
 
@@ -239,8 +317,17 @@ namespace Cthangover.Core.Audio
 				IsCanAutoPlay = false;
 		}
 
-		public void PlayMusic(string name, AudioStream music, bool isLooped = false)
-		{
+        /// <summary>
+        /// Manually plays a specific track with an explicit
+        /// <c>AudioStream</c>. Updates <c>LastMusicName</c> and resets
+        /// the auto-advance cooldown to prevent an immediate skip.
+        /// The <paramref name="isLooped"/> parameter is accepted but
+        /// currently unused — OGG streams are expected to be
+        /// non-looping and auto-advance handles the next-track
+        /// selection.
+        /// </summary>
+        public void PlayMusic(string name, AudioStream music, bool isLooped = false)
+        {
 			if (audioPlayer == null || !IsInstanceValid(audioPlayer))
 				TryFindAudioPlayer();
 			if (audioPlayer == null)
@@ -255,34 +342,67 @@ namespace Cthangover.Core.Audio
 			autoAdvanceCooldown = Time.GetTicksUsec() / 1_000_000.0 + 0.5;
 		}
 
-		public void PlayMusic(string name, bool isLooped = false)
-		{
+        /// <summary>
+        /// Plays a track by name, resolving the stream from
+        /// <c>MusicFactory</c>. Delegates to the
+        /// <c>PlayMusic(name, stream, isLooped)</c> overload.
+        /// </summary>
+        public void PlayMusic(string name, bool isLooped = false)
+        {
 			PlayMusic(name, MusicFactory.Instance.Get(name), isLooped);
 		}
 
-		public void PlayMusic()
-		{
+        /// <summary>
+        /// Resumes the currently-loaded stream on the audio player.
+        /// Unlike the named overloads, does not change the stream
+        /// or <c>LastMusicName</c>. Resets the auto-advance cooldown
+        /// so the just-resumed track isn't replaced immediately.
+        /// </summary>
+        public void PlayMusic()
+        {
 			audioPlayer?.Play();
 			autoAdvanceCooldown = Time.GetTicksUsec() / 1_000_000.0 + 0.5;
 		}
 
-		public void PauseMusic()
-		{
+        /// <summary>
+        /// Pauses the music player in-place via <c>StreamPaused</c>.
+        /// Unlike <c>StopMusic</c>, the stream stays loaded and
+        /// <c>PlayMusic()</c> will resume from the paused sample.
+        /// </summary>
+        public void PauseMusic()
+        {
 			GameLogger.Log("AUDIO", "PauseMusic");
 
 			if (audioPlayer != null)
 				audioPlayer.StreamPaused = true;
 		}
 
-		public void StopMusic()
-		{
+        /// <summary>
+        /// Immediately stops playback on the audio player. The stream
+        /// reference is preserved; a subsequent <c>PlayMusic()</c>
+        /// would restart the same track from the beginning.
+        /// <c>LastMusicName</c> is not cleared, so <c>EnabledAutoPlay</c>
+        /// can restore it from the factory.
+        /// </summary>
+        public void StopMusic()
+        {
 			GameLogger.Log("AUDIO", "StopMusic");
 
 			audioPlayer?.Stop();
 		}
 
-		public void FadeMusic()
-		{
+        /// <summary>
+        /// Fades the music bus volume from 1 to 0 over 6 seconds after
+        /// a 1-second delay, then stops playback and resets the bus to
+        /// full volume. The fade is implemented via a Godot <c>Tween</c>
+        /// that calls <c>AudioService.SetVolume</c> each frame. If a
+        /// previous fade is still running it is killed before starting the
+        /// new one. The final reset to volume=1 is necessary because the
+        /// settings poll would otherwise keep the bus at zero until the
+        /// next <c>ApplySettings</c> cycle.
+        /// </summary>
+        public void FadeMusic()
+        {
 			GameLogger.Log("AUDIO", "FadeMusic start (1s delay + 6s fade)");
 
 			fadeTween?.Kill();

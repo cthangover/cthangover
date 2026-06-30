@@ -8,8 +8,22 @@ namespace Cthangover.Core.Actions.Atomic
     /// </summary>
     public class QuestAddTagAction : IScenarioAction
     {
+        /// <summary>
+        /// Registered as "quest.add_tag" — attaches a string tag to a
+        /// quest for use in conditional logic. Tags are queried by the
+        /// scenario DSL's "has_tag" condition to branch dialog or gate
+        /// quest progression. Both "quest_id" and "tag" dialog variables
+        /// are required — returns early with a warning if either is
+        /// missing.
+        /// </summary>
         public string Name => "quest.add_tag";
 
+        /// <summary>
+        /// Reads "quest_id" and "tag" from dialog variables and delegates
+        /// to ctx.Quests.AddTag. Routes through QuestServiceImpl.TryGet —
+        /// missing quests are silently skipped. Tags are persisted with
+        /// save data and survive game restart.
+        /// </summary>
         public void Run(IActionContext ctx)
         {
             var questId = ctx.GetParam("quest_id");

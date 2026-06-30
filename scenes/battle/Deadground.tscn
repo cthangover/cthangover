@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://bhkoi82ftv0wi"]
 
-[ext_resource type="Script" uid="uid://dl1fkp5xw8do2" path="res://Core/Battle/DeadgroundBehaviour.cs" id="DeadgroundBehaviourController"]
+[ext_resource type="Script" uid="uid://b4c1vmomfo2cf" path="res://Core/Battle/DeadgroundBehaviour.cs" id="DeadgroundBehaviourController"]
 
 [node name="Deadground" type="Control" unique_id=1769284696]
 layout_mode = 3

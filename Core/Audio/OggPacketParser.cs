@@ -106,7 +106,28 @@ namespace Cthangover.Core.Audio
 			return trimmedStream;
 		}
 
-		public static OggPacketSequence CreateFromOggBytes(byte[] data)
+        /// <summary>
+        /// Parses raw OGG container bytes into a Godot
+        /// <c>OggPacketSequence</c> ready for consumption by
+        /// <c>AudioStreamOggVorbis</c>. Walks the page structure:
+        /// <list type="bullet">
+        /// <item>Validates the "OggS" magic at each page header.</item>
+        /// <item>Reads the segment table to split pages into individual
+        /// packets, correctly reassembling packets that span page
+        /// boundaries via the continuation flag.</item>
+        /// <item>Assigns the page's granule position to each packet
+        /// extracted from that page, preserving seek metadata.</item>
+        /// <item>Extracts the sampling rate from the first packet's
+        /// Vorbis identification header; falls back to 44100 Hz if
+        /// the header is missing or malformed.</item>
+        /// <item>Any unflushed pending packet at EOF is appended as
+        /// a final packet.</item>
+        /// </list>
+        /// Returns <c>null</c> on corruption (bad magic, segment table
+        /// overflow) or if no packets were extracted, logging the
+        /// error with the offset for debugging.
+        /// </summary>
+        public static OggPacketSequence CreateFromOggBytes(byte[] data)
         {
             if (data == null || data.Length < OGG_PAGE_HEADER_SIZE)
             {

@@ -569,7 +569,6 @@ namespace Cthangover.Tools.InteractiveEditor
 			var handle = new InteractiveEditorHandle(color, index);
 			handle.DragUpdate = center =>
 			{
-				GameLogger.Log("INTERACTIVE_EDITOR", $"DragUpdate idx={index} center=({center.X:F0},{center.Y:F0})");
 				onDrag(center);
 			};
 			handle.Clicked = () =>

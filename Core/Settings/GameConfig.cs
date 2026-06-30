@@ -22,9 +22,10 @@ namespace Cthangover.Core.Settings
         });
         public static GameConfig Instance => instance.Value;
         
-        [JsonPropertyName("audio")]    public AudioSection   Audio    { get; set; } = new();
-        [JsonPropertyName("logging")]  public LoggingSection Logging  { get; set; } = new();
-        [JsonPropertyName("language")] public string         Language { get; set; } = "ru-ru";
+        [JsonPropertyName("audio")]    public AudioSection    Audio    { get; set; } = new();
+        [JsonPropertyName("display")]  public DisplaySection  Display  { get; set; } = new();
+        [JsonPropertyName("logging")]  public LoggingSection  Logging  { get; set; } = new();
+        [JsonPropertyName("language")] public string          Language { get; set; } = "ru-ru";
 
         [JsonConstructor]
         private GameConfig()
@@ -69,6 +70,7 @@ namespace Cthangover.Core.Settings
                     return;
 
                 Audio = parsed.Audio ?? new AudioSection();
+                Display = parsed.Display ?? new DisplaySection();
                 Language = parsed.Language ?? "ru-ru";
                 Logging = parsed.Logging ?? new LoggingSection();
             }

@@ -1,0 +1,25 @@
+[gd_scene format=3 uid="uid://f4p3u2o0jcvq"]
+
+[ext_resource type="Script" uid="uid://dli6gyad80wio" path="res://Core/UI/Menu/Launcher.cs" id="LauncherScript"]
+[ext_resource type="Script" uid="uid://dvk5pel3k4k0b" path="res://Core/UI/Base/ModSpriteLoader.cs" id="ModSpriteLoaderScript"]
+
+[node name="Launcher" type="Control" unique_id=636557095]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("LauncherScript")
+
+[node name="Background" type="TextureRect" parent="." unique_id=1344075153]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="SpriteLoader" type="Node" parent="Background" unique_id=155539428]
+script = ExtResource("ModSpriteLoaderScript")
+TextureId = "base/dark"

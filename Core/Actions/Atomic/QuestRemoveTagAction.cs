@@ -7,8 +7,21 @@ namespace Cthangover.Core.Actions.Atomic
     /// </summary>
     public class QuestRemoveTagAction : IScenarioAction
     {
+        /// <summary>
+        /// Registered as "quest.remove_tag" — the inverse of
+        /// QuestAddTagAction. Removes a tag from a quest to clear
+        /// temporary conditions (e.g. removing a "witnessed_event" tag
+        /// after the event has been resolved). Both "quest_id" and "tag"
+        /// are required.
+        /// </summary>
         public string Name => "quest.remove_tag";
 
+        /// <summary>
+        /// Reads "quest_id" and "tag" from dialog variables and delegates
+        /// to ctx.Quests.RemoveTag. Removing a non-existent tag is a
+        /// no-op at the collection level. Missing quests are silently
+        /// skipped via TryGet.
+        /// </summary>
         public void Run(IActionContext ctx)
         {
             var questId = ctx.GetParam("quest_id");

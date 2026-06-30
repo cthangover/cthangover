@@ -7,8 +7,11 @@ namespace Cthangover.Core.Audio
     /// </summary>
     public enum MixerType
     {
+        /// <summary>Bus for short sound effects (SFX).</summary>
         Sounds,
+        /// <summary>Bus for background music.</summary>
         Musics,
+        /// <summary>Bus for ambient loops (dynamically crossfaded).</summary>
         Ambient
     }
 }

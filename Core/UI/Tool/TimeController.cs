@@ -26,7 +26,7 @@ namespace Cthangover.Core.UI.Tool
 			eventController = GetTree()?.Root?.GetNodeOrNull<SceneEventController>("EventController")
 						  ?? GetNodeOrNull<SceneEventController>("/root/EventController");
 			eventController?.AddTimerTickEventListener(this);
-			UpdateRenderedTime();
+			OnTimerTick();
 		}
 
 		public override void _ExitTree()
@@ -38,14 +38,12 @@ namespace Cthangover.Core.UI.Tool
 
 		public void OnTimerTick()
 		{
-			var time = GameData.Instance.Runtime.Time;
-			time.AddTick();
 			UpdateRenderedTime();
 		}
 
 		public void UpdateRenderedTime()
 		{
-			Godot.Engine.TimeScale = timeScale;
+			Engine.TimeScale = timeScale;
 			var time = GameData.Instance.Runtime.Time;
 			var text = time?.Text ?? string.Empty;
 			if (timerField != null)
@@ -56,7 +54,7 @@ namespace Cthangover.Core.UI.Tool
 		public override void _ValidateProperty(Godot.Collections.Dictionary property)
 		{
 			base._ValidateProperty(property);
-			UpdateRenderedTime();
+			OnTimerTick();
 		}
 #endif
 

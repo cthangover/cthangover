@@ -51,7 +51,6 @@ namespace Cthangover.Tools.InteractiveEditor
 			else if (@event is InputEventMouseMotion && _dragging)
 			{
 				var center = GlobalPosition + Size / 2;
-				GameLogger.Log("INTERACTIVE_HANDLE", $"drag move idx={VertexIndex} center={center}");
 				GlobalPosition = GetGlobalMousePosition() - _dragOffset;
 				DragUpdate?.Invoke(center);
 			}

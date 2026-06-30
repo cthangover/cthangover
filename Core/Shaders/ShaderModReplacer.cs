@@ -37,7 +37,8 @@ public static class ShaderModReplacer
                 var name = System.IO.Path.GetFileNameWithoutExtension(shader.ResourcePath);
                 if (shaders.TryGetValue(name, out var entry))
                 {
-                    var overrideShader = ModManager.Instance.ResolveShader(name);
+                    var overrideShader = ModManager.Instance.TryGetCachedShader(name)
+                        ?? ModManager.Instance.ResolveShader(name);
                     if (overrideShader != null && overrideShader != shader)
                     {
                         mat.Shader = overrideShader;
@@ -78,7 +79,8 @@ public static class ShaderModReplacer
             var name = System.IO.Path.GetFileNameWithoutExtension(currentTexture.ResourcePath);
             if (textures.TryGetValue(name, out var entry))
             {
-                var overrideTexture = ModManager.Instance.ResolveTexture(name);
+                var overrideTexture = ModManager.Instance.TryGetCachedTexture(name)
+                    ?? ModManager.Instance.ResolveTexture(name);
                 if (overrideTexture != null && overrideTexture != currentTexture)
                 {
                     if (node is TextureRect tr)

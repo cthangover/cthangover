@@ -150,8 +150,10 @@ namespace Cthangover.Core.Scenes
 			if (tree == null)
 				return;
 
+			GameLogger.Log("SCENE", $"PerformSceneSwitch: changing scene to '{pendingScenePath}'...");
 			SceneContextNode.Instance?.ClearData();
 			tree.ChangeSceneToFile(pendingScenePath);
+			GameLogger.Log("SCENE", $"PerformSceneSwitch: scene changed to '{pendingScenePath}' OK");
 
 			CallDeferred(nameof(PatchShaderMaterialsAfterLoad));
 			CallDeferred(nameof(RunSubscriptionAfterLoad));
@@ -162,6 +164,7 @@ namespace Cthangover.Core.Scenes
 
 		private void RunSubscriptionAfterLoad()
 		{
+			GameLogger.Log("SCENE", $"RunSubscriptionAfterLoad: scene='{pendingSubscriptionSceneName}'");
 			if (string.IsNullOrEmpty(pendingSubscriptionSceneName))
 				return;
 
@@ -170,6 +173,7 @@ namespace Cthangover.Core.Scenes
 				return;
 
 			SceneSubscriptionRegistry.RunSubscriptions(pendingSubscriptionSceneName, tree.CurrentScene);
+			GameLogger.Log("SCENE", "RunSubscriptionAfterLoad: DONE");
 		}
 
 		private void StartFadeInAfterSwitch()
@@ -215,7 +219,9 @@ namespace Cthangover.Core.Scenes
 
 		private void PatchShaderMaterialsAfterLoad()
 		{
+			GameLogger.Log("SCENE", "PatchShaderMaterialsAfterLoad: START");
 			ShaderModReplacer.PatchScene(GetTree().Root);
+			GameLogger.Log("SCENE", "PatchShaderMaterialsAfterLoad: DONE");
 		}
 
         public void SwitchScene(GodotSceneType sceneType)

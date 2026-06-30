@@ -68,6 +68,8 @@ namespace Cthangover.Core.UI.Executable
 
 		public override void _Ready()
 		{
+			GameLogger.Log("CHAIN", $"_Ready: starting, tree scene='{GetTree()?.CurrentScene?.Name}'");
+
 			dialogBox = SceneContextNode.FindNode<DialogBox>("DialogBox");
 
 			eventController = SceneContextNode.FindNode<SceneEventController>("EventController");
@@ -86,9 +88,12 @@ namespace Cthangover.Core.UI.Executable
 			if (sceneManager != null && !string.IsNullOrEmpty(sceneManager.PendingSceneName))
 			{
 				var pending = sceneManager.PendingSceneName;
+				GameLogger.Log("CHAIN", $"_Ready: deferring SwitchScene('{pending}')");
 				sceneManager.PendingSceneName = null;
 				Callable.From(() => sceneManager.SwitchScene(pending)).CallDeferred();
 			}
+
+			GameLogger.Log("CHAIN", $"_Ready: done, allEvents={allEvents.Count}");
 		}
 
 		public override void _ExitTree()

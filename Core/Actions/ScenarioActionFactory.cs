@@ -20,6 +20,12 @@ namespace Cthangover.Core.Actions
     {
         private static readonly Lazy<ScenarioActionFactory> instance = new(() => new ScenarioActionFactory());
 
+        /// <summary>
+        /// Thread-safe singleton instance, lazily initialized via
+        /// Lazy&lt;T&gt;. Construction triggers a full assembly scan
+        /// for all IScenarioAction implementations via
+        /// Reflections.FindAndCreate and registers each by its Name.
+        /// </summary>
         public static ScenarioActionFactory Instance => instance.Value;
 
         private readonly Dictionary<string, IScenarioAction> actions = new();
@@ -34,6 +40,14 @@ namespace Cthangover.Core.Actions
             GameLogger.Log("FACTORY", $"loaded '{actions.Count}' scenario actions");
         }
 
+        /// <summary>
+        /// Looks up a registered action by its Name (e.g.
+        /// "quest.set_status"). Returns null and logs an error if no
+        /// action with the given name is registered. This is the primary
+        /// entry point for the dialog engine — ActionScenario calls Get()
+        /// with the command name from the scenario script and invokes Run()
+        /// on the returned action.
+        /// </summary>
         public IScenarioAction Get(string name)
         {
             if (actions.TryGetValue(name, out var action))
@@ -43,6 +57,13 @@ namespace Cthangover.Core.Actions
             return null;
         }
 
+        /// <summary>
+        /// Registers an action instance. If an action with the same Name
+        /// is already registered, the new one is silently ignored — this
+        /// allows core actions to take precedence over mod overrides,
+        /// and prevents accidental duplicates from reflection scans.
+        /// Logs the registration for debugging.
+        /// </summary>
         public void Register(IScenarioAction action)
         {
             if (actions.ContainsKey(action.Name))
@@ -52,6 +73,14 @@ namespace Cthangover.Core.Actions
             GameLogger.Log("FACTORY", $"registered scenario action '{action.Name}'");
         }
 
+        /// <summary>
+        /// Scans all types in the given assembly for non-abstract
+        /// IScenarioAction implementations, instantiates each via
+        /// Activator.CreateInstance, and registers them. This is the
+        /// extension point for mods — mod assemblies call this at
+        /// startup to inject custom scenario actions into the dialog
+        /// engine. Actions with names already registered are skipped.
+        /// </summary>
         public void RegisterAssembly(Assembly assembly)
         {
             foreach (var type in assembly.GetTypes())
@@ -64,6 +93,12 @@ namespace Cthangover.Core.Actions
             }
         }
 
+        /// <summary>
+        /// Returns a snapshot list of all registered actions. Used for
+        /// debugging and introspection (listing available commands).
+        /// Not intended for hot-path lookups — use Get() by name for
+        /// that.
+        /// </summary>
         public List<IScenarioAction> GetAll() => actions.Values.ToList();
     }
 }

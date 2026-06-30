@@ -12,8 +12,24 @@ namespace Cthangover.Core.Actions.Atomic
     /// </summary>
     public class TogglePanelAction : IScenarioAction
     {
+        /// <summary>
+        /// Registered as "ui.toggle_panel" — toggles the visibility of
+        /// any Control-derived node in the scene by name. Uses
+        /// ctx.Scene.Find for recursive tree search, so panels can be
+        /// nested arbitrarily deep. Toggles Godot's native Visible
+        /// property directly (not Widget lifecycle methods), so it works
+        /// on non-Widget controls. The toggle is unconditional — if the
+        /// panel doesn't exist, it logs a warning rather than creating it.
+        /// </summary>
         public string Name => "ui.toggle_panel";
 
+        /// <summary>
+        /// Reads the "name" variable, locates the Control node via
+        /// recursive scene tree search, and flips its Visible property.
+        /// Logs both the toggle result (new visibility state) and the
+        /// not-found case. Returns early with a warning if "name" is
+        /// missing.
+        /// </summary>
         public void Run(IActionContext ctx)
         {
             var name = ctx.GetParam("name");

@@ -107,10 +107,11 @@ namespace Cthangover.Core.Scenes
             }
         }
 
-        public void SwitchScene(string sceneName)
-        {
-            if (!isInitialized)
-                Initialize();
+		public void SwitchScene(string sceneName)
+		{
+			GameLogger.Log("SCENE", $"SwitchScene: ENTER sceneName='{sceneName}', currentSceneName='{currentSceneName}'");
+			if (!isInitialized)
+				Initialize();
             
             var lightController = SceneContextNode.FindNode<UiLightController>("Lights");
             if (lightController != null)

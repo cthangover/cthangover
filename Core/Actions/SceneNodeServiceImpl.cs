@@ -14,6 +14,14 @@ namespace Cthangover.Core.Actions
     /// </summary>
     internal class SceneNodeServiceImpl : ISceneNodeService
     {
+        /// <summary>
+        /// Loads a PackedScene by resource path via GD.Load, instantiates
+        /// it, assigns the node name, and adds it as a child of
+        /// SceneContextNode.Instance (the current scene's autoload root).
+        /// If the resource fails to load (wrong path, missing file), logs
+        /// an error and returns without throwing — the dialog continues.
+        /// The instantiated node becomes visible immediately.
+        /// </summary>
         public void Instantiate(string scenePath, string nodeName)
         {
             var packedScene = GD.Load<PackedScene>(scenePath);
@@ -28,6 +36,13 @@ namespace Cthangover.Core.Actions
             SceneContextNode.Instance?.AddChild(instance);
         }
 
+        /// <summary>
+        /// Removes a named child node from SceneContextNode.Instance.
+        /// First notifies the event system via RemoveEventObject to clean
+        /// up any event subscriptions referencing the node, then performs
+        /// RemoveChild + QueueFree. Safe to call on non-existent nodes
+        /// (silently returns if the context or child is null).
+        /// </summary>
         public void Remove(string nodeName)
         {
             var ctx = SceneContextNode.Instance;
@@ -44,6 +59,12 @@ namespace Cthangover.Core.Actions
             }
         }
 
+        /// <summary>
+        /// Typed recursive lookup by node name across the entire scene
+        /// tree via SceneContextNode.FindNode. Returns null if no
+        /// matching node of type T with the given name exists. Used by
+        /// TogglePanelAction to locate UI controls at any nesting depth.
+        /// </summary>
         public T Find<T>(string nodeName) where T : Node
         {
             return SceneContextNode.FindNode<T>(nodeName);

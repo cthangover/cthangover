@@ -28,10 +28,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -340.0
-offset_top = -260.0
-offset_right = 340.0
-offset_bottom = 260.0
+offset_left = -360.0
+offset_top = -280.0
+offset_right = 360.0
+offset_bottom = 300.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -199,6 +199,78 @@ layout_mode = 2
 text = "5%"
 custom_minimum_size = Vector2(48, 0)
 horizontal_alignment = 2
+
+[node name="Display" type="VBoxContainer" parent="Panel/Margin/VBox/Tabs"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Spacer2" type="Control" parent="Panel/Margin/VBox/Tabs/Display"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 12)
+
+[node name="ModeBox" type="HBoxContainer" parent="Panel/Margin/VBox/Tabs/Display"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="ModeLabel" type="Label" parent="Panel/Margin/VBox/Tabs/Display/ModeBox"]
+layout_mode = 2
+text = "Window Mode"
+size_flags_horizontal = 3
+
+[node name="ModeSelect" type="OptionButton" parent="Panel/Margin/VBox/Tabs/Display/ModeBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ResBox" type="HBoxContainer" parent="Panel/Margin/VBox/Tabs/Display"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="ResLabel" type="Label" parent="Panel/Margin/VBox/Tabs/Display/ResBox"]
+layout_mode = 2
+text = "Resolution"
+size_flags_horizontal = 3
+
+[node name="ResSelect" type="OptionButton" parent="Panel/Margin/VBox/Tabs/Display/ResBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="MonitorBox" type="HBoxContainer" parent="Panel/Margin/VBox/Tabs/Display"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="MonitorLabel" type="Label" parent="Panel/Margin/VBox/Tabs/Display/MonitorBox"]
+layout_mode = 2
+text = "Monitor"
+size_flags_horizontal = 3
+
+[node name="MonitorSelect" type="OptionButton" parent="Panel/Margin/VBox/Tabs/Display/MonitorBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ScaleBox" type="HBoxContainer" parent="Panel/Margin/VBox/Tabs/Display"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="ScaleLabel" type="Label" parent="Panel/Margin/VBox/Tabs/Display/ScaleBox"]
+layout_mode = 2
+text = "Scale"
+size_flags_horizontal = 3
+
+[node name="ScaleSelect" type="OptionButton" parent="Panel/Margin/VBox/Tabs/Display/ScaleBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="VSyncRow" type="HBoxContainer" parent="Panel/Margin/VBox/Tabs/Display"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="VSyncLabel" type="Label" parent="Panel/Margin/VBox/Tabs/Display/VSyncRow"]
+layout_mode = 2
+text = "VSync"
+size_flags_horizontal = 3
+
+[node name="VSyncToggle" type="CheckButton" parent="Panel/Margin/VBox/Tabs/Display/VSyncRow"]
+layout_mode = 2
 
 [node name="BackBtn" type="Button" parent="Panel/Margin/VBox"]
 layout_mode = 2

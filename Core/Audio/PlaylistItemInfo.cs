@@ -10,7 +10,16 @@ namespace Cthangover.Core.Audio
     /// </summary>
 	public class PlaylistData
 	{
-		public string Scene { get; set; }
-		public List<PlaylistMusicEntry> Musics { get; set; }
+        /// <summary>
+        /// The scene name this config entry targets.
+        /// </summary>
+        public string Scene { get; set; }
+
+        /// <summary>
+        /// Flat list of per-type entries. The factory groups these
+        /// into the dictionary form in <see cref="Playlist.Musics"/>
+        /// for efficient runtime lookup.
+        /// </summary>
+        public List<PlaylistMusicEntry> Musics { get; set; }
 	}
 }

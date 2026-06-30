@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://dx40qu1dj80in"]
 
-[ext_resource type="Script" uid="uid://delddwitb7e77" path="res://Core/Battle/ExpReportCard.cs" id="ExpReportCardScript"]
+[ext_resource type="Script" uid="uid://c1uhtdg7pip8s" path="res://Core/Battle/ExpReportCard.cs" id="ExpReportCardScript"]
 
 [node name="ExpReportCard" type="Control" unique_id=223866085]
 custom_minimum_size = Vector2(130, 130)

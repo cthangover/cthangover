@@ -10,8 +10,21 @@ namespace Cthangover.Core.Audio
     /// </summary>
     public enum MusicType
     {
+        /// <summary>
+        /// Transient signal used to force a specific track. Normalised to
+        /// <c>Ambient</c> during playlist initialisation so it never
+        /// persists across scene transitions.
+        /// </summary>
         Force,
+        /// <summary>
+        /// Battle music. Transitioning to Combat saves the current
+        /// Ambient track and position for later restoration.
+        /// </summary>
         Combat,
+        /// <summary>
+        /// Background exploration music. The default type; restored
+        /// with the saved track when returning from Combat.
+        /// </summary>
         Ambient
     }
     

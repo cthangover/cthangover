@@ -23,6 +23,21 @@ namespace Cthangover.Core.Actions
     /// </summary>
     internal class BattleServiceImpl : IBattleService
 	{
+		/// <summary>
+		/// Constructs BattleData from scenario parameters and stores it in
+		/// GameData.Instance.Runtime.BattleData. Captures the current
+		/// background texture via BackgroundFactory using
+		/// SceneContextNode.LastBackgroundID — the battle must be initiated
+		/// after the background has been set by a prior ActionBackground,
+		/// otherwise the backdrop is null. Also snapshots the depth/albedo
+		/// lighting maps from UiLightController for visual consistency
+		/// across the scene-to-battle transition. If questId is provided,
+		/// the quest is bound to the battle and an optional newTag triggers
+		/// a quest notification. The active battle core (combat ruleset)
+		/// is resolved from BattleCoreRegistry — wrapped in try/catch
+		/// because the registry may not be initialized when this is called
+		/// from non-battle contexts (e.g. preloading).
+		/// </summary>
 		public void Init(string sceneType, string enemies, string questId = null, string newTag = null)
 		{
 			var enemyList = enemies.Split(',');

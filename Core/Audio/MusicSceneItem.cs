@@ -12,15 +12,37 @@ namespace Cthangover.Core.Audio
     [Serializable]
     public class MusicSceneItem
     {
+        /// <summary>
+        /// Asset name used as a key in <c>MusicFactory</c> lookups.
+        /// </summary>
         public string Name { get; set; }
+
+        /// <summary>
+        /// Zero-based ordering index within the scene's track list.
+        /// Used for deterministic playback order rather than random
+        /// selection.
+        /// </summary>
         public int Index { get; set; }
+
+        /// <summary>
+        /// The music category for this track. Defaults to
+        /// <see cref="MusicType.Ambient"/>.
+        /// </summary>
         public MusicType Type { get; set; } = MusicType.Ambient;
 
+        /// <summary>
+        /// Parameterless constructor for serialisation. Initialises
+        /// <c>Name</c> to <see cref="string.Empty"/>.
+        /// </summary>
         public MusicSceneItem()
         {
             Name = string.Empty;
         }
 
+        /// <summary>
+        /// Constructs an entry with a name, an ordering index, and an
+        /// optional music type (defaults to <c>Ambient</c>).
+        /// </summary>
         public MusicSceneItem(string name, int index, MusicType type = MusicType.Ambient)
         {
             Name = name;
@@ -28,6 +50,9 @@ namespace Cthangover.Core.Audio
             Type = type;
         }
         
+        /// <summary>
+        /// Returns the item name for debug/log display.
+        /// </summary>
         public override string ToString()
         {
             return $"MusicSceneItem: Name={Name}";

@@ -64,45 +64,7 @@ namespace Cthangover.Core.Settings
 
         public void AddTick()
         {
-            Tick++;
-
-            if (Minutes < 59)
-            {
-                Minutes++;
-
-                return;
-            }
-
-            Minutes = 0;
-
-            if (Hours < 23)
-            {
-                Hours++;
-
-                return;
-            }
-
-            Hours = 0;
-
-            if (Days < 28)
-            {
-                Days++;
-
-                return;
-            }
-
-            Days = 0;
-
-            if (Months < 10)
-            {
-                Months++;
-
-                return;
-            }
-
-            Months = 0;
-
-            Years++;
+            SetTime(++Tick);
         }
 
         public void AddTime(int years, int months, int days, int hours, int minutes)
