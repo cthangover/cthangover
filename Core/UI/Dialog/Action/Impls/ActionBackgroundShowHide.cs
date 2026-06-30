@@ -12,11 +12,14 @@ namespace Cthangover.Core.UI.Dialog.Action.Impls
     /// </summary>
     public class ActionBackgroundShowHide : ActionCommand
     {
+        /// <summary>Whether to fade the background in (Show) or out (Hide).</summary>
         public BackgroundActionType ActionType { get; set; } = BackgroundActionType.Show;
+        /// <summary>Duration of the fade tween in seconds.</summary>
         public float Duration { get; set; } = 1f;
 
         private Tween activeTween;
 
+        /// <summary>Default NoWait — overridden by the DialogQueue builder if the wait flag is set, changing to WaitTime to pause during transition.</summary>
         public override WaitType WaitType { get; set; } = WaitType.NoWait;
 
         public override void DoRun(DialogRuntime runtime)

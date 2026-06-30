@@ -10,8 +10,21 @@ using Godot;
 
 namespace Cthangover.Core.Scenarios
 {
+    /// <summary>
+    /// Parses scenario DSL script text into a <see cref="DialogQueue"/> of dialog actions.
+    /// The pipeline works in two phases: first the text is split into lines, then each
+    /// non-empty, non-comment line is tokenized and dispatched to the matching
+    /// <see cref="IScenarioCommandStrategy"/> via <see cref="ScenarioCommandStrategyFactory"/>.
+    /// Special handling exists for <c>:label</c> anchor points, <c>select/option</c>
+    /// blocks (accumulated into <see cref="ActionSelect"/>), and <c>-&gt;</c> arrow targets.
+    /// </summary>
     public static class ScenarioParser
     {
+        /// <summary>
+        /// Parses a complete scenario script text and returns the resulting dialog queue.
+        /// </summary>
+        /// <param name="text">Raw scenario DSL content.</param>
+        /// <param name="locale">Optional localization provider for <c>key=</c> text lookups.</param>
         public static DialogQueue Parse(string text, ILocalizationProvider locale = null)
         {
             var dlg = new DialogQueue();
@@ -131,6 +144,12 @@ namespace Cthangover.Core.Scenarios
             return dlg;
         }
 
+        /// <summary>
+        /// Extracts YAML-like front-matter metadata from script text. Lines before
+        /// a <c>---</c> separator or the first non-key:value line are parsed as
+        /// <c>key: value</c> pairs. Returns both the metadata dictionary and the
+        /// remaining script content after the metadata block.
+        /// </summary>
         public static (Dictionary<string, string> metadata, string remainingText) ParseMetadata(string text)
         {
             var metadata = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);

@@ -15,18 +15,29 @@ namespace Cthangover.Core.UI.Inventory
         [Export] private TextureRect imgIcon;
         [Export] private Label txtCount;
 
+        /// <summary>
+        /// Binds the item model and renders the visual display via
+        /// <see cref="UpdateInfo"/>.
+        /// </summary>
         public override void Construct(IItemContainer container)
         {
             base.Construct(container);
             UpdateInfo();
         }
 
+        /// <summary>
+        /// Refreshes the icon from the model's sprite and the count label.
+        /// For single items, the count is suppressed for a clean display.
+        /// </summary>
         public void UpdateInfo()
         {
             imgIcon.Texture = Model.Item.Sprite;
             txtCount.Text = Model.Count == 1 ? "" : Model.Count.ToString();
         }
 
+        /// <summary>
+        /// Removes this cell from the scene tree via <c>QueueFree</c>.
+        /// </summary>
         public override void Destruct()
         {
             QueueFree();

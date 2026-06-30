@@ -31,17 +31,35 @@ namespace Cthangover.Core.UI.Messages
 			return (index - 1) * 60;
 		}
 
+        /// <summary>
+        /// Resets the cycling position index to 0. Call when UI state resets
+        /// to prevent messages from accumulating at high Y positions.
+        /// </summary>
         public static void ClearLastIndex()
         {
             lastMessageIndex = 0;
         }
 
+        /// <summary>
+        /// Shows a yellow message at the next vertical slot. Convenience overload
+        /// using the default warning/accent color.
+        /// </summary>
+        /// <param name="text">The message text to display.</param>
+        /// <param name="speed">Fade speed multiplier (higher = faster fade, default 1).</param>
         public static void AddMessage(string text, float speed = 1f)
         {
             AddMessage(text, Colors.Yellow, speed);
         }
 
 
+        /// <summary>
+        /// Shows a message with a custom color at the next vertical slot.
+        /// Messages auto-fade and self-destruct after ~3 seconds of display plus
+        /// a fade duration determined by <paramref name="speed"/>.
+        /// </summary>
+        /// <param name="text">The message text to display.</param>
+        /// <param name="color">The text color.</param>
+        /// <param name="speed">Fade speed multiplier (higher = faster fade, default 1).</param>
         public static void AddMessage(string text, Color color, float speed = 1f)
         {
             var nextIndex = GetNextIndex(lastMessageIndex);
@@ -50,11 +68,26 @@ namespace Cthangover.Core.UI.Messages
         }
 
 
+        /// <summary>
+        /// Shows a yellow message at a specific vertical position, bypassing
+        /// the cycling slot system.
+        /// </summary>
+        /// <param name="position">Y-offset in pixels for this message.</param>
+        /// <param name="text">The message text to display.</param>
+        /// <param name="speed">Fade speed multiplier (default 1).</param>
         public static void AddMessage(float position, string text, float speed = 1f)
         {
             AddMessage(position, text, Colors.Yellow, speed);
         }
 
+        /// <summary>
+        /// Instantiates a <see cref="UiMessage"/> from <c>Message.tscn</c>, parents
+        /// it to the Background node, and configures it for display and auto-fade.
+        /// </summary>
+        /// <param name="position">Y-offset in pixels for this message.</param>
+        /// <param name="text">The message text to display.</param>
+        /// <param name="color">The text color.</param>
+        /// <param name="speed">Fade speed multiplier (default 1).</param>
         public static void AddMessage(float position, string text, Color color, float speed = 1f)
         {
             if (prefab == null)

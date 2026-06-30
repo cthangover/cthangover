@@ -9,6 +9,15 @@ using Godot;
 
 namespace Cthangover.Core.UI.Tool.ScenarioEditor
 {
+    /// <summary>
+    /// Multi-tab scenario script editor with syntax highlighting, file tree browser,
+    /// background thumbnail previews, metadata/parsed-info inspection, and integrated
+    /// test-play. Scans all <c>.scenario</c> files across installed mods via
+    /// <see cref="ScenarioFileService.ScanScenarioFiles"/> and displays them in a
+    /// tree grouped by mod and directory. Tracks per-tab dirty state and supports
+    /// save, open-in-external-editor, and one-click playtest that temporarily swaps
+    /// the running scene to the scenario's target scene.
+    /// </summary>
     public partial class ScenarioEditorWindow : ToolWindow
     {
         private sealed class TabData
@@ -48,6 +57,7 @@ namespace Cthangover.Core.UI.Tool.ScenarioEditor
 
         private readonly Dictionary<string, string> _fileItemToPath = new();
 
+        /// <summary>Constructs the editor window, builds the full UI, and populates the file tree from all mods.</summary>
         public ScenarioEditorWindow() : base("tools/scenario_editor/title")
         {
             BuildUI();

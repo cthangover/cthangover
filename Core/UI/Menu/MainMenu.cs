@@ -7,13 +7,14 @@ using Godot;
 namespace Cthangover.Core.UI.Menu
 {
     /// <summary>
-    /// Title screen main menu. On _Ready, checks GameLogger.CompilationErrors
-    /// and shows a popup if any mods failed to compile — this is the first
-    /// opportunity to inform the player about broken mods. New Game initializes
-    /// the SceneManager and loads BaseScene with "start_scene" as the pending
-    /// scene to enter. The Tools button dynamically builds a tool-selection
-    /// Window from ToolFactory at click time, avoiding hardcoding tool references.
-    /// SettingsMenu and SaveLoadMenu are created at ready time but hidden.
+    /// Title screen main menu. On _Ready, initializes SceneManager
+    /// (triggering mod discovery and IModInitializer callbacks), then
+    /// checks GameLogger.CompilationErrors and shows a popup if any mods
+    /// failed to compile. New Game sets the pending scene to "start_scene"
+    /// and loads BaseScene. The Tools button dynamically builds a
+    /// tool-selection Window from ToolFactory at click time, avoiding
+    /// hardcoding tool references. SettingsMenu and SaveLoadMenu are
+    /// created at ready time but hidden.
     /// </summary>
     public partial class MainMenu : Control
     {
@@ -45,6 +46,9 @@ namespace Cthangover.Core.UI.Menu
             AddChild(_saveLoadMenu);
             
             RefreshButtons();
+
+            var sceneManager = GetNode<SceneManager>("/root/SceneManager");
+            sceneManager.Initialize();
 
             CheckModCompilationErrors();
         }
@@ -115,12 +119,16 @@ namespace Cthangover.Core.UI.Menu
                 kv.Key.Text = TranslationServer.Translate(kv.Value);
         }
 
+        /// <summary>
+        /// Starts a new game by setting <see cref="SceneManager.PendingSceneName"/> to "start_scene"
+        /// and loading <c>BaseScene.tscn</c> via <see cref="GodotSceneService"/>. The scene manager
+        /// picks up the pending scene name during its initialization flow.
+        /// </summary>
         public void OnNewGameClick()
         {
             var sceneManager = GetNode<SceneManager>("/root/SceneManager");
             if (sceneManager != null)
             {
-                sceneManager.Initialize();
                 sceneManager.PendingSceneName = "start_scene";
                 var sceneService = GetNode<GodotSceneService>("/root/GodotSceneService");
                 sceneService?.LoadScene("res://Scenes/BaseScene.tscn");
@@ -138,16 +146,27 @@ namespace Cthangover.Core.UI.Menu
             dialog.PopupCentered();
         }
 
+        /// <summary>
+        /// Opens the <see cref="SaveLoadMenu"/> in load mode, displaying saved game slots
+        /// for the player to pick from.
+        /// </summary>
         public void OnLoadClick()
         {
             _saveLoadMenu.OpenForLoad();
         }
 
+        /// <summary>
+        /// Shows the <see cref="SettingsMenu"/> overlay. The menu was already instantiated
+        /// during <c>_Ready</c> so there is no loading delay.
+        /// </summary>
         public void OnSettingsClick()
         {
             _settingsMenu.Visible = true;
         }
 
+        /// <summary>
+        /// Quits the application immediately via <c>SceneTree.Quit</c>.
+        /// </summary>
         public void OnExitClick()
         {
             GetTree().Quit();

@@ -5,6 +5,14 @@ using Godot;
 
 namespace Mods.Cooking.Rations
 {
+    /// <summary>
+    /// Displays live ration statistics on the dinner/ration UI screen.
+    /// Shows the player the current ration count, how many rations are
+    /// consumed daily (one per character), and the maximum number of days
+    /// the party can survive on available rations. Listens to
+    /// <see cref="Core.Items.InventoryBag.Change"/> events to refresh
+    /// automatically whenever the inventory is modified.
+    /// </summary>
     public class RationStatisticsPanel : Widget
     {
         private RichTextLabel label;
@@ -37,6 +45,14 @@ namespace Mods.Cooking.Rations
             GameData.Instance.Runtime.Inventory.Change -= UpdateInfo;
         }
 
+        /// <summary>
+        /// Recomputes and refreshes the ration-statistics text.
+        /// Reads current ration inventory via <see cref="Core.Items.InventoryBag.CheckCount"/>
+        /// for <c>Item.Ration</c> and the total character count from
+        /// <see cref="CharacterData"/>. Formats three localized lines:
+        /// total rations, daily consumption, and remaining days
+        /// (rations divided by character count, clamped to 1 minimum).
+        /// </summary>
         public void UpdateInfo()
         {
             if (label == null)

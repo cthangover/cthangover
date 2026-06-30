@@ -42,6 +42,7 @@ namespace Cthangover.Core.UI.Dialog
             }
         }
         
+        /// <summary>Binds the variant model and sets the button label text to <see cref="SelectVariant.Text"/>.</summary>
         public override void Construct(SelectVariant variant)
         {
             base.Construct(variant);
@@ -53,6 +54,7 @@ namespace Cthangover.Core.UI.Dialog
             dialogBox?.SelectVariant(Model);
         }
 
+        /// <summary>Required by <see cref="IListItem{TModel}"/>. Intentionally empty — the parent AnswerBox handles cleanup.</summary>
         public override void Destruct()
         { }
         

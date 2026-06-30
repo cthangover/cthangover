@@ -14,10 +14,14 @@ namespace Cthangover.Core.UI.Dialog.Action.Impls
     /// </summary>
     public class ActionForeground : ActionCommand
     {
+        /// <summary>Sprite resource ID resolved through <see cref="BackgroundFactory"/> on construction.</summary>
         public string SpriteID { get; set; }
+        /// <summary>Direct texture override. Bypasses factory resolution. Nulled after application to prevent stale reuse across dialog cycles.</summary>
         public Texture2D Texture { get; set; }
 
+        /// <summary>Preloads the texture when the dialog queue is first created.</summary>
         public override ConstructType ConstructType { get; set; } = ConstructType.OnStartQueue;
+        /// <summary>Foreground is set imperatively — the dialog continues immediately.</summary>
         public override WaitType WaitType { get; set; } = WaitType.NoWait;
 
         public override void DoConstruct()

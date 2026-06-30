@@ -27,6 +27,7 @@ namespace Cthangover.Core.UI.Dialog
             }
         }
 
+        /// <summary>Stores the variants and triggers <see cref="Widget.Show"/> to build and display the answer list.</summary>
         public void CreateVariantsUI(ICollection<SelectVariant> variants)
         {
             this.variants = variants;
@@ -39,15 +40,18 @@ namespace Cthangover.Core.UI.Dialog
             QueueFree();
         }
 
+        /// <summary>Returns the stored variants collection. Called by the base <see cref="ListWidget{T, M}.ConstructUI"/> pipeline.</summary>
         public override ICollection<SelectVariant> CreateModels()
         {
             return variants;
         }
 
+        /// <summary>Deliberate no-op — answer items are positioned by their own layout system, not by the list widget's PutToLayout.</summary>
         protected override void PutToLayout(AnswerItem item, int index, Control container, Vector2 contentSize)
         {
         }
 
+        /// <summary>Fixed-height layout: content height = <paramref name="count"/> * 60px. Width is inherited from the Content container.</summary>
         public override Vector2 GetContentSize(int count)
         {
             return new Vector2(Content.Size.X, count * 60);

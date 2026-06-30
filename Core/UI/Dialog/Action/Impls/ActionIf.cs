@@ -10,10 +10,14 @@ namespace Cthangover.Core.UI.Dialog.Action.Impls
     /// </summary>
     public class ActionIf : ActionCommand
     {
+        /// <summary>Delegate evaluated at runtime. Must return true/false to select the branch target.</summary>
         public Func<bool> Condition { get; set; }
+        /// <summary>Target action ID if <see cref="Condition"/> returns true. Empty or null causes fall-through.</summary>
         public string TrueGoTo { get; set; }
+        /// <summary>Target action ID if <see cref="Condition"/> returns false. Empty or null causes fall-through.</summary>
         public string FalseGoTo { get; set; }
 
+        /// <summary>Branch evaluation is transparent — the dialog jumps to the target without user input.</summary>
         public override WaitType WaitType { get; set; } = WaitType.NoWait;
 
         public override void DoRun(DialogRuntime runtime)

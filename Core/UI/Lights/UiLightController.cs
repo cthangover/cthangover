@@ -24,16 +24,45 @@ namespace Cthangover.Core.UI.Lights
     /// </summary>
     public partial class UiLightController : Control, IOnTimeEvent
     {
+        /// <summary>
+        /// Singleton accessor for the active controller. Set in <see cref="_EnterTree"/>,
+        /// cleared in <see cref="_ExitTree"/>. Duplicate instances log an error but
+        /// overwrite the reference.
+        /// </summary>
         public static UiLightController Instance { get; private set; }
 
+        /// <summary>
+        /// Default depth map texture applied on startup for parallax lighting effects.
+        /// </summary>
         [Export] public Texture2D DefaultDepthMap { get; set; }
+
+        /// <summary>
+        /// Default albedo (color) texture applied on startup for lighting blending.
+        /// </summary>
         [Export] public Texture2D DefaultAlbedoMap { get; set; }
+
+        /// <summary>
+        /// When <c>true</c>, forces full-night time-of-day weights regardless of
+        /// in-game time. Set from game settings or scenario commands.
+        /// </summary>
         [Export] public bool DarkMode { get; set; }
+
+        /// <summary>
+        /// Master toggle for time-of-day lighting. When <c>false</c>, time blending
+        /// is disabled on all shader materials.
+        /// </summary>
         [Export] public bool UseLight { get; set; } = true;
 
         private int staticLightCount;
 
+        /// <summary>
+        /// The currently active depth map texture, pushed to all shader materials.
+        /// </summary>
 		public Texture2D CurrentDepthMap { get; private set; }
+
+        /// <summary>
+        /// The currently active albedo texture, pushed to all shader materials.
+        /// </summary>
 		public Texture2D CurrentAlbedoMap { get; private set; }
 
 		private SceneEventController eventController;
@@ -48,8 +77,16 @@ namespace Cthangover.Core.UI.Lights
 
         private LampBehaviour lampBehaviour;
 
+        /// <summary>
+        /// Priority <c>0</c> — the lighting controller runs before most other timer-tick
+        /// subscribers to ensure shader params are updated first.
+        /// </summary>
         public int Priority => 0;
 
+        /// <summary>
+        /// Runtime dark mode toggle. Updates <see cref="DarkMode"/> and immediately
+        /// recalculates time-of-day weights.
+        /// </summary>
         public bool IsDarkMode
         {
             get => DarkMode;
@@ -60,6 +97,10 @@ namespace Cthangover.Core.UI.Lights
             }
         }
 
+        /// <summary>
+        /// Runtime toggle for time-of-day blending. Pushes the new value to all
+        /// registered shader materials.
+        /// </summary>
         public bool IsUseLight
         {
             get => UseLight;
@@ -107,6 +148,10 @@ namespace Cthangover.Core.UI.Lights
             CallDeferred(nameof(SetupTime));
         }
 
+        /// <summary>
+        /// Reads lamp parameters from <see cref="LampBehaviour.GetLightParams"/>
+        /// and updates the player light slot (index 0) in the uniform arrays.
+        /// </summary>
         public void UpdateLampLightParams()
         {
             var lightParams = LampBehaviour.GetLightParams();
@@ -115,6 +160,10 @@ namespace Cthangover.Core.UI.Lights
             lightInfluence[0] = lightParams.Item3;
         }
 
+        /// <summary>
+        /// Resets all static light slots (indices 1–10) to off-screen positions
+        /// with zero radius and influence, then pushes to shader materials.
+        /// </summary>
         public void ClearStaticLights()
         {
             for (int i = 1; i < 11; i++)
@@ -131,6 +180,11 @@ namespace Cthangover.Core.UI.Lights
             GameLogger.Log("LIGHT", "LightsCtrl.ClearStaticLights: all static lights cleared");
         }
 
+        /// <summary>
+        /// Deserializes a JSON array of <see cref="LightDef"/> objects and populates
+        /// static light slots 1–10. Supports up to 10 static lights.
+        /// </summary>
+        /// <param name="json">JSON string containing an array of <see cref="LightDef"/> objects.</param>
         public void SetStaticLights(string json)
         {
             ClearStaticLights();
@@ -173,6 +227,10 @@ namespace Cthangover.Core.UI.Lights
 	        SetTime(GameData.Instance?.Runtime?.Time?.Normalized ?? 0f);
         }
 
+        /// <summary>
+        /// Timer-tick callback (~1/sec). Updates lamp visibility based on time of
+        /// day and recalculates time-of-day weights for shaders.
+        /// </summary>
         public void OnTimerTick()
         {
 	        lampBehaviour ??= FindLampChild();
@@ -188,11 +246,21 @@ namespace Cthangover.Core.UI.Lights
             SetTime(GameData.Instance?.Runtime?.Time?.Normalized ?? 0f);
         }
 
+        /// <summary>
+        /// Pushes the <c>use_time</c> shader parameter to all registered materials.
+        /// </summary>
+        /// <param name="value">The new <c>use_time</c> uniform value.</param>
 		public void ChangeUseTime(bool value)
 		{
 			ForEachMaterial(m => m.SetShaderParameter("use_time", value));
 		}
 
+        /// <summary>
+        /// Adds a <see cref="ShaderMaterial"/> to receive lighting uniform updates
+        /// alongside the ViewBox background/foreground. Duplicate registrations
+        /// are silently ignored.
+        /// </summary>
+        /// <param name="material">The material to register for lighting updates.</param>
 		public void RegisterMaterial(ShaderMaterial material)
 		{
 			if (material == null || extraMaterials.Contains(material))
@@ -201,6 +269,11 @@ namespace Cthangover.Core.UI.Lights
 			PushAllParams(material);
 		}
 
+        /// <summary>
+        /// Removes a previously registered material from the lighting update list.
+        /// No-op if the material is not currently registered.
+        /// </summary>
+        /// <param name="material">The material to unregister.</param>
 		public void UnregisterMaterial(ShaderMaterial material)
 		{
 			extraMaterials.Remove(material);
@@ -239,18 +312,32 @@ namespace Cthangover.Core.UI.Lights
 			material.SetShaderParameter("light_radius_scale", 1.0f);
 		}
 
+        /// <summary>
+        /// Sets the depth map texture and pushes it to all shader materials via
+        /// the <c>depth_mask</c> uniform.
+        /// </summary>
+        /// <param name="depthMap">The new depth map texture.</param>
         public void SetupDepthMap(Texture2D depthMap)
         {
             CurrentDepthMap = depthMap;
             ForEachMaterial(m => m.SetShaderParameter("depth_mask", CurrentDepthMap));
         }
 
+        /// <summary>
+        /// Sets the albedo map texture and pushes it to all shader materials via
+        /// the <c>albedo_map</c> uniform.
+        /// </summary>
+        /// <param name="albedoMap">The new albedo texture.</param>
         public void SetupAlbedoMap(Texture2D albedoMap)
         {
             CurrentAlbedoMap = albedoMap;
             ForEachMaterial(m => m.SetShaderParameter("albedo_map", CurrentAlbedoMap));
         }
 
+        /// <summary>
+        /// Rebuilds and pushes all lighting uniform arrays to every registered
+        /// shader material.
+        /// </summary>
         public void UpdateShaders()
         {
             int count = 0;
@@ -262,6 +349,12 @@ namespace Cthangover.Core.UI.Lights
             ChangeUseTime(UseLight);
         }
 
+        /// <summary>
+        /// Updates the player lamp position (slot 0) and pushes to all shaders.
+        /// If the position is off-screen (X &lt; -100), the lamp is excluded
+        /// from the active light count.
+        /// </summary>
+        /// <param name="position">New lamp position in screen-space pixels.</param>
 		public void UpdateLightPos(Vector2 position)
 		{
 			lightPositions[0] = position;
@@ -274,6 +367,13 @@ namespace Cthangover.Core.UI.Lights
 			ChangeUseTime(UseLight);
 		}
 
+        /// <summary>
+        /// Directly sets the player light position, radius, and influence without
+        /// triggering a shader push. Call <see cref="UpdateShaders"/> afterward.
+        /// </summary>
+        /// <param name="position">Screen-space pixel position.</param>
+        /// <param name="radius">Light radius in pixels.</param>
+        /// <param name="influence">Light influence factor (0.0–1.0).</param>
 		public void SetPlayerLight(Vector2 position, float radius, float influence)
 		{
 			lightPositions[0] = position;
@@ -281,6 +381,12 @@ namespace Cthangover.Core.UI.Lights
 			lightInfluence[0] = influence;
 		}
 
+        /// <summary>
+        /// Calculates time-of-day blend weights and pushes to all shader materials.
+        /// Respects <see cref="DarkMode"/> — when active, full-night weights are used
+        /// regardless of <paramref name="normalizedHour"/>.
+        /// </summary>
+        /// <param name="normalizedHour">Hour in 0–24 range (may be fractional).</param>
         public void SetTime(float normalizedHour)
         {
             if (DarkMode)

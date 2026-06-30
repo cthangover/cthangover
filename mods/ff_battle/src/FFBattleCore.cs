@@ -13,9 +13,20 @@ using Godot;
 
 namespace Cthangover.FFBattle
 {
+    /// <summary>
+    /// Core orchestration class for the Final Fantasy-style turn-based battle system.
+    /// Manages the full battle lifecycle: player turn with menu-driven action selection,
+    /// enemy AI turn execution, target selection mode, escape mechanics, and win/loss
+    /// condition checks. Coordinates between <see cref="FFPlayerPanel"/>,
+    /// <see cref="FFEnemyPanel"/>, <see cref="FFMenuPanel"/>, and
+    /// <see cref="FFBattleController"/> for UI interaction. Registered via
+    /// <see cref="IBattleCore.Id"/> as <c>"ff_battle"</c>.
+    /// </summary>
     public class FFBattleCore : IBattleCore
     {
+        /// <summary>Unique identifier for this battle system implementation, used by the core engine to locate it.</summary>
         public string Id => "ff_battle";
+        /// <summary>Provides the set of action executors (damage, defence, stun, item) registered for this battle system.</summary>
         public IActionExecutorProvider ActionProvider { get; } = new Actions.FFActionProvider();
 
         private Character[] _playerChars;
@@ -39,6 +50,16 @@ namespace Cthangover.FFBattle
 
         private const float PLAYER_SCALE = 0.85f;
 
+        /// <summary>
+        /// Initialises the battle UI panels, controller, and event wiring. Copies enemy
+        /// <see cref="Character"/> instances via <c>Copy()</c> so mutations during battle
+        /// do not affect the original data. Registers the <see cref="ActionProvider"/>
+        /// with <see cref="ActionExecutorHub"/> and constructs all UI widgets inside
+        /// <paramref name="ctx"/>'s root node.
+        /// </summary>
+        /// <param name="playerChars">The player party characters, consumed directly (not copied).</param>
+        /// <param name="enemyChars">Enemy characters — each is shallow-copied for battle isolation.</param>
+        /// <param name="ctx">Battle context providing root node and end-battle callback.</param>
         public void Init(Character[] playerChars, Character[] enemyChars, IBattleContext ctx)
         {
             _playerChars = playerChars;
@@ -91,6 +112,12 @@ namespace Cthangover.FFBattle
             _menuPanel.OnCancelled += OnMenuCancel;
         }
 
+        /// <summary>
+        /// Begins the battle sequence. Calculates layout positions and scales for
+        /// player/enemy panels based on viewport size. Subscribes to
+        /// <see cref="BattleSceneContext.OnBattleCleared"/> for cleanup.
+        /// Immediately transitions into the first player turn.
+        /// </summary>
         public void Start()
         {
             var root = _ctx.RootNode as Node;
@@ -615,6 +642,15 @@ namespace Cthangover.FFBattle
             OnPlayerTurnEnd();
         }
 
+        /// <summary>
+        /// Ends the player's turn, hides all UI, and transitions to the enemy turn.
+        /// Runs a brief delay before invoking <c>RunEnemyTurn()</c> which iterates
+        /// over all alive enemies, each picking a random <see cref="ActionCharacter"/>
+        /// and a random valid target, executing the action via the appropriate
+        /// animation subclass. Checks for player defeat after each enemy action.
+        /// If all enemies are dead, calls <see cref="IBattleContext.EndBattle"/>.
+        /// Otherwise starts a new player turn.
+        /// </summary>
         public async void OnPlayerTurnEnd()
         {
             GameLogger.Log("FF_BATTLE", "Player turn ended", LogLevel.Debug);

@@ -7,6 +7,14 @@ using Godot;
 
 namespace Cthangover.Core.Scenes
 {
+    /// <summary>
+    /// Collects scene subscription definitions from mod manifests, compiles wrapper
+    /// template scripts with injected user code via <see cref="ModCompiler"/>, and
+    /// executes them on scene enter and exit events. Subscriptions are C# code
+    /// fragments that run against the scene root node, enabling mods to dynamically
+    /// populate or modify scenes. Compilation results are cached by template+code key
+    /// for reuse across scene visits.
+    /// </summary>
     public static class SceneSubscriptionRegistry
     {
         private static readonly Dictionary<string, List<SubscriptionInfo>> enterSubscriptions = new();
@@ -14,6 +22,12 @@ namespace Cthangover.Core.Scenes
         private static readonly Dictionary<string, CompileResult> compiledCache = new();
         private static bool initialized;
 
+        /// <summary>
+        /// Collects all subscription entries from mod manifests by iterating over
+        /// loaded mods, reading wrapper template files and optional user code files,
+        /// and populating the enter/exit subscription tables. Safe to call multiple
+        /// times; subsequent calls are no-ops.
+        /// </summary>
         public static void Initialize()
         {
             if (initialized)
@@ -131,12 +145,28 @@ namespace Cthangover.Core.Scenes
             }
         }
 
+        /// <summary>
+        /// Compiles and executes all "on_enter" subscriptions for the given scene.
+        /// Each subscription's template is compiled (with user code substitution via
+        /// <c>{{USER_CODE}}</c>) by <see cref="ModCompiler"/>, then the resulting
+        /// <c>SceneBuilderScript.Run(Node)</c> method is invoked with the scene root
+        /// via a deferred call to ensure the scene tree is fully available.
+        /// </summary>
+        /// <param name="sceneName">The scene identifier to run subscriptions for.</param>
+        /// <param name="sceneRoot">The root node of the target scene.</param>
         public static void RunSubscriptions(string sceneName, Node sceneRoot)
         {
             Initialize();
             ExecuteSubscriptions(enterSubscriptions, sceneName, sceneRoot, "on_enter");
         }
 
+        /// <summary>
+        /// Compiles and executes all "on_exit" subscriptions for the given scene,
+        /// following the same pattern as <see cref="RunSubscriptions"/> but targeting
+        /// the exit trigger.
+        /// </summary>
+        /// <param name="sceneName">The scene identifier to run exit subscriptions for.</param>
+        /// <param name="sceneRoot">The root node of the scene being exited.</param>
         public static void RunExitSubscriptions(string sceneName, Node sceneRoot)
         {
             Initialize();

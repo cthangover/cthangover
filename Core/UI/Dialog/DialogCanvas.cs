@@ -11,7 +11,8 @@ namespace Cthangover.Core.UI.Dialog
 	{
 		private DialogBox dialogBox;
 
-		public DialogBox DialogBox => dialogBox;
+        /// <summary>The active DialogBox child, resolved in _Ready. Used by the scene tree root to access dialog without path traversal.</summary>
+        public DialogBox DialogBox => dialogBox;
 
 		public override void _Ready()
 		{

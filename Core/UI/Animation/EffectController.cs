@@ -8,6 +8,7 @@ namespace Cthangover.Core.UI.Animation
     /// </summary>
     public partial class EffectController : AnimationController
     {
+        /// <summary>Shadows the base Pause() and calls <see cref="AnimationController.Clear"/> instead, instantly resetting one-shot effects.</summary>
         public new void Pause()
         {
             Clear();

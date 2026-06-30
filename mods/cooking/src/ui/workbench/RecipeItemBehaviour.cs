@@ -6,6 +6,16 @@ using Godot;
 
 namespace Mods.Cooking.Workbench
 {
+    /// <summary>
+    /// Represents a single recipe entry in the <see cref="WorkbenchPanel"/> list.
+    /// Displays the recipe name, preparation time, and a horizontal row of
+    /// ingredient icons. Supports click-to-select with visual highlight
+    /// (tracked statically so only one recipe is selected at a time).
+    /// Fires <see cref="RecipeClicked"/> to notify the parent panel of
+    /// selection changes. Ingredient availability is checked via child
+    /// <see cref="RecipeIconItemBehaviour"/> instances, greying out the
+    /// entire row when any ingredient is missing.
+    /// </summary>
     public class RecipeItemBehaviour : Widget
     {
         private Control background;
@@ -22,10 +32,22 @@ namespace Mods.Cooking.Workbench
         private Node panel;
 
         private static RecipeItemBehaviour selected;
+
+        /// <summary>
+        /// The recipe currently selected across all <see cref="RecipeItemBehaviour"/>
+        /// instances. Only one recipe can be selected at a time because the
+        /// selection is tracked via a static backing field. Returns <c>null</c>
+        /// when no recipe is selected.
+        /// </summary>
         public static IRecipe SelectedRecipe => selected?.recipe;
         private readonly List<Node> items = new();
         private readonly List<RecipeIconItemBehaviour> ingredients = new();
 
+        /// <summary>
+        /// Fired when this recipe entry is clicked, passing the recipe data
+        /// and this widget so that <see cref="WorkbenchPanel"/> can update
+        /// the description and output preview panel.
+        /// </summary>
         public event System.Action<IRecipe, RecipeItemBehaviour> RecipeClicked;
 
         protected override void OnceConstruct()
@@ -77,6 +99,14 @@ namespace Mods.Cooking.Workbench
             }
         }
 
+        /// <summary>
+        /// Refreshes the visual availability state of this recipe.
+        /// Iterates all child <see cref="RecipeIconItemBehaviour"/> widgets,
+        /// calling <c>CheckAndUpdate</c> on each. If any ingredient is missing,
+        /// tints the name and time labels with <c>disableColor</c> (greyed out);
+        /// otherwise restores the default yellow/red colour scheme.
+        /// Call after inventory changes or cooking operations.
+        /// </summary>
         public void UpdateState()
         {
             var hasItems = true;
@@ -97,6 +127,13 @@ namespace Mods.Cooking.Workbench
             }
         }
 
+        /// <summary>
+        /// Initialises the recipe row with recipe data and the parent panel
+        /// reference. Spawns <see cref="RecipeIconItemBehaviour"/> children
+        /// for each ingredient, with plus-sign separators between them.
+        /// Sets the translated recipe name and time, then calls
+        /// <see cref="UpdateState"/> to set initial colour state.
+        /// </summary>
         public void Init(IRecipe recipe, Node panel)
         {
             EnsureConstructed();
@@ -137,6 +174,12 @@ namespace Mods.Cooking.Workbench
             }
         }
 
+        /// <summary>
+        /// Tears down this recipe row by queue-freeing all child nodes
+        /// (ingredient icons, plus labels, and this widget itself),
+        /// then clears the internal ingredient/item lists.
+        /// Called by <see cref="WorkbenchPanel"/> when the panel is hidden.
+        /// </summary>
         public void Destroy()
         {
             foreach (var item in items)
@@ -146,6 +189,14 @@ namespace Mods.Cooking.Workbench
             items.Clear();
         }
 
+        /// <summary>
+        /// Handles left-click selection of this recipe entry.
+        /// Deselects the previously-selected entry (if any) by restoring its
+        /// background to normal colour, highlights the background of this
+        /// entry, updates the static <c>selected</c> tracker, and invokes
+        /// <see cref="RecipeClicked"/> so the parent can update the
+        /// description and output panel.
+        /// </summary>
         public void OnClick()
         {
             if (selected != null)

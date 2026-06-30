@@ -20,12 +20,25 @@ namespace Cthangover.Core.UI.Messages
         [Export] public  float Speed { get; set; } = 1f;
         private         float timestamp;
 
+        /// <summary>
+        /// The text content displayed by this message. Reads/writes the child
+        /// <c>textField</c> label directly.
+        /// </summary>
         public string Text
         {
             get => textField.Text;
             set => textField.Text = value;
         }
 
+        /// <summary>
+        /// Initializes the message: positions it, sets text/speed/color, records
+        /// the start timestamp, and registers with the <see cref="SceneEventController"/>
+        /// for per-frame updates. Called by <see cref="MessagesHelper"/>.
+        /// </summary>
+        /// <param name="pos">Vertical Y-offset in pixels.</param>
+        /// <param name="text">The message text.</param>
+        /// <param name="speed">Fade speed multiplier.</param>
+        /// <param name="color">The text color.</param>
 		public void Setup(float pos, string text, float speed, Color color)
 		{
 			OffsetLeft = 50;
@@ -54,7 +67,16 @@ namespace Cthangover.Core.UI.Messages
             }
         }
 
+        /// <summary>
+        /// Priority <c>1</c> — lightweight enough for many concurrent messages.
+        /// </summary>
         public int Priority => 1;
+
+        /// <summary>
+        /// Per-frame update: displays for 3 seconds, then fades out over
+        /// <c>2 / <see cref="Speed"/></c> seconds. Self-destructs via
+        /// <c>QueueFree</c> when fully transparent.
+        /// </summary>
 		public void OnUpdate()
 		{
 			var currentTime = (float)Time.GetTicksMsec() / 1000f;

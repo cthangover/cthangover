@@ -11,10 +11,14 @@ namespace Cthangover.Core.UI.Dialog.Action.Impls
     /// </summary>
     public class ActionDelay : ActionCommand
     {
+        /// <summary>When true, hides the dialog body for the duration of the wait (dramatic pauses, cutscene beats).</summary>
         public bool HiddenMode { get; set; }
+        /// <summary>Optional temporary text displayed while waiting. Set to null to keep the current dialog text.</summary>
         public string ShowText { get; set; }
 
+        /// <summary>Pauses the dialog until <see cref="WaitTime"/> elapses.</summary>
         public override WaitType WaitType { get; set; } = WaitType.WaitTime;
+        /// <summary>Duration of the pause in seconds. Default 1.0.</summary>
         public override float WaitTime { get; set; } = 1f;
 
         public override void DoRun(DialogRuntime runtime)

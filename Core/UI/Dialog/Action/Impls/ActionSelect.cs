@@ -14,11 +14,16 @@ namespace Cthangover.Core.UI.Dialog.Action.Impls
     /// </summary>
     public class ActionSelect : ActionCommand
     {
+        /// <summary>The list of selectable choice variants. Each carries display text and a GoTo target.</summary>
         public List<SelectVariant> Variants { get; set; }
+        /// <summary>Context text shown alongside the choices (e.g. "What will you do?"). Supports variable substitution.</summary>
         public string Text { get; set; }
+        /// <summary>Left avatar sprite ID shown during the choice. Null hides the slot.</summary>
         public string FirstAvatar { get; set; }
+        /// <summary>Right avatar sprite ID shown during the choice. Null hides the slot.</summary>
         public string SecondAvatar { get; set; }
 
+        /// <summary>Dialog pauses until the player selects a variant — then the runtime jumps to the chosen GoTo target.</summary>
         public override WaitType WaitType { get; set; } = WaitType.WaitSelect;
 
         public override void DoRun(DialogRuntime runtime)

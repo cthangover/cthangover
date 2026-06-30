@@ -5,15 +5,37 @@ using Cthangover.Core.Utils;
 
 namespace Cthangover.Core.Scenes
 {
+    /// <summary>
+    /// Evaluates condition expression strings by parsing them into an AST via
+    /// <see cref="ConditionParser"/> and recursively walking the tree. Maintains a
+    /// static dictionary of named flags settable via <see cref="SetFlag"/>, enabling
+    /// scenario scripts to control branching through flag-based conditions. Quest
+    /// conditions are resolved through <see cref="QuestFactory"/>.
+    /// </summary>
     public static class ScenarioCondition
     {
         private static readonly Dictionary<string, string> flags = new();
 
+        /// <summary>
+        /// Sets a named flag value in the static flag dictionary. Used by scenario
+        /// scripts to set conditions that can be checked in subsequent
+        /// <see cref="Evaluate"/> calls.
+        /// </summary>
+        /// <param name="key">The flag name.</param>
+        /// <param name="value">The flag value, which may be parsed as integer for numeric comparisons.</param>
         public static void SetFlag(string key, string value)
         {
             flags[key] = value;
         }
 
+        /// <summary>
+        /// Parses and evaluates a condition expression string. Returns <c>true</c> for
+        /// null or whitespace-only input (vacuous truth). Returns <c>false</c> on parse
+        /// errors. Supports boolean combinators (<c>&amp;&amp;</c>, <c>||</c>, <c>!</c>),
+        /// numeric comparisons on flags and quest properties, and quest tag membership
+        /// checks (<c>hasTag</c>, <c>notHasTag</c>).
+        /// </summary>
+        /// <param name="condition">The condition expression string to evaluate.</param>
         public static bool Evaluate(string condition)
         {
             if (string.IsNullOrWhiteSpace(condition))

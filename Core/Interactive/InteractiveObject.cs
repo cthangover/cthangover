@@ -156,12 +156,25 @@ namespace Cthangover.Core.Interactive
 			return false;
 		}
 
+		/// <summary>
+		/// Unregisters from the <c>SceneContextNode</c> event-object tracker and
+		/// frees the Godot node. Called by <c>InteractiveManager.ClearAll</c> on
+		/// scene transition and by <c>InteractiveManager.Remove</c> for targeted
+		/// cleanup, ensuring no dangling references survive scene teardown.
+		/// </summary>
 		public void Destruct()
 		{
 			SceneContextNode.Instance?.RemoveEventObject(ID);
 			QueueFree();
 		}
 
+		/// <summary>
+		/// Creates or hides a debug overlay showing the hit-area bounds rectangle
+		/// and the object's <c>ID</c> label. The rectangle colour changes to
+		/// yellow when the pointer is inside the collider. Used by
+		/// <c>InteractiveManager.ShowDebugBounds</c> to toggle all objects at once.
+		/// </summary>
+		/// <param name="show">Whether to create/show or hide the debug visuals.</param>
 		public void UpdateDebugVisual(bool show)
 		{
 			if (show)

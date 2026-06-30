@@ -37,6 +37,7 @@ namespace Cthangover.Core.UI.Animation
         {
         }
 
+        /// <summary>Starts the shader animation from frame 0, resetting the elapsed timer.</summary>
         public void Play()
         {
             startTime = Time.GetTicksUsec() / 1_000_000.0;
@@ -45,8 +46,10 @@ namespace Cthangover.Core.UI.Animation
                 materialInstance.SetShaderParameter(FrameIndexId, 0f);
         }
 
+        /// <summary>Update priority. Default 1.</summary>
         public int Priority => 1;
 
+        /// <summary>Advances the shader's _FrameIndex uniform each frame based on elapsed time. Self-destructs when <c>totalDuration</c> elapses.</summary>
         public void OnUpdate()
         {
             double now = Time.GetTicksUsec() / 1_000_000.0;

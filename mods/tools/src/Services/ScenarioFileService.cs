@@ -8,42 +8,73 @@ using Godot;
 
 namespace Cthangover.Tools.Services
 {
+    /// <summary>Parsed metadata from a scenario file header (before the <c>---</c> separator).</summary>
     public sealed class ScenarioMetadata
     {
+        /// <summary>Target scene name for the scenario.</summary>
         public string Scene { get; set; } = "-";
+        /// <summary>Priority level of the scenario.</summary>
         public string Priority { get; set; } = "-";
+        /// <summary>Condition string for the scenario to activate.</summary>
         public string Condition { get; set; } = "-";
     }
 
+    /// <summary>Collected references extracted from scenario command lines for the info panel.</summary>
     public sealed class ScenarioReferences
     {
+        /// <summary>Scene switch targets referenced in commands.</summary>
         public List<string> SwitchTargets { get; set; } = new();
+        /// <summary>Localisation keys found in named parameters.</summary>
         public List<string> LocaleKeys { get; set; } = new();
+        /// <summary>Quest IDs referenced in named <c>quest_id</c> parameters.</summary>
         public List<string> QuestRefs { get; set; } = new();
+        /// <summary>Background IDs referenced in positional parameters of background-related commands.</summary>
         public List<string> BackgroundRefs { get; set; } = new();
     }
 
+    /// <summary>Describes a single scenario file found during scanning.</summary>
     public sealed class ScenarioFileInfo
     {
+        /// <summary>Absolute path on disk.</summary>
         public string AbsolutePath { get; set; }
+        /// <summary>Filename without extension.</summary>
         public string Name { get; set; }
+        /// <summary>Directory path relative to the mod's <c>scenarios/</c> folder.</summary>
         public string RelativeDir { get; set; }
     }
 
+    /// <summary>A group of scenario files within the same subdirectory under <c>scenarios/</c>.</summary>
     public sealed class ScenarioGroup
     {
+        /// <summary>Relative directory path (empty for root-level files).</summary>
         public string DirectoryPath { get; set; }
+        /// <summary>Files in this group, sorted by name.</summary>
         public List<ScenarioFileInfo> Files { get; set; } = new();
     }
 
+    /// <summary>Represents all scenario files for one mod, grouped by subdirectory.</summary>
     public sealed class ModScenarioTree
     {
+        /// <summary>The mod's identifier.</summary>
         public string ModId { get; set; }
+        /// <summary>Groups of scenario files within this mod.</summary>
         public List<ScenarioGroup> Groups { get; set; } = new();
     }
 
+    /// <summary>
+    /// Static service for discovering, reading, writing, and analysing scenario files.
+    /// Scans all <c>mods/*/scenarios/**/*.scenario</c> files in the project, groups
+    /// them by mod and subdirectory, parses YAML-like metadata blocks, and extracts
+    /// referenced background/scene/locale/quest identifiers. Used by
+    /// <see cref="ScenarioEditorWindow"/> for the file tree and info panel.
+    /// </summary>
     public static class ScenarioFileService
     {
+        /// <summary>
+        /// Recursively scans <c>res://mods/*/scenarios/</c> for <c>.scenario</c> files.
+        /// Groups results by mod ID and subdirectory. Returns an empty list if the
+        /// mods directory does not exist.
+        /// </summary>
         public static List<ModScenarioTree> ScanScenarioFiles()
         {
             var result = new List<ModScenarioTree>();
@@ -91,6 +122,10 @@ namespace Cthangover.Tools.Services
             return result;
         }
 
+        /// <summary>
+        /// Parses the header block (before first <c>---</c> line) in YAML-like
+        /// <c>key: value</c> format to extract scene, priority, and condition.
+        /// </summary>
         public static ScenarioMetadata ParseMetadata(string text)
         {
             var meta = new ScenarioMetadata();
@@ -121,6 +156,14 @@ namespace Cthangover.Tools.Services
             return meta;
         }
 
+        /// <summary>
+        /// Walks the body of the scenario (after <c>---</c>) and extracts references:
+        /// background IDs, scene switch targets, locale keys, and quest IDs.
+        /// Uses <see cref="ScenarioSyntaxService.ExtractCommandParams"/> to tokenise
+        /// each line and <see cref="ScenarioCommandStrategyFactory"/> metadata to
+        /// classify positional parameters.
+        /// </summary>
+        /// <param name="text">Full scenario file text including header.</param>
         public static ScenarioReferences ExtractReferences(string text)
         {
             var refs = new ScenarioReferences();
@@ -161,16 +204,19 @@ namespace Cthangover.Tools.Services
             return refs;
         }
 
+        /// <summary>Reads the entire file at <paramref name="filePath"/> as a UTF-8 string.</summary>
         public static string ReadAllText(string filePath)
         {
             return File.ReadAllText(filePath);
         }
 
+        /// <summary>Writes <paramref name="text"/> to <paramref name="filePath"/>, overwriting existing content.</summary>
         public static void WriteAllText(string filePath, string text)
         {
             File.WriteAllText(filePath, text);
         }
 
+        /// <summary>Converts an absolute file path to a path relative to <c>res://</c>, using forward slashes.</summary>
         public static string GetRelativePath(string absolutePath)
         {
             var projectPath = ProjectSettings.GlobalizePath("res://");

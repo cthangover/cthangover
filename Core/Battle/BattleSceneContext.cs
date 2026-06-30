@@ -28,26 +28,66 @@ namespace Cthangover.Core.Battle
     /// </summary>
     public partial class BattleSceneContext : Node
 	{
+		/// <summary>
+		/// Singleton reference to the active battle scene context.
+		/// Set on <c>_EnterTree</c>, cleared on <c>_ExitTree</c>.
+		/// External systems read this to access battle state.
+		/// </summary>
 		public static BattleSceneContext Instance { get; private set; }
 
 		[Export] private TextureRect battleBg;
 
+		/// <summary>
+		/// The <see cref="Actions.BattleActionMachine"/> node that
+		/// processes the animation queue for this battle. Cores push
+		/// animation actions through the context and the machine drives
+		/// playback frame-by-frame.
+		/// </summary>
 		public Actions.BattleActionMachine BattleActionMachine { get; private set; }
 
 		private BattleSpeedControl _battleSpeedControl;
 		private Widget deadground;
 		private Widget winground;
 
+		/// <summary>
+		/// Per-character EXP earned during this battle, keyed by
+		/// <see cref="Character.ID"/>. Populated by
+		/// <see cref="RecordEnemyDefeated"/>; consumed by
+		/// <see cref="WingroundBehaviour"/> on victory.
+		/// </summary>
 		public Dictionary<string, int> PlayerExpGained { get; private set; } = new();
+		/// <summary>
+		/// Enemies defeated during this battle (for loot generation
+		/// and recruitment rolls).
+		/// </summary>
 		public List<Character> DefeatedEnemies { get; private set; } = new();
 
+		/// <summary>
+		/// Guards against double-triggering end-of-battle paths.
+		/// Set to <c>true</c> by <see cref="ShowWinground"/> or
+		/// <see cref="ShowDeadground"/>.
+		/// </summary>
 		public bool IsDestroyed { get; private set; }
 
+		/// <summary>
+		/// When <c>true</c>, the battle core pauses processing (e.g.
+		/// while a UI overlay is open). Set externally by pause widgets.
+		/// </summary>
 		public bool IsWait { get; set; }
 
+		/// <summary>Fired when a character's health reaches 0.</summary>
 		public event System.Action<Character> OnCharacterDied;
+		/// <summary>
+		/// Fired after battle state is cleared (both victory and defeat).
+		/// External systems can hook this to release battle resources.
+		/// </summary>
 		public event System.Action OnBattleCleared;
 
+		/// <summary>
+		/// Invokes <see cref="OnCharacterDied"/> to notify listeners
+		/// (quests, achievements, the battle core) that a character
+		/// has been defeated.
+		/// </summary>
 		public void NotifyCharacterDied(Character character)
 		{
 			OnCharacterDied?.Invoke(character);
@@ -184,6 +224,11 @@ namespace Cthangover.Core.Battle
 			activeBattleCore.Start();
 		}
 
+		/// <summary>
+		/// Triggers the defeat screen: sets <see cref="IsDestroyed"/>,
+		/// resets battle speed, clears battle state, and shows the
+		/// deadground widget.
+		/// </summary>
 		public void ShowDeadground()
 		{
 			if (IsDestroyed)
@@ -194,6 +239,11 @@ namespace Cthangover.Core.Battle
 			deadground?.Show();
 		}
 
+		/// <summary>
+		/// Triggers the victory screen: sets <see cref="IsDestroyed"/>,
+		/// resets battle speed, clears battle state, and shows the
+		/// winground widget.
+		/// </summary>
 		public void ShowWinground()
 		{
 			if (IsDestroyed)
@@ -204,6 +254,12 @@ namespace Cthangover.Core.Battle
 			winground?.Show();
 		}
 
+		/// <summary>
+		/// Records a defeated enemy: adds it to
+		/// <see cref="DefeatedEnemies"/> and distributes its EXP
+		/// (<c>Level * Exp</c>) equally among all surviving player
+		/// characters in <see cref="PlayerExpGained"/>.
+		/// </summary>
 		public void RecordEnemyDefeated(Character enemy)
 		{
 			if (enemy == null)

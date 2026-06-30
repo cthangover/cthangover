@@ -1,4 +1,5 @@
 #if TOOLS
+using Cthangover.Core.Mods;
 using Cthangover.Core.Scenes;
 using Cthangover.Core.Settings;
 using Cthangover.Core.Utils;
@@ -44,9 +45,9 @@ namespace Cthangover.Core.Autotest
         private void SetupBattleTest()
         {
             var runtime = GameData.Instance.Runtime;
-            runtime.CharacterData.AddCharacterToParty(CharacterType.Murakami);
+            runtime.CharacterData.AddCharacterToParty("Murakami");
 
-            var background = ResourceLoader.Load<Texture2D>("res://Resources/backgrounds/00006-4133256041.png");
+            var background = ModManager.Instance.ResolveTexture("empty");
             var data = BattleData.InitBattle(background, "MainMenu", "wolf_1", "wolf_2", "werewolf_girl_1");
             runtime.BattleData = data;
 

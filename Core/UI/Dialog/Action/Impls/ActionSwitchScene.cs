@@ -13,10 +13,14 @@ namespace Cthangover.Core.UI.Dialog.Action.Impls
     /// </summary>
     public class ActionSwitchScene : ActionCommand
     {
+        /// <summary>Target scene name passed to <see cref="SceneManager.SwitchScene"/>.</summary>
         public string SceneName { get; set; }
+        /// <summary>Whether to transition with the dialog hidden. Default true.</summary>
         public bool HiddenMode { get; set; } = true;
+        /// <summary>Transition speed parameter passed to the scene manager. Default 4.0.</summary>
         public float Speed { get; set; } = 4f;
 
+        /// <summary>Scene switch is deferred — the dialog ends immediately with no return.</summary>
         public override WaitType WaitType { get; set; } = WaitType.NoWait;
 
         public override void DoRun(DialogRuntime runtime)

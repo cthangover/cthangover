@@ -7,8 +7,10 @@ namespace Cthangover.Core.UI.Dialog.Action.Impls
     /// </summary>
     public class ActionTitle : ActionCommand
     {
+        /// <summary>Text to display in the title bar. Null hides the title bar.</summary>
         public string TitleText { get; set; }
 
+        /// <summary>Title changes are instant visual updates — the dialog continues immediately.</summary>
         public override WaitType WaitType { get; set; } = WaitType.NoWait;
 
         public override void DoRun(DialogRuntime runtime)

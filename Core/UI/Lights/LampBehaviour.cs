@@ -24,6 +24,11 @@ namespace Cthangover.Core.UI.Lights
 
 		private bool pressingOnLamp;
 
+        /// <summary>
+        /// Queries lamp parameters (color, radius, influence) from
+        /// <see cref="GameData.Instance.Runtime.LampData"/>. Static so the
+        /// <see cref="UiLightController"/> can query without a direct reference.
+        /// </summary>
 		public static (Color, float, float) GetLightParams()
 		{
 			var lampData = GameData.Instance.Runtime.LampData;
@@ -31,7 +36,12 @@ namespace Cthangover.Core.UI.Lights
 			var influence = lampData.Influence;
 			return (Colors.Yellow, radius, influence);
 		}
-		
+
+        /// <summary>
+        /// Visibility toggle for the lamp. Setting to <c>false</c> resets the
+        /// placed state and sends the light position offscreen to disable
+        /// the lamp light in the shader. Uses <c>new</c> to log transitions.
+        /// </summary>
 		public new bool Visible
 		{
 			get => base.Visible;

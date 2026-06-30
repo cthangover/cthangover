@@ -2,8 +2,29 @@ using Cthangover.Core.Mods;
 using Cthangover.Core.Utils;
 using Godot;
 
+/// <summary>
+/// Runtime shader and texture override system for modded scenes.
+/// Walks the entire node tree of a freshly-instantiated scene,
+/// matching each <c>ShaderMaterial</c> by its resource-path name
+/// against the mod shader registry and each <c>TextureRect</c> /
+/// <c>Sprite2D</c> texture by name against the mod texture registry.
+///
+/// Replacement is name-based (matching <c>Path.GetFileNameWithoutExtension</c>
+/// of the original resource path to a mod file entry), so a mod providing
+/// <c>shaders/outline.gdshader</c> will automatically override every node
+/// whose material originally referenced <c>res://shaders/outline.gdshader</c>.
+///
+/// Called from <c>SceneLoader</c> immediately after <c>Instantiate</c>,
+/// before <c>_Ready</c> fires on any child — thus overridden materials
+/// are in place before any node runs its init logic.
+/// </summary>
 public static class ShaderModReplacer
 {
+    /// <summary>
+    /// Entry point called after scene instantiation. Runs both the
+    /// shader-material pass and the texture pass in one tree walk,
+    /// logging counts of each replacement type.
+    /// </summary>
     public static void PatchScene(Node root)
     {
         var shaderReplaced = PatchShaderMaterials(root);

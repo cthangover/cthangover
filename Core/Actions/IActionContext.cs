@@ -47,8 +47,8 @@ namespace Cthangover.Core.Actions
         IQuestService Quests { get; }
         /// <summary>
         /// Character subsystem: add characters to the player's party and
-        /// dispatch "character joined" UI notifications. Parses CharacterType
-        /// enum values from scenario string parameters.
+        /// dispatch "character joined" UI notifications. Accepts character
+        /// ID strings from scenario parameters.
         /// </summary>
         ICharacterService Character { get; }
         /// <summary>

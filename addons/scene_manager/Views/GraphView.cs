@@ -5,6 +5,17 @@ using Godot;
 
 namespace SceneManagerAddon
 {
+    /// <summary>
+    /// A two-panel view that renders scene-to-scene transitions as an
+    /// interactive <see cref="GraphEdit"/> node graph. The left side
+    /// shows a minimap-enabled graph where each
+    /// <see cref="SceneDefInfo"/> becomes a <see cref="GraphNode"/>
+    /// colour-coded by status (green for the start scene, red for
+    /// scenes with errors, white for normal). Edges represent
+    /// <c>switch_scene</c> commands. The right panel displays
+    /// rich-text metadata (scenario list with clickable links) for
+    /// the currently selected node.
+    /// </summary>
     [Tool]
     public partial class GraphView : HSplitContainer
     {
@@ -58,6 +69,13 @@ namespace SceneManagerAddon
             panel.AddChild(_infoLabel);
         }
 
+        /// <summary>
+        /// Clears the existing graph and rebuilds it from the given
+        /// mod list. Nodes are laid out in a simple grid (280 px per
+        /// column, wrapping at 1000 px). After placing nodes, every
+        /// <c>switch_scene</c> target is wired as a directed edge
+        /// from source node to destination node.
+        /// </summary>
         public void Populate(List<ModSceneInfo> mods)
         {
             _mods = mods;
@@ -152,6 +170,13 @@ namespace SceneManagerAddon
 
         private void OnNodeDeselected(Node n) => _infoLabel.Text = "";
 
+        /// <summary>
+        /// Fired when the user clicks a scenario hyperlink in the
+        /// right-hand info panel. The consumer (typically
+        /// <see cref="MainPanel"/>) switches to the Scenes tab and
+        /// selects the clicked scenario in the tree so the user can
+        /// immediately see its full text.
+        /// </summary>
         public event ScenarioLinkHandler ScenarioLinkClicked;
 
         private void OnLinkClicked(Variant meta)

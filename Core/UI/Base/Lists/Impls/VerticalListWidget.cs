@@ -20,6 +20,7 @@ namespace Cthangover.Core.UI.Base.Lists.Impls
             itemRect.Position = pos;
         }
 
+        /// <summary>Content height = count * (prefab height + Y padding). Width is inherited from the Content container.</summary>
         public override Vector2 GetContentSize(int count)
         {
             var boxSize = Content.Size;

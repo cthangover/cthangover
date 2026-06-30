@@ -8,7 +8,9 @@ namespace Cthangover.Core.UI.Dialog.Action
     /// </summary>
     public enum ConstructType
     {
+        /// <summary>Construct when the dialog queue is first loaded. Useful for actions that need to preload resources.</summary>
         OnStartQueue,
+        /// <summary>Construct lazily just before the action runs. Default for most actions — saves resources for unreached branches.</summary>
         OnStartAction
     }
     

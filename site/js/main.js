@@ -113,6 +113,57 @@
     }
   }
 
+  function initLightbox() {
+    var lightbox = document.getElementById("lightbox");
+    if (!lightbox) return;
+
+    var img = lightbox.querySelector(".lightbox-img");
+    var items = document.querySelectorAll(".screenshot-item img");
+    var currentIndex = -1;
+
+    function show(index) {
+      if (index < 0 || index >= items.length) return;
+      currentIndex = index;
+      img.src = items[index].src;
+      img.alt = items[index].alt;
+      lightbox.classList.add("open");
+      lightbox.setAttribute("aria-hidden", "false");
+      document.body.style.overflow = "hidden";
+    }
+
+    function close() {
+      lightbox.classList.remove("open");
+      lightbox.setAttribute("aria-hidden", "true");
+      document.body.style.overflow = "";
+    }
+
+    function showNext() {
+      if (currentIndex < items.length - 1) show(currentIndex + 1);
+    }
+
+    function showPrev() {
+      if (currentIndex > 0) show(currentIndex - 1);
+    }
+
+    for (var i = 0; i < items.length; i++) {
+      items[i].parentElement.addEventListener("click", function (idx) {
+        return function () { show(idx); };
+      }(i));
+    }
+
+    lightbox.querySelector(".lightbox-overlay").addEventListener("click", close);
+    lightbox.querySelector(".lightbox-close").addEventListener("click", close);
+    lightbox.querySelector(".lightbox-next").addEventListener("click", showNext);
+    lightbox.querySelector(".lightbox-prev").addEventListener("click", showPrev);
+
+    document.addEventListener("keydown", function (e) {
+      if (!lightbox.classList.contains("open")) return;
+      if (e.key === "Escape") close();
+      if (e.key === "ArrowRight") showNext();
+      if (e.key === "ArrowLeft") showPrev();
+    });
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     var langBtns = document.querySelectorAll(".lang-btn");
     for (var i = 0; i < langBtns.length; i++) {
@@ -127,6 +178,8 @@
       if (scrollTimer) clearTimeout(scrollTimer);
       scrollTimer = setTimeout(updateActiveNav, 50);
     });
+
+    initLightbox();
 
     applyI18n();
     updateActiveNav();

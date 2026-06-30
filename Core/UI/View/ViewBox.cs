@@ -26,12 +26,26 @@ namespace Cthangover.Core.UI.View
 		[Export] private float minZoom;
 		[Export] private float maxZoom;
 
+		/// <summary>
+		/// The content node that holds all scene visuals. Scaling and alignment are applied
+		/// directly to this node.
+		/// </summary>
 		public Control Content => content;
 
 		/// <summary>Logical resolution of the content area (default 1920x1024). Used for normalised coordinate calculations.</summary>
 		public Vector2I LogicalSize => defaultResolution;
 
+		/// <summary>
+		/// The background <see cref="TextureRect"/> rendered behind all interactive layers.
+		/// Receives a <c>timed_sprite</c> shader material for time-of-day lighting when
+		/// no material is already assigned.
+		/// </summary>
 		public TextureRect Background { get; private set; }
+
+		/// <summary>
+		/// The foreground <see cref="TextureRect"/> rendered above interactive layers.
+		/// Receives the same <c>timed_sprite</c> shader as the background.
+		/// </summary>
 		public TextureRect Foreground { get; private set; }
 
 		/// <summary>Container for interactive objects rendered behind the foreground.</summary>
@@ -103,29 +117,51 @@ namespace Cthangover.Core.UI.View
 			return layer;
 		}
 
-        public void SetBackgroundTexture(Texture2D texture)
-        {
-            if (Background != null)
-            {
-                Background.Texture = texture;
-                GameLogger.Log("VIEW", $"set background '" + SceneContextNode.LastBackgroundID + "'");
-            }
-        }
+		/// <summary>
+		/// Assigns a texture to the background <see cref="TextureRect"/>. This is the
+		/// primary mechanism for scenes to set the backdrop visual. Logs the new background
+		/// ID from <see cref="SceneContextNode.LastBackgroundID"/> for debugging.
+		/// </summary>
+		public void SetBackgroundTexture(Texture2D texture)
+		{
+			if (Background != null)
+			{
+				Background.Texture = texture;
+				GameLogger.Log("VIEW", $"set background '" + SceneContextNode.LastBackgroundID + "'");
+			}
+		}
 
-        public void SetForegroundTexture(Texture2D texture)
-        {
-            if (Foreground != null)
-            {
-                Foreground.Texture = texture;
-                GameLogger.Log("VIEW", $"set foreground");
-            }
-        }
+		/// <summary>
+		/// Assigns a texture to the foreground <see cref="TextureRect"/>. Typically used
+		/// for scene overlays rendered above interactive objects but below UI.
+		/// </summary>
+		public void SetForegroundTexture(Texture2D texture)
+		{
+			if (Foreground != null)
+			{
+				Foreground.Texture = texture;
+				GameLogger.Log("VIEW", $"set foreground");
+			}
+		}
 
-        public Texture2D GetBackgroundTexture()
-        {
-            return Background?.Texture;
-        }
+		/// <summary>
+		/// Returns the currently assigned background texture, or <c>null</c> if none is set
+		/// or the <see cref="Background"/> node is missing.
+		/// </summary>
+		public Texture2D GetBackgroundTexture()
+		{
+			return Background?.Texture;
+		}
 
+		/// <summary>
+		/// Smoothly transitions the background to a new texture using a black overlay crossfade:
+		/// fades a <see cref="ColorRect"/> to full opacity over the first half of <paramref name="duration"/>,
+		/// swaps the background texture mid-transition, then fades back out over the second half.
+		/// If the target texture is already set or the background node is missing, no-op.
+		/// <see cref="KillTransitionTween"/> cancels any in-progress transition first.
+		/// </summary>
+		/// <param name="newTexture">The replacement background texture.</param>
+		/// <param name="duration">Total crossfade duration in seconds (default 0.5).</param>
 		public void TransitionBackground(Texture2D newTexture, float duration = 0.5f)
 		{
 			if (Background == null)
@@ -161,6 +197,10 @@ namespace Cthangover.Core.UI.View
 			}));
 		}
 
+		/// <summary>
+		/// Aborts any in-progress background transition by killing the tween and resetting
+		/// the overlay to invisible. Safe to call when no transition is active.
+		/// </summary>
 		public void KillTransitionTween()
 		{
 			if (transitionTween != null)
@@ -196,18 +236,28 @@ namespace Cthangover.Core.UI.View
 			return transitionOverlay;
 		}
 
+		/// <summary>
+		/// Applies a zoom level to the content node. The <paramref name="value"/> is a 0–1 lerp
+		/// factor between <c>minZoom</c> and <c>maxZoom</c>. Scale is uniform (X and Y are equal).
+		/// </summary>
+		/// <param name="value">Normalized zoom factor: 0 = minZoom, 1 = maxZoom.</param>
 		public void SetZoom(float value)
-        {
-            var zoom = minZoom + (maxZoom - minZoom) * value;
-            if (content != null)
-                content.Scale = Vector2.One * zoom;
-        }
+		{
+			var zoom = minZoom + (maxZoom - minZoom) * value;
+			if (content != null)
+				content.Scale = Vector2.One * zoom;
+		}
 
-        public void SetAlign(AlignType align)
-        {
-            if (content != null)
-                content.Position = ViewBoxNavigator.GetPositionByAlign(align, content.Size);
-        }
+		/// <summary>
+		/// Positions the content node within the viewport using the 9-point alignment grid
+		/// from <see cref="ViewBoxNavigator.GetPositionByAlign"/>.
+		/// </summary>
+		/// <param name="align">Which corner/edge/center to align to.</param>
+		public void SetAlign(AlignType align)
+		{
+			if (content != null)
+				content.Position = ViewBoxNavigator.GetPositionByAlign(align, content.Size);
+		}
 
 #if TOOLS && DEBUG
         public override void _ValidateProperty(Godot.Collections.Dictionary property)

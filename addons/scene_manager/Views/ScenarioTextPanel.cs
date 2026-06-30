@@ -6,6 +6,16 @@ using Godot;
 
 namespace SceneManagerAddon
 {
+    /// <summary>
+    /// The right-hand panel of the Scenes tab. Displays the raw text of
+    /// the currently selected scene JSON or scenario script in a
+    /// syntax-highlighted <see cref="TextEdit"/> control. Below the
+    /// editor, a horizontal thumbnail strip renders previews of every
+    /// background texture referenced by the selected scenario. An
+    /// "Open file" button in the toolbar launches the system default
+    /// text editor for the current scenario's
+    /// <see cref="ScenarioDefInfo.AbsoluteFilePath"/>.
+    /// </summary>
     [Tool]
     public partial class ScenarioTextPanel : VBoxContainer
     {
@@ -56,6 +66,12 @@ namespace SceneManagerAddon
             _thumbScroll.AddChild(_thumbContainer);
         }
 
+        /// <summary>
+        /// Loads the <see cref="SceneDefInfo.RawJson"/> text into the
+        /// editor, disables the "Open file" button (scene JSON files
+        /// are not intended for external editing), and clears any
+        /// existing background thumbnails.
+        /// </summary>
         public void ShowSceneJson(SceneDefInfo scene)
         {
             _textEdit.Text = scene.RawJson ?? $"{{ \"name\": \"{scene.Name}\" }}";
@@ -65,6 +81,13 @@ namespace SceneManagerAddon
             ClearThumbnails();
         }
 
+        /// <summary>
+        /// Loads the <see cref="ScenarioDefInfo.RawText"/> into the
+        /// editor, enables the "Open file" button, and populates the
+        /// thumbnail strip by resolving each background reference in
+        /// <see cref="ScenarioDefInfo.BackgroundRefs"/> through
+        /// <see cref="Services.ResourceResolver.ResolveBackgroundFile"/>.
+        /// </summary>
         public void ShowScenario(ScenarioDefInfo sc, string modId)
         {
             _textEdit.Text = sc.RawText ?? "";
@@ -74,6 +97,11 @@ namespace SceneManagerAddon
             LoadThumbnails(sc.BackgroundRefs);
         }
 
+        /// <summary>
+        /// Resets the panel to its empty state: clears the text editor,
+        /// disables the "Open file" button, and removes all thumbnail
+        /// children.
+        /// </summary>
         public void Clear()
         {
             _textEdit.Text = "";

@@ -3,6 +3,13 @@ using Cthangover.Core.Utils;
 
 namespace Cthangover.FFBattle.Actions
 {
+    /// <summary>
+    /// Executes a defensive action (buff/barrier). Increases the target's
+    /// <see cref="CharacterAttributes.Defence"/> by the value stored in
+    /// <see cref="ActionCharacter.ATTRIBUTE_DEFENCE"/> (default 4).
+    /// Defence acts as a shield against incoming physical damage in the
+    /// <see cref="FFDamageExecutor"/>. Registered under ID <c>"physics/defence"</c>.
+    /// </summary>
     public class FFDefenceExecutor : ActionBase
     {
         public override string ID => "FFDefenceExecutor";

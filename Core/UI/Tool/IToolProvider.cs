@@ -9,8 +9,16 @@ namespace Cthangover.Core.UI.Tool
     /// </summary>
     public interface IToolProvider
     {
+        /// <summary>Unique identifier used as the lookup key in <see cref="ToolFactory"/>.</summary>
         string Id { get; }
+
+        /// <summary>Translation key for the tool's display name, resolved via <c>TranslationServer.Translate</c>.</summary>
         string LocaleKey { get; }
+
+        /// <summary>
+        /// Creates a new <see cref="Window"/> instance for this tool. Callers are responsible
+        /// for adding it to the scene tree and displaying it.
+        /// </summary>
         Window CreateWindow();
     }
 }

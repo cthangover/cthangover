@@ -5,8 +5,31 @@ using System.Linq;
 
 namespace SceneManagerAddon
 {
+    /// <summary>
+    /// Runs a full cross-reference validation pass over all loaded mods.
+    /// First builds global catalogues of known resources (scene names,
+    /// background IDs, locale keys, quest IDs) via
+    /// <see cref="ResourceResolver"/>. Then for every scene and every
+    /// scenario, checks each extracted reference against the
+    /// appropriate catalogue and appends a
+    /// <see cref="ValidationMessage"/> (with
+    /// <see cref="SeverityLevel.Error"/> or
+    /// <see cref="SeverityLevel.Warning"/>) on mismatch. Finally
+    /// aggregates all scenario-level errors up to their owning
+    /// <see cref="SceneDefInfo"/> and sets
+    /// <see cref="SceneDefInfo.HasErrors"/>.
+    /// </summary>
     public static class SceneValidator
     {
+        /// <summary>
+        /// Performs the validation pass described on the class
+        /// summary. This is the only public entry point; it mutates
+        /// the <c>Errors</c> and <c>HasErrors</c> members of every
+        /// <see cref="SceneDefInfo"/> and
+        /// <see cref="ScenarioDefInfo"/> in the tree.
+        /// </summary>
+        /// <param name="mods">The complete list of mods produced by
+        /// <see cref="SceneDataLoader.LoadAll"/>.</param>
         public static void Validate(List<ModSceneInfo> mods)
         {
             var allScenes = ResourceResolver.GetRegisteredSceneNames(mods);

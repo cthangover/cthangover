@@ -8,11 +8,29 @@ using Godot;
 
 namespace SceneManagerAddon
 {
+    /// <summary>
+    /// Entry point for loading all scene and scenario data from disk.
+    /// Walks the <c>res://mods/</c> directory tree, parses every
+    /// <c>scenes/*.json</c> into <see cref="SceneDefInfo"/> objects
+    /// grouped by <see cref="ModSceneInfo"/>, then attaches
+    /// <c>scenarios/*.scenario</c> files to the scene whose name
+    /// matches the scenario's <c>scene:</c> meta field.
+    /// </summary>
     public static class SceneDataLoader
     {
         private static string _projectPath;
         private static string ProjectPath => _projectPath ??= ProjectSettings.GlobalizePath("res://");
 
+        /// <summary>
+        /// Performs a full crawl of the <c>mods/</c> tree. For each mod
+        /// directory that contains a <c>scenes/</c> subfolder, every
+        /// <c>*.json</c> file is parsed; if the resulting mod has at
+        /// least one valid scene it is included in the output list.
+        /// Afterwards, <c>AttachScenarios</c> links each
+        /// <c>*.scenario</c> file to its target scene by matching the
+        /// scenario's <c>scene:</c> header against the scene's
+        /// <see cref="SceneDefInfo.Name"/>.
+        /// </summary>
         public static List<ModSceneInfo> LoadAll()
         {
             var mods = new List<ModSceneInfo>();

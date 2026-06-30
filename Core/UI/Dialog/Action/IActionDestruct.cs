@@ -6,6 +6,7 @@ namespace Cthangover.Core.UI.Dialog.Action
     /// </summary>
     public interface IActionDestruct
     {
+        /// <summary>Called to release resources, disconnect signals, and mark the object as finished. Must be idempotent.</summary>
         void Destruct();
     }
     

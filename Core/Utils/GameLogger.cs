@@ -11,6 +11,39 @@ using System.Runtime.InteropServices;
 
 namespace Cthangover.Core.Utils
 {
+    /// <summary>
+    /// Central logging sink for the entire project. Every subsystem — the scenario
+    /// engine, mod loader, UI framework, and AI behaviours — routes diagnostic
+    /// output through this static class.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The logger writes to three destinations simultaneously when enabled:
+    /// <list type="number">
+    /// <item>
+    /// <term>Console</term><description>A separate console window allocated
+    /// via <c>AllocConsole</c> (Windows) or stdout (Linux/macOS) with
+    /// colour-coded category labels. Controlled by
+    /// <c>GameConfig.Instance.Logging.ConsoleEnabled</c>.</description>
+    /// </item>
+    /// <item>
+    /// <term>Godot output</term><description>Falls back to <see cref="GD.Print"/>
+    /// if a dedicated console is unavailable, so messages still appear in the
+    /// Godot editor's Output panel.</description>
+    /// </item>
+    /// <item>
+    /// <term>Log files</term><description>All entries go to
+    /// <c>cthangover.log</c>; entries with <see cref="LogLevel.Error"/> are
+    /// also duplicated to <c>cthangover_errors.log</c> for quick triage.</description>
+    /// </item>
+    /// </list>
+    /// </para>
+    /// <para>
+    /// Initialisation is lazy and implicit: the first call to <see cref="Log"/>
+    /// triggers <see cref="Init"/> automatically, which reads configuration from
+    /// <see cref="Cthangover.Core.Settings.GameConfig.Instance"/>.
+    /// </para>
+    /// </remarks>
     public static class GameLogger
     {
 #if WINDOWS
@@ -30,8 +63,21 @@ namespace Cthangover.Core.Utils
         private static HashSet<string> _enabledCategories;
         private static readonly object _lock = new();
         
+        /// <summary>
+        /// Accumulates compilation errors emitted by the scenario scripting
+        /// subsystem during source parsing. Other modules may inspect this list
+        /// after a batch compile to surface diagnostics to the user.
+        /// </summary>
         public static readonly List<string> CompilationErrors = new();
         
+        /// <summary>
+        /// Explicit initialisation entry point. Reads logging configuration
+        /// from <see cref="Cthangover.Core.Settings.GameConfig.Instance"/>,
+        /// ensures the <c>logs/</c> directory exists under the Godot user-data
+        /// folder, honours the <c>--log-file=</c> command-line override, and
+        /// optionally allocates a Windows console. Idempotent — subsequent
+        /// calls are no-ops.
+        /// </summary>
         public static void Init()
         {
             if (_initialized)
@@ -165,6 +211,22 @@ namespace Cthangover.Core.Utils
             Console.WriteLine($"[{timestamp}] {color}[{category}]\x1b[0m {message}");
         }
 
+        /// <summary>
+        /// Writes a timestamped, categorised entry to all active sinks (console,
+        /// Godot output, and log files) provided the entry's <paramref name="level"/>
+        /// meets the configured <c>MinimumLevel</c> threshold. Thread-safe: file
+        /// I/O is synchronised with a private lock object.
+        /// </summary>
+        /// <param name="category">
+        /// A short label identifying the source subsystem. Conventionally
+        /// uppercase (e.g. <c>"MODS"</c>, <c>"SCENE"</c>). Displayed in
+        /// colour on the console.
+        /// </param>
+        /// <param name="message">The free-form diagnostic text.</param>
+        /// <param name="level">
+        /// Severity classification. Defaults to <see cref="LogLevel.Message"/>.
+        /// Errors are duplicated to the dedicated error log.
+        /// </param>
         public static void Log(string category, string message, LogLevel level = LogLevel.Message)
         {
             if (!_initialized)

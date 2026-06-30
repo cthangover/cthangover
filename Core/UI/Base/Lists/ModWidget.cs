@@ -13,6 +13,7 @@ namespace Cthangover.Core.UI
     {
         private bool _constructed;
 
+        /// <summary>Idempotent construction gate: calls <see cref="Construct"/> exactly once, on the first invocation. Thread-safe for repeated external calls.</summary>
         public void EnsureConstructed()
         {
             if (_constructed)

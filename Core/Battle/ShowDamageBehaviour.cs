@@ -33,6 +33,12 @@ namespace Cthangover.Core.Battle
             AddChild(_label);
         }
 
+        /// <summary>
+        /// Creates and parents a floating damage (or heal) number.
+        /// Damage is red, heal is green. The label floats upward with
+        /// a random horizontal drift and auto-destructs after the
+        /// tween completes. Skips values &lt;= 0.
+        /// </summary>
         public static void SpawnDamage(int amount, Node parent, Vector2 position, bool isHeal = false)
         {
             if (amount <= 0)
@@ -47,6 +53,11 @@ namespace Cthangover.Core.Battle
             hint.Init(amount, position, color);
         }
 
+        /// <summary>
+        /// Creates and parents a floating defence number (blue).
+        /// Same floating behaviour as <see cref="SpawnDamage"/>.
+        /// Skips values &lt;= 0.
+        /// </summary>
         public static void SpawnDefence(int amount, Node parent, Vector2 position)
         {
             if (amount <= 0)
@@ -57,6 +68,11 @@ namespace Cthangover.Core.Battle
             hint.Init(amount, position, new Color(0.3f, 0.3f, 1f, 1f));
         }
 
+        /// <summary>
+        /// Sets the label text, colour, and world position, then starts
+        /// the floating animation tween. Called by the static factory
+        /// methods after instantiation.
+        /// </summary>
         public void Init(int amount, Vector2 worldPosition, Color? color = null)
         {
             _label.Text = amount.ToString();

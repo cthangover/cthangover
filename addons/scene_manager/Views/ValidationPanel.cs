@@ -6,9 +6,25 @@ using Godot;
 
 namespace SceneManagerAddon
 {
+    /// <summary>
+    /// The validation tab's content — a two-column <see cref="Tree"/>
+    /// listing every validation message across all mods, scenes, and
+    /// scenarios. Column 0 shows the human-readable message, column 1
+    /// shows the source file path. Rows are colour-coded red for errors
+    /// and orange for warnings. The tab title is updated with summary
+    /// counts (e.g. <c>"Validation (3 err, 1 warn)"</c>). Clicking a
+    /// row fires <see cref="ErrorSelected"/> with the file path so
+    /// <see cref="MainPanel"/> can navigate to the relevant scene
+    /// JSON or scenario script in the Scenes tab.
+    /// </summary>
     [Tool]
     public partial class ValidationPanel : Tree
     {
+        /// <summary>
+        /// Raised when the user clicks a validation error/warning row.
+        /// Carries the <see cref="ValidationMessage.FilePath"/> so the
+        /// handler can locate and display the offending file.
+        /// </summary>
         public event ErrorSelectedHandler ErrorSelected;
 
         public override void _Ready()
@@ -22,6 +38,13 @@ namespace SceneManagerAddon
             CellSelected += OnCellSelected;
         }
 
+        /// <summary>
+        /// Clears the tree and populates it with every non-empty
+        /// validation message group. Scenes and scenarios with zero
+        /// errors are skipped. After populating, the parent
+        /// <see cref="TabContainer"/> tab title is updated to show
+        /// aggregate error and warning counts.
+        /// </summary>
         public void Populate(List<ModSceneInfo> mods)
         {
             Clear();

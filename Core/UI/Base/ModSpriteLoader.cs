@@ -12,6 +12,7 @@ namespace Cthangover.Core.UI.Base
     /// </summary>
     public partial class ModSpriteLoader : Node
 	{
+		/// <summary>Logical texture identifier resolved through <see cref="UITextureFactory"/>. Set in the Godot inspector.</summary>
 		[Export] public string TextureId { get; set; }
 
 		public override void _Ready()

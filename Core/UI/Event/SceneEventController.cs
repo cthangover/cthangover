@@ -26,8 +26,27 @@ namespace Cthangover.Core.UI.Event
         private List<IOnDialogStartEvent> OnDialogStartEventList = new();
         private List<IOnDialogEndEvent>   OnDialogEndEventList   = new();
         private List<IOnTimeEvent>        OnTimerTickEventList   = new();
+
+        /// <summary>
+        /// <c>true</c> after <see cref="_ExitTree"/> runs and <see cref="ClearData"/>
+        /// has been called. External code should check this before registering new
+        /// listeners on a dead controller.
+        /// </summary>
         public  bool                      IsDestroyed { get; private set; }
+
+        /// <summary>
+        /// Controls whether <c>_Process</c> dispatches events. When <c>false</c>,
+        /// the event pump continues running but all subscriber lists are paused.
+        /// Distinct from <see cref="IsActive"/> — use this for flow control.
+        /// </summary>
         public bool IsRunning { get; set; }
+
+        /// <summary>
+        /// Master enable/disable for event dispatch. When <c>false</c>,
+        /// <c>_Process</c> skips all subscriber lists entirely. Use during scene
+        /// transitions or loading screens to suppress UI events without
+        /// unregistering listeners.
+        /// </summary>
         public bool IsActive { get; set; } = true;
 
         private double timerAccum;
@@ -91,6 +110,13 @@ namespace Cthangover.Core.UI.Event
 			}
 		}
 
+        /// <summary>
+        /// Fires <see cref="IOnDialogStartEvent.OnDialogStart"/> on all registered
+        /// subscribers. Called by <see cref="DialogBox"/> when a dialog queue begins.
+        /// </summary>
+        /// <param name="dialog">The dialog queue that is starting.</param>
+        /// <param name="runtime">The dialog runtime state.</param>
+        /// <param name="executableEvent">The event that triggered this dialog.</param>
         public void StartDialog(DialogQueue dialog, DialogRuntime runtime, ExecutableEvent executableEvent)
         {
             for (int i = OnDialogStartEventList.Count - 1; i > -1; i--)
@@ -105,6 +131,13 @@ namespace Cthangover.Core.UI.Event
             }
         }
 
+        /// <summary>
+        /// Fires <see cref="IOnDialogEndEvent.OnDialogEnd"/> on all registered
+        /// subscribers. Called by <see cref="DialogBox"/> when a dialog queue finishes.
+        /// </summary>
+        /// <param name="dialog">The dialog queue that ended.</param>
+        /// <param name="runtime">The dialog runtime state at end.</param>
+        /// <param name="executableEvent">The event that triggered this dialog.</param>
         public void EndDialog(DialogQueue dialog, DialogRuntime runtime, ExecutableEvent executableEvent)
         {
             for (int i = OnDialogEndEventList.Count - 1; i > -1; i--)
@@ -120,16 +153,24 @@ namespace Cthangover.Core.UI.Event
         }
 
         #region Add
+        /// <summary>Registers an <see cref="IOnUpdateEvent"/> subscriber for per-frame updates.</summary>
         public void AddUpdateEventListener(IOnUpdateEvent listener) => AddListener(listener, OnUpdateEventList);
+        /// <summary>Registers a dialog-start subscriber notified when a dialog queue begins.</summary>
         public void AddDialogStartEventListener(IOnDialogStartEvent listener) => AddListener(listener, OnDialogStartEventList);
+        /// <summary>Registers a dialog-end subscriber notified when a dialog queue finishes.</summary>
         public void AddDialogEndEventListener(IOnDialogEndEvent listener) => AddListener(listener, OnDialogEndEventList);
+        /// <summary>Registers a timer-tick subscriber for ~1 second interval callbacks.</summary>
         public void AddTimerTickEventListener(IOnTimeEvent listener) => AddListener(listener, OnTimerTickEventList);
         #endregion
 
         #region Remove
+        /// <summary>Unregisters a per-frame update subscriber.</summary>
         public void RemoveUpdateEventListener(IOnUpdateEvent listener) => RemoveListener(listener, OnUpdateEventList);
+        /// <summary>Unregisters a dialog-start subscriber.</summary>
         public void RemoveDialogStartEventListener(IOnDialogStartEvent listener) => RemoveListener(listener, OnDialogStartEventList);
+        /// <summary>Unregisters a dialog-end subscriber.</summary>
         public void RemoveDialogEndEventListener(IOnDialogEndEvent listener) => RemoveListener(listener, OnDialogEndEventList);
+        /// <summary>Unregisters a timer-tick subscriber.</summary>
         public void RemoveTimerTickEventListener(IOnTimeEvent listener) => RemoveListener(listener, OnTimerTickEventList);
         #endregion
         
@@ -149,6 +190,10 @@ namespace Cthangover.Core.UI.Event
                 eventList.Sort((o1, o2) => o1.Priority - o2.Priority);
         }
 
+        /// <summary>
+        /// Empties all subscriber lists without calling callbacks. Called in
+        /// <see cref="_ExitTree"/> to cleanly detach all listeners.
+        /// </summary>
         public void ClearData()
         {
             OnUpdateEventList.Clear();

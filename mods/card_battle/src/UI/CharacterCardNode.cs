@@ -6,6 +6,15 @@ using Godot;
 
 namespace Cthangover.CardBattle.UI
 {
+    /// <summary>
+    /// UI node representing a single character (player or enemy) on the battle field.
+    /// Displays the character portrait, name, health bar, and stat labels (defence S, attack A, action points P).
+    /// Implements <see cref="ICard"/> for hit-testing during drag-and-drop targeting.
+    /// Supports team-colored outlines (blue for player, yellow for enemy), hover scale-up animation,
+    /// and multiple selection highlight modes (<see cref="Select"/>, <see cref="Attack"/>, <see cref="Invalid"/>)
+    /// driven by the <see cref="ICardActionStrategy"/> flow. Manages Z-index layering for selected,
+    /// hovered, and normal states.
+    /// </summary>
     public partial class CharacterCardNode : ModWidget, ICard
     {
         private ColorRect teamOutline;
@@ -28,20 +37,43 @@ namespace Cthangover.CardBattle.UI
         private static Texture2D cachedSelectTex;
         private static bool selectTexLoaded;
 
+        /// <summary>
+        /// Distinguishes player-owned cards from enemy cards. Affects team outline color in
+        /// <see cref="SetTeamColors"/> and determines whether the card is clickable in
+        /// <see cref="CardController.OnPointerClick"/>.
+        /// </summary>
         public bool IsPlayer { get; set; }
+        /// <summary>
+        /// Marks the card as dead. Set by <see cref="BattleCardPanel.Dead"/>, checked by
+        /// <see cref="CardBattleCore"/> when counting alive cards and by
+        /// <see cref="CardBattleCore.RunEnemyTurn"/> when iterating for enemy actions.
+        /// </summary>
         public bool IsDead { get; set; }
 
         private int _baseZIndex;
         private bool _selected;
         private Vector2 _baseScale;
 
+        /// <inheritdoc />
         public TextureRect Frame => frame;
+        /// <inheritdoc />
         public TextureRect Image => image;
+        /// <summary>
+        /// All <see cref="TextureRect"/> nodes on this card (frame, image, selection).
+        /// Consumed by <see cref="CardDeathAnimation"/> to apply the dissolve shader to every visual element.
+        /// </summary>
         public TextureRect[] AllImages => _allImages ??= new[] { frame, image, selection };
         private TextureRect[] _allImages;
 
+        /// <summary>
+        /// The <see cref="Character"/> data model backing this card. Contains attributes
+        /// (health, attack, defence, points) and the action deck.
+        /// </summary>
         public Character Card { get; set; }
 
+        /// <summary>
+        /// Returns <c>this</c> — character cards are self-contained <see cref="Control"/> nodes.
+        /// </summary>
         public Control GetControlNode() => this;
 
         protected override void Construct()
@@ -153,6 +185,11 @@ namespace Cthangover.CardBattle.UI
             MouseExited += OnMouseExited;
         }
 
+        /// <summary>
+        /// Initializes the card with the given <paramref name="characterCard"/> data, sets the
+        /// portrait and frame textures, resets selection visuals, and refreshes stat labels.
+        /// Called by <see cref="BattleCardPanel.Create"/>.
+        /// </summary>
         public void Init(Character characterCard)
         {
             Card = characterCard;
@@ -172,6 +209,10 @@ namespace Cthangover.CardBattle.UI
             UpdateInfo();
         }
 
+        /// <summary>
+        /// Applies a team-colored outline: blue for player cards (<see cref="IsPlayer"/> = <c>true</c>),
+        /// yellow for enemy cards. Called by <see cref="BattleCardPanel.Create"/> after initialization.
+        /// </summary>
         public void SetTeamColors()
         {
             if (teamOutline != null)
@@ -180,6 +221,11 @@ namespace Cthangover.CardBattle.UI
                     : new Color(1f, 0.8f, 0.1f, 0.5f);
         }
 
+        /// <summary>
+        /// Sets the base Z-index used for layering cards. When not selected, the card renders at
+        /// this Z-index. Selected cards jump to Z-index 4096 to render above all others.
+        /// Called by <see cref="BattleCardPanel.SetCardPosition"/> during layout.
+        /// </summary>
         public void SetBaseZIndex(int z)
         {
             _baseZIndex = z;
@@ -187,6 +233,12 @@ namespace Cthangover.CardBattle.UI
                 ZIndex = z;
         }
 
+        /// <summary>
+        /// Applies a green selection highlight, raises Z-index to 4096 to ensure the card
+        /// is clickable above other cards during drag-and-drop targeting, and animates
+        /// the selection overlay to green. Called when the player clicks a character card
+        /// or when a valid support/self target is dragged over.
+        /// </summary>
         public void Select()
         {
             _selected = true;
@@ -196,6 +248,10 @@ namespace Cthangover.CardBattle.UI
             ZIndex = 4096;
         }
 
+        /// <summary>
+        /// Clears the selection highlight, restores Z-index to <see cref="SetBaseZIndex"/> value,
+        /// and fades the selection overlay to transparent.
+        /// </summary>
         public void Unselect()
         {
             _selected = false;
@@ -205,6 +261,10 @@ namespace Cthangover.CardBattle.UI
             ZIndex = _baseZIndex;
         }
 
+        /// <summary>
+        /// Applies a red highlight indicating this card is being targeted for an attack.
+        /// Called by <see cref="ICardActionStrategy.HighlightTarget"/> during drag-over.
+        /// </summary>
         public void Attack()
         {
             selectionState = new Color(1, 0, 0, 1);
@@ -212,6 +272,11 @@ namespace Cthangover.CardBattle.UI
             if (selection != null) selection.ZIndex = 1;
         }
 
+        /// <summary>
+        /// Applies a gray dimming highlight indicating this card is an invalid target
+        /// for the currently dragged action card. Called by <see cref="CardController.OnDrag"/>
+        /// when the strategy's <c>Check</c> returns <c>false</c>.
+        /// </summary>
         public void Invalid()
         {
             selectionState = new Color(0.4f, 0.4f, 0.4f, 0.8f);
@@ -228,6 +293,11 @@ namespace Cthangover.CardBattle.UI
             selectionTween.TweenProperty(selection, "modulate", target, 0.15f);
         }
 
+        /// <summary>
+        /// Refreshes all displayed stats from the underlying <see cref="Character"/> data:
+        /// name, defence, attack, action points, and health bar width (based on health percent).
+        /// Called after every action execution and during initial setup.
+        /// </summary>
         public void UpdateInfo()
         {
             if (healthRect == null || Card == null) return;

@@ -7,8 +7,16 @@ namespace Cthangover.Core.UI.Executable
     /// </summary>
     public partial class IdentifiableEventObjectBehaviour : Godot.Node, IEventObject
     {
+        /// <summary>
+        /// Identifier for this event object. Set externally to allow the event
+        /// tracking system to locate and manage this instance.
+        /// </summary>
         public string ID { get; private set; }
 
+        /// <summary>
+        /// Signals cleanup by calling <c>QueueFree</c> to remove this node from
+        /// the scene tree and release resources.
+        /// </summary>
         public void Destruct()
         {
             QueueFree();

@@ -7,6 +7,15 @@ using Godot;
 
 namespace Cthangover.Core.UI.Tool.SceneBuilder
 {
+    /// <summary>
+    /// Controller for the scene builder tool. Loads Godot <c>.tscn</c> scenes into
+    /// a <see cref="SubViewport"/>, builds an interactive node hierarchy tree, and
+    /// executes user-supplied C# code via <see cref="ModCompiler"/>. The code is
+    /// wrapped in a template (selected from mod-provided wrappers) that replaces
+    /// <c>{{USER_CODE}}</c> with the user's input, then compiled at runtime and
+    /// invoked through a static <c>Run(Node root)</c> method. Scene list is sourced
+    /// from <see cref="Scenes.ModScenes.CollectTscnFiles"/>.
+    /// </summary>
     public class SceneBuilderController
     {
         private Node _loadedRoot;
@@ -15,11 +24,13 @@ namespace Cthangover.Core.UI.Tool.SceneBuilder
         private readonly Dictionary<TreeItem, Node> _itemToNode = new();
         private string _currentScenePath;
 
+        /// <summary>Returns all available <c>.tscn</c> scene files as (Name, Path) tuples.</summary>
         public List<(string Name, string Path)> GetSceneList()
         {
             return Scenes.ModScenes.CollectTscnFiles();
         }
 
+        /// <summary>Returns all code wrapper templates registered by mods, each with a display name and content.</summary>
         public List<(string DisplayName, string Content)> GetWrappers()
         {
             var result = new List<(string, string)>();
@@ -32,6 +43,11 @@ namespace Cthangover.Core.UI.Tool.SceneBuilder
             return result;
         }
 
+        /// <summary>
+        /// Loads a packed scene into <paramref name="viewport"/>, adds an orange
+        /// highlight <see cref="ColorRect"/> for node selection visual feedback,
+        /// and stores the instance as the current root.
+        /// </summary>
         public Node LoadScene(string path, SubViewport viewport)
         {
             UnloadScene();
@@ -56,6 +72,7 @@ namespace Cthangover.Core.UI.Tool.SceneBuilder
             return instance;
         }
 
+        /// <summary>Frees the currently loaded scene root and clears all node-item mappings.</summary>
         public void UnloadScene()
         {
             _nodeToItem.Clear();
@@ -71,6 +88,11 @@ namespace Cthangover.Core.UI.Tool.SceneBuilder
             _currentScenePath = null;
         }
 
+        /// <summary>
+        /// Recursively walks the loaded scene tree and populates the given
+        /// <see cref="Tree"/> control with nodes labelled <c>Name (Type)</c>.
+        /// Skips the internal highlight rect.
+        /// </summary>
         public void BuildHierarchy(Tree tree)
         {
             tree.Clear();
@@ -103,6 +125,12 @@ namespace Cthangover.Core.UI.Tool.SceneBuilder
             }
         }
 
+        /// <summary>
+        /// Highlights the selected node by positioning the highlight rect over it.
+        /// For <see cref="Control"/> nodes, uses <c>GetGlobalRect()</c>; for others,
+        /// approximates the position via parent chain traversal. Hides the highlight
+        /// if the root node itself is selected.
+        /// </summary>
         public void SelectNode(TreeItem item)
         {
             if (_highlight == null || item == null)
@@ -152,6 +180,7 @@ namespace Cthangover.Core.UI.Tool.SceneBuilder
             }
         }
 
+        /// <summary>Hides the node highlight overlay and resets its colour.</summary>
         public void HideHighlight()
         {
             if (_highlight != null)
@@ -159,6 +188,17 @@ namespace Cthangover.Core.UI.Tool.SceneBuilder
             _highlight.Color = new Color(1f, 0.7f, 0f, 0.35f);
         }
 
+        /// <summary>
+        /// Compiles and executes user code on the loaded scene. Substitutes
+        /// <c>{{USER_CODE}}</c> in the wrapper template, compiles with
+        /// <see cref="ModCompiler.CompileString"/>, then invokes the static
+        /// <c>Run(Node)</c> method of the resulting assembly's
+        /// <c>SceneBuilderScript</c> type. Returns error details on any
+        /// compilation or runtime failure.
+        /// </summary>
+        /// <param name="userCode">The C# code entered by the user.</param>
+        /// <param name="wrapperContent">The wrapper template containing <c>{{USER_CODE}}</c>.</param>
+        /// <returns>A tuple with <c>IsError</c> flag and a localised message.</returns>
         public (bool IsError, string Message) RunCode(string userCode, string wrapperContent)
         {
             if (_loadedRoot == null)

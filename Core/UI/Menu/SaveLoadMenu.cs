@@ -24,6 +24,9 @@ namespace Cthangover.Core.UI.Menu
         private const int SlotCount = 12;
         private List<SaveSlotInfo> _currentSlots;
 
+        /// <summary>
+        /// Emitted when the player clicks the back button to dismiss the save/load screen.
+        /// </summary>
         [Signal]
         public delegate void ClosedEventHandler();
 
@@ -39,6 +42,11 @@ namespace Cthangover.Core.UI.Menu
             Visible = false;
         }
 
+        /// <summary>
+        /// Opens the menu in load mode. Sets the title to the localized load label, shows the
+        /// panel, and defers <see cref="RefreshSlots"/> so the control gets its final size
+        /// before the grid layout calculates cell dimensions.
+        /// </summary>
         public void OpenForLoad()
         {
             _isLoadMode = true;
@@ -47,6 +55,9 @@ namespace Cthangover.Core.UI.Menu
             CallDeferred(nameof(RefreshSlots));
         }
 
+        /// <summary>
+        /// Opens the menu in save mode. Same deferred refresh strategy as <see cref="OpenForLoad"/>.
+        /// </summary>
         public void OpenForSave()
         {
             _isLoadMode = false;
@@ -55,6 +66,12 @@ namespace Cthangover.Core.UI.Menu
             CallDeferred(nameof(RefreshSlots));
         }
 
+        /// <summary>
+        /// Queries <see cref="SaveService.GetSaveSlots"/> for the configured number of slots
+        /// and passes the results to the <see cref="SaveSlotList"/> grid for rendering.
+        /// Called deferred from <see cref="OpenForLoad"/> and <see cref="OpenForSave"/> to
+        /// ensure the UI has received its final layout size.
+        /// </summary>
         public void RefreshSlots()
         {
             _currentSlots = SaveService.GetSaveSlots(SlotCount);

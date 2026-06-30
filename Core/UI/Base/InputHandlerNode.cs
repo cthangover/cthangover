@@ -14,6 +14,7 @@ namespace Cthangover.Core.UI
             OnInput(@event);
         }
 
+        /// <summary>Override in derived classes to receive Godot input events. Called by <see cref="_Input"/> which proxies from the engine.</summary>
         protected virtual void OnInput(InputEvent @event) { }
     }
 }

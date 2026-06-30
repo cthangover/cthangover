@@ -15,6 +15,13 @@ using Godot;
 
 namespace Cthangover.Core.Scenes
 {
+    /// <summary>
+    /// Central orchestrator for visual novel scene progression. Composes and schedules
+    /// executable events from C# attributes and .scenario files, applies scene defaults
+    /// (random background, ambient audio), and routes to native Godot scenes for menus
+    /// and battles. Manages the <see cref="ExecutableMainEventChain"/> queue and
+    /// coordinates with <see cref="SceneSubscriptionRegistry"/> for enter/exit hooks.
+    /// </summary>
     public partial class SceneManager : Node, IOnDialogEndEvent
     {
         private Dictionary<string, List<SceneDefinition>> allScenes;
@@ -25,14 +32,27 @@ namespace Cthangover.Core.Scenes
         private SceneEventController eventController;
         private DialogBox dialogBox;
 
+        /// <summary>
+        /// Gets the name of the currently active scene as tracked by this manager.
+        /// </summary>
         public string CurrentSceneName => currentSceneName;
 
+        /// <summary>
+        /// Statically retrieves the current scene name by locating the
+        /// <see cref="SceneManager"/> singleton via <see cref="SceneContextNode"/>.
+        /// Returns <c>null</c> if the manager has not been instantiated.
+        /// </summary>
         public static string GetCurrentSceneName()
         {
             var instance = SceneContextNode.FindNode<SceneManager>("SceneManager");
             return instance?.CurrentSceneName;
         }
 
+        /// <summary>
+        /// Checks whether saving is permitted in the currently active scene by inspecting
+        /// all <see cref="ScenarioDefinition"/> entries associated with it. Returns
+        /// <c>true</c> if any scenario for the scene has <c>SaveAllowed</c> enabled.
+        /// </summary>
         public static bool IsSaveAllowedForCurrentScene()
         {
             var instance = SceneContextNode.FindNode<SceneManager>("SceneManager");
@@ -71,9 +91,23 @@ namespace Cthangover.Core.Scenes
             GameLogger.Log("SCENE", $"SwitchScene: filtered {runtime.LoadedCompletedScenarioIds.Count} completed scenario(s), {composedEvents.Count} remaining");
         }
 
+        /// <summary>
+        /// Gets or sets the name of a scene queued for deferred transition, used when a
+        /// scene switch must be delayed (e.g. awaiting dialog completion).
+        /// </summary>
         public string PendingSceneName { get; set; }
 
+        /// <summary>
+        /// Gets or sets whether test-play mode is active. When enabled,
+        /// <see cref="SwitchScene"/> redirects non-menu targets to the main menu unless
+        /// <see cref="TestScenarioText"/> is populated.
+        /// </summary>
         public static bool IsTestPlayActive { get; set; }
+
+        /// <summary>
+        /// Gets or sets the scenario text to execute in test-play mode. Once consumed
+        /// by <see cref="ComposeEvents"/>, it is cleared.
+        /// </summary>
         public static string TestScenarioText { get; set; }
 
         public override void _Ready()
@@ -83,6 +117,11 @@ namespace Cthangover.Core.Scenes
             ec?.AddDialogEndEventListener(this);
         }
 
+        /// <summary>
+        /// Initializes the <see cref="ModManager"/>, <see cref="SceneEventRegistry"/>,
+        /// and collects scene definitions from all loaded mods. Safe to call
+        /// multiple times; subsequent calls are no-ops.
+        /// </summary>
         public void Initialize()
         {
             if (isInitialized)
@@ -107,7 +146,20 @@ namespace Cthangover.Core.Scenes
             }
         }
 
-		public void SwitchScene(string sceneName)
+        /// <summary>
+        /// Core scene-switching pipeline. Clears static lights, resolves node references,
+        /// freezes UI activity, then composes and sorts executable events for the target
+        /// scene. Events come from C# classes registered via <see cref="SceneEventRegistry"/>
+        /// and from .scenario files in mods. Conditions are evaluated via
+        /// <see cref="ScenarioCondition.Evaluate"/>, valid events are instantiated and
+        /// enqueued in the <see cref="ExecutableMainEventChain"/>. If no events exist,
+        /// falls back to the scene's <see cref="SceneDefinition.DefaultScenario"/>.
+        /// Godot-native scenes (mainmenu, battle) are routed through <see cref="GodotSceneService"/>.
+        /// Runs enter/exit subscriptions from <see cref="SceneSubscriptionRegistry"/>,
+        /// applies a random default background, and updates music/ambient.
+        /// </summary>
+        /// <param name="sceneName">The identifier of the target scene.</param>
+        public void SwitchScene(string sceneName)
 		{
 			GameLogger.Log("SCENE", $"SwitchScene: ENTER sceneName='{sceneName}', currentSceneName='{currentSceneName}'");
 			if (!isInitialized)

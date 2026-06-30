@@ -6,8 +6,18 @@ using Godot;
 
 namespace Cthangover.Core.UI.Tool.LightEditor
 {
+    /// <summary>
+    /// Data controller for the light editor tool. Maintains a list of
+    /// <see cref="LightDef"/> objects and feeds up to 10 lights plus one
+    /// sentinel entry into the <c>"timed_sprite"</c> shader material for
+    /// real-time preview. Exports lights as JSON (<see cref="ExportLightsJson"/>)
+    /// or as a scenario DSL snippet (<see cref="ExportScenarioSnippet"/>).
+    /// Uses a dirty-flag pattern so shader uniform updates only occur when
+    /// the light list changes.
+    /// </summary>
 	public class LightEditorController
 	{
+        /// <summary>The editable list of light definitions. Capped at 10 for shader preview.</summary>
 		public List<LightDef> Lights { get; } = new();
 
 		private readonly Vector2[] previewPositions = new Vector2[11];
@@ -17,7 +27,8 @@ namespace Cthangover.Core.UI.Tool.LightEditor
 
 		private bool dirty = true;
 
-		public LightEditorController()
+        /// <summary>Initialises preview arrays with out-of-bounds sentinel values.</summary>
+        public LightEditorController()
 		{
 			for (int i = 0; i < 11; i++)
 			{
@@ -28,7 +39,11 @@ namespace Cthangover.Core.UI.Tool.LightEditor
 			}
 		}
 
-		public ShaderMaterial CreatePreviewMaterial()
+        /// <summary>
+        /// Creates a <see cref="ShaderMaterial"/> using the <c>"timed_sprite"</c> shader
+        /// with night-time weights applied. Returns <c>null</c> if the shader is not found.
+        /// </summary>
+        public ShaderMaterial CreatePreviewMaterial()
 		{
 			var shader = ModManager.Instance.ResolveShader("timed_sprite");
 			if (shader == null)
@@ -41,31 +56,36 @@ namespace Cthangover.Core.UI.Tool.LightEditor
 			return mat;
 		}
 
-		public void SetBackgroundForPreview(Texture2D texture, ShaderMaterial material)
+        /// <summary>Sets the background texture uniform on the preview shader material.</summary>
+        public void SetBackgroundForPreview(Texture2D texture, ShaderMaterial material)
 		{
 			if (material != null)
 				material.SetShaderParameter("background_map", texture);
 		}
 
+        /// <summary>Sets the depth mask texture uniform on the preview shader material.</summary>
 		public void SetDepthForPreview(Texture2D texture, ShaderMaterial material)
 		{
 			if (material != null)
 				material.SetShaderParameter("depth_mask", texture);
 		}
 
+        /// <summary>Sets the albedo texture uniform on the preview shader material.</summary>
 		public void SetAlbedoForPreview(Texture2D texture, ShaderMaterial material)
 		{
 			if (material != null)
 				material.SetShaderParameter("albedo_map", texture);
 		}
 
-		public void AddLight(LightDef light)
+        /// <summary>Appends a <see cref="LightDef"/> to the list and marks the preview dirty.</summary>
+        public void AddLight(LightDef light)
 		{
 			Lights.Add(light);
 			dirty = true;
 		}
 
-		public void RemoveLight(int index)
+        /// <summary>Removes the light at <paramref name="index"/>. No-op if out of range.</summary>
+        public void RemoveLight(int index)
 		{
 			if (index < 0 || index >= Lights.Count)
 				return;
@@ -73,18 +93,25 @@ namespace Cthangover.Core.UI.Tool.LightEditor
 			dirty = true;
 		}
 
-		public void Clear()
+        /// <summary>Removes all lights from the list and marks dirty.</summary>
+        public void Clear()
 		{
 			Lights.Clear();
 			dirty = true;
 		}
 
-		public void MarkDirty()
+        /// <summary>Forces the preview to be recalculated on the next <see cref="UpdatePreview"/> call.</summary>
+        public void MarkDirty()
 		{
 			dirty = true;
 		}
 
-		public void UpdatePreview(ShaderMaterial material, Vector2 previewGlobalPos, Vector2 previewSize)
+        /// <summary>
+        /// Packs up to 10 lights plus a sentinel into shader uniform arrays.
+        /// Only executes if <c>dirty</c> is <c>true</c>. Converts each light's
+        /// normalised position to pixel coordinates relative to the preview area.
+        /// </summary>
+        public void UpdatePreview(ShaderMaterial material, Vector2 previewGlobalPos, Vector2 previewSize)
 		{
 			if (material == null || !dirty)
 				return;
@@ -131,13 +158,15 @@ namespace Cthangover.Core.UI.Tool.LightEditor
 			dirty = false;
 		}
 
-		public string ExportLightsJson()
+        /// <summary>Serialises the light list as a compact JSON string.</summary>
+        public string ExportLightsJson()
 		{
 			var options = new JsonSerializerOptions { WriteIndented = false };
 			return JsonSerializer.Serialize(Lights, options);
 		}
 
-		public string ExportScenarioSnippet()
+        /// <summary>Produces a <c>light_set</c> scenario DSL command with the lights JSON as its argument.</summary>
+        public string ExportScenarioSnippet()
 		{
 			var json = ExportLightsJson();
 			return $"light_set \"{json.Replace("\"", "\\\"")}\"";

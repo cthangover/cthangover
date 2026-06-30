@@ -5,6 +5,13 @@ using Godot;
 
 namespace Cthangover.CardBattle.UI
 {
+    /// <summary>
+    /// Plays a death animation on a <see cref="CharacterCardNode"/> when its health reaches zero.
+    /// The card simultaneously fades out, shrinks toward the screen center, spins 360 degrees,
+    /// and applies a dissolve shader to all its <see cref="CharacterCardNode.AllImages"/> textures.
+    /// The dissolve shader (<c>"scene_transition"</c>) is resolved once via <see cref="ModManager"/>
+    /// and cached statically. Created and started by <see cref="BattleCardPanel.Dead"/>.
+    /// </summary>
     public partial class CardDeathAnimation : Node
     {
         private CharacterCardNode card;
@@ -13,6 +20,12 @@ namespace Cthangover.CardBattle.UI
 
         private static Shader dissolveShader;
 
+        /// <summary>
+        /// Begins the death animation sequence. Calculates a target position at the viewport center
+        /// (relative to the card's parent), starts fading all child <see cref="Label"/> nodes,
+        /// applies the dissolve shader material to all card images, and tweens position/rotation/alpha.
+        /// On completion, invokes <paramref name="onComplete"/> and frees this node.
+        /// </summary>
         public void StartAnimation(CharacterCardNode card, Action onComplete)
         {
             this.card = card;

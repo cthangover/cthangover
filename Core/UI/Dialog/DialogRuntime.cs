@@ -30,28 +30,38 @@ namespace Cthangover.Core.UI.Dialog
         private bool                        isLastGoTo;
         private IDictionary<string, string> variables = new Dictionary<string, string>();
 
+        /// <summary>The dialog box instance this runtime drives. Set when a new queue is loaded.</summary>
         public DialogBox   DialogBox { get; private set; }
+        /// <summary>The currently active dialog queue. Set by <see cref="SetDialogQueueAndRun"/>.</summary>
         public DialogQueue Dialog    { get; set; }
 
-		public IActionCommand CurrentAction => GetByIndex(index);
+        /// <summary>The action at the current queue index. Automatically constructs it if <see cref="ConstructType"/> is OnStartAction and it hasn't been constructed yet.</summary>
+        public IActionCommand CurrentAction => GetByIndex(index);
 
+        /// <summary>True when the current action is waiting for a player choice (<see cref="WaitType.WaitSelect"/>).</summary>
         public bool IsWaitAnswer => IsWaitType(WaitType.WaitSelect);
+        /// <summary>True when the current action is waiting for a timer (<see cref="WaitType.WaitTime"/>).</summary>
         public bool IsWaitTime   => IsWaitType(WaitType.WaitTime);
+        /// <summary>True when the current action is waiting for an external event (<see cref="WaitType.WaitEvent"/>).</summary>
         public bool IsWaitEvent  => IsWaitType(WaitType.WaitEvent);
 
+        /// <summary>True when the dialog queue is exhausted (index past end or queue is empty).</summary>
         public bool IsEnd => Lists.IsEmpty(dialogQueue) || index >= dialogQueue.Count;
 
+        /// <summary>Retrieves a stored variable value by name. Returns null if not set.</summary>
         public string GetVariable(string name)
         {
             variables.TryGetValue(name, out var val);
             return val;
         }
 
+        /// <summary>Stores a variable for later substitution via ${name} syntax. Overwrites existing values.</summary>
         public void SetVariable(string name, string value)
         {
             variables[name] = value;
         }
 
+        /// <summary>Scans <paramref name="text"/> for ${key} patterns and replaces them with stored variable values. Unresolved keys become "?".</summary>
         public string ProcessText(string text)
         {
             if (string.IsNullOrWhiteSpace(text))
@@ -91,6 +101,11 @@ namespace Cthangover.Core.UI.Dialog
             return action;
         }
 
+        /// <summary>
+        /// Loads a new dialog queue and prepares for execution. Resets variables, sets the dialog box reference,
+        /// ends any previous queue (destructing its actions), copies the new queue, and constructs OnStartQueue actions.
+        /// Note: does NOT call Run() — the caller must call Run() separately.
+        /// </summary>
         public void SetDialogQueueAndRun(DialogBox dialogBox,
                                          IEnumerable<IActionCommand> queue,
                                          IEnumerable<IActionCommand> endQueue,
@@ -111,6 +126,11 @@ namespace Cthangover.Core.UI.Dialog
                     action.Construct();
         }
 
+        /// <summary>
+        /// Searches the queue linearly for an action with ID == <paramref name="actionID"/> and jumps the index there.
+        /// Destructs the source action before jumping. If not found, calls <see cref="End"/>.
+        /// <paramref name="lastGoTo"/> prevents the runtime from auto-advancing past the target when the GoTo is the last action in its branch.
+        /// </summary>
         public void TryGoTo(string actionID, bool lastGoTo = false)
         {
             goToActionIndex = index;
@@ -137,6 +157,12 @@ namespace Cthangover.Core.UI.Dialog
             End();
         }
 
+        /// <summary>
+        /// Main execution loop. Iterates through actions, calling <see cref="IActionCommand.Run"/> on each and advancing
+        /// automatically for <see cref="WaitType.NoWait"/> actions. Stops the loop on any wait-type action (WaitClick, WaitSelect,
+        /// WaitTime, WaitEvent) so the runtime yields control until the condition is satisfied. Protected against infinite loops
+        /// with a 100,000-iteration cap.
+        /// </summary>
         public void Run()
         {
             var iteration = 0;
@@ -177,6 +203,11 @@ namespace Cthangover.Core.UI.Dialog
             }
         }
 
+        /// <summary>
+        /// Advances the queue index by one. Destructs the current action if its <see cref="DestructType"/> is OnEndAction.
+        /// Processes any delayed-destruct targets registered by the current action. Calls <see cref="End"/> if the queue is exhausted.
+        /// Respects <see cref="isLastGoTo"/> — if a GoTo was the final action, the index is not incremented.
+        /// </summary>
         public void Next()
         {
             if (isLastGoTo)
@@ -204,6 +235,11 @@ namespace Cthangover.Core.UI.Dialog
             index++;
         }
 
+        /// <summary>
+        /// Terminates the dialog queue. Destructs all remaining constructed actions, hides the dialog box, processes the
+        /// end-dialog cleanup queue (if any), and raises the dialog-end event via <see cref="SceneEventController"/>.
+        /// Guards against end-queue actions starting a new dialog mid-cleanup by checking if the queue changed.
+        /// </summary>
         public void End()
         {
             GameLogger.Log("DIALOG", $"End: {dialogQueue?.Count ?? 0} actions in queue, {(endDialogQueue?.Count ?? 0)} end actions");

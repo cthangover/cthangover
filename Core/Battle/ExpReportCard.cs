@@ -27,7 +27,12 @@ namespace Cthangover.Core.Battle
 			expLabel ??= GetNodeOrNull<Label>("Panel/ExpLabel");
 		}
 
-		public void Setup(Texture2D characterIcon, string characterName, int exp)
+        /// <summary>
+        /// Populates the card with a character icon, localised name, and
+        /// "+N" EXP value. Calls <c>ResolveMissingNodes</c> to tolerate
+        /// incomplete scene wiring in the editor.
+        /// </summary>
+        public void Setup(Texture2D characterIcon, string characterName, int exp)
 		{
 			ResolveMissingNodes();
 

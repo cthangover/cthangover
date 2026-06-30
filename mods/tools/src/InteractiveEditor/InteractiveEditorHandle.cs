@@ -11,15 +11,20 @@ namespace Cthangover.Tools.InteractiveEditor
 	/// </summary>
 	public partial class InteractiveEditorHandle : ColorRect
 	{
+        /// <summary>Index of the vertex this handle represents (0-based).</summary>
 		public int VertexIndex;
-		public System.Action<Vector2> DragUpdate;
-		public System.Action Clicked;
-		public System.Action DragEnd;
+        /// <summary>Invoked during drag with the centre position of the handle in global coordinates.</summary>
+        public System.Action<Vector2> DragUpdate;
+        /// <summary>Invoked when the handle is clicked (mouse down).</summary>
+        public System.Action Clicked;
+        /// <summary>Invoked when the drag ends (mouse up). Used to sync sidebar values.</summary>
+        public System.Action DragEnd;
 
 		private bool _dragging;
 		private Vector2 _dragOffset;
 
-		public InteractiveEditorHandle(Color color, int index)
+        /// <summary>Creates a handle with the given colour, size 16×16, and index for vertex identification.</summary>
+        public InteractiveEditorHandle(Color color, int index)
 		{
 			VertexIndex = index;
 			Size = new Vector2(16, 16);

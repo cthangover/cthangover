@@ -2,31 +2,67 @@ using Godot;
 
 namespace Cthangover.Core.Settings
 {
+    /// <summary>
+    /// User-facing settings that persist across sessions via Godot's
+    /// <c>ConfigFile</c> API (INI-like format at <c>user://settings.cfg</c>).
+    /// Covers audio toggles/volumes, language, battle speed, display mode
+    /// (window mode, resolution, monitor, vsync, scale), and launcher state.
+    /// On construction, defaults are pulled from <see cref="GameConfig.Instance"/>
+    /// so the static JSON config acts as the baseline; <see cref="Load"/>
+    /// overwrites these with the user's saved overrides, and <see cref="Save"/>
+    /// flushes the current values back to disk.
+    /// </summary>
     public class SettingsData
     {
         private const string ConfigPath = "user://settings.cfg";
 
+        /// <summary>SFX master toggle.</summary>
         public bool   SoundsEnabled   { get; set; }
+        /// <summary>Music master toggle.</summary>
         public bool   MusicsEnabled   { get; set; }
+        /// <summary>Ambient audio master toggle.</summary>
         public bool   AmbientEnabled  { get; set; }
+        /// <summary>SFX volume 0–100.</summary>
         public int    SoundsVolume    { get; set; }
+        /// <summary>Music volume 0–100.</summary>
         public int    MusicsVolume    { get; set; }
+        /// <summary>Ambient volume 0–100.</summary>
         public int    AmbientVolume   { get; set; }
+        /// <summary>Locale code string (e.g. "ru-ru").</summary>
         public string Language        { get; set; }
+        /// <summary>Battle animation speed multiplier (1 = normal).</summary>
         public int    BattleSpeed     { get; set; }
+        /// <summary>Godot <c>DisplayServer.WindowMode</c> value.</summary>
         public int    WindowMode      { get; set; }
+        /// <summary>Horizontal resolution override (pixels).</summary>
         public int    ResolutionWidth  { get; set; }
+        /// <summary>Vertical resolution override (pixels).</summary>
         public int    ResolutionHeight { get; set; }
+        /// <summary>Zero-based monitor index.</summary>
         public int    CurrentScreen   { get; set; }
+        /// <summary>Vertical synchronization toggle.</summary>
         public bool   VsyncEnabled    { get; set; }
+        /// <summary>Viewport stretch multiplier.</summary>
         public int    Scale           { get; set; }
+        /// <summary><c>true</c> if the launcher window has been shown at least once,
+        /// suppressing it on subsequent launches.</summary>
         public bool   LauncherShown   { get; set; }
 
+        /// <summary>
+        /// Initialises all properties from <see cref="GameConfig.Instance"/>
+        /// defaults (audio, display, language) and hard-coded fallbacks for
+        /// settings that have no JSON counterpart (battle speed = 1).
+        /// </summary>
         public SettingsData()
         {
             ApplyDefaults();
         }
 
+        /// <summary>
+        /// Resets every property to the factory defaults read from
+        /// <see cref="GameConfig.Instance"/>. Called during construction
+        /// and can be re-invoked to discard user overrides.
+        /// </summary>
         public void ApplyDefaults()
         {
             var cfg = GameConfig.Instance;
@@ -46,6 +82,13 @@ namespace Cthangover.Core.Settings
             Scale           = cfg.Display.Scale;
         }
 
+        /// <summary>
+        /// Reads <c>user://settings.cfg</c> via Godot's <c>ConfigFile</c> API.
+        /// Each value is read with a fallback default (the current property
+        /// value), so missing keys leave the in-memory defaults intact.
+        /// If the config file does not exist (<c>Error.Ok</c> is not returned),
+        /// the method returns silently without changing anything.
+        /// </summary>
         public void Load()
         {
             var config = new ConfigFile();
@@ -69,6 +112,11 @@ namespace Cthangover.Core.Settings
             LauncherShown   = (bool)config.GetValue("launcher", "shown", LauncherShown);
         }
 
+        /// <summary>
+        /// Writes all current property values to <c>user://settings.cfg</c>
+        /// via Godot's <c>ConfigFile</c> API. The file is atomically
+        /// replaced (truncated and rewritten) on each call.
+        /// </summary>
         public void Save()
         {
             var config = new ConfigFile();
@@ -90,6 +138,12 @@ namespace Cthangover.Core.Settings
             config.Save(ConfigPath);
         }
 
+        /// <summary>
+        /// Bulk-copies all property values from another
+        /// <see cref="SettingsData"/> instance. Used to apply preset
+        /// configurations (e.g. from a settings dialog) before saving.
+        /// Note: <see cref="LauncherShown"/> is intentionally NOT copied.
+        /// </summary>
         public void Set(SettingsData other)
         {
             SoundsEnabled = other.SoundsEnabled;

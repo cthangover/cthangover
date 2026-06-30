@@ -9,8 +9,11 @@ namespace Cthangover.Core.UI.Dialog.Action
     /// </summary>
     public enum DestructType
     {
+        /// <summary>Destruct immediately when the action is advanced past. Default for most commands.</summary>
         OnEndAction,
+        /// <summary>Destruct is deferred — must be manually triggered or triggered via <see cref="ActionCommand.DelayedDestruct"/>.</summary>
         OnDelayed,
+        /// <summary>Destruct when the entire dialog queue finishes. Use for resources that must survive the whole dialog but not beyond.</summary>
         OnEndQueue,
     }
 

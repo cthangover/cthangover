@@ -26,7 +26,9 @@ namespace Cthangover.Core.UI.Animation
         [Export] private float speed = 1f;
         [Export] private float nextFrameSpeed = 0.2f;
 
+        /// <summary>Fires when the current frame transition completes and the next frame texture is assigned.</summary>
         public event Action NextFrame;
+        /// <summary>Fires when the animation wraps around (looping) or reaches the final frame (non-looping).</summary>
         public event Action NextCycle;
 
         [Export] private Color clearColor = new(1f, 1f, 1f, 0f);
@@ -39,13 +41,19 @@ namespace Cthangover.Core.UI.Animation
         private float waitPercent;
         private bool isStarted;
 
+        /// <summary>When true, the animation wraps from the last frame back to the first. When false, playback stops at the final frame.</summary>
         public bool IsLoop { get => isLoop; set => isLoop = value; }
+        /// <summary>Crossfade speed multiplier between frames. Higher values produce faster transitions.</summary>
         public float Speed { get => speed; set => speed = value; }
+        /// <summary>Hold duration multiplier for the "wait" phase after a frame transition completes.</summary>
         public float NextFrameSpeed { get => nextFrameSpeed; set => nextFrameSpeed = value; }
+        /// <summary>Whether playback is currently active. False on startup and after <see cref="Pause"/> or <see cref="Clear"/>.</summary>
         public bool IsStarted => isStarted;
         
+        /// <summary>Ordered list of textures to cycle through. Set externally before calling <see cref="Play"/>.</summary>
         public List<Texture2D> FrameSet { get; set; }
 
+        /// <summary>Resets to idle state: stops playback, clears frame set, and blanks both texture nodes to transparent.</summary>
         public void Clear()
         {
             isStarted = false;
@@ -56,11 +64,13 @@ namespace Cthangover.Core.UI.Animation
             next.Modulate = Colors.Transparent;
         }
 
+        /// <summary>Stops playback without clearing textures, freezing on the current frame.</summary>
         public void Pause()
         {
             isStarted = false;
         }
 
+        /// <summary>Starts or restarts playback from the first frame in <see cref="FrameSet"/>.</summary>
         public void Play()
         {
             currentFrame = 0;
@@ -72,7 +82,9 @@ namespace Cthangover.Core.UI.Animation
             next.Texture = FrameSet[currentFrame];
         }
         
+        /// <summary>Update priority. Lower numbers run earlier in the frame. Default 1.</summary>
         public int Priority => 1;
+        /// <summary>Advances the crossfade each frame. Handles both the transition phase (lerping modulate) and the wait phase (holding the next frame visible).</summary>
         public void OnUpdate()
         {
             if(!isStarted)

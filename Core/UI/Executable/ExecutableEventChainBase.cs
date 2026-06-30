@@ -19,17 +19,30 @@ namespace Cthangover.Core.UI.Executable
         
         protected DialogBox dialogBox;
 
+        /// <summary>
+        /// Controls whether the chain is actively polling. Setting to <c>false</c>
+        /// pauses event dispatch; setting to <c>true</c> resumes.
+        /// </summary>
         public bool IsActive
         {
             get => isActive;
             set { isActive = value; }
         }
-        
+
+        /// <summary>
+        /// Pauses the chain. No further events will be dispatched until
+        /// <see cref="Play"/> is called.
+        /// </summary>
         public void Stop()
         {
             IsActive = false;
         }
 
+        /// <summary>
+        /// Activates the chain and immediately attempts to run the next event
+        /// returned by <see cref="GetNext"/>. If no event is available, the
+        /// chain deactivates itself.
+        /// </summary>
         public void Play()
         {
             IsActive = true;

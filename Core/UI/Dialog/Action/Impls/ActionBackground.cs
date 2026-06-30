@@ -19,12 +19,18 @@ namespace Cthangover.Core.UI.Dialog.Action.Impls
     /// </summary>
     public class ActionBackground : ActionCommand
     {
+        /// <summary>Sprite resource ID resolved through <see cref="BackgroundFactory"/> on construction. Also loads depth (_depth) and albedo (_albedo) variants.</summary>
         public string SpriteID { get; set; }
+        /// <summary>Direct texture override. When non-null, bypasses factory resolution. Set to null after application to prevent stale reuse.</summary>
         public Texture2D Texture { get; set; }
+        /// <summary>Depth map for the lighting system, loaded from <see cref="SpriteID"/> + "_depth".</summary>
         public Texture2D DepthTexture { get; set; }
+        /// <summary>Albedo color map for the lighting system, loaded from <see cref="SpriteID"/> + "_albedo".</summary>
         public Texture2D AlbedoTexture { get; set; }
 
+        /// <summary>Preloads textures when the dialog queue is first created, resolving SpriteID through the factory.</summary>
         public override ConstructType ConstructType { get; set; } = ConstructType.OnStartQueue;
+        /// <summary>Background is set imperatively — the dialog continues immediately.</summary>
         public override WaitType WaitType { get; set; } = WaitType.NoWait;
 
         public override void DoConstruct()

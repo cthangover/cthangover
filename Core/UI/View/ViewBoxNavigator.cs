@@ -12,6 +12,16 @@ namespace Cthangover.Core.UI.View
     public static class ViewBoxNavigator
     {
 
+        /// <summary>
+        /// Calculates the content node position offset for the given 9-point <see cref="AlignType"/>.
+        /// Uses the visible viewport rect size as the camera area and computes offsets relative
+        /// to the top-left corner. Negative X coordinates are intentional: Godot positions content
+        /// relative to the container origin, so aligning center or right requires negative offsets
+        /// when content is larger than the viewport.
+        /// </summary>
+        /// <param name="align">The target alignment from the 9-point grid.</param>
+        /// <param name="contentSize">The size of the content node being positioned.</param>
+        /// <returns>A position offset that places the content correctly for the chosen alignment.</returns>
         public static Vector2 GetPositionByAlign(AlignType align, Vector2 contentSize)
         {
             var viewport = Godot.Engine.GetMainLoop() as SceneTree;

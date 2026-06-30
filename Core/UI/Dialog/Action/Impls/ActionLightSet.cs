@@ -12,9 +12,11 @@ namespace Cthangover.Core.UI.Dialog.Action.Impls
     /// </summary>
 	public class ActionLightSet : ActionCommand
 	{
-		public string LightsJson { get; set; }
+        /// <summary>JSON string defining static light positions and properties. Empty or null clears all static lights.</summary>
+        public string LightsJson { get; set; }
 
-		public override WaitType WaitType { get; set; } = WaitType.NoWait;
+        /// <summary>Lights are set imperatively — the dialog continues immediately.</summary>
+        public override WaitType WaitType { get; set; } = WaitType.NoWait;
 
 		public override void DoRun(DialogRuntime runtime)
 		{

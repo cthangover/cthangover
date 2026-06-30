@@ -23,21 +23,54 @@ namespace Cthangover.Core.UI.Executable
     {
         private static readonly Dictionary<string, string> CustomMappings = new();
 
+        /// <summary>
+        /// Registers a custom mapping from a class name to a scenario file path.
+        /// Use from mod initialization code for mod-provided scenario paths that
+        /// deviate from the default naming convention.
+        /// </summary>
+        /// <param name="className">The C# class name (without namespace).</param>
+        /// <param name="scenarioPath">The resource path to the .scenario file.</param>
         public static void RegisterScenario(string className, string scenarioPath)
         {
             CustomMappings[className] = scenarioPath;
         }
 
+        /// <summary>
+        /// Explicit resource path to a scenario file. When set, overrides the
+        /// default path resolution in <see cref="ResolveScenarioPath"/>.
+        /// </summary>
         [Export] public string ScenarioPath { get; set; }
 
+        /// <summary>
+        /// Inline scenario text. If non-empty, parsed by <see cref="ScenarioConverter"/>
+        /// instead of loading from a file. Enables embedding small scenarios directly
+        /// in code or scene data.
+        /// </summary>
         public string ScenarioText { get; set; }
 
+        /// <summary>
+        /// A condition expression evaluated by <see cref="ScenarioCondition.Evaluate"/>.
+        /// If empty, the event always passes condition checks.
+        /// </summary>
         public string Condition { get; set; }
 
+        /// <summary>
+        /// Stable identifier for save/load tracking. If set, becomes the value of
+        /// <see cref="ExecutableEvent.ID"/> instead of the type name.
+        /// </summary>
         public string ScenarioId { get; set; }
 
+        /// <summary>
+        /// Overrides the time-of-day lighting flag for this event's dialog.
+        /// <c>true</c> enables time blending, <c>false</c> disables it,
+        /// <c>null</c> leaves the current setting unchanged.
+        /// </summary>
         public bool? LightUseTime { get; set; }
 
+        /// <summary>
+        /// Returns <see cref="ScenarioId"/> if set; otherwise falls back to the
+        /// full type name from <see cref="ExecutableEvent.ID"/>.
+        /// </summary>
         public override string ID => ScenarioId ?? base.ID;
 
         protected override void CreateDialog(DialogQueue dlg)

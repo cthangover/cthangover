@@ -7,8 +7,20 @@ using Godot;
 
 namespace Cthangover.CardBattle.Actions
 {
+    /// <summary>
+    /// Animated battle action that moves the source card toward an enemy target, applies damage/defence
+    /// via <see cref="ActionExecutorHub"/>, and animates the target's knockback/squash reaction.
+    /// The source card follows one of five randomly-selected <see cref="MovementPattern"/> trajectories
+    /// (direct, arc, zigzag, spiral, dash). This is the visual counterpart of <see cref="PhysicsDamageActionCard"/>
+    /// — it handles the presentation while the executor handles the stat changes.
+    /// Created by <see cref="CardBattleCore.CreateAnimatedAction"/> for enemy turns.
+    /// </summary>
     public class PhysicsAttackAction : AbstractBattleAction
     {
+        /// <summary>
+        /// Pre-defined movement trajectory patterns for the source card's approach to the target.
+        /// Selected randomly at construction to add visual variety to enemy attack animations.
+        /// </summary>
         public enum MovementPattern
         {
             Direct,
@@ -43,6 +55,12 @@ namespace Cthangover.CardBattle.Actions
         private MovementPattern movementPattern = MovementPattern.Direct;
         private Vector2 movementControlPoint;
 
+        /// <summary>
+        /// Creates an attack animation from <paramref name="source"/> to <paramref name="target"/>
+        /// using the stats defined in <paramref name="action"/>. The <see cref="MovementPattern"/> is
+        /// randomly selected on construction to make enemy attacks visually distinct.
+        /// <paramref name="speed"/> acts as a multiplier on all phase durations.
+        /// </summary>
         public PhysicsAttackAction(CharacterCardNode source, CharacterCardNode target, ActionCharacter action, float speed = 1)
             : base(source, target, action, speed)
         {

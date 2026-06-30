@@ -8,6 +8,7 @@ namespace Cthangover.Core.UI.Dialog.Action.Impls
     /// </summary>
     public class ActionMusicPlay : ActionCommand
     {
+        /// <summary>Resume is instant — the dialog continues without waiting for audio.</summary>
         public override WaitType WaitType { get; set; } = WaitType.NoWait;
 
         public override void DoRun(DialogRuntime runtime)

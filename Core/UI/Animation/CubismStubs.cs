@@ -9,6 +9,7 @@ namespace Live2D.Cubism.Core
     /// </summary>
     public partial class CubismModel : Node
     {
+        /// <summary>No-op placeholder matching the Cubism SDK signature. Called to force parameter updates before rendering.</summary>
         public void ForceUpdateNow()
         {
         }

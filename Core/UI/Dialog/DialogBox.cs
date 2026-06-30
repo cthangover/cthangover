@@ -63,12 +63,17 @@ namespace Cthangover.Core.UI.Dialog
 			}
 		}
 
-		public ExecutableEvent Locker { get; set; }
-		public DialogRuntime Runtime { get; } = new();
-		public bool IsAnswerBoxShowed => answerBox != null;
-		public bool IsActive { get; set; } = true;
+        /// <summary>Mutable lock object that prevents concurrent dialogs. Set when a queue starts, cleared when the dialog ends.</summary>
+        public ExecutableEvent Locker { get; set; }
+        /// <summary>The execution engine. Created once at construction and reused for all dialog queues.</summary>
+        public DialogRuntime Runtime { get; } = new();
+        /// <summary>Whether the answer/choice box is currently visible.</summary>
+        public bool IsAnswerBoxShowed => answerBox != null;
+        /// <summary>If false, new dialog queues are rejected. Set externally to prevent dialog during non-dialog scenes.</summary>
+        public bool IsActive { get; set; } = true;
 
-		public void SelectVariant(SelectVariant variant)
+        /// <summary>Called by answer items when the player picks a choice. Hides the answer box and jumps the runtime to the variant's GoTo target.</summary>
+        public void SelectVariant(SelectVariant variant)
 		{
 			if (answerBox != null)
 			{
@@ -80,14 +85,16 @@ namespace Cthangover.Core.UI.Dialog
 			Runtime.Run();
 		}
 
-		public void SetTitle(string title)
+        /// <summary>Sets the title bar text. Null or empty hides the title bar.</summary>
+        public void SetTitle(string title)
 		{
 			if (title == null) title = string.Empty;
 			titleField.Text = title;
 			titleBody.Visible = title != string.Empty;
 		}
 
-		public void SetVariants(ICollection<SelectVariant> variants)
+        /// <summary>Instantiates the AnswerBox scene, adds it as a child, and populates it with the given choice variants.</summary>
+        public void SetVariants(ICollection<SelectVariant> variants)
 		{
 			var scene = answerBoxScene.Instantiate<AnswerBox>();
 			AddChild(scene);
@@ -95,7 +102,8 @@ namespace Cthangover.Core.UI.Dialog
 			answerBox.CreateVariantsUI(variants);
 		}
 
-		public void SetText(string text)
+        /// <summary>Sets the main dialog text. Hides the Body canvas item when text is null or whitespace.</summary>
+        public void SetText(string text)
 		{
 			if (text == null) text = string.Empty;
 			textField.Text = text;
@@ -104,7 +112,8 @@ namespace Cthangover.Core.UI.Dialog
 				body.Visible = !string.IsNullOrWhiteSpace(text);
 		}
 
-		public void SetFirstAvatar(Texture2D avatar, bool hideColor = false)
+        /// <summary>Sets the left avatar texture. Null hides the slot. <paramref name="hideColor"/> enables shader silhouette mode when true.</summary>
+        public void SetFirstAvatar(Texture2D avatar, bool hideColor = false)
 		{
 			if (avatar == null)
 			{
@@ -119,7 +128,8 @@ namespace Cthangover.Core.UI.Dialog
 			}
 		}
 
-		public void SetSecondAvatar(Texture2D avatar, bool hideColor = false)
+        /// <summary>Sets the right avatar texture. Null hides the slot. <paramref name="hideColor"/> enables shader silhouette mode when true.</summary>
+        public void SetSecondAvatar(Texture2D avatar, bool hideColor = false)
 		{
 			if (avatar == null)
 			{
@@ -134,7 +144,8 @@ namespace Cthangover.Core.UI.Dialog
 			}
 		}
 
-		protected override void HideDestruct()
+        /// <summary>Resets avatars to empty and releases the dialog locker, preparing for the next dialog session.</summary>
+        protected override void HideDestruct()
 		{
 			firstAvatar.Texture = emptyAvatar;
 			firstAvatar.Visible = false;
@@ -143,7 +154,11 @@ namespace Cthangover.Core.UI.Dialog
 			Locker = null;
 		}
 
-		public void SetDialogQueueAndRun(DialogQueue dialog, IEnumerable<IActionCommand> endDialogQueue, int startIndex, ExecutableEvent locker)
+        /// <summary>
+        /// Loads and starts a dialog sequence. Validates that: (1) dialog is not null, (2) this DialogBox is active,
+        /// (3) no existing dialog locker is running. On success, shows the box and delegates to <see cref="DialogRuntime.SetDialogQueueAndRun"/>.
+        /// </summary>
+        public void SetDialogQueueAndRun(DialogQueue dialog, IEnumerable<IActionCommand> endDialogQueue, int startIndex, ExecutableEvent locker)
 		{
 			if (dialog == null)
 			{
@@ -170,7 +185,12 @@ namespace Cthangover.Core.UI.Dialog
 			Runtime.Run();
 		}
 
-		public void NextAction()
+        /// <summary>
+        /// Advances the dialog to the next action. Skips if the runtime is waiting for an answer or has ended.
+        /// Respects <see cref="WaitType.WaitEvent"/> (waits for destruct) and <see cref="WaitType.WaitTime"/> (waits for elapsed duration).
+        /// Called by click/keyboard input and by <see cref="OnUpdate"/> polling.
+        /// </summary>
+        public void NextAction()
 		{
 			if (Runtime.IsWaitAnswer)
 				return;
@@ -228,12 +248,19 @@ namespace Cthangover.Core.UI.Dialog
 					}
 				}
 			}
-		}
+        }
 
-		public int Priority => 1;
-		public bool IsRunning => Locker != null;
+        /// <summary>Whether a dialog is currently running (Locker is not null).</summary>
+        public bool IsRunning => Locker != null;
 
-		public void OnUpdate()
+        /// <summary>Update priority. Default 1.</summary>
+        public int Priority => 1;
+        /// <summary>
+        /// Polling loop for time/event-waiting actions. Throttled to 100ms minimum interval.
+        /// If the current action is a WaitEvent type and its destruct flag is set, advances.
+        /// If the current action is a WaitTime type and elapsed >= WaitTime, advances.
+        /// </summary>
+        public void OnUpdate()
 		{
 			double now = Time.GetTicksUsec() / 1_000_000.0;
 			var delta = now - lastTimestamp;

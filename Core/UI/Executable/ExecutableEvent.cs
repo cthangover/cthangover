@@ -22,15 +22,42 @@ namespace Cthangover.Core.UI.Executable
         private SceneEventController eventController;
         private float timestamp;
 
+        /// <summary>
+        /// <c>true</c> until <see cref="RunDialog"/> is called for the first time.
+        /// Used by chains to determine whether a one-shot event has already fired.
+        /// </summary>
 		public bool IsFirstRun { get; private set; } = true;
 
+        /// <summary>
+        /// If <c>true</c>, the event fires exactly once and never again, even across
+        /// scene revisits. After <see cref="RunDialog"/> completes, <see cref="IsFirstRun"/>
+        /// becomes <c>false</c>.
+        /// </summary>
 		[Export] public bool IsOneRun { get; set; } = false;
 
+        /// <summary>
+        /// If <c>true</c>, the event can re-trigger on subsequent scene visits.
+        /// When <c>false</c>, the event only fires on the first visit to the scene.
+        /// </summary>
 		[Export] public bool CanRepeat { get; set; } = true;
 
+        /// <summary>
+        /// Virtual guard evaluated before triggering. Defaults to <c>true</c>.
+        /// Override to implement conditional logic (e.g. <see cref="ScenarioEvent"/>
+        /// checks script conditions via <see cref="ScenarioCondition.Evaluate"/>).
+        /// </summary>
 		public virtual bool CheckConditions => true;
+
+        /// <summary>
+        /// Unique identifier for this event instance. Defaults to the full type name.
+        /// Override to provide a stable, save-friendly ID.
+        /// </summary>
 		public virtual string ID => GetType().FullName;
 
+        /// <summary>
+        /// Priority within the event chain — lower values execute first. Default
+        /// is <c>1</c>, placing this after high-priority handlers.
+        /// </summary>
 		public int Priority => 1;
 
 		public override void _Ready()
@@ -76,6 +103,12 @@ namespace Cthangover.Core.UI.Executable
 			RunDialog();
 		}
 
+        /// <summary>
+        /// Builds a <see cref="DialogQueue"/> via <see cref="CreateDialog"/> and queues
+        /// it on the <see cref="DialogBox"/>, passing <c>this</c> as the locker to
+        /// block other dialog attempts. Returns <c>false</c> if the one-shot already
+        /// ran, the dialog box is unavailable, or another locker is active.
+        /// </summary>
 		public bool RunDialog()
 		{
 			if (!IsFirstRun && IsOneRun)

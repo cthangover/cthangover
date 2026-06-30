@@ -3,6 +3,13 @@ using Cthangover.Core.Utils;
 
 namespace Cthangover.FFBattle.Actions
 {
+    /// <summary>
+    /// Applies a stun status effect to the target for a configurable number of turns.
+    /// Reads the turn count from <see cref="ActionCharacter.ATTRIBUTE_TURN"/> (default 3).
+    /// Stunned characters are skipped during turn iteration in
+    /// <see cref="FFBattleCore.TryNextCharacterOrEndTurn"/> and
+    /// <see cref="FFBattleCore.RunEnemyTurn"/>. Registered under ID <c>"physics/stun"</c>.
+    /// </summary>
     public class FFStunExecutor : ActionBase
     {
         public override string ID => "FFStunExecutor";

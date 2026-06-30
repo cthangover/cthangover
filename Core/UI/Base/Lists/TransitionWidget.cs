@@ -24,6 +24,10 @@ namespace Cthangover.Core.UI.Base.Lists
         private ShaderMaterial materialInstance;
         private Tween transitionTween;
 
+        /// <summary>
+        /// Shows the widget base, then creates or reuses a shader material for the background and starts the transition tween.
+        /// Material is duplicated from <c>imgBackground.Material</c> on first call so each instance gets independent shader parameters.
+        /// </summary>
         public override void Show()
         {
             base.Show();
@@ -51,6 +55,7 @@ namespace Cthangover.Core.UI.Base.Lists
             RunShowAnimation();
         }
 
+        /// <summary>Kills the active transition tween if one is running, then calls base <see cref="Widget.Hide"/>.</summary>
         public override void Hide()
         {
             if (transitionTween != null)

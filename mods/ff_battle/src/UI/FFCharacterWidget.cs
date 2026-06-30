@@ -6,6 +6,14 @@ using Godot;
 
 namespace Cthangover.FFBattle.UI
 {
+    /// <summary>
+    /// Visual representation of a single character (player or enemy) in the FF battle UI.
+    /// Composite widget containing a sprite, HP bar, name label, and selection overlay.
+    /// Supports highlight, flash, shake, and dissolve-death animations via Godot tweens.
+    /// Created per-character by <see cref="FFPlayerPanel.Init"/> and
+    /// <see cref="FFEnemyPanel.Init"/>. Clickable via <c>GuiInput</c> events;
+    /// embedding panels wire these to <see cref="FFBattleCore"/> for action flow.
+    /// </summary>
     public partial class FFCharacterWidget : ModWidget
     {
         private TextureRect _sprite;
@@ -18,10 +26,15 @@ namespace Cthangover.FFBattle.UI
         private static bool _selectTexLoaded;
         private static Shader _dissolveShader;
 
+        /// <summary>Whether this widget belongs to the player party (affects highlight/targeting logic).</summary>
         public bool IsPlayer { get; set; }
+        /// <summary>Whether the character is dead; set by <see cref="PlayDeathAnimation"/>.</summary>
         public bool IsDead { get; set; }
+        /// <summary>The character data model backing this widget: stats, actions, status effects.</summary>
         public Character Card { get; set; }
+        /// <summary>Original scale captured at construction; used to restore after death animation.</summary>
         public Vector2 BaseScale { get; private set; }
+        /// <summary>Exposes this widget as a <see cref="Godot.Control"/> for layout calculations.</summary>
         public Control ControlNode => this;
 
         protected override void Construct()
@@ -84,6 +97,12 @@ namespace Cthangover.FFBattle.UI
             _selection.Modulate = new Color(0, 0, 0, 0);
         }
 
+        /// <summary>
+        /// Binds this widget to a <see cref="Character"/> model. Sets the sprite from
+        /// <see cref="Character.Image"/>, localises the name via
+        /// <see cref="TranslationServer"/>, and calls <see cref="UpdateInfo"/>
+        /// to refresh the HP bar.
+        /// </summary>
         public void Init(Character character)
         {
             Card = character;
@@ -99,6 +118,7 @@ namespace Cthangover.FFBattle.UI
             UpdateInfo();
         }
 
+        /// <summary>Refreshes the HP bar fill width and colour gradient based on current health percentage.</summary>
         public void UpdateInfo()
         {
             if (_hpFill == null || Card == null)
@@ -115,6 +135,7 @@ namespace Cthangover.FFBattle.UI
                 _hpFill.Color = new Color(0.85f, 0.1f, 0.1f, 1f);
         }
 
+        /// <summary>Shows a coloured selection overlay with a 0.15s tween fade-in. Used for target highlighting and selection indication.</summary>
         public void Highlight(Color color)
         {
             if (_selection == null)
@@ -126,6 +147,7 @@ namespace Cthangover.FFBattle.UI
             _animTween.TweenProperty(_selection, "modulate", color, 0.15f);
         }
 
+        /// <summary>Fades out the selection overlay to transparent via a 0.15s tween.</summary>
         public void ClearHighlight()
         {
             if (_selection == null)
@@ -137,6 +159,7 @@ namespace Cthangover.FFBattle.UI
             _animTween.TweenProperty(_selection, "modulate", new Color(0, 0, 0, 0), 0.15f);
         }
 
+        /// <summary>Rapidly oscillates the widget's position with random offsets (6 iterations) to simulate impact feedback.</summary>
         public void Shake(float intensity, float duration)
         {
             var originalPos = Position;
@@ -154,6 +177,7 @@ namespace Cthangover.FFBattle.UI
             }
         }
 
+        /// <summary>Briefly tints the entire widget with a colour pulse (30% rise, 70% fall) for damage/heal feedback.</summary>
         public void Flash(Color color, float duration)
         {
             var originalModulate = Modulate;
@@ -163,6 +187,13 @@ namespace Cthangover.FFBattle.UI
             _animTween.TweenProperty(this, "modulate", originalModulate, duration * 0.7f);
         }
 
+        /// <summary>
+        /// Plays a dissolve-and-shrink death sequence. If a <c>"scene_transition"</c>
+        /// shader is available, applies a dissolve material to the sprite. Fades the
+        /// widget alpha, scales it to zero, and hides the HP bar and name label.
+        /// Invokes <paramref name="onComplete"/> when finished so the parent panel
+        /// can remove the widget from the grid.
+        /// </summary>
         public void PlayDeathAnimation(Action onComplete)
         {
             if (IsDead)

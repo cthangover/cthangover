@@ -6,6 +6,13 @@ using Godot;
 
 namespace Cthangover.CardBattle.Actions
 {
+    /// <summary>
+    /// Animated battle action that plays a self-buff or ally-support animation: the source card
+    /// briefly rotates toward the target, applies a defence boost via <see cref="ActionExecutorHub"/>,
+    /// and shows a subtle block/stagger reaction on the target. Used for both <c>ToSelf</c> and
+    /// <c>ToAlias</c> action types. This is the visual counterpart of <see cref="PhysicsDefenceActionCard"/>.
+    /// Created by <see cref="CardBattleCore.CreateAnimatedAction"/> for enemy self-buff/support turns.
+    /// </summary>
     public class PhysicsDefenceAction : AbstractBattleAction
     {
         private ActionPhase phase = ActionPhase.Prepare;
@@ -25,6 +32,11 @@ namespace Cthangover.CardBattle.Actions
         private float moveForBackDuration = 0.4f;
         private float recoverDuration = 0.3f;
 
+        /// <summary>
+        /// Creates a defence/support animation. Both <paramref name="source"/> and <paramref name="target"/>
+        /// can be the same card (for self-buffs) or different (for ally support).
+        /// <paramref name="speed"/> multiplies all phase durations.
+        /// </summary>
         public PhysicsDefenceAction(CharacterCardNode source, CharacterCardNode target, ActionCharacter action, float speed = 1)
             : base(source, target, action, speed) { }
 

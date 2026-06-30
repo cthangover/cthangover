@@ -31,6 +31,7 @@ namespace Cthangover.Core.UI
                 OnceDestruct();
         }
 
+        /// <summary>Toggles visibility: calls <see cref="Hide"/> if visible, <see cref="Show"/> otherwise.</summary>
         public void Switch()
         {
             if (Visible)
@@ -39,6 +40,11 @@ namespace Cthangover.Core.UI
                 Show();
         }
 
+        /// <summary>
+        /// Makes visible and runs lifecycle. On first call, <see cref="EnsureConstructed"/> fires <see cref="OnceConstruct"/>.
+        /// Subsequent calls trigger <see cref="ShowConstruct"/> without reconstruction. Sets both the internal isVisible flag
+        /// and Godot's native visibility, then explicitly shows the Body canvas item.
+        /// </summary>
         public new virtual void Show()
         {
             GameLogger.Log("WIDGET", $"Show ENTER: name={Name}, isVisible={isVisible}, GodotVisible={base.Visible}", LogLevel.Debug);
@@ -67,6 +73,7 @@ namespace Cthangover.Core.UI
             GameLogger.Log("WIDGET", $"Show EXIT: name={Name}, isVisible={isVisible}, GodotVisible={base.Visible}", LogLevel.Debug);
         }
 
+        /// <summary>Hides the widget, fires <see cref="HideDestruct"/> if constructed, sets internal and Godot visibility to false, and hides the Body canvas item.</summary>
         public new virtual void Hide()
         {
             if (!Visible)
@@ -83,6 +90,7 @@ namespace Cthangover.Core.UI
                 canvasBody.Visible = false;
         }
 
+        /// <summary>Idempotent construction gate: calls <see cref="OnceConstruct"/> exactly once, on the first invocation.</summary>
         public void EnsureConstructed()
         {
             if (!isConstructed)
@@ -92,10 +100,12 @@ namespace Cthangover.Core.UI
             }
         }
 
+        /// <summary>Called exactly once on the first <see cref="Show"/>. Override to perform one-time initialization.</summary>
         protected virtual void OnceConstruct()
         {
         }
 
+        /// <summary>Called once on tree exit if constructed. Override for one-time cleanup of resources allocated in <see cref="OnceConstruct"/>.</summary>
         protected virtual void OnceDestruct()
         {
         }
@@ -104,6 +114,11 @@ namespace Cthangover.Core.UI
 
         [Export] private Node body;
 
+        /// <summary>
+        /// Shadows Godot's built-in visibility. Setting to true calls <see cref="Show"/>, setting to false calls <see cref="Hide"/>.
+        /// Maintains an independent <c>isVisible</c> flag because Godot's native visibility propagates through the parent chain,
+        /// which would break the explicit lifecycle state machine.
+        /// </summary>
         public new bool Visible
         {
             get => isVisible;
@@ -119,14 +134,18 @@ namespace Cthangover.Core.UI
             }
         }
 
+        /// <summary>The rendered content subtree. May be a child node separate from the Rect layout root.</summary>
         public Node Body => body;
 
+        /// <summary>The Control used for layout. For Widget this is the node itself, enabling it to serve as both layout root and widget.</summary>
         public Control Rect => this;
 
+        /// <summary>Called each time <see cref="Show"/> runs after initial construction. Override to refresh state (e.g. reload data, re-enable input).</summary>
         protected virtual void ShowConstruct()
         {
         }
 
+        /// <summary>Called each time <see cref="Hide"/> runs when constructed. Override to clean up display-only state without destroying permanent resources.</summary>
         protected virtual void HideDestruct()
         {
         }

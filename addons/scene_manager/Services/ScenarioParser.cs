@@ -5,8 +5,29 @@ using System.IO;
 
 namespace SceneManagerAddon
 {
+    /// <summary>
+    /// Parses a <c>*.scenario</c> file into a
+    /// <see cref="ScenarioDefInfo"/> model. The parser splits the file
+    /// at the <c>\n---</c> separator: everything above becomes the YAML
+    /// metadata block (extracting <c>scene</c>, <c>priority</c>,
+    /// <c>condition</c>), and everything below is scanned line-by-line
+    /// for command tokens that reference backgrounds, other scenes,
+    /// locale keys, avatar aliases, and quest IDs.
+    /// </summary>
     public static class ScenarioParser
     {
+        /// <summary>
+        /// Reads the file at <paramref name="filePath"/>, splits the
+        /// header/body, extracts metadata fields, and runs
+        /// <c>ExtractReferences</c> on the command body to populate
+        /// all reference lists. Returns <c>null</c> if any exception
+        /// occurs during file I/O or parsing.
+        /// </summary>
+        /// <param name="filePath">Absolute filesystem path to the
+        /// <c>.scenario</c> file.</param>
+        /// <param name="modDir">Absolute path to the owning mod's root
+        /// directory, used to compute the relative
+        /// <see cref="ScenarioDefInfo.FilePath"/>.</param>
         public static ScenarioDefInfo Parse(string filePath, string modDir)
         {
             try

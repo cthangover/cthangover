@@ -26,7 +26,14 @@ namespace Cthangover.Core.Battle
 			countLabel ??= GetNodeOrNull<Label>("Panel/CountLabel");
 		}
 
-		public void Setup(Texture2D itemIcon, string localizedName, int count)
+        /// <summary>
+        /// Configures the loot cell: sets the item icon, a "xN" count
+        /// label (hidden when <paramref name="count"/> is 1), and the
+        /// localised name as the tooltip. Calls
+        /// <c>ResolveMissingNodes</c> to handle missing editor
+        /// assignments gracefully.
+        /// </summary>
+        public void Setup(Texture2D itemIcon, string localizedName, int count)
 		{
 			ResolveMissingNodes();
 

@@ -4,14 +4,35 @@ using Godot;
 
 namespace Cthangover.FFBattle.UI
 {
+    /// <summary>
+    /// Data object for a single menu entry. <see cref="Key"/> drives the action
+    /// dispatch in <see cref="FFBattleCore.MatchMenuAction"/> (values like
+    /// <c>"attack"</c>, <c>"action"</c>, <c>"item"</c>, <c>"back"</c>).
+    /// <see cref="Data"/> carries arbitrary payload: an
+    /// <see cref="ActionCharacter"/> for action entries or an
+    /// <see cref="IItem"/> for item entries.
+    /// </summary>
     public class FFMenuEntry
     {
+        /// <summary>Dispatch key used by <see cref="FFBattleCore"/> to determine the next step.</summary>
         public string Key;
+        /// <summary>Display label shown in the menu.</summary>
         public string Label;
+        /// <summary>Whether this entry can be selected (greyed out if false).</summary>
         public bool Enabled = true;
+        /// <summary>Payload data: <see cref="ActionCharacter"/> for actions, <see cref="IItem"/> for items.</summary>
         public object Data;
     }
 
+    /// <summary>
+    /// Vertical scrolling menu panel with a blinking cursor, keyboard navigation,
+    /// and mouse hover/click support. Used as both the main battle menu and the
+    /// action/item sub-menu (a separate instance). Each menu is populated via
+    /// <see cref="ShowMenu"/> with a list of <see cref="FFMenuEntry"/> objects.
+    /// Selection wraps around but skips disabled entries. Raises
+    /// <see cref="OnItemSelected"/> on confirm, <see cref="OnCancelled"/> on
+    /// right-click or Escape (handled by <see cref="FFBattleController"/>).
+    /// </summary>
     public partial class FFMenuPanel : ModWidget
     {
         private ColorRect _background;
@@ -27,7 +48,12 @@ namespace Cthangover.FFBattle.UI
         private const float CURSOR_OFFSET_X = 6f;
         private const float CURSOR_OFFSET_Y = 7f;
 
+        /// <summary>The entries currently displayed in the menu.</summary>
         public List<FFMenuEntry> Entries { get; private set; } = new();
+        /// <summary>
+        /// 0-based index of the highlighted entry. Setting it moves the
+        /// cursor and clamps to the valid range.
+        /// </summary>
         public int SelectedIndex
         {
             get => _selectedIndex;
@@ -41,7 +67,9 @@ namespace Cthangover.FFBattle.UI
             }
         }
 
+        /// <summary>Raised when an entry is confirmed (Enter/Space or left click).</summary>
         public event System.Action<int> OnItemSelected;
+        /// <summary>Raised when the menu is cancelled (right click, or Escape handled externally).</summary>
         public event System.Action OnCancelled;
 
         protected override void Construct()
@@ -75,6 +103,11 @@ namespace Cthangover.FFBattle.UI
             GuiInput += OnPanelGuiInput;
         }
 
+        /// <summary>
+        /// Renders the menu with the given entries. Creates labels, wires hover/click
+        /// handlers, sizes the panel to fit, positions the cursor at index 0, and
+        /// makes the panel visible.
+        /// </summary>
         public void ShowMenu(List<FFMenuEntry> entries, string title = null)
         {
             ClearEntries();
@@ -129,6 +162,7 @@ namespace Cthangover.FFBattle.UI
             Visible = true;
         }
 
+        /// <summary>Hides the menu and cursor. Does not clear entries — call <see cref="ShowMenu"/> to repopulate.</summary>
         public void HideMenu()
         {
             _visible = false;
@@ -136,6 +170,7 @@ namespace Cthangover.FFBattle.UI
             _cursorLabel.Visible = false;
         }
 
+        /// <summary>Moves selection down, wrapping around and skipping disabled entries.</summary>
         public void SelectNext()
         {
             if (!_visible || Entries.Count == 0)
@@ -151,6 +186,7 @@ namespace Cthangover.FFBattle.UI
             SelectedIndex = next;
         }
 
+        /// <summary>Moves selection up, wrapping around and skipping disabled entries.</summary>
         public void SelectPrevious()
         {
             if (!_visible || Entries.Count == 0)
@@ -166,6 +202,7 @@ namespace Cthangover.FFBattle.UI
             SelectedIndex = prev;
         }
 
+        /// <summary>Invokes <see cref="OnItemSelected"/> for the currently highlighted entry if it is enabled.</summary>
         public void ConfirmSelection()
         {
             if (!_visible || Entries.Count == 0)

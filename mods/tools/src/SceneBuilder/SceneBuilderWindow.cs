@@ -3,6 +3,13 @@ using Godot;
 
 namespace Cthangover.Core.UI.Tool.SceneBuilder
 {
+    /// <summary>
+    /// Developer tool window for interactively inspecting Godot scenes and
+    /// running ad-hoc C# scripts against them. Features a scene selector, a
+    /// wrapper template picker, a live viewport with a selectable node hierarchy
+    /// tree, a code editor with monospace font, and an output panel for compilation
+    /// or runtime results. Uses <see cref="SceneBuilderController"/> for all logic.
+    /// </summary>
     public partial class SceneBuilderWindow : ToolWindow
     {
         private SceneBuilderController _controller;
@@ -19,6 +26,7 @@ namespace Cthangover.Core.UI.Tool.SceneBuilder
         private List<(string DisplayName, string Content)> _wrappers;
         private int _selectedWrapperIndex;
 
+        /// <summary>Constructs the window, creates the controller, builds UI, and populates scene/wrapper dropdowns.</summary>
         public SceneBuilderWindow() : base("tools/scene_builder/title")
         {
             _controller = new SceneBuilderController();

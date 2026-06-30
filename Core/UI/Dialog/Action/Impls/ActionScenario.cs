@@ -11,8 +11,10 @@ namespace Cthangover.Core.UI.Dialog.Action.Impls
     /// </summary>
     public class ActionScenario : ActionCommand
     {
+        /// <summary>Scenario action name resolved through <see cref="ScenarioActionFactory"/>. Empty names are logged and skipped.</summary>
         public string ActionName { get; set; }
 
+        /// <summary>The scenario action runs and the dialog advances — no synchronization.</summary>
         public override WaitType WaitType { get; set; } = WaitType.NoWait;
 
 		public override void DoRun(DialogRuntime runtime)

@@ -16,6 +16,10 @@ namespace Cthangover.Core.Battle
     /// </summary>
     public partial class DeadgroundBehaviour : TransitionWidget
     {
+        /// <summary>
+        /// Clears battle data and switches to the main menu scene.
+        /// Bound to the "Main Menu" button on the defeat screen.
+        /// </summary>
         public void ToMainMenuClick()
         {
             var sceneService = GetNode<GodotSceneService>("/root/GodotSceneService");
@@ -23,6 +27,10 @@ namespace Cthangover.Core.Battle
             GameData.Instance.Runtime.BattleData = null;
         }
 
+        /// <summary>
+        /// Plays the defeat sound, resolves the deadground background
+        /// texture from mods, and shows the transition widget.
+        /// </summary>
         public override void Show()
         {
             GameLogger.Log("BATTLE", $"Deadground.Show() ENTER: Visible={Visible}, GodotVisible={base.Visible}", LogLevel.Debug);

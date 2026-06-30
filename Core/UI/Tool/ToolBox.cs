@@ -107,6 +107,10 @@ namespace Cthangover.Core.UI.Tool
             }
         }
 
+        /// <summary>
+        /// Opens the in-game <see cref="GameMenu"/>. Refreshes the save button state first
+        /// so it correctly reflects whether the current scene allows saving.
+        /// </summary>
         public void OnSettingsClick()
         {
             GameLogger.Log("TOOLBOX", "settings button clicked");
@@ -118,24 +122,28 @@ namespace Cthangover.Core.UI.Tool
             }
         }
 
+        /// <summary>Switches to the inventory bag widget, hiding all other toolbox widgets.</summary>
         public void OnBagClick()
         {
             GameLogger.Log("TOOLBOX", "bag button clicked");
             Switch("BagWidget");
         }
 
+        /// <summary>Switches to the skills widget, hiding all other toolbox widgets.</summary>
         public void OnSkillsClick()
         {
             GameLogger.Log("TOOLBOX", "skills button clicked");
             Switch("SkillWidget");
         }
 
+        /// <summary>Switches to the cards widget, hiding all other toolbox widgets.</summary>
         public void OnCardsClick()
         {
             GameLogger.Log("TOOLBOX", "cards button clicked");
             Switch("CardsWidget");
         }
 
+        /// <summary>Switches to the map widget, hiding all other toolbox widgets.</summary>
         public void OnMapClick()
         {
             GameLogger.Log("TOOLBOX", "map button clicked");
@@ -164,6 +172,10 @@ namespace Cthangover.Core.UI.Tool
             }
         }
 
+        /// <summary>
+        /// Shows or hides the save icon based on <see cref="SceneManager.IsSaveAllowedForCurrentScene"/>.
+        /// Call after scene transitions to reflect the new scene's save policy.
+        /// </summary>
         public void UpdateSaveIconVisibility()
         {
             if (_saveIcon == null)

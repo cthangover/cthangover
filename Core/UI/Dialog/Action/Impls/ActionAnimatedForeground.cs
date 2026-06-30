@@ -18,11 +18,16 @@ namespace Cthangover.Core.UI.Dialog.Action.Impls
     /// </summary>
     public class ActionAnimatedForeground : ActionCommand, IOnUpdateEvent
     {
+        /// <summary>Update priority. Runs after higher-priority listeners. Value 0.</summary>
         public int Priority => 0;
 
+        /// <summary>List of sprite resource paths to display as animation frames. Loaded in <see cref="DoConstruct"/>.</summary>
         public List<string> SpriteIDs { get; set; }
+        /// <summary>Initial frame rate multiplier for the first frame.</summary>
         public float Speed { get; set; } = 1f;
+        /// <summary>Frame rate multiplier for subsequent frames after the first. Allows different pacing for the initial frame.</summary>
         public float NextFrameSpeed { get; set; } = 1f;
+        /// <summary>Whether the animation wraps after the last frame. When false, playback stops at the final frame.</summary>
         public bool IsLoop { get; set; } = true;
 
         private int currentFrame;
@@ -30,7 +35,9 @@ namespace Cthangover.Core.UI.Dialog.Action.Impls
         private bool isAnimating;
         private List<Texture2D> frames;
 
+        /// <summary>Preloads frames when the dialog queue is first loaded, so textures are ready before playback.</summary>
         public override ConstructType ConstructType { get; set; } = ConstructType.OnStartQueue;
+        /// <summary>Animation runs in the background — the dialog queue continues immediately.</summary>
         public override WaitType WaitType { get; set; } = WaitType.NoWait;
 
         public override void DoConstruct()

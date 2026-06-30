@@ -12,6 +12,12 @@ namespace Cthangover.Core.UI.View
 
         [Export] private ViewBox viewBox;
 
+        /// <summary>
+        /// Delegates to <see cref="ViewBox.SetZoom"/> on the linked <see cref="ViewBox"/>.
+        /// Intended to be connected to a slider or scroll input signal. No-op if
+        /// <c>viewBox</c> is not assigned.
+        /// </summary>
+        /// <param name="value">Normalized zoom factor (0–1).</param>
         public void OnChangeZoom(float value)
         {
             if (viewBox == null)

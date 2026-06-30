@@ -380,32 +380,112 @@ section:nth-child(even) {
   scroll-snap-type: x mandatory;
 }
 
-.screenshot-placeholder {
+.screenshot-item {
   min-width: 280px;
   height: 180px;
   flex-shrink: 0;
   background: var(--bg-card);
-  border: 1px dashed var(--border-light);
+  border: 1px solid var(--border-light);
   border-radius: var(--radius-lg);
+  overflow: hidden;
+  scroll-snap-align: start;
+  transition: border-color var(--transition);
+  cursor: pointer;
+}
+
+.screenshot-item:hover {
+  border-color: var(--accent);
+}
+
+.screenshot-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ========== LIGHTBOX ========== */
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
-  scroll-snap-align: start;
-  transition: all var(--transition);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
 }
 
-.screenshot-placeholder:hover {
-  border-color: var(--accent);
-  border-style: solid;
+.lightbox.open {
+  opacity: 1;
+  pointer-events: auto;
 }
 
-.placeholder-inner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  color: var(--text-muted);
-  font-size: 0.85rem;
+.lightbox-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+}
+
+.lightbox-img {
+  position: relative;
+  z-index: 1;
+  max-width: 90vw;
+  max-height: 85vh;
+  object-fit: contain;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 16px;
+  right: 24px;
+  z-index: 2;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 2rem;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+  line-height: 1;
+}
+
+.lightbox-close:hover {
+  opacity: 1;
+}
+
+.lightbox-prev,
+.lightbox-next {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 3rem;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 0.2s;
+  transform: translateY(-50%);
+  line-height: 1;
+  padding: 8px 16px;
+}
+
+.lightbox-prev:hover,
+.lightbox-next:hover {
+  opacity: 1;
+}
+
+.lightbox-prev {
+  left: 8px;
+}
+
+.lightbox-next {
+  right: 8px;
 }
 
 /* ========== VIDEOS ========== */

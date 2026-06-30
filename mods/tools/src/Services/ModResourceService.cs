@@ -5,8 +5,20 @@ using Godot;
 
 namespace Cthangover.Tools.Services
 {
+    /// <summary>
+    /// Static service for discovering and loading mod background resources.
+    /// Queries <see cref="ModManager.Instance.CollectFileList"/> for files under
+    /// <c>"backgrounds"</c>, strips extensions to produce IDs, and loads textures
+    /// via <see cref="BackgroundFactory"/>. Used by the light editor, interactive
+    /// editor, and scenario editor to populate background selection lists and
+    /// render previews.
+    /// </summary>
     public static class ModResourceService
     {
+        /// <summary>
+        /// Returns all unique background IDs (filenames without extension) from
+        /// the <c>"backgrounds"</c> file collection across all installed mods.
+        /// </summary>
         public static List<string> GetBackgroundIds()
         {
             var ids = new List<string>();
@@ -24,6 +36,10 @@ namespace Cthangover.Tools.Services
             return ids;
         }
 
+        /// <summary>
+        /// Loads a background texture by ID via <see cref="BackgroundFactory.Instance.Get"/>.
+        /// Returns <c>null</c> on any error (missing resource, load failure).
+        /// </summary>
         public static Texture2D LoadBackgroundTexture(string id)
         {
             try

@@ -10,6 +10,7 @@ namespace Cthangover.Core.UI.Dialog.Action.Impls
     /// </summary>
     public class ActionEmpty : ActionCommand
     {
+        /// <summary>Label actions skip immediately so the dialog doesn't pause on markers.</summary>
         public override WaitType WaitType { get; set; } = WaitType.NoWait;
 
         public override void DoRun(DialogRuntime runtime)

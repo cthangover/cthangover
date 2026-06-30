@@ -6,7 +6,9 @@ namespace Cthangover.Core.UI.Dialog.Action
     /// </summary>
     public enum ActionType
     {
+        /// <summary>A dialog text display action that pauses for click input.</summary>
         Text,
+        /// <summary>Terminates the dialog queue.</summary>
         End
     }
 }

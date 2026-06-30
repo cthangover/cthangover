@@ -13,6 +13,17 @@ using Godot;
 
 namespace Mods.Cooking.Workbench
 {
+    /// <summary>
+    /// Main cooking workbench UI panel that lists available recipes,
+    /// shows descriptions and output previews, and performs the actual
+    /// cooking operation. Recipes are loaded from <see cref="RecipeData"/>
+    /// filtered by <see cref="WorkbenchType.Cooking"/> and sorted so that
+    /// craftable recipes (all ingredients present) appear before
+    /// un-craftable ones. Selecting a recipe displays its translated
+    /// description and output items via an <see cref="InventoryBagBehaviour"/>.
+    /// Cooking consumes ingredients, produces output items, advances
+    /// in-game time, and plays a sound effect.
+    /// </summary>
     public class WorkbenchPanel : Widget
     {
         private Control content;
@@ -124,6 +135,13 @@ namespace Mods.Cooking.Workbench
             return list;
         }
 
+        /// <summary>
+        /// Responds to a recipe being selected in the list.
+        /// Updates the description area with the recipe's translated name
+        /// (styled bold/yellow via BBCode) and description, and populates
+        /// the output preview panel with items the recipe produces by
+        /// wrapping each output into an <see cref="ItemContainer"/>.
+        /// </summary>
         public void ClickRecipe(IRecipe recipe, RecipeItemBehaviour recipeItemBehaviour)
         {
             if (txtDescription != null)
@@ -137,6 +155,10 @@ namespace Mods.Cooking.Workbench
             }).ToList();
         }
 
+        /// <summary>
+        /// Hides the workbench panel and plays a UI close-click sound
+        /// via the scene's <see cref="AudioService"/> node.
+        /// </summary>
         public void OnCloseClick()
         {
             Hide();
@@ -144,6 +166,15 @@ namespace Mods.Cooking.Workbench
             audioService?.PlaySound("ui/close_click", SoundType.UI);
         }
 
+        /// <summary>
+        /// Executes the cooking operation for the currently selected recipe.
+        /// Validates that the player has enough ingredients in inventory
+        /// (short-circuits if not). Deducts input items, adds output items,
+        /// advances in-game time by the recipe's duration, updates the
+        /// on-screen time display, plays the cooking sound effect,
+        /// and refreshes all recipe rows so their availability colours
+        /// reflect the new inventory state.
+        /// </summary>
         public void OnCookClick()
         {
             var inventory = GameData.Instance.Runtime.Inventory;

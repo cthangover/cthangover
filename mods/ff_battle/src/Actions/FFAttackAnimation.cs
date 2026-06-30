@@ -6,6 +6,15 @@ using Godot;
 
 namespace Cthangover.FFBattle.Actions
 {
+    /// <summary>
+    /// Animation for offensive actions against enemies. Implements a three-phase
+    /// sequence: (1) MoveForward — source character dashes toward the target with
+    /// ease-in-out interpolation, stopping 30px short, (2) Impact — applies damage
+    /// via <see cref="ActionExecutorHub"/> when 30% through the phase, triggering
+    /// flash, shake, and floating damage text, (3) MoveBack — returns the source
+    /// to its original position with ease-out.
+    /// Used for player attacks and enemy attacks alike.
+    /// </summary>
     public class FFAttackAnimation : FFAbstractAnimation
     {
         private enum Phase { MoveForward, Impact, MoveBack, Done }
@@ -14,6 +23,7 @@ namespace Cthangover.FFBattle.Actions
         private bool _damageApplied;
         private Vector2 _midPoint;
 
+        /// <summary>Creates an attack animation for source→target with the given action descriptor and speed.</summary>
         public FFAttackAnimation(FFCharacterWidget source, FFCharacterWidget target, ActionCharacter action, float speed = 1f)
             : base(source, target, action, speed) { }
 

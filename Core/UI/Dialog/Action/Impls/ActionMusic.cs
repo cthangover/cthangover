@@ -11,8 +11,10 @@ namespace Cthangover.Core.UI.Dialog.Action.Impls
     /// </summary>
     public class ActionMusic : ActionCommand
     {
+        /// <summary>Music track identifier resolved through the audio system. Empty strings are silently ignored.</summary>
         public string Music { get; set; }
 
+        /// <summary>Music starts playing in the background — the dialog continues immediately.</summary>
         public override WaitType WaitType { get; set; } = WaitType.NoWait;
 
         public override void DoRun(DialogRuntime runtime)

@@ -3,16 +3,27 @@ using Godot;
 
 namespace Cthangover.Core.UI.Tool.LightEditor
 {
-	public partial class LightEditorHandle : ColorRect
-	{
-		public int LightIndex;
-		public System.Action<Vector2> DragUpdate;
-		public System.Action Clicked;
+    /// <summary>
+    /// Draggable 24×24 coloured handle representing a light source on the preview.
+    /// Overrides <c>_GuiInput</c> (Godot virtual) for mouse drag support; the colour
+    /// is taken from <see cref="LightDef.ToColor"/>. Raises <see cref="DragUpdate"/>
+    /// with the handle's centre position in global coordinates for the window to
+    /// convert back to normalised coordinates.
+    /// </summary>
+    public partial class LightEditorHandle : ColorRect
+    {
+        /// <summary>Index of the light in <see cref="LightEditorController.Lights"/>.</summary>
+        public int LightIndex;
+        /// <summary>Invoked during drag with the centre position in global coordinates.</summary>
+        public System.Action<Vector2> DragUpdate;
+        /// <summary>Invoked when the handle is clicked (mouse down).</summary>
+        public System.Action Clicked;
 
 		private bool dragging;
 		private Vector2 dragOffset;
 
-		public LightEditorHandle(LightDef light, int index)
+        /// <summary>Creates a 24×24 handle coloured to match the light's <see cref="LightDef.ToColor"/> value.</summary>
+        public LightEditorHandle(LightDef light, int index)
 		{
 			LightIndex = index;
 			Size = new Vector2(24, 24);
@@ -20,7 +31,8 @@ namespace Cthangover.Core.UI.Tool.LightEditor
 			MouseFilter = MouseFilterEnum.Stop;
 		}
 
-		public override void _GuiInput(InputEvent @event)
+        /// <summary>Handles mouse drag and click via Godot's virtual input system (<c>_GuiInput</c>).</summary>
+        public override void _GuiInput(InputEvent @event)
 		{
 			if (@event is InputEventMouseButton mb && mb.ButtonIndex == MouseButton.Left)
 			{

@@ -7,7 +7,14 @@ using Godot;
 
 namespace Cthangover.Core.UI.Tool.LightEditor
 {
-	public partial class LightEditorWindow : ToolWindow
+    /// <summary>
+    /// Editor window for placing and configuring static lights on a background.
+    /// Provides a sidebar with background selection, a light list with add/delete/select,
+    /// per-light property editors (radius, influence, colour), draggable handles on a
+    /// shader-powered preview, and JSON export. Uses <see cref="LightEditorController"/>
+    /// for data management and <see cref="ModResourceService"/> for background textures.
+    /// </summary>
+    public partial class LightEditorWindow : ToolWindow
 	{
 		private LightEditorController controller;
 
@@ -27,7 +34,8 @@ namespace Cthangover.Core.UI.Tool.LightEditor
 
 		private readonly List<string> bgIds = new();
 
-		public LightEditorWindow() : base("tools/light_editor/title")
+        /// <summary>Constructs the window, creates the controller, builds UI, and loads the background list.</summary>
+        public LightEditorWindow() : base("tools/light_editor/title")
 		{
 			controller = new LightEditorController();
 			BuildUI();

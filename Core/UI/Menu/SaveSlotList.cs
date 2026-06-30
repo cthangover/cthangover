@@ -18,15 +18,21 @@ namespace Cthangover.Core.UI.Menu
         private PackedScene _itemScene;
         private readonly List<SaveSlotItem> _items = new();
 
+        /// <summary>
+        /// Emitted when any child <see cref="SaveSlotItem"/> is clicked, forwarding the save file name.
+        /// </summary>
         [Signal]
         public delegate void SlotPressedEventHandler(string fileName);
 
+        /// <summary>Number of columns in the save slot grid. Editor-configurable.</summary>
         [Export]
         public int ColumnCount { get; set; } = 4;
 
+        /// <summary>Number of rows in the save slot grid. Editor-configurable.</summary>
         [Export]
         public int RowCount { get; set; } = 3;
 
+        /// <summary>Spacing between adjacent slots in pixels. Editor-configurable.</summary>
         [Export]
         public float SlotPadding { get; set; } = 8f;
 
@@ -38,6 +44,9 @@ namespace Cthangover.Core.UI.Menu
             Resized += OnResized;
         }
 
+        /// <summary>
+        /// Stores the slot data models and triggers a full grid rebuild via <see cref="Refresh"/>.
+        /// </summary>
         public void SetSlots(List<SaveSlotInfo> slots)
         {
             _slotModels = slots;
@@ -54,6 +63,12 @@ namespace Cthangover.Core.UI.Menu
             _items.Clear();
         }
 
+        /// <summary>
+        /// Destroys all existing <see cref="SaveSlotItem"/> children and rebuilds the grid
+        /// from <c>_slotModels</c>. Calculates cell dimensions as (total - gaps) / column|row count,
+        /// then positions each item using flat coordinates (no <c>GridContainer</c> dependency).
+        /// Skips rendering if the control has zero size (e.g. called before first layout pass).
+        /// </summary>
         public void Refresh()
         {
             ClearItems();

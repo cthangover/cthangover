@@ -14,11 +14,25 @@ using Godot;
 
 namespace Cthangover.Core.Settings
 {
-
+    /// <summary>
+    /// Static facade for the save/load subsystem operating on
+    /// <c>user://saves/</c>. Serializes the entire <see cref="RuntimeData"/>
+    /// subgraph into a flat <see cref="SaveData"/> DTO and writes it as
+    /// compact JSON. On load, it reconstructs each subsystem (time, lamp,
+    /// characters, inventory, quests, recipes, recruiting, battle set,
+    /// completed scenario IDs) by calling the appropriate setters.
+    /// Slot enumeration (<see cref="GetSaveSlots"/>) reads header-level
+    /// data from every JSON file without deserializing the full payload.
+    /// </summary>
     public static class SaveService
     {
         private const string SaveDir = "user://saves";
 
+        /// <summary>
+        /// Builds a sanitised file path for a save slot. Non-alphanumeric
+        /// characters (except <c>_</c> and <c>-</c>) are replaced with <c>_</c>
+        /// to prevent path traversal.
+        /// </summary>
         private static string GetSavePath(string fileName)
         {
             var safe = new string(fileName.Select(c =>
@@ -26,6 +40,12 @@ namespace Cthangover.Core.Settings
             return $"{SaveDir}/{safe}.json";
         }
 
+        /// <summary>
+        /// Walks the active <see cref="Cthangover.Core.UI.Executable.ExecutableMainEventChain"/>
+        /// scene tree node and collects IDs of all one-shot events that
+        /// have already executed. These IDs are stored in the save file so
+        /// that reloaded games do not re-trigger completed scenarios.
+        /// </summary>
         private static HashSet<string> CollectCompletedScenarioIds()
         {
             var result = new HashSet<string>();
@@ -45,6 +65,10 @@ namespace Cthangover.Core.Settings
             return result;
         }
 
+        /// <summary>
+        /// Builds the PNG screenshot path for a save slot using the same
+        /// sanitisation rules as <see cref="GetSavePath"/>.
+        /// </summary>
         private static string GetScreenshotPath(string fileName)
         {
             var safe = new string(fileName.Select(c =>
@@ -52,6 +76,10 @@ namespace Cthangover.Core.Settings
             return $"{SaveDir}/{safe}.png";
         }
 
+        /// <summary>
+        /// Ensures <c>user://saves/</c> directory exists, creating it
+        /// recursively if needed.
+        /// </summary>
         private static void EnsureSaveDir()
         {
             var absDir = ProjectSettings.GlobalizePath(SaveDir);
@@ -59,6 +87,12 @@ namespace Cthangover.Core.Settings
                 DirAccess.MakeDirRecursiveAbsolute(absDir);
         }
 
+        /// <summary>
+        /// Resolves the currently active scene name by querying the
+        /// <see cref="Cthangover.Core.Scenes.SceneManager"/> singleton
+        /// first, then falling back to the current scene's filename.
+        /// Returns "unknown" if neither source is available.
+        /// </summary>
         private static string GetCurrentSceneName()
         {
             var sceneManager = SceneContextNode.FindNode<SceneManager>("SceneManager");
@@ -76,6 +110,14 @@ namespace Cthangover.Core.Settings
             return "unknown";
         }
 
+        /// <summary>
+        /// Captures the full game state into a <see cref="SaveData"/> DTO
+        /// and writes it as JSON to <c>user://saves/{fileName}.json</c>.
+        /// Also persists a screenshot via <see cref="SaveScreenshotService"/>.
+        /// All subsystems are sampled synchronously: time, lamp, characters,
+        /// quests, recruiting, battle set, inventory, recipes, and completed
+        /// scenario IDs. Write failures are logged but do not throw.
+        /// </summary>
         public static void Save(string fileName)
         {
             var gameData = GameData.Instance;
@@ -119,6 +161,18 @@ namespace Cthangover.Core.Settings
             }
         }
 
+        /// <summary>
+        /// Deserializes a save file and pushes every subsystem value back
+        /// into <see cref="RuntimeData"/>. Returns <c>true</c> on success.
+        /// Character data is rebuilt as a dictionary keyed by
+        /// <see cref="CharacterInfoData.CharacterType"/>; inventory items
+        /// are rehydrated from <see cref="CItem"/> into full
+        /// <see cref="Cthangover.Core.Items.IItemContainer"/> objects via
+        /// <see cref="Cthangover.Core.Factories.Impls.ItemFactory"/>.
+        /// Completed scenario IDs are stored in
+        /// <see cref="RuntimeData.LoadedCompletedScenarioIds"/> for
+        /// post-load processing.
+        /// </summary>
         public static bool Load(string fileName)
         {
             var path = GetSavePath(fileName);
@@ -146,10 +200,10 @@ namespace Cthangover.Core.Settings
             runtime.LampData.Influence = saveData.LampInfluence;
             runtime.RecruitingData.Data = saveData.Recruits ?? new List<Recruit>();
             runtime.CharacterData.BattleSet =
-                saveData.BattleSet?.ToHashSet() ?? new HashSet<CharacterType>();
+                saveData.BattleSet?.ToHashSet() ?? new HashSet<string>();
 
             runtime.CharacterData.Characters =
-                new Dictionary<CharacterType, CharacterInfoData>();
+                new Dictionary<string, CharacterInfoData>();
             if (saveData.Characters != null)
             {
                 foreach (var character in saveData.Characters)
@@ -170,6 +224,14 @@ namespace Cthangover.Core.Settings
             return true;
         }
 
+        /// <summary>
+        /// Enumerates all existing save slots up to <paramref name="slotCount"/>.
+        /// For each slot (<c>slot_1</c> through <c>slot_N</c>), reads the
+        /// JSON header to extract metadata for the load-game UI. Empty slots
+        /// (no file on disk) are represented by <see cref="SaveSlotInfo"/>
+        /// instances with <see cref="SaveSlotInfo.IsEmpty"/> = <c>true</c>,
+        /// so the UI always has a fixed-size grid.
+        /// </summary>
         public static List<SaveSlotInfo> GetSaveSlots(int slotCount)
         {
             var result = new List<SaveSlotInfo>();
@@ -251,6 +313,11 @@ namespace Cthangover.Core.Settings
             return result;
         }
 
+        /// <summary>
+        /// Deletes both the JSON save file and its associated PNG screenshot
+        /// for the given slot. Failures (e.g. file already missing) are logged
+        /// but do not throw.
+        /// </summary>
         public static void DeleteSave(string fileName)
         {
             var jsonPath = ProjectSettings.GlobalizePath(GetSavePath(fileName));

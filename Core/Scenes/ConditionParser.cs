@@ -3,6 +3,15 @@ using System.Collections.Generic;
 
 namespace Cthangover.Core.Scenes
 {
+    /// <summary>
+    /// Recursive-descent parser that converts condition expression strings into an
+    /// abstract syntax tree of <see cref="ConditionNode"/> objects. Supports boolean
+    /// logic (<c>&amp;&amp;</c>, <c>||</c>, <c>!</c>, grouping with parentheses), six
+    /// comparison operators (<c>==</c>, <c>!=</c>, <c>&gt;=</c>, <c>&lt;=</c>,
+    /// <c>&gt;</c>, <c>&lt;</c>), flag-to-literal comparisons, quest property comparisons
+    /// (<c>quest.Status >= 3</c> or <c>quest.DataStatus == 0</c>), and quest tag checks
+    /// (<c>quest.hasTag("tag")</c>, <c>quest.notHasTag("tag")</c>).
+    /// </summary>
     public static class ConditionParser
     {
         private enum TokenType
@@ -271,6 +280,12 @@ namespace Cthangover.Core.Scenes
             }
         }
 
+        /// <summary>
+        /// Parses a condition expression string into a <see cref="ConditionNode"/> AST.
+        /// Returns <c>null</c> for null, empty, or whitespace-only input. Throws
+        /// <see cref="FormatException"/> on syntax errors with position information.
+        /// </summary>
+        /// <param name="input">The condition expression string to parse.</param>
         public static ConditionNode Parse(string input)
         {
             if (string.IsNullOrWhiteSpace(input))

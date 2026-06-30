@@ -7,6 +7,12 @@ namespace Cthangover.Core.Battle.Actions
     /// </summary>
     public interface IActionExecutorProvider
     {
+        /// <summary>
+        /// Returns the executor registered for <paramref name="actionId"/>,
+        /// or null if no override is configured. Called by
+        /// <see cref="ActionExecutorHub"/> before falling back to the
+        /// global registry.
+        /// </summary>
         IActionExecutor GetExecutor(string actionId);
     }
 }

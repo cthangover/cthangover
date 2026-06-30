@@ -5,6 +5,15 @@ using Godot;
 
 namespace Cthangover.FFBattle.Actions
 {
+    /// <summary>
+    /// Animation for item usage in battle. Creates a floating item icon
+    /// (<see cref="TextureRect"/>) that rises above the source character and then
+    /// flies toward the target with fading opacity. Phases: (1) RaiseItem — the
+    /// item icon floats upward and the source bobs, (2) ApplyEffect — the icon
+    /// lerps to the target's position and <see cref="FFItemExecutor.TryUseItem"/>
+    /// is called at 30% phase, (3) Recover — source returns to position with
+    /// ease-out. The icon is freed in <see cref="DoInternalEnd"/>.
+    /// </summary>
     public class FFItemAnimation : FFAbstractAnimation
     {
         private enum Phase { RaiseItem, ApplyEffect, Recover, Done }
@@ -14,6 +23,7 @@ namespace Cthangover.FFBattle.Actions
         private bool _effectApplied;
         private TextureRect _itemIcon;
 
+        /// <summary>Creates an item-use animation. <paramref name="action"/> is a synthetic <c>"ff/item"</c> descriptor; actual logic runs via <paramref name="item"/>.</summary>
         public FFItemAnimation(FFCharacterWidget source, FFCharacterWidget target, ActionCharacter action, IItem item, float speed = 1f)
             : base(source, target, action, speed)
         {

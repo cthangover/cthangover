@@ -4,6 +4,15 @@ using Godot;
 
 namespace Cthangover.FFBattle.Actions
 {
+    /// <summary>
+    /// Executes a physical attack action. Calculates damage as
+    /// <c>action.Attack × user.Attack</c>, then routes through
+    /// <see cref="StatusEffectQueue.OnDealDamage"/> and
+    /// <see cref="StatusEffectQueue.OnTakeDamage"/> for status-effect
+    /// hooks. Subtraction is applied defence-first: <see cref="CharacterAttributes.Defence"/>
+    /// absorbs damage point-for-point before health is reduced.
+    /// Registered under ID <c>"physics/attack"</c>.
+    /// </summary>
     public class FFDamageExecutor : ActionBase
     {
         public override string ID => "FFDamageExecutor";

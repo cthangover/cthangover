@@ -24,6 +24,7 @@ namespace Cthangover.Core.UI.Base.Lists.Impls
 
         private Border contentBorder => new() { left = borderLeft, right = borderRight, top = borderTop, bottom = borderBottom };
 
+        /// <summary>Dynamically computed cell dimensions in pixels. Width = (content width - borders - padding * (columns - 1)) / columns; height = width * aspectHeight.</summary>
         public Vector2 CellSize => GetCellSize(Content.Size);
 
         private Vector2 GetCellSize(Vector2 contentSize)
@@ -35,6 +36,7 @@ namespace Cthangover.Core.UI.Base.Lists.Impls
             return new Vector2(cellWidth, cellHeight);
         }
 
+        /// <summary>Number of cells visible in the viewport: X = columnCount, Y = floor((content height - borders) / (cell height + padding)).</summary>
         public Vector2I ViewCellsCount
         {
             get
@@ -47,6 +49,7 @@ namespace Cthangover.Core.UI.Base.Lists.Impls
             }
         }
 
+        /// <summary>Calculates total scrollable content height: top border + bottom border + rows * cellHeight + (rows - 1) * padding.</summary>
         public override Vector2 GetContentSize(int count)
         {
             if (count == 0) return Vector2.Zero;

@@ -46,7 +46,14 @@ namespace Cthangover.Core.Battle
 
 		private BattleData data;
 
-		public override void Show()
+        /// <summary>
+        /// Victory screen entry point. Awards tracked EXP to each
+        /// surviving character, builds the EXP report row (4 slots,
+        /// placeholders for missing characters), generates loot from
+        /// defeated enemies, lays out the loot grid, adds items to
+        /// inventory, and processes character recruitment rolls.
+        /// </summary>
+        public override void Show()
 		{
 			lootTitle.Text = TranslationServer.Translate("ui/battle/victory/loot_title");
 			

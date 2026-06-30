@@ -8,7 +8,13 @@ namespace Cthangover.Core.Characters
     /// </summary>
     public struct CharacterSet
     {
+        /// <summary>
+        /// Damage dealt or received in this exchange.
+        /// </summary>
         public int Damage;
+        /// <summary>
+        /// Defence value at the time of the exchange.
+        /// </summary>
         public int Defence;
     }
 }

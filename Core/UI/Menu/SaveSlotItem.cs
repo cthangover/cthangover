@@ -23,6 +23,10 @@ namespace Cthangover.Core.UI.Menu
 		private Button slotButton;
 		private Label statsLabel;
 
+        /// <summary>
+        /// Emitted when this specific slot is clicked, carrying the save file name so the parent
+        /// <see cref="SaveSlotList"/> can forward it to <see cref="SaveLoadMenu"/>.
+        /// </summary>
 		[Signal]
 		public delegate void SlotPressedEventHandler(string fileName);
 
@@ -37,6 +41,12 @@ namespace Cthangover.Core.UI.Menu
 			statsLabel = GetNodeOrNull<Label>("StatsLabel");
 		}
 
+		/// <summary>
+		/// Populates the slot visuals from the <see cref="SaveSlotInfo"/> model. For occupied slots,
+		/// loads the screenshot texture, formats the game date from <see cref="SaveSlotInfo.GameTime"/>,
+		/// shows the real-world save timestamp, and displays party size. Empty slots show only a
+		/// localized "empty" label. Wires the button click signal to emit <see cref="SlotPressed"/>.
+		/// </summary>
 		public override void Construct(SaveSlotInfo model)
 		{
 			base.Construct(model);
@@ -88,6 +98,11 @@ namespace Cthangover.Core.UI.Menu
 			EmitSignal(SignalName.SlotPressed, Model.FileName);
 		}
 
+		/// <summary>
+		/// Disconnects the button signal to prevent callbacks on freed nodes, then queues
+		/// this item for deletion. Called by the <see cref="SaveSlotList"/> when rebuilding
+		/// the grid, ensuring no dangling signal references.
+		/// </summary>
 		public override void Destruct()
 		{
 			if (slotButton != null && GodotObject.IsInstanceValid(slotButton))

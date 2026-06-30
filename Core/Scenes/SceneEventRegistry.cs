@@ -12,6 +12,11 @@ namespace Cthangover.Core.Scenes
 		private static readonly Dictionary<string, List<SceneEventInfo>> events = new();
 		private static bool initialized;
 
+		/// <summary>
+		/// Scans all loaded assemblies for <see cref="ExecutableEvent"/> types decorated
+		/// with <see cref="SceneEventAttribute"/> and registers them in the event table.
+		/// Uses double-checked locking for thread safety. Subsequent calls are no-ops.
+		/// </summary>
 		public static void Initialize()
 		{
 			if (initialized)
@@ -27,11 +32,29 @@ namespace Cthangover.Core.Scenes
 			}
 		}
 
+		/// <summary>
+		/// Registers a specific <see cref="ExecutableEvent"/> subclass for a scene with
+		/// optional priority, dependency, and condition parameters.
+		/// </summary>
+		/// <typeparam name="T">The <see cref="ExecutableEvent"/> subclass to register.</typeparam>
+		/// <param name="sceneName">The scene identifier to associate the event with.</param>
+		/// <param name="priority">Execution priority (lower = earlier). Default 0.</param>
+		/// <param name="after">Identifier of an event that must precede this one.</param>
+		/// <param name="condition">Condition expression string evaluated at runtime.</param>
 		public static void Register<T>(string sceneName, int priority = 0, string after = null, string condition = null) where T : class
 		{
 			Register(typeof(T), sceneName, priority, after, condition);
 		}
 
+		/// <summary>
+		/// Non-generic variant of <see cref="Register{T}"/> that accepts a
+		/// <see cref="Type"/> directly.
+		/// </summary>
+		/// <param name="type">The <see cref="ExecutableEvent"/> type to register.</param>
+		/// <param name="sceneName">The scene identifier to associate the event with.</param>
+		/// <param name="priority">Execution priority (lower = earlier). Default 0.</param>
+		/// <param name="after">Identifier of an event that must precede this one.</param>
+		/// <param name="condition">Condition expression string evaluated at runtime.</param>
 		public static void Register(Type type, string sceneName, int priority = 0, string after = null, string condition = null)
 		{
 			lock (events)
@@ -53,6 +76,12 @@ namespace Cthangover.Core.Scenes
 			}
 		}
 
+		/// <summary>
+		/// Returns all registered <see cref="SceneEventInfo"/> entries for the given
+		/// scene name, sorted topologically by priority and <c>After</c> dependencies.
+		/// Ensures <see cref="Initialize"/> has been called first.
+		/// </summary>
+		/// <param name="sceneName">The scene identifier to retrieve events for.</param>
 		public static List<SceneEventInfo> GetEvents(string sceneName)
 		{
 			Initialize();
@@ -112,6 +141,13 @@ namespace Cthangover.Core.Scenes
                 RegisterFromAttributes(assembly);
         }
 
+        /// <summary>
+        /// Scans a specific assembly for <see cref="SceneEventAttribute"/>-decorated
+        /// <see cref="ExecutableEvent"/> types and registers them. Thread-safe.
+        /// Useful for registering events from dynamically loaded mod assemblies
+        /// after initial startup.
+        /// </summary>
+        /// <param name="assembly">The assembly to scan for event types.</param>
         public static void RegisterAssembly(Assembly assembly)
         {
             lock (events)

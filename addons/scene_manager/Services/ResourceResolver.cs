@@ -8,6 +8,14 @@ using Godot;
 
 namespace SceneManagerAddon
 {
+    /// <summary>
+    /// Static utility that catalogues all known game resources
+    /// (background textures, locale keys, quest IDs, registered scene
+    /// names) by crawling the <c>mods/</c> directory tree. These
+    /// catalogues are the "source of truth" that
+    /// <see cref="SceneValidator"/> uses to check every reference
+    /// extracted from scene JSON files and scenario scripts.
+    /// </summary>
     public static class ResourceResolver
     {
         private static string _projectPath;
@@ -44,6 +52,14 @@ namespace SceneManagerAddon
             return _textureExtensions;
         }
 
+        /// <summary>
+        /// Crawls the <c>backgrounds/</c> directory of every mod in
+        /// <paramref name="mods"/> and collects the base name (without
+        /// extension) of every recognized image file. The set of valid
+        /// extensions is read from <c>config/mod_config.json</c> under
+        /// <c>texture_extensions</c>, falling back to <c>.png</c>,
+        /// <c>.jpg</c>, <c>.jpeg</c>.
+        /// </summary>
         public static HashSet<string> GetAllBackgroundIds(List<ModSceneInfo> mods)
         {
             var ids = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -72,6 +88,15 @@ namespace SceneManagerAddon
             return ids;
         }
 
+        /// <summary>
+        /// Searches every mod's <c>backgrounds/</c> folder for a texture
+        /// file whose name (without extension) matches
+        /// <paramref name="backgroundId"/>. Returns the absolute
+        /// filesystem path of the first match, or <c>null</c> if no
+        /// matching texture exists. Used by
+        /// <see cref="Views.ScenarioTextPanel"/> to load background
+        /// thumbnail previews.
+        /// </summary>
         public static string ResolveBackgroundFile(string backgroundId)
         {
             var modsPath = Path.Combine(ProjectPath, "mods");
@@ -90,6 +115,12 @@ namespace SceneManagerAddon
             return null;
         }
 
+        /// <summary>
+        /// Collects the <see cref="SceneDefInfo.Name"/> of every scene
+        /// across all mods into a case-insensitive set. This set is the
+        /// authority for validating <c>switch_scene</c> targets — any
+        /// target not present here is flagged as an error.
+        /// </summary>
         public static HashSet<string> GetRegisteredSceneNames(List<ModSceneInfo> mods)
         {
             var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -99,6 +130,12 @@ namespace SceneManagerAddon
             return names;
         }
 
+        /// <summary>
+        /// Parses every <c>*.properties</c> file in every mod's
+        /// <c>locale/</c> directory and extracts the left-hand side of
+        /// each key-value line (trimmed) into a set. Scenario locale
+        /// references not found in this set get a warning.
+        /// </summary>
         public static HashSet<string> GetAllLocaleKeys(List<ModSceneInfo> mods)
         {
             var keys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -124,6 +161,13 @@ namespace SceneManagerAddon
             return keys;
         }
 
+        /// <summary>
+        /// Walks every <c>quests/*.json</c> file across all mods,
+        /// parses the JSON, and collects the <c>"Id"</c> value of
+        /// every item in the <c>"Items"</c> array. Errors are
+        /// comparison-checked against this set to catch typos and
+        /// dangling references.
+        /// </summary>
         public static HashSet<string> GetAllQuestIds(List<ModSceneInfo> mods)
         {
             var ids = new HashSet<string>(StringComparer.OrdinalIgnoreCase);

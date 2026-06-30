@@ -7,7 +7,9 @@ namespace Cthangover.Core.Battle
     /// </summary>
     public enum BattleSide
     {
+        /// <summary>The player's party.</summary>
         Player,
+        /// <summary>The opposing force (monsters, NPCs).</summary>
         Enemy,
     }
 }

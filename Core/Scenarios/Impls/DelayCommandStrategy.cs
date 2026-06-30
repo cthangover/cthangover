@@ -5,10 +5,18 @@ using Cthangover.Core.UI.Dialog;
 
 namespace Cthangover.Core.Scenarios
 {
+    /// <summary>
+    /// Handles the <c>delay</c> DSL command. Pauses dialog execution for a
+    /// number of seconds, optionally displaying a text label during the pause.
+    /// If the <c>hidden</c> flag is set, the delay runs without visible text.
+    /// Supports localization via the <c>key=</c> named parameter.
+    /// </summary>
     public class DelayCommandStrategy : IScenarioCommandStrategy
     {
+        /// <inheritdoc/>
         public string Command => "delay";
 
+        /// <inheritdoc/>
         public void Execute(DialogQueue dlg, List<string> positional, Dictionary<string, string> named, string arrowTarget, ILocalizationProvider locale)
         {
             var time = positional.Count > 0 ? ParseFloat(positional[0]) : 1f;

@@ -19,6 +19,11 @@ namespace Cthangover.Core.UI.Animation
         private int frameWidth;
         private float totalDuration;
 
+        /// <summary>Factory method that creates the node, attaches it to <paramref name="target"/> filling the full rect, and initializes the spritesheet animation. Returns null if target or sheet is null.</summary>
+        /// <param name="target">Parent Control to anchor the animation to.</param>
+        /// <param name="sheet">Horizontal spritesheet texture. Frame width = sheet width / frameCount.</param>
+        /// <param name="frameCount">Number of frames in the spritesheet.</param>
+        /// <param name="totalDuration">Total playback time in seconds; frameInterval = totalDuration / frameCount.</param>
         public static EffectAnimNode SpawnOn(Control target, Texture2D sheet, int frameCount, float totalDuration)
         {
             if (target == null || sheet == null)

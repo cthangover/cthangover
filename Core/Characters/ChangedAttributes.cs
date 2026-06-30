@@ -9,8 +9,20 @@ namespace Cthangover.Core.Characters
     /// </summary>
     public struct ChangedAttributes
     {
+        /// <summary>
+        /// Snapshot of the action source's damage and defence after the
+        /// exchange.
+        /// </summary>
         public CharacterSet Source;
+        /// <summary>
+        /// Snapshot of the action target's damage and defence after the
+        /// exchange.
+        /// </summary>
         public CharacterSet Target;
+        /// <summary>
+        /// Whether the action succeeded (e.g. hit landed vs. missed or
+        /// blocked).
+        /// </summary>
         public bool Result;
 
     }

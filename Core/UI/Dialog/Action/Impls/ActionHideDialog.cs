@@ -8,6 +8,7 @@ namespace Cthangover.Core.UI.Dialog.Action.Impls
     /// </summary>
     public class ActionHideDialog : ActionCommand
     {
+        /// <summary>Hides the dialog immediately — the queue continues without pause.</summary>
         public override WaitType WaitType { get; set; } = WaitType.NoWait;
 
         public override void DoRun(DialogRuntime runtime)

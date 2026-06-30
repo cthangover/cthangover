@@ -3,8 +3,36 @@ using Godot;
 
 namespace Cthangover.Core.Utils
 {
+    /// <summary>
+    /// Centralised texture-loading pipeline for the mod system. Because Godot's
+    /// <c>ResourceLoader</c> cannot load assets embedded inside mod archives,
+    /// this utility reads raw image bytes through <see cref="ModManager"/> and
+    /// decodes them into <see cref="Godot.Texture2D"/> instances via Godot's
+    /// <see cref="Image"/> API. It also performs extension-based key matching
+    /// so that callers can omit file extensions when requesting textures.
+    /// </summary>
 	public static class TextureUtils
 	{
+		/// <summary>
+		/// Loads a texture identified by <paramref name="imagePath"/> from the
+		/// mod group named <paramref name="groupName"/>. The path is normalised
+		/// (slashes, casing, optional extension) before it is matched against
+		/// the file manifest maintained by <see cref="ModManager.Instance"/>.
+		/// </summary>
+		/// <param name="groupName">
+		/// The logical mod group whose file manifest will be searched.
+		/// </param>
+		/// <param name="imagePath">
+		/// A project-relative path to the image. Leading slashes are stripped,
+		/// any <c>groupName/</c> prefix is removed, and the extension may be
+		/// omitted — the first file whose key starts with the normalised path
+		/// and carries a recognised texture extension (from
+		/// <c>ModConfig.Instance.GetTextureExtensionSet()</c>) will be loaded.
+		/// </param>
+		/// <returns>
+		/// A decoded <see cref="Texture2D"/>, or <c>null</c> if the path is
+		/// blank, no matching file is found, or decoding fails.
+		/// </returns>
 		public static Texture2D LoadFromModGroup(string groupName, string imagePath)
 		{
 			if (string.IsNullOrWhiteSpace(imagePath))

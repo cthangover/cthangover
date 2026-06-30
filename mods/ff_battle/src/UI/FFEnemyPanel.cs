@@ -7,6 +7,14 @@ using Godot;
 
 namespace Cthangover.FFBattle.UI
 {
+    /// <summary>
+    /// Panel that arranges enemy character widgets in a grid layout and handles their
+    /// lifecycle. Calculates a uniform scale for all enemy widgets based on the panel
+    /// dimensions and enemy count, centering rows horizontally. Listens to each
+    /// widget's health change and triggers <see cref="FFCharacterWidget.PlayDeathAnimation"/>
+    /// when HP reaches zero, then removes the dead widget and re-grids the survivors.
+    /// Raises <see cref="OnEnemyDead"/> so <see cref="FFBattleCore"/> can check win conditions.
+    /// </summary>
     public partial class FFEnemyPanel : ModWidget
     {
         private const float BASE_W = 180f;
@@ -15,15 +23,24 @@ namespace Cthangover.FFBattle.UI
         private const float MAX_SCALE = 1.0f;
         private const float CELL_PADDING = 10f;
 
+        /// <summary>All enemy character widgets currently in the panel, including dead ones until removed.</summary>
         public List<FFCharacterWidget> Widgets { get; } = new();
 
+        /// <summary>Raised when a widget's death animation completes and the widget is removed.</summary>
         public event System.Action<FFCharacterWidget> OnEnemyDead;
+        /// <summary>Raised when an enemy widget is clicked (used for target selection).</summary>
         public event System.Action<FFCharacterWidget> OnEnemyClicked;
 
         protected override void Construct() { }
 
+        /// <summary>Number of enemy widget instances currently managed (including dead).</summary>
         public int EnemyCount => Widgets.Count;
 
+        /// <summary>
+        /// Creates <see cref="FFCharacterWidget"/> instances for each enemy, scales
+        /// them uniformly, wires click and health-change handlers, and calls
+        /// <see cref="GridLayout"/> to arrange them.
+        /// </summary>
         public void Init(Character[] enemies, float scale)
         {
             foreach (var child in Widgets)
@@ -56,6 +73,13 @@ namespace Cthangover.FFBattle.UI
             GridLayout();
         }
 
+        /// <summary>
+        /// Computes a uniform scale factor so all enemies fit within
+        /// <paramref name="panelSize"/> with padding. Uses
+        /// <see cref="GetGridDimensions"/> to determine layout, then chooses
+        /// the tighter of width-based and height-based scales, clamped to
+        /// [<c>MIN_SCALE</c>, <c>MAX_SCALE</c>].
+        /// </summary>
         public static float CalculateScale(int enemyCount, Vector2 panelSize)
         {
             var (cols, rows) = GetGridDimensions(enemyCount);
@@ -72,6 +96,10 @@ namespace Cthangover.FFBattle.UI
             return scale;
         }
 
+        /// <summary>
+        /// Determines grid dimensions for a given count: 1–4 → single row,
+        /// 5–10 → 2 rows, 11–16 → 3 rows, 17+ → 4 rows.
+        /// </summary>
         public static (int cols, int rows) GetGridDimensions(int count)
         {
             if (count <= 4) return (count, 1);
@@ -80,6 +108,7 @@ namespace Cthangover.FFBattle.UI
             return ((count + 3) / 4, 4);
         }
 
+        /// <summary>Repositions all widgets into the calculated grid, with optional 0.3s cubic tween animation.</summary>
         public void GridLayout(bool animate = true)
         {
             var (cols, rows) = GetGridDimensions(Widgets.Count);
@@ -134,6 +163,7 @@ namespace Cthangover.FFBattle.UI
             });
         }
 
+        /// <summary>Removes a widget from the panel, frees it, and re-grids the remaining widgets.</summary>
         public void RemoveWidget(FFCharacterWidget widget)
         {
             Widgets.Remove(widget);
@@ -141,6 +171,7 @@ namespace Cthangover.FFBattle.UI
             GridLayout();
         }
 
+        /// <summary>Returns <c>true</c> if any widget in the panel is not marked dead.</summary>
         public bool HasAlive()
         {
             foreach (var w in Widgets)
@@ -149,6 +180,7 @@ namespace Cthangover.FFBattle.UI
             return false;
         }
 
+        /// <summary>Frees all widget instances and clears the widget list. Called on battle cleanup.</summary>
         public void ClearAll()
         {
             foreach (var widget in Widgets.ToList())

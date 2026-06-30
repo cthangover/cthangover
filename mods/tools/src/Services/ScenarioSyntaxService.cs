@@ -4,8 +4,23 @@ using Godot;
 
 namespace Cthangover.Tools.Services
 {
+    /// <summary>
+    /// Static service providing scenario DSL syntax highlighting, tokenisation,
+    /// and command-line parsing. <see cref="CreateHighlighter"/> produces a
+    /// <see cref="CodeHighlighter"/> for the scenario editor's
+    /// <see cref="TextEdit"/>. <see cref="ExtractCommandParams"/> tokenises a
+    /// scenario command line into a command name, positional arguments, and
+    /// named (<c>key=value</c>) parameters — used by
+    /// <see cref="ScenarioFileService.ExtractReferences"/> for reference analysis.
+    /// </summary>
     public static class ScenarioSyntaxService
     {
+        /// <summary>
+        /// Builds a <see cref="CodeHighlighter"/> for scenario DSL syntax.
+        /// Comments (lines starting with <c>#</c>) are green, strings are orange,
+        /// command names are blue, and argument keywords (e.g. <c>key</c>,
+        /// <c>wait</c>, <c>quest_id</c>) are amber.
+        /// </summary>
         public static CodeHighlighter CreateHighlighter()
         {
             var hl = new CodeHighlighter();
@@ -33,6 +48,10 @@ namespace Cthangover.Tools.Services
             return hl;
         }
 
+        /// <summary>
+        /// Splits a line into tokens, handling quoted strings (with backslash
+        /// escaping) and whitespace. Returns all non-whitespace tokens in order.
+        /// </summary>
         public static List<string> Tokenize(string line)
         {
             var result = new List<string>();
@@ -60,6 +79,7 @@ namespace Cthangover.Tools.Services
             return result;
         }
 
+        /// <summary>Strips surrounding double quotes from a value if present.</summary>
         public static string StripQuotes(string val)
         {
             if (val.Length >= 2 && val.StartsWith("\"") && val.EndsWith("\""))
@@ -67,6 +87,17 @@ namespace Cthangover.Tools.Services
             return val;
         }
 
+        /// <summary>
+        /// Parses a scenario command line into its components. Tokenises via
+        /// <see cref="Tokenize"/>, then extracts the first token as the command
+        /// name (lowercased), remaining bare tokens as positional arguments, and
+        /// <c>key=value</c> pairs as named arguments. The <c>-></c> arrow token
+        /// is consumed but discarded.
+        /// </summary>
+        /// <param name="line">A single scenario command line (trimmed).</param>
+        /// <param name="cmd">The command name, lowercased.</param>
+        /// <param name="positional">Positional arguments in order.</param>
+        /// <param name="named">Named arguments keyed by lowercased name.</param>
         public static void ExtractCommandParams(string line, out string cmd, out List<string> positional, out Dictionary<string, string> named)
         {
             positional = new List<string>();

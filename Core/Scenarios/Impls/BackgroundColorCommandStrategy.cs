@@ -5,10 +5,17 @@ using Godot;
 
 namespace Cthangover.Core.Scenarios
 {
+    /// <summary>
+    /// Handles the <c>background_color</c> DSL command. Sets the dialog scene's
+    /// background color from a named color string (e.g. <c>black</c>, <c>red</c>)
+    /// or an HTML hex color (e.g. <c>#FF0000</c>). Delegates to <see cref="DialogQueue.BackgroundColor"/>.
+    /// </summary>
     public class BackgroundColorCommandStrategy : IScenarioCommandStrategy
     {
+        /// <inheritdoc/>
         public string Command => "background_color";
 
+        /// <inheritdoc/>
         public void Execute(DialogQueue dlg, List<string> positional, Dictionary<string, string> named, string arrowTarget, ILocalizationProvider locale)
         {
             if (positional.Count > 0)

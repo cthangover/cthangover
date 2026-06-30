@@ -16,15 +16,29 @@ namespace Cthangover.Core.Cards.StatusEffect
     /// </summary>
     public class StatusEffectItem : IStatusEffect
     {
+        /// <inheritdoc cref="IStatusEffect.ID"/>
         public string ID { get; private set; }
+        /// <inheritdoc cref="IStatusEffect.Name"/>
         public string Name { get; private set; }
+        /// <inheritdoc cref="IStatusEffect.Description"/>
         public string Description { get; private set; }
+        /// <inheritdoc cref="IStatusEffect.Duration"/>
         public int Duration { get; set; }
+        /// <inheritdoc cref="IStatusEffect.RemainingTurns"/>
         public int RemainingTurns { get; set; }
+        /// <inheritdoc cref="IStatusEffect.EffectType"/>
         public StatusEffectType EffectType { get; private set; }
+        /// <inheritdoc cref="IStatusEffect.Icon"/>
         public Texture2D Icon { get; private set; }
+        /// <inheritdoc cref="IStatusEffect.Actions"/>
         public IStatusActions Actions { get; private set; }
 
+        /// <summary>Constructs a runtime effect from its JSON-serialisable
+        /// definition. Resolves the icon via
+        /// <c>TextureUtils.LoadFromModGroup</c> and the action set via
+        /// <c>StatusEffectActionFactory</c>.</summary>
+        /// <param name="info">Deserialised effect data from a mod
+        /// config.</param>
         public StatusEffectItem(StatusEffectInfo info)
         {
             ID   = info.ID;
@@ -36,8 +50,16 @@ namespace Cthangover.Core.Cards.StatusEffect
             Actions = StatusEffectActionFactory.Instance.Get(info.Actions);
         }
 
+        /// <summary>Parameterless constructor for cases where properties are
+        /// set manually (e.g. by <see cref="Copy"/> or deserialisation
+        /// paths).</summary>
         public StatusEffectItem() { }
         
+        /// <summary>Shallow clone that copies primitives and reuses the
+        /// shared <c>Actions</c> reference. Used when the queue
+        /// duplicates effects during character cloning.</summary>
+        /// <returns>A new <see cref="StatusEffectItem"/> with identical
+        /// property values.</returns>
         public IStatusEffect Copy()
         {
             return new StatusEffectItem

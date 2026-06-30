@@ -5,6 +5,15 @@ using Godot;
 
 namespace Cthangover.Core.Scenes
 {
+	/// <summary>
+	/// Manages native Godot scene file (.tscn) transitions with a shader-based fade
+	/// overlay. Handles scene routing for menus, battle, and the main base scene.
+	/// Orchestrates the full transition lifecycle: fade-out, synchronous scene change
+	/// via <see cref="SceneTree.ChangeSceneToFile"/>, deferred shader patching, subscription
+	/// execution, and fade-in. The static <see cref="IsTransitioning"/> flag is consumed
+	/// by <see cref="SceneManager"/> to decide between instant and animated background
+	/// swaps during scene entry.
+	/// </summary>
 	public partial class GodotSceneService : Node
 	{
 		private SceneManager sceneManager;
@@ -16,6 +25,11 @@ namespace Cthangover.Core.Scenes
 		private string currentGodotSceneName;
 		private Tween fadeTween;
 
+		/// <summary>
+		/// Indicates whether a scene transition fade is currently in progress. When
+		/// <c>true</c>, <see cref="SceneManager"/> applies background changes instantly
+		/// rather than animating them, avoiding visual conflicts with the fade effect.
+		/// </summary>
 		public static bool IsTransitioning { get; private set; }
 
 		public override void _Ready()
@@ -25,6 +39,13 @@ namespace Cthangover.Core.Scenes
 			sceneManager = GetNode<SceneManager>("/root/SceneManager");
 		}
 
+		/// <summary>
+		/// Initiates loading a .tscn scene file. Notifies all music players in the
+		/// "music_player" group about the scene type, then delegates to
+		/// <see cref="BeginSceneTransition"/> for the actual transition. Battle scenes
+		/// receive a fade effect; non-battle scenes switch immediately.
+		/// </summary>
+		/// <param name="nextScene">The resource path to the .tscn file to load.</param>
 		public void LoadScene(string nextScene)
 		{
 			GameLogger.Log("SCENE", $"load scene '{nextScene}'...");
@@ -224,6 +245,14 @@ namespace Cthangover.Core.Scenes
 			GameLogger.Log("SCENE", "PatchShaderMaterialsAfterLoad: DONE");
 		}
 
+        /// <summary>
+        /// Resolves a <see cref="GodotSceneType"/> to its .tscn file path via
+        /// <see cref="GetScenePath"/>, runs exit subscriptions for the currently loaded
+        /// Godot scene through <see cref="SceneSubscriptionRegistry.RunExitSubscriptions"/>,
+        /// then delegates to <see cref="LoadScene"/>. If no file path is resolved,
+        /// falls back to <see cref="SceneManager.SwitchScene"/> for scenario-based routing.
+        /// </summary>
+        /// <param name="sceneType">The type of Godot scene to switch to.</param>
         public void SwitchScene(GodotSceneType sceneType)
         {
             if (!string.IsNullOrEmpty(currentGodotSceneName))
@@ -245,11 +274,19 @@ namespace Cthangover.Core.Scenes
             sceneManager?.SwitchScene(sceneType.ToString());
         }
 
+        /// <summary>
+        /// Convenience method that switches to the main menu scene.
+        /// Equivalent to <c>SwitchScene(GodotSceneType.MainMenu)</c>.
+        /// </summary>
         public void SwitchToMenu()
         {
             SwitchScene(GodotSceneType.MainMenu);
         }
 
+        /// <summary>
+        /// Convenience method that switches to the battle scene.
+        /// Equivalent to <c>SwitchScene(GodotSceneType.Battle)</c>.
+        /// </summary>
         public void SwitchToBattle()
         {
             SwitchScene(GodotSceneType.Battle);

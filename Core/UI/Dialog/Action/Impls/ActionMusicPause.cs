@@ -9,6 +9,7 @@ namespace Cthangover.Core.UI.Dialog.Action.Impls
     /// </summary>
     public class ActionMusicPause : ActionCommand
     {
+        /// <summary>Pause is instant — the dialog continues without waiting for audio acknowledgment.</summary>
         public override WaitType WaitType { get; set; } = WaitType.NoWait;
 
         public override void DoRun(DialogRuntime runtime)

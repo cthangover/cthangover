@@ -5,10 +5,18 @@ using Cthangover.Core.UI.Dialog;
 
 namespace Cthangover.Core.Scenarios
 {
+    /// <summary>
+    /// Handles the <c>animation</c> DSL command. Supports two modes:
+    /// (a) multiple sprites via <c>sprites=</c> named parameter, or
+    /// (b) a single sprite base with <c>start</c>, <c>count</c>, <c>speed</c>, and <c>loop</c> controls.
+    /// Delegates to <see cref="DialogQueue.Animation"/>.
+    /// </summary>
     public class AnimationCommandStrategy : IScenarioCommandStrategy
     {
+        /// <inheritdoc/>
         public string Command => "animation";
 
+        /// <inheritdoc/>
         public void Execute(DialogQueue dlg, List<string> positional, Dictionary<string, string> named, string arrowTarget, ILocalizationProvider locale)
         {
             if (named.TryGetValue("sprites", out var spritesStr))

@@ -17,6 +17,11 @@ namespace Cthangover.Core.UI.Inventory
     /// </summary>
     public partial class PlayerInventoryBagBehaviour : ColumnCellListWidget<InventoryItemBehaviour, IItemContainer>
     {
+        /// <summary>
+        /// Subscribes to inventory change events for auto-refresh, sets mouse
+        /// filter to <c>Stop</c> to block click-through, and hides the bag
+        /// initially.
+        /// </summary>
         public override void _Ready()
         {
             GameData.Instance.Runtime.Inventory.Change += Refresh;
@@ -26,6 +31,11 @@ namespace Cthangover.Core.UI.Inventory
             Hide();
         }
 
+        /// <summary>
+        /// Shows the inventory bag. Updates content size to match the
+        /// <c>ScrollContainer</c> width and sets mouse filter to block
+        /// click-through to the game world.
+        /// </summary>
         public override void Show()
         {
             MouseFilter = MouseFilterEnum.Stop;
@@ -33,11 +43,19 @@ namespace Cthangover.Core.UI.Inventory
             base.Show();
         }
 
+        /// <summary>
+        /// Consumes all GUI input to prevent events from reaching nodes behind
+        /// the inventory panel.
+        /// </summary>
         public override void _GuiInput(InputEvent @event)
         {
             AcceptEvent();
         }
 
+        /// <summary>
+        /// Unsubscribes from the inventory change event to prevent memory leaks
+        /// when this node leaves the scene tree.
+        /// </summary>
         public override void _ExitTree()
         {
             GameData.Instance.Runtime.Inventory.Change -= Refresh;
@@ -56,6 +74,11 @@ namespace Cthangover.Core.UI.Inventory
             }
         }
 
+        /// <summary>
+        /// Provides the player's inventory items from
+        /// <see cref="GameData.Instance.Runtime.Inventory.Items"/> as the data
+        /// source for the grid display.
+        /// </summary>
         public override ICollection<IItemContainer> CreateModels()
         {
             return GameData.Instance.Runtime.Inventory.Items;

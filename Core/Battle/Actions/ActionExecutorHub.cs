@@ -14,22 +14,43 @@ namespace Cthangover.Core.Battle.Actions
     /// </summary>
     public class ActionExecutorHub
     {
+        /// <summary>
+        /// Singleton hub instance. There is one global dispatcher shared
+        /// across all battle cores; cores swap providers via
+        /// <see cref="SetActiveProvider"/> when they activate.
+        /// </summary>
         public static readonly ActionExecutorHub Instance = new();
 
         private IActionExecutorProvider _activeProvider;
         private readonly Dictionary<string, IActionExecutor> _globalExecutors = new();
 
+        /// <summary>
+        /// Installs a per-core executor provider. The active provider is
+        /// consulted before the global registry, allowing the current
+        /// battle core to override specific action handlers.
+        /// </summary>
         public void SetActiveProvider(IActionExecutorProvider provider)
         {
             _activeProvider = provider;
         }
 
+        /// <summary>
+        /// Registers a fallback executor in the global pool, keyed by
+        /// <see cref="IActionExecutor.ActionId"/>. Global executors are
+        /// used when no active provider supplies a match.
+        /// </summary>
         public void RegisterGlobal(IActionExecutor executor)
         {
             if (executor != null && !string.IsNullOrEmpty(executor.ActionId))
                 _globalExecutors[executor.ActionId] = executor;
         }
 
+        /// <summary>
+        /// Dispatches an action to the appropriate executor. Resolution
+        /// order: active provider first, then global registry. Returns
+        /// <c>Result = false</c> if no executor is found or if
+        /// <paramref name="action"/> is null.
+        /// </summary>
         public ChangedAttributes Execute(ActionCharacter action, Character user, Character target)
         {
             if (action == null)

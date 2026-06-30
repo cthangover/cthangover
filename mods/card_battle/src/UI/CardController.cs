@@ -9,6 +9,15 @@ using Godot;
 
 namespace Cthangover.CardBattle.UI
 {
+    /// <summary>
+    /// Central input handler for the card battle UI. Processes mouse clicks and drags to implement
+    /// the full player interaction flow: click a character card to show its action cards in the
+    /// action panel, drag an action card onto a valid target (enemy for attacks, ally for support,
+    /// self for self-buffs), and execute the action on drop. Valid targets are determined by
+    /// <see cref="CardActionStrategyFactory.Get"/> dispatching the appropriate <see cref="ICardActionStrategy"/>.
+    /// Fires <see cref="OnActionExecuted"/> after each action, which <see cref="CardBattleCore"/>
+    /// uses to detect automatic turn end when all points are exhausted.
+    /// </summary>
     public partial class CardController : InputHandlerNode
     {
         private Control actionPanel;
@@ -27,6 +36,11 @@ namespace Cthangover.CardBattle.UI
         private Vector2 pressPosition;
         private Node _originalActionCardParent;
 
+        /// <summary>
+        /// Locates the action panel and both battle card panels (<see cref="BattleCardPanel"/>) in the
+        /// scene tree relative to this node. Called once by <see cref="CardBattleCore.Init"/>
+        /// after the controller is added to the scene.
+        /// </summary>
         public void FindPanels()
         {
             actionPanel = GetNodeOrNull<Control>("../ActionPanel");
@@ -90,14 +104,28 @@ namespace Cthangover.CardBattle.UI
 
         private float cardScale = 1f;
 
+        /// <summary>
+        /// Uniform scale factor applied to all action cards created by this controller.
+        /// Set by <see cref="CardBattleCore.Start"/> based on viewport fitting calculations.
+        /// </summary>
         public float CardScale
         {
             get => cardScale;
             set => cardScale = value;
         }
 
+        /// <summary>
+        /// Fired after a successful drag-and-drop action execution. Subscribed by
+        /// <see cref="CardBattleCore.CheckPlayerTurnEnd"/> to auto-end the player's turn
+        /// when all action points are spent.
+        /// </summary>
         public event System.Action OnActionExecuted;
 
+        /// <summary>
+        /// Clears previous action cards and creates new <see cref="ActionCardNode"/> instances
+        /// for every action in <paramref name="character"/>'s deck. Action cards fade in and are
+        /// laid out horizontally in the action panel. Called when the player clicks a character card.
+        /// </summary>
         public void ShowActions(CharacterCardNode character)
         {
             if (character?.Card?.Actions == null)
@@ -128,6 +156,10 @@ namespace Cthangover.CardBattle.UI
             Redraw(animate: false);
         }
 
+        /// <summary>
+        /// Animates existing action cards fading out and dropping down, then frees them.
+        /// Called before showing new action cards for a different character.
+        /// </summary>
         public void DiscardActionCharacters()
         {
             if (actionCards.Count == 0)
@@ -151,6 +183,12 @@ namespace Cthangover.CardBattle.UI
             }
         }
 
+        /// <summary>
+        /// Deselects the current action card, source character, and target character, clearing
+        /// their visual highlights and optionally discarding action cards. When
+        /// <paramref name="clearSource"/> is <c>true</c>, the action panel is also cleared. Triggers
+        /// a redraw of all battle panels to restore normal Z-ordering.
+        /// </summary>
         public void ClearSelections(bool clearSource = true)
         {
             if (currentActionCharacter != null)
@@ -177,6 +215,10 @@ namespace Cthangover.CardBattle.UI
             }
         }
 
+        /// <summary>
+        /// Immediately frees all action card nodes without animation. Called at battle cleanup
+        /// by <see cref="CardBattleCore.OnBattleCleared"/>.
+        /// </summary>
         public void ClearActions()
         {
             if (actionCards.Count > 0)
@@ -187,6 +229,10 @@ namespace Cthangover.CardBattle.UI
             }
         }
 
+        /// <summary>
+        /// Re-positions all action cards in a horizontal row within the action panel.
+        /// When <paramref name="animate"/> is <c>true</c>, cards tween smoothly to their targets.
+        /// </summary>
         public void Redraw(bool animate = true)
         {
             var size = actionCards.Count;
@@ -211,6 +257,11 @@ namespace Cthangover.CardBattle.UI
             }
         }
 
+        /// <summary>
+        /// Instantiates an <see cref="ActionCardNode"/>, adds it to the action panel, applies
+        /// the given <paramref name="cardScale"/>, and initializes it with <paramref name="actionCard"/> data.
+        /// Called by <see cref="ShowActions"/> for each action in a character's deck.
+        /// </summary>
         public ActionCardNode CreateAction(ActionCharacter actionCard, float cardScale)
         {
             var card = new ActionCardNode();
@@ -221,6 +272,11 @@ namespace Cthangover.CardBattle.UI
             return card;
         }
 
+        /// <summary>
+        /// Resolves the currently selected action against the selected target using the
+        /// appropriate <see cref="ICardActionStrategy"/>. Called by <see cref="OnEndDrag"/>
+        /// when a valid drop is confirmed.
+        /// </summary>
         public void DoActionToTarget()
         {
             var strategy = Cthangover.CardBattle.Player.CardActionStrategyFactory.Get(

@@ -5,17 +5,34 @@ using Godot;
 
 namespace Cthangover.CardBattle.UI
 {
+    /// <summary>
+    /// UI node representing a single action card that the player can drag onto a target.
+    /// Implements <see cref="ICard"/> so <see cref="CardController"/> can hit-test drag targets.
+    /// Displayed in the <see cref="CardController"/>'s action panel below the character cards.
+    /// Supports hover scale-up animation, selection highlighting (<see cref="Select"/>, <see cref="Attack"/>, <see cref="Invalid"/>),
+    /// and info updates from the underlying <see cref="ActionCharacter"/> data model.
+    /// </summary>
     public partial class ActionCardNode : ModWidget, ICard
     {
         private TextureRect frame;
         private TextureRect image;
         private Label nameLabel;
 
+        /// <inheritdoc />
         public TextureRect Frame => frame;
+        /// <inheritdoc />
         public TextureRect Image => image;
 
+        /// <summary>
+        /// The <see cref="ActionCharacter"/> data model backing this card. Contains the action's
+        /// name, image, type, and stat modifiers used during execution.
+        /// </summary>
         public ActionCharacter Card { get; set; }
 
+        /// <summary>
+        /// Returns <c>this</c> — action cards are <see cref="Control"/> nodes themselves,
+        /// unlike <see cref="CharacterCardNode"/> which wraps a separate control.
+        /// </summary>
         public Control GetControlNode() => this;
 
         private Tween hoverTween;
@@ -58,18 +75,34 @@ namespace Cthangover.CardBattle.UI
             MouseExited += OnMouseExited;
         }
 
+        /// <summary>
+        /// Placeholder for selection highlight. Currently unused — action cards use
+        /// <see cref="Attack"/> and <see cref="Invalid"/> for drag-over feedback instead.
+        /// </summary>
         public void Select()
         {
         }
 
+        /// <summary>
+        /// Placeholder for attack-mode highlight. Currently unused — target highlighting
+        /// is applied by <see cref="ICardActionStrategy.HighlightTarget"/> instead.
+        /// </summary>
         public void Attack()
         {
         }
 
+        /// <summary>
+        /// Placeholder for invalid-target highlight. Currently unused — invalidity is
+        /// indicated by <see cref="ICardActionStrategy.HighlightTarget"/> calling
+        /// <see cref="CharacterCardNode.Invalid"/> on the target card instead.
+        /// </summary>
         public void Invalid()
         {
         }
 
+        /// <summary>
+        /// Resets the Z-index to 0 when the card is no longer being dragged.
+        /// </summary>
         public void Unselect()
         {
             ZIndex = 0;
@@ -100,6 +133,11 @@ namespace Cthangover.CardBattle.UI
             hoverTween.TweenProperty(this, "scale", _baseScale, 0.12f);
         }
 
+        /// <summary>
+        /// Initializes the card with data from <paramref name="card"/>, caches the base scale
+        /// for hover animation, sets the card image texture, and refreshes displayed text.
+        /// Called by <see cref="CardController.CreateAction"/>.
+        /// </summary>
         public void Init(ActionCharacter card)
         {
             Card = card;
@@ -110,6 +148,9 @@ namespace Cthangover.CardBattle.UI
             UpdateInfo();
         }
 
+        /// <summary>
+        /// Refreshes the displayed name label from the translated <see cref="ActionCharacter.Name"/>.
+        /// </summary>
         public void UpdateInfo()
         {
             if (nameLabel != null && Card != null)

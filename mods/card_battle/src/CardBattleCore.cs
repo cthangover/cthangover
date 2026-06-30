@@ -12,10 +12,24 @@ using Godot;
 
 namespace Cthangover.CardBattle
 {
+    /// <summary>
+    /// Core orchestrator for the card-based turn battle system.
+    /// Manages the full battle lifecycle: initializing UI panels (<see cref="BattleCardPanel"/> and <see cref="CardController"/>),
+    /// cycling between player and enemy turns, spawning animated actions via <see cref="AbstractBattleAction"/>,
+    /// applying status effects each turn, and detecting win/loss conditions when all cards on one side are dead.
+    /// Implements <see cref="IBattleCore"/> so it can be registered as a battle type provider in the core battle engine.
+    /// </summary>
     public class CardBattleCore : IBattleCore
     {
+        /// <summary>
+        /// Unique identifier for this battle core, used by the battle engine to select the card battle mod.
+        /// </summary>
         public string Id => "card_battle";
 
+        /// <summary>
+        /// Provides <see cref="IActionExecutor"/> instances for the three card action types
+        /// (physics/attack, physics/defence, physics/stun) used during action resolution.
+        /// </summary>
         public IActionExecutorProvider ActionProvider { get; } = new Actions.CardBattleActionProvider();
 
         private Character[] _playerChars;
@@ -36,6 +50,12 @@ namespace Cthangover.CardBattle
         private const float BASE_CARD_WIDTH = 230f;
         private const float BASE_CARD_HEIGHT = 420f;
 
+        /// <summary>
+        /// Initializes the card battle by constructing the player and enemy <see cref="BattleCardPanel"/> instances,
+        /// the <see cref="CardController"/> for drag-and-drop input, and the <see cref="EndTurnButton"/>.
+        /// Enemy characters are deep-copied so defeats are tracked independently per battle instance.
+        /// The <see cref="CardBattleActionProvider"/> is registered with <see cref="ActionExecutorHub"/>.
+        /// </summary>
         public void Init(Character[] playerChars, Character[] enemyChars, IBattleContext ctx)
         {
             _playerChars = playerChars;
@@ -76,6 +96,12 @@ namespace Cthangover.CardBattle
             _cardController.FindPanels();
         }
 
+        /// <summary>
+        /// Positions the UI panels relative to the viewport, calculates a unified <c>cardScale</c> that
+        /// fits both player and enemy cards on screen, initializes all character cards, and starts the first player turn.
+        /// Subscribes to <c>OnCardDead</c> to record defeated enemies and to <c>OnActionExecuted</c> to detect
+        /// automatic turn completion when all player cards exhaust their action points.
+        /// </summary>
         public void Start()
         {
             var root = _ctx.RootNode as Node;
@@ -206,6 +232,12 @@ namespace Cthangover.CardBattle
                 OnPlayerTurnEnd();
         }
 
+        /// <summary>
+        /// Ends the player's turn by hiding the end-turn button, setting the battle to <c>IsWait</c>,
+        /// and yielding two frames for UI to settle before running the enemy AI turn via <c>RunEnemyTurn</c>.
+        /// If all enemies are already dead, the battle ends immediately with the player as winner.
+        /// This method is <c>async void</c> so it can await frames without blocking the game loop.
+        /// </summary>
         public async void OnPlayerTurnEnd()
         {
             GameLogger.Log("CARD_BATTLE", "Player turn ended", LogLevel.Debug);

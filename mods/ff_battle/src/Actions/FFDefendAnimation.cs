@@ -6,6 +6,16 @@ using Godot;
 
 namespace Cthangover.FFBattle.Actions
 {
+    /// <summary>
+    /// Animation for defensive/support actions (buff, self-target, ally heal).
+    /// Phases: (1) Bounce — source character bobs in place with a sine-based
+    /// vertical oscillation, (2) Glow — applies the effect via
+    /// <see cref="ActionExecutorHub"/> at 30% phase progress, triggering a green
+    /// flash on the target and floating defence/damage indicators, (3) Recover —
+    /// smoothly returns the source to its original position with ease-out
+    /// interpolation. Unlike <see cref="FFAttackAnimation"/>, the source does not
+    /// move toward the target.
+    /// </summary>
     public class FFDefendAnimation : FFAbstractAnimation
     {
         private enum Phase { Bounce, Glow, Recover, Done }
@@ -14,6 +24,7 @@ namespace Cthangover.FFBattle.Actions
         private bool _effectApplied;
         private Vector2 _bounceOffset;
 
+        /// <summary>Creates a defend/buff animation for source→target with the given action descriptor and speed.</summary>
         public FFDefendAnimation(FFCharacterWidget source, FFCharacterWidget target, ActionCharacter action, float speed = 1f)
             : base(source, target, action, speed) { }
 

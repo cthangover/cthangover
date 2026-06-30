@@ -11,10 +11,14 @@ namespace Cthangover.Core.UI.Dialog.Action.Impls
     /// </summary>
     public class ActionSet : ActionCommand
     {
+        /// <summary>Variable name. Referenced by subsequent actions via ${name} syntax.</summary>
         public string Name { get; set; }
+        /// <summary>Literal value to store. Ignored if <see cref="Callback"/> is set.</summary>
         public string Value { get; set; }
+        /// <summary>Lazy evaluation delegate. When non-null, invoked at runtime to compute the value dynamically.</summary>
         public Func<string> Callback { get; set; }
 
+        /// <summary>Variable assignment is instant — the dialog continues without pause.</summary>
         public override WaitType WaitType { get; set; } = WaitType.NoWait;
 
         public override void DoRun(DialogRuntime runtime)

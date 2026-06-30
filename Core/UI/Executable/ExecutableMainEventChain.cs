@@ -25,16 +25,33 @@ namespace Cthangover.Core.UI.Executable
 		private SceneEventController eventController;
 		private float timestamp;
 
+        /// <summary>
+        /// Stores the last background ID set by action commands (e.g. "bg_home").
+        /// Used on scene revisit to restore the previously active background.
+        /// </summary>
 		public string LastBackgroundID { get; set; }
 
+        /// <summary>
+        /// Event priority for <see cref="SceneEventController"/> sorting. Value
+        /// <c>1</c> places this chain after high-priority handlers but before
+        /// general subscribers.
+        /// </summary>
 		public int Priority => 1;
 
+        /// <summary>
+        /// Enables or disables event polling. When <c>false</c>,
+        /// <see cref="OnUpdate"/> returns immediately without dispatching events.
+        /// </summary>
 		public bool IsActive
 		{
 			get => isActive;
 			set { isActive = value; }
 		}
 
+        /// <summary>
+        /// Removes and frees all currently registered events from the chain via
+        /// <c>QueueFree</c> and empties the internal event list.
+        /// </summary>
 		public void ClearEvents()
 		{
 			GameLogger.Log("CHAIN", $"ClearEvents: removing {allEvents.Count} event(s)");
@@ -48,6 +65,11 @@ namespace Cthangover.Core.UI.Executable
 			allEvents.Clear();
 		}
 
+        /// <summary>
+        /// Adds an <see cref="ExecutableEvent"/> to the chain and reparents it via
+        /// <c>AddChild</c>. Events are dispatched in insertion order.
+        /// </summary>
+        /// <param name="evt">The event to register and parent to this chain.</param>
 		public void AddEvent(ExecutableEvent evt)
 		{
 			var id = evt is ScenarioEvent se ? se.Condition ?? "no_condition" : evt.GetType().Name;
@@ -57,6 +79,11 @@ namespace Cthangover.Core.UI.Executable
 			GameLogger.Log("CHAIN", $"  AddEvent: done, allEvents.Count={allEvents.Count}");
 		}
 
+        /// <summary>
+        /// Removes an event from the chain and queues it for deletion. No-op if
+        /// the event is not currently registered.
+        /// </summary>
+        /// <param name="evt">The event to unregister and free.</param>
 		public void RemoveEvent(ExecutableEvent evt)
 		{
 			if (allEvents.Remove(evt))
@@ -121,8 +148,16 @@ namespace Cthangover.Core.UI.Executable
 			dialog.RunDialog();
 		}
 
+        /// <summary>
+        /// <c>true</c> if the chain has any registered events remaining. Used to
+        /// check whether a scene still has pending dialog content.
+        /// </summary>
 		public bool HasEvents => allEvents.Count > 0;
 
+        /// <summary>
+        /// Deactivates the chain, preventing any further event dispatch until
+        /// reactivation.
+        /// </summary>
 		public void Stop()
 		{
 			isActive = false;

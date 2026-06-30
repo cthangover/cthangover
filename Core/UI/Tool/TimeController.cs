@@ -34,13 +34,25 @@ namespace Cthangover.Core.UI.Tool
 			eventController?.RemoveTimerTickEventListener(this);
 		}
 
+		/// <summary>
+		/// Priority in the <see cref="SceneEventController"/> listener chain. Returns 0 (default).
+		/// </summary>
 		public int Priority => 0;
 
+		/// <summary>
+		/// Called by <see cref="SceneEventController"/> on each timer tick. Delegates to
+		/// <see cref="UpdateRenderedTime"/> to refresh the on-screen clock label.
+		/// </summary>
 		public void OnTimerTick()
 		{
 			UpdateRenderedTime();
 		}
 
+		/// <summary>
+		/// Applies <c>timeScale</c> to <c>Engine.TimeScale</c> (global time speed), reads the
+		/// current in-game time from <see cref="GameData.Runtime.Time"/>, and writes its text
+		/// representation to the <c>TimeLabel</c> node.
+		/// </summary>
 		public void UpdateRenderedTime()
 		{
 			Engine.TimeScale = timeScale;

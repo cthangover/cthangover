@@ -71,6 +71,11 @@ namespace Cthangover.Core.UI.Menu
             return SceneManager.IsSaveAllowedForCurrentScene();
         }
 
+        /// <summary>
+        /// Enables or disables the save button based on whether the current scene permits saving.
+        /// Called by <see cref="ToolBox.OnSettingsClick"/> before showing the game menu, so the
+        /// button state reflects the current scene's save policy.
+        /// </summary>
         public void RefreshSaveButton()
         {
             _saveBtn.Disabled = !IsSaveAllowed();

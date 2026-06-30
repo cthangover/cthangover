@@ -18,6 +18,11 @@ namespace Cthangover.Core.UI.Menu
     /// </summary>
     public partial class SettingsMenu : Control
     {
+        /// <summary>
+        /// Emitted after the player selects a different language and it has been applied.
+        /// Parent menus (<see cref="MainMenu"/>, <see cref="GameMenu"/>) subscribe to refresh
+        /// their translated button text.
+        /// </summary>
         [Signal]
         public delegate void LanguageChangedEventHandler();
         private TabContainer _tabs;

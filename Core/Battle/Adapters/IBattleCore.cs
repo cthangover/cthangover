@@ -14,12 +14,33 @@ namespace Cthangover.Core.Battle
     /// </summary>
     public interface IBattleCore
     {
+        /// <summary>
+        /// Unique identifier for this battle engine (e.g. "card_battle",
+        /// "ff_battle"). Used by <see cref="BattleCoreRegistry"/> and
+        /// <see cref="BattleData.ActiveBattleCore"/> for lookup.
+        /// </summary>
         string Id { get; }
 
+        /// <summary>
+        /// Provider that returns core-specific <see cref="IActionExecutor"/>
+        /// overrides. Set on the <see cref="ActionExecutorHub"/> when
+        /// this core activates, so actions route through custom logic
+        /// before falling back to the global registry.
+        /// </summary>
         IActionExecutorProvider ActionProvider { get; }
 
+        /// <summary>
+        /// Initialises the core with the two character arrays and a
+        /// <see cref="IBattleContext"/> for callbacks. Called once per
+        /// battle before <see cref="Start"/>.
+        /// </summary>
         void Init(Character[] playerChars, Character[] enemyChars, IBattleContext ctx);
 
+        /// <summary>
+        /// Begins the turn loop. Cores may use coroutines, polling, or
+        /// event-driven state machines — the core owns its own lifecycle
+        /// after this call.
+        /// </summary>
         void Start();
     }
 }

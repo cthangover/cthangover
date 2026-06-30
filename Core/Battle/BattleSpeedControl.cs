@@ -42,6 +42,10 @@ namespace Cthangover.Core.Battle
 			ApplySavedSpeed();
 		}
 
+		/// <summary>
+		/// Restores the speed from <see cref="GameData.Settings.BattleSpeed"/>.
+		/// Called on <c>_Ready</c> to reapply the saved preference.
+		/// </summary>
 		public void ApplySavedSpeed()
 		{
 			var speed = GameData.Instance.Settings.BattleSpeed;
@@ -53,6 +57,12 @@ namespace Cthangover.Core.Battle
 			UpdateHighlight();
 		}
 
+		/// <summary>
+		/// Resets <see cref="Engine.TimeScale"/> to 1.0x without
+		/// persisting to settings. Used when battle ends so the lobby
+		/// and menus run at normal speed regardless of the player's
+		/// in-battle preference.
+		/// </summary>
 		public void ResetToNormal()
 		{
 			Engine.TimeScale = 1.0f;

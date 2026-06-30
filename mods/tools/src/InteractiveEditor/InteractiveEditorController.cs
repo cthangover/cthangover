@@ -13,33 +13,55 @@ namespace Cthangover.Tools.InteractiveEditor
 	/// </summary>
 	public class InteractiveEditorController
 	{
+		/// <summary>Unique identifier for the interactive object resource.</summary>
 		public string Id { get; set; } = "new_interactive";
+		/// <summary>Texture key mapped to a sprite resource by the resource system.</summary>
 		public string Texture { get; set; } = "";
+		/// <summary>Render layer: <c>"foreground"</c>, <c>"background"</c>, or <c>"ui"</c>.</summary>
 		public string Layer { get; set; } = "foreground";
+		/// <summary>Z-index for draw order within the layer.</summary>
 		public int ZIndex { get; set; }
+		/// <summary>Whether the interactive is initially enabled.</summary>
 		public bool Enabled { get; set; } = true;
+		/// <summary>Whether the interactive is visible.</summary>
 		public bool Visible { get; set; } = true;
+		/// <summary>Mouse cursor override name, e.g. <c>"PointingHand"</c>. Empty for default.</summary>
 		public string Cursor { get; set; } = "";
+		/// <summary>Collider shape type: <c>"rect"</c>, <c>"circle"</c>, or <c>"polygon"</c>.</summary>
 		public string HitType { get; set; } = "rect";
 
+        /// <summary>Normalised X position of the rect collider (0–1).</summary>
 		public float RectX { get; set; }
-		public float RectY { get; set; }
-		public float RectW { get; set; } = 0.1f;
-		public float RectH { get; set; } = 0.1f;
+        /// <summary>Normalised Y position of the rect collider (0–1).</summary>
+        public float RectY { get; set; }
+        /// <summary>Normalised width of the rect collider (0–1).</summary>
+        public float RectW { get; set; } = 0.1f;
+        /// <summary>Normalised height of the rect collider (0–1).</summary>
+        public float RectH { get; set; } = 0.1f;
 
-		public float CircleX { get; set; } = 0.5f;
-		public float CircleY { get; set; } = 0.5f;
-		public float CircleRadius { get; set; } = 0.05f;
+        /// <summary>Normalised X centre of the circle collider (0–1).</summary>
+        public float CircleX { get; set; } = 0.5f;
+        /// <summary>Normalised Y centre of the circle collider (0–1).</summary>
+        public float CircleY { get; set; } = 0.5f;
+        /// <summary>Normalised radius of the circle collider (0–1).</summary>
+        public float CircleRadius { get; set; } = 0.05f;
 
-		public List<Vector2> PolygonVertices { get; set; } = new();
+        /// <summary>List of normalised (0–1) vertices defining the polygon collider.</summary>
+        public List<Vector2> PolygonVertices { get; set; } = new();
 
-		public string HighlightColorHex { get; set; } = "#FFFF0033";
-		public float HighlightScale { get; set; } = 1.02f;
+        /// <summary>Hex colour string (e.g. <c>"#FFFF0033"</c>) for the highlight overlay.</summary>
+        public string HighlightColorHex { get; set; } = "#FFFF0033";
+        /// <summary>Scale multiplier applied to the sprite when highlighted.</summary>
+        public float HighlightScale { get; set; } = 1.02f;
 
-		public string OnClickScenario { get; set; } = "";
-		public string OnClickCommands { get; set; } = "";
-		public string OnHoverEnter { get; set; } = "";
-		public string OnHoverLeave { get; set; } = "";
+        /// <summary>Scenario file path executed on click.</summary>
+        public string OnClickScenario { get; set; } = "";
+        /// <summary>Inline DSL commands executed on click, one per line.</summary>
+        public string OnClickCommands { get; set; } = "";
+        /// <summary>DSL commands executed when the mouse enters the interactive area.</summary>
+        public string OnHoverEnter { get; set; } = "";
+        /// <summary>DSL commands executed when the mouse leaves the interactive area.</summary>
+        public string OnHoverLeave { get; set; } = "";
 
 		/// <summary>Builds an InteractiveDefinition from current state.</summary>
 		public InteractiveDefinition ToDefinition()

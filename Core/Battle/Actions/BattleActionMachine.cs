@@ -16,10 +16,20 @@ namespace Cthangover.Core.Battle.Actions
 	public partial class BattleActionMachine : Node
 	{
 
+		/// <summary>
+		/// Pending action queue. Actions are dequeued one-by-one in _Process,
+		/// starting the next as soon as the current signals completion.
+		/// Can be extended while the machine is running — new actions will
+		/// be processed after the current queue drains.
+		/// </summary>
 		public  List<IBattleAction> Actions       { get; set; } = new();
 		private IBattleAction       CurrentAction { get; set; }
 		private bool                _hadActions;
 
+		/// <summary>
+		/// Fired when the machine drains naturally or is explicitly stopped.
+		/// Battle cores subscribe to advance the turn phase without polling.
+		/// </summary>
 		public event StopMachineDelegate OnStopMachine;
 		
 		public override void _ExitTree()
@@ -64,6 +74,10 @@ namespace Cthangover.Core.Battle.Actions
 			}
 		}
 
+		/// <summary>
+		/// Enqueues a single action. If the machine is idle (no current
+		/// action), processing starts on the next _Process tick.
+		/// </summary>
 		public void AddAction(IBattleAction action)
 		{
 			if (action == null)
@@ -71,6 +85,10 @@ namespace Cthangover.Core.Battle.Actions
 			Actions.Add(action);
 		}
 
+		/// <summary>
+		/// Batch-enqueues multiple actions. All are appended to the existing
+		/// queue and processed in FIFO order on subsequent frames.
+		/// </summary>
 		public void AddActions(List<IBattleAction> actions)
 		{
 			if(actions == null || actions.Count == 0)
@@ -78,6 +96,11 @@ namespace Cthangover.Core.Battle.Actions
 			Actions.AddRange(actions);
 		}
 		
+		/// <summary>
+		/// Immediately clears the queue, aborts the current action, and
+		/// fires <see cref="OnStopMachine"/>. Called on _ExitTree and
+		/// when the queue drains naturally.
+		/// </summary>
 		public void StopMachine()
 		{
 			CurrentAction = null;

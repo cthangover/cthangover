@@ -10,8 +10,18 @@ namespace Cthangover.Core.Battle.Actions
     /// </summary>
     public interface IActionExecutor
     {
+        /// <summary>
+        /// String key that matches <see cref="ActionCharacter.ID"/>.
+        /// The hub uses this to resolve executors without knowing
+        /// concrete types.
+        /// </summary>
         string ActionId { get; }
 
+        /// <summary>
+        /// Applies the action's effects. Receives the action definition
+        /// and the user/target <see cref="Character"/> instances; returns
+        /// <see cref="ChangedAttributes"/> with deltas and success/failure.
+        /// </summary>
         ChangedAttributes Execute(ActionCharacter action, Character user, Character target);
     }
 }

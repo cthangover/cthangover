@@ -13,6 +13,12 @@ namespace Cthangover.Core.UI.Inventory
     public partial class InventoryBagBehaviour : ColumnCellListWidget<InventoryItemBehaviour, IItemContainer>
     {
         private List<IItemContainer> list;
+
+        /// <summary>
+        /// Bound inventory data source. Setting this property immediately rebuilds
+        /// the grid display via <see cref="Refresh"/>. The entire grid is
+        /// reconstructed from the new list reference.
+        /// </summary>
         public List<IItemContainer> List
         {
             get => list;
@@ -23,6 +29,10 @@ namespace Cthangover.Core.UI.Inventory
             }
         }
 
+        /// <summary>
+        /// Provides the current <see cref="List"/> as the data collection for the
+        /// <see cref="ColumnCellListWidget{TItem, TModel}"/> base.
+        /// </summary>
         public override ICollection<IItemContainer> CreateModels()
         {
             return list;

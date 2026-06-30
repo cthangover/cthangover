@@ -10,8 +10,10 @@ namespace Cthangover.Core.UI.Dialog.Action.Impls
     /// </summary>
     public class ActionRun : ActionCommand
     {
+        /// <summary>Arbitrary delegate executed during dialog sequencing. Null delegates are logged and skipped.</summary>
         public System.Action Executable { get; set; }
 
+        /// <summary>The delegate runs and the dialog advances — no pausing.</summary>
         public override WaitType WaitType { get; set; } = WaitType.NoWait;
 
         public override void DoRun(DialogRuntime runtime)
