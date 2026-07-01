@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Cthangover.Core.Factories.Impls;
 using Cthangover.Core.Mods;
 using Cthangover.Core.Scenarios;
 using Cthangover.Core.Scenes;

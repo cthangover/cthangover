@@ -1,3 +1,4 @@
+using System;
 using Cthangover.Core.Audio;
 using Cthangover.Core.Mods;
 using Cthangover.Core.Utils;
@@ -56,7 +57,7 @@ namespace Cthangover.Core.Scenes
 				{
 					GameLogger.Log("AUDIO", $"GodotSceneService notifying MusicPlayer about scene '{nextScene}'");
 					var fileName = System.IO.Path.GetFileNameWithoutExtension(nextScene);
-					if (System.Enum.TryParse<GodotSceneType>(fileName, out var sceneType))
+					if (System.Enum.TryParse<GodotSceneType>(fileName, true, out var sceneType))
 						cast.UpdateMusicType(sceneType);
 				}
 			}
@@ -103,7 +104,7 @@ namespace Cthangover.Core.Scenes
 
 		private static bool IsBattlePath(string scenePath)
 		{
-			return scenePath != null && scenePath.Contains("Battle");
+			return scenePath != null && scenePath.IndexOf("battle", StringComparison.OrdinalIgnoreCase) >= 0;
 		}
 
 		private void EnsureOverlay(Node root)
@@ -245,62 +246,62 @@ namespace Cthangover.Core.Scenes
 			GameLogger.Log("SCENE", "PatchShaderMaterialsAfterLoad: DONE");
 		}
 
-        /// <summary>
-        /// Resolves a <see cref="GodotSceneType"/> to its .tscn file path via
-        /// <see cref="GetScenePath"/>, runs exit subscriptions for the currently loaded
-        /// Godot scene through <see cref="SceneSubscriptionRegistry.RunExitSubscriptions"/>,
-        /// then delegates to <see cref="LoadScene"/>. If no file path is resolved,
-        /// falls back to <see cref="SceneManager.SwitchScene"/> for scenario-based routing.
-        /// </summary>
-        /// <param name="sceneType">The type of Godot scene to switch to.</param>
-        public void SwitchScene(GodotSceneType sceneType)
-        {
-            if (!string.IsNullOrEmpty(currentGodotSceneName))
-            {
-                var tree = GetTree();
-                if (tree != null)
-                    SceneSubscriptionRegistry.RunExitSubscriptions(currentGodotSceneName, tree.CurrentScene);
-            }
+		/// <summary>
+		/// Resolves a <see cref="GodotSceneType"/> to its .tscn file path via
+		/// <see cref="GetScenePath"/>, runs exit subscriptions for the currently loaded
+		/// Godot scene through <see cref="SceneSubscriptionRegistry.RunExitSubscriptions"/>,
+		/// then delegates to <see cref="LoadScene"/>. If no file path is resolved,
+		/// falls back to <see cref="SceneManager.SwitchScene"/> for scenario-based routing.
+		/// </summary>
+		/// <param name="sceneType">The type of Godot scene to switch to.</param>
+		public void SwitchScene(GodotSceneType sceneType)
+		{
+			if (!string.IsNullOrEmpty(currentGodotSceneName))
+			{
+				var tree = GetTree();
+				if (tree != null)
+					SceneSubscriptionRegistry.RunExitSubscriptions(currentGodotSceneName, tree.CurrentScene);
+			}
 
-            pendingSubscriptionSceneName = sceneType.ToString().ToLowerInvariant();
-            currentGodotSceneName = pendingSubscriptionSceneName;
-            var path = GetScenePath(sceneType);
-            if (!string.IsNullOrEmpty(path))
-            {
-                LoadScene(path);
-                return;
-            }
+			pendingSubscriptionSceneName = sceneType.ToString().ToLowerInvariant();
+			currentGodotSceneName = pendingSubscriptionSceneName;
+			var path = GetScenePath(sceneType);
+			if (!string.IsNullOrEmpty(path))
+			{
+				LoadScene(path);
+				return;
+			}
 
-            sceneManager?.SwitchScene(sceneType.ToString());
-        }
+			sceneManager?.SwitchScene(sceneType.ToString());
+		}
 
-        /// <summary>
-        /// Convenience method that switches to the main menu scene.
-        /// Equivalent to <c>SwitchScene(GodotSceneType.MainMenu)</c>.
-        /// </summary>
-        public void SwitchToMenu()
-        {
-            SwitchScene(GodotSceneType.MainMenu);
-        }
+		/// <summary>
+		/// Convenience method that switches to the main menu scene.
+		/// Equivalent to <c>SwitchScene(GodotSceneType.MainMenu)</c>.
+		/// </summary>
+		public void SwitchToMenu()
+		{
+			SwitchScene(GodotSceneType.MainMenu);
+		}
 
-        /// <summary>
-        /// Convenience method that switches to the battle scene.
-        /// Equivalent to <c>SwitchScene(GodotSceneType.Battle)</c>.
-        /// </summary>
-        public void SwitchToBattle()
-        {
-            SwitchScene(GodotSceneType.Battle);
-        }
+		/// <summary>
+		/// Convenience method that switches to the battle scene.
+		/// Equivalent to <c>SwitchScene(GodotSceneType.Battle)</c>.
+		/// </summary>
+		public void SwitchToBattle()
+		{
+			SwitchScene(GodotSceneType.Battle);
+		}
 
-        private static string GetScenePath(GodotSceneType type)
-        {
-            if (type == GodotSceneType.Battle)
-                return "res://Scenes/Battle.tscn";
-            if (type == GodotSceneType.MainMenu)
-                return "res://Scenes/MainMenu.tscn";
-            if (type == GodotSceneType.BaseScene)
-                return "res://Scenes/BaseScene.tscn";
-            return null;
-        }
-    }
+		private static string GetScenePath(GodotSceneType type)
+		{
+			if (type == GodotSceneType.Battle)
+				return "res://scenes/battle/battle.tscn";
+			if (type == GodotSceneType.MainMenu)
+				return "res://scenes/menu/main_menu.tscn";
+			if (type == GodotSceneType.BaseScene)
+				return "res://scenes/ui/base_scene.tscn";
+			return null;
+		}
+	}
 }

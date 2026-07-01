@@ -1,8 +1,9 @@
 using System;
+using Cthangover.Core.Interactive;
 using Cthangover.Core.Mods;
 using Cthangover.Core.Utils;
 
-namespace Cthangover.Core.Interactive
+namespace Cthangover.Core.Factories.Impls
 {
 	/// <summary>
 	/// Factory for <c>InteractiveDefinition</c> lookups. Wraps

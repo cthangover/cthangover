@@ -1,7 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://Core/UI/Dialog/DialogCanvas.cs" id="1_canvas"]
-[ext_resource type="PackedScene" path="res://Scenes/UI/DialogBox.tscn" id="2_dialogbox"]
+[ext_resource type="PackedScene" path="res://scenes/ui/dialog_box.tscn" id="2_dialogbox"]
 
 [node name="DialogCanvas" type="Control"]
 layout_mode = 3

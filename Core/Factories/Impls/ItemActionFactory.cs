@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using Cthangover.Core.Items;
 using Cthangover.Core.Utils;
-using Godot;
 
-namespace Cthangover.Core.Items
+namespace Cthangover.Core.Factories.Impls
 {
     /// <summary>
     /// Reflection-based plugin registry for item action behaviours.

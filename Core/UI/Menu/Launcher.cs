@@ -1,4 +1,4 @@
-using Cthangover.Core.Settings;
+﻿using Cthangover.Core.Settings;
 using Godot;
 
 namespace Cthangover.Core.UI.Menu
@@ -60,7 +60,7 @@ namespace Cthangover.Core.UI.Menu
                     : DisplayServer.VSyncMode.Disabled);
                 ProjectSettings.SetSetting("display/window/stretch/scale", (float)s.Scale);
             }
-            GetTree().ChangeSceneToFile("res://Scenes/MainMenu.tscn");
+            GetTree().ChangeSceneToFile("res://scenes/menu/main_menu.tscn");
         }
 
         private void BuildUI()
@@ -210,7 +210,7 @@ namespace Cthangover.Core.UI.Menu
         private void OnPlayClick()
         {
             ApplyAndSave();
-            GetTree().ChangeSceneToFile("res://Scenes/MainMenu.tscn");
+            GetTree().ChangeSceneToFile("res://scenes/menu/main_menu.tscn");
         }
 
         private void OnExitClick()

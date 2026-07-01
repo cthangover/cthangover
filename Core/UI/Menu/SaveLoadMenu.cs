@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Cthangover.Core.Scenes;
 using Cthangover.Core.Settings;
 using Godot;
@@ -101,7 +101,7 @@ namespace Cthangover.Core.UI.Menu
                         }
 
                         var sceneService = SceneContextNode.FindNode<GodotSceneService>("GodotSceneService");
-                        sceneService?.LoadScene("res://Scenes/BaseScene.tscn");
+                        sceneService?.LoadScene("res://scenes/ui/base_scene.tscn");
                     }
                 }
             }

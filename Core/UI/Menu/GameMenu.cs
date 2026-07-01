@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Cthangover.Core.Scenes;
 using Godot;
 
@@ -37,12 +37,12 @@ namespace Cthangover.Core.UI.Menu
             _btnKeys[GetNode<Button>("Panel/Margin/VBox/MainMenuBtn")] = "menu/main_menu";
             _btnKeys[GetNode<Button>("Panel/Margin/VBox/ExitBtn")] = "menu/exit";
 
-            _settingsMenu = GD.Load<PackedScene>("res://scenes/SettingsMenu.tscn").Instantiate<SettingsMenu>();
+            _settingsMenu = GD.Load<PackedScene>("res://scenes/menu/settings_menu.tscn").Instantiate<SettingsMenu>();
             _settingsMenu.Visible = false;
             _settingsMenu.LanguageChanged += RefreshButtons;
             AddChild(_settingsMenu);
 
-            _saveLoadMenu = GD.Load<PackedScene>("res://scenes/SaveLoadMenu.tscn").Instantiate<SaveLoadMenu>();
+            _saveLoadMenu = GD.Load<PackedScene>("res://scenes/menu/save_load_menu.tscn").Instantiate<SaveLoadMenu>();
             _saveLoadMenu.Visible = false;
             AddChild(_saveLoadMenu);
 

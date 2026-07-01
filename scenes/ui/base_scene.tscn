@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3 uid="uid://bs8k1n2m3p4q5"]
 
-[ext_resource type="PackedScene" uid="uid://dv50g7bpno3lu" path="res://Scenes/UI/Scene.tscn" id="1_scene"]
+[ext_resource type="PackedScene" uid="uid://dv50g7bpno3lu" path="res://scenes/ui/scene.tscn" id="1_scene"]
 [ext_resource type="Script" uid="uid://cgfwgutq2rj4a" path="res://Core/UI/Executable/ExecutableMainEventChain.cs" id="2_chain"]
 
 [node name="BaseScene" type="Control" groups=["main_event_chain"]]

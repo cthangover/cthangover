@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://bw5sfp66lf0jw"]
 
 [ext_resource type="Script" uid="uid://qhlsegnxyhf4" path="res://Core/UI/View/ViewBox.cs" id="1_viewbox"]
-[ext_resource type="PackedScene" uid="uid://crkf1jqtm5b4a" path="res://scenes/ui/Lights.tscn" id="2_lights"]
+[ext_resource type="PackedScene" uid="uid://crkf1jqtm5b4a" path="res://scenes/ui/lights.tscn" id="2_lights"]
 
 [node name="ViewBox" type="Control" unique_id=2077779400]
 layout_mode = 3

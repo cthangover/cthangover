@@ -1,12 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Text.RegularExpressions;
+using Cthangover.Core.Factories.Impls;
 using Cthangover.Core.Localization;
 using Cthangover.Core.UI.Dialog;
-using Cthangover.Core.UI.Dialog.Action;
 using Cthangover.Core.UI.Dialog.Action.Impls;
-using Godot;
 
 namespace Cthangover.Core.Scenarios
 {

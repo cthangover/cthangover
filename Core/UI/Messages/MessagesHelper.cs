@@ -1,4 +1,4 @@
-using Cthangover.Core.Scenes;
+﻿using Cthangover.Core.Scenes;
 using Cthangover.Core.Utils;
 using Godot;
 
@@ -91,7 +91,7 @@ namespace Cthangover.Core.UI.Messages
         public static void AddMessage(float position, string text, Color color, float speed = 1f)
         {
             if (prefab == null)
-                prefab = GD.Load<PackedScene>("res://scenes/ui/Message.tscn");
+                prefab = GD.Load<PackedScene>("res://scenes/ui/message.tscn");
 
             var instance = prefab.Instantiate<UiMessage>();
             var background = SceneContextNode.FindNode<Control>("Background");

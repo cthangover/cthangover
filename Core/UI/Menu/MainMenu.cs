@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Cthangover.Core.Scenes;
 using Cthangover.Core.UI.Tool;
 using Cthangover.Core.Utils;
@@ -36,12 +36,12 @@ namespace Cthangover.Core.UI.Menu
             _btnKeys[GetNode<Button>("MenuContainer/ExitBtn")] = "menu/exit";
             _btnKeys[GetNode<Button>("MenuContainer/ToolsBtn")] = "menu/tools";
 
-            _settingsMenu = GD.Load<PackedScene>("res://scenes/SettingsMenu.tscn").Instantiate<SettingsMenu>();
+            _settingsMenu = GD.Load<PackedScene>("res://scenes/menu/settings_menu.tscn").Instantiate<SettingsMenu>();
             _settingsMenu.Visible = false;
             _settingsMenu.LanguageChanged += RefreshButtons;
             AddChild(_settingsMenu);
 
-            _saveLoadMenu = GD.Load<PackedScene>("res://scenes/SaveLoadMenu.tscn").Instantiate<SaveLoadMenu>();
+            _saveLoadMenu = GD.Load<PackedScene>("res://scenes/menu/save_load_menu.tscn").Instantiate<SaveLoadMenu>();
             _saveLoadMenu.Visible = false;
             AddChild(_saveLoadMenu);
             
@@ -131,7 +131,7 @@ namespace Cthangover.Core.UI.Menu
             {
                 sceneManager.PendingSceneName = "start_scene";
                 var sceneService = GetNode<GodotSceneService>("/root/GodotSceneService");
-                sceneService?.LoadScene("res://Scenes/BaseScene.tscn");
+                sceneService?.LoadScene("res://scenes/ui/base_scene.tscn");
             }
         }
 

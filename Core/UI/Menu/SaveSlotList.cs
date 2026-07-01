@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Cthangover.Core.Settings;
 using Godot;
 
@@ -40,7 +40,7 @@ namespace Cthangover.Core.UI.Menu
 
         public override void _Ready()
         {
-            _itemScene = GD.Load<PackedScene>("res://scenes/SaveSlotItem.tscn");
+            _itemScene = GD.Load<PackedScene>("res://scenes/menu/save_slot_item.tscn");
             Resized += OnResized;
         }
 

@@ -1,9 +1,9 @@
-namespace Cthangover.Core.Scenes
+﻿namespace Cthangover.Core.Scenes
 {
     /// <summary>
     /// Enumerates the built-in Godot .tscn scenes that can be directly loaded by
     /// <see cref="GodotSceneService"/>. Each value maps to a specific scene file
-    /// path (e.g. <c>res://Scenes/MainMenu.tscn</c>). Also used by music player
+    /// path (e.g. <c>res://scenes/menu/main_menu.tscn</c>). Also used by music player
     /// behaviors to determine context-appropriate audio.
     /// </summary>
     public enum GodotSceneType

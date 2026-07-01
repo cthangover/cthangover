@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://f4p3u2o0jcvq"]
+[gd_scene format=3 uid="uid://pewe5q8u7a4x"]
 
 [ext_resource type="Script" uid="uid://dli6gyad80wio" path="res://Core/UI/Menu/Launcher.cs" id="LauncherScript"]
 [ext_resource type="Script" uid="uid://dvk5pel3k4k0b" path="res://Core/UI/Base/ModSpriteLoader.cs" id="ModSpriteLoaderScript"]

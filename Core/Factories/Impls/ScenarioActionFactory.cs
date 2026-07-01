@@ -2,9 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Cthangover.Core.Actions;
 using Cthangover.Core.Utils;
 
-namespace Cthangover.Core.Actions
+namespace Cthangover.Core.Factories.Impls
 {
     /// <summary>
     /// Singleton registry that discovers and indexes all IScenarioAction

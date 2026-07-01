@@ -1,7 +1,7 @@
 [gd_scene load_steps=2 format=3]
 
 [ext_resource type="Script" path="res://Core/UI/Dialog/AnswerBox.cs" id="1_answerbox"]
-[ext_resource type="PackedScene" path="res://Scenes/UI/AnswerItem.tscn" id="2_answeritem"]
+[ext_resource type="PackedScene" path="res://scenes/ui/answer_item.tscn" id="2_answeritem"]
 
 [node name="AnswerBox" type="Control"]
 layout_mode = 3

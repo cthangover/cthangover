@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using Cthangover.Core.Audio;
@@ -334,7 +334,7 @@ namespace Cthangover.Core.Battle
 			var sceneManager = GetNode<SceneManager>("/root/SceneManager");
 			if (sceneManager != null)
 				sceneManager.PendingSceneName = returnScene;
-			sceneService?.LoadScene("res://Scenes/BaseScene.tscn");
+            sceneService?.LoadScene("res://scenes/ui/base_scene.tscn");
 		}
 	}
 }

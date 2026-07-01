@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using Cthangover.Core.Factories.Impls;
 using Cthangover.Core.Utils;
 
 namespace Cthangover.Core.Mods
@@ -61,10 +62,10 @@ namespace Cthangover.Core.Mods
         /// </summary>
         public static void RegisterAssembly(Assembly assembly, string modId)
         {
-            Actions.ScenarioActionFactory.Instance.RegisterAssembly(assembly);
-            Scenarios.ScenarioCommandStrategyFactory.RegisterAssembly(assembly);
+            ScenarioActionFactory.Instance.RegisterAssembly(assembly);
+            ScenarioCommandStrategyFactory.RegisterAssembly(assembly);
             Scenes.SceneEventRegistry.RegisterAssembly(assembly);
-            Items.ItemActionFactory.RegisterAssembly(assembly);
+            ItemActionFactory.RegisterAssembly(assembly);
             Battle.BattleCoreRegistry.Instance.RegisterAssembly(assembly);
             Relationship.RecruitBehaviourRegistry.Instance.RegisterAssembly(assembly);
             UI.Tool.ToolFactory.Instance.RegisterAssembly(assembly);

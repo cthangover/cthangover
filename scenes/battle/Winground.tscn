@@ -1,8 +1,8 @@
 [gd_scene format=3 uid="uid://cq11ls8ja3lg0"]
 
 [ext_resource type="Script" uid="uid://cdfoypwmwgvwk" path="res://Core/Battle/WingroundBehaviour.cs" id="1_win"]
-[ext_resource type="PackedScene" uid="uid://dx40qu1dj80in" path="res://scenes/battle/ExpReportCard.tscn" id="2_expcard"]
-[ext_resource type="PackedScene" path="res://Scenes/Battle/LootReportItem.tscn" id="3_lootitem"]
+[ext_resource type="PackedScene" uid="uid://dx40qu1dj80in" path="res://scenes/battle/exp_report_card.tscn" id="2_expcard"]
+[ext_resource type="PackedScene" path="res://scenes/battle/loot_report_item.tscn" id="3_lootitem"]
 
 [node name="Winground" type="Control" unique_id=1812297436 node_paths=PackedStringArray("lootTitle")]
 layout_mode = 3

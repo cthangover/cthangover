@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -324,7 +324,7 @@ namespace Cthangover.Core.UI.Tool.ScenarioEditor
             }
 
             var sceneService = GetNodeOrNull<GodotSceneService>("/root/GodotSceneService");
-            sceneService?.LoadScene("res://Scenes/BaseScene.tscn");
+            sceneService?.LoadScene("res://scenes/ui/base_scene.tscn");
 
             _playActive = true;
         }

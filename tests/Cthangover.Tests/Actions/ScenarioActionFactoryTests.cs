@@ -1,9 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Cthangover.Core.Actions;
+using Cthangover.Core.Factories.Impls;
 using Cthangover.Core.UI.Dialog;
-using Cthangover.Core.UI.Dialog.Action;
 using Cthangover.Core.UI.Dialog.Action.Impls;
 
 namespace Engine.Tests.Actions

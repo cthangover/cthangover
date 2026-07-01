@@ -21,7 +21,7 @@ if ($Help) {
   .\tests\run_test.ps1                                          # Тесты модов
   .\tests\run_test.ps1 -Test battle                             # Тест боя
   .\tests\run_test.ps1 -Test menu                               # Тест главного меню
-  .\tests\run_test.ps1 -Test scene -Scene "res://Scenes/Battle.tscn" -Choices "0,1"
+  .\tests\run_test.ps1 -Test scene -Scene "res://scenes/battle/battle.tscn" -Choices "0,1"
 "@
     exit
 }

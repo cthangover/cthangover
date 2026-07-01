@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://crkf1jqtm5b4a"]
+[gd_scene format=3 uid="uid://cea6udtv45xtr"]
 
 [ext_resource type="Script" path="res://Core/UI/Lights/UiLightController.cs" id="1_lightctrl"]
 

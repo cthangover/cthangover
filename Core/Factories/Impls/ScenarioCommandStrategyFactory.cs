@@ -1,9 +1,9 @@
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
+using Cthangover.Core.Scenarios;
 using Cthangover.Core.Utils;
 
-namespace Cthangover.Core.Scenarios
+namespace Cthangover.Core.Factories.Impls
 {
     /// <summary>
     /// Auto-discovery registry for <see cref="IScenarioCommandStrategy"/> implementations.

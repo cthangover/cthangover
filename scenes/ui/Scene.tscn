@@ -1,10 +1,10 @@
 [gd_scene format=3 uid="uid://dv50g7bpno3lu"]
 
-[ext_resource type="PackedScene" uid="uid://bw5sfp66lf0jw" path="res://scenes/ui/ViewBox.tscn" id="1_viewbox"]
-[ext_resource type="PackedScene" path="res://Scenes/UI/DialogCanvas.tscn" id="2_canvas"]
-[ext_resource type="PackedScene" uid="uid://d3m4jm0xk8ruc" path="res://scenes/ui/TopView.tscn" id="3_topview"]
-[ext_resource type="PackedScene" path="res://Scenes/UI/PlayerInventoryBag.tscn" id="5_bag"]
-[ext_resource type="PackedScene" path="res://scenes/ui/GameMenu.tscn" id="6_gamemenu"]
+[ext_resource type="PackedScene" uid="uid://bw5sfp66lf0jw" path="res://scenes/ui/view_box.tscn" id="1_viewbox"]
+[ext_resource type="PackedScene" path="res://scenes/ui/dialog_canvas.tscn" id="2_canvas"]
+[ext_resource type="PackedScene" uid="uid://d3m4jm0xk8ruc" path="res://scenes/ui/top_view.tscn" id="3_topview"]
+[ext_resource type="PackedScene" path="res://scenes/ui/player_inventory_bag.tscn" id="5_bag"]
+[ext_resource type="PackedScene" path="res://scenes/menu/game_menu.tscn" id="6_gamemenu"]
 
 [node name="Scene" type="Control" unique_id=610561430]
 layout_mode = 3

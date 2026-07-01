@@ -3,9 +3,9 @@
 [ext_resource type="Script" uid="uid://dq85ubii8cfid" path="res://Core/Battle/Actions/BattleActionMachine.cs" id="BattleActionMachineScript"]
 [ext_resource type="Script" uid="uid://c1rwrejr5aoc0" path="res://Core/Battle/BattleSceneContext.cs" id="BattleSceneContextScript"]
 [ext_resource type="Script" uid="uid://cln2rvmofijtb" path="res://Core/Battle/BattleSpeedControl.cs" id="BattleSpeedControlScript"]
-[ext_resource type="PackedScene" uid="uid://bhkoi82ftv0wi" path="res://scenes/battle/Deadground.tscn" id="DeadgroundScene"]
+[ext_resource type="PackedScene" uid="uid://bhkoi82ftv0wi" path="res://scenes/battle/deadground.tscn" id="DeadgroundScene"]
 [ext_resource type="Script" uid="uid://icsu2hv2c68r" path="res://Core/UI/Lights/UiLightController.cs" id="UiLightControllerScript"]
-[ext_resource type="PackedScene" uid="uid://cq11ls8ja3lg0" path="res://scenes/battle/Winground.tscn" id="WingroundScene"]
+[ext_resource type="PackedScene" uid="uid://cq11ls8ja3lg0" path="res://scenes/battle/winground.tscn" id="WingroundScene"]
 
 [node name="BattleScene" type="Control" unique_id=760066045]
 layout_mode = 3

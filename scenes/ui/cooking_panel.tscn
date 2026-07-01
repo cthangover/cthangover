@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://dcx8esny0w1oq"]
 
 [ext_resource type="Script" path="res://Core/Scenes/Events/Home/DinerRoom/CookingPanelBehaviour.cs" id="1_script"]
-[ext_resource type="PackedScene" path="res://Scenes/UI/RecipeItem.tscn" id="2_recipe"]
+[ext_resource type="PackedScene" path="res://scenes/ui/recipe_item.tscn" id="2_recipe"]
 
 [node name="CookingPanel" type="Control" unique_id=1064111695]
 layout_mode = 3

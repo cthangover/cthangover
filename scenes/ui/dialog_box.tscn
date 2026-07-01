@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://b8vnxfoixyust"]
 
 [ext_resource type="Script" uid="uid://b41bti3wq4m88" path="res://Core/UI/Dialog/DialogBox.cs" id="1_dialogbox"]
-[ext_resource type="PackedScene" path="res://Scenes/UI/AnswerBox.tscn" id="2_answerbox"]
+[ext_resource type="PackedScene" path="res://scenes/ui/answer_box.tscn" id="2_answerbox"]
 
 [node name="DialogBox" type="Control" unique_id=702809053 node_paths=PackedStringArray("textField", "titleField", "titleBody", "firstAvatar", "secondAvatar")]
 layout_mode = 3

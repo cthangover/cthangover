@@ -142,18 +142,25 @@ namespace Cthangover.CardBattle.UI
 
             DiscardActionCharacters();
 
-            foreach (var action in character.Card.Actions)
+            var originPos = actionPanel.ToLocal(character.GlobalPosition);
+            var count = character.Card.Actions.Count;
+
+            for (int i = 0; i < count; i++)
             {
+                var action = character.Card.Actions[i];
                 var cardNode = CreateAction(action, cardScale);
                 cardNode.Modulate = new Color(1, 1, 1, 0);
+                cardNode.Position = originPos - cardNode.Size / 2;
                 actionCards.Add(cardNode);
 
-                var tween = CreateTween();
-                tween.SetEase(Tween.EaseType.Out).SetTrans(Tween.TransitionType.Cubic);
-                tween.TweenProperty(cardNode, "modulate:a", 1f, 0.25f);
-            }
+                var targetPos = new Vector2(cardNode.Size.X * i, 0);
 
-            Redraw(animate: false);
+                var tween = CreateTween();
+                tween.SetParallel(true);
+                tween.SetEase(Tween.EaseType.Out).SetTrans(Tween.TransitionType.Cubic);
+                tween.TweenProperty(cardNode, "modulate:a", 1f, 0.5f);
+                tween.TweenProperty(cardNode, "position", targetPos, 0.5f);
+            }
         }
 
         /// <summary>
@@ -332,7 +339,9 @@ namespace Cthangover.CardBattle.UI
                 currentActionCharacter = source;
                 var control = currentActionCharacter.GetControlNode();
                 _originalActionCardParent = control.GetParent();
+                var globalPos = control.GlobalPosition;
                 control.Reparent(GetTree().Root);
+                control.GlobalPosition = globalPos;
                 control.ZIndex = 4096;
                 var pickTween = CreateTween();
                 pickTween.SetEase(Tween.EaseType.Out).SetTrans(Tween.TransitionType.Back);

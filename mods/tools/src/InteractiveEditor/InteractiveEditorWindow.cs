@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Cthangover.Core.Interactive;
 using Cthangover.Core.Mods;
+using Cthangover.Core.Factories.Impls;
 using Cthangover.Core.UI.Tool;
 using Cthangover.Core.Utils;
 using Cthangover.Tools.Services;
