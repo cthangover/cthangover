@@ -2,7 +2,7 @@ shader_type canvas_item;
 render_mode blend_premul_alpha;
 
 uniform int hide_mode : hint_range(0, 1) = 0;
-uniform vec4 outline_color : source_color = vec4(1.0, 1.0, 1.0, 1.0);
+uniform vec4 outline_color : source_color = vec4(0.0, 0.0, 0.0, 1.0);
 uniform vec4 invert_outline_color : source_color = vec4(1.0, 1.0, 1.0, 1.0);
 uniform vec2 pixel_size = vec2(0.001953125, 0.001953125);
 

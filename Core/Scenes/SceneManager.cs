@@ -130,6 +130,7 @@ namespace Cthangover.Core.Scenes
             ModManager.Instance.Initialize();
             SceneEventRegistry.Initialize();
             allScenes = ModManager.Instance.CollectSceneDefinitions();
+            ModInitializerRegistry.NotifyResourcesReady();
             isInitialized = true;
 
             GameLogger.Log("SCENE", $"SceneManager initialized with {allScenes?.Count ?? 0} scene(s)");

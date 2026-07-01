@@ -23,10 +23,10 @@ namespace Cthangover.Core.UI.Menu
 		private Button slotButton;
 		private Label statsLabel;
 
-        /// <summary>
-        /// Emitted when this specific slot is clicked, carrying the save file name so the parent
-        /// <see cref="SaveSlotList"/> can forward it to <see cref="SaveLoadMenu"/>.
-        /// </summary>
+		/// <summary>
+		/// Emitted when this specific slot is clicked, carrying the save file name so the parent
+		/// <see cref="SaveSlotList"/> can forward it to <see cref="SaveLoadMenu"/>.
+		/// </summary>
 		[Signal]
 		public delegate void SlotPressedEventHandler(string fileName);
 

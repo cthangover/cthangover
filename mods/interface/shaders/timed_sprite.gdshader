@@ -102,27 +102,26 @@ void fragment() {
 	if (!use_time) {
 		COLOR = color;
 	} else {
-
-	vec4 weights = time_weights;
-
-	vec4 time_color = morning_color * weights.x
-		+ day_color * weights.y
-		+ evening_color * weights.z
-		+ night_color * weights.w;
-
-	float total_influence;
-	vec3 light_col = calculate_light_color(world_pos, total_influence);
-	total_influence = clamp(total_influence, 0.0, 1.0);
-
-	float light_infl = clamp(mix(light_col.r, 0.0, weights.y + weights.x + weights.z) * depth, 0.0, 1.0);
-
-	float pixel_luma = max(dot(color.rgb, vec3(0.299, 0.587, 0.114)), 0.01);
-	float target_luma = max(albedo, pixel_luma);
-	float lift = mix(1.0, target_luma / pixel_luma, light_infl);
-
-	vec3 lit_result = min(color.rgb * lift * light_col, 1.0);
-
-	COLOR.rgb = mix(color.rgb * time_color.rgb, lit_result, light_infl);
-	COLOR.a = a;
+	    vec4 weights = time_weights;
+    
+	    vec4 time_color = morning_color * weights.x
+	    	+ day_color * weights.y
+	    	+ evening_color * weights.z
+	    	+ night_color * weights.w;
+    
+	    float total_influence;
+	    vec3 light_col = calculate_light_color(world_pos, total_influence);
+	    total_influence = clamp(total_influence, 0.0, 1.0);
+    
+	    float light_infl = clamp(mix(light_col.r, 0.0, weights.y + weights.x + weights.z) * depth, 0.0, 1.0);
+    
+	    float pixel_luma = max(dot(color.rgb, vec3(0.299, 0.587, 0.114)), 0.01);
+	    float target_luma = max(albedo, pixel_luma);
+	    float lift = mix(1.0, target_luma / pixel_luma, light_infl);
+    
+	    vec3 lit_result = min(color.rgb * lift * light_col, 1.0);
+    
+	    COLOR.rgb = mix(color.rgb * time_color.rgb, lit_result, light_infl);
+	    COLOR.a = a;
 	}
 }

@@ -77,5 +77,23 @@ namespace Cthangover.Core.Mods
             _initializers.AddRange(newInitializers);
             _loadedModIds.Add(modId);
         }
+
+        /// <summary>
+        /// Notifies every registered <c>IModInitializer</c> that all
+        /// mods and their JSON resources are fully loaded. Call this
+        /// once, after <c>ModRegistry.Initialize()</c> has completed
+        /// and factories can read mod data.
+        /// </summary>
+        public static void NotifyResourcesReady()
+        {
+            foreach (var init in _initializers)
+            {
+                try { init.OnModResourcesReady(); }
+                catch (Exception ex)
+                {
+                    GameLogger.Log("MODS_INIT", $"OnModResourcesReady failed: {ex.Message}", LogLevel.Error);
+                }
+            }
+        }
     }
 }
