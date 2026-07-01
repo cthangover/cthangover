@@ -1,13 +1,13 @@
 { "Items": [
-    ${Enemies/wolf_1},
-    ${Enemies/wolf_2},
-    ${Enemies/wolf_3},
-    ${Enemies/wolf_4},
-    ${Enemies/wolf_5},
-    ${Enemies/wolf_6},
-    ${Enemies/wolf_7},
-    ${Enemies/wolf_8},
-    ${Enemies/wolf_9},
-    ${Enemies/wolf_10},
-    ${Enemies/werewolf_girl_1}
+    ${enemies/wolf_1},
+    ${enemies/wolf_2},
+    ${enemies/wolf_3},
+    ${enemies/wolf_4},
+    ${enemies/wolf_5},
+    ${enemies/wolf_6},
+    ${enemies/wolf_7},
+    ${enemies/wolf_8},
+    ${enemies/wolf_9},
+    ${enemies/wolf_10},
+    ${enemies/werewolf_girl_1}
 ]}

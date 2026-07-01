@@ -35,6 +35,8 @@ namespace Cthangover.Core.Settings
         public RecipeData     RecipeData     { get; set; } = new();
         /// <summary>Lamp light radius and influence state.</summary>
         public LampData       LampData       { get; set; } = new();
+        /// <summary>Persistent collection of action IDs available for assignment via the character panel.</summary>
+        public ActionPoolData ActionPool     { get; set; } = new();
 
         /// <summary>
         /// IDs of one-shot scenarios already completed in this session.

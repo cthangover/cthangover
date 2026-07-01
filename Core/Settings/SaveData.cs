@@ -42,6 +42,8 @@ namespace Cthangover.Core.Settings
         public long GameTime { get; set; }
         /// <summary>Number of recruited characters (denormalized for slot preview).</summary>
         public int CharacterCount { get; set; }
+        /// <summary>IDs of action cards owned by the player in the persistent action pool.</summary>
+        public List<string> ActionPool { get; set; }
         /// <summary>IDs of all one-shot scenarios that have been completed,
         /// used to suppress re-triggering them after a load.</summary>
         public HashSet<string> CompletedScenarioIds { get; set; } = new();

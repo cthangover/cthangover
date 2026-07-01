@@ -43,7 +43,7 @@ namespace Cthangover.Core.Characters
         /// </summary>
         protected bool CheckRequiredAndUsePoint(ActionCharacter action, Character user)
         {
-            var requiredPoint = action.GetInt(ActionCharacter.ATTRIBUTE_REQUIRED_POINT);
+            var requiredPoint = action.GetInt("RequiredPoint");
 
             if (user.Attributes.Point.Value < requiredPoint)
             {

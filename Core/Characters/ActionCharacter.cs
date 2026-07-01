@@ -15,27 +15,6 @@ namespace Cthangover.Core.Characters
     public class ActionCharacter : IIdentifiable
     {
         /// <summary>
-        /// Well-known key for the action point cost in <see cref="Properties"/>.
-        /// </summary>
-        public const string ATTRIBUTE_REQUIRED_POINT = "RequiredPoint";
-        /// <summary>
-        /// Well-known key for attack damage in <see cref="Properties"/>.
-        /// </summary>
-        public const string ATTRIBUTE_ATTACK = "Attack";
-        /// <summary>
-        /// Well-known key for defence value in <see cref="Properties"/>.
-        /// </summary>
-        public const string ATTRIBUTE_DEFENCE = "Defence";
-        /// <summary>
-        /// Well-known key for heal amount in <see cref="Properties"/>.
-        /// </summary>
-        public const string ATTRIBUTE_HEAL = "Heal";
-        /// <summary>
-        /// Well-known key for turn skip/delay in <see cref="Properties"/>.
-        /// </summary>
-        public const string ATTRIBUTE_TURN = "Turn";
-        
-        /// <summary>
         /// Unique action identifier, used as the factory lookup key.
         /// </summary>
         public string              ID          { get; set; }

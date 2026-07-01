@@ -1,10 +1,12 @@
-[gd_scene format=3 uid="uid://dv50g7bpno3lu"]
+[gd_scene format=3 uid="uid://bqvxi01kodugp"]
 
 [ext_resource type="PackedScene" uid="uid://bw5sfp66lf0jw" path="res://scenes/ui/view_box.tscn" id="1_viewbox"]
 [ext_resource type="PackedScene" path="res://scenes/ui/dialog_canvas.tscn" id="2_canvas"]
 [ext_resource type="PackedScene" uid="uid://d3m4jm0xk8ruc" path="res://scenes/ui/top_view.tscn" id="3_topview"]
 [ext_resource type="PackedScene" path="res://scenes/ui/player_inventory_bag.tscn" id="5_bag"]
 [ext_resource type="PackedScene" path="res://scenes/menu/game_menu.tscn" id="6_gamemenu"]
+[ext_resource type="PackedScene" path="res://scenes/ui/character_panel/character_panel.tscn" id="7_charpanel"]
+[ext_resource type="PackedScene" path="res://scenes/ui/skills_panel/skills_panel.tscn" id="8_skillspanel"]
 
 [node name="Scene" type="Control" unique_id=610561430]
 layout_mode = 3
@@ -39,6 +41,14 @@ anchors_preset = -1
 anchor_right = 0.5
 offset_top = 40.0
 offset_bottom = 300.0
+
+[node name="CharacterPanel" parent="." instance=ExtResource("7_charpanel")]
+visible = false
+layout_mode = 1
+
+[node name="SkillsPanel" parent="." instance=ExtResource("8_skillspanel")]
+visible = false
+layout_mode = 1
 
 [node name="GameMenu" parent="." instance=ExtResource("6_gamemenu")]
 visible = false

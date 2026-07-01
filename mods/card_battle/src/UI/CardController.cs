@@ -142,12 +142,14 @@ namespace Cthangover.CardBattle.UI
 
             DiscardActionCharacters();
 
-            var originPos = actionPanel.ToLocal(character.GlobalPosition);
+            var originPos = character.GlobalPosition * actionPanel.GetGlobalTransformWithCanvas().AffineInverse();
             var count = character.Card.Actions.Count;
 
             for (int i = 0; i < count; i++)
             {
                 var action = character.Card.Actions[i];
+                if (!action.Type.UseInBattle())
+                    continue;
                 var cardNode = CreateAction(action, cardScale);
                 cardNode.Modulate = new Color(1, 1, 1, 0);
                 cardNode.Position = originPos - cardNode.Size / 2;

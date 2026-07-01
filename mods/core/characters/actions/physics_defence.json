@@ -1,0 +1,11 @@
+{
+    "Id": "physics/defence",
+    "Name": "characters/action/defence/name",
+    "Description": "characters/action/defence/description",
+    "Image": "characters/actions/physics_defence",
+    "Type": "ToAlias",
+    "Values": [
+        "RequiredPoint=1",
+        "Defence=4"  
+    ]
+}

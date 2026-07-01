@@ -1,40 +1,5 @@
 ﻿{ "Items": [
-
-    {
-        "Id": "physics/attack",
-        "Name": "characters/action/physics_attack/name",
-        "Description": "characters/action/physics_attack/description",
-        "Image": "characters/actions/physics_attack",
-        "Type": "ToEnemy",
-        "Values": [
-            "RequiredPoint=1",
-            "Attack=1.0",
-            "AttackType=Physics"
-        ]
-    },
-    
-    {
-        "Id": "physics/defence",
-        "Name": "characters/action/defence/name",
-        "Description": "characters/action/defence/description",
-        "Image": "characters/actions/physics_defence",
-        "Type": "ToAlias",
-        "Values": [
-            "RequiredPoint=1",
-            "Defence=4"  
-        ]
-    },
-    
-    {
-        "Id": "physics/stun",
-        "Name": "characters/action/stun/name",
-        "Description": "characters/action/stun/description",
-        "Image": "characters/actions/physics_stun",
-        "Type": "ToEnemy",
-        "Values": [
-            "RequiredPoint=2",
-            "AttackType=Physics",
-            "Turn=3"
-        ]
-    }
+    ${actions/physics_attack},
+    ${actions/physics_defence},
+    ${actions/physics_stun}
 ]}

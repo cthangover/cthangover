@@ -11,6 +11,18 @@ namespace Cthangover.Core.Characters
         ToSelf,
         ToAlias,
         ToEnemy,
+        Passive,
+        Active,
     };
+
+    public static class ActionCharacterTypeExtension
+    {
+        public static bool UseInBattle(this ActionCharacterType type)
+        {
+            return type == ActionCharacterType.ToSelf
+                || type == ActionCharacterType.ToAlias
+                || type == ActionCharacterType.ToEnemy;
+        }
+    }
 
 }

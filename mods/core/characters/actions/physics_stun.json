@@ -1,0 +1,12 @@
+{
+    "Id": "physics/stun",
+    "Name": "characters/action/stun/name",
+    "Description": "characters/action/stun/description",
+    "Image": "characters/actions/physics_stun",
+    "Type": "ToEnemy",
+    "Values": [
+        "RequiredPoint=2",
+        "AttackType=Physics",
+        "Turn=3"
+    ]
+}

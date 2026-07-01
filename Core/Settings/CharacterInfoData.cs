@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Cthangover.Core.Characters;
 
 namespace Cthangover.Core.Settings
@@ -23,6 +24,13 @@ namespace Cthangover.Core.Settings
         public int            Exp { get; set; }
         /// <summary>Full set of battle attributes (health, mana, etc.).</summary>
         public CharacterAttributes Attributes { get; set; }
+        /// <summary>
+        /// Up to 3 action IDs assigned to this character's slots.
+        /// Index 0,1,2 map to slot positions; empty slots hold <c>null</c>.
+        /// When <c>null</c> (<see cref="System.Text.Json"/> default for missing keys
+        /// in older saves), the battle system falls back to the factory template.
+        /// </summary>
+        public List<string> ActionSlots { get; set; }
     }
 
 }

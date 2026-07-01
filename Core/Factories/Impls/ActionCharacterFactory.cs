@@ -56,6 +56,16 @@ namespace Cthangover.Core.Factories.Impls
             return item?.Copy();
         }
 
+        /// <summary>
+        /// Returns all known action info IDs. Used by the character panel to determine
+        /// which actions are not assigned to any character (the action pool).
+        /// </summary>
+        public IReadOnlyCollection<string> GetAllActionIds()
+        {
+            EnsureInfos();
+            return _allInfos?.Keys;
+        }
+
         private ActionCharacter CreateActionCharacter(ActionCharacterInfo info)
         {
             if (info == null)

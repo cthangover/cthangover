@@ -35,11 +35,13 @@ namespace Cthangover.Core.Skills
         /// this call is a no-op.
         /// </summary>
         /// <param name="color">The tint colour to apply to <see cref="img"/>.</param>
-        public void SetColor(Color color)
-        {
-            if (img != null)
-                img.Modulate = color;
-        }
+		public void SetColor(Color color)
+		{
+			if (img == null)
+				img = GetNodeOrNull<TextureRect>("FrameImg");
+			if (img != null)
+				img.Modulate = color;
+		}
 
 #if TOOLS
         /// <summary>

@@ -1,0 +1,12 @@
+{
+    "Id": "physics/attack",
+    "Name": "characters/action/physics_attack/name",
+    "Description": "characters/action/physics_attack/description",
+    "Image": "characters/actions/physics_attack",
+    "Type": "ToEnemy",
+    "Values": [
+        "RequiredPoint=1",
+        "Attack=1.0",
+        "AttackType=Physics"
+    ]
+}

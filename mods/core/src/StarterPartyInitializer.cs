@@ -45,6 +45,7 @@ namespace Cthangover.Core.Characters
         public void OnModResourcesReady()
         {
             GameData.Instance.Runtime.CharacterData.AddCharacterToParty("Marao");
+            GameData.Instance.Runtime.SkillData.AddSkill("slave_master");
         }
     }
 }

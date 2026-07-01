@@ -331,6 +331,8 @@ namespace Cthangover.FFBattle
             var entries = new List<FFMenuEntry>();
             foreach (var action in _currentCharacter.Card.Actions)
             {
+                if (!action.Type.UseInBattle())
+                    continue;
                 var cost = action.GetInt(ActionCharacter.ATTRIBUTE_REQUIRED_POINT, 1);
                 var canUse = _currentCharacter.Card.Attributes.Point.Value >= cost;
 
@@ -807,6 +809,8 @@ namespace Cthangover.FFBattle
 
             foreach (var action in _currentCharacter.Card.Actions)
             {
+                if (!action.Type.UseInBattle())
+                    continue;
                 var cost = action.GetInt(ActionCharacter.ATTRIBUTE_REQUIRED_POINT, 1);
                 if (_currentCharacter.Card.Attributes.Point.Value >= cost)
                     return true;

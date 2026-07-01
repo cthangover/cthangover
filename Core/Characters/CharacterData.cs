@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Cthangover.Core.Factories.Impls;
 using Cthangover.Core.Settings;
 using Cthangover.Core.UI.Messages;
@@ -80,6 +81,7 @@ namespace Cthangover.Core.Characters
 				Exp           = card.Exp,
 				ID            = characterType,
 				CharacterType = characterType,
+				ActionSlots   = card.Actions?.Select(a => a.ID).ToList() ?? new List<string>(),
 			};
 		}
 		
