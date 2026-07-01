@@ -185,6 +185,14 @@ namespace Cthangover.Core.Battle
 				character.Attributes = characterInfo.Attributes ?? new CharacterAttributes();
 				character.Level = characterInfo.Level;
 				character.Exp = characterInfo.Exp;
+				if (characterInfo.ActionSlots != null && characterInfo.ActionSlots.Any(id => !string.IsNullOrEmpty(id)))
+				{
+					character.Actions = characterInfo.ActionSlots
+						.Where(id => !string.IsNullOrEmpty(id))
+						.Select(id => ActionCharacterFactory.Instance.Get(id))
+						.Where(a => a != null)
+						.ToList();
+				}
 				pendingPlayerCards.Add(character);
 			}
 

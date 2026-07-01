@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Cthangover.Core.Scenes;
+using Cthangover.Core.UI.CharacterPanel;
 using Cthangover.Core.UI.Inventory;
 using Cthangover.Core.UI.Menu;
 using Cthangover.Core.UI.Tool;
@@ -29,6 +30,7 @@ namespace Cthangover.Core.UI.Tool
             {
                 {"MapWidget",   FindWidget<MapWidget>()},
                 {"BagWidget",   FindWidget<PlayerInventoryBagBehaviour>()},
+                {"CharactersWidget", FindWidget<CharacterPanelBehaviour>()},
             };
 
             _saveIcon = GetNodeOrNull<TextureRect>("CenterTools/Save");
@@ -39,6 +41,7 @@ namespace Cthangover.Core.UI.Tool
             {
                 ConnectButton(buttons, "MapButton", OnMapClick);
                 ConnectButton(buttons, "BagButton", OnBagClick);
+                ConnectButton(buttons, "CharactersButton", OnCharactersClick);
                 ConnectButton(buttons, "SkillsButton", OnSkillsClick);
                 ConnectButton(buttons, "SettingsButton", OnSettingsClick);
                 AddToolButtons(buttons);
@@ -148,6 +151,13 @@ namespace Cthangover.Core.UI.Tool
         {
             GameLogger.Log("TOOLBOX", "map button clicked");
             Switch("MapWidget");
+        }
+
+        /// <summary>Switches to the character panel widget, hiding all other toolbox widgets.</summary>
+        public void OnCharactersClick()
+        {
+            GameLogger.Log("TOOLBOX", "characters button clicked");
+            Switch("CharactersWidget");
         }
 
         private void AddToolButtons(HBoxContainer container)

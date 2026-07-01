@@ -133,6 +133,7 @@ namespace Cthangover.Core.Settings
                 Inventory  = gameData.Runtime.Inventory.Items.Select(o =>
                     new CItem { ID = o.Item.ID, Count = o.Count }).ToList(),
                 Recipes    = gameData.Runtime.RecipeData.Data.ToList(),
+                ActionPool  = gameData.Runtime.ActionPool.ActionIds.ToList(),
                 CurrentSceneName = GetCurrentSceneName(),
                 SaveDateTime = DateTime.UtcNow,
                 GameTime = gameData.Runtime.Time.Tick,
@@ -216,6 +217,8 @@ namespace Cthangover.Core.Settings
                 ?? new List<IItemContainer>();
 
             runtime.RecipeData.Data = saveData.Recipes?.ToHashSet() ?? new HashSet<string>();
+
+            runtime.ActionPool.ActionIds = saveData.ActionPool ?? new List<string>();
 
             QuestFactory.Instance.SetAll(saveData.Quests);
 

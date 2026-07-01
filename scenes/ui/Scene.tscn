@@ -5,6 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://d3m4jm0xk8ruc" path="res://scenes/ui/top_view.tscn" id="3_topview"]
 [ext_resource type="PackedScene" path="res://scenes/ui/player_inventory_bag.tscn" id="5_bag"]
 [ext_resource type="PackedScene" path="res://scenes/menu/game_menu.tscn" id="6_gamemenu"]
+[ext_resource type="PackedScene" path="res://scenes/ui/character_panel/character_panel.tscn" id="7_charpanel"]
 
 [node name="Scene" type="Control" unique_id=610561430]
 layout_mode = 3
@@ -39,6 +40,10 @@ anchors_preset = -1
 anchor_right = 0.5
 offset_top = 40.0
 offset_bottom = 300.0
+
+[node name="CharacterPanel" parent="." instance=ExtResource("7_charpanel")]
+visible = false
+layout_mode = 1
 
 [node name="GameMenu" parent="." instance=ExtResource("6_gamemenu")]
 visible = false

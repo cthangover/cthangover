@@ -1,0 +1,56 @@
+[gd_scene format=3 uid="uid://67q36mh0x454"]
+
+[ext_resource type="Script" uid="uid://dkioyb2bx5e10" path="res://Core/UI/CharacterPanel/CharacterCardBehaviour.cs" id="1_script"]
+[ext_resource type="PackedScene" uid="uid://b00u0cgcip134" path="res://scenes/ui/character_panel/action_slot.tscn" id="2_slot"]
+
+[node name="CharacterCard" type="Control" unique_id=161727493]
+custom_minimum_size = Vector2(250, 370)
+layout_mode = 3
+anchors_preset = 10
+anchor_right = 1.0
+grow_horizontal = 2
+mouse_filter = 1
+script = ExtResource("1_script")
+
+[node name="Margin" type="MarginContainer" parent="." unique_id=540453317]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBox" type="VBoxContainer" parent="Margin" unique_id=1477867509]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Header" type="HBoxContainer" parent="Margin/VBox" unique_id=410961700]
+layout_mode = 2
+
+[node name="Portrait" type="TextureRect" parent="Margin/VBox/Header" unique_id=427546847]
+custom_minimum_size = Vector2(60, 60)
+layout_mode = 2
+expand_mode = 2
+stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="Margin/VBox/Header" unique_id=604539797]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Character Name"
+
+[node name="Slots" type="VBoxContainer" parent="Margin/VBox" unique_id=2066648023]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Slot0" parent="Margin/VBox/Slots" unique_id=592809057 instance=ExtResource("2_slot")]
+layout_mode = 2
+
+[node name="Slot1" parent="Margin/VBox/Slots" unique_id=424670098 instance=ExtResource("2_slot")]
+layout_mode = 2
+
+[node name="Slot2" parent="Margin/VBox/Slots" unique_id=1790943736 instance=ExtResource("2_slot")]
+layout_mode = 2

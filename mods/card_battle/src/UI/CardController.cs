@@ -142,7 +142,7 @@ namespace Cthangover.CardBattle.UI
 
             DiscardActionCharacters();
 
-            var originPos = actionPanel.ToLocal(character.GlobalPosition);
+            var originPos = character.GlobalPosition * actionPanel.GetGlobalTransformWithCanvas().AffineInverse();
             var count = character.Card.Actions.Count;
 
             for (int i = 0; i < count; i++)

@@ -1,0 +1,120 @@
+[gd_scene format=3 uid="uid://boo65s3v3vn2c"]
+
+[ext_resource type="Script" uid="uid://b60voxni8jut4" path="res://Core/UI/CharacterPanel/CharacterPanelBehaviour.cs" id="1_script"]
+[ext_resource type="PackedScene" uid="uid://cgjc22lv4w4s5" path="res://scenes/ui/character_panel/action_pool.tscn" id="2_pool"]
+
+[node name="CharacterPanel" type="Control" unique_id=2003172289]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+script = ExtResource("1_script")
+
+[node name="Bg" type="ColorRect" parent="." unique_id=538790315]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.05, 0.05, 0.1, 0.9)
+
+[node name="LeftPanel" type="Panel" parent="." unique_id=582936654]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 0.68700004
+anchor_bottom = 1.0
+offset_right = 0.95996094
+size_flags_horizontal = 3
+
+[node name="LeftVBox" type="VBoxContainer" parent="LeftPanel" unique_id=927965975]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Title" type="Label" parent="LeftPanel/LeftVBox" unique_id=1322979441]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "ui/character_panel/title"
+horizontal_alignment = 1
+
+[node name="ScrollContainer" type="ScrollContainer" parent="LeftPanel/LeftVBox" unique_id=649910277]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="CharactersContainer" type="VBoxContainer" parent="LeftPanel/LeftVBox/ScrollContainer" unique_id=15539617]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="RightPanel" type="Panel" parent="." unique_id=94541911]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.69500005
+anchor_right = 1.0
+anchor_bottom = 0.91800004
+offset_left = 0.5998535
+offset_bottom = -0.032043457
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+
+[node name="ActionPoolScroll" type="ScrollContainer" parent="RightPanel" unique_id=1837472944]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_scroll_mode = 0
+
+[node name="ActionPool" parent="RightPanel/ActionPoolScroll" unique_id=2092045870 instance=ExtResource("2_pool")]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="CloseButton" type="Button" parent="." unique_id=140259217]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.697
+anchor_top = 0.94100004
+anchor_right = 0.85
+anchor_bottom = 0.9850001
+offset_left = -0.23999023
+offset_top = 0.4159546
+offset_bottom = 0.35992432
+grow_horizontal = 0
+grow_vertical = 0
+text = "ui/character_panel/close"
+
+[node name="ResetButton" type="Button" parent="." unique_id=73911922]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.855
+anchor_top = 0.94100004
+anchor_right = 0.99300003
+anchor_bottom = 0.9850001
+offset_left = 0.39990234
+offset_top = 0.4159546
+offset_right = 0.4399414
+offset_bottom = 0.35992432
+grow_horizontal = 0
+grow_vertical = 0
+text = "ui/character_panel/reset"
+
+[node name="DragLayer" type="Control" parent="." unique_id=1296303852]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
