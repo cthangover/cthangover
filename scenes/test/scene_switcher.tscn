@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Core/Autotest/SceneSwitcher.cs" id="switcher_script"]
+
+[node name="SceneSwitcherRoot" type="Node"]
+script = ExtResource("switcher_script")

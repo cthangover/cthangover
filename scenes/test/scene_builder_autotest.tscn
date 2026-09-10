@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Core/Autotest/SceneBuilderAutotest.cs" id="autotest_script"]
+
+[node name="SceneBuilderAutotestRoot" type="Node"]
+script = ExtResource("autotest_script")

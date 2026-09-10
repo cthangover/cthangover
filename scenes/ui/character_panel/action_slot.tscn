@@ -1,0 +1,24 @@
+[gd_scene format=3 uid="uid://b00u0cgcip134"]
+
+[ext_resource type="Script" uid="uid://bfawx4g6dyrjo" path="res://Core/UI/CharacterPanel/ActionSlotBehaviour.cs" id="1_script"]
+
+[node name="ActionSlot" type="Control" unique_id=1066231859]
+custom_minimum_size = Vector2(300, 100)
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+script = ExtResource("1_script")
+
+[node name="Bg" type="ColorRect" parent="." unique_id=1234999814]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.1, 0.1, 0.15, 0.5)

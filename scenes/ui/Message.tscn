@@ -1,0 +1,17 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Core/UI/Messages/UiMessage.cs" id="1_msg"]
+
+[node name="Message" type="Control" node_paths=PackedStringArray("textField")]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_msg")
+textField = NodePath("Label")
+
+[node name="Label" type="Label" parent="."]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+text = ""

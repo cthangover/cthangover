@@ -1,0 +1,82 @@
+hljs.registerLanguage("scenario", function (hljs) {
+  "use strict";
+
+  return {
+    name: "Scenario DSL",
+    case_insensitive: false,
+    keywords: {
+      keyword: [
+        "scene",
+        "priority",
+        "condition",
+        "is_one_run",
+        "save_allowed",
+        "light_use_time",
+        "background",
+        "foreground",
+        "background_color",
+        "background_show_hide",
+        "text",
+        "p_text",
+        "title",
+        "select",
+        "option",
+        "switch_scene",
+        "end",
+        "action",
+        "music",
+        "music_play",
+        "music_pause",
+        "sound",
+        "light_set",
+        "delay",
+        "effect",
+        "animation",
+        "interactive_add",
+        "interactive_remove",
+        "interactive_clear",
+        "interactive_set",
+        "show_dialog",
+        "hide_dialog",
+        "set",
+        "empty",
+        "goto",
+      ].join(" "),
+    },
+    contains: [
+      hljs.HASH_COMMENT_MODE,
+      {
+        className: "comment",
+        begin: /--/,
+        end: /$/m,
+        relevance: 0,
+      },
+      hljs.QUOTE_STRING_MODE,
+      {
+        className: "section",
+        begin: /:\w+/,
+        relevance: 10,
+      },
+      {
+        className: "operator",
+        begin: /->/,
+        relevance: 10,
+      },
+      {
+        className: "attr",
+        begin: /\b\w+(?=\s*=)/,
+        relevance: 0,
+      },
+      {
+        className: "meta",
+        begin: /^---/m,
+        relevance: 10,
+      },
+      {
+        className: "number",
+        begin: /\b\d+(\.\d+)?\b/,
+        relevance: 0,
+      },
+    ],
+  };
+});

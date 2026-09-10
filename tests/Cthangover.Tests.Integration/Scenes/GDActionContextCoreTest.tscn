@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://bvldeokw36mod"]
+
+[ext_resource type="Script" path="res://tests/Cthangover.Tests.Integration/Autotest/GDActionContextCoreTestSetup.cs" id="1_setup"]
+
+[node name="GDActionContextCoreTest" type="Node"]
+script = ExtResource("1_setup")

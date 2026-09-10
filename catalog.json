@@ -1,0 +1,57 @@
+{
+  "catalog": {
+    "version": 1,
+    "updated_at": "2026-07-22T12:00:00Z"
+  },
+  "mods": [
+  {
+	"id": "live2d",
+	"author": "ct",
+	"version": "1.0.0",
+	"category": "Library",
+	"tags": [
+		"live2d",
+		"ui",
+		"graphics",
+		"2d"
+	],
+	"icon_url": "https://github.com/cthangover/mods-live2d/blob/master/mod.png?raw=true",
+	"locale": [
+		{
+			"lang":"en",
+			"name": "Live2D Cubism",
+			"description": "Live2D Cubism C# runtime: model loading, rendering, physics, animation, effects"
+		},
+		{
+			"lang":"ru",
+			"name": "Live2D Cubism",
+			"description": "Live2D Cubism C# рантайм: загрузка моделей, отрисовка, физика, анимации, эффекты"
+		}
+	],
+	"depends": [
+		"core\u003E=1"
+	],
+	"downloads": [
+		{
+		"version": "1.0.0",
+		"urls": [
+			"https://github.com/cthangover/mods-live2d/releases/download/mod/live2d-v1.0.0.zip"
+		],
+		"size_bytes": 1831899,
+		"archive_sha256": "075a3f582919b26b39afc1fd66d1e4a91cab0e521d6ca36f746c248e1ee82c9a",
+		"install_sha256": "db738a14cda17a358d3a0132b97a382978bf9db7b7ea3db750b346b943ba57e6"
+		},
+		{
+		"version": "1.0.1",
+		"urls": [
+			"https://github.com/cthangover/mods-live2d/releases/download/mod/live2d-v1.0.0.zip"
+		],
+		"size_bytes": 1831899,
+		"archive_sha256": "075a3f582919b26b39afc1fd66d1e4a91cab0e521d6ca36f746c248e1ee82c9a",
+		"install_sha256": "db738a14cda17a358d3a0132b97a382978bf9db7b7ea3db750b346b943ba57e6"
+		}
+	],
+	"status": "beta"
+	}
+  ]
+}

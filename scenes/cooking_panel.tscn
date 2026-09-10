@@ -1,0 +1,65 @@
+[gd_scene format=3 uid="uid://k6qdc2dk6ay8"]
+
+[node name="CookingWorkbenchPanel" type="Control" unique_id=150018136]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="BgImage" type="TextureRect" parent="." unique_id=611685315]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 4
+
+[node name="HBox" type="HBoxContainer" parent="." unique_id=1573004986]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 10
+
+[node name="LeftPanel" type="VBoxContainer" parent="HBox" unique_id=79003266]
+custom_minimum_size = Vector2(400, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="LeftTitle" type="Label" parent="HBox/LeftPanel" unique_id=1782321553]
+layout_mode = 2
+
+[node name="Scroll" type="ScrollContainer" parent="HBox/LeftPanel" unique_id=2031724182]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 3
+
+[node name="Content" type="VBoxContainer" parent="HBox/LeftPanel/Scroll" unique_id=1739714823]
+layout_mode = 2
+
+[node name="RightPanel" type="VBoxContainer" parent="HBox" unique_id=1189692123]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TxtDescription" type="RichTextLabel" parent="HBox/RightPanel" unique_id=1625200102]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+bbcode_enabled = true
+
+[node name="BtnCook" type="Button" parent="HBox/RightPanel" unique_id=1351408030]
+layout_mode = 2
+
+[node name="BtnClose" type="Button" parent="HBox/RightPanel" unique_id=1845462725]
+layout_mode = 2

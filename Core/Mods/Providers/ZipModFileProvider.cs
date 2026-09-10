@@ -1,0 +1,226 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
+using Cthangover.Core.Utils;
+
+namespace Cthangover.Core.Mods.Providers
+{
+    /// <summary>
+    /// Mod file provider backed by a <c>.zip</c> archive. On construction
+    /// the entire zip entry table is flattened into a case-insensitive
+    /// dictionary — this trades startup memory for O(1) lookups on every
+    /// subsequent file access call, which dominates because factories
+    /// repeatedly check file existence during cache-population scans.
+    ///
+    /// <see cref="ListFiles"/> simulates a shallow directory listing by
+    /// parsing the flat zip entry list: entries whose relative path
+    /// contains a <c>/</c> after the prefix become synthetic directory
+    /// entries (trailing <c>/</c>), while entries at the prefix level
+    /// become file entries. This preserves the same recursive-walk
+    /// interface that <see cref="FolderModFileProvider"/> provides natively.
+    ///
+    /// <see cref="GetFileSystemPath"/> always returns <c>null</c> — Godot
+    /// cannot load resources or scenes directly from within a zip, so
+    /// callers that need filesystem paths (e.g. <c>EffectFactory</c>,
+    /// shader loading) must extract files to the cache or skip zip mods
+    /// entirely.
+    /// </summary>
+    public class ZipModFileProvider : IModFileProvider
+    {
+        private readonly ZipArchive archive;
+        private readonly Dictionary<string, ZipArchiveEntry> entryLookup;
+
+        /// <inheritdoc />
+        public string Mod { get; }
+
+        /// <inheritdoc />
+        public string RootPath { get; }
+        
+        /// <summary>
+        /// Opens the zip archive at <paramref name="zipPath"/> and builds
+        /// an O(1) case-insensitive lookup dictionary from every entry's
+        /// full path. The zip remains open until <see cref="Dispose"/> is
+        /// called — callers must dispose the provider to release the
+        /// native file handle.
+        /// </summary>
+        /// <param name="zipPath">Absolute or relative path to the
+        /// <c>.zip</c> file.</param>
+        /// <param name="modName">Short identifier for this mod, used in
+        /// log messages and as the <see cref="Mod"/> value.</param>
+        public ZipModFileProvider(string zipPath, string modName)
+        {
+            this.RootPath = zipPath;
+            this.Mod = modName;
+            archive = ZipFile.OpenRead(zipPath);
+            entryLookup = new Dictionary<string, ZipArchiveEntry>(StringComparer.OrdinalIgnoreCase);
+            foreach (var e in archive.Entries)
+            {
+                var name = e.FullName.TrimEnd('/');
+                if (name.Length > 0)
+                    entryLookup[name] = e;
+            }
+            GameLogger.Log("MODS_ZIP", $"Opened zip '{Path.GetFileName(zipPath)}': {entryLookup.Count} entries total");
+            foreach (var e in archive.Entries)
+                GameLogger.Log("MODS_ZIP", $"  entry: '{e.FullName}' length={e.Length}", LogLevel.Debug);
+        }
+
+        /// <summary>
+        /// Closes the underlying <see cref="ZipArchive"/> and releases
+        /// the native file handle. After disposal, all read operations
+        /// will fail.
+        /// </summary>
+        public void Dispose()
+        {
+            archive?.Dispose();
+        }
+
+        /// <summary>
+        /// Checks whether the given path exists as a zip entry using the
+        /// case-insensitive lookup dictionary built during construction.
+        /// </summary>
+        public bool FileExists(string path)
+        {
+            var normalized = NormalizePath(path);
+            var result = entryLookup.ContainsKey(normalized);
+            return result;
+        }
+
+        /// <summary>
+        /// Returns a simulated shallow directory listing by grouping zip
+        /// entries. Entries at the given directory level become file
+        /// entries; entries one level deeper become synthetic directory
+        /// entries suffixed with <c>/</c>. This preserves the same
+        /// recursive-walk contract that <see cref="FolderModFileProvider"/>
+        /// provides natively.
+        /// </summary>
+        /// <param name="directory">Mod-relative directory path. Empty
+        /// string for the archive root.</param>
+        public IEnumerable<string> ListFiles(string directory = "")
+        {
+            var prefix = NormalizePath(directory);
+            if (prefix.Length > 0 && !prefix.EndsWith("/"))
+                prefix += "/";
+
+            var seen = new HashSet<string>();
+            var yieldList = new List<string>();
+
+            foreach (var entry in archive.Entries)
+            {
+                var fullName = entry.FullName.TrimEnd('/');
+                var isDir = fullName.Length > 0 && entry.FullName.EndsWith("/");
+                if (string.IsNullOrEmpty(prefix) || fullName.StartsWith(prefix))
+                {
+                    var suffix = string.IsNullOrEmpty(prefix)
+                        ? fullName
+                        : fullName.Substring(prefix.Length);
+
+                    if (string.IsNullOrEmpty(suffix))
+                        continue;
+
+                    var idx = suffix.IndexOf('/');
+                    if (idx >= 0)
+                    {
+                        var dirPart = prefix + suffix.Substring(0, idx + 1);
+                        if (seen.Add(dirPart))
+                            yieldList.Add(dirPart);
+                    }
+                    else if (isDir)
+                    {
+                        var dirPart = prefix + suffix + "/";
+                        if (seen.Add(dirPart))
+                            yieldList.Add(dirPart);
+                    }
+                    else
+                    {
+                        var filePath = prefix + suffix;
+                        if (seen.Add(filePath))
+                            yieldList.Add(filePath);
+                    }
+                }
+            }
+            foreach (var item in yieldList)
+                yield return item;
+        }
+
+        /// <summary>
+        /// Reads the full text content of a zip entry as a UTF-8 string.
+        /// Returns <c>null</c> if the entry does not exist.
+        /// </summary>
+        public string ReadFileText(string path)
+        {
+            var normalized = NormalizePath(path);
+            if (!entryLookup.TryGetValue(normalized, out var entry))
+                return null;
+            GameLogger.Log("MODS_ZIP", $"ReadFileText('{path}') norm='{normalized}' => found ({entry.Length} bytes)");
+            using var reader = new StreamReader(entry.Open());
+            return reader.ReadToEnd();
+        }
+
+        /// <summary>
+        /// Reads the full binary content of a zip entry. Returns
+        /// <c>null</c> if the entry does not exist.
+        /// </summary>
+        public byte[] ReadFileBinary(string path)
+        {
+            var normalized = NormalizePath(path);
+            if (!entryLookup.TryGetValue(normalized, out var entry))
+                return null;
+
+            GameLogger.Log("MODS_ZIP", $"ReadFileBinary('{path}') norm='{normalized}' => found ({entry.Length} bytes)");
+
+            using var stream = entry.Open();
+            using var ms = new MemoryStream();
+            stream.CopyTo(ms);
+            return ms.ToArray();
+        }
+
+        /// <summary>
+        /// Opens a read-only stream to the zip entry. Returns <c>null</c>
+        /// if the entry does not exist. The caller is responsible for
+        /// disposing the stream.
+        /// </summary>
+        public Stream OpenStream(string path)
+        {
+            var normalized = NormalizePath(path);
+            if (!entryLookup.TryGetValue(normalized, out var entry))
+                return null;
+            
+            GameLogger.Log("MODS_ZIP", $"OpenStream('{path}') norm='{normalized}' => found");
+            return entry.Open();
+        }
+
+        /// <summary>
+        /// Always returns <c>null</c>. Zip mods cannot provide filesystem
+        /// paths — Godot's <c>ResourceLoader</c> requires real filesystem
+        /// paths, so callers dependent on scene instantiation must use
+        /// folder mods or extract assets to the cache first.
+        /// </summary>
+        public string GetFileSystemPath(string path)
+        {
+            return null;
+        }
+
+        /// <summary>
+        /// Resolves a relative include path (<c>../shared/data.json</c>)
+        /// against the directory of <paramref name="currentPath"/> to
+        /// produce a canonical mod-relative path.
+        /// </summary>
+        public string ResolveIncludePath(string includePath, string currentPath)
+        {
+            if (string.IsNullOrEmpty(currentPath))
+                return includePath;
+
+            var lastSlash = currentPath.LastIndexOf('/');
+            var baseDir = lastSlash < 0 ? "" : currentPath.Substring(0, lastSlash);
+            var result = string.IsNullOrEmpty(baseDir) ? includePath : baseDir + "/" + includePath;
+            GameLogger.Log("MODS_ZIP", $"ResolveIncludePath(include='{includePath}', current='{currentPath}') baseDir='{baseDir}' => '{result}'");
+            return result;
+        }
+
+        private static string NormalizePath(string path)
+        {
+            return path?.Replace('\\', '/').TrimStart('/') ?? "";
+        }
+    }
+}
