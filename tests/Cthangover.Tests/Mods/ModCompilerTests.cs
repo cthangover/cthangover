@@ -133,5 +133,34 @@ public class TestB : IModInitializer { public void OnModLoaded(string m) { } pub
             try { ModCompiler.InvalidateCache(modId1); } catch { }
             try { ModCompiler.InvalidateCache(modId2); } catch { }
         }
+
+        [Fact]
+        public void CompileAll_PreCancelledToken_Throws()
+        {
+            using var cts = new System.Threading.CancellationTokenSource();
+            cts.Cancel();
+
+            Assert.Throws<OperationCanceledException>(() =>
+            {
+                ModCompiler.CompileAll(new Dictionary<string, IModInfo>(), cts.Token);
+            });
+        }
+
+        [Fact]
+        public void Compile_PreCancelledToken_Throws()
+        {
+            var sources = new List<(string, string)>
+            {
+                ("TestClass.cs", ValidClassCode)
+            };
+
+            using var cts = new System.Threading.CancellationTokenSource();
+            cts.Cancel();
+
+            Assert.Throws<OperationCanceledException>(() =>
+            {
+                ModCompiler.Compile("test_mod_cancelled", sources, cts.Token);
+            });
+        }
     }
 }

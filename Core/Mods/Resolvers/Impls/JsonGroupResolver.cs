@@ -52,7 +52,7 @@ namespace Cthangover.Core.Mods.Resolvers
             GameLogger.Log("MODS", $"CollectJsonGroup<{typeof(T).Name}>('{directory}'): CACHE MISS, scanning {Context.Mods.Count} mod(s)...");
 
             var result = new Dictionary<string, T>();
-            var prefix = directory.Replace('\\', '/').TrimEnd('/') + "/";
+            var prefix = ModPath.NormalizeDirectory(directory);
             var foundAny = false;
 
             foreach (var modId in Context.GetOrderedModIds())

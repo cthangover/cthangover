@@ -172,12 +172,10 @@ namespace Cthangover.Core.Mods
             if (string.IsNullOrEmpty(path))
                 return path;
 
-            var normalized = path.Replace('\\', '/');
+            if (path.StartsWith("res://", StringComparison.OrdinalIgnoreCase))
+                path = path.Substring(6);
 
-            if (normalized.StartsWith("res://", StringComparison.OrdinalIgnoreCase))
-                normalized = normalized.Substring(6);
-
-            return normalized.TrimStart('/');
+            return ModPath.Normalize(path);
         }
     }
 }

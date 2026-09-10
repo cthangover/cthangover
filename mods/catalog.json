@@ -1,0 +1,292 @@
+{
+  "catalog": {
+    "version": 1,
+    "updated_at": "2026-09-10T00:00:00Z"
+  },
+  "mods": [
+    {
+      "id": "core",
+      "name": "Core",
+      "author": "ct",
+      "version": "1.0.0",
+      "description": "Game core",
+      "category": "Library",
+      "tags": ["core", "kernel"],
+      "icon_url": "https://git.cthangover.ru/cthangover/mod_core/raw/branch/master/mod.png",
+      "depends": [],
+      "conflicts_with": [],
+      "downloads": [
+        {
+          "version": "1.0.0",
+          "urls": [
+            "https://git.cthangover.ru/cthangover/mod_core/releases/download/v1.0.0/mod_core-v1.0.0.zip"
+          ],
+          "size_bytes": 141598121,
+          "archive_sha256": "39c42500e7495ed8ef54fbd60b9abb36cffc1606a74bb08763524503edbc2e7c",
+          "install_sha256": "80b160d43bb804478562d249c7142aa89d8764e89b4abed11bac24857cf32c2c"
+        }
+      ],
+      "status": "stable"
+    },
+    {
+      "id": "interface",
+      "name": "Interface",
+      "author": "ct",
+      "version": "1.0.0",
+      "description": "Game interface",
+      "category": "UI",
+      "tags": ["ui", "interface"],
+      "icon_url": "https://git.cthangover.ru/cthangover/mod_interface/raw/branch/master/mod.png",
+      "depends": ["core>=1"],
+      "conflicts_with": [],
+      "downloads": [
+        {
+          "version": "1.0.0",
+          "urls": [
+            "https://git.cthangover.ru/cthangover/mod_interface/releases/download/v1.0.0/mod_interface-v1.0.0.zip"
+          ],
+          "size_bytes": 197847,
+          "archive_sha256": "95a8dad64a084baff6fbee416eb2ad5eaeb1926a9917abcdf80bfe3bea4d4bcc",
+          "install_sha256": "0950e8d6051a7c2b8c7cd9037453a6f250115ea4b7582ef74442f92bc2a92566"
+        }
+      ],
+      "status": "stable"
+    },
+    {
+      "id": "card_battle",
+      "name": "CardBattle",
+      "author": "ct",
+      "version": "1.0.0",
+      "description": "Card battle mechanics",
+      "category": "Gameplay",
+      "tags": ["battle", "cards", "gameplay"],
+      "icon_url": "https://git.cthangover.ru/cthangover/mod_card_battle/raw/branch/master/mod.png",
+      "depends": ["core>=1", "interface>=1"],
+      "conflicts_with": [],
+      "downloads": [
+        {
+          "version": "1.0.0",
+          "urls": [
+            "https://git.cthangover.ru/cthangover/mod_card_battle/releases/download/v1.0.0/mod_card_battle-v1.0.0.zip"
+          ],
+          "size_bytes": 165410,
+          "archive_sha256": "a711c6f17956216b43a50ba6e4acadf8bcadbe0b9727c5ded7595ea3111948ea",
+          "install_sha256": "5be5b1078dd6a4172549e9b6c697b9fec8be518a8d3ada73890b19e4289fa974"
+        }
+      ],
+      "status": "stable"
+    },
+    {
+      "id": "ff_battle",
+      "name": "FFBattle",
+      "author": "ct",
+      "version": "1.0.0",
+      "description": "Final Fantasy style battle system",
+      "category": "Gameplay",
+      "tags": ["battle", "final-fantasy", "gameplay"],
+      "icon_url": "https://git.cthangover.ru/cthangover/mod_ff_battle/raw/branch/master/mod.png",
+      "depends": ["core>=1", "interface>=1"],
+      "conflicts_with": [],
+      "downloads": [
+        {
+          "version": "1.0.0",
+          "urls": [
+            "https://git.cthangover.ru/cthangover/mod_ff_battle/releases/download/v1.0.0/mod_ff_battle-v1.0.0.zip"
+          ],
+          "size_bytes": 108655,
+          "archive_sha256": "c18e327f406766dbc9f0917263a41a1de548f8056a30909ae727b0e27d79f5b2",
+          "install_sha256": "12917bf52f987af1279a37529f5736b44d1ae3b65e4f3bf3d5933f416cdc39f1"
+        }
+      ],
+      "status": "stable"
+    },
+    {
+      "id": "cooking",
+      "name": "Cooking",
+      "author": "ct",
+      "version": "1.0.0",
+      "description": "Cooking mechanic - full autonomous mod",
+      "category": "Gameplay",
+      "tags": ["cooking", "crafting", "survival"],
+      "icon_url": "https://git.cthangover.ru/cthangover/mod_cooking/raw/branch/master/mod.png",
+      "depends": ["core>=1", "interface>=1"],
+      "conflicts_with": [],
+      "downloads": [
+        {
+          "version": "1.0.0",
+          "urls": [
+            "https://git.cthangover.ru/cthangover/mod_cooking/releases/download/v1.0.0/mod_cooking-v1.0.0.zip"
+          ],
+          "size_bytes": 189925,
+          "archive_sha256": "97001727fba6b2b8d7dc9a2397fc30ffa2e136e2c60b038b93df124f963cfc83",
+          "install_sha256": "dec437c18064a003f30fe7bbe7e22c42d7b70a956708c540d238cc5d00adb15e"
+        }
+      ],
+      "status": "stable"
+    },
+    {
+      "id": "live2d",
+      "name": "Live2D Cubism",
+      "author": "ct",
+      "version": "1.0.0",
+      "description": "Live2D Cubism C# runtime: model loading, rendering, physics, animation, effects",
+      "category": "Library",
+      "tags": ["live2d", "ui", "graphics", "2d"],
+      "icon_url": "https://git.cthangover.ru/cthangover/mod_live2d/raw/branch/master/mod.png",
+      "depends": ["core>=1"],
+      "conflicts_with": [],
+      "downloads": [
+        {
+          "version": "1.0.0",
+          "urls": [
+            "https://git.cthangover.ru/cthangover/mod_live2d/releases/download/v1.0.0/mod_live2d-v1.0.0.zip"
+          ],
+          "size_bytes": 253979,
+          "archive_sha256": "698e3d6e9f74cde6b98ca88bf89e2dd3944f512241f1d0f19fbbd777149eac6a",
+          "install_sha256": "d43643940343089c00db0b0cd6d3d902261d0222e152e2ed44e25ced1960c868"
+        }
+      ],
+      "status": "stable"
+    },
+    {
+      "id": "live2d_test",
+      "name": "Live2D Cubism Test",
+      "author": "ct",
+      "version": "1.0.0",
+      "description": "Live2D Cubism integration test mod",
+      "category": "Visual",
+      "tags": ["live2d", "test"],
+      "icon_url": "https://git.cthangover.ru/cthangover/mod_live2d_test/raw/branch/master/mod.png",
+      "depends": ["core>=1", "live2d>=1"],
+      "conflicts_with": [],
+      "downloads": [
+        {
+          "version": "1.0.0",
+          "urls": [
+            "https://git.cthangover.ru/cthangover/mod_live2d_test/releases/download/v1.0.0/mod_live2d_test-v1.0.0.zip"
+          ],
+          "size_bytes": 46746709,
+          "archive_sha256": "ba82dac21560aa948a7e507ec172b11c63bd9d054ceec20424899f876773962f",
+          "install_sha256": "dd0bf02efbd8ce552779c4baa209874e79161acedc4ff3913ec98d44612561a0"
+        }
+      ],
+      "status": "beta"
+    },
+    {
+      "id": "murakami",
+      "name": "Murakami",
+      "author": "dyn",
+      "version": "1.0.0",
+      "description": "Murakami line",
+      "category": "Story",
+      "tags": ["story", "character"],
+      "icon_url": "https://git.cthangover.ru/cthangover/mod_murakami/raw/branch/master/mod.png",
+      "depends": ["core>=1", "interface>=1"],
+      "conflicts_with": [],
+      "downloads": [
+        {
+          "version": "1.0.0",
+          "urls": [
+            "https://git.cthangover.ru/cthangover/mod_murakami/releases/download/v1.0.0/mod_murakami-v1.0.0.zip"
+          ],
+          "size_bytes": 10472576,
+          "archive_sha256": "f7f2d5792ea534c539c68bfde2b0724aca97d676540ad807383bb710a6cf6860",
+          "install_sha256": "e30aab066c38c4fab21d06d6c1345dbab04a2a2ae20b71dd0c916666fa368ace"
+        }
+      ],
+      "status": "stable"
+    },
+    {
+      "id": "gdscript_test",
+      "name": "GDScript Integration Test Mod",
+      "author": "ct",
+      "version": "1.0.0",
+      "description": "Integration tests for GDScript mod actions. Exercises the full pipeline: .gd load -> compile -> action registration -> scenario execution.",
+      "category": "Other",
+      "tags": ["test", "gdscript"],
+      "depends": ["core>=1"],
+      "conflicts_with": [],
+      "downloads": [
+        {
+          "version": "1.0.0",
+          "urls": [
+            "https://git.cthangover.ru/cthangover/mod_gdscript_test/releases/download/v1.0.0/mod_gdscript_test-v1.0.0.zip"
+          ],
+          "size_bytes": 5425,
+          "archive_sha256": "df83e38931835bf52c743bc2186d6f9cff090ee712069cab2ce30ebe32bc6e7b",
+          "install_sha256": "8df7f7fefbafa5e602353657efabda3b45c1544c3aae18499f147858c2c19537"
+        }
+      ],
+      "status": "beta"
+    },
+    {
+      "id": "test_defaults_and_patches",
+      "name": "Test Defaults and Patches",
+      "author": "ct",
+      "version": "1.0.0",
+      "description": "Test mod demonstrating property patches system with wildcard and targeted patches",
+      "category": "Other",
+      "tags": ["test", "patches"],
+      "depends": ["core>=1"],
+      "conflicts_with": [],
+      "downloads": [
+        {
+          "version": "1.0.0",
+          "urls": [
+            "https://git.cthangover.ru/cthangover/mod_test_defaults_and_patches/releases/download/v1.0.0/mod_test_defaults_and_patches-v1.0.0.zip"
+          ],
+          "size_bytes": 749,
+          "archive_sha256": "4758fe6e95ee64431e5e0f40f4d77a958f20e36f6940af387174d36e4972ad2d",
+          "install_sha256": "8ea1161036856463deb49738f4db58fa75349e9732e99dcce9a630b053000ff9"
+        }
+      ],
+      "status": "beta"
+    },
+    {
+      "id": "test_interactives",
+      "name": "Test Interactives",
+      "author": "ct",
+      "version": "1.0.0",
+      "description": "Test mod demonstrating the interactive object system - clickable elements on scene with highlight",
+      "category": "Other",
+      "tags": ["test", "interactives"],
+      "depends": ["core>=1", "interface>=1"],
+      "conflicts_with": [],
+      "downloads": [
+        {
+          "version": "1.0.0",
+          "urls": [
+            "https://git.cthangover.ru/cthangover/mod_test_interactives/releases/download/v1.0.0/mod_test_interactives-v1.0.0.zip"
+          ],
+          "size_bytes": 1571,
+          "archive_sha256": "7dbce2b0d0a6e7808ac880a67950e61601a4dcf0864310fce8c6be4d1ce12e1f",
+          "install_sha256": "b8407e4931c88a9de757d91cf27deb92a0b417a8c641870d1caa707a9bad7e0f"
+        }
+      ],
+      "status": "beta"
+    },
+    {
+      "id": "tools",
+      "name": "Tools",
+      "author": "ct",
+      "version": "1.0.0",
+      "description": "Development tools",
+      "category": "Other",
+      "tags": ["tools", "editor", "development"],
+      "depends": ["core>=1"],
+      "conflicts_with": [],
+      "downloads": [
+        {
+          "version": "1.0.0",
+          "urls": [
+            "https://git.cthangover.ru/cthangover/mod_tools/releases/download/v1.0.0/mod_tools-v1.0.0.zip"
+          ],
+          "size_bytes": 72801,
+          "archive_sha256": "61eeaff5bbb99f57f0084eb5e90775ab20fefabe7e9e687f5dec20d58bd3d081",
+          "install_sha256": "dd43cc1d911441ab36c61a19c8ad5abf6fbc774546707768f240f54e89aa46ae"
+        }
+      ],
+      "status": "beta"
+    }
+  ]
+}

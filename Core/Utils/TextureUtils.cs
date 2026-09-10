@@ -45,7 +45,7 @@ namespace Cthangover.Core.Utils
 
 		private static string NormalizeImagePath(string path, string groupName)
 		{
-			var normalized = path.Replace('\\', '/').TrimStart('/');
+			var normalized = ModPath.Normalize(path);
 			var prefix = groupName + "/";
 			if (normalized.StartsWith(prefix, System.StringComparison.OrdinalIgnoreCase))
 				normalized = normalized.Substring(prefix.Length);

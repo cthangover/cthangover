@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Cthangover.Core.Localization;
 using Cthangover.Core.Mods;
 using Cthangover.Core.Scenes;
@@ -24,6 +26,16 @@ namespace Cthangover.Core.UI.Menu
         private OptionButton _monitorSelect;
         private OptionButton _scaleSelect;
         private CheckButton _vsyncToggle;
+
+        /// <summary>
+        /// Cancels the background mod compile if the launcher leaves the tree
+        /// (player quits while the boot overlay is still streaming the log).
+        /// The token only prevents the pipeline from reaching
+        /// <see cref="ModManager.FinalizeGodotInit"/> on a dying scene; the
+        /// running Roslyn emit still completes, see
+        /// <see cref="ModManager.DiscoverAndCompile"/>.
+        /// </summary>
+        private readonly CancellationTokenSource _bootCts = new();
 
         private static readonly Vector2I[] CommonResolutions =
         {
@@ -54,6 +66,18 @@ namespace Cthangover.Core.UI.Menu
 
             BuildUI();
             LoadSettingsToUI();
+        }
+
+        /// <summary>
+        /// Aborts the launcher-driven boot pipeline when the scene is torn
+        /// down, so <see cref="RunBootAsync"/> does not finalize mods or touch
+        /// freed UI after the player has already left. Only cancellation is
+        /// performed here — disposing the source could race with the pending
+        /// boot task reading <c>Token</c>.
+        /// </summary>
+        public override void _ExitTree()
+        {
+            _bootCts.Cancel();
         }
 
         private Control _bootOverlay;
@@ -103,7 +127,17 @@ namespace Cthangover.Core.UI.Menu
             var modManager = ModManager.Instance;
             modManager.PreparePaths();
 
-            await Task.Run(() => modManager.DiscoverAndCompile());
+            try
+            {
+                await Task.Run(() => modManager.DiscoverAndCompile(_bootCts.Token), _bootCts.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+
+            if (!GodotObject.IsInstanceValid(this))
+                return;
 
             modManager.FinalizeGodotInit();
             modManager.ClearCaches();

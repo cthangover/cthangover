@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
+using System.Threading;
 using Cthangover.Core.Events;
 using Cthangover.Core.Mods.Discovery;
 using Godot;
@@ -43,6 +44,26 @@ namespace Cthangover.Core.Mods
         private bool pathsPrepared;
 
         /// <summary>
+        /// Serialises the discovery/compile/finalize pipeline. The synchronous
+        /// <see cref="Initialize"/> holds it for the whole pipeline so a second
+        /// caller blocks and then observes <see cref="initialized"/> instead of
+        /// running a competing load; the launcher-boot path takes it per phase.
+        /// <see cref="pipelineRunning"/> lets a re-entrant call from inside the
+        /// pipeline (e.g. <see cref="GetOrderedModIds"/> during finalize) return
+        /// without recursing.
+        /// </summary>
+        private readonly object pipelineLock = new();
+        private bool pipelineRunning;
+
+        /// <summary>
+        /// How long a background caller waits for the launcher-driven load
+        /// before giving up. The launcher finalizes on the main thread, so a
+        /// background thread may safely block here; 2 minutes covers large
+        /// modpacks with cold Roslyn compilation.
+        /// </summary>
+        private const int LauncherReadyTimeoutMs = 120000;
+
+        /// <summary>
         /// Roots resolved on the main thread during <see cref="PreparePaths"/>.
         /// Discovery itself is pure file I/O, but scanners resolve their roots via
         /// <c>ProjectSettings.GlobalizePath</c>, which is Godot-API and must stay
@@ -67,7 +88,7 @@ namespace Cthangover.Core.Mods
         public static List<(string Path, int Priority)> AllModsRoots => ResolveModsRoots();
 
         /// <summary>True once discovery has run at least once.</summary>
-        public bool IsInitialized => initialized;
+        public bool IsInitialized => Volatile.Read(ref initialized);
 
         /// <inheritdoc />
         public IReadOnlyDictionary<string, IModInfo> Mods { get; }
@@ -93,20 +114,43 @@ namespace Cthangover.Core.Mods
         /// </summary>
         public void Initialize()
         {
-            if (initialized)
+            if (Volatile.Read(ref initialized))
                 return;
 
             // When booting through the launcher scene, the launcher drives the
             // pipeline itself (background compile + main-thread finalize) so the
-            // main thread can keep rendering. Any synchronous Initialize() call
-            // that slips through during that window (e.g. a lazy GetMod from a
-            // factory) must not kick off a competing load.
+            // main thread can keep rendering. A main-thread caller must return
+            // rather than block — the main thread is the one that will finalize.
+            // A background caller waits for the launcher instead of silently
+            // observing an empty registry, which is what used to make lazy
+            // factories cache "no mods" during the boot window.
             if (BootController.IsLauncherBoot && !BootController.ModsInitialized)
-                return;
+            {
+                if (GameEnvironment.IsMainThread)
+                    return;
 
-            PreparePaths();
-            DiscoverAndCompile();
-            FinalizeGodotInit();
+                if (!BootController.WaitForModsInitialized(LauncherReadyTimeoutMs))
+                    GameLogger.Log("MODS_REGISTRY", "Timed out waiting for launcher mod initialization", LogLevel.Error);
+                return;
+            }
+
+            lock (pipelineLock)
+            {
+                if (initialized || pipelineRunning)
+                    return;
+
+                pipelineRunning = true;
+                try
+                {
+                    PreparePaths();
+                    DiscoverAndCompile();
+                    FinalizeGodotInit();
+                }
+                finally
+                {
+                    pipelineRunning = false;
+                }
+            }
         }
 
         /// <summary>
@@ -121,21 +165,24 @@ namespace Cthangover.Core.Mods
         /// </summary>
         public void PreparePaths()
         {
-            if (pathsPrepared)
-                return;
-            pathsPrepared = true;
-
-            ModDiscoveryRegistry.Initialize();
-            ModCompiler.WarmUpPaths();
-            _ = ModNativeLoader.CacheRoot;
-            _ = ModConfig.Instance;
-            DisabledModsStore.WarmUp();
-
-            resolvedRoots.Clear();
-            foreach (var scanner in ModDiscoveryRegistry.Scanners)
+            lock (pipelineLock)
             {
-                foreach (var root in scanner.GetRoots())
-                    resolvedRoots.Add((scanner, root.Url, root.Priority));
+                if (pathsPrepared)
+                    return;
+                pathsPrepared = true;
+
+                ModDiscoveryRegistry.Initialize();
+                ModCompiler.WarmUpPaths();
+                _ = ModNativeLoader.CacheRoot;
+                _ = ModConfig.Instance;
+                DisabledModsStore.WarmUp();
+
+                resolvedRoots.Clear();
+                foreach (var scanner in ModDiscoveryRegistry.Scanners)
+                {
+                    foreach (var root in scanner.GetRoots())
+                        resolvedRoots.Add((scanner, root.Url, root.Priority));
+                }
             }
         }
 
@@ -147,47 +194,54 @@ namespace Cthangover.Core.Mods
         /// background thread during launcher boot. Collected assemblies are
         /// stored internally and registered later by <see cref="FinalizeGodotInit"/>.
         /// </summary>
-        public void DiscoverAndCompile()
+        public void DiscoverAndCompile(CancellationToken cancellationToken = default)
         {
-            // The mods dictionary is being rebuilt — any previously cached load
-            // order (possibly computed from an empty registry during the boot
-            // window) is now stale and must be recomputed.
-            orderedModIds = null;
-
-            var anyRootFound = false;
-
-            foreach (var (scanner, url, priority) in resolvedRoots)
+            lock (pipelineLock)
             {
-                if (!scanner.IsCanProvide(url))
+                cancellationToken.ThrowIfCancellationRequested();
+
+                // The mods dictionary is being rebuilt — any previously cached load
+                // order (possibly computed from an empty registry during the boot
+                // window) is now stale and must be recomputed.
+                orderedModIds = null;
+
+                var anyRootFound = false;
+
+                foreach (var (scanner, url, priority) in resolvedRoots)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    if (!scanner.IsCanProvide(url))
+                    {
+                        GameLogger.Log("MODS_REGISTRY",
+                            $"Scanner '{scanner.Name}' skipped root '{url}': not available",
+                            LogLevel.Debug);
+                        continue;
+                    }
+
+                    anyRootFound = true;
                     GameLogger.Log("MODS_REGISTRY",
-                        $"Scanner '{scanner.Name}' skipped root '{url}': not available",
-                        LogLevel.Debug);
-                    continue;
+                        $"Scanning root '{url}' with '{scanner.Name}' priority={priority}");
+                    DiscoverMods(scanner, url, priority, cancellationToken);
                 }
 
-                anyRootFound = true;
-                GameLogger.Log("MODS_REGISTRY",
-                    $"Scanning root '{url}' with '{scanner.Name}' priority={priority}");
-                DiscoverMods(scanner, url, priority);
+                if (!anyRootFound)
+                {
+                    GameLogger.Log("MODS_REGISTRY", "No mods roots found, skipping mod loading", LogLevel.Error);
+                    GameLogger.Log("MODS_REGISTRY", $"ModRegistry.Initialize: END (no mods root), {mods.Count} mod(s)");
+                    return;
+                }
+
+                foreach (var kvp in mods)
+                    allDiscoveredMods[kvp.Key] = kvp.Value;
+
+                FilterDisabledMods();
+                ValidateDependencies();
+
+                ModNativeLoader.LoadNativeDlls(mods.Values, cancellationToken);
+                _precompiledAssemblies = ModAssemblyLoader.LoadPrecompiledDlls(mods.Values, cancellationToken);
+                _compiledAssemblies = ModCompiler.CompileAll(mods, cancellationToken);
             }
-
-            if (!anyRootFound)
-            {
-                GameLogger.Log("MODS_REGISTRY", "No mods roots found, skipping mod loading", LogLevel.Error);
-                GameLogger.Log("MODS_REGISTRY", $"ModRegistry.Initialize: END (no mods root), {mods.Count} mod(s)");
-                return;
-            }
-
-            foreach (var kvp in mods)
-                allDiscoveredMods[kvp.Key] = kvp.Value;
-
-            FilterDisabledMods();
-            ValidateDependencies();
-
-            ModNativeLoader.LoadNativeDlls(mods.Values);
-            _precompiledAssemblies = ModAssemblyLoader.LoadPrecompiledDlls(mods.Values);
-            _compiledAssemblies = ModCompiler.CompileAll(mods);
         }
 
         /// <summary>
@@ -199,32 +253,39 @@ namespace Cthangover.Core.Mods
         /// </summary>
         public void FinalizeGodotInit()
         {
-            if (initialized)
-                return;
-            initialized = true;
-
-            foreach (var (modId, assembly) in _precompiledAssemblies)
-                ModAssemblyLoader.RegisterAssembly(assembly, modId);
-
-            foreach (var (modId, assembly, sourceFiles) in _compiledAssemblies)
+            lock (pipelineLock)
             {
-                ModAssemblyLoader.RegisterAssembly(assembly, modId);
-                ScriptTypeRegistry.RegisterAssembly(assembly, modId, sourceFiles);
+                if (initialized)
+                    return;
+
+                foreach (var (modId, assembly) in _precompiledAssemblies)
+                    ModAssemblyLoader.RegisterAssembly(assembly, modId);
+
+                foreach (var (modId, assembly, sourceFiles) in _compiledAssemblies)
+                {
+                    ModAssemblyLoader.RegisterAssembly(assembly, modId);
+                    ScriptTypeRegistry.RegisterAssembly(assembly, modId, sourceFiles);
+                }
+
+                ModGDScriptLoader.LoadGDScripts(mods);
+
+                var orderedIds = GetOrderedModIds();
+                var orderedList = new List<(string ModId, int Priority)>();
+                for (var i = 0; i < orderedIds.Count; i++)
+                    orderedList.Add((orderedIds[i], i));
+                ScriptTypeRegistry.SetModOrder(orderedList);
+
+                // Publish readiness only after every registry is populated:
+                // a concurrent reader must never observe IsInitialized while
+                // scripts/GDScripts are still missing. The volatile write is
+                // ordered before the wait-handle release in MarkModsInitialized.
+                Volatile.Write(ref initialized, true);
+                BootController.MarkModsInitialized();
+
+                GameLogger.Log("MODS_REGISTRY", $"ModRegistry.Initialize: loaded {mods.Count} mod(s)");
+                foreach (var kvp in mods)
+                    GameLogger.Log("MODS_REGISTRY", $"  [{kvp.Key}] '{kvp.Value.Name}' v{kvp.Value.Version ?? "?"} provider={kvp.Value.FileProvider.GetType().Name}", LogLevel.Debug);
             }
-
-            ModGDScriptLoader.LoadGDScripts(mods);
-
-            var orderedIds = GetOrderedModIds();
-            var orderedList = new List<(string ModId, int Priority)>();
-            for (var i = 0; i < orderedIds.Count; i++)
-                orderedList.Add((orderedIds[i], i));
-            ScriptTypeRegistry.SetModOrder(orderedList);
-
-            BootController.MarkModsInitialized();
-
-            GameLogger.Log("MODS_REGISTRY", $"ModRegistry.Initialize: loaded {mods.Count} mod(s)");
-            foreach (var kvp in mods)
-                GameLogger.Log("MODS_REGISTRY", $"  [{kvp.Key}] '{kvp.Value.Name}' v{kvp.Value.Version ?? "?"} provider={kvp.Value.FileProvider.GetType().Name}", LogLevel.Debug);
         }
 
         /// <summary>
@@ -234,19 +295,22 @@ namespace Cthangover.Core.Mods
         /// </summary>
         public void Reload()
         {
-            foreach (var kvp in mods)
-                ModEventBus.Instance?.ClearForMod(kvp.Key);
+            lock (pipelineLock)
+            {
+                foreach (var kvp in mods)
+                    ModEventBus.Instance?.ClearForMod(kvp.Key);
 
-            initialized = false;
-            mods.Clear();
-            allDiscoveredMods.Clear();
-            _existingPriorities.Clear();
-            orderedModIds = null;
-            _precompiledAssemblies = new List<(string ModId, Assembly Assembly)>();
-            _compiledAssemblies = new List<(string ModId, Assembly Assembly, List<(string FilePath, string Source)> Sources)>();
-            ScriptTypeRegistry.Clear();
-            ModNativeLoader.FreeAll();
-            Initialize();
+                Volatile.Write(ref initialized, false);
+                mods.Clear();
+                allDiscoveredMods.Clear();
+                _existingPriorities.Clear();
+                orderedModIds = null;
+                _precompiledAssemblies = new List<(string ModId, Assembly Assembly)>();
+                _compiledAssemblies = new List<(string ModId, Assembly Assembly, List<(string FilePath, string Source)> Sources)>();
+                ScriptTypeRegistry.Clear();
+                ModNativeLoader.FreeAll();
+                Initialize();
+            }
         }
 
         /// <summary>
@@ -343,7 +407,7 @@ namespace Cthangover.Core.Mods
             public int RootPriority;
         }
 
-        private void DiscoverMods(IModScanner scanner, string modsRoot, int rootPriority)
+        private void DiscoverMods(IModScanner scanner, string modsRoot, int rootPriority, CancellationToken cancellationToken)
         {
             var candidates = new List<ModCandidate>();
 
@@ -351,6 +415,8 @@ namespace Cthangover.Core.Mods
             {
                 foreach (var entry in scanner.Discover(modsRoot))
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
+
                     if (entry.EntryName == ".gdignore" || entry.EntryName == ".gitkeep")
                         continue;
 
@@ -366,6 +432,10 @@ namespace Cthangover.Core.Mods
                         candidates.Add(c);
                     }
                 }
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
             }
             catch (Exception ex)
             {

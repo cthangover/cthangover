@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using Cthangover.Core.Utils;
@@ -23,8 +24,20 @@ namespace Cthangover.Core.Mods.Resolvers
         /// <inheritdoc />
         public override string Id => "textures";
 
-        private Dictionary<string, FileEntry> _fileCache;
-        private readonly Dictionary<string, Texture2D> _resolvedCache = new();
+        /// <summary>
+        /// Collected file entries. The reference is written once after the
+        /// build completes, hence <c>volatile</c> so other threads observe the
+        /// fully-populated dictionary instead of a stale null.
+        /// </summary>
+        private volatile Dictionary<string, FileEntry> _fileCache;
+
+        /// <summary>
+        /// Resolved Godot textures, keyed by logical name.
+        /// <see cref="ConcurrentDictionary"/> because <see cref="Resolve"/> and
+        /// <see cref="ClearCache"/> may run from different threads; a plain
+        /// dictionary corrupts under concurrent writes.
+        /// </summary>
+        private readonly ConcurrentDictionary<string, Texture2D> _resolvedCache = new();
 
         /// <summary>
         /// Collects all texture file entries from every configured

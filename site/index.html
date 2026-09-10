@@ -1,13 +1,23 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title data-i18n="hero_title">cthangover</title>
-<meta name="description" content="Мод-ориентированная платформа для визуальных новелл с элементами RPG на Godot 4.6">
-<link rel="stylesheet" href="css/highlight-theme.css">
-<link rel="stylesheet" href="css/style.css">
+<title>cthangover</title>
+<meta name="description" content="A mod-oriented platform for visual novels with RPG elements, built on Godot 4.6">
+<link rel="canonical" href="https://cthangover.ru/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="cthangover">
+<meta property="og:description" content="A mod-oriented platform for visual novels with RPG elements, built on Godot 4.6">
+<meta property="og:url" content="https://cthangover.ru/">
+<meta property="og:image" content="https://cthangover.ru/img/logo.png">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="/img/favicon-32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/img/favicon-16.png" sizes="16x16">
+<link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+<link rel="stylesheet" href="/css/highlight-theme.css">
+<link rel="stylesheet" href="/css/style.css">
 </head>
 
 <body>
@@ -15,9 +25,9 @@
 <header id="hero">
   <div class="hero-content">
     <h1 data-i18n="hero_title">cthangover</h1>
-    <p class="tagline" data-i18n="hero_tagline">Мод-ориентированная платформа для визуальных новелл с элементами RPG</p>
+    <p class="tagline" data-i18n="hero_tagline">A mod-oriented platform for visual novels with RPG elements</p>
     <div class="hero-buttons">
-      <a href="https://git.cthangover.ru/cthangover/cthangover" class="btn btn-primary" target="_blank" rel="noopener" data-i18n="hero_btn_repo">Исходный код в репозитории</a>
+      <a href="https://git.cthangover.ru/cthangover/cthangover" class="btn btn-primary" target="_blank" rel="noopener" data-i18n="hero_btn_repo">Source in the repository</a>
     </div>
   </div>
   <div class="hero-bg"></div>
@@ -25,21 +35,21 @@
 
 <nav id="navbar">
   <div class="nav-inner">
-    <a href="#hero" class="nav-brand">cthangover</a>
-    <a class="docs-back-link" data-i18n="nav_docs_back">← На сайт</a>
+    <a href="/#hero" class="nav-brand">cthangover</a>
+    <a href="/" class="docs-back-link" data-i18n="nav_docs_back">← Back to site</a>
     <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation" aria-expanded="false">
       <span></span><span></span><span></span>
     </button>
     <ul class="nav-links">
-      <li><a href="#about" data-i18n="nav_about">О проекте</a></li>
-      <li><a href="#features" data-i18n="nav_features">Возможности</a></li>
-      <li><a href="#architecture" data-i18n="nav_arch">Архитектура</a></li>
-      <li><a href="#screenshots" data-i18n="nav_screenshots">Скриншоты</a></li>
-      <li><a href="#videos" data-i18n="nav_videos">Видео</a></li>
-      <li><a href="#story" data-i18n="nav_story">Сюжет</a></li>
-      <li><a href="#systems" data-i18n="nav_systems">Системы</a></li>
-      <li><a href="#quickstart" data-i18n="nav_quickstart">Быстрый старт</a></li>
-      <li><a href="#docs" data-i18n="nav_docs">Документация</a></li>
+      <li><a href="/#about" data-i18n="nav_about">About</a></li>
+      <li><a href="/#features" data-i18n="nav_features">Features</a></li>
+      <li><a href="/#architecture" data-i18n="nav_arch">Architecture</a></li>
+      <li><a href="/#screenshots" data-i18n="nav_screenshots">Screenshots</a></li>
+      <li><a href="/#videos" data-i18n="nav_videos">Videos</a></li>
+      <li><a href="/#story" data-i18n="nav_story">Story</a></li>
+      <li><a href="/#systems" data-i18n="nav_systems">Systems</a></li>
+      <li><a href="/quickstart/" data-i18n="nav_quickstart">Quick Start</a></li>
+      <li><a href="/docs/" data-i18n="nav_docs">Documentation</a></li>
     </ul>
     <div class="nav-right">
       <div class="lang-switcher">
@@ -51,8 +61,8 @@
         <button class="lang-btn" data-lang="vi" aria-label="Tiếng Việt">VI</button>
         <button class="lang-btn" data-lang="es" aria-label="Español">ES</button>
       </div>
-      <a href="https://git.cthangover.ru/cthangover/cthangover" class="nav-repo" target="_blank" rel="noopener" aria-label="Репозиторий">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.605-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.295 24 12 24 5.37 18.63 0 12 0z"/></svg>
+      <a href="https://git.cthangover.ru/cthangover/cthangover" class="nav-repo" target="_blank" rel="noopener" aria-label="Repository">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h12v4a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5v-4z"/><path d="M16 11h1.5a1.5 1.5 0 0 1 0 3H16"/><path d="M3 21h14"/><path d="M8 7c0-1 .9-1.4.9-2.4S8 3.1 8 2.2"/><path d="M11.5 7c0-1 .9-1.4.9-2.4s-.9-1.5-.9-2.4"/></svg>
       </a>
     </div>
   </div>
@@ -66,65 +76,65 @@
 
 <section id="about">
   <div class="container">
-    <h2 data-i18n="about_title">О проекте</h2>
-    <p data-i18n="about_p1">cthangover — это визуальная новелла с элементами RPG, построенная на уникальной мод-ориентированной архитектуре. Проект написан на Godot 4.6 (C# / .NET 8) и распространяется под лицензией MIT.</p>
-    <p data-i18n="about_p2">В Godot-проекте практически нет ресурсов. Лёгкое C#-ядро собирает готовую игру в рантайме из модов, расположенных в папке mods/. Моды содержат сцены, сценарии, ресурсы, а также C#-код в исходном виде — он компилируется «на лету» через Roslyn. Убирая или дополняя моды, можно удалять или добавлять сцены, механики и целые игровые подсистемы.</p>
-    <p data-i18n="about_p3">Это открывает дорогу в бесконечный моддинг и разработку собственных проектов на базе ядра. Для доработки модов не требуется даже наличие Godot или SDK — достаточно текстового редактора и базовых знаний JSON.</p>
+    <h2 data-i18n="about_title">About the Project</h2>
+    <p data-i18n="about_p1">cthangover is a visual novel with RPG elements, built on a unique mod-oriented architecture. Written in Godot 4.6 (C# / .NET 8) and distributed under the MIT license.</p>
+    <p data-i18n="about_p2">The Godot project contains almost no resources. A lightweight C# kernel assembles a complete game at runtime from mods located in the mods/ folder. Mods contain scenes, scenarios, resources, and C# source code — compiled on-the-fly via Roslyn. By removing or adding mods, you can remove or add scenes, mechanics, and entire game subsystems.</p>
+    <p data-i18n="about_p3">This opens the door to limitless modding and development of your own projects on top of the kernel. To modify mods, you don't even need Godot or an SDK — a text editor and basic JSON knowledge are enough.</p>
   </div>
 </section>
 
 <section id="features">
   <div class="container">
-    <h2 data-i18n="features_title">Ключевые возможности</h2>
-    <p class="section-subtitle" data-i18n="features_subtitle">Что уже работает в базовой поставке</p>
+    <h2 data-i18n="features_title">Key Features</h2>
+    <p class="section-subtitle" data-i18n="features_subtitle">What's already working out of the box</p>
     <div class="features-grid">
 
       <div class="feature-card">
         <div class="feature-icon">
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="9" opacity="0.3"/><circle cx="12" cy="12" r="1.5"/></svg>
         </div>
-        <h3 data-i18n="feat_time_title">Шейдерное время суток</h3>
-        <p data-i18n="feat_time_desc">Один задник — вместо сотен вариаций. Автоматический расчёт фаз дня и ночи прямо на GPU, без лишних ресурсов.</p>
+        <h3 data-i18n="feat_time_title">Shader-based Time of Day</h3>
+        <p data-i18n="feat_time_desc">One background instead of hundreds of variations. Automatic GPU-based calculation of day/night phases without extra assets.</p>
       </div>
 
       <div class="feature-card">
         <div class="feature-icon">
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2l1.5 5.5L19 6l-3.5 4.5L19 15l-5.5-1.5L12 22l-1.5-8.5L5 15l3.5-4.5L5 6l5.5 1.5z"/></svg>
         </div>
-        <h3 data-i18n="feat_light_title">2D-освещение</h3>
-        <p data-i18n="feat_light_desc">Динамические источники света, карты глубины и перетаскиваемая лампа игрока оживляют каждую сцену.</p>
+        <h3 data-i18n="feat_light_title">2D Lighting</h3>
+        <p data-i18n="feat_light_desc">Dynamic light sources, depth maps, and a draggable player lamp bring every scene to life.</p>
       </div>
 
       <div class="feature-card">
         <div class="feature-icon">
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5M10 18l-2 3h8l-2-3"/></svg>
         </div>
-        <h3 data-i18n="feat_dsl_title">DSL-сценарии</h3>
-        <p data-i18n="feat_dsl_desc">Собственный предметно-ориентированный язык для написания сценариев. Простой синтаксис, 26 команд, расширяется модами.</p>
+        <h3 data-i18n="feat_dsl_title">Scenario DSL</h3>
+        <p data-i18n="feat_dsl_desc">A custom domain-specific language for writing scenarios. Simple syntax, 26 commands, extensible via mods.</p>
       </div>
 
       <div class="feature-card">
         <div class="feature-icon">
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
         </div>
-        <h3 data-i18n="feat_rpg_title">RPG-системы</h3>
-        <p data-i18n="feat_rpg_desc">Персонажи с 6 атрибутами, уровни, опыт, квесты, инвентарь, крафт, скиллы и коллекционные карты редкости.</p>
+        <h3 data-i18n="feat_rpg_title">RPG Systems</h3>
+        <p data-i18n="feat_rpg_desc">Characters with levels, XP, quests, inventory, crafting, skills, and collectible rarity cards.</p>
       </div>
 
       <div class="feature-card">
         <div class="feature-icon">
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="6" y="4" width="12" height="16" rx="2"/><path d="M9 8h2M13 8h2M9 12h6M9 16h4"/></svg>
         </div>
-        <h3 data-i18n="feat_battle_title">Карточный бой</h3>
-        <p data-i18n="feat_battle_desc">Пошаговая карточная битва с атакой, защитой, оглушением и статус-эффектами. Второй вариант — FF-стиль (в разработке).</p>
+        <h3 data-i18n="feat_battle_title">Turn-Based Battle</h3>
+        <p data-i18n="feat_battle_desc">Two equal battle modes — turn-based and Final Fantasy style. Switch on the fly via mods.</p>
       </div>
 
       <div class="feature-card">
         <div class="feature-icon">
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
         </div>
-        <h3 data-i18n="feat_mod_title">Система модов</h3>
-        <p data-i18n="feat_mod_desc">Игра собрана из прозрачных «кирпичиков». Каждый мод можно рассмотреть, вынуть и увидеть, как меняется игра.</p>
+        <h3 data-i18n="feat_mod_title">Mod System</h3>
+        <p data-i18n="feat_mod_desc">The game is assembled from transparent bricks. Each mod can be inspected, removed, and you'll see how the game changes.</p>
       </div>
 
     </div>
@@ -133,15 +143,15 @@
 
 <section id="architecture">
   <div class="container">
-    <h2 data-i18n="arch_title">Мод-ориентированная архитектура</h2>
+    <h2 data-i18n="arch_title">Mod-Oriented Architecture</h2>
 
     <div class="arch-diagram">
       <div class="arch-block arch-kernel">
         <div class="arch-icon">
           <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="3"/><circle cx="12" cy="12" r="4"/></svg>
         </div>
-        <h3 data-i18n="arch_kernel">Ядро (C#)</h3>
-        <p data-i18n="arch_kernel_desc">Лёгкое ядро без ресурсов. Загружает и активирует моды, компилирует C#-код (Roslyn), разрешает конфликты.</p>
+        <h3 data-i18n="arch_kernel">Kernel (C#)</h3>
+        <p data-i18n="arch_kernel_desc">A lightweight core with no resources. Loads and activates mods, compiles C# code (Roslyn), resolves conflicts.</p>
       </div>
 
       <div class="arch-arrow">
@@ -152,8 +162,8 @@
         <div class="arch-icon">
           <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2v11z"/></svg>
         </div>
-        <h3 data-i18n="arch_mods">Моды (mods/)</h3>
-        <p data-i18n="arch_mods_desc">Сцены, сценарии (.scenario), текстуры, звуки, шейдеры, JSON-данные, исходный C#-код. Всё, из чего состоит игра.</p>
+        <h3 data-i18n="arch_mods">Mods (mods/)</h3>
+        <p data-i18n="arch_mods_desc">Scenes, scenarios (.scenario), textures, sounds, shaders, JSON data, C# source code. Everything the game is made of.</p>
       </div>
 
       <div class="arch-arrow">
@@ -164,30 +174,30 @@
         <div class="arch-icon">
           <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M8 12h8M12 8v8"/></svg>
         </div>
-        <h3 data-i18n="arch_game">Игра</h3>
-        <p data-i18n="arch_game_desc">Собирается в рантайме из активных модов. Убрал мод карточного боя — пропала боевая система. Добавил мод с квестом — появился новый квест.</p>
+        <h3 data-i18n="arch_game">Game</h3>
+        <p data-i18n="arch_game_desc">Assembled at runtime from active mods. Removed the turn-based battle mod, added FF — now you have Final Fantasy style combat. Swapped them back — turn-based again. Added a food mod — now you cook, eat, and feed your companions. Removed it — no survival fuss.</p>
       </div>
     </div>
 
-    <p class="arch-footer" data-i18n="arch_footer">Для доработки модов не нужен Godot или SDK. Текстовый редактор, JSON и немного C# (опционально) — этого достаточно, чтобы изменить или создать игровую механику.</p>
+    <p class="arch-footer" data-i18n="arch_footer">You don't need Godot or an SDK to modify mods. A text editor, JSON, and a bit of C# (optional) — that's enough to change or create a game mechanic.</p>
   </div>
 </section>
 
 <section id="screenshots">
   <div class="container">
-    <h2 data-i18n="screenshots_title">Скриншоты</h2>
+    <h2 data-i18n="screenshots_title">Screenshots</h2>
     <div class="screenshots-grid">
       <div class="screenshot-item">
-        <img src="img/screen1.jpg" alt="Скриншот 1" loading="lazy">
+        <img src="/img/screen1.jpg" alt="Screenshot 1" loading="lazy">
       </div>
       <div class="screenshot-item">
-        <img src="img/screen2.jpg" alt="Скриншот 2" loading="lazy">
+        <img src="/img/screen2.jpg" alt="Screenshot 2" loading="lazy">
       </div>
       <div class="screenshot-item">
-        <img src="img/screen3.jpg" alt="Скриншот 3" loading="lazy">
+        <img src="/img/screen3.jpg" alt="Screenshot 3" loading="lazy">
       </div>
       <div class="screenshot-item">
-        <img src="img/screen4.jpg" alt="Скриншот 4" loading="lazy">
+        <img src="/img/screen4.jpg" alt="Screenshot 4" loading="lazy">
       </div>
     </div>
   </div>
@@ -195,13 +205,16 @@
 
 <section id="videos">
   <div class="container">
-    <h2 data-i18n="videos_title">Видео</h2>
+    <h2 data-i18n="videos_title">Videos</h2>
     <div class="videos-grid">
       <div class="video-card">
         <div class="video-wrapper">
-          <iframe src="https://www.youtube.com/embed/477laCsjRy4" title="Освещение и время суток" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+          <button class="video-facade" type="button" data-video-id="477laCsjRy4" aria-label="Play video">
+            <img src="https://i.ytimg.com/vi/477laCsjRy4/hqdefault.jpg" alt="Lighting &amp; Time of Day" loading="lazy">
+            <span class="video-play" aria-hidden="true"></span>
+          </button>
         </div>
-        <p class="video-caption" data-i18n="video_lighting_title">Освещение и время суток</p>
+        <p class="video-caption" data-i18n="video_lighting_title">Lighting &amp; Time of Day</p>
       </div>
     </div>
   </div>
@@ -209,20 +222,20 @@
 
 <section id="story">
   <div class="container">
-    <h2 data-i18n="story_title">Сюжет</h2>
+    <h2 data-i18n="story_title">Story</h2>
     <div class="story-content">
-      <p data-i18n="story_p1">Cthangover (Cthulhu + Hangover) — это история о том, как великий Аль-Азиф, известный как «Книга Мертвых», встретил своего единственного и непобедимого врага — хронического алкоголика.</p>
-      <p data-i18n="story_p2">Главный герой, пропащий субъект из параллельной реальности, случайно прочёл пару строк на незнакомом языке, после чего небосвод пошёл трещинами, а в прогалы хлынули щупальца, когти и неописуемые формы из миров за гранью сна. Человечество погрузилось в хаос, но виновник апокалипсиса безучастно ковыряет в носу, принимая рёв космических ужасов за галлюцинации.</p>
-      <p data-i18n="story_p3">Смертоносное проклятие Некрономикона, ломающее психику сильнейших магов, разбивается о «непробиваемую» тупость и химическую зависимость пьяницы. Сама Книга, запертая в этой абсурдной связке, впервые в своём существовании оказывается в тупике: она бессмертна, но обречена делить вечность с существом, которому на неё плевать.</p>
-      <p data-i18n="story_p4">Чёрный юмор, грязные словечки, абсурдные ситуации и необычный сюжет.</p>
+      <p data-i18n="story_p1">Cthangover (Cthulhu + Hangover) is the story of how the great Al-Azif, also known as the Book of the Dead, met its one and only invincible enemy — a chronic alcoholic.</p>
+      <p data-i18n="story_p2">The protagonist, a lost soul from a parallel reality, accidentally read a couple of lines in an unknown language, after which the firmament cracked open and tentacles, claws, and indescribable forms from worlds beyond sleep poured through. Humanity plunged into chaos, but the culprit of the apocalypse is idly picking his nose, mistaking the roar of cosmic horrors for hallucinations.</p>
+      <p data-i18n="story_p3">The deadly curse of the Necronomicon, which breaks the minds of the mightiest mages, shatters against the impenetrable stupidity and chemical dependency of a drunkard. The Book itself, trapped in this absurd bond, finds itself at a dead end for the first time in its existence: it is immortal, but doomed to share eternity with a being who couldn't care less.</p>
+      <p data-i18n="story_p4">Black humor, foul language, absurd situations, and an unusual plot.</p>
     </div>
   </div>
 </section>
 
 <section id="systems">
   <div class="container">
-    <h2 data-i18n="systems_title">Ключевые подсистемы</h2>
-    <p class="section-subtitle" data-i18n="systems_subtitle">Каждая система — это набор C#-классов, Godot-сцен и JSON-данных, задокументированных и расширяемых через моды.</p>
+    <h2 data-i18n="systems_title">Core Subsystems</h2>
+    <p class="section-subtitle" data-i18n="systems_subtitle">Each subsystem is a set of C# classes, Godot scenes, and JSON data — documented and extensible via mods.</p>
     <div class="systems-list" id="systemsAccordion"></div>
   </div>
 </section>
@@ -233,7 +246,7 @@
     <aside id="docs-sidebar" class="docs-sidebar">
       <div class="sidebar-search">
         <div class="sidebar-search-wrap">
-          <input type="text" id="docsSearch" class="sidebar-search-input" placeholder="Поиск..." autocomplete="off">
+          <input type="text" id="docsSearch" class="sidebar-search-input" placeholder="Search..." autocomplete="off">
           <button class="sidebar-search-clear" id="searchClear" aria-label="Clear search">&times;</button>
         </div>
       </div>
@@ -249,12 +262,12 @@
 
 <section id="cta">
   <div class="container">
-    <h2 data-i18n="cta_title">Присоединяйся</h2>
-    <p data-i18n="cta_p1">Проект с открытым исходным кодом под лицензией MIT.</p>
-    <p data-i18n="cta_p2">Нужна конструктивная критика, свежий взгляд и обратная связь. Если тебе интересны визуальные новеллы, моддинг, Godot или просто необычная архитектура — загляни в репозиторий.</p>
+    <h2 data-i18n="cta_title">Get Involved</h2>
+    <p data-i18n="cta_p1">Open source project under the MIT license.</p>
+    <p data-i18n="cta_p2">Constructive criticism, fresh perspectives, and feedback are needed. If you're interested in visual novels, modding, Godot, or just unusual architecture — check out the repository.</p>
     <div class="cta-buttons">
-      <a href="https://git.cthangover.ru/cthangover/cthangover" class="btn btn-primary" target="_blank" rel="noopener" data-i18n="cta_btn_repo">Перейти в репозиторий</a>
-      <a href="https://git.cthangover.ru/cthangover/cthangover/src/branch/master/LICENSE" class="btn btn-secondary" target="_blank" rel="noopener" data-i18n="cta_btn_license">Лицензия MIT</a>
+      <a href="https://git.cthangover.ru/cthangover/cthangover" class="btn btn-primary" target="_blank" rel="noopener" data-i18n="cta_btn_repo">Go to repository</a>
+      <a href="https://git.cthangover.ru/cthangover/cthangover/src/branch/master/LICENSE" class="btn btn-secondary" target="_blank" rel="noopener" data-i18n="cta_btn_license">MIT License</a>
     </div>
   </div>
 </section>
@@ -269,7 +282,7 @@
 
 <footer>
   <div class="container footer-inner">
-    <span data-i18n="footer_text">© 2026 Исаев Илья</span>
+    <span data-i18n="footer_text">© 2026 Isaev Ilya</span>
     <span class="footer-sep">·</span>
     <span data-i18n="footer_opensource">Open Source / MIT License</span>
     <span class="footer-sep">·</span>
@@ -279,23 +292,23 @@
 
 <div id="lightbox" class="lightbox" aria-hidden="true" role="dialog">
   <div class="lightbox-overlay"></div>
-  <button class="lightbox-close" aria-label="Закрыть">&times;</button>
-  <button class="lightbox-prev" aria-label="Предыдущий">&lsaquo;</button>
-  <button class="lightbox-next" aria-label="Следующий">&rsaquo;</button>
+  <button class="lightbox-close" aria-label="Close">&times;</button>
+  <button class="lightbox-prev" aria-label="Previous">&lsaquo;</button>
+  <button class="lightbox-next" aria-label="Next">&rsaquo;</button>
   <img class="lightbox-img" src="" alt="">
 </div>
 
-<script src="js/i18n.js"></script>
-<script src="js/vendor/highlight.min.js"></script>
-<script src="js/vendor/mermaid.min.js" defer></script>
-<script src="js/vendor/hljs-scenario.js"></script>
-<script src="js/vendor/hljs-gdscript.js"></script>
-<script src="js/vendor/hljs-filestree.js"></script>
-    <script src="js/vendor/hljs-glsl.js"></script>
-    <script src="js/vendor/hljs-jsonc.js"></script>
-    <script src="js/vendor/marked.min.js"></script>
-<script src="js/docs.js"></script>
-<script src="js/quickstart.js"></script>
-<script src="js/main.js"></script>
+<script src="/js/i18n.js"></script>
+<script src="/js/vendor/highlight.min.js"></script>
+<script src="/js/vendor/mermaid.min.js" defer></script>
+<script src="/js/vendor/hljs-scenario.js"></script>
+<script src="/js/vendor/hljs-gdscript.js"></script>
+<script src="/js/vendor/hljs-filestree.js"></script>
+    <script src="/js/vendor/hljs-glsl.js"></script>
+    <script src="/js/vendor/hljs-jsonc.js"></script>
+    <script src="/js/vendor/marked.min.js"></script>
+<script src="/js/docs.js"></script>
+<script src="/js/quickstart.js"></script>
+<script src="/js/main.js"></script>
 </body>
 </html>

@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /js/
+Disallow: /css/
+Disallow: /*.md$
+Disallow: /docs/docs-index.json
+Disallow: /quickstart/quickstart-index.json
+
+Sitemap: https://cthangover.ru/sitemap.xml

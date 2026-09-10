@@ -170,7 +170,7 @@ public class MyModSettings : IModSettings
 }
 ```
 
-![Mod Settings example view](docs/mods/settings/mod_example.png)
+![Mod Settings example view](mod_example.png)
 
 ### Example with enum
 
@@ -190,7 +190,7 @@ new ModSettingDefinition
 }
 ```
 
-![Mod Settings example view](docs/mods/settings/mod_example_enum.png)
+![Mod Settings example view](mod_example_enum.png)
 
 The `Options` dictionary maps internal values (stored in the blob) to localisation keys (shown in the dropdown). The mod provides translations in its `locale/` files.
 

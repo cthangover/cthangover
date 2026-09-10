@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Threading;
 using Cthangover.Core.Mods;
 using Cthangover.Core.Mods.Caches;
 using Cthangover.Core.Utils;
@@ -32,6 +33,21 @@ namespace Cthangover.Core.UI.Menu
 		private CatalogEntryDownload _selectedDownload;
 		private RemoteModStatus _selectedRemoteStatus;
 		private static readonly HashSet<string> _pendingRestart = new();
+		private CancellationTokenSource _networkRefreshCts;
+
+		/// <summary>
+		/// Cancels an in-flight catalog fetch when the menu leaves the tree.
+		/// Without this the awaited continuation in
+		/// <see cref="RefreshNetworkMods"/> would rebuild lists on freed nodes
+		/// after the player closed the menu mid-download. The source is
+		/// disposed by <see cref="RefreshNetworkMods"/> when the fetch unwinds,
+		/// not here, to avoid racing the pending HTTP request with a disposed
+		/// token.
+		/// </summary>
+		public override void _ExitTree()
+		{
+			_networkRefreshCts?.Cancel();
+		}
 
 		private static string GetCurrentLocale()
 		{
@@ -83,15 +99,33 @@ namespace Cthangover.Core.UI.Menu
 
 		private async void RefreshNetworkMods()
 		{
+			_networkRefreshCts?.Cancel();
+			var cts = new CancellationTokenSource();
+			_networkRefreshCts = cts;
+
 			try
 			{
-				await CatalogService.RefreshAsync(forceRefresh: true);
+				await CatalogService.RefreshAsync(forceRefresh: true, cts.Token);
+			}
+			catch (OperationCanceledException)
+			{
+				return;
 			}
 			catch
 			{
-				_networkStatusLabel.Text = TranslationServer.Translate("mods/network_error");
+				if (GodotObject.IsInstanceValid(_networkStatusLabel))
+					_networkStatusLabel.Text = TranslationServer.Translate("mods/network_error");
 				return;
 			}
+			finally
+			{
+				if (_networkRefreshCts == cts)
+					_networkRefreshCts = null;
+				cts.Dispose();
+			}
+
+			if (!GodotObject.IsInstanceValid(this))
+				return;
 
 			BuildNetworkList();
 		}

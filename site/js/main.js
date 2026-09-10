@@ -2,8 +2,12 @@
   "use strict";
 
   var SUPPORTED_LANGS = ["ru", "en", "zh", "ja", "ko", "vi", "es"];
-  var DEFAULT_LANG = "ru";
+  var DEFAULT_LANG = "en";
   var LS_KEY = "cthangover_lang";
+  var SECTION_BY_ROUTE = {
+    "/docs/": "docs",
+    "/quickstart/": "quickstart"
+  };
 
   var currentLang = getInitialLang();
 
@@ -22,7 +26,11 @@
 
     document.documentElement.lang = currentLang;
 
-    if (strings.hero_title) {
+    if (
+      strings.hero_title &&
+      !document.body.classList.contains("docs-mode") &&
+      !document.body.classList.contains("quickstart-mode")
+    ) {
       document.title = strings.hero_title;
     }
 
@@ -107,7 +115,9 @@
     for (var i = 0; i < links.length; i++) {
       var link = links[i];
       var href = link.getAttribute("href");
-      if (href === "#" + currentId) {
+      var isActive =
+        link.hash === "#" + currentId || SECTION_BY_ROUTE[href] === currentId;
+      if (isActive) {
         link.style.color = "var(--accent)";
       } else {
         link.style.color = "";
@@ -166,6 +176,48 @@
     });
   }
 
+  function initVideoFacade() {
+    var facades = document.querySelectorAll(".video-facade");
+    for (var i = 0; i < facades.length; i++) {
+      facades[i].addEventListener("click", function () {
+        var id = this.getAttribute("data-video-id");
+        var img = this.querySelector("img");
+        var iframe = document.createElement("iframe");
+        iframe.src = "https://www.youtube-nocookie.com/embed/" + id + "?autoplay=1";
+        iframe.title = img ? img.alt : "";
+        iframe.setAttribute(
+          "allow",
+          "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        );
+        iframe.setAttribute("referrerpolicy", "strict-origin-when-cross-origin");
+        iframe.setAttribute("allowfullscreen", "");
+        this.parentNode.replaceChild(iframe, this);
+      });
+    }
+  }
+
+  function isRouteHref(href) {
+    if (!href || href.charAt(0) !== "/") return false;
+    if (href.indexOf("#") !== -1) return false;
+    return !/\.(png|jpe?g|gif|svg|webp|ico|mp4|webm|mp3|ogg|wav|css|js|json|xml|zip|txt|md)(\?.*)?$/i.test(href);
+  }
+
+  function initRouteLinks() {
+    document.addEventListener("click", function (e) {
+      if (e.defaultPrevented || e.button !== 0) return;
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      var a = e.target.closest ? e.target.closest("a") : null;
+      if (!a) return;
+      if (a.target && a.target !== "_self") return;
+      if (a.hasAttribute("download")) return;
+      var href = a.getAttribute("href");
+      if (!isRouteHref(href)) return;
+      e.preventDefault();
+      history.pushState(null, "", href);
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     var langBtns = document.querySelectorAll(".lang-btn");
     for (var i = 0; i < langBtns.length; i++) {
@@ -182,6 +234,8 @@
     });
 
     initLightbox();
+    initVideoFacade();
+    initRouteLinks();
 
     applyI18n();
     updateActiveNav();

@@ -108,7 +108,7 @@ namespace Cthangover.Core.Autotest
 				var scenarioWithInclude = zip.CreateEntry("scenarios/with_include.scenario");
 				using (var sw = new StreamWriter(scenarioWithInclude.Open()))
 				{
-					sw.Write("scene: test_zip_scene\n---\ntext ${include/stats.json}");
+					sw.Write("scene: test_zip_scene\n---\ntext ${../include/stats.json}");
 				}
 			}
 

@@ -5,10 +5,12 @@ namespace Cthangover.Core.Mods.Providers
 {
     /// <summary>
     /// Mod file provider backed by a real directory on disk. All paths
-    /// are relative to the mod root; directory separators are normalised
-    /// to the OS-native character. Trailing <c>/</c> in <see cref="ListFiles"/>
-    /// output distinguishes directories from files so that recursive
-    /// scanners can branch without stat-calling every entry.
+    /// are relative to the mod root and use the canonical form defined by
+    /// <see cref="ModPath"/> (forward slashes, no root or <c>..</c> escape);
+    /// conversion to the OS-native separator happens only at the
+    /// <see cref="System.IO.Path"/> boundary. Trailing <c>/</c> in
+    /// <see cref="ListFiles"/> output distinguishes directories from files so
+    /// that recursive scanners can branch without stat-calling every entry.
     ///
     /// <see cref="GetFileSystemPath"/> returns the absolute path — the
     /// critical capability that enables Godot's <c>ResourceLoader</c> and
@@ -55,7 +57,7 @@ namespace Cthangover.Core.Mods.Providers
         /// </summary>
         public bool FileExists(string path)
         {
-            return File.Exists(Path.Combine(RootPath, NormalizePath(path)));
+            return File.Exists(Path.Combine(RootPath, ModPath.Normalize(path)));
         }
 
         /// <summary>
@@ -68,13 +70,13 @@ namespace Cthangover.Core.Mods.Providers
         /// string for the mod root.</param>
         public IEnumerable<string> ListFiles(string directory = "")
         {
-            var dir = Path.Combine(RootPath, NormalizePath(directory));
+            var dir = Path.Combine(RootPath, ModPath.Normalize(directory));
             if (!Directory.Exists(dir))
                 yield break;
 
             foreach (var entry in Directory.EnumerateFileSystemEntries(dir, "*", SearchOption.TopDirectoryOnly))
             {
-                var relative = Path.GetRelativePath(RootPath, entry).Replace('\\', '/');
+                var relative = ModPath.Normalize(Path.GetRelativePath(RootPath, entry));
                 if (Directory.Exists(entry))
                     relative += "/";
                 yield return relative;
@@ -88,7 +90,7 @@ namespace Cthangover.Core.Mods.Providers
         /// </summary>
         public string ReadFileText(string path)
         {
-            var fullPath = Path.Combine(RootPath, NormalizePath(path));
+            var fullPath = Path.Combine(RootPath, ModPath.Normalize(path));
             return File.Exists(fullPath) ? File.ReadAllText(fullPath) : null;
         }
 
@@ -98,7 +100,7 @@ namespace Cthangover.Core.Mods.Providers
         /// </summary>
         public byte[] ReadFileBinary(string path)
         {
-            var fullPath = Path.Combine(RootPath, NormalizePath(path));
+            var fullPath = Path.Combine(RootPath, ModPath.Normalize(path));
             return File.Exists(fullPath) ? File.ReadAllBytes(fullPath) : null;
         }
 
@@ -109,7 +111,7 @@ namespace Cthangover.Core.Mods.Providers
         /// </summary>
         public Stream OpenStream(string path)
         {
-            var fullPath = Path.Combine(RootPath, NormalizePath(path));
+            var fullPath = Path.Combine(RootPath, ModPath.Normalize(path));
             if (!File.Exists(fullPath))
                 return null;
             return File.OpenRead(fullPath);
@@ -124,28 +126,20 @@ namespace Cthangover.Core.Mods.Providers
         /// </summary>
         public string GetFileSystemPath(string path)
         {
-            var fullPath = Path.GetFullPath(Path.Combine(RootPath, NormalizePath(path)));
+            var fullPath = Path.GetFullPath(Path.Combine(RootPath, ModPath.Normalize(path)));
             return File.Exists(fullPath) ? fullPath : null;
         }
 
         /// <summary>
         /// Resolves a relative include path (<c>../shared/data.json</c>)
         /// against the directory of <paramref name="currentPath"/> to
-        /// produce a canonical mod-relative path.
+        /// produce a canonical mod-relative path. Delegates to
+        /// <see cref="ModPath.ResolveRelative"/> so folder and zip mods
+        /// resolve includes identically.
         /// </summary>
         public string ResolveIncludePath(string includePath, string currentPath)
         {
-            if (string.IsNullOrEmpty(currentPath))
-                return includePath;
-
-            var lastSlash = currentPath.LastIndexOf('/');
-            var baseDir = lastSlash < 0 ? "" : currentPath.Substring(0, lastSlash);
-            return string.IsNullOrEmpty(baseDir) ? includePath : baseDir + "/" + includePath;
-        }
-
-        private static string NormalizePath(string path)
-        {
-            return path?.Replace('/', Path.DirectorySeparatorChar) ?? "";
+            return ModPath.ResolveRelative(includePath, currentPath);
         }
     }
 }

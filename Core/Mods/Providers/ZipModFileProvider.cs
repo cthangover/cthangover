@@ -56,7 +56,7 @@ namespace Cthangover.Core.Mods.Providers
             entryLookup = new Dictionary<string, ZipArchiveEntry>(StringComparer.OrdinalIgnoreCase);
             foreach (var e in archive.Entries)
             {
-                var name = e.FullName.TrimEnd('/');
+                var name = ModPath.Normalize(e.FullName);
                 if (name.Length > 0)
                     entryLookup[name] = e;
             }
@@ -81,7 +81,7 @@ namespace Cthangover.Core.Mods.Providers
         /// </summary>
         public bool FileExists(string path)
         {
-            var normalized = NormalizePath(path);
+            var normalized = ModPath.Normalize(path);
             var result = entryLookup.ContainsKey(normalized);
             return result;
         }
@@ -98,17 +98,16 @@ namespace Cthangover.Core.Mods.Providers
         /// string for the archive root.</param>
         public IEnumerable<string> ListFiles(string directory = "")
         {
-            var prefix = NormalizePath(directory);
-            if (prefix.Length > 0 && !prefix.EndsWith("/"))
-                prefix += "/";
+            var prefix = ModPath.NormalizeDirectory(directory);
 
             var seen = new HashSet<string>();
             var yieldList = new List<string>();
 
             foreach (var entry in archive.Entries)
             {
-                var fullName = entry.FullName.TrimEnd('/');
-                var isDir = fullName.Length > 0 && entry.FullName.EndsWith("/");
+                var rawName = entry.FullName.Replace('\\', '/');
+                var isDir = rawName.EndsWith("/");
+                var fullName = ModPath.Normalize(rawName);
                 if (string.IsNullOrEmpty(prefix) || fullName.StartsWith(prefix))
                 {
                     var suffix = string.IsNullOrEmpty(prefix)
@@ -149,7 +148,7 @@ namespace Cthangover.Core.Mods.Providers
         /// </summary>
         public string ReadFileText(string path)
         {
-            var normalized = NormalizePath(path);
+            var normalized = ModPath.Normalize(path);
             if (!entryLookup.TryGetValue(normalized, out var entry))
                 return null;
             GameLogger.Log("MODS_ZIP", $"ReadFileText('{path}') norm='{normalized}' => found ({entry.Length} bytes)");
@@ -163,7 +162,7 @@ namespace Cthangover.Core.Mods.Providers
         /// </summary>
         public byte[] ReadFileBinary(string path)
         {
-            var normalized = NormalizePath(path);
+            var normalized = ModPath.Normalize(path);
             if (!entryLookup.TryGetValue(normalized, out var entry))
                 return null;
 
@@ -182,7 +181,7 @@ namespace Cthangover.Core.Mods.Providers
         /// </summary>
         public Stream OpenStream(string path)
         {
-            var normalized = NormalizePath(path);
+            var normalized = ModPath.Normalize(path);
             if (!entryLookup.TryGetValue(normalized, out var entry))
                 return null;
             
@@ -204,23 +203,15 @@ namespace Cthangover.Core.Mods.Providers
         /// <summary>
         /// Resolves a relative include path (<c>../shared/data.json</c>)
         /// against the directory of <paramref name="currentPath"/> to
-        /// produce a canonical mod-relative path.
+        /// produce a canonical mod-relative path. Delegates to
+        /// <see cref="ModPath.ResolveRelative"/> so zip and folder mods
+        /// resolve includes identically.
         /// </summary>
         public string ResolveIncludePath(string includePath, string currentPath)
         {
-            if (string.IsNullOrEmpty(currentPath))
-                return includePath;
-
-            var lastSlash = currentPath.LastIndexOf('/');
-            var baseDir = lastSlash < 0 ? "" : currentPath.Substring(0, lastSlash);
-            var result = string.IsNullOrEmpty(baseDir) ? includePath : baseDir + "/" + includePath;
-            GameLogger.Log("MODS_ZIP", $"ResolveIncludePath(include='{includePath}', current='{currentPath}') baseDir='{baseDir}' => '{result}'");
+            var result = ModPath.ResolveRelative(includePath, currentPath);
+            GameLogger.Log("MODS_ZIP", $"ResolveIncludePath(include='{includePath}', current='{currentPath}') => '{result}'");
             return result;
-        }
-
-        private static string NormalizePath(string path)
-        {
-            return path?.Replace('\\', '/').TrimStart('/') ?? "";
         }
     }
 }

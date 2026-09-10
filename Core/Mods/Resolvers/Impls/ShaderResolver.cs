@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Cthangover.Core.Mods.Caches;
 using Cthangover.Core.Mods.Providers;
@@ -25,8 +26,20 @@ namespace Cthangover.Core.Mods.Resolvers
         /// <inheritdoc />
         public override string Id => "shaders";
 
-        private Dictionary<string, FileEntry> _fileCache;
-        private readonly Dictionary<string, Shader> _resolvedCache = new();
+        /// <summary>
+        /// Collected shader file entries. The reference is written once after
+        /// the build completes, hence <c>volatile</c> so other threads observe
+        /// the fully-populated dictionary instead of a stale null.
+        /// </summary>
+        private volatile Dictionary<string, FileEntry> _fileCache;
+
+        /// <summary>
+        /// Resolved Godot shaders, keyed by logical name.
+        /// <see cref="ConcurrentDictionary"/> because <see cref="Resolve"/> and
+        /// <see cref="ClearCache"/> may run from different threads; a plain
+        /// dictionary corrupts under concurrent writes.
+        /// </summary>
+        private readonly ConcurrentDictionary<string, Shader> _resolvedCache = new();
 
         /// <summary>
         /// Collects all shader file entries from mods via

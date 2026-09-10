@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Threading;
 using Cthangover.Core.Factories.Impls;
 using Cthangover.Core.Mods.Discovery;
 using Cthangover.Core.Scenes.TscnBuild;
@@ -96,7 +97,7 @@ namespace Cthangover.Core.Mods
         /// </summary>
         /// <returns>A list of <c>(modId, assembly)</c> pairs for every loaded
         /// precompiled DLL, in discovery order.</returns>
-        public static List<(string ModId, Assembly Assembly)> LoadPrecompiledDlls(IEnumerable<IModInfo> mods)
+        public static List<(string ModId, Assembly Assembly)> LoadPrecompiledDlls(IEnumerable<IModInfo> mods, CancellationToken cancellationToken = default)
         {
             var result = new List<(string ModId, Assembly Assembly)>();
 
@@ -105,6 +106,8 @@ namespace Cthangover.Core.Mods
 
             foreach (var mod in mods)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 var dllFiles = CollectDllFiles(mod.FileProvider, mod.Id);
                 if (dllFiles.Count == 0)
                     continue;
@@ -113,6 +116,8 @@ namespace Cthangover.Core.Mods
 
                 foreach (var (filePath, bytes) in dllFiles)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
+
                     try
                     {
                         var fileName = Path.GetFileName(filePath);

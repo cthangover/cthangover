@@ -54,8 +54,19 @@ namespace Cthangover.Core.Settings
 
         /// <summary>Persisted user-facing settings (audio, display, language, etc.).</summary>
         public SettingsData Settings { get; private set; } = new();
-        /// <summary>All mutable session state: time, characters, inventory, recipes, lamp.</summary>
-        public RuntimeData Runtime { get; private set; } = new();
+
+        private RuntimeData _runtime;
+
+        /// <summary>
+        /// All mutable session state: time, characters, inventory, recipes, lamp.
+        /// Created lazily because constructing <see cref="RuntimeData"/> seeds the
+        /// starter <see cref="Inventory"/> through mod factories. During launcher
+        /// boot the autoload is constructed before the launcher loads mods, so an
+        /// eager construction would query an empty registry and permanently cache
+        /// "no items". Deferring the first construction until after mod
+        /// initialisation guarantees the factories see the loaded mods.
+        /// </summary>
+        public RuntimeData Runtime => _runtime ??= new RuntimeData();
 
         /// <summary>
         /// Discards the current <see cref="RuntimeData"/> and creates a
@@ -67,7 +78,7 @@ namespace Cthangover.Core.Settings
         /// </summary>
         public void ResetRuntime()
         {
-            Runtime = new RuntimeData();
+            _runtime = new RuntimeData();
             GameLogger.Log("GAME", "RuntimeData reset for new game");
         }
 

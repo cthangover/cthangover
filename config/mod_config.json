@@ -1,7 +1,7 @@
 {
   "use_assembly_cache": true,
   "catalog_ignore_patterns": [".*","bin","obj"],
-  "catalog_urls": ["https://raw.githubusercontent.com/cthangover/mod_list/main/list.json"],
+  "catalog_urls": ["https://git.cthangover.ru/cthangover/catalog/raw/branch/main/catalog.json"],
   "texture_extensions": [".png", ".jpg", ".jpeg"],
   "audio_extensions": [".ogg", ".wav"],
   "shader_extensions": [".gdshader", ".gdshaderinclude"],

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Cthangover.Core.Events;
 using Cthangover.Core.Factories.Impls;
+using Cthangover.Core.Utils;
 
 namespace Cthangover.Core.Items
 {
@@ -32,8 +33,26 @@ namespace Cthangover.Core.Items
 
 		public Inventory()
 		{
-			Items.Add(new ItemContainer { Item = ItemFactory.Instance.Get("food/wolf_meat"),    Count = 10});
-			Items.Add(new ItemContainer { Item = ItemFactory.Instance.Get("resource/branches"), Count = 10});
+			AddStarterItem("food/wolf_meat", 10);
+			AddStarterItem("resource/branches", 10);
+		}
+
+		/// <summary>
+		/// Seeds one starter stack, skipping the entry when the item definition
+		/// cannot be resolved. This can legitimately happen when the inventory is
+		/// constructed while the launcher has not finished loading mods; adding a
+		/// container with a <c>null</c> item would otherwise crash every later
+		/// <see cref="HasItem(string)"/> call.
+		/// </summary>
+		private void AddStarterItem(string id, int count)
+		{
+			var item = ItemFactory.Instance.Get(id);
+			if (item == null)
+			{
+				GameLogger.Log("INVENTORY", $"starter item '{id}' not found, skipping seed", LogLevel.Warning);
+				return;
+			}
+			Items.Add(new ItemContainer { Item = item, Count = count });
 		}
 
 		public bool HasItem(IItem item)

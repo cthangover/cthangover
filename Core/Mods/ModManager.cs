@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using Cthangover.Core.Factories;
 using Cthangover.Core.Interactive;
 using Cthangover.Core.Scenes;
@@ -73,10 +74,13 @@ namespace Cthangover.Core.Mods
         /// Launcher-boot phase 2 (background thread): discovery, hashing, native
         /// DLL loading, precompiled DLL loading and Roslyn compilation — pure .NET,
         /// no Godot API. See <see cref="ModRegistry.DiscoverAndCompile"/>.
+        /// Cancelling <paramref name="cancellationToken"/> aborts the phase
+        /// between mods and during source parsing; Roslyn's final emit cannot be
+        /// interrupted, so cancellation is cooperative rather than immediate.
         /// </summary>
-        public void DiscoverAndCompile()
+        public void DiscoverAndCompile(CancellationToken cancellationToken = default)
         {
-            registry.DiscoverAndCompile();
+            registry.DiscoverAndCompile(cancellationToken);
         }
 
         /// <summary>

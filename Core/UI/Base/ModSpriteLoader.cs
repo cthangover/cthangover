@@ -1,4 +1,5 @@
 using Cthangover.Core.Factories.Impls;
+using Cthangover.Core.Mods;
 using Godot;
 
 namespace Cthangover.Core.UI.Base
@@ -29,6 +30,12 @@ namespace Cthangover.Core.UI.Base
         public void Reload()
         {
             if (string.IsNullOrEmpty(TextureId))
+                return;
+
+            // During launcher boot the scene is instantiated before the background
+            // mod load finishes; the launcher re-invokes Reload once mods are
+            // ready, so skip the guaranteed miss instead of logging a false error.
+            if (!ModManager.Instance.IsInitialized)
                 return;
 
             var texture = UITextureFactory.Instance.Get(TextureId);

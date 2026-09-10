@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Cthangover.Core.Utils;
@@ -19,7 +20,15 @@ namespace Cthangover.Core.Mods.Resolvers
         /// <inheritdoc />
         public override string Id => "file_list";
 
-        private readonly Dictionary<string, Dictionary<string, FileEntry>> _cache = new();
+        /// <summary>
+        /// Per-group file cache. <see cref="ConcurrentDictionary"/> because
+        /// <see cref="Collect"/> may be entered concurrently (factories,
+        /// parallel tests); the inner dictionaries are built locally and only
+        /// published after they are complete, so they stay read-only in the
+        /// cache. A plain dictionary here used to corrupt its internal state
+        /// when two threads collected the same group at once.
+        /// </summary>
+        private readonly ConcurrentDictionary<string, Dictionary<string, FileEntry>> _cache = new();
 
         /// <summary>
         /// Collects all files under the given directory group (e.g.
@@ -38,7 +47,7 @@ namespace Cthangover.Core.Mods.Resolvers
             GameLogger.Log("MODS", $"CollectFileList('{group}'): CACHE MISS, collecting from {Context.Mods.Count} mod(s)...");
 
             var result = new Dictionary<string, FileEntry>();
-            var prefix = group.Replace('\\', '/').TrimEnd('/') + "/";
+            var prefix = ModPath.NormalizeDirectory(group);
 
             foreach (var modId in Context.GetOrderedModIds())
             {

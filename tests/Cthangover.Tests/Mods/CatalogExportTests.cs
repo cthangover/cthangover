@@ -1,9 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 using Cthangover.Core.Mods;
+using Cthangover.Core.Mods.Providers;
 using Xunit;
 
 namespace Engine.Tests.Mods
@@ -442,6 +446,29 @@ namespace Engine.Tests.Mods
 		}
 
 		[Fact]
+		public void ComputeInstallSha256_FolderAndZip_SameContent_SameHash()
+		{
+			var dir = Path.Combine(_testDir, "mod");
+			Directory.CreateDirectory(Path.Combine(dir, "dir"));
+			File.WriteAllText(Path.Combine(dir, "dir", "main.txt"), "hello");
+			File.WriteAllText(Path.Combine(dir, "manifest.json"), "{}");
+
+			var zipPath = Path.Combine(_testDir, "mod.zip");
+			using (var zip = ZipFile.Open(zipPath, ZipArchiveMode.Create))
+			{
+				WriteZipEntry(zip, "dir/main.txt", "hello");
+				WriteZipEntry(zip, "manifest.json", "{}");
+			}
+
+			using var folderProvider = new FolderModFileProvider(dir, "mod");
+			using var zipProvider = new ZipModFileProvider(zipPath, "mod");
+
+			Assert.Equal(
+				ModHasher.ComputeInstallSha256(folderProvider),
+				ModHasher.ComputeInstallSha256(zipProvider));
+		}
+
+		[Fact]
 		public void ComputeArchiveSha256_KnownContent()
 		{
 			var filePath = Path.Combine(_testDir, "test.bin");
@@ -452,6 +479,13 @@ namespace Engine.Tests.Mods
 			Assert.NotNull(hash);
 			Assert.Equal(64, hash.Length);
 			Assert.Matches("^[0-9a-f]+$", hash);
+		}
+
+		private static void WriteZipEntry(ZipArchive archive, string path, string content)
+		{
+			var entry = archive.CreateEntry(path);
+			using var writer = new StreamWriter(entry.Open(), new UTF8Encoding(false));
+			writer.Write(content);
 		}
 	}
 
@@ -559,6 +593,35 @@ namespace Engine.Tests.Mods
 			};
 			var status = CatalogService.GetRemoteModStatus("1.0.0", "abc", remote);
 			Assert.Equal(RemoteModStatus.Installed, status);
+		}
+
+		[Fact]
+		public async Task RefreshAsync_PreCancelledToken_ThrowsAndFiresNoEvents()
+		{
+			var refreshed = false;
+			var failed = false;
+			Action onRefreshed = () => refreshed = true;
+			Action<string> onFailed = _ => failed = true;
+			CatalogService.OnRefreshed += onRefreshed;
+			CatalogService.OnRefreshFailed += onFailed;
+
+			try
+			{
+				using var cts = new CancellationTokenSource();
+				cts.Cancel();
+
+				await Assert.ThrowsAnyAsync<OperationCanceledException>(
+					() => CatalogService.RefreshAsync(forceRefresh: true, cts.Token));
+
+				Assert.False(refreshed);
+				Assert.False(failed);
+				Assert.False(CatalogService.IsFetching);
+			}
+			finally
+			{
+				CatalogService.OnRefreshed -= onRefreshed;
+				CatalogService.OnRefreshFailed -= onFailed;
+			}
 		}
 	}
 }

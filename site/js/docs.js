@@ -1,13 +1,17 @@
 (function () {
   "use strict";
 
-  var DOCS_BASE = "docs/";
+  var DOCS_BASE = "/docs/";
   var container = null;
   var currentPage = null;
   var docsIndex = {};
   var docsLoaded = false;
   var docsTree = [];
   var searchTimer = null;
+  var metaDescription = null;
+  var canonicalLink = null;
+  var defaultDescription = "";
+  var defaultTitle = "cthangover";
 
   function esc(str) {
     var d = document.createElement("div");
@@ -248,6 +252,66 @@
     } catch (e) {}
   }
 
+  function extractTitle(md, fallback) {
+    var match = md.match(/^#\s+(.+)$/m);
+    return match ? match[1].trim() : fallback;
+  }
+
+  function extractDescription(md) {
+    var lines = md.split("\n");
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i].trim();
+      if (!line || line.charAt(0) === "#") continue;
+      if (line.charAt(0) === ">") line = line.replace(/^>\s*/, "");
+      return line
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+        .replace(/[`*_]/g, "")
+        .slice(0, 160);
+    }
+    return "";
+  }
+
+  function setMeta(attr, key, content) {
+    var el = document.querySelector("meta[" + attr + '="' + key + '"]');
+    if (!el) {
+      el = document.createElement("meta");
+      el.setAttribute(attr, key);
+      document.head.appendChild(el);
+    }
+    el.setAttribute("content", content);
+  }
+
+  function applyPageMeta(name, md) {
+    var title = extractTitle(md, name);
+    var description = extractDescription(md);
+    var url = location.origin + "/docs/" + name;
+
+    document.title = title + " — cthangover";
+    if (metaDescription) metaDescription.setAttribute("content", description);
+    if (canonicalLink) canonicalLink.setAttribute("href", url);
+
+    setMeta("property", "og:title", title + " — cthangover");
+    setMeta("property", "og:description", description);
+    setMeta("property", "og:url", url);
+  }
+
+  function resetPageMeta() {
+    document.title = defaultTitle;
+    if (metaDescription) metaDescription.setAttribute("content", defaultDescription);
+    if (canonicalLink) canonicalLink.setAttribute("href", location.origin + "/");
+
+    setMeta("property", "og:title", defaultTitle);
+    setMeta("property", "og:description", defaultDescription);
+    setMeta("property", "og:url", location.origin + "/");
+  }
+
+  function renderDoc(name, md) {
+    applyPageMeta(name, md);
+    container.innerHTML = marked.parse(md);
+    updateSidebarActive(name);
+    renderMermaidDiagrams();
+  }
+
   function loadPage(name) {
     if (!container) return;
     if (!name) name = "index";
@@ -255,9 +319,7 @@
     currentPage = name;
 
     if (docsIndex[name]) {
-      container.innerHTML = marked.parse(docsIndex[name]);
-      updateSidebarActive(name);
-      renderMermaidDiagrams();
+      renderDoc(name, docsIndex[name]);
       return;
     }
 
@@ -267,9 +329,7 @@
       url,
       function (md) {
         docsIndex[name] = md;
-        container.innerHTML = marked.parse(md);
-        updateSidebarActive(name);
-        renderMermaidDiagrams();
+        renderDoc(name, md);
       },
       function (err) {
         var msg =
@@ -281,7 +341,7 @@
             "<p class='docs-hint'>Cannot load files via file:// protocol in this browser.</p>" +
             "<p class='docs-hint'>Run a local server: <code>npx serve site/</code></p>";
         }
-        msg += '<p><a href="#/docs/">Back to Documentation</a></p>';
+        msg += '<p><a href="/docs/">Back to Documentation</a></p>';
         container.innerHTML = '<div class="docs-error">' + msg + "</div>";
         console.warn("docs.js:", err.message || err);
       }
@@ -318,7 +378,7 @@
 
       if (node.slug) {
         html +=
-          '<a href="#/docs/' +
+          '<a href="/docs/' +
           node.slug +
           '" class="sidebar-link" data-slug="' +
           node.slug +
@@ -408,34 +468,35 @@
     if (input) input.value = "";
     var clear = document.getElementById("searchClear");
     if (clear) clear.classList.remove("visible");
-    if (location.hash && location.hash.startsWith("#/docs/")) {
-      history.replaceState(null, "", window.location.pathname);
-    } else if (location.hash === "#docs") {
-      history.replaceState(null, "", window.location.pathname);
+    resetPageMeta();
+  }
+
+  function migrateLegacyHash() {
+    var hash = location.hash;
+    if (hash.indexOf("#/docs/") === 0) {
+      var page = hash.slice(7) || "index";
+      history.replaceState(null, "", "/docs/" + page);
+    } else if (hash === "#docs") {
+      history.replaceState(null, "", "/docs/");
     }
   }
 
   function handleRoute() {
-    var hash = location.hash;
+    var path = location.pathname;
 
-    if (hash.startsWith("#/docs/")) {
+    if (path === "/docs" || path === "/docs/" || path.indexOf("/docs/") === 0) {
       document.body.classList.remove("quickstart-mode");
-      if (!document.body.classList.contains("docs-mode")) {
-        enterDocsMode("index");
-      }
-      var page = hash.slice(7);
+      var page = path.replace(/^\/docs\/?/, "");
       if (!page) page = "index";
-      loadPage(page);
+      if (!document.body.classList.contains("docs-mode")) {
+        enterDocsMode(page);
+      } else {
+        loadPage(page);
+      }
       return;
     }
 
-    if (hash === "#docs") {
-      enterDocsMode("index");
-      history.replaceState(null, "", "#/docs/");
-      return;
-    }
-
-    if (document.body.classList.contains("docs-mode") && !hash) {
+    if (document.body.classList.contains("docs-mode")) {
       exitDocsMode();
     }
   }
@@ -493,6 +554,16 @@
   document.addEventListener("DOMContentLoaded", function () {
     container = document.getElementById("docs-content");
     if (!container) return;
+
+    metaDescription = document.querySelector('meta[name="description"]');
+    defaultDescription = metaDescription ? metaDescription.getAttribute("content") : "";
+    defaultTitle = document.title;
+    canonicalLink = document.querySelector('link[rel="canonical"]');
+    if (!canonicalLink) {
+      canonicalLink = document.createElement("link");
+      canonicalLink.setAttribute("rel", "canonical");
+      document.head.appendChild(canonicalLink);
+    }
 
     renderSidebar(null);
 
@@ -583,7 +654,7 @@
       var href = token.href;
 
       if (/^(https?:|#|mailto:|data:|\/\/)/i.test(href)) return;
-      if (href.startsWith("#/docs/")) return;
+      if (href.startsWith("/docs/")) return;
       if (/\.(png|jpg|jpeg|gif|svg|webp|mp4|webm|mp3|ogg|wav|css|js)(\?.*)?$/i.test(href)) return;
 
       var page = href;
@@ -614,7 +685,7 @@
         page += "/index";
       }
 
-      token.href = "#/docs/" + page;
+      token.href = "/docs/" + page;
     };
 
     marked.use(useExt);
@@ -625,11 +696,11 @@
       var href = a.getAttribute("href");
       if (!href) return;
 
-      if (href.startsWith("#/docs/")) {
+      if (href.startsWith("/docs/")) {
         e.preventDefault();
-        var page = href.slice(7);
+        var page = href.slice(6);
         if (!page) page = "index";
-        if (location.hash !== href) {
+        if (location.pathname !== href) {
           history.pushState(null, "", href);
         }
         if (!document.body.classList.contains("docs-mode")) {
@@ -669,8 +740,8 @@
       if (isDir && !page.endsWith("/index")) {
         page += "/index";
       }
-      var newHref = "#/docs/" + page;
-      if (location.hash !== newHref) {
+      var newHref = "/docs/" + page;
+      if (location.pathname !== newHref) {
         history.pushState(null, "", newHref);
       }
       loadPage(page);
@@ -696,8 +767,8 @@
         e.preventDefault();
         var slug = a.getAttribute("data-slug");
         if (slug) {
-          var href = "#/docs/" + slug;
-          if (location.hash !== href) {
+          var href = "/docs/" + slug;
+          if (location.pathname !== href) {
             history.pushState(null, "", href);
           }
           loadPage(slug);
@@ -734,6 +805,9 @@
       backLink.addEventListener("click", function (e) {
         e.preventDefault();
         if (document.body.classList.contains("quickstart-mode")) return;
+        if (location.pathname !== "/") {
+          history.pushState(null, "", "/");
+        }
         exitDocsMode();
       });
     }
@@ -780,10 +854,8 @@
     });
 
     window.addEventListener("popstate", handleRoute);
-    window.addEventListener("hashchange", function () {
-      handleRoute();
-    });
 
+    migrateLegacyHash();
     handleRoute();
   });
 })();

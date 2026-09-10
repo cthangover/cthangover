@@ -120,25 +120,7 @@ namespace Engine.Tests.Mods.Mocks
 
         public string ResolveIncludePath(string includePath, string currentPath)
         {
-            var currentDir = Path.GetDirectoryName(currentPath.Replace('\\', '/'));
-            if (string.IsNullOrEmpty(currentDir))
-                return includePath;
-
-            var resolved = Path.Combine(currentDir, includePath).Replace('\\', '/');
-            var parts = new List<string>();
-            foreach (var part in resolved.Split('/'))
-            {
-                if (part == "..")
-                {
-                    if (parts.Count > 0)
-                        parts.RemoveAt(parts.Count - 1);
-                }
-                else if (part != ".")
-                {
-                    parts.Add(part);
-                }
-            }
-            return string.Join("/", parts);
+            return ModPath.ResolveRelative(includePath, currentPath);
         }
 
         public void Dispose()

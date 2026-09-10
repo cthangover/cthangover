@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Threading;
 using Cthangover.Core.Utils;
 using Godot;
 
@@ -78,13 +79,15 @@ namespace Cthangover.Core.Mods
         /// resolution — typically from <c>ModRegistry.Initialize()</c>
         /// right before precompiled DLL loading.
         /// </summary>
-        public static void LoadNativeDlls(IEnumerable<IModInfo> mods)
+        public static void LoadNativeDlls(IEnumerable<IModInfo> mods, CancellationToken cancellationToken = default)
         {
             if (!Directory.Exists(CacheRoot))
                 Directory.CreateDirectory(CacheRoot);
 
             foreach (var mod in mods)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 var modInfo = mod as ModInfo;
                 var nativePatterns = modInfo?.Manifest?.DependsNative;
                 if (nativePatterns == null || nativePatterns.Count == 0)
@@ -98,6 +101,8 @@ namespace Cthangover.Core.Mods
 
                 foreach (var (filePath, bytes) in nativeFiles)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
+
                     try
                     {
                         var fileName = Path.GetFileName(filePath);

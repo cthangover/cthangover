@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using Cthangover.Core.Utils;
 using Cthangover.Core.Actions;
 using Godot;
@@ -94,9 +95,11 @@ namespace Cthangover.Core.Mods
         /// </summary>
         /// <returns>A list of <c>(modId, assembly, sourceFiles)</c> tuples for
         /// every successfully compiled mod, in dependency order.</returns>
-        public static List<(string ModId, Assembly Assembly, List<(string FilePath, string Source)> Sources)> CompileAll(IDictionary<string, IModInfo> mods)
+        public static List<(string ModId, Assembly Assembly, List<(string FilePath, string Source)> Sources)> CompileAll(IDictionary<string, IModInfo> mods, CancellationToken cancellationToken = default)
         {
             var result = new List<(string ModId, Assembly Assembly, List<(string FilePath, string Source)> Sources)>();
+
+            cancellationToken.ThrowIfCancellationRequested();
 
             GameLogger.CompilationErrors.Clear();
 
@@ -119,9 +122,11 @@ namespace Cthangover.Core.Mods
 
             foreach (var modInfo in sorted)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 try
                 {
-                    var sourceFiles = CollectSourceFiles(modInfo);
+                    var sourceFiles = CollectSourceFiles(modInfo, cancellationToken);
                     if (sourceFiles.Count == 0)
                         continue;
 
@@ -129,12 +134,16 @@ namespace Cthangover.Core.Mods
                     foreach (var (path, _) in sourceFiles)
                         GameLogger.Log("MODS_COMPILE", $"  {path}", LogLevel.Debug);
 
-                    var assembly = Compile(modInfo.Id, sourceFiles);
+                    var assembly = Compile(modInfo.Id, sourceFiles, cancellationToken);
                     if (assembly != null)
                     {
                         result.Add((modInfo.Id, assembly, sourceFiles));
                         GameLogger.Log("MODS_COMPILE", $"ModCompiler.CompileAll: Compiled mod '{modInfo.Id}', {sourceFiles.Count} source file(s)");
                     }
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    throw;
                 }
                 catch (Exception ex)
                 {
@@ -146,12 +155,14 @@ namespace Cthangover.Core.Mods
             return result;
         }
 
-        private static List<(string FilePath, string Source)> CollectSourceFiles(ModInfo modInfo)
+        private static List<(string FilePath, string Source)> CollectSourceFiles(ModInfo modInfo, CancellationToken cancellationToken)
         {
             var result = new List<(string, string)>();
 
             foreach (var pattern in modInfo.Manifest.Sources)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 var prefix = pattern;
                 var suffix = "*.cs";
                 var sepIndex = pattern.LastIndexOf('/');
@@ -171,7 +182,7 @@ namespace Cthangover.Core.Mods
 
                     return suffix == "*" || suffix == "*.cs" ||
                         (suffix.StartsWith("*.") && fileNamePart.EndsWith(suffix.Substring(1), StringComparison.OrdinalIgnoreCase));
-                }, result);
+                }, result, cancellationToken);
             }
 
             if (result.Count == 0)
@@ -179,7 +190,7 @@ namespace Cthangover.Core.Mods
                 CollectSourceFilesRecursive(modInfo.FileProvider, "", file =>
                 {
                     return file.EndsWith(".cs", StringComparison.OrdinalIgnoreCase);
-                }, result);
+                }, result, cancellationToken);
             }
 
             return result;
@@ -189,14 +200,17 @@ namespace Cthangover.Core.Mods
             IModFileProvider provider,
             string directory,
             Func<string, bool> fileFilter,
-            List<(string, string)> result)
+            List<(string, string)> result,
+            CancellationToken cancellationToken)
         {
             foreach (var entry in provider.ListFiles(directory))
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 if (entry.EndsWith("/"))
                 {
                     var subDir = entry.TrimEnd('/');
-                    CollectSourceFilesRecursive(provider, subDir, fileFilter, result);
+                    CollectSourceFilesRecursive(provider, subDir, fileFilter, result, cancellationToken);
                 }
                 else if (fileFilter(entry))
                 {
@@ -250,12 +264,14 @@ namespace Cthangover.Core.Mods
         /// First checks the SHA-256 output cache; skips compilation
         /// if a cached DLL exists and <c>UseAssemblyCache</c> is true.
         /// </summary>
-        public static Assembly Compile(string modId, IEnumerable<(string FilePath, string Source)> sources)
+        public static Assembly Compile(string modId, IEnumerable<(string FilePath, string Source)> sources, CancellationToken cancellationToken = default)
         {
             var sourceList = sources.ToList();
             if (sourceList.Count == 0)
                 return null;
-            
+
+            cancellationToken.ThrowIfCancellationRequested();
+
             var hash = ModHasher.ComputeHash(sourceList);
             var cachedPath = Path.Combine(CacheRoot, $"{modId}_{hash}.dll");
             
@@ -273,7 +289,7 @@ namespace Cthangover.Core.Mods
 
             var parseOptions = new CSharpParseOptions();
             var syntaxTrees = sourceList
-                .Select(s => CSharpSyntaxTree.ParseText(s.Source, options: parseOptions, path: s.FilePath))
+                .Select(s => CSharpSyntaxTree.ParseText(s.Source, options: parseOptions, path: s.FilePath, cancellationToken: cancellationToken))
                 .ToList();
 
             var metadataReferences = new List<MetadataReference>();
@@ -287,8 +303,12 @@ namespace Cthangover.Core.Mods
                     .WithOptimizationLevel(OptimizationLevel.Debug)
             );
 
+            cancellationToken.ThrowIfCancellationRequested();
+
             using var ms = new MemoryStream();
             var result = compilation.Emit(ms);
+
+            cancellationToken.ThrowIfCancellationRequested();
 
             if (!result.Success)
             {

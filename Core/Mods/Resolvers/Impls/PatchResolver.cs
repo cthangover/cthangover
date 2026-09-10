@@ -46,7 +46,7 @@ namespace Cthangover.Core.Mods.Resolvers
             if (_cache.TryGetValue(entityType, out var cached))
                 return cached;
             var result = new Dictionary<string, List<PropertyPatch>>();
-            var prefix = $"patches/{entityType}".Replace('\\', '/').TrimEnd('/') + "/";
+            var prefix = ModPath.NormalizeDirectory($"patches/{entityType}");
 
             foreach (var modId in Context.GetOrderedModIds())
             {

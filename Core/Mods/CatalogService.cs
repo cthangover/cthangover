@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Cthangover.Core.Mods.Caches;
 using Cthangover.Core.Utils;
@@ -82,8 +83,15 @@ namespace Cthangover.Core.Mods
         /// fires <see cref="OnRefreshed"/> on the main thread. Clears
         /// the on-disk cache if <paramref name="forceRefresh"/> is true
         /// before fetching.
+        ///
+        /// Cancelling <paramref name="cancellationToken"/> aborts the
+        /// in-flight HTTP requests and suppresses the completion events, so a
+        /// caller whose window is closing is never called back. The
+        /// <see cref="IsFetching"/> flag is always cleared — on success,
+        /// cancellation, and unexpected exceptions alike — otherwise a single
+        /// failed merge would permanently block every later refresh.
         /// </summary>
-        public static async Task RefreshAsync(bool forceRefresh = false)
+        public static async Task RefreshAsync(bool forceRefresh = false, CancellationToken cancellationToken = default)
         {
             if (_isFetching)
                 return;
@@ -100,69 +108,80 @@ namespace Cthangover.Core.Mods
             _isFetching = true;
             _lastFetchTime = DateTime.UtcNow;
 
-			if (forceRefresh)
-			{
-				ClearCache();
-				ModIconCache.Clear();
-			}
-
-            var allEntries = new List<CatalogExportEntry>();
-            var errors = new List<string>();
-            var urls = ModConfig.Instance.CatalogUrls;
-
-            if (urls == null || urls.Count == 0)
+            try
             {
-                _cachedEntries = new List<CatalogExportEntry>();
-                _isFetching = false;
-                OnRefreshed?.Invoke();
-                return;
-            }
+                cancellationToken.ThrowIfCancellationRequested();
 
-            GameLogger.Log("CATALOG", $"Starting catalog refresh from {urls.Count} URL(s)...");
-
-            foreach (var url in urls)
-            {
-                if (string.IsNullOrWhiteSpace(url))
-                    continue;
-
-                try
+                if (forceRefresh)
                 {
-                    GameLogger.Log("CATALOG", $"Fetching catalog from '{url}'...");
-                    var json = await _httpClient.GetStringAsync(url);
-                    var catalog = JsonSerializer.Deserialize<CatalogRoot>(json, JsonOptionsProvider.ReadOptions);
-                    if (catalog?.Mods != null)
+                    ClearCache();
+                    ModIconCache.Clear();
+                }
+
+                var allEntries = new List<CatalogExportEntry>();
+                var errors = new List<string>();
+                var urls = ModConfig.Instance.CatalogUrls;
+
+                if (urls == null || urls.Count == 0)
+                {
+                    _cachedEntries = new List<CatalogExportEntry>();
+                    OnRefreshed?.Invoke();
+                    return;
+                }
+
+                GameLogger.Log("CATALOG", $"Starting catalog refresh from {urls.Count} URL(s)...");
+
+                foreach (var url in urls)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    if (string.IsNullOrWhiteSpace(url))
+                        continue;
+
+                    try
                     {
-                        allEntries.AddRange(catalog.Mods);
-                        GameLogger.Log("CATALOG", $"Fetched {catalog.Mods.Count} entr(y/ies) from '{url}'");
+                        GameLogger.Log("CATALOG", $"Fetching catalog from '{url}'...");
+                        var json = await _httpClient.GetStringAsync(url, cancellationToken);
+                        var catalog = JsonSerializer.Deserialize<CatalogRoot>(json, JsonOptionsProvider.ReadOptions);
+                        if (catalog?.Mods != null)
+                        {
+                            allEntries.AddRange(catalog.Mods);
+                            GameLogger.Log("CATALOG", $"Fetched {catalog.Mods.Count} entr(y/ies) from '{url}'");
+                        }
+                    }
+                    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                    {
+                        throw;
+                    }
+                    catch (Exception ex)
+                    {
+                        var msg = $"Failed to fetch catalog from '{url}': {ex.Message}";
+                        GameLogger.Log("CATALOG", msg, LogLevel.Error);
+                        errors.Add(msg);
                     }
                 }
-                catch (Exception ex)
+
+                if (allEntries.Count > 0)
                 {
-                    var msg = $"Failed to fetch catalog from '{url}': {ex.Message}";
-                    GameLogger.Log("CATALOG", msg, LogLevel.Error);
-                    errors.Add(msg);
+                    _cachedEntries = MergeAndDeduplicate(allEntries);
+                    SaveCache(_cachedEntries);
+                    GameLogger.Log("CATALOG", $"Catalog refresh complete: {_cachedEntries.Count} total entr(y/ies) merged");
+                    OnRefreshed?.Invoke();
+                }
+                else if (_cachedEntries == null && errors.Count > 0)
+                {
+                    GameLogger.Log("CATALOG", "Catalog refresh failed: all URLs returned errors", LogLevel.Error);
+                    OnRefreshFailed?.Invoke(string.Join("\n", errors));
+                }
+                else
+                {
+                    GameLogger.Log("CATALOG", "Catalog refresh complete: no new entries");
+                    OnRefreshed?.Invoke();
                 }
             }
-
-            if (allEntries.Count > 0)
-            {
-                _cachedEntries = MergeAndDeduplicate(allEntries);
-                SaveCache(_cachedEntries);
-                _isFetching = false;
-                GameLogger.Log("CATALOG", $"Catalog refresh complete: {_cachedEntries.Count} total entr(y/ies) merged");
-                OnRefreshed?.Invoke();
-            }
-            else if (_cachedEntries == null && errors.Count > 0)
+            finally
             {
                 _isFetching = false;
-                GameLogger.Log("CATALOG", "Catalog refresh failed: all URLs returned errors", LogLevel.Error);
-                OnRefreshFailed?.Invoke(string.Join("\n", errors));
-            }
-            else
-            {
-                _isFetching = false;
-                GameLogger.Log("CATALOG", "Catalog refresh complete: no new entries");
-                OnRefreshed?.Invoke();
             }
         }
 

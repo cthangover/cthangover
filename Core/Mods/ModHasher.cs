@@ -112,7 +112,7 @@ namespace Cthangover.Core.Mods
             IModFileProvider provider, List<string> files, List<string> ignorePatterns)
         {
             var sorted = files
-                .Select(f => f.Replace('\\', '/'))
+                .Select(ModPath.Normalize)
                 .Where(f => !ShouldIgnore(f, ignorePatterns))
                 .OrderBy(f => f, StringComparer.OrdinalIgnoreCase)
                 .ToList();
