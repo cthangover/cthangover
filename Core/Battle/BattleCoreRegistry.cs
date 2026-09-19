@@ -86,5 +86,30 @@ namespace Cthangover.Core.Battle
         {
             return _cores.ContainsKey(id);
         }
+
+        /// <summary>
+        /// Registered core IDs, sorted for stable output. Used by the battle
+        /// coverage tool as the single source of truth for how many battle
+        /// cores ship with the current mod set.
+        /// </summary>
+        public IReadOnlyList<string> CoreIds
+        {
+            get
+            {
+                var ids = new List<string>(_cores.Keys);
+                ids.Sort(System.StringComparer.Ordinal);
+                return ids;
+            }
+        }
+
+        /// <summary>
+        /// Returns the registered <see cref="Type"/> for a core, or
+        /// <c>null</c>. Lets tooling inspect a core's implemented interfaces
+        /// (e.g. <see cref="IBattleAutoPlayable"/>) without instantiating it.
+        /// </summary>
+        public Type GetCoreType(string id)
+        {
+            return _cores.TryGetValue(id, out var type) ? type : null;
+        }
     }
 }

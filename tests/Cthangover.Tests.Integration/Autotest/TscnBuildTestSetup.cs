@@ -21,9 +21,10 @@ namespace Cthangover.Core.Autotest
             var tscn = @"
 [gd_scene format=3]
 
-[node name=""Root"" type=""Control"" groups=[""tscn_test_group""] __entry_point=""Cthangover.Core.Autotest.TscnTestEntryPoint""]
+[node name=""Root"" type=""Control"" groups=[""tscn_test_group""]]
 anchor_right = 1.0
 anchor_bottom = 1.0
+__entry_point = ""Cthangover.Core.Autotest.TscnTestEntryPoint""
 
 [node name=""MyPanel"" parent=""."" type=""Panel""]
 layout_mode = 1
@@ -42,7 +43,10 @@ text = ""Hello World""
             var scene = parser.Parse(tscn);
 
             Assert(scene.Nodes.Count == 4, "Parse: 4 nodes");
-            Assert(scene.Connections.Count == 0, "Parse: 0 connections (OnPressed not on root Control)");
+            Assert(scene.Connections.Count == 1, "Parse: 1 script connection kept");
+            Assert(scene.Connections[0].Signal == "pressed", "Parse: connection signal");
+            Assert(scene.Connections[0].From == "MyButton", "Parse: connection source");
+            Assert(scene.Connections[0].Method == "OnPressed", "Parse: connection method");
             Assert(scene.Nodes[0].Groups != null && scene.Nodes[0].Groups.Length == 1, "Parse: root has 1 group");
             Assert(scene.Nodes[0].Groups[0] == "tscn_test_group", "Parse: group name correct");
             Assert(scene.EntryPointClass == "Cthangover.Core.Autotest.TscnTestEntryPoint", "Parse: entry point class stored");
@@ -95,7 +99,7 @@ texture = ExtResource(""1_tex"")
             var texRoot = builder.Build(parsedTex, null, refId =>
             {
                 texResolved = true;
-                var img = Image.Create(2, 2, false, Image.Format.Rgba8);
+                var img = Image.CreateEmpty(2, 2, false, Image.Format.Rgba8);
                 resolvedTex = ImageTexture.CreateFromImage(img);
                 return resolvedTex;
             });
@@ -112,7 +116,8 @@ texture = ExtResource(""1_tex"")
             if (_failed == 0)
                 GameLogger.Log("TSCN_TEST", "All integration tests PASSED");
 
-            GetTree().Quit();
+            GameLogger.Log("TSCN_TEST", $"[TEST_RESULT] name=tscn passed={_passed} failed={_failed}");
+            GetTree().Quit(_failed == 0 ? 0 : 1);
         }
 
         private void Assert(bool condition, string msg)

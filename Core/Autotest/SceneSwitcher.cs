@@ -86,15 +86,22 @@ namespace Cthangover.Core.Autotest
 			GetTree().CreateTimer(0.2f).Timeout += () =>
 			{
 				var sm = GetNodeOrNull<SceneManager>("/root/SceneManager");
-				if (sm != null)
-				{
-					GameLogger.Log("TEST", $"SceneSwitcher: switching to logical scene '{sceneName}'");
-					sm.SwitchScene(sceneName);
-				}
-				else
+				if (sm == null)
 				{
 					GameLogger.Log("TEST", "SceneSwitcher: SceneManager autoload not found", LogLevel.Error);
+					GetTree().Quit(1);
+					return;
 				}
+
+				if (!sm.HasScene(sceneName))
+				{
+					GameLogger.Log("TEST", $"SceneSwitcher: logical scene '{sceneName}' not found", LogLevel.Error);
+					GetTree().Quit(1);
+					return;
+				}
+
+				GameLogger.Log("TEST", $"SceneSwitcher: switching to logical scene '{sceneName}'");
+				sm.SwitchScene(sceneName);
 			};
 			ScheduleDriverAttach();
 		}

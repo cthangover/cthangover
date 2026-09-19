@@ -9,13 +9,39 @@ using Godot;
 
 namespace Cthangover.Core.Autotest
 {
+    /// <summary>
+    /// Auto-plays dialog scenes for integration tests and the AI workflow.
+    /// Attached by <c>SceneSwitcher</c> and <c>MainMenuTestSetup</c>, it clicks
+    /// <c>NextAction</c> at a fixed interval and answers selection prompts from
+    /// <c>--choices=</c> (first variant when unspecified). The DialogBox is
+    /// discovered lazily so the driver can be added before the dialog scene
+    /// exists; end-of-dialog quits the process, optionally switching to
+    /// <c>--scene2=</c> first.
+    /// </summary>
     public partial class DialogAutoDriver : Node
     {
         [Export] public float AdvanceInterval { get; set; } = 0.1f;
         [Export] public bool AutoQuit { get; set; } = true;
 
+        /// <summary>
+        /// When set, a successful end of dialog emits
+        /// <c>[TEST_RESULT] name=&lt;ResultName&gt; passed=1 failed=0</c> before
+        /// quitting, so the global test runner can attribute the result to the
+        /// calling test. Left empty by SceneSwitcher, whose smoke runs are
+        /// evaluated by log markers instead.
+        /// </summary>
+        public string ResultName { get; set; }
+
+        /// <summary>
+        /// How long the driver tolerates a discovered DialogBox staying idle
+        /// (Runtime.IsEnd) before treating it as an empty scene and quitting.
+        /// Covers the gap between scene load and the first scenario queue.
+        /// </summary>
+        private const ulong FirstDialogGraceMs = 3000;
+
         private DialogBox _dialogBox;
         private float _timer;
+        private ulong _dialogFoundAtMs;
         private List<int> _choices = new();
         private int _choiceIndex;
         private string _sceneOnEnd;
@@ -24,20 +50,20 @@ namespace Cthangover.Core.Autotest
         public override void _Ready()
         {
             ParseCmdArgs();
+        }
 
-            _dialogBox = SceneContextNode.FindNode<DialogBox>("DialogBox");
-            if (_dialogBox == null)
-            {
-                GameLogger.Log("TEST", "DialogAutoDriver: DialogBox not found, disabling", LogLevel.Error);
-                SetProcess(false);
-                return;
-            }
-
-            var choicesInfo = _choices.Count > 0
-                ? "choices=[" + string.Join(",", _choices) + "]"
-                : "no choices, will pick first variant each time";
-
-            GameLogger.Log("TEST", $"DialogAutoDriver started, interval={AdvanceInterval}, {choicesInfo}");
+        /// <summary>
+        /// Looks the DialogBox up lazily through the tree root instead of the
+        /// cached <c>SceneContextNode.FindNode</c>: the driver is often added
+        /// before the dialog scene exists, and the context cache would poison
+        /// the name as not-found until the next scene-exit event.
+        /// </summary>
+        private DialogBox FindDialogBox()
+        {
+            var tree = GetTree();
+            if (tree?.Root == null)
+                return null;
+            return tree.Root.FindChild("DialogBox", true, false) as DialogBox;
         }
 
         private void ParseCmdArgs()
@@ -62,8 +88,21 @@ namespace Cthangover.Core.Autotest
 
         public override void _Process(double delta)
         {
-            if (_dialogBox == null || !_dialogBox.IsInsideTree())
-                return;
+            if (_dialogBox == null || !GodotObject.IsInstanceValid(_dialogBox) || !_dialogBox.IsInsideTree())
+            {
+                _dialogBox = FindDialogBox();
+                if (_dialogBox == null)
+                    return;
+
+                _dialogFoundAtMs = Time.GetTicksMsec();
+                _hasSeenRunningDialog = false;
+
+                var choicesInfo = _choices.Count > 0
+                    ? "choices=[" + string.Join(",", _choices) + "]"
+                    : "no choices, will pick first variant each time";
+
+                GameLogger.Log("TEST", $"DialogAutoDriver started, interval={AdvanceInterval}, {choicesInfo}");
+            }
 
             _timer += (float)delta;
             if (_timer < AdvanceInterval)
@@ -75,9 +114,11 @@ namespace Cthangover.Core.Autotest
 
             // Runtime.IsEnd is also true while the very first queue has not
             // been loaded yet, so end-handling waits until a dialog was
-            // actually observed running (relevant for --scene2 revisits where
-            // the second entry legitimately starts no dialog at all).
-            var waitingForFirstDialog = !string.IsNullOrEmpty(_sceneOnEnd) && !_hasSeenRunningDialog;
+            // actually observed running. In --scene2 mode the wait is
+            // indefinite (the second entry legitimately starts no dialog);
+            // otherwise a short grace period lets dialog-less scenes finish.
+            var waitingForFirstDialog = !_hasSeenRunningDialog
+                && (!string.IsNullOrEmpty(_sceneOnEnd) || Time.GetTicksMsec() - _dialogFoundAtMs < FirstDialogGraceMs);
 
             if (_dialogBox.Runtime.IsEnd && !waitingForFirstDialog)
             {
@@ -92,6 +133,8 @@ namespace Cthangover.Core.Autotest
 
                 if (AutoQuit)
                 {
+                    if (!string.IsNullOrEmpty(ResultName))
+                        GameLogger.Log("TEST", $"[TEST_RESULT] name={ResultName} passed=1 failed=0");
 
                     GameLogger.Log("TEST", "DialogAutoDriver: dialog ended, quitting");
                     GetTree().Quit();

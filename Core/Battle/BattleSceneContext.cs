@@ -136,6 +136,14 @@ namespace Cthangover.Core.Battle
 		private List<Character> pendingEnemyCards;
 		private IBattleCore activeBattleCore;
 
+		/// <summary>
+		/// The battle core driving this scene, resolved from
+		/// <see cref="BattleCoreRegistry"/> in <c>_Ready</c>. Exposed so
+		/// tooling and tests can query the active core (for example for
+		/// <see cref="IBattleAutoPlayable"/>) without reaching into UI nodes.
+		/// </summary>
+		public IBattleCore ActiveBattleCore => activeBattleCore;
+
 		public override void _Ready()
 		{
 			battleBg = GetNodeOrNull<TextureRect>("BattleBg");

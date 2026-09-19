@@ -39,7 +39,8 @@ namespace Cthangover.Core.Autotest
 				GameLogger.Log("TEST", "All mod tests PASSED");
 			}
 
-			GetTree().Quit();
+			GameLogger.Log("TEST", $"[TEST_RESULT] name=mod passed={passed} failed={failed}");
+			GetTree().Quit(failed == 0 ? 0 : 1);
 		}
 
 		private void TestFolderMod()

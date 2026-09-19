@@ -1,0 +1,51 @@
+{
+  "unit": {
+    "project": "tests/Cthangover.Tests/Cthangover.Tests.csproj",
+    "timeoutSeconds": 300
+  },
+  "integration": [
+    {
+      "name": "mod",
+      "scene": "res://tests/Cthangover.Tests.Integration/Scenes/ModTest.tscn",
+      "timeoutSeconds": 180
+    },
+    {
+      "name": "actioncontext",
+      "scene": "res://tests/Cthangover.Tests.Integration/Scenes/GDActionContextCoreTest.tscn",
+      "timeoutSeconds": 120
+    },
+    {
+      "name": "tscn",
+      "scene": "res://tests/Cthangover.Tests.Integration/Scenes/TscnTestScene.tscn",
+      "timeoutSeconds": 120
+    },
+    {
+      "name": "scene_builder",
+      "scene": "res://scenes/test/scene_builder_autotest.tscn",
+      "timeoutSeconds": 120
+    },
+    {
+      "name": "coverage",
+      "scene": "res://tests/Cthangover.Tests.Integration/Scenes/BattleCoverageTest.tscn",
+      "timeoutSeconds": 120
+    },
+    {
+      "name": "battle",
+      "scene": "res://tests/Cthangover.Tests.Integration/Scenes/BattleTestScene.tscn",
+      "args": ["--core=card_battle"],
+      "timeoutSeconds": 180
+    },
+    {
+      "name": "battle_ff",
+      "scene": "res://tests/Cthangover.Tests.Integration/Scenes/BattleTestScene.tscn",
+      "args": ["--core=ff_battle"],
+      "timeoutSeconds": 180
+    },
+    {
+      "name": "menu",
+      "scene": "res://tests/Cthangover.Tests.Integration/Scenes/MainMenuTestScene.tscn",
+      "args": ["--test=menu", "--timeout=180"],
+      "timeoutSeconds": 240
+    }
+  ]
+}

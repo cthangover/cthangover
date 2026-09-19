@@ -432,6 +432,24 @@ namespace Cthangover.Core.Scenes
             return lower == "mainmenu" || lower == "menu" || lower == "battle";
         }
 
+        /// <summary>
+        /// Checks whether a logical scene name can be switched to: either a
+        /// Godot-native route (mainmenu/menu/battle) or a scenario scene
+        /// collected from the mods. Tools such as <c>SceneSwitcher</c> use it
+        /// to reject typos with a non-zero exit code instead of silently
+        /// running an empty scene and reporting success.
+        /// </summary>
+        public bool HasScene(string sceneName)
+        {
+            if (string.IsNullOrEmpty(sceneName))
+                return false;
+            if (!isInitialized)
+                Initialize();
+            if (IsGodotScene(sceneName))
+                return true;
+            return allScenes != null && allScenes.ContainsKey(sceneName);
+        }
+
         private static readonly Random _bgRandom = new();
 
         private void ApplySceneDefaults()

@@ -1,0 +1,87 @@
+#if TOOLS
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Cthangover.Core.Battle;
+using Cthangover.Core.Mods;
+using Cthangover.Core.Utils;
+using Godot;
+
+namespace Cthangover.Core.Autotest
+{
+    /// <summary>
+    /// Reports integration-test coverage of battle cores. The registry is the
+    /// single source of truth for how many battle cores the current mod set
+    /// ships; <see cref="DeclaredTests"/> maps each core to the runner test
+    /// type that drives it. A registered core without a declaration — or
+    /// without <see cref="IBattleAutoPlayable"/> — fails the run, so adding a
+    /// new core forces adding its test and the automation contract. The
+    /// machine-readable lines are parsed by <c>tests/Cthangover.TestRunner</c>,
+    /// which executes every declared test and reports the coverage summary.
+    /// </summary>
+    public partial class BattleCoverageTestSetup : Node
+    {
+        /// <summary>
+        /// Battle core id to the runner test name covering it. Update together
+        /// with <c>tests/tests.manifest.json</c> when a core is added.
+        /// </summary>
+        private static readonly Dictionary<string, string> DeclaredTests = new()
+        {
+            ["card_battle"] = "battle",
+            ["ff_battle"] = "battle_ff",
+        };
+
+        private int _failed;
+
+        public override void _Ready()
+        {
+            if (!ModManager.Instance.IsInitialized)
+                ModManager.Instance.Initialize();
+
+            var coreIds = BattleCoreRegistry.Instance.CoreIds;
+            GameLogger.Log("BATTLE_COVERAGE", $"registered cores: {coreIds.Count}");
+
+            foreach (var id in coreIds)
+            {
+                if (!DeclaredTests.TryGetValue(id, out var testName))
+                {
+                    Fail($"core={id} has no integration test declared");
+                    continue;
+                }
+
+                var autoPlayable = typeof(IBattleAutoPlayable)
+                    .IsAssignableFrom(BattleCoreRegistry.Instance.GetCoreType(id));
+                if (!autoPlayable)
+                {
+                    Fail($"core={id} test={testName} does not implement IBattleAutoPlayable");
+                    continue;
+                }
+
+                Pass($"core={id} test={testName} autoplayable=true");
+            }
+
+            foreach (var declared in DeclaredTests)
+            {
+                if (!coreIds.Contains(declared.Key))
+                    Fail($"declared test='{declared.Value}' references unknown core={declared.Key}");
+            }
+
+            var covered = coreIds.Count(id => DeclaredTests.ContainsKey(id));
+            GameLogger.Log("BATTLE_COVERAGE", $"coverage: {covered}/{coreIds.Count} cores");
+            GameLogger.Log("BATTLE_COVERAGE", $"[TEST_RESULT] name=coverage passed={(_failed == 0 ? 1 : 0)} failed={_failed}");
+            GetTree().Quit(_failed == 0 ? 0 : 1);
+        }
+
+        private void Pass(string message)
+        {
+            GameLogger.Log("BATTLE_COVERAGE", $"PASS {message}");
+        }
+
+        private void Fail(string message)
+        {
+            _failed++;
+            GameLogger.Log("BATTLE_COVERAGE", $"FAIL {message}", LogLevel.Error);
+        }
+    }
+}
+#endif

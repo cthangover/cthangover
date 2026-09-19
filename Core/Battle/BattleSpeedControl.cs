@@ -49,7 +49,7 @@ namespace Cthangover.Core.Battle
 		public void ApplySavedSpeed()
 		{
 			var speed = GameData.Instance.Settings.BattleSpeed;
-			if (speed < 1 || speed > 4)
+			if (speed < 1 || speed > 8)
 				speed = 1;
 
 			_activeSpeed = speed;
