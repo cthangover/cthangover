@@ -19,6 +19,7 @@ namespace Cthangover.Core.UI.Tool
         public static readonly ToolBoxButtonFactory Instance = new();
 
         private readonly List<IToolBoxButton> _buttons = new();
+        private readonly HashSet<Type> _buttonTypes = new();
 
         private ToolBoxButtonFactory()
         {
@@ -35,26 +36,33 @@ namespace Cthangover.Core.UI.Tool
         /// </summary>
         public void RegisterAssembly(Assembly assembly)
         {
-            foreach (var button in Reflections.FindAndCreate<IToolBoxButton>(assembly))
+            ICollection<IToolBoxButton> buttons;
+            try
             {
-                try
-                {
-                    Register(button);
-                }
-                catch (Exception ex)
-                {
-                    GameLogger.Log("TOOLS", $"ToolBoxButtonFactory: failed to create instance of '{button.GetType().FullName}': {ex.Message}", LogLevel.Error);
-                }
+                buttons = Reflections.FindAndCreate<IToolBoxButton>(assembly);
             }
+            catch (Exception ex)
+            {
+                GameLogger.Log("TOOLS", $"ToolBoxButtonFactory: failed to scan assembly '{assembly.GetName().Name}': {ex.Message}", LogLevel.Error);
+                return;
+            }
+
+            foreach (var button in buttons)
+                Register(button);
         }
 
         /// <summary>
-        /// Adds a button definition to the registry. Safe to call multiple times — duplicates
-        /// are not filtered because buttons targeting the same <see cref="IToolBoxButton.ToolId"/>
-        /// may have different visibility rules.
+        /// Adds a button definition to the registry. Buttons of the same concrete type are
+        /// deduplicated (the factory may see an assembly both through the initial AppDomain
+        /// scan and through <see cref="RegisterAssembly"/>). Different button types targeting
+        /// the same <see cref="IToolBoxButton.ToolId"/> are still allowed because they may
+        /// have different visibility rules.
         /// </summary>
         public void Register(IToolBoxButton button)
         {
+            if (!_buttonTypes.Add(button.GetType()))
+                return;
+
             _buttons.Add(button);
             GameLogger.Log("TOOLS", $"ToolBoxButtonFactory: registered button for '{button.ToolId}'");
         }

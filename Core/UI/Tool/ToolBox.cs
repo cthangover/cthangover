@@ -176,14 +176,36 @@ namespace Cthangover.Core.UI.Tool
         {
             foreach (var buttonDef in ToolBoxButtonFactory.Instance.GetVisible())
             {
-                var btn = new TextureButton
-                {
-                    CustomMinimumSize = new Vector2(60, 60),
-                    SizeFlagsVertical = Control.SizeFlags.ShrinkCenter,
-                    IgnoreTextureSize = true,
-                    StretchMode = TextureButton.StretchModeEnum.KeepAspectCentered
-                };
                 var toolId = buttonDef.ToolId;
+                var title = TranslationServer.Translate(buttonDef.LocaleKey);
+
+                Texture2D icon = null;
+                if (!string.IsNullOrEmpty(buttonDef.IconPath) && ResourceLoader.Exists(buttonDef.IconPath))
+                    icon = ResourceLoader.Load<Texture2D>(buttonDef.IconPath);
+
+                BaseButton btn;
+                if (icon != null)
+                {
+                    btn = new TextureButton
+                    {
+                        TextureNormal = icon,
+                        CustomMinimumSize = new Vector2(60, 60),
+                        SizeFlagsVertical = Control.SizeFlags.ShrinkCenter,
+                        IgnoreTextureSize = true,
+                        StretchMode = TextureButton.StretchModeEnum.KeepAspectCentered
+                    };
+                }
+                else
+                {
+                    btn = new Button
+                    {
+                        Text = title,
+                        CustomMinimumSize = new Vector2(60, 60),
+                        SizeFlagsVertical = Control.SizeFlags.ShrinkCenter
+                    };
+                }
+
+                btn.TooltipText = title;
                 btn.Pressed += () =>
                 {
                     var tool = ToolFactory.Instance.Get(toolId);

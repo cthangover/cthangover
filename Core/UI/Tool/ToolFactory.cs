@@ -34,17 +34,19 @@ namespace Cthangover.Core.UI.Tool
         /// </summary>
         public void RegisterAssembly(Assembly assembly)
         {
-            foreach (var tool in Reflections.FindAndCreate<IToolProvider>(assembly))
+            ICollection<IToolProvider> tools;
+            try
             {
-                try
-                {
-                    Register(tool);
-                }
-                catch (Exception ex)
-                {
-                    GameLogger.Log("TOOLS", $"ToolFactory: failed to create instance of '{tool.GetType().FullName}': {ex.Message}", LogLevel.Error);
-                }
+                tools = Reflections.FindAndCreate<IToolProvider>(assembly);
             }
+            catch (Exception ex)
+            {
+                GameLogger.Log("TOOLS", $"ToolFactory: failed to scan assembly '{assembly.GetName().Name}': {ex.Message}", LogLevel.Error);
+                return;
+            }
+
+            foreach (var tool in tools)
+                Register(tool);
         }
 
         /// <summary>
@@ -53,8 +55,16 @@ namespace Cthangover.Core.UI.Tool
         /// </summary>
         public void Register(IToolProvider tool)
         {
-            if (_tools.ContainsKey(tool.Id))
+            if (_tools.TryGetValue(tool.Id, out var existing))
+            {
+                if (existing.GetType() != tool.GetType())
+                {
+                    GameLogger.Log("TOOLS",
+                        $"ToolFactory: duplicate tool id '{tool.Id}' from '{tool.GetType().FullName}' ignored (already provided by '{existing.GetType().FullName}')",
+                        LogLevel.Warning);
+                }
                 return;
+            }
 
             _tools[tool.Id] = tool;
             GameLogger.Log("TOOLS", $"ToolFactory: registered '{tool.Id}'");

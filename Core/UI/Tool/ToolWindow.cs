@@ -75,7 +75,7 @@ namespace Cthangover.Core.UI.Tool
             window.SetupChrome();
             var tree = Godot.Engine.GetMainLoop() as SceneTree;
             tree?.Root.AddChild(window);
-            window.PopupCentered((Vector2I)GetGameViewportSize());
+            window.PopupCentered();
             GameLogger.Log("TOOL_WINDOW", $"Open<{typeof(T).Name}> gameViewport=({GetGameViewportSize().X:F0},{GetGameViewportSize().Y:F0}) physWindow=({DisplayServer.WindowGetSize().X},{DisplayServer.WindowGetSize().Y}) windowSize=({window.Size.X},{window.Size.Y})");
             return window;
         }
@@ -90,7 +90,7 @@ namespace Cthangover.Core.UI.Tool
                 tw.SetupChrome();
             var tree = Godot.Engine.GetMainLoop() as SceneTree;
             tree?.Root.AddChild(window);
-            window.PopupCentered((Vector2I)GetGameViewportSize());
+            window.PopupCentered();
             GameLogger.Log("TOOL_WINDOW", $"ShowWindow gameViewport=({GetGameViewportSize().X:F0},{GetGameViewportSize().Y:F0}) physWindow=({DisplayServer.WindowGetSize().X},{DisplayServer.WindowGetSize().Y}) windowSize=({window.Size.X},{window.Size.Y})");
             return window;
         }
@@ -129,9 +129,14 @@ namespace Cthangover.Core.UI.Tool
                 return;
             _chromeBuilt = true;
 
+            var initialSize = Size;
+
             Borderless = true;
             MinSize = new Vector2I(800, 400);
             MaxSize = (Vector2I)GetGameViewportSize();
+
+            if (initialSize.X < MinSize.X || initialSize.Y < MinSize.Y)
+                Size = MaxSize;
 
             GameLogger.Log("TOOL_WINDOW", $"SetupChrome gameViewport=({GetGameViewportSize().X:F0},{GetGameViewportSize().Y:F0}) physWindow=({DisplayServer.WindowGetSize().X},{DisplayServer.WindowGetSize().Y}) maxSize=({MaxSize.X},{MaxSize.Y})");
 
@@ -204,24 +209,6 @@ namespace Cthangover.Core.UI.Tool
             dialog.Canceled += () => dialog.QueueFree();
             AddChild(dialog);
             dialog.PopupCentered();
-        }
-
-        protected bool ConfirmDiscardUnsaved()
-        {
-            if (!_dirty)
-                return true;
-
-            var dialog = new ConfirmationDialog();
-            dialog.Title = TranslationServer.Translate("tools/unsaved_title");
-            dialog.DialogText = TranslationServer.Translate("tools/unsaved_text");
-            AddChild(dialog);
-
-            bool result = false;
-            dialog.Confirmed += () => { result = true; dialog.QueueFree(); };
-            dialog.Canceled += () => { result = false; dialog.QueueFree(); };
-            dialog.PopupCentered();
-
-            return result;
         }
 
         private void HandleCloseRequested()

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 
 namespace Cthangover.Core.Utils
@@ -47,12 +48,44 @@ namespace Cthangover.Core.Utils
 
         private static void CheckAssembly<T>(Type typeT, LinkedList<T> list, Assembly assemblyFilter, Predicate<Type> filter = null)
         {
-            foreach (var type in assemblyFilter.GetTypes())
+            Type[] types;
+            try
             {
-                if (typeT.IsAssignableFrom(type) && type.IsPublic && !type.IsAbstract
-                    && type.GetConstructor(Type.EmptyTypes) != null && (filter == null || filter.Invoke(type)))
+                types = assemblyFilter.GetTypes();
+            }
+            catch (ReflectionTypeLoadException ex)
+            {
+                types = ex.Types.Where(t => t != null).ToArray();
+                GameLogger.Log("REFLECTIONS",
+                    $"FindAndCreate<{typeT.Name}>: assembly '{assemblyFilter.GetName().Name}' partially loaded, continuing with {types.Length} type(s)",
+                    LogLevel.Warning);
+            }
+            catch (Exception ex)
+            {
+                GameLogger.Log("REFLECTIONS",
+                    $"FindAndCreate<{typeT.Name}>: cannot enumerate types of '{assemblyFilter.FullName}': {ex.Message}",
+                    LogLevel.Warning);
+                return;
+            }
+
+            foreach (var type in types)
+            {
+                if (!typeT.IsAssignableFrom(type) || !type.IsPublic || type.IsAbstract
+                    || type.GetConstructor(Type.EmptyTypes) == null)
+                    continue;
+
+                if (filter != null && !filter.Invoke(type))
+                    continue;
+
+                try
                 {
                     list.AddLast((T)Activator.CreateInstance(type));
+                }
+                catch (Exception ex)
+                {
+                    GameLogger.Log("REFLECTIONS",
+                        $"FindAndCreate<{typeT.Name}>: failed to instantiate '{type.FullName}': {ex.Message}",
+                        LogLevel.Warning);
                 }
             }
         }

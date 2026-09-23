@@ -100,7 +100,11 @@ namespace Cthangover.Core.UI.Menu
             btnHBox.Alignment = BoxContainer.AlignmentMode.End;
             vbox.AddChild(btnHBox);
 
-            var launchBtn = new Button { Text = TranslationServer.Translate("tools/launch") };
+            var launchBtn = new Button
+            {
+                Text = TranslationServer.Translate("tools/launch"),
+                Disabled = tools.Count == 0
+            };
             launchBtn.Pressed += () =>
             {
                 var meta = dropdown.GetItemMetadata(dropdown.Selected).AsString();
