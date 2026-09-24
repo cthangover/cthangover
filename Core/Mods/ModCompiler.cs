@@ -134,7 +134,11 @@ namespace Cthangover.Core.Mods
                     foreach (var (path, _) in sourceFiles)
                         GameLogger.Log("MODS_COMPILE", $"  {path}", LogLevel.Debug);
 
-                    var assembly = Compile(modInfo.Id, sourceFiles, cancellationToken);
+                    var dependencySignature = BuildDependencySignature(modInfo, mods);
+                    if (!string.IsNullOrEmpty(dependencySignature))
+                        GameLogger.Log("MODS_COMPILE", $"  dependencies: {dependencySignature}", LogLevel.Debug);
+
+                    var assembly = Compile(modInfo.Id, sourceFiles, dependencySignature, cancellationToken);
                     if (assembly != null)
                     {
                         result.Add((modInfo.Id, assembly, sourceFiles));
@@ -153,6 +157,29 @@ namespace Cthangover.Core.Mods
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Builds a deterministic signature of a mod's dependencies for the
+        /// compilation cache key: every dependency id together with the version that
+        /// was actually loaded (or <c>missing</c>). Renaming or upgrading a dependency
+        /// therefore forces dependents to recompile against the new assembly instead
+        /// of loading a stale cached DLL that links to the old assembly name.
+        /// </summary>
+        private static string BuildDependencySignature(ModInfo modInfo, IDictionary<string, IModInfo> mods)
+        {
+            var dependencies = modInfo?.Manifest?.DependencyIds;
+            if (dependencies == null || dependencies.Count == 0)
+                return string.Empty;
+
+            var parts = new List<string>();
+            foreach (var depId in dependencies.Distinct().OrderBy(id => id, StringComparer.OrdinalIgnoreCase))
+            {
+                var version = mods != null && mods.TryGetValue(depId, out var dependency) ? dependency.Version : null;
+                parts.Add($"{depId}@{version ?? "missing"}");
+            }
+
+            return string.Join(";", parts);
         }
 
         private static List<(string FilePath, string Source)> CollectSourceFiles(ModInfo modInfo, CancellationToken cancellationToken)
@@ -266,13 +293,26 @@ namespace Cthangover.Core.Mods
         /// </summary>
         public static Assembly Compile(string modId, IEnumerable<(string FilePath, string Source)> sources, CancellationToken cancellationToken = default)
         {
+            return Compile(modId, sources, null, cancellationToken);
+        }
+
+        /// <summary>
+        /// Same as <see cref="Compile(string, IEnumerable{(string FilePath, string Source)}, CancellationToken)"/>,
+        /// but mixes <paramref name="dependencySignature"/> into the cache key. The
+        /// signature describes the mod's dependencies (id + resolved version), so a
+        /// renamed or version-bumped dependency invalidates the cached assembly even
+        /// when this mod's own sources did not change. Without it, a cached DLL keeps
+        /// linking against the old dependency assembly name and fails to load.
+        /// </summary>
+        public static Assembly Compile(string modId, IEnumerable<(string FilePath, string Source)> sources, string dependencySignature, CancellationToken cancellationToken = default)
+        {
             var sourceList = sources.ToList();
             if (sourceList.Count == 0)
                 return null;
 
             cancellationToken.ThrowIfCancellationRequested();
 
-            var hash = ModHasher.ComputeHash(sourceList);
+            var hash = ModHasher.ComputeHash(sourceList, dependencySignature);
             var cachedPath = Path.Combine(CacheRoot, $"{modId}_{hash}.dll");
             
             if (File.Exists(cachedPath))

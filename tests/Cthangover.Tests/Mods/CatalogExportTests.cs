@@ -92,6 +92,23 @@ namespace Engine.Tests.Mods
 		}
 
 		[Fact]
+		public void JsonRoundTrip_CombinedCategory()
+		{
+			var original = new CatalogExportEntry
+			{
+				Id = "multi_cat_mod",
+				Version = "1.0.0",
+				Category = CategoryType.Library | CategoryType.Gameplay,
+			};
+
+			var json = JsonSerializer.Serialize(original);
+			var restored = JsonSerializer.Deserialize<CatalogExportEntry>(json);
+
+			Assert.NotNull(restored);
+			Assert.Equal(CategoryType.Library | CategoryType.Gameplay, restored.Category);
+		}
+
+		[Fact]
 		public void JsonRoundTrip_WithLocales()
 		{
 			var original = new CatalogExportEntry

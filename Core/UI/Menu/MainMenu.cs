@@ -142,7 +142,7 @@ namespace Cthangover.Core.UI.Menu
             {
                 sceneManager.PendingSceneName = "start_scene";
                 var sceneService = GetNode<GodotSceneService>("/root/GodotSceneService");
-                sceneService?.LoadScene("res://scenes/ui/base_scene.tscn");
+                sceneService?.LoadShell();
             }
         }
 

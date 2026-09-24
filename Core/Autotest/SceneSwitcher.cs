@@ -123,7 +123,7 @@ namespace Cthangover.Core.Autotest
 
 		private void LoadLogicalScene(string sceneName)
 		{
-			var baseScene = GD.Load<PackedScene>("res://scenes/ui/base_scene.tscn");
+			var baseScene = GD.Load<PackedScene>(GodotSceneService.GetScenePath(GodotSceneType.BaseScene));
 			if (baseScene == null)
 			{
 				GameLogger.Log("TEST", "SceneSwitcher: failed to load base_scene.tscn", LogLevel.Error);

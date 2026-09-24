@@ -101,7 +101,7 @@ namespace Cthangover.Core.UI.Menu
                         }
 
                         var sceneService = SceneContextNode.FindNode<GodotSceneService>("GodotSceneService");
-                        sceneService?.LoadScene("res://scenes/ui/base_scene.tscn");
+                        sceneService?.LoadShell();
                     }
                 }
             }

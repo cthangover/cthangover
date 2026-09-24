@@ -46,8 +46,9 @@ namespace Cthangover.Core.Mods
         [JsonPropertyName("locale")]
         public List<CatalogLocaleEntry> Locale { get; set; }
 
-        /// <summary>Category slug for filtering.
-        /// Serialised as lowercase enum name (e.g. "gameplay").</summary>
+        /// <summary>Category (or comma-separated combination of
+        /// categories, e.g. "Library, Gameplay") for filtering and
+        /// grouping. Serialised as enum name(s).</summary>
         [JsonPropertyName("category")]
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public CategoryType Category { get; set; }

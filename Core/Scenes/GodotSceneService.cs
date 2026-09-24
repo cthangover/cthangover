@@ -321,7 +321,28 @@ namespace Cthangover.Core.Scenes
 			SwitchScene(GodotSceneType.Battle);
 		}
 
-		private static string GetScenePath(GodotSceneType type)
+		/// <summary>
+		/// Loads the native base shell scene. Encapsulates the shell path so that
+		/// menus, the battle return flow and mods never hardcode
+		/// <c>res://scenes/ui/base_scene.tscn</c>. Unlike
+		/// <see cref="SwitchScene(GodotSceneType)"/> this keeps the current
+		/// pending-logical-scene flow: the shell's event chain picks up
+		/// <see cref="SceneManager.PendingSceneName"/> after the load and switches
+		/// to the requested logical scene.
+		/// </summary>
+		public void LoadShell()
+		{
+			LoadScene(GetScenePath(GodotSceneType.BaseScene));
+		}
+
+		/// <summary>
+		/// Single source of truth for scene paths by <see cref="GodotSceneType"/>.
+		/// Native shells and menus return <c>res://</c> paths handled by Godot's
+		/// loader; the battle path comes from <see cref="BattleSceneRegistry"/>
+		/// (mod-relative, built by the runtime tscn pipeline). Callers should ask
+		/// for a scene type instead of hardcoding paths themselves.
+		/// </summary>
+		public static string GetScenePath(GodotSceneType type)
 		{
 			if (type == GodotSceneType.Battle)
 				return BattleSceneRegistry.ScenePath;

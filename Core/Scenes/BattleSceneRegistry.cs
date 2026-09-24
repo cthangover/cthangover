@@ -4,7 +4,7 @@ namespace Cthangover.Core.Scenes
 {
     /// <summary>
     /// Self-registration point for the battle view scene. The battle GUI lives in
-    /// a mod (<c>turn_battle</c>), so the core cannot hardcode its path; the mod's
+    /// a mod (<c>turn_battle_base</c>), so the core cannot hardcode its path; the mod's
     /// initializer calls <see cref="Register"/> with a mod-relative scene path and
     /// <see cref="GodotSceneService"/> routes the logical "battle" scene there,
     /// switching via the runtime tscn pipeline instead of the native loader.

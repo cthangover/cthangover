@@ -47,8 +47,12 @@ namespace Cthangover.Core.Mods
         /// Concatenates each file's path and source text (ordered by path for determinism),
         /// then returns the first 16 hex characters of the SHA-256 hash.
         /// Used by <see cref="ModCompiler"/> to determine whether a mod needs recompilation.
+        /// <paramref name="dependencySignature"/> is mixed into the hash so that a change in
+        /// the mod's dependencies — for example renaming a dependency mod, which changes the
+        /// assembly name its compiled code links against — invalidates the cache even when
+        /// the mod's own sources are unchanged.
         /// </summary>
-        public static string ComputeHash(List<(string FilePath, string Source)> sources)
+        public static string ComputeHash(List<(string FilePath, string Source)> sources, string dependencySignature = null)
         {
             using var sha = SHA256.Create();
             var sb = new StringBuilder();
@@ -58,6 +62,13 @@ namespace Cthangover.Core.Mods
                 sb.Append(':');
                 sb.Append(source);
             }
+
+            if (!string.IsNullOrEmpty(dependencySignature))
+            {
+                sb.Append("#deps:");
+                sb.Append(dependencySignature);
+            }
+
             var hashBytes = sha.ComputeHash(Encoding.UTF8.GetBytes(sb.ToString()));
             return Convert.ToHexString(hashBytes).Substring(0, 16).ToLowerInvariant();
         }

@@ -46,6 +46,20 @@ namespace Cthangover.Core.Mods
         public string Description { get; set; }
 
         /// <summary>
+        /// Optional catalog category (or combination) used to group the
+        /// mod in the online catalog. Serialized as a string via
+        /// <c>JsonStringEnumConverter</c> — a single name (e.g.
+        /// <c>"gameplay"</c>) or a comma-separated list for mods that
+        /// belong to several categories (e.g. <c>"library, gameplay"</c>).
+        /// Omitted means <see cref="CategoryType.Other"/>. The Catalog
+        /// Export dialog pre-checks these categories for
+        /// <see cref="CatalogExportEntry.Category"/>.
+        /// </summary>
+        [JsonPropertyName("category")]
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public CategoryType? Category { get; set; }
+
+        /// <summary>
         /// Glob-style paths to C# source files (e.g. "scripts/*.cs",
         /// "src/"). <c>ModCompiler</c> collects and compiles them.
         /// </summary>

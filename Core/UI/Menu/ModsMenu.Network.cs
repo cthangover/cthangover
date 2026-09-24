@@ -432,8 +432,20 @@ namespace Cthangover.Core.UI.Menu
 			var urlEdit = AddLineEdit(vbox, "mods/catalog_download_url");
 
 			var categories = Enum.GetValues<CategoryType>();
-			var categoryNames = categories.Select(c => GetCategoryDisplayName(c)).ToArray();
-			var categoryOpt = AddOptionButton(vbox, "mods/catalog_category", categoryNames);
+			var categoryList = new ItemList
+			{
+				CustomMinimumSize = new Vector2(0, 130),
+				SizeFlagsHorizontal = SizeFlags.ExpandFill,
+				SelectMode = ItemList.SelectModeEnum.Toggle,
+			};
+			var preselected = manifest.Category ?? CategoryType.Other;
+			for (var i = 0; i < categories.Length; i++)
+			{
+				categoryList.AddItem(GetCategoryDisplayName(categories[i]));
+				if ((preselected & categories[i]) != 0)
+					categoryList.Select(i, false);
+			}
+			AddLabeledControl(vbox, "mods/catalog_category", categoryList);
 
 			var tagsEdit = AddLineEdit(vbox, "mods/catalog_tags");
 
@@ -609,7 +621,7 @@ namespace Cthangover.Core.UI.Menu
 						InstallSha256 = "—",
 					},
 				};
-				entry.Category = categories[categoryOpt.Selected];
+				entry.Category = CollectSelectedCategories(categoryList, categories);
 				var tagsText = tagsEdit.Text.Trim();
 				entry.Tags = string.IsNullOrEmpty(tagsText)
 					? null
@@ -627,7 +639,8 @@ namespace Cthangover.Core.UI.Menu
 			updatePreview();
 
 			urlEdit.TextChanged += _ => updatePreview();
-			categoryOpt.ItemSelected += _ => updatePreview();
+			categoryList.ItemSelected += _ => updatePreview();
+			categoryList.MultiSelected += (_, _) => updatePreview();
 			tagsEdit.TextChanged += _ => updatePreview();
 			changelogEdit.TextChanged += () => updatePreview();
 			statusOpt.ItemSelected += _ => updatePreview();
@@ -652,7 +665,7 @@ namespace Cthangover.Core.UI.Menu
 						SizeBytes = 0,
 					},
 				};
-				entry.Category = categories[categoryOpt.Selected];
+				entry.Category = CollectSelectedCategories(categoryList, categories);
 				var tagsText = tagsEdit.Text.Trim();
 				entry.Tags = string.IsNullOrEmpty(tagsText)
 					? null
@@ -696,9 +709,21 @@ namespace Cthangover.Core.UI.Menu
 				Author = manifest.Author,
 				Version = manifest.Version,
 				Description = manifest.Description,
+				Category = manifest.Category ?? CategoryType.Other,
 				Depends = depends,
 				ConflictsWith = manifest.ConflictsWith,
 			};
+		}
+
+		private static CategoryType CollectSelectedCategories(ItemList list, CategoryType[] categories)
+		{
+			var selected = (CategoryType)0;
+			for (var i = 0; i < categories.Length && i < list.ItemCount; i++)
+			{
+				if (list.IsSelected(i))
+					selected |= categories[i];
+			}
+			return selected != 0 ? selected : CategoryType.Other;
 		}
 
 		private static void AddLabeledControl(Container parent, string labelKey, Control control)
@@ -763,6 +788,7 @@ namespace Cthangover.Core.UI.Menu
 			CategoryType.Locale => TranslationServer.Translate("mods/category_locale"),
 			CategoryType.Library => TranslationServer.Translate("mods/category_library"),
 			CategoryType.Overhaul => TranslationServer.Translate("mods/category_overhaul"),
+			CategoryType.Tools => TranslationServer.Translate("mods/category_tools"),
 			CategoryType.Other => TranslationServer.Translate("mods/category_other"),
 			_ => cat.ToString(),
 		};

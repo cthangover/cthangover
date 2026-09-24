@@ -32,7 +32,7 @@ locally-installed mods.
           "description": "Live2D Cubism C# рантайм: загрузка моделей, отрисовка, физика, анимации, эффекты"
         }
       ],
-      "category": "library",                               // Category slug: story, characters, gameplay, visual, audio, ui, locale, library, overhaul, other
+      "category": "library",                               // Category slug or comma-separated combination (e.g. "library, gameplay"): story, characters, gameplay, visual, audio, ui, locale, library, overhaul, tools, other
       "tags": ["live2d", "ui", "graphics", "2d"],          // Search/filter tags
       "icon_url": "https://git.cthangover.ru/cthangover/mod_live2d/raw/branch/master/mod.png", // Full URL to preview icon (PNG or JPEG)
       "depends": ["core>=1"],                              // Versioned dependency strings
@@ -75,7 +75,7 @@ locally-installed mods.
 | `version` | string | Semver version of the latest release (e.g. "1.0.0") |
 | `description` | string | Fallback short description (used when no `locale` entry matches the player's language) |
 | `locale` | object[] | Localized name/description entries for different languages (see below) |
-| `category` | string | Category slug: `story`, `characters`, `gameplay`, `visual`, `audio`, `ui`, `locale`, `library`, `overhaul`, `other` |
+| `category` | string | Category slug or comma-separated combination of slugs (e.g. `"library, gameplay"`): `story`, `characters`, `gameplay`, `visual`, `audio`, `ui`, `locale`, `library`, `overhaul`, `tools`, `other` |
 | `tags` | string[] | Search/filter tags |
 | `icon_url` | string | Full URL to preview icon (PNG or JPEG) |
 | `depends` | string[] | Versioned dependency strings (e.g. `"core>=1"`) |
@@ -158,6 +158,10 @@ download URL, category, tags, and changelog, then generates:
 
 - A `.zip` archive of the mod (if it was a folder)
 - A `.json` catalog entry file alongside the archive
+
+Categories are pre-checked from the mod's `manifest.json` `category`
+field (falling back to `other` when absent); several categories can be
+toggled at once.
 
 Both files go into the mods root directory. The JSON snippet can be
 copied to clipboard and pasted into the catalog JSON you host online.
