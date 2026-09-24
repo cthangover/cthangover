@@ -19,6 +19,7 @@ namespace Cthangover.Core.Scenes.TscnBuild
     {
         private readonly SubResourceFactory _subResourceFactory = new();
         private readonly Dictionary<string, Node> _builtNodes = new();
+        private readonly List<(Node Node, string Key, NodePath Path)> _nodePathAssignments = new();
         private Node _rootNode;
 
         /// <summary>
@@ -30,6 +31,7 @@ namespace Cthangover.Core.Scenes.TscnBuild
         public Node Build(ParsedScene scene, Func<string, Node> instanceLoader, Func<string, Resource> extResourceResolver)
         {
             _builtNodes.Clear();
+            _nodePathAssignments.Clear();
             _rootNode = null;
 
             _subResourceFactory.BuildAll(scene.SubResources, id => _subResourceFactory.Get(id));
@@ -53,6 +55,8 @@ namespace Cthangover.Core.Scenes.TscnBuild
 
                 _builtNodes[parsedNode.Name] = node;
             }
+
+            ResolveNodePathAssignments();
 
             foreach (var conn in scene.Connections)
                 ApplyConnection(conn);
@@ -126,7 +130,7 @@ namespace Cthangover.Core.Scenes.TscnBuild
             foreach (var kvp in parsedNode.OrderedProperties) { var r = PropertyResolverRegistry.Find(kvp.Key, kvp.Value); r?.Apply(node, kvp.Key, kvp.Value, ctx); }
         }
 
-        private static void ApplyNodePathVars(Node node, Dictionary<string, string> nodePathVars)
+        private void ApplyNodePathVars(Node node, Dictionary<string, string> nodePathVars)
         {
             if (nodePathVars == null || nodePathVars.Count == 0) return;
             foreach (var kvp in nodePathVars)
@@ -134,8 +138,36 @@ namespace Cthangover.Core.Scenes.TscnBuild
                 if (string.IsNullOrEmpty(kvp.Value)) continue;
                 var parsed = TscnPropertyParser.Parse(kvp.Value);
                 if (parsed is ParsedGodotValue pgv && pgv.TypeName == "NodePath")
-                    node.Set(kvp.Key, new NodePath((string)pgv.Arg(0)));
+                    _nodePathAssignments.Add((node, kvp.Key, new NodePath((string)pgv.Arg(0))));
             }
+        }
+
+        /// <summary>
+        /// Resolves exported Node-typed properties (declared in a tscn node's
+        /// <c>node_paths</c> header) once the whole tree exists. Godot's native
+        /// loader turns these NodePaths into the referenced nodes; the runtime
+        /// builder must do the same, otherwise <c>[Export] private Control foo</c>
+        /// fields stay null. Resolution is deferred because a node's children are
+        /// added only after its own properties have been applied.
+        /// </summary>
+        private void ResolveNodePathAssignments()
+        {
+            foreach (var (node, key, path) in _nodePathAssignments)
+            {
+                if (node == null || !GodotObject.IsInstanceValid(node))
+                    continue;
+
+                var target = node.GetNodeOrNull(path);
+                if (target == null)
+                {
+                    GameLogger.Log("TSCN_BUILD", $"SceneBuilder: node_paths '{key}' -> '{path}' not found on '{node.Name}'", LogLevel.Warning);
+                    continue;
+                }
+
+                node.Set(key, target);
+            }
+
+            _nodePathAssignments.Clear();
         }
 
         private void ApplyConnection(ParsedConnection conn)

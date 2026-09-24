@@ -83,6 +83,20 @@ namespace Cthangover.Core.Settings
         }
 
         /// <summary>
+        /// Begins a "New Game": wipes the runtime state and then publishes
+        /// <see cref="Events.NewGameStartedEvent"/>. Mods listen to that event to
+        /// re-seed per-session data — the core mod restores the starter party there,
+        /// because <see cref="ResetRuntime"/> discards it and
+        /// <c>IModInitializer.OnModResourcesReady</c> only runs once at boot. Call
+        /// this instead of <see cref="ResetRuntime"/> whenever a fresh game starts.
+        /// </summary>
+        public void StartNewGame()
+        {
+            ResetRuntime();
+            Events.ModEventBus.Publish(new Events.NewGameStartedEvent());
+        }
+
+        /// <summary>
         /// Called once after entering the scene tree. Loads previously
         /// saved <see cref="SettingsData"/> from disk, activates the
         /// current locale, registers <see cref="_timeTickController"/>

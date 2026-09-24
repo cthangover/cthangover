@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Cthangover.Core.Events;
 using Cthangover.Core.UI.Dialog;
 using Cthangover.Core.UI.Event;
 using Cthangover.Core.Scenes;
@@ -125,6 +126,8 @@ namespace Cthangover.Core.UI.Executable
 					GameLogger.Log("CHAIN", $"collected event '{evt.GetType().Name}'");
 				}
 			}
+
+			ModEventBus.Publish(new ShellReadyEvent { Root = this });
 
 			var sceneManager = GetNodeOrNull<SceneManager>("/root/SceneManager");
 			if (sceneManager != null && !string.IsNullOrEmpty(sceneManager.PendingSceneName))

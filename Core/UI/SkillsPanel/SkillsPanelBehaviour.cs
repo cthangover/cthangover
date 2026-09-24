@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Cthangover.Core.Factories.Impls;
+using Cthangover.Core.Scenes;
 using Cthangover.Core.Settings;
 using Cthangover.Core.Skills;
 using Cthangover.Core.Utils;
@@ -19,7 +20,7 @@ namespace Cthangover.Core.UI.SkillsPanel
 		private Label _expandedName;
 		private RichTextLabel _descriptionLabel;
 
-		private PackedScene _skillCardPrefab;
+		private ModScenePrefab _skillCardPrefab;
 		private Texture2D _frameTexture;
 		private Texture2D _frameFullTexture;
 		private Godot.Collections.Array<Color> _rareColors;
@@ -50,7 +51,7 @@ namespace Cthangover.Core.UI.SkillsPanel
 			_expandedName = GetNodeOrNull<Label>("ExpandedOverlay/ExpandedName");
 			_descriptionLabel = GetNodeOrNull<RichTextLabel>("ExpandedOverlay/DescriptionBg/DescriptionLabel");
 
-			_skillCardPrefab = GD.Load<PackedScene>("res://scenes/ui/skills_panel/skill_card.tscn");
+			_skillCardPrefab = new ModScenePrefab("scenes/ui/skills_panel/skill_card.tscn");
 			_frameTexture = TextureUtils.LoadFromModGroup("ui/skills", "skill_frame");
 			_frameFullTexture = TextureUtils.LoadFromModGroup("ui/skills", "skill_frame_full");
 

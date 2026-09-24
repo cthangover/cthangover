@@ -1,6 +1,6 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://bno4s184ypdep"]
 
-[ext_resource type="Script" path="res://tests/Cthangover.Tests.Integration/Autotest/TscnBuildTestSetup.cs" id="1_setup"]
+[ext_resource type="Script" uid="uid://vkwpjbrfofyx" path="res://tests/Cthangover.Tests.Integration/Autotest/TscnBuildTestSetup.cs" id="1_setup"]
 
-[node name="TscnTest" type="Node"]
+[node name="TscnTest" type="Node" unique_id=1967626308]
 script = ExtResource("1_setup")

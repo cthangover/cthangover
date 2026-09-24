@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Cthangover.Core.Characters;
 using Cthangover.Core.Factories.Impls;
+using Cthangover.Core.Scenes;
 using Cthangover.Core.Settings;
 using Cthangover.Core.Utils;
 using Godot;
@@ -24,8 +25,8 @@ namespace Cthangover.Core.UI.CharacterPanel
 		private Vector2 _dragStartMousePos;
 		private int _skipFrames;
 
-		private PackedScene _characterCardScene;
-		private PackedScene _actionCardScene;
+		private ModScenePrefab _characterCardScene;
+		private ModScenePrefab _actionCardScene;
 		private CanvasLayer _dragCanvas;
 
 		private const int DragThreshold = 5;
@@ -37,8 +38,8 @@ namespace Cthangover.Core.UI.CharacterPanel
 			_actionPool = GetNodeOrNull<ActionPoolBehaviour>("RightPanel/ActionPoolScroll/ActionPool");
 			_actionPoolData = GameData.Instance.Runtime.ActionPool;
 
-			_characterCardScene = GD.Load<PackedScene>("res://scenes/ui/character_panel/character_card.tscn");
-			_actionCardScene = GD.Load<PackedScene>("res://scenes/ui/character_panel/action_card.tscn");
+			_characterCardScene = new ModScenePrefab("scenes/ui/character_panel/character_card.tscn");
+			_actionCardScene = new ModScenePrefab("scenes/ui/character_panel/action_card.tscn");
 
 			_dragCanvas = new CanvasLayer { Name = "DragCanvas", Layer = 100 };
 			AddChild(_dragCanvas);
@@ -220,6 +221,7 @@ namespace Cthangover.Core.UI.CharacterPanel
 
 		private void ReloadCharacters()
 		{
+			GameLogger.Log("UI", $"CharacterPanel.ReloadCharacters: container={_charactersContainer != null}, cardsBefore={_characterCards.Count}, battleSet={GameData.Instance?.Runtime?.CharacterData?.BattleSet?.Count ?? 0}");
 			ClearCharacterCards();
 
 			var characterData = GameData.Instance.Runtime.CharacterData;
@@ -240,10 +242,13 @@ namespace Cthangover.Core.UI.CharacterPanel
 
 			_actionPool?.SetActionCardScene(_actionCardScene);
 			RefreshPool();
+			GameLogger.Log("UI", $"CharacterPanel.ReloadCharacters: cardsAfter={_characterCards.Count}, containerChildren={_charactersContainer?.GetChildCount() ?? -1}");
 		}
 
 		private void ClearCharacterCards()
 		{
+			if (_characterCards.Count > 0)
+				GameLogger.Log("UI", $"CharacterPanel.ClearCharacterCards: removing {_characterCards.Count} card(s)");
 			foreach (var card in _characterCards)
 				card.QueueFree();
 			_characterCards.Clear();

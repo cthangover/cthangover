@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Cthangover.Core.Characters;
 using Cthangover.Core.Factories.Impls;
+using Cthangover.Core.Scenes;
 using Godot;
 
 namespace Cthangover.Core.UI.CharacterPanel
@@ -13,7 +14,7 @@ namespace Cthangover.Core.UI.CharacterPanel
 	{
 		private VBoxContainer _container;
 		private readonly List<ActionCardBehaviour> _poolCards = new();
-		private PackedScene _actionCardScene;
+		private ModScenePrefab _actionCardScene;
 
 		public override void _Ready()
 		{
@@ -21,7 +22,7 @@ namespace Cthangover.Core.UI.CharacterPanel
 			_container = GetNodeOrNull<VBoxContainer>("Container");
 		}
 
-		public void SetActionCardScene(PackedScene scene)
+		public void SetActionCardScene(ModScenePrefab scene)
 		{
 			_actionCardScene = scene;
 		}

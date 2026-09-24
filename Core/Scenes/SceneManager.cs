@@ -6,6 +6,7 @@ using Cthangover.Core.Factories.Impls;
 using Cthangover.Core.Mods;
 using Cthangover.Core.Mods.Resolvers;
 using Cthangover.Core.Settings;
+using Cthangover.Core.UI;
 using Cthangover.Core.UI.Dialog;
 using Cthangover.Core.UI.Event;
 using Cthangover.Core.UI.Executable;
@@ -22,7 +23,7 @@ namespace Cthangover.Core.Scenes
     /// executable events from C# attributes and .scenario files, applies scene defaults
     /// (random background, ambient audio), and routes to native Godot scenes for menus
     /// and battles. Manages the <see cref="ExecutableMainEventChain"/> queue and
-    /// coordinates with <see cref="SceneSubscriptionRegistry"/> for enter/exit hooks.
+    /// drives scene enter/exit lifecycle events consumed by mod GUI and gameplay hooks.
     /// </summary>
     public partial class SceneManager : Node
     {
@@ -156,7 +157,7 @@ namespace Cthangover.Core.Scenes
             ModManager.Instance.Initialize();
             SceneEventRegistry.Initialize();
             allScenes = SceneDefinitions.Collect();
-            SceneSubscriptionRegistry.Initialize();
+            UiRegistry.Initialize();
             ModInitializerRegistry.NotifyResourcesReady();
             ModSettingsRegistry.LoadAll();
             isInitialized = true;
@@ -195,7 +196,7 @@ namespace Cthangover.Core.Scenes
         /// enqueued in the <see cref="ExecutableMainEventChain"/>. If no events exist,
         /// falls back to the scene's <see cref="SceneDefinition.DefaultScenario"/>.
         /// Godot-native scenes (mainmenu, battle) are routed through <see cref="GodotSceneService"/>.
-        /// Runs enter/exit subscriptions from <see cref="SceneSubscriptionRegistry"/>,
+        /// Publishes enter/exit lifecycle events consumed by mod hooks,
         /// applies a random default background, and updates music/ambient.
         /// </summary>
         /// <param name="sceneName">The identifier of the target scene.</param>

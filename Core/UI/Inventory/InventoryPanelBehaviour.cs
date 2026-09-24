@@ -60,7 +60,7 @@ namespace Cthangover.Core.UI.Inventory
         private int _dropQuantity = 1;
         private readonly List<InventoryItemBehaviour> _itemCells = new();
         private CharacterTargetPanel _targetPanel;
-        private PackedScene _itemScene;
+        private ModScenePrefab _itemScene;
         private System.Action<string, int> _onInventoryChange;
 
         private const int Columns = 6;
@@ -104,7 +104,7 @@ namespace Cthangover.Core.UI.Inventory
             SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
             MouseFilter = MouseFilterEnum.Stop;
 
-            _itemScene = GD.Load<PackedScene>("res://scenes/ui/inventory_item.tscn");
+            _itemScene = new ModScenePrefab("scenes/ui/inventory_item.tscn");
 
             var bg = new ColorRect();
             bg.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);

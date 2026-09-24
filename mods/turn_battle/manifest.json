@@ -1,0 +1,11 @@
+{
+  "id": "turn_battle",
+  "name": "Пошаговый бой",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Turn-based battle GUI: battle scene, victory/defeat screens, EXP and loot reports",
+  "sources": [
+    "src/**/*.cs"
+  ],
+  "depends": [ "core>=1", "interface>=1" ]
+}

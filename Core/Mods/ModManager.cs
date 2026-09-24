@@ -7,6 +7,7 @@ using System.Threading;
 using Cthangover.Core.Factories;
 using Cthangover.Core.Interactive;
 using Cthangover.Core.Scenes;
+using Cthangover.Core.UI;
 using Cthangover.Core.Mods.Patches;
 using Cthangover.Core.Mods.Providers;
 using Cthangover.Core.Mods.Resolvers;
@@ -98,6 +99,9 @@ namespace Cthangover.Core.Mods
             foreach (var resolver in resolvers.Values)
                 resolver.ClearCache();
             ModConflictRegistry.Clear();
+            UiRegistry.Clear();
+            UiHost.Instance?.ClearAll();
+            Scenes.BattleSceneRegistry.Clear();
             registry.Reload();
         }
 
@@ -113,6 +117,9 @@ namespace Cthangover.Core.Mods
             foreach (var resolver in resolvers.Values)
                 resolver.ClearCache();
             ModConflictRegistry.Clear();
+            UiRegistry.Clear();
+            UiHost.Instance?.ClearAll();
+            Scenes.BattleSceneRegistry.Clear();
         }
 
         public void RegisterResolver(IModAssetResolver resolver)

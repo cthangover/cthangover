@@ -175,7 +175,22 @@ namespace Cthangover.Core.Scenes
 				return;
 
 			GameLogger.Log("SCENE", $"PerformSceneSwitch: changing scene to '{pendingScenePath}'...");
-			tree.ChangeSceneToFile(pendingScenePath);
+
+			if (IsModScene(pendingScenePath))
+			{
+				var node = TscnScenes.LoadAndBuild(pendingScenePath);
+				if (node == null)
+				{
+					GameLogger.Log("SCENE", $"PerformSceneSwitch: failed to build mod scene '{pendingScenePath}'", LogLevel.Error);
+					return;
+				}
+				tree.ChangeSceneToNode(node);
+			}
+			else
+			{
+				tree.ChangeSceneToFile(pendingScenePath);
+			}
+
 			GameLogger.Log("SCENE", $"PerformSceneSwitch: scene changed to '{pendingScenePath}' OK");
 
 			CallDeferred(nameof(PatchShaderMaterialsAfterLoad));
@@ -244,6 +259,16 @@ namespace Cthangover.Core.Scenes
 			IsTransitioning = false;
 		}
 
+		/// <summary>
+		/// True when the path points at a mod-provided scene (mod-relative, no
+		/// <c>res://</c> prefix). Native project scenes keep the engine loader;
+		/// mod scenes are built by <see cref="TscnScenes"/> and swapped in with
+		/// <see cref="SceneTree.ChangeSceneToNode"/>.
+		/// </summary>
+		private static bool IsModScene(string scenePath)
+			=> !string.IsNullOrEmpty(scenePath)
+			   && !scenePath.StartsWith("res://", StringComparison.OrdinalIgnoreCase);
+
 		private void PatchShaderMaterialsAfterLoad()
 		{
 			GameLogger.Log("SCENE", "PatchShaderMaterialsAfterLoad: START");
@@ -275,7 +300,7 @@ namespace Cthangover.Core.Scenes
 				return;
 			}
 
-			sceneManager?.SwitchScene(sceneType.ToString());
+			GameLogger.Log("SCENE", $"SwitchScene: no scene path registered for '{sceneType}'", LogLevel.Error);
 		}
 
 		/// <summary>
@@ -299,7 +324,7 @@ namespace Cthangover.Core.Scenes
 		private static string GetScenePath(GodotSceneType type)
 		{
 			if (type == GodotSceneType.Battle)
-				return "res://scenes/battle/battle.tscn";
+				return BattleSceneRegistry.ScenePath;
 			if (type == GodotSceneType.MainMenu)
 				return "res://scenes/menu/main_menu.tscn";
 			if (type == GodotSceneType.BaseScene)

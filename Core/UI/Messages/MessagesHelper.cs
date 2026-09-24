@@ -9,7 +9,7 @@ namespace Cthangover.Core.UI.Messages
     /// Static factory for floating UI messages (like "Quest updated" or item
     /// pickup notifications). Manages a cycling position index of 0-5 so
     /// consecutive messages stack vertically without overlapping. Each message
-    /// is instantiated from Message.tscn and parented to the Background node
+    /// is instantiated from message.tscn and parented to the Background node
     /// (found via scene tree search). Messages auto-fade and self-destruct
     /// via UiMessage's OnUpdate.
     /// </summary>
@@ -18,7 +18,7 @@ namespace Cthangover.Core.UI.Messages
         private const int maxMessageIndex = 5;
         private static int lastMessageIndex = 0;
 
-        private static PackedScene prefab;
+        private static ModScenePrefab prefab;
 
         private static int GetNextIndex(int index)
         {
@@ -82,7 +82,7 @@ namespace Cthangover.Core.UI.Messages
         }
 
         /// <summary>
-        /// Instantiates a <see cref="UiMessage"/> from <c>Message.tscn</c>, parents
+        /// Instantiates a <see cref="UiMessage"/> from <c>message.tscn</c>, parents
         /// it to the Background node, and configures it for display and auto-fade.
         /// </summary>
         /// <param name="position">Y-offset in pixels for this message.</param>
@@ -92,7 +92,7 @@ namespace Cthangover.Core.UI.Messages
         public static void AddMessage(float position, string text, Color color, float speed = 1f)
         {
             if (prefab == null)
-                prefab = GD.Load<PackedScene>("res://scenes/ui/Message.tscn");
+                prefab = new ModScenePrefab("scenes/ui/message.tscn");
 
             var instance = prefab.Instantiate<UiMessage>();
             var background = SceneContextNode.FindNode<Control>("Background");

@@ -1,179 +1,86 @@
 using System.Collections.Generic;
+using Cthangover.Core.Factories.Impls;
+using Cthangover.Core.Mods;
 using Cthangover.Core.Scenes;
-using Cthangover.Core.UI.CharacterPanel;
-using Cthangover.Core.UI.Inventory;
-using Cthangover.Core.UI.Menu;
-using Cthangover.Core.UI.Quests;
-using Cthangover.Core.UI.SkillsPanel;
-using Cthangover.Core.UI.Tool;
 using Cthangover.Core.Utils;
 using Godot;
 
 namespace Cthangover.Core.UI.Tool
 {
     /// <summary>
-    /// Main toolbar/HUD container. Manages a set of named Widget instances
-    /// (map, inventory bag, skills, cards) and toggles between them via Switch(),
-    /// auto-hiding all others. Buttons are wired by name from an "Buttons"
-    /// HBoxContainer child, supporting both regular Buttons and TextureButtons.
-    /// AddToolButtons dynamically creates buttons for mod-registered tools from
-    /// ToolBoxButtonFactory. Updates the save icon visibility based on
-    /// SceneManager.IsSaveAllowedForCurrentScene. FindWidget uses recursive
-    /// tree search so widgets can be placed anywhere in the scene hierarchy.
+    /// Main toolbar/HUD container (the <c>TopView</c> shell node). It no longer
+    /// knows any concrete panel: buttons for mod-provided panels are handed to it
+    /// by <see cref="UiBuilder"/> from <see cref="UiRegistry.PanelEntries"/>, and
+    /// pressing one calls <see cref="UiRegistry.Toggle"/>. Tool buttons
+    /// (<see cref="IToolBoxButton"/>/<see cref="ToolFactory"/>) remain a separate,
+    /// self-registering mechanism and are added alongside the panel buttons.
     /// </summary>
     public partial class ToolBox : Control
     {
-        private Dictionary<string, Widget> tools;
+        private HBoxContainer _buttons;
         private TextureRect _saveIcon;
 
         public override void _Ready()
         {
-            tools = new Dictionary<string, Widget>
-            {
-                {"MapWidget",   FindWidget<MapWidget>()},
-                {"BagWidget",   FindWidget<InventoryPanelBehaviour>()},
-                {"CharactersWidget", FindWidget<CharacterPanelBehaviour>()},
-                {"SkillWidget", FindWidget<SkillsPanelBehaviour>()},
-                {"JournalWidget", FindWidget<QuestJournalBehaviour>()},
-            };
-
+            _buttons = GetNodeOrNull<HBoxContainer>("Buttons");
             _saveIcon = GetNodeOrNull<TextureRect>("CenterTools/Save");
             UpdateSaveIconVisibility();
 
-            var buttons = GetNodeOrNull<HBoxContainer>("Buttons");
-            if (buttons != null)
-            {
-                ConnectButton(buttons, "MapButton", OnMapClick);
-                ConnectButton(buttons, "BagButton", OnBagClick);
-                ConnectButton(buttons, "CharactersButton", OnCharactersClick);
-                ConnectButton(buttons, "SkillsButton", OnSkillsClick);
-                ConnectButton(buttons, "SettingsButton", OnSettingsClick);
-                ConnectButton(buttons, "JournalButton", OnJournalClick);
-                AddToolButtons(buttons);
-            }
-        }
-
-        private void ConnectButton(HBoxContainer container, string name, System.Action callback)
-        {
-            var btn = container.GetNodeOrNull<Button>(name);
-            if (btn != null)
-            {
-                btn.Pressed += callback;
-                return;
-            }
-            var texBtn = container.GetNodeOrNull<TextureButton>(name);
-            if (texBtn != null)
-                texBtn.Pressed += callback;
-        }
-
-        private T FindWidget<T>() where T : Widget
-        {
-            var tree = GetTree();
-            if (tree?.Root == null)
-            {
-                GameLogger.Log("TOOLBOX", $"FindWidget<{typeof(T).Name}>: tree root is null");
-                return null;
-            }
-            return FindWidgetRecursive<T>(tree.Root);
-        }
-
-        private T FindWidgetRecursive<T>(Node node) where T : Widget
-        {
-            if (node is T widget)
-            {
-                GameLogger.Log("TOOLBOX", $"FindWidget<{typeof(T).Name}>: found '{widget.Name}' in tree");
-                return widget;
-            }
-            var childCount = node.GetChildCount();
-            for (int i = 0; i < childCount; i++)
-            {
-                var result = FindWidgetRecursive<T>(node.GetChild(i));
-                if (result != null)
-                    return result;
-            }
-            return null;
-        }
-
-        private void Switch(string widgetName)
-        {
-            if (!tools.TryGetValue(widgetName, out var widget) || widget == null)
-            {
-                GameLogger.Log("TOOLBOX", $"switch '{widgetName}' failed: widget not found");
-                return;
-            }
-
-            GameLogger.Log("TOOLBOX", $"switch to '{widgetName}'");
-
-            foreach (var tool in tools.Values)
-            {
-                if (tool == null)
-                    continue;
-                if (tool == widget)
-                    tool.Switch();
-                else
-                    tool.Hide();
-            }
+            AddToolButtons(_buttons);
         }
 
         /// <summary>
-        /// Opens the in-game <see cref="GameMenu"/>. Refreshes the save button state first
-        /// so it correctly reflects whether the current scene allows saving.
+        /// Materializes a toolbar button for every entry. Called once per shell by
+        /// <see cref="UiBuilder"/>; entries arrive pre-sorted by the registry
+        /// (button index, then mod load order, then id).
         /// </summary>
-        public void OnSettingsClick()
+        public void ApplyPanelButtons(IReadOnlyList<UiEntry> entries)
         {
-            GameLogger.Log("TOOLBOX", "settings button clicked");
-            var gameMenu = SceneContextNode.FindNode<GameMenu>("GameMenu");
-            if (gameMenu != null)
+            if (_buttons == null || entries == null)
+                return;
+
+            foreach (var entry in entries)
+                _buttons.AddChild(CreatePanelButton(entry));
+        }
+
+        private static BaseButton CreatePanelButton(UiEntry entry)
+        {
+            var title = TranslationServer.Translate(entry.Button.Locale);
+            var icon = UIIconFactory.Instance.Get(entry.Button.Icon);
+
+            BaseButton button;
+            if (icon != null)
             {
-                gameMenu.RefreshSaveButton();
-                gameMenu.Visible = true;
+                button = new TextureButton
+                {
+                    TextureNormal = icon,
+                    CustomMinimumSize = new Vector2(60, 60),
+                    SizeFlagsVertical = SizeFlags.ShrinkCenter,
+                    IgnoreTextureSize = true,
+                    StretchMode = TextureButton.StretchModeEnum.KeepAspectCentered
+                };
             }
-        }
+            else
+            {
+                button = new Button
+                {
+                    Text = title,
+                    CustomMinimumSize = new Vector2(60, 60),
+                    SizeFlagsVertical = SizeFlags.ShrinkCenter
+                };
+            }
 
-        /// <summary>Switches to the inventory bag widget, hiding all other toolbox widgets.</summary>
-        public void OnBagClick()
-        {
-            GameLogger.Log("TOOLBOX", "bag button clicked");
-            Switch("BagWidget");
-        }
-
-        /// <summary>Switches to the skills widget, hiding all other toolbox widgets.</summary>
-        public void OnSkillsClick()
-        {
-            GameLogger.Log("TOOLBOX", "skills button clicked");
-            Switch("SkillWidget");
-        }
-
-        /// <summary>Switches to the cards widget, hiding all other toolbox widgets.</summary>
-        public void OnCardsClick()
-        {
-            GameLogger.Log("TOOLBOX", "cards button clicked");
-            Switch("CardsWidget");
-        }
-
-        /// <summary>Switches to the map widget, hiding all other toolbox widgets.</summary>
-        public void OnMapClick()
-        {
-            GameLogger.Log("TOOLBOX", "map button clicked");
-            Switch("MapWidget");
-        }
-
-        /// <summary>Switches to the character panel widget, hiding all other toolbox widgets.</summary>
-        public void OnCharactersClick()
-        {
-            GameLogger.Log("TOOLBOX", "characters button clicked");
-            Switch("CharactersWidget");
-        }
-
-        /// <summary>Switches to the quest journal widget, hiding all other toolbox widgets.</summary>
-        public void OnJournalClick()
-        {
-            GameLogger.Log("TOOLBOX", "journal button clicked");
-            Switch("JournalWidget");
+            var id = entry.Id;
+            button.TooltipText = title;
+            button.Pressed += () => UiRegistry.Toggle(id);
+            return button;
         }
 
         private void AddToolButtons(HBoxContainer container)
         {
+            if (container == null)
+                return;
+
             foreach (var buttonDef in ToolBoxButtonFactory.Instance.GetVisible())
             {
                 var toolId = buttonDef.ToolId;
@@ -190,7 +97,7 @@ namespace Cthangover.Core.UI.Tool
                     {
                         TextureNormal = icon,
                         CustomMinimumSize = new Vector2(60, 60),
-                        SizeFlagsVertical = Control.SizeFlags.ShrinkCenter,
+                        SizeFlagsVertical = SizeFlags.ShrinkCenter,
                         IgnoreTextureSize = true,
                         StretchMode = TextureButton.StretchModeEnum.KeepAspectCentered
                     };
@@ -201,7 +108,7 @@ namespace Cthangover.Core.UI.Tool
                     {
                         Text = title,
                         CustomMinimumSize = new Vector2(60, 60),
-                        SizeFlagsVertical = Control.SizeFlags.ShrinkCenter
+                        SizeFlagsVertical = SizeFlags.ShrinkCenter
                     };
                 }
 
@@ -226,7 +133,5 @@ namespace Cthangover.Core.UI.Tool
                 return;
             _saveIcon.Visible = SceneManager.IsSaveAllowedForCurrentScene();
         }
-
     }
-
 }

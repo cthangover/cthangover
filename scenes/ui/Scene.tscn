@@ -1,14 +1,8 @@
-[gd_scene format=3 uid="uid://bqvxi01kodugp"]
+[gd_scene format=3 uid="uid://f0ir82p46nsr"]
 
 [ext_resource type="PackedScene" uid="uid://bw5sfp66lf0jw" path="res://scenes/ui/view_box.tscn" id="1_viewbox"]
 [ext_resource type="PackedScene" path="res://scenes/ui/dialog_canvas.tscn" id="2_canvas"]
 [ext_resource type="PackedScene" uid="uid://d3m4jm0xk8ruc" path="res://scenes/ui/top_view.tscn" id="3_topview"]
-[ext_resource type="PackedScene" path="res://scenes/ui/inventory_panel.tscn" id="5_inventory"]
-[ext_resource type="PackedScene" path="res://scenes/menu/game_menu.tscn" id="6_gamemenu"]
-[ext_resource type="PackedScene" uid="uid://boo65s3v3vn2c" path="res://scenes/ui/character_panel/character_panel.tscn" id="7_charpanel"]
-[ext_resource type="PackedScene" path="res://scenes/ui/skills_panel/skills_panel.tscn" id="8_skillspanel"]
-[ext_resource type="PackedScene" path="res://scenes/ui/map_widget.tscn" id="9_mapwidget"]
-[ext_resource type="PackedScene" path="res://scenes/ui/quest_journal.tscn" id="10_questjournal"]
 [ext_resource type="Script" uid="uid://r55amt8dr0kd" path="res://Core/UI/Messages/NotificationPanel.cs" id="11_notifications"]
 
 [node name="Scene" type="Control" unique_id=610561430]
@@ -55,30 +49,6 @@ offset_right = 400.0
 offset_bottom = 230.0
 mouse_filter = 2
 script = ExtResource("11_notifications")
-
-[node name="InventoryPanel" parent="." unique_id=932324416 instance=ExtResource("5_inventory")]
-visible = false
-layout_mode = 1
-
-[node name="CharacterPanel" parent="." unique_id=815860912 instance=ExtResource("7_charpanel")]
-visible = false
-layout_mode = 1
-
-[node name="SkillsPanel" parent="." unique_id=368688682 instance=ExtResource("8_skillspanel")]
-visible = false
-layout_mode = 1
-
-[node name="GameMenu" parent="." unique_id=1216771226 instance=ExtResource("6_gamemenu")]
-visible = false
-layout_mode = 1
-
-[node name="MapWidget" parent="." unique_id=234196194 instance=ExtResource("9_mapwidget")]
-visible = false
-layout_mode = 1
-
-[node name="QuestJournal" parent="." unique_id=975568292 instance=ExtResource("10_questjournal")]
-visible = false
-layout_mode = 1
 
 [node name="ModLastPanel" type="Control" parent="." unique_id=1901487756]
 layout_mode = 1

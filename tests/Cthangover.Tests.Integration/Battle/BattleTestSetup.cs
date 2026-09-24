@@ -2,6 +2,7 @@
 using Cthangover.Core.Battle;
 using Cthangover.Core.Mods;
 using Cthangover.Core.Mods.Resolvers;
+using Cthangover.Core.Scenes;
 using Cthangover.Core.Settings;
 using Cthangover.Core.Utils;
 using Godot;
@@ -11,7 +12,7 @@ namespace Cthangover.Core.Autotest
     /// <summary>
     /// Prepares a deterministic battle encounter for <c>BattleTestScene</c>.
     /// The node is placed as the first sibling before the instantiated
-    /// <c>Battle.tscn</c>, so Godot runs its <c>_Ready</c> before the battle
+    /// <c>battle.tscn</c>, so Godot runs its <c>_Ready</c> before the battle
     /// scene reads <see cref="RuntimeData.BattleData"/> and the battle core
     /// registry. Mods are initialized synchronously first — otherwise
     /// CharacterFactory and BattleCoreRegistry stay empty and the battle
@@ -55,6 +56,19 @@ namespace Cthangover.Core.Autotest
             runtime.BattleData = data;
 
             GameLogger.Log("BATTLE_TEST", $"BattleTestSetup: core={core}, party=[{PartyMember}], enemies={data.EnemiesCards.Count}, speed=x{MaxBattleSpeed}");
+
+            var battleScene = TscnScenes.LoadAndBuild("scenes/battle/battle.tscn");
+            if (battleScene == null)
+            {
+                GameLogger.Log("BATTLE_TEST", "BattleTestSetup: failed to build mod battle scene 'scenes/battle/battle.tscn'", LogLevel.Error);
+                GetTree().Quit(1);
+                return;
+            }
+
+            // _Ready runs while the test root is still setting up its children,
+            // so a direct AddChild is rejected; defer until the tree is free.
+            GetParent().CallDeferred(Node.MethodName.AddChild, battleScene);
+            GameLogger.Log("BATTLE_TEST", $"BattleTestSetup: battle scene built, deferred attach ({battleScene.GetType().Name})");
         }
 
         /// <summary>

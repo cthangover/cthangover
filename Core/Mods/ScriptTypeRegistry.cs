@@ -30,6 +30,40 @@ namespace Cthangover.Core.Mods
 
         private static List<(string ModId, int Priority)> _orderedModIds;
 
+        static ScriptTypeRegistry()
+        {
+            RegisterCoreAssembly(typeof(ScriptTypeRegistry).Assembly);
+        }
+
+        /// <summary>
+        /// Registers the main game assembly's Node types as the lowest-priority
+        /// fallback. Mod-provided scenes reference core behaviours by their
+        /// <c>res://Core/...cs</c> path; <see cref="Resolve"/> has no path entry for
+        /// them, so it falls through to <see cref="ResolveByName"/>, which needs
+        /// these types. Mod assemblies registered later still win because their
+        /// name maps are consulted before the fallback list.
+        /// </summary>
+        public static void RegisterCoreAssembly(Assembly assembly)
+        {
+            if (assembly == null)
+                return;
+
+            try
+            {
+                foreach (var type in assembly.GetTypes())
+                {
+                    if (!type.IsClass || type.IsAbstract || !typeof(Godot.Node).IsAssignableFrom(type))
+                        continue;
+                    if (!_allTypes.Contains(type))
+                        _allTypes.Add(type);
+                }
+            }
+            catch (Exception ex)
+            {
+                GameLogger.Log("MODS", $"ScriptTypeRegistry: failed to scan core assembly: {ex.Message}", LogLevel.Error);
+            }
+        }
+
         public static void SetModOrder(List<(string ModId, int Priority)> orderedMods)
         {
             _orderedModIds = orderedMods;
@@ -165,6 +199,7 @@ namespace Cthangover.Core.Mods
             _modNameToType.Clear();
             _allTypes.Clear();
             _orderedModIds = null;
+            RegisterCoreAssembly(typeof(ScriptTypeRegistry).Assembly);
         }
 
         private static string NormalizePath(string path)

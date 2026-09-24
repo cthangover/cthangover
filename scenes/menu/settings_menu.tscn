@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://gqdtni3liast"]
+[gd_scene format=3 uid="uid://dbhnl1kf3hvt7"]
 
 [ext_resource type="Script" uid="uid://bjgxbheqsar5r" path="res://Core/UI/Menu/SettingsMenu.cs" id="SettingsMenuScript"]
 
@@ -59,13 +59,13 @@ size_flags_vertical = 3
 tab_alignment = 1
 current_tab = 0
 
-[node name="GeneralMargin" type="MarginContainer" parent="Panel/Margin/VBox/Tabs"]
+[node name="GeneralMargin" type="MarginContainer" parent="Panel/Margin/VBox/Tabs" unique_id=286157637]
 layout_mode = 2
-metadata/_tab_index = 0
 theme_override_constants/margin_left = 16
 theme_override_constants/margin_top = 12
 theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 12
+metadata/_tab_index = 0
 
 [node name="General" type="VBoxContainer" parent="Panel/Margin/VBox/Tabs/GeneralMargin" unique_id=2028800899]
 layout_mode = 2
@@ -88,14 +88,14 @@ text = "Language"
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="AudioMargin" type="MarginContainer" parent="Panel/Margin/VBox/Tabs"]
-layout_mode = 2
+[node name="AudioMargin" type="MarginContainer" parent="Panel/Margin/VBox/Tabs" unique_id=1364466225]
 visible = false
-metadata/_tab_index = 1
+layout_mode = 2
 theme_override_constants/margin_left = 16
 theme_override_constants/margin_top = 12
 theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 12
+metadata/_tab_index = 1
 
 [node name="Audio" type="VBoxContainer" parent="Panel/Margin/VBox/Tabs/AudioMargin" unique_id=564523157]
 layout_mode = 2
@@ -214,14 +214,14 @@ layout_mode = 2
 text = "5%"
 horizontal_alignment = 2
 
-[node name="DisplayMargin" type="MarginContainer" parent="Panel/Margin/VBox/Tabs"]
-layout_mode = 2
+[node name="DisplayMargin" type="MarginContainer" parent="Panel/Margin/VBox/Tabs" unique_id=587106973]
 visible = false
-metadata/_tab_index = 2
+layout_mode = 2
 theme_override_constants/margin_left = 16
 theme_override_constants/margin_top = 12
 theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 12
+metadata/_tab_index = 2
 
 [node name="Display" type="VBoxContainer" parent="Panel/Margin/VBox/Tabs/DisplayMargin" unique_id=1371435162]
 layout_mode = 2
@@ -295,14 +295,14 @@ text = "VSync"
 [node name="VSyncToggle" type="CheckButton" parent="Panel/Margin/VBox/Tabs/DisplayMargin/Display/VSyncRow" unique_id=1909935663]
 layout_mode = 2
 
-[node name="ModSettingsMargin" type="MarginContainer" parent="Panel/Margin/VBox/Tabs"]
-layout_mode = 2
+[node name="ModSettingsMargin" type="MarginContainer" parent="Panel/Margin/VBox/Tabs" unique_id=1544358324]
 visible = false
-metadata/_tab_index = 3
+layout_mode = 2
 theme_override_constants/margin_left = 16
 theme_override_constants/margin_top = 12
 theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 12
+metadata/_tab_index = 3
 
 [node name="ModSettings" type="HBoxContainer" parent="Panel/Margin/VBox/Tabs/ModSettingsMargin" unique_id=2038671463]
 layout_mode = 2

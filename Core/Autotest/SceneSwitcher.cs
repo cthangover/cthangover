@@ -20,6 +20,9 @@ namespace Cthangover.Core.Autotest
 
 		private string _targetScene;
 		private string _choices;
+		private string _ui;
+		private string _load;
+		private bool _reset;
 		private float _elapsed;
 		private bool _driverAttached;
 
@@ -36,6 +39,12 @@ namespace Cthangover.Core.Autotest
 					if (float.TryParse(arg.Substring("--timeout=".Length), out var t) && t > 0)
 						TimeoutSeconds = t;
 				}
+				else if (arg.StartsWith("--ui="))
+					_ui = arg.Substring("--ui=".Length).Trim();
+				else if (arg.StartsWith("--load="))
+					_load = arg.Substring("--load=".Length).Trim();
+				else if (arg == "--reset")
+					_reset = true;
 			}
 
 			if (string.IsNullOrEmpty(_targetScene))
@@ -49,12 +58,52 @@ namespace Cthangover.Core.Autotest
 			if (s != null)
 				s.LauncherShown = true;
 
+			if (_reset)
+			{
+				GameData.Instance?.StartNewGame();
+				GameLogger.Log("TEST", "SceneSwitcher: StartNewGame() applied (simulates New Game)");
+			}
+
 			GameLogger.Log("TEST", $"SceneSwitcher: target='{_targetScene}', choices='{_choices}', timeout={TimeoutSeconds}s");
 
 			if (_targetScene.EndsWith(".tscn"))
 				LoadGodotScene(_targetScene);
 			else
 				LoadLogicalScene(_targetScene);
+
+			ScheduleLoadCheck();
+		}
+
+		/// <summary>
+		/// Test hook for arbitrary mod scenes: builds every path from <c>--load=</c>
+		/// through <see cref="TscnScenes.LoadAndBuild"/> and logs the resulting root
+		/// type. Unlike <c>--ui=</c> it needs no registry entry, so it can validate
+		/// scenes that are only reachable through other UI (e.g. mods_menu).
+		/// </summary>
+		private void ScheduleLoadCheck()
+		{
+			if (string.IsNullOrEmpty(_load))
+				return;
+
+			GetTree().CreateTimer(0.8f).Timeout += () =>
+			{
+				foreach (var raw in _load.Split(','))
+				{
+					var path = raw.Trim();
+					if (string.IsNullOrEmpty(path))
+						continue;
+
+					var node = TscnScenes.LoadAndBuild(path);
+					if (node == null)
+					{
+						GameLogger.Log("TEST", $"SceneSwitcher: load '{path}' FAILED", LogLevel.Error);
+						continue;
+					}
+
+					GameLogger.Log("TEST", $"SceneSwitcher: load '{path}' OK -> root='{node.Name}' ({node.GetType().Name})");
+					node.QueueFree();
+				}
+			};
 		}
 
 		private void LoadGodotScene(string path)
@@ -69,6 +118,7 @@ namespace Cthangover.Core.Autotest
 
 			AddChild(packed.Instantiate());
 			ScheduleDriverAttach();
+			ScheduleUiToggle();
 		}
 
 		private void LoadLogicalScene(string sceneName)
@@ -104,6 +154,96 @@ namespace Cthangover.Core.Autotest
 				sm.SwitchScene(sceneName);
 			};
 			ScheduleDriverAttach();
+			ScheduleUiToggle();
+		}
+
+		/// <summary>
+		/// Test hook for the mod GUI pipeline: after the shell is up, toggles every
+		/// id from <c>--ui=</c> through <see cref="UI.UiRegistry.Toggle"/>. This
+		/// exercises registry lookup, TscnScenes construction and core-script
+		/// resolution for mod-provided panels — failures surface as ERROR logs.
+		/// </summary>
+		private void ScheduleUiToggle()
+		{
+			if (string.IsNullOrEmpty(_ui))
+				return;
+
+			GetTree().CreateTimer(1.0f).Timeout += () =>
+			{
+				foreach (var raw in _ui.Split(','))
+				{
+					var id = raw.Trim();
+					if (string.IsNullOrEmpty(id))
+						continue;
+
+					var entry = UI.UiRegistry.Get(id);
+					if (entry == null)
+					{
+						GameLogger.Log("TEST", $"SceneSwitcher: ui entry '{id}' not found", LogLevel.Error);
+						continue;
+					}
+
+					GameLogger.Log("TEST", $"SceneSwitcher: toggling ui '{id}' ({entry.ScenePath})");
+					UI.UiRegistry.Toggle(id);
+				}
+
+				GetTree().CreateTimer(0.5f).Timeout += DumpUiState;
+			};
+		}
+
+		/// <summary>
+		/// Diagnostic dump used by the UI smoke runs: logs party/action-pool data and
+		/// the opened panels' node trees (type, visibility, size) so layout and
+		/// data-binding problems are visible in headless logs.
+		/// </summary>
+		private void DumpUiState()
+		{
+			var runtime = GameData.Instance?.Runtime;
+			if (runtime != null)
+			{
+				GameLogger.Log("TEST", $"SceneSwitcher: BattleSet=[{string.Join(",", runtime.CharacterData.BattleSet)}] "
+					+ $"chars=[{string.Join(",", runtime.CharacterData.Characters.Keys)}] "
+					+ $"actionPool=[{string.Join(",", runtime.ActionPool.ActionIds)}]");
+			}
+
+			foreach (var raw in _ui.Split(','))
+			{
+				var id = raw.Trim();
+				if (string.IsNullOrEmpty(id))
+					continue;
+
+				var node = SceneContextNode.FindNode<Control>(id);
+				if (node == null)
+				{
+					GameLogger.Log("TEST", $"SceneSwitcher: dump '{id}': instance not found", LogLevel.Error);
+					continue;
+				}
+
+				GameLogger.Log("TEST", $"SceneSwitcher: dump '{id}' -> {node.GetType().Name}");
+				DumpNode(node, 1);
+			}
+		}
+
+		private static void DumpNode(Node node, int depth)
+		{
+			if (node == null || depth > 14)
+				return;
+
+			var indent = new string(' ', depth * 2);
+			var text = node switch
+			{
+				Label label => label.Text,
+				RichTextLabel rich => rich.Text,
+				_ => null
+			};
+
+			if (node is Control control)
+				GameLogger.Log("TEST", $"  {indent}{node.Name} [{node.GetType().Name}] vis={control.Visible} size={control.Size} text='{text}'");
+			else
+				GameLogger.Log("TEST", $"  {indent}{node.Name} [{node.GetType().Name}]");
+
+			foreach (var child in node.GetChildren())
+				DumpNode(child, depth + 1);
 		}
 
 		private void ScheduleDriverAttach()

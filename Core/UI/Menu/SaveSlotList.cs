@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Cthangover.Core.Scenes;
 using Cthangover.Core.Settings;
 using Godot;
 
@@ -15,7 +16,7 @@ namespace Cthangover.Core.UI.Menu
     /// </summary>
     public partial class SaveSlotList : Control
     {
-        private PackedScene _itemScene;
+        private ModScenePrefab _itemScene;
         private readonly List<SaveSlotItem> _items = new();
 
         /// <summary>
@@ -40,7 +41,7 @@ namespace Cthangover.Core.UI.Menu
 
         public override void _Ready()
         {
-            _itemScene = GD.Load<PackedScene>("res://scenes/menu/save_slot_item.tscn");
+            _itemScene = new ModScenePrefab("scenes/menu/save_slot_item.tscn");
             Resized += OnResized;
         }
 

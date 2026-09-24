@@ -34,7 +34,6 @@ namespace Cthangover.Core.Scenes
         private readonly Dictionary<string, ParsedScene> _parsedCache = new();
         private readonly Dictionary<string, Node> _builtCache = new();
         private readonly TscnParser _parser = new();
-        private readonly SceneBuilder _builder = new();
         private readonly HashSet<string> _buildingPaths = new();
         private ParsedScene _resolvingScene;
 
@@ -127,12 +126,13 @@ namespace Cthangover.Core.Scenes
                     return null;
                 }
 
+                var previousScene = _resolvingScene;
                 _resolvingScene = parsed;
-                var root = _builder.Build(
+                var root = new SceneBuilder().Build(
                     parsed,
                     InstanceLoader,
                     ResolveExtResource);
-                _resolvingScene = null;
+                _resolvingScene = previousScene;
 
                 if (root != null)
                 {

@@ -47,15 +47,15 @@ namespace Cthangover.Core.Battle
 		/// </summary>
 		public Actions.BattleActionMachine BattleActionMachine { get; private set; }
 
-		private BattleSpeedControl _battleSpeedControl;
+		private IBattleSpeedControl _battleSpeedControl;
 		private Widget deadground;
 		private Widget winground;
 
 		/// <summary>
 		/// Per-character EXP earned during this battle, keyed by
 		/// <see cref="Character.ID"/>. Populated by
-		/// <see cref="RecordEnemyDefeated"/>; consumed by
-		/// <see cref="WingroundBehaviour"/> on victory.
+		/// <see cref="RecordEnemyDefeated"/>; consumed by the victory screen
+		/// provided by the turn-battle GUI mod.
 		/// </summary>
 		public Dictionary<string, int> PlayerExpGained { get; private set; } = new();
 		/// <summary>
@@ -155,7 +155,7 @@ namespace Cthangover.Core.Battle
 			}
 
 			BattleActionMachine = GetNodeOrNull<Actions.BattleActionMachine>("ToolPanel/BattleActionMachine");
-			_battleSpeedControl = GetNodeOrNull<BattleSpeedControl>("BattleSpeedControl");
+			_battleSpeedControl = GetNodeOrNull<Control>("BattleSpeedControl") as IBattleSpeedControl;
 			deadground = GetNodeOrNull<Widget>("Deadground");
 
 			winground = GetNodeOrNull<Widget>("Winground");

@@ -105,10 +105,11 @@ namespace Cthangover.Core.Mods
         public string Version { get; set; }
 
         /// <summary>
-        /// Scene event bindings — each entry describes which wrapper
-        /// template to inject into which scene, on which trigger.
+        /// Mod-provided GUI declarations. Each entry is either a toolbar-toggled
+        /// panel or a code-driven overlay, anchored to a named slot of the shell.
+        /// Collected and validated by <c>UiRegistry</c>.
         /// </summary>
-        [JsonPropertyName("subscriptions")]
-        public List<SubscriptionEntry> Subscriptions { get; set; }
+        [JsonPropertyName("ui")]
+        public List<UiEntry> Ui { get; set; }
     }
 }

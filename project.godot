@@ -35,6 +35,7 @@ SceneContextNode="*res://Core/Scenes/SceneContextNode.cs"
 AudioService="*res://Core/Audio/AudioService.cs"
 MusicPlayer="*res://Core/Audio/MusicPlayerBehaviour.cs"
 ModEventBus="*res://Core/Events/ModEventBus.cs"
+UiHost="*res://Core/UI/UiHost.cs"
 
 [csharp]
 

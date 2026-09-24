@@ -1,5 +1,6 @@
 using System.Linq;
 using Cthangover.Core.Factories.Impls;
+using Cthangover.Core.Scenes;
 using Cthangover.Core.Settings;
 using Godot;
 
@@ -20,7 +21,7 @@ namespace Cthangover.Core.UI.CharacterPanel
 		private Label _nameLabel;
 		private VBoxContainer _slotsContainer;
 		private CharacterInfoData _characterInfo;
-		private PackedScene _actionCardScene;
+		private ModScenePrefab _actionCardScene;
 
 		public override void _Ready()
 		{
@@ -45,7 +46,7 @@ namespace Cthangover.Core.UI.CharacterPanel
 		/// Populates the card from a <see cref="CharacterInfoData"/> entry and its factory template.
 		/// Loads portrait, name, and fills action slots from <see cref="CharacterInfoData.ActionSlots"/>.
 		/// </summary>
-		public void SetCharacter(string characterId, CharacterInfoData info, PackedScene actionCardScene)
+		public void SetCharacter(string characterId, CharacterInfoData info, ModScenePrefab actionCardScene)
 		{
 			CharacterId = characterId;
 			_characterInfo = info;

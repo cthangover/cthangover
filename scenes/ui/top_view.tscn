@@ -1,6 +1,5 @@
 [gd_scene format=3 uid="uid://d3m4jm0xk8ruc"]
 
-[ext_resource type="Script" uid="uid://c0u0adtwmfjbx" path="res://Core/UI/Tool/ButtonModIconLoader.cs" id="ButtonModIconLoaderScript"]
 [ext_resource type="Script" uid="uid://bf3qln30mdj5w" path="res://Core/UI/Lights/LampBehaviour.cs" id="LampBehaviourScript"]
 [ext_resource type="Script" uid="uid://brtwe4dkubjxe" path="res://Core/UI/Menu/SaveIcon.cs" id="TextureRectModIconLoaderScript"]
 [ext_resource type="Script" uid="uid://6a38jpevrxy4" path="res://Core/UI/Tool/TimeController.cs" id="TimeControllerScript"]
@@ -58,66 +57,6 @@ offset_right = -10.0
 grow_horizontal = 0
 grow_vertical = 2
 alignment = 2
-
-[node name="MapButton" type="TextureButton" parent="Buttons" unique_id=714882614]
-custom_minimum_size = Vector2(60, 60)
-layout_mode = 2
-size_flags_horizontal = 0
-size_flags_vertical = 4
-ignore_texture_size = true
-stretch_mode = 4
-script = ExtResource("ButtonModIconLoaderScript")
-IconId = "map"
-
-[node name="BagButton" type="TextureButton" parent="Buttons" unique_id=418215445]
-custom_minimum_size = Vector2(60, 60)
-layout_mode = 2
-size_flags_horizontal = 0
-size_flags_vertical = 4
-ignore_texture_size = true
-stretch_mode = 4
-script = ExtResource("ButtonModIconLoaderScript")
-IconId = "bag"
-
-[node name="CharactersButton" type="TextureButton" parent="Buttons" unique_id=83551271]
-custom_minimum_size = Vector2(60, 60)
-layout_mode = 2
-size_flags_horizontal = 0
-size_flags_vertical = 4
-ignore_texture_size = true
-stretch_mode = 4
-script = ExtResource("ButtonModIconLoaderScript")
-IconId = "cards"
-
-[node name="SkillsButton" type="TextureButton" parent="Buttons" unique_id=1347720480]
-custom_minimum_size = Vector2(60, 60)
-layout_mode = 2
-size_flags_horizontal = 0
-size_flags_vertical = 4
-ignore_texture_size = true
-stretch_mode = 4
-script = ExtResource("ButtonModIconLoaderScript")
-IconId = "skills"
-
-[node name="SettingsButton" type="TextureButton" parent="Buttons" unique_id=1906236872]
-custom_minimum_size = Vector2(60, 60)
-layout_mode = 2
-size_flags_horizontal = 0
-size_flags_vertical = 4
-ignore_texture_size = true
-stretch_mode = 4
-script = ExtResource("ButtonModIconLoaderScript")
-IconId = "settings"
-
-[node name="JournalButton" type="TextureButton" parent="Buttons" unique_id=5555555555]
-custom_minimum_size = Vector2(60, 60)
-layout_mode = 2
-size_flags_horizontal = 0
-size_flags_vertical = 4
-ignore_texture_size = true
-stretch_mode = 4
-script = ExtResource("ButtonModIconLoaderScript")
-IconId = "journal"
 
 [node name="CenterTools" type="Control" parent="." unique_id=1513615082]
 layout_mode = 1

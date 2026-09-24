@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://hl0j46kh1rmc"]
+[gd_scene format=3 uid="uid://s2crgjfjcor1"]
 
 [ext_resource type="Script" uid="uid://dq5snl02fmi16" path="res://Core/UI/Menu/ModsMenu.cs" id="ModsMenuScript"]
 

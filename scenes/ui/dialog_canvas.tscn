@@ -1,7 +1,6 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://Core/UI/Dialog/DialogCanvas.cs" id="1_canvas"]
-[ext_resource type="PackedScene" path="res://scenes/ui/dialog_box.tscn" id="2_dialogbox"]
 
 [node name="DialogCanvas" type="Control"]
 layout_mode = 3
@@ -11,5 +10,3 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_canvas")
-
-[node name="DialogBox" parent="." instance=ExtResource("2_dialogbox")]

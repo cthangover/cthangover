@@ -42,12 +42,12 @@ namespace Cthangover.Core.UI.Menu
             _btnKeys[GetNode<Button>("MenuContainer/ExitBtn")] = "menu/exit";
             _btnKeys[GetNode<Button>("MenuContainer/ToolsBtn")] = "menu/tools";
 
-            _settingsMenu = GD.Load<PackedScene>("res://scenes/menu/settings_menu.tscn").Instantiate<SettingsMenu>();
+            _settingsMenu = new ModScenePrefab("scenes/menu/settings_menu.tscn").Instantiate<SettingsMenu>();
             _settingsMenu.Visible = false;
             _settingsMenu.LanguageChanged += RefreshButtons;
             AddChild(_settingsMenu);
 
-            _saveLoadMenu = GD.Load<PackedScene>("res://scenes/menu/save_load_menu.tscn").Instantiate<SaveLoadMenu>();
+            _saveLoadMenu = new ModScenePrefab("scenes/menu/save_load_menu.tscn").Instantiate<SaveLoadMenu>();
             _saveLoadMenu.Visible = false;
             AddChild(_saveLoadMenu);
             
@@ -136,7 +136,7 @@ namespace Cthangover.Core.UI.Menu
         /// </summary>
         public void OnNewGameClick()
         {
-            GameData.Instance?.ResetRuntime();
+            GameData.Instance?.StartNewGame();
             var sceneManager = GetNode<SceneManager>("/root/SceneManager");
             if (sceneManager != null)
             {
@@ -182,7 +182,7 @@ namespace Cthangover.Core.UI.Menu
         /// </summary>
         public void OnModsClick()
         {
-            var modsMenu = GD.Load<PackedScene>("res://scenes/menu/mods_menu.tscn").Instantiate<ModsMenu>();
+            var modsMenu = new ModScenePrefab("scenes/menu/mods_menu.tscn").Instantiate<ModsMenu>();
             AddChild(modsMenu);
         }
 

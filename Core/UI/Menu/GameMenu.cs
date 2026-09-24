@@ -37,17 +37,29 @@ namespace Cthangover.Core.UI.Menu
             _btnKeys[GetNode<Button>("Panel/Margin/VBox/MainMenuBtn")] = "menu/main_menu";
             _btnKeys[GetNode<Button>("Panel/Margin/VBox/ExitBtn")] = "menu/exit";
 
-            _settingsMenu = GD.Load<PackedScene>("res://scenes/menu/settings_menu.tscn").Instantiate<SettingsMenu>();
+            _settingsMenu = new ModScenePrefab("scenes/menu/settings_menu.tscn").Instantiate<SettingsMenu>();
             _settingsMenu.Visible = false;
             _settingsMenu.LanguageChanged += RefreshButtons;
             AddChild(_settingsMenu);
 
-            _saveLoadMenu = GD.Load<PackedScene>("res://scenes/menu/save_load_menu.tscn").Instantiate<SaveLoadMenu>();
+            _saveLoadMenu = new ModScenePrefab("scenes/menu/save_load_menu.tscn").Instantiate<SaveLoadMenu>();
             _saveLoadMenu.Visible = false;
             AddChild(_saveLoadMenu);
 
             Visible = false;
             RefreshButtons();
+            VisibilityChanged += OnVisibilityChanged;
+        }
+
+        /// <summary>
+        /// Refreshes the save button whenever the menu becomes visible. The panel is
+        /// opened through <see cref="UI.UiRegistry.Toggle"/>, so this signal replaces
+        /// the old toolbar callback that used to do the refresh before showing.
+        /// </summary>
+        private void OnVisibilityChanged()
+        {
+            if (Visible)
+                RefreshSaveButton();
         }
 
         private void RefreshButtons()
