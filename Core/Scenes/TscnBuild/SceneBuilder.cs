@@ -127,7 +127,18 @@ namespace Cthangover.Core.Scenes.TscnBuild
         private static void ApplyProperties(Node node, ParsedNode parsedNode, ParsedScene scene, Func<string, Resource> extResourceResolver, Func<string, Node> instanceLoader)
         {
             var ctx = new PropertyContext(scene, instanceLoader, extResourceResolver);
-            foreach (var kvp in parsedNode.OrderedProperties) { var r = PropertyResolverRegistry.Find(kvp.Key, kvp.Value); r?.Apply(node, kvp.Key, kvp.Value, ctx); }
+            foreach (var kvp in parsedNode.OrderedProperties)
+            {
+                try
+                {
+                    var r = PropertyResolverRegistry.Find(kvp.Key, kvp.Value);
+                    r?.Apply(node, kvp.Key, kvp.Value, ctx);
+                }
+                catch (Exception ex)
+                {
+                    GameLogger.Log("TSCN_BUILD", $"SceneBuilder: failed to apply '{kvp.Key}' on '{node.Name}': {ex.Message}", LogLevel.Warning);
+                }
+            }
         }
 
         private void ApplyNodePathVars(Node node, Dictionary<string, string> nodePathVars)

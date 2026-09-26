@@ -1,11 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text.Json;
 using System.Threading;
 using Cthangover.Core.Mods;
 using Cthangover.Core.Mods.Caches;
+using Cthangover.Core.UI.Theming;
 using Cthangover.Core.Utils;
 using Godot;
 
@@ -69,6 +67,20 @@ namespace Cthangover.Core.UI.Menu
 			};
 		}
 
+		/// <summary>
+		/// Unique dictionary key for a remote entry: the same id may appear several
+		/// times when catalogs publish conflicting variants (see
+		/// <see cref="CatalogService"/>), so the first source URL disambiguates them.
+		/// </summary>
+		private static string RemoteKey(CatalogExportEntry entry)
+			=> $"{entry.Id}|{FirstSource(entry)}";
+
+		private static string FirstSource(CatalogExportEntry entry)
+			=> entry?.SourceUrls != null && entry.SourceUrls.Count > 0 ? entry.SourceUrls[0] : string.Empty;
+
+		private string SelectedSourceUrl()
+			=> FirstSource(_selectedRemoteEntry);
+
 		private void BuildNetworkHeader()
 		{
 			_refreshNetworkBtn = new Button
@@ -87,7 +99,7 @@ namespace Cthangover.Core.UI.Menu
 				SizeFlagsHorizontal = SizeFlags.ExpandFill,
 			};
 			_networkStatusLabel.AddThemeFontSizeOverride("font_size", 12);
-			_networkStatusLabel.AddThemeColorOverride("font_color", new Color(0.6f, 0.6f, 0.65f));
+			_networkStatusLabel.AddThemeColorOverride("font_color", UiTokens.Muted);
 			_tabHeaderBox.AddChild(_networkStatusLabel);
 		}
 
@@ -178,7 +190,7 @@ namespace Cthangover.Core.UI.Menu
 						SelectRemoteMod(remoteEntry, localInfo, entry);
 				});
 				_modListContainer.AddChild(entry);
-				_remoteEntries[remoteEntry.Id] = entry;
+				_remoteEntries[RemoteKey(remoteEntry)] = entry;
 			}
 		}
 
@@ -196,7 +208,6 @@ namespace Cthangover.Core.UI.Menu
 			_selectedRemoteEntry = remoteEntry;
 			_selectedDownload = remoteModEntry.SelectedDownload;
 
-			_catalogExportBtn.Visible = false;
 			_toggleBtn.Visible = false;
 
 			UpdateInstallButton();
@@ -292,14 +303,14 @@ namespace Cthangover.Core.UI.Menu
 				_installBtn.Text = TranslationServer.Translate("mods/update_button");
 				_installBtn.Disabled = false;
 				_installBtn.Visible = true;
-				_installBtn.AddThemeColorOverride("font_color", new Color(1f, 0.65f, 0.2f));
+				_installBtn.AddThemeColorOverride("font_color", UiTokens.Warning);
 			}
 			else if (cmp < 0)
 			{
 				_installBtn.Text = TranslationServer.Translate("mods/downgrade_button");
 				_installBtn.Disabled = false;
 				_installBtn.Visible = true;
-				_installBtn.AddThemeColorOverride("font_color", new Color(0.3f, 0.7f, 1f));
+				_installBtn.AddThemeColorOverride("font_color", UiTokens.Info);
 			}
 			else
 			{
@@ -312,7 +323,7 @@ namespace Cthangover.Core.UI.Menu
 					_installBtn.Text = TranslationServer.Translate("mods/overwrite_button");
 					_installBtn.Disabled = false;
 					_installBtn.Visible = true;
-					_installBtn.AddThemeColorOverride("font_color", new Color(1f, 0.4f, 0.4f));
+					_installBtn.AddThemeColorOverride("font_color", UiTokens.Danger);
 				}
 				else
 				{
@@ -361,437 +372,20 @@ namespace Cthangover.Core.UI.Menu
 				}
 			};
 
-			await ModDownloader.InstallAsync(modId, version);
+			await ModDownloader.InstallAsync(modId, version, SelectedSourceUrl());
 		}
 
 		private static Color GetStatusColor(RemoteModStatus status)
 		{
 			return status switch
 			{
-				RemoteModStatus.Installed => new Color(0.3f, 0.8f, 0.3f),
-				RemoteModStatus.UpdateAvailable => new Color(1f, 0.65f, 0.2f),
-				RemoteModStatus.NotInstalled => new Color(0.5f, 0.5f, 0.55f),
-				RemoteModStatus.ModifiedLocally => new Color(1f, 0.4f, 0.4f),
-				_ => new Color(0.6f, 0.6f, 0.6f),
+				RemoteModStatus.Installed => UiTokens.Success,
+				RemoteModStatus.UpdateAvailable => UiTokens.Warning,
+				RemoteModStatus.NotInstalled => UiTokens.Muted,
+				RemoteModStatus.ModifiedLocally => UiTokens.Danger,
+				_ => UiTokens.Muted,
 			};
 		}
-
-		private void OnCatalogExport()
-		{
-			if (string.IsNullOrEmpty(_selectedModId))
-				return;
-
-			var allMods = ModRegistry.Instance.AllDiscoveredMods;
-			if (!allMods.TryGetValue(_selectedModId, out var modInfo))
-				return;
-
-			ShowCatalogExportDialog((ModInfo)modInfo);
-		}
-
-		private void ShowCatalogExportDialog(ModInfo modInfo)
-		{
-			var window = new Window
-			{
-				Title = TranslationServer.Translate("mods/catalog_title"),
-				Unresizable = false,
-				Size = new Vector2I(560, 640),
-				Exclusive = true,
-			};
-
-			var margin = new MarginContainer();
-			margin.AddThemeConstantOverride("margin_left", 16);
-			margin.AddThemeConstantOverride("margin_right", 16);
-			margin.AddThemeConstantOverride("margin_top", 12);
-			margin.AddThemeConstantOverride("margin_bottom", 12);
-			margin.SetAnchorsPreset(LayoutPreset.FullRect);
-			window.AddChild(margin);
-
-			var scroll = new ScrollContainer
-			{
-				SizeFlagsHorizontal = SizeFlags.ExpandFill,
-				SizeFlagsVertical = SizeFlags.ExpandFill,
-			};
-			margin.AddChild(scroll);
-
-			var vbox = new VBoxContainer
-			{
-				SizeFlagsHorizontal = SizeFlags.ExpandFill,
-			};
-			vbox.AddThemeConstantOverride("separation", 8);
-			scroll.AddChild(vbox);
-
-			var manifest = modInfo.Manifest;
-
-			AddSectionLabel(vbox, "Mod Info");
-			AddReadOnlyField(vbox, "mods/id", modInfo.Id);
-			AddReadOnlyField(vbox, "mods/name", modInfo.DisplayTitle);
-			AddReadOnlyField(vbox, "mods/version", modInfo.Version ?? "—");
-			AddReadOnlyField(vbox, "mods/author", modInfo.Author ?? "—");
-
-			AddSectionLabel(vbox, "Catalog Metadata");
-			var urlEdit = AddLineEdit(vbox, "mods/catalog_download_url");
-
-			var categories = Enum.GetValues<CategoryType>();
-			var categoryList = new ItemList
-			{
-				CustomMinimumSize = new Vector2(0, 130),
-				SizeFlagsHorizontal = SizeFlags.ExpandFill,
-				SelectMode = ItemList.SelectModeEnum.Toggle,
-			};
-			var preselected = manifest.Category ?? CategoryType.Other;
-			for (var i = 0; i < categories.Length; i++)
-			{
-				categoryList.AddItem(GetCategoryDisplayName(categories[i]));
-				if ((preselected & categories[i]) != 0)
-					categoryList.Select(i, false);
-			}
-			AddLabeledControl(vbox, "mods/catalog_category", categoryList);
-
-			var tagsEdit = AddLineEdit(vbox, "mods/catalog_tags");
-
-			var changelogEdit = new TextEdit
-			{
-				CustomMinimumSize = new Vector2(0, 60),
-				SizeFlagsHorizontal = SizeFlags.ExpandFill,
-				WrapMode = TextEdit.LineWrappingMode.Boundary,
-			};
-			AddLabeledControl(vbox, "mods/catalog_changelog", changelogEdit);
-
-			var statuses = new[] { "stable", "beta", "deprecated", "archived" };
-			var statusOpt = AddOptionButton(vbox, "mods/catalog_status", statuses);
-
-			var minGameVer = AddLineEdit(vbox, "mods/catalog_min_game_version");
-			var iconUrlEdit = AddLineEdit(vbox, "mods/catalog_icon_url");
-
-			AddSectionLabel(vbox, "JSON Preview");
-			var previewEdit = new TextEdit
-			{
-				CustomMinimumSize = new Vector2(0, 160),
-				SizeFlagsHorizontal = SizeFlags.ExpandFill,
-				Editable = false,
-				WrapMode = TextEdit.LineWrappingMode.None,
-			};
-			previewEdit.AddThemeFontSizeOverride("font_size", 11);
-			vbox.AddChild(previewEdit);
-
-			var btnRow = new HBoxContainer
-			{
-				SizeFlagsHorizontal = SizeFlags.ExpandFill,
-			};
-			btnRow.AddThemeConstantOverride("separation", 8);
-
-			var copyBtn = new Button
-			{
-				Text = TranslationServer.Translate("mods/catalog_copy"),
-				SizeFlagsHorizontal = SizeFlags.ExpandFill,
-			};
-			btnRow.AddChild(copyBtn);
-
-			var exportBtn = new Button
-			{
-				Text = TranslationServer.Translate("mods/catalog_export_file"),
-				SizeFlagsHorizontal = SizeFlags.ExpandFill,
-			};
-			btnRow.AddChild(exportBtn);
-
-			var closeBtn = new Button
-			{
-				Text = TranslationServer.Translate("mods/catalog_close"),
-				SizeFlagsHorizontal = SizeFlags.ExpandFill,
-			};
-			btnRow.AddChild(closeBtn);
-
-			vbox.AddChild(btnRow);
-
-			var modsRoot = ModRegistry.ModsPath;
-
-			AddSectionLabel(vbox, "Locales");
-			var localeContainer = new VBoxContainer
-			{
-				SizeFlagsHorizontal = SizeFlags.ExpandFill,
-			};
-			localeContainer.AddThemeConstantOverride("separation", 4);
-			vbox.AddChild(localeContainer);
-
-			var addLocaleBtn = new Button
-			{
-				Text = TranslationServer.Translate("mods/catalog_add_locale"),
-				SizeFlagsHorizontal = SizeFlags.ExpandFill,
-			};
-			vbox.AddChild(addLocaleBtn);
-
-			System.Func<List<CatalogLocaleEntry>> collectLocales = null;
-			System.Action updatePreview = null;
-
-			void AddLocaleRow(string lang = "", string name = "", string desc = "")
-			{
-				var row = new HBoxContainer
-				{
-					SizeFlagsHorizontal = SizeFlags.ExpandFill,
-				};
-				row.AddThemeConstantOverride("separation", 4);
-
-				var langEdit = new LineEdit
-				{
-					CustomMinimumSize = new Vector2(44, 0),
-					PlaceholderText = "en",
-					MaxLength = 5,
-					Text = lang,
-				};
-				row.AddChild(langEdit);
-
-				var nameEdit = new LineEdit
-				{
-					SizeFlagsHorizontal = SizeFlags.ExpandFill,
-					PlaceholderText = TranslationServer.Translate("mods/catalog_locale_name"),
-					Text = name,
-				};
-				row.AddChild(nameEdit);
-
-				var descEdit = new LineEdit
-				{
-					SizeFlagsHorizontal = SizeFlags.ExpandFill,
-					PlaceholderText = TranslationServer.Translate("mods/catalog_locale_desc"),
-					Text = desc,
-				};
-				row.AddChild(descEdit);
-
-				var removeBtn = new Button { Text = "×", CustomMinimumSize = new Vector2(28, 0) };
-				removeBtn.Pressed += () =>
-				{
-					localeContainer.RemoveChild(row);
-					row.QueueFree();
-					updatePreview();
-				};
-				row.AddChild(removeBtn);
-
-				langEdit.TextChanged += _ => updatePreview();
-				nameEdit.TextChanged += _ => updatePreview();
-				descEdit.TextChanged += _ => updatePreview();
-
-				localeContainer.AddChild(row);
-			}
-
-			addLocaleBtn.Pressed += () => AddLocaleRow();
-
-			collectLocales = () =>
-			{
-				var list = new List<CatalogLocaleEntry>();
-				foreach (var child in localeContainer.GetChildren())
-				{
-					if (child is HBoxContainer row && row.GetChildCount() >= 3)
-					{
-						var lang = ((LineEdit)row.GetChild(0)).Text.Trim();
-						var name = ((LineEdit)row.GetChild(1)).Text.Trim();
-						var desc = ((LineEdit)row.GetChild(2)).Text.Trim();
-						if (!string.IsNullOrEmpty(lang))
-						{
-							list.Add(new CatalogLocaleEntry
-							{
-								Lang = lang,
-								Name = name.Length > 0 ? name : null,
-								Description = desc.Length > 0 ? desc : null,
-							});
-						}
-					}
-				}
-				if (list.Count == 0)
-				{
-					list.Add(new CatalogLocaleEntry
-					{
-						Lang = "en",
-						Name = manifest.Name,
-						Description = manifest.Description,
-					});
-				}
-				return list;
-			};
-
-			updatePreview = () =>
-			{
-				var entry = BuildEntryFromManifest(manifest);
-				entry.Downloads = new List<CatalogEntryDownload>
-				{
-					new CatalogEntryDownload
-					{
-						Version = entry.Version,
-						Urls = new List<string> { urlEdit.Text.Trim() },
-						SizeBytes = 0,
-						ArchiveSha256 = "—",
-						InstallSha256 = "—",
-					},
-				};
-				entry.Category = CollectSelectedCategories(categoryList, categories);
-				var tagsText = tagsEdit.Text.Trim();
-				entry.Tags = string.IsNullOrEmpty(tagsText)
-					? null
-					: tagsText.Split(',').Select(t => t.Trim()).Where(t => t.Length > 0).ToList();
-			entry.Downloads[0].Changelog = changelogEdit.Text.Trim().Length > 0 ? changelogEdit.Text.Trim() : null;
-			entry.Status = statuses[statusOpt.Selected];
-			var mgv = minGameVer.Text.Trim();
-			entry.MinGameVersion = mgv.Length > 0 ? mgv : null;
-			var iconUrl = iconUrlEdit.Text.Trim();
-			entry.IconUrl = iconUrl.Length > 0 ? iconUrl : null;
-			entry.Locale = collectLocales();
-				previewEdit.Text = JsonSerializer.Serialize(entry, JsonOptionsProvider.WriteIndentedIgnoreNullOptions);
-			};
-
-			updatePreview();
-
-			urlEdit.TextChanged += _ => updatePreview();
-			categoryList.ItemSelected += _ => updatePreview();
-			categoryList.MultiSelected += (_, _) => updatePreview();
-			tagsEdit.TextChanged += _ => updatePreview();
-			changelogEdit.TextChanged += () => updatePreview();
-			statusOpt.ItemSelected += _ => updatePreview();
-			minGameVer.TextChanged += _ => updatePreview();
-			iconUrlEdit.TextChanged += _ => updatePreview();
-
-			copyBtn.Pressed += () =>
-			{
-				DisplayServer.ClipboardSet(previewEdit.Text);
-				GameLogger.Log("MODS_UI", $"Copied catalog JSON for '{modInfo.Id}' to clipboard");
-			};
-
-			exportBtn.Pressed += () =>
-			{
-				var entry = BuildEntryFromManifest(manifest);
-				entry.Downloads = new List<CatalogEntryDownload>
-				{
-					new CatalogEntryDownload
-					{
-						Version = entry.Version,
-						Urls = new List<string> { urlEdit.Text.Trim() },
-						SizeBytes = 0,
-					},
-				};
-				entry.Category = CollectSelectedCategories(categoryList, categories);
-				var tagsText = tagsEdit.Text.Trim();
-				entry.Tags = string.IsNullOrEmpty(tagsText)
-					? null
-					: tagsText.Split(',').Select(t => t.Trim()).Where(t => t.Length > 0).ToList();
-			entry.Downloads[0].Changelog = changelogEdit.Text.Trim().Length > 0 ? changelogEdit.Text.Trim() : null;
-			entry.Status = statuses[statusOpt.Selected];
-			var mgv = minGameVer.Text.Trim();
-			entry.MinGameVersion = mgv.Length > 0 ? mgv : null;
-			var iconUrl = iconUrlEdit.Text.Trim();
-			entry.IconUrl = iconUrl.Length > 0 ? iconUrl : null;
-			entry.Locale = collectLocales();
-
-				var isZip = modInfo.FileProvider.RootPath.EndsWith(".zip",
-					System.StringComparison.OrdinalIgnoreCase);
-
-				if (isZip)
-					ModCatalogExporter.ExportFromZip(modInfo, entry, modsRoot);
-				else
-					ModCatalogExporter.ExportFromFolder(modInfo, entry, modsRoot);
-
-				window.QueueFree();
-			};
-
-			closeBtn.Pressed += () => window.QueueFree();
-			window.CloseRequested += () => window.QueueFree();
-
-			var tree = Godot.Engine.GetMainLoop() as SceneTree;
-			tree?.Root.AddChild(window);
-			window.PopupCentered(window.Size);
-			window.GrabFocus();
-		}
-
-		private static CatalogExportEntry BuildEntryFromManifest(ModManifest manifest)
-		{
-			var depends = manifest.Depends?.Select(d => d.ToString()).Where(s => s.Length > 0).ToList();
-
-			return new CatalogExportEntry
-			{
-				Id = manifest.Id,
-				Name = manifest.Name,
-				Author = manifest.Author,
-				Version = manifest.Version,
-				Description = manifest.Description,
-				Category = manifest.Category ?? CategoryType.Other,
-				Depends = depends,
-				ConflictsWith = manifest.ConflictsWith,
-			};
-		}
-
-		private static CategoryType CollectSelectedCategories(ItemList list, CategoryType[] categories)
-		{
-			var selected = (CategoryType)0;
-			for (var i = 0; i < categories.Length && i < list.ItemCount; i++)
-			{
-				if (list.IsSelected(i))
-					selected |= categories[i];
-			}
-			return selected != 0 ? selected : CategoryType.Other;
-		}
-
-		private static void AddLabeledControl(Container parent, string labelKey, Control control)
-		{
-			var box = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
-			var label = new Label
-			{
-				Text = TranslationServer.Translate(labelKey),
-			};
-			label.AddThemeFontSizeOverride("font_size", 12);
-			label.AddThemeColorOverride("font_color", new Color(0.7f, 0.7f, 0.75f));
-			box.AddChild(label);
-			box.AddChild(control);
-			parent.AddChild(box);
-		}
-
-		private static void AddReadOnlyField(Container parent, string labelKey, string value)
-		{
-			var label = new Label
-			{
-				Text = $"{TranslationServer.Translate(labelKey)}: {value}",
-			};
-			label.AddThemeFontSizeOverride("font_size", 13);
-			label.AddThemeColorOverride("font_color", new Color(0.85f, 0.85f, 0.9f));
-			parent.AddChild(label);
-		}
-
-		private static LineEdit AddLineEdit(Container parent, string labelKey)
-		{
-			var edit = new LineEdit { SizeFlagsHorizontal = SizeFlags.ExpandFill };
-			AddLabeledControl(parent, labelKey, edit);
-			return edit;
-		}
-
-		private static OptionButton AddOptionButton(Container parent, string labelKey, string[] items)
-		{
-			var opt = new OptionButton { SizeFlagsHorizontal = SizeFlags.ExpandFill };
-			foreach (var item in items)
-				opt.AddItem(item);
-			AddLabeledControl(parent, labelKey, opt);
-			return opt;
-		}
-
-		private static void AddSectionLabel(Container parent, string text)
-		{
-			var sep = new HSeparator();
-			parent.AddChild(sep);
-			var label = new Label { Text = text };
-			label.AddThemeFontSizeOverride("font_size", 14);
-			label.AddThemeColorOverride("font_color", new Color(0.9f, 0.9f, 0.95f));
-			parent.AddChild(label);
-		}
-
-		private static string GetCategoryDisplayName(CategoryType cat) => cat switch
-		{
-			CategoryType.Story => TranslationServer.Translate("mods/category_story"),
-			CategoryType.Characters => TranslationServer.Translate("mods/category_characters"),
-			CategoryType.Gameplay => TranslationServer.Translate("mods/category_gameplay"),
-			CategoryType.Visual => TranslationServer.Translate("mods/category_visual"),
-			CategoryType.Audio => TranslationServer.Translate("mods/category_audio"),
-			CategoryType.UI => TranslationServer.Translate("mods/category_ui"),
-			CategoryType.Locale => TranslationServer.Translate("mods/category_locale"),
-			CategoryType.Library => TranslationServer.Translate("mods/category_library"),
-			CategoryType.Overhaul => TranslationServer.Translate("mods/category_overhaul"),
-			CategoryType.Tools => TranslationServer.Translate("mods/category_tools"),
-			CategoryType.Other => TranslationServer.Translate("mods/category_other"),
-			_ => cat.ToString(),
-		};
 
 		private partial class RemoteModEntry : HBoxContainer
 		{
@@ -821,7 +415,7 @@ namespace Cthangover.Core.UI.Menu
 
 				_selectionBg = new ColorRect
 				{
-					Color = new Color(0.3f, 0.5f, 0.7f, 0f),
+					Color = UiTokens.Alpha(UiTokens.Accent, 0f),
 					MouseFilter = MouseFilterEnum.Ignore,
 				};
 				_selectionBg.SetAnchorsPreset(LayoutPreset.FullRect);
@@ -833,7 +427,7 @@ namespace Cthangover.Core.UI.Menu
 					CustomMinimumSize = new Vector2(28, 0),
 					HorizontalAlignment = HorizontalAlignment.Right,
 				};
-				orderLabel.AddThemeColorOverride("font_color", new Color(0.45f, 0.45f, 0.55f));
+				orderLabel.AddThemeColorOverride("font_color", UiTokens.Muted);
 				orderLabel.AddThemeFontSizeOverride("font_size", 12);
 				AddChild(orderLabel);
 
@@ -869,7 +463,7 @@ namespace Cthangover.Core.UI.Menu
 					Text = versionString,
 					MouseFilter = MouseFilterEnum.Pass,
 				};
-				_versionLabel.AddThemeColorOverride("font_color", new Color(0.6f, 0.6f, 0.65f));
+				_versionLabel.AddThemeColorOverride("font_color", UiTokens.Muted);
 				_versionLabel.AddThemeFontSizeOverride("font_size", 12);
 				textBox.AddChild(_versionLabel);
 
@@ -932,7 +526,7 @@ namespace Cthangover.Core.UI.Menu
 
 			public void SetSelected(bool selected)
 			{
-				_selectionBg.Color = new Color(0.3f, 0.5f, 0.7f, selected ? 0.3f : 0f);
+				_selectionBg.Color = selected ? UiTokens.AccentTrace : UiTokens.Alpha(UiTokens.Accent, 0f);
 			}
 		}
 	}

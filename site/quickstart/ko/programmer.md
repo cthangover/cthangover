@@ -37,7 +37,7 @@ mods/
   "description": "새 액션과 모드 설정",  // 모드 목록에 표시되는 모드 설명
   "sources": ["src/*.cs"],            // 소스 파일 수집을 위한 glob 패턴 (모든 ".cs" 파일 포함)
   "author": "programmer",             // 작성자
-  "depends": ["core"]                 // 코어 게임 의존성 (수동으로 모드 로드 순서를 정할 필요 없음)
+  "depends": ["visual_novel_core"]    // 코어 게임 의존성 (수동으로 모드 로드 순서를 정할 필요 없음)
 }
 ```
 

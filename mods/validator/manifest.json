@@ -1,0 +1,10 @@
+{
+  "id": "validator",
+  "name": "Validator",
+  "version": "0.1.0",
+  "author": "ct",
+  "description": "Static validation of mod entities and properties",
+  "category": "debug",
+  "sources": ["src/**/*.cs"],
+  "depends": []
+}

@@ -10,12 +10,16 @@ namespace Cthangover.Core.Scenarios
     /// with <see cref="PositionalReferenceKind.Background"/> so the build pipeline
     /// can track referenced background assets.
     /// </summary>
-    public class BackgroundCommandStrategy : IScenarioCommandStrategy, ICommandReferenceMetadata
+    public class BackgroundCommandStrategy : IScenarioCommandStrategy, ICommandReferenceMetadata, IScenarioCommandSpec
     {
         /// <inheritdoc/>
         public string Command => "background";
         /// <inheritdoc/>
         public PositionalReferenceKind Positional0Kind => PositionalReferenceKind.Background;
+        /// <inheritdoc/>
+        public int MinPositional => 1;
+        /// <inheritdoc/>
+        public int MaxPositional => 1;
 
         /// <inheritdoc/>
         public void Execute(DialogQueue dlg, List<string> positional, Dictionary<string, string> named, string arrowTarget, ILocalizationProvider locale)

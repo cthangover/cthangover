@@ -34,7 +34,7 @@ mods/
   "name": "Marao強化",              // Mod管理メニューに表示される名前
   "description": "初めてのMod！",    // Modリストとカタログに表示される説明
   "author": "player",              // Mod作者（任意の文字列）
-  "depends": ["core"]              // コアゲームへの依存（手動でMod読み込み順序を設定する必要なし）
+  "depends": ["visual_novel_core"] // コアゲームへの依存（手動でMod読み込み順序を設定する必要なし）
 }
 ```
 
@@ -50,7 +50,7 @@ mods/
 {
   "Items": [
     {
-      "Id": "Marao",  // パッチ対象のキャラクターID（core Modで定義）
+      "Id": "Marao",  // パッチ対象のキャラクターID（visual_novel_visual_novel_core Modで定義）
 
       "Health": 5000, // 新しいプロパティ値 — 元の値を上書き
       "Attack": 1200,
@@ -64,7 +64,7 @@ mods/
 
 ### 仕組み
 
-- **`"Id": "Marao"`** — パッチの対象：識別子 `Marao` のキャラクター（`core` Modで定義）。
+- **`"Id": "Marao"`** — パッチの対象：識別子 `Marao` のキャラクター（`visual_novel_core` Modで定義）。
 - **`"Health": 5000`**、**`"Attack": 1200`**、**`"Points": 2`** — キャラクターのフィールドを上書きします。新しい値が古い値を置き換えます。
 - **`"Actions$add": ["physics/stun"]`** — 接尾辞 `$add` は「配列に追加」を意味します。アクション `physics/stun` がリストに追加されます。デフォルトの `physics/attack` と `physics/defence` はそのまま残ります。
 

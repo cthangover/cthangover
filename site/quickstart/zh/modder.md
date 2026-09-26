@@ -45,7 +45,7 @@ mods/
   "name": "我的酒馆",                       // 模组菜单中显示的模组名称
   "description": "在城镇中添加一个酒馆场景",   // 模组菜单中显示的模组描述
   "author": "modder",                      // 模组作者
-  "depends": ["core"]                      // 依赖核心游戏（无需手动排列模组加载顺序）
+  "depends": ["visual_novel_core"]         // 依赖核心游戏（无需手动排列模组加载顺序）
 }
 ```
 
@@ -79,7 +79,7 @@ mods/
 
 任何 PNG 图片都可以使用。游戏支持基于着色器的光照和昼夜系统 — 背景会自动光照。
 
-> 如果没有自己的图片，临时复制 `mods/core/backgrounds/home/kitchen.png` → `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png`。
+> 如果没有自己的图片，临时复制 `mods/visual_novel_core/backgrounds/home/kitchen.png` → `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png`。
 
 ---
 
@@ -121,7 +121,7 @@ end
 
 ## 步骤 6：扩展城镇（场景优先级）
 
-现在我们在城镇场景中添加"去酒馆"选项，**不碰**原始的 `core` 文件。
+现在我们在城镇场景中添加"去酒馆"选项，**不碰**原始的 `visual_novel_core` 文件。
 
 `mods/quickstart_modder/scenarios/town_entry_override.scenario`：
 
@@ -145,7 +145,7 @@ end
 ### 为什么有效
 
 `town_entry` 场景现在有两个场景：
-- `priority: 10` — 默认（来自 `core` 模组）
+- `priority: 10` — 默认（来自 `visual_novel_core` 模组）
 - `priority: 1` — 我们的（来自 `quickstart_modder`）
 
 引擎运行 **最低** `priority` 的场景。我们的 `priority: 1` 胜出 — 玩家看到新选项。

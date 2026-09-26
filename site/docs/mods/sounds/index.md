@@ -26,9 +26,9 @@ sounds/
 - Short duration (0.1–5 seconds) recommended for one-shot effects
 - The sound id is the path relative to the mod's `sounds/` folder, minus extension: `sounds/ui/click.ogg` → `ui/click`, `battle/hit`
 
-## Real example — `core/sounds/`
+## Real example — `visual_novel_core/sounds/`
 
-From `mods/core/sounds/`:
+From `mods/visual_novel_core/sounds/`:
 
 ```filestree
 sounds/

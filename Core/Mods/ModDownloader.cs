@@ -39,7 +39,7 @@ namespace Cthangover.Core.Mods
         public static event Action<InstallProgress> OnProgress;
         public static event Action<string, bool> OnCompleted;
 
-		public static async Task<bool> InstallAsync(string modId, string version = null)
+		public static async Task<bool> InstallAsync(string modId, string version = null, string sourceUrl = null)
 		{
 			if (string.IsNullOrEmpty(modId))
 				return Fail(modId, "Mod ID is empty");
@@ -56,7 +56,7 @@ namespace Cthangover.Core.Mods
 				if (cached == null)
 					return Fail(modId, "Catalog not loaded");
 
-				var entry = cached.FirstOrDefault(e => e.Id == modId);
+				var entry = CatalogMerger.FindEntry(cached, modId, sourceUrl);
 				if (entry == null)
 					return Fail(modId, "Mod not found in catalog");
 

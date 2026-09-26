@@ -9,10 +9,12 @@ namespace Cthangover.Core.Scenarios
     /// terminating execution of the current scenario. Typically used at the final
     /// line of a scenario script to signal the dialog engine to close or transition.
     /// </summary>
-    public class EndCommandStrategy : IScenarioCommandStrategy
+    public class EndCommandStrategy : IScenarioCommandStrategy, IScenarioCommandSpec
     {
         /// <inheritdoc/>
         public string Command => "end";
+        /// <inheritdoc/>
+        public int MaxPositional => 0;
 
         /// <inheritdoc/>
         public void Execute(DialogQueue dlg, List<string> positional, Dictionary<string, string> named, string arrowTarget, ILocalizationProvider locale)

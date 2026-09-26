@@ -12,12 +12,18 @@ namespace Cthangover.Core.Scenarios
     /// the transition. Implements <see cref="ICommandReferenceMetadata"/> with
     /// <see cref="PositionalReferenceKind.Scene"/> for build-time dependency tracking.
     /// </summary>
-    public class SwitchSceneCommandStrategy : IScenarioCommandStrategy, ICommandReferenceMetadata
+    public class SwitchSceneCommandStrategy : IScenarioCommandStrategy, ICommandReferenceMetadata, IScenarioCommandSpec
     {
         /// <inheritdoc/>
         public string Command => "switch_scene";
         /// <inheritdoc/>
         public PositionalReferenceKind Positional0Kind => PositionalReferenceKind.Scene;
+        /// <inheritdoc/>
+        public int MinPositional => 1;
+        /// <inheritdoc/>
+        public int MaxPositional => 1;
+        /// <inheritdoc/>
+        public IReadOnlyList<string> AllowedNamed => new[] { "speed", "hidden" };
 
         /// <inheritdoc/>
         public void Execute(DialogQueue dlg, List<string> positional, Dictionary<string, string> named, string arrowTarget, ILocalizationProvider locale)

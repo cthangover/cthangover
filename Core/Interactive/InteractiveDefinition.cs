@@ -1,5 +1,6 @@
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 using Cthangover.Core.Factories;
+using Cthangover.Core.UI.Theming;
 using Godot;
 
 namespace Cthangover.Core.Interactive
@@ -119,7 +120,7 @@ namespace Cthangover.Core.Interactive
 		private static Color ParseColor(string hex)
 		{
 			if (string.IsNullOrEmpty(hex))
-				return new Color(1f, 1f, 0f, 0.3f);
+				return UiTokens.Alpha(UiTokens.Accent, 0.3f);
 
 			try
 			{
@@ -127,7 +128,7 @@ namespace Cthangover.Core.Interactive
 			}
 			catch
 			{
-				return new Color(1f, 1f, 0f, 0.3f);
+				return UiTokens.Alpha(UiTokens.Accent, 0.3f);
 			}
 		}
 	}
@@ -165,3 +166,4 @@ namespace Cthangover.Core.Interactive
 		public string[] Commands { get; set; }
 	}
 }
+

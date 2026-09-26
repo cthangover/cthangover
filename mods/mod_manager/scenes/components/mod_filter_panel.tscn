@@ -1,0 +1,43 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="src/UI/ModFilterPanel.cs" id="1_filter"]
+
+[node name="ModFilterPanel" type="VBoxContainer"]
+theme_override_constants/separation = 8
+script = ExtResource("1_filter")
+
+[node name="Title" type="Label" parent="."]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+
+[node name="Reset" type="Button" parent="."]
+layout_mode = 2
+size_flags_horizontal = 0
+
+[node name="Sep1" type="HSeparator" parent="."]
+layout_mode = 2
+
+[node name="StatusCaption" type="Label" parent="."]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+
+[node name="StatusList" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="Sep2" type="HSeparator" parent="."]
+layout_mode = 2
+
+[node name="CategoryCaption" type="Label" parent="."]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+
+[node name="CategoryList" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="Sep3" type="HSeparator" parent="."]
+layout_mode = 2
+
+[node name="GroupToggle" type="CheckButton" parent="."]
+layout_mode = 2

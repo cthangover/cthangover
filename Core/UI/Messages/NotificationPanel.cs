@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Cthangover.Core.Events;
 using Cthangover.Core.Scenes;
 using Cthangover.Core.UI.Event;
+using Cthangover.Core.UI.Theming;
 using Godot;
 
 namespace Cthangover.Core.UI.Messages
@@ -105,28 +106,22 @@ namespace Cthangover.Core.UI.Messages
                 MouseFilter = MouseFilterEnum.Ignore,
             };
 
-            var style = new StyleBoxFlat
-            {
-                BgColor = new Color(0.13f, 0.13f, 0.13f, 0.75f),
-                CornerRadiusTopLeft = 6,
-                CornerRadiusTopRight = 6,
-                CornerRadiusBottomLeft = 6,
-                CornerRadiusBottomRight = 6,
-                ContentMarginLeft = 10,
-                ContentMarginRight = 10,
-                ContentMarginTop = 4,
-                ContentMarginBottom = 4,
-            };
+            var style = UiKit.Frame(UiTokens.RadiusMd, UiTokens.ToastBg, UiTokens.Line);
+            style.ContentMarginLeft = UiTokens.Space4;
+            style.ContentMarginRight = UiTokens.Space4;
+            style.ContentMarginTop = UiTokens.Space2;
+            style.ContentMarginBottom = UiTokens.Space2;
             container.AddThemeStyleboxOverride("panel", style);
 
             var label = new Label
             {
                 Text = text,
-                Modulate = new Color(1, 1, 1, 0),
+                Modulate = UiTokens.Alpha(Colors.White, 0f),
                 HorizontalAlignment = HorizontalAlignment.Left,
                 VerticalAlignment = VerticalAlignment.Center,
             };
-            label.AddThemeFontSizeOverride("font_size", 16);
+            label.AddThemeFontSizeOverride("font_size", UiTokens.FontLead);
+            label.AddThemeColorOverride("font_color", UiTokens.Ink);
             container.AddChild(label);
 
             AddChild(container);
@@ -141,7 +136,7 @@ namespace Cthangover.Core.UI.Messages
             _slots.Add(slot);
 
             var tween = CreateTween();
-            tween.TweenProperty(label, "modulate", new Color(1, 1, 1, 1), FadeInDuration);
+            tween.TweenProperty(label, "modulate", Colors.White, FadeInDuration);
         }
 
         private void FadeOutSlot(int index)
@@ -153,7 +148,7 @@ namespace Cthangover.Core.UI.Messages
             if (label != null)
             {
                 var tween = CreateTween();
-                tween.TweenProperty(label, "modulate", new Color(1, 1, 1, 0), FadeOutDuration);
+                tween.TweenProperty(label, "modulate", UiTokens.Alpha(Colors.White, 0f), FadeOutDuration);
                 tween.TweenCallback(Callable.From(() =>
                 {
                     slot.IsDead = true;

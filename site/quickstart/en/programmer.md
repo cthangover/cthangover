@@ -37,7 +37,7 @@ mods/
   "description": "New action and mod settings", // Mod description shown in the mod list
   "sources": ["src/*.cs"],                      // Glob pattern for collecting source files (include all ".cs" files)
   "author": "programmer",                       // Author
-  "depends": ["core"]                           // Dependency on the core game (so manual mod load ordering is not required)
+  "depends": ["visual_novel_core"]              // Dependency on the core game (so manual mod load ordering is not required)
 }
 ```
 

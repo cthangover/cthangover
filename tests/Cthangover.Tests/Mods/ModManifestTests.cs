@@ -167,7 +167,7 @@ namespace Engine.Tests.Mods
                 Author = "Tester",
                 Description = "Round-trip manifest",
                 Version = "1.2.3",
-                Category = CategoryType.Library | CategoryType.Tools,
+                Category = CategoryType.Library | CategoryType.Tools | CategoryType.Editor | CategoryType.Debug,
                 Sources = new List<string> { "src/*.cs" },
                 GdSources = new List<string> { "gd/*.gd" },
                 DependsNative = new List<string> { "native/*.dll" },
@@ -184,7 +184,7 @@ namespace Engine.Tests.Mods
             Assert.Equal(original.Author, restored.Author);
             Assert.Equal(original.Description, restored.Description);
             Assert.Equal(original.Version, restored.Version);
-            Assert.Equal(CategoryType.Library | CategoryType.Tools, restored.Category);
+            Assert.Equal(CategoryType.Library | CategoryType.Tools | CategoryType.Editor | CategoryType.Debug, restored.Category);
             Assert.Equal(original.Sources, restored.Sources);
             Assert.Equal(original.GdSources, restored.GdSources);
             Assert.Equal(original.DependsNative, restored.DependsNative);

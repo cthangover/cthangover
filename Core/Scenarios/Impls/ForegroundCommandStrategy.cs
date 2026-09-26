@@ -9,10 +9,14 @@ namespace Cthangover.Core.Scenarios
     /// image on top of the scene (above background and characters). The first
     /// positional argument specifies the resource path to the image asset.
     /// </summary>
-    public class ForegroundCommandStrategy : IScenarioCommandStrategy
+    public class ForegroundCommandStrategy : IScenarioCommandStrategy, IScenarioCommandSpec
     {
         /// <inheritdoc/>
         public string Command => "foreground";
+        /// <inheritdoc/>
+        public int MinPositional => 1;
+        /// <inheritdoc/>
+        public int MaxPositional => 1;
 
         /// <inheritdoc/>
         public void Execute(DialogQueue dlg, List<string> positional, Dictionary<string, string> named, string arrowTarget, ILocalizationProvider locale)

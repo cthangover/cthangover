@@ -1,0 +1,127 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="src/ModManagerScreen.cs" id="1_screen"]
+[ext_resource type="PackedScene" path="scenes/components/mod_filter_panel.tscn" id="2_filter"]
+[ext_resource type="PackedScene" path="scenes/components/mod_grid_view.tscn" id="3_grid"]
+[ext_resource type="PackedScene" path="scenes/components/mod_detail_view.tscn" id="4_detail"]
+
+[node name="ModManagerScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+script = ExtResource("1_screen")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.054902, 0.058824, 0.082353, 1)
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 12
+
+[node name="Root" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Header" type="HBoxContainer" parent="Margin/Root"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Close" type="Button" parent="Margin/Root/Header"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="Margin/Root/Header"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(0.956863, 0.941176, 0.905882, 1)
+uppercase = true
+
+[node name="Spacer" type="Control" parent="Margin/Root/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Search" type="LineEdit" parent="Margin/Root/Header"]
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="Sort" type="OptionButton" parent="Margin/Root/Header"]
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="Refresh" type="Button" parent="Margin/Root/Header"]
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="Result" type="Label" parent="Margin/Root/Header"]
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="Body" type="HBoxContainer" parent="Margin/Root"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 12
+
+[node name="Sidebar" type="PanelContainer" parent="Margin/Root/Body"]
+custom_minimum_size = Vector2(260, 0)
+layout_mode = 2
+
+[node name="SidebarScroll" type="ScrollContainer" parent="Margin/Root/Body/Sidebar"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="FilterPanel" parent="Margin/Root/Body/Sidebar/SidebarScroll" instance=ExtResource("2_filter")]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Content" type="Control" parent="Margin/Root/Body"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Grid" parent="Margin/Root/Body/Content" instance=ExtResource("3_grid")]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Detail" parent="Margin/Root/Body/Content" instance=ExtResource("4_detail")]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Banner" type="PanelContainer" parent="Margin/Root"]
+visible = false
+layout_mode = 2
+
+[node name="BannerLabel" type="Label" parent="Margin/Root/Banner"]
+layout_mode = 2
+size_flags_horizontal = 3
+horizontal_alignment = 1

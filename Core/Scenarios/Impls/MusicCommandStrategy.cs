@@ -10,12 +10,16 @@ namespace Cthangover.Core.Scenarios
     /// with <see cref="PositionalReferenceKind.Music"/> so the build pipeline
     /// can track referenced audio assets.
     /// </summary>
-    public class MusicCommandStrategy : IScenarioCommandStrategy, ICommandReferenceMetadata
+    public class MusicCommandStrategy : IScenarioCommandStrategy, ICommandReferenceMetadata, IScenarioCommandSpec
     {
         /// <inheritdoc/>
         public string Command => "music";
         /// <inheritdoc/>
         public PositionalReferenceKind Positional0Kind => PositionalReferenceKind.Music;
+        /// <inheritdoc/>
+        public int MinPositional => 1;
+        /// <inheritdoc/>
+        public int MaxPositional => 1;
 
         /// <inheritdoc/>
         public void Execute(DialogQueue dlg, List<string> positional, Dictionary<string, string> named, string arrowTarget, ILocalizationProvider locale)

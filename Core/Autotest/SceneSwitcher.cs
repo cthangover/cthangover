@@ -108,30 +108,30 @@ namespace Cthangover.Core.Autotest
 
 		private void LoadGodotScene(string path)
 		{
-			var packed = GD.Load<PackedScene>(path);
-			if (packed == null)
+			var node = InstantiateScene(path);
+			if (node == null)
 			{
-				GameLogger.Log("TEST", $"SceneSwitcher: failed to load PackedScene '{path}'", LogLevel.Error);
+				GameLogger.Log("TEST", $"SceneSwitcher: failed to instantiate scene '{path}'", LogLevel.Error);
 				GetTree().Quit(1);
 				return;
 			}
 
-			AddChild(packed.Instantiate());
+			AddChild(node);
 			ScheduleDriverAttach();
 			ScheduleUiToggle();
 		}
 
 		private void LoadLogicalScene(string sceneName)
 		{
-			var baseScene = GD.Load<PackedScene>(GodotSceneService.GetScenePath(GodotSceneType.BaseScene));
+			var baseScene = InstantiateScene(GodotSceneService.GetScenePath(GodotSceneType.BaseScene));
 			if (baseScene == null)
 			{
-				GameLogger.Log("TEST", "SceneSwitcher: failed to load base_scene.tscn", LogLevel.Error);
+				GameLogger.Log("TEST", "SceneSwitcher: failed to instantiate base_scene", LogLevel.Error);
 				GetTree().Quit(1);
 				return;
 			}
 
-			AddChild(baseScene.Instantiate());
+			AddChild(baseScene);
 
 			GetTree().CreateTimer(0.2f).Timeout += () =>
 			{
@@ -155,6 +155,23 @@ namespace Cthangover.Core.Autotest
 			};
 			ScheduleDriverAttach();
 			ScheduleUiToggle();
+		}
+
+		/// <summary>
+		/// Instantiates a scene target for testing: native <c>res://</c> scenes go
+		/// through Godot's loader, while mod-relative paths (the shell and battle
+		/// scenes moved into mods) are built by the runtime tscn pipeline. Keeps
+		/// <c>--scene=</c> usable for both kinds without hardcoding which is which.
+		/// </summary>
+		private static Node InstantiateScene(string path)
+		{
+			if (string.IsNullOrEmpty(path))
+				return null;
+
+			if (path.StartsWith("res://"))
+				return GD.Load<PackedScene>(path)?.Instantiate();
+
+			return TscnScenes.LoadAndBuild(path);
 		}
 
 		/// <summary>
@@ -198,6 +215,10 @@ namespace Cthangover.Core.Autotest
 		/// </summary>
 		private void DumpUiState()
 		{
+			var shotPath = "user://ui_smoke.png";
+			GetViewport()?.GetTexture()?.GetImage()?.SavePng(shotPath);
+			GameLogger.Log("TEST", $"SceneSwitcher: screenshot -> {ProjectSettings.GlobalizePath(shotPath)}");
+
 			var runtime = GameData.Instance?.Runtime;
 			if (runtime != null)
 			{
@@ -254,7 +275,14 @@ namespace Cthangover.Core.Autotest
 					return;
 
 				_driverAttached = true;
-				var driver = new DialogAutoDriver();
+				var driver = new DialogAutoDriver
+				{
+					// UI/load smoke runs need the process to survive the end of a
+					// dialog: the toggle/dump timers fire after the dialog has
+					// already finished, so quitting on dialog end would hide the
+					// very state the run inspects.
+					AutoQuit = string.IsNullOrEmpty(_ui) && string.IsNullOrEmpty(_load)
+				};
 				AddChild(driver);
 				GameLogger.Log("TEST", "SceneSwitcher: DialogAutoDriver attached");
 			};

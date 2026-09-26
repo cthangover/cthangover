@@ -19,7 +19,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0, 0, 0, 0.98039216)
+color = Color(0, 0, 0, 0.9)
 
 [node name="Panel" type="Panel" parent="." unique_id=664458435]
 layout_mode = 1
@@ -49,9 +49,11 @@ theme_override_constants/separation = 14
 
 [node name="Title" type="Label" parent="Panel/Margin/VBox" unique_id=6175375]
 layout_mode = 2
-theme_override_font_sizes/font_size = 26
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(0.956863, 0.941176, 0.905882, 1)
 text = "Mods"
 horizontal_alignment = 1
+uppercase = true
 
 [node name="HBox" type="HBoxContainer" parent="Panel/Margin/VBox" unique_id=1102798166]
 layout_mode = 2
@@ -71,6 +73,7 @@ text = "Показать отключённые"
 [node name="ResetOrderBtn" type="Button" parent="Panel/Margin/VBox/HBox/LeftPanel" unique_id=1745806105]
 layout_mode = 2
 text = "Сбросить порядок"
+theme_type_variation = "CthangoverDanger"
 
 [node name="Scroll" type="ScrollContainer" parent="Panel/Margin/VBox/HBox/LeftPanel" unique_id=1745806103]
 layout_mode = 2
@@ -163,3 +166,4 @@ text = "Toggle"
 layout_mode = 2
 size_flags_horizontal = 8
 text = "Back"
+theme_type_variation = "CthangoverIcon"

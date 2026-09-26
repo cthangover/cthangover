@@ -99,5 +99,32 @@ namespace Engine.Tests.Mods
             Assert.True(DisabledModsStore.IsDisabled("mod_a"));
             Assert.False(DisabledModsStore.IsDisabled("mod_b"));
         }
+
+        [Fact]
+        public void Remove_ExistingId_DropsItAndKeepsOthers()
+        {
+            if (File.Exists(TestFile)) File.Delete(TestFile);
+            DisabledModsStore.SetEnabled("mod_a", false);
+            DisabledModsStore.SetEnabled("mod_b", false);
+
+            DisabledModsStore.Remove("mod_a");
+
+            var set = DisabledModsStore.Load();
+            Assert.DoesNotContain("mod_a", set);
+            Assert.Contains("mod_b", set);
+        }
+
+        [Fact]
+        public void Remove_UnknownId_LeavesSetUntouched()
+        {
+            if (File.Exists(TestFile)) File.Delete(TestFile);
+            DisabledModsStore.SetEnabled("mod_a", false);
+
+            DisabledModsStore.Remove("missing_mod");
+
+            var set = DisabledModsStore.Load();
+            Assert.Single(set);
+            Assert.Contains("mod_a", set);
+        }
     }
 }

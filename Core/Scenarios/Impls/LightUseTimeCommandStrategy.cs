@@ -9,10 +9,12 @@ namespace Cthangover.Core.Scenarios
     /// scene lighting should be driven by the simulated time-of-day system.
     /// Passes a boolean flag to <see cref="DialogQueue.LightUseTime"/>.
     /// </summary>
-    public class LightUseTimeCommandStrategy : IScenarioCommandStrategy
+    public class LightUseTimeCommandStrategy : IScenarioCommandStrategy, IScenarioCommandSpec
     {
         /// <inheritdoc/>
         public string Command => "light_use_time";
+        /// <inheritdoc/>
+        public int MaxPositional => 1;
 
         /// <inheritdoc/>
         public void Execute(DialogQueue dlg, List<string> positional, Dictionary<string, string> named, string arrowTarget, ILocalizationProvider locale)

@@ -10,10 +10,14 @@ namespace Cthangover.Core.Scenarios
     /// background color from a named color string (e.g. <c>black</c>, <c>red</c>)
     /// or an HTML hex color (e.g. <c>#FF0000</c>). Delegates to <see cref="DialogQueue.BackgroundColor"/>.
     /// </summary>
-    public class BackgroundColorCommandStrategy : IScenarioCommandStrategy
+    public class BackgroundColorCommandStrategy : IScenarioCommandStrategy, IScenarioCommandSpec
     {
         /// <inheritdoc/>
         public string Command => "background_color";
+        /// <inheritdoc/>
+        public int MinPositional => 1;
+        /// <inheritdoc/>
+        public int MaxPositional => 1;
 
         /// <inheritdoc/>
         public void Execute(DialogQueue dlg, List<string> positional, Dictionary<string, string> named, string arrowTarget, ILocalizationProvider locale)

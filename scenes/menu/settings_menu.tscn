@@ -19,7 +19,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0, 0, 0, 1)
+color = Color(0, 0, 0, 0.9)
 
 [node name="Panel" type="Panel" parent="." unique_id=1554260654]
 layout_mode = 1
@@ -49,9 +49,11 @@ theme_override_constants/separation = 14
 
 [node name="Title" type="Label" parent="Panel/Margin/VBox" unique_id=86160906]
 layout_mode = 2
-theme_override_font_sizes/font_size = 26
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(0.956863, 0.941176, 0.905882, 1)
 text = "Settings"
 horizontal_alignment = 1
+uppercase = true
 
 [node name="Tabs" type="TabContainer" parent="Panel/Margin/VBox" unique_id=1524671125]
 layout_mode = 2
@@ -349,6 +351,7 @@ theme_override_font_sizes/font_size = 16
 [node name="ResetBtn" type="Button" parent="Panel/Margin/VBox/Tabs/ModSettingsMargin/ModSettings/RightPanel/TopBar" unique_id=531057889]
 layout_mode = 2
 text = "Reset"
+theme_type_variation = "CthangoverDanger"
 
 [node name="SettingsScroll" type="ScrollContainer" parent="Panel/Margin/VBox/Tabs/ModSettingsMargin/ModSettings/RightPanel" unique_id=674333894]
 layout_mode = 2
@@ -368,3 +371,4 @@ horizontal_alignment = 1
 layout_mode = 2
 size_flags_horizontal = 8
 text = "Back"
+theme_type_variation = "CthangoverIcon"

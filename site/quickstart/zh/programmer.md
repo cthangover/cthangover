@@ -37,7 +37,7 @@ mods/
   "description": "新动作和模组设置",  // 模组列表中显示的模组描述
   "sources": ["src/*.cs"],         // 收集源文件的 glob 模式（包含所有 ".cs" 文件）
   "author": "programmer",          // 作者
-  "depends": ["core"]              // 依赖核心游戏（无需手动排列模组加载顺序）
+  "depends": ["visual_novel_core"] // 依赖核心游戏（无需手动排列模组加载顺序）
 }
 ```
 

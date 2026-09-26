@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Cthangover.Core.Mods;
+using Cthangover.Core.UI.Theming;
 using Godot;
 
 namespace Cthangover.Core.UI.Menu
@@ -33,7 +34,6 @@ namespace Cthangover.Core.UI.Menu
 		private Label _detailUsedBy;
 		private Label _detailConflicts;
 		private Button _toggleBtn;
-		private Button _catalogExportBtn;
 		private Button _installBtn;
 		private Label _statusLabel;
 		private Button _backBtn;
@@ -115,16 +115,6 @@ namespace Cthangover.Core.UI.Menu
 			_filterDisabledCheck.Toggled += OnFilterToggled;
 			_resetOrderBtn.Pressed += OnResetOrder;
 
-			_catalogExportBtn = new Button
-			{
-				Text = TranslationServer.Translate("mods/catalog_export"),
-				Visible = false,
-				SizeFlagsHorizontal = SizeFlags.ShrinkEnd,
-			};
-			_catalogExportBtn.Pressed += OnCatalogExport;
-			var detailVBox = _toggleBtn.GetParent();
-			detailVBox.AddChild(_catalogExportBtn);
-
 			_installBtn = new Button
 			{
 				Text = TranslationServer.Translate("mods/install_button"),
@@ -132,7 +122,7 @@ namespace Cthangover.Core.UI.Menu
 				SizeFlagsHorizontal = SizeFlags.ExpandFill,
 			};
 			_installBtn.Pressed += OnInstallSelected;
-			detailVBox.AddChild(_installBtn);
+			_toggleBtn.GetParent().AddChild(_installBtn);
 
 			_backBtn.Text = TranslationServer.Translate("mods/back");
 			_titleLabel.Text = TranslationServer.Translate("mods/title");
@@ -235,6 +225,7 @@ namespace Cthangover.Core.UI.Menu
 				dialog.QueueFree();
 			};
 			dialog.Canceled += () => dialog.QueueFree();
+			CthangoverTheme.ApplyDanger(dialog.GetOkButton());
 
 			dialog.PopupCentered();
 		}
@@ -253,7 +244,6 @@ namespace Cthangover.Core.UI.Menu
 				_detailConflicts.Text = string.Empty;
 			_detailIcon.Texture = null;
 			_statusLabel.Text = string.Empty;
-			_catalogExportBtn.Visible = false;
 			if (_installBtn != null)
 				_installBtn.Visible = false;
 		}
@@ -358,8 +348,6 @@ namespace Cthangover.Core.UI.Menu
 
 			ShowConflictInfo(modId);
 
-			_catalogExportBtn.Visible = true;
-
 			LoadModThumbnail(modInfo);
 		}
 
@@ -368,7 +356,7 @@ namespace Cthangover.Core.UI.Menu
 			if (enabled)
 			{
 				_statusLabel.Text = TranslationServer.Translate("mods/enabled");
-				_statusLabel.AddThemeColorOverride("font_color", new Color(0.3f, 0.8f, 0.3f));
+				_statusLabel.AddThemeColorOverride("font_color", UiTokens.Success);
 			}
 			else
 			{
@@ -392,7 +380,7 @@ namespace Cthangover.Core.UI.Menu
 				{
 					_statusLabel.Text = TranslationServer.Translate("mods/disabled");
 				}
-				_statusLabel.AddThemeColorOverride("font_color", new Color(0.8f, 0.4f, 0.4f));
+				_statusLabel.AddThemeColorOverride("font_color", UiTokens.Danger);
 			}
 		}
 
@@ -422,7 +410,7 @@ namespace Cthangover.Core.UI.Menu
 				_detailUsedBy.GetParent().AddChild(_detailConflicts);
 			}
 			_detailConflicts.Text = TranslationServer.Translate("mods/overrides_title") + ":\n" + string.Join("\n", lines);
-			_detailConflicts.AddThemeColorOverride("font_color", new Color(1f, 0.55f, 0.2f));
+			_detailConflicts.AddThemeColorOverride("font_color", UiTokens.Warning);
 		}
 
 		private bool HasDisabledDependency(string modId)
@@ -583,26 +571,26 @@ namespace Cthangover.Core.UI.Menu
 
 			var style = new StyleBoxFlat
 			{
-				BgColor = new Color(0.13f, 0.13f, 0.13f, 0.8f),
-				CornerRadiusTopLeft = 6,
-				CornerRadiusTopRight = 6,
-				CornerRadiusBottomLeft = 6,
-				CornerRadiusBottomRight = 6,
-				ContentMarginLeft = 12,
-				ContentMarginRight = 12,
-				ContentMarginTop = 6,
-				ContentMarginBottom = 6,
+				BgColor = UiTokens.ToastBg,
+				CornerRadiusTopLeft = UiTokens.RadiusMd,
+				CornerRadiusTopRight = UiTokens.RadiusMd,
+				CornerRadiusBottomLeft = UiTokens.RadiusMd,
+				CornerRadiusBottomRight = UiTokens.RadiusMd,
+				ContentMarginLeft = UiTokens.Space5,
+				ContentMarginRight = UiTokens.Space5,
+				ContentMarginTop = UiTokens.Space2,
+				ContentMarginBottom = UiTokens.Space2,
 			};
 			container.AddThemeStyleboxOverride("panel", style);
 
 			var label = new Label
 			{
 				Text = TranslationServer.Translate("mods/restart_required"),
-				Modulate = new Color(1, 1, 1, 0),
+				Modulate = UiTokens.Alpha(UiTokens.White, 0f),
 				HorizontalAlignment = HorizontalAlignment.Center,
 				VerticalAlignment = VerticalAlignment.Center,
 			};
-			label.AddThemeFontSizeOverride("font_size", 14);
+			label.AddThemeFontSizeOverride("font_size", UiTokens.FontBodyLarge);
 			container.AddChild(label);
 
 			container.AnchorRight = 1f;
@@ -613,8 +601,8 @@ namespace Cthangover.Core.UI.Menu
 			panel.AddChild(container);
 
 			var tween = CreateTween();
-			tween.TweenProperty(label, "modulate", new Color(1, 1, 1, 1), 0.3f);
-			tween.TweenProperty(label, "modulate", new Color(1, 1, 1, 0), 0.5f).SetDelay(5f);
+			tween.TweenProperty(label, "modulate", UiTokens.Alpha(UiTokens.White, 1f), 0.3f);
+			tween.TweenProperty(label, "modulate", UiTokens.Alpha(UiTokens.White, 0f), 0.5f).SetDelay(5f);
 			tween.TweenCallback(Callable.From(() =>
 			{
 				if (GodotObject.IsInstanceValid(container))
@@ -648,7 +636,7 @@ namespace Cthangover.Core.UI.Menu
 
 				_selectionBg = new ColorRect
 				{
-					Color = new Color(0.3f, 0.5f, 0.7f, 0f),
+					Color = UiTokens.Alpha(UiTokens.Accent, 0f),
 					MouseFilter = MouseFilterEnum.Ignore
 				};
 				_selectionBg.SetAnchorsPreset(LayoutPreset.FullRect);
@@ -656,7 +644,7 @@ namespace Cthangover.Core.UI.Menu
 
 				_disabledOverlay = new ColorRect
 				{
-					Color = new Color(0f, 0f, 0f, enabled ? 0f : 0.3f),
+					Color = UiTokens.Alpha(UiTokens.Backdrop, enabled ? 0f : 0.3f),
 					MouseFilter = MouseFilterEnum.Ignore
 				};
 				_disabledOverlay.SetAnchorsPreset(LayoutPreset.FullRect);
@@ -668,7 +656,7 @@ namespace Cthangover.Core.UI.Menu
 					CustomMinimumSize = new Vector2(28, 0),
 					HorizontalAlignment = HorizontalAlignment.Right
 				};
-				_orderLabel.AddThemeColorOverride("font_color", new Color(0.45f, 0.45f, 0.55f));
+				_orderLabel.AddThemeColorOverride("font_color", UiTokens.Muted);
 				_orderLabel.AddThemeFontSizeOverride("font_size", 12);
 				AddChild(_orderLabel);
 
@@ -692,7 +680,7 @@ namespace Cthangover.Core.UI.Menu
 					Text = $"v{modInfo.Version ?? "0.0.0.0"}",
 					MouseFilter = MouseFilterEnum.Pass
 				};
-				_versionLabel.AddThemeColorOverride("font_color", new Color(0.6f, 0.6f, 0.65f));
+				_versionLabel.AddThemeColorOverride("font_color", UiTokens.Muted);
 				_versionLabel.AddThemeFontSizeOverride("font_size", 12);
 				textBox.AddChild(_versionLabel);
 
@@ -767,21 +755,21 @@ namespace Cthangover.Core.UI.Menu
 				_updatingState = true;
 				_enabled = enabled;
 				_toggle.ButtonPressed = enabled;
-				_disabledOverlay.Color = new Color(0f, 0f, 0f, enabled ? 0f : 0.3f);
+				_disabledOverlay.Color = UiTokens.Alpha(UiTokens.Backdrop, enabled ? 0f : 0.3f);
 				UpdateTextColor();
 				_updatingState = false;
 			}
 
 			public void SetSelected(bool selected)
 			{
-				_selectionBg.Color = new Color(0.3f, 0.5f, 0.7f, selected ? 0.3f : 0f);
+				_selectionBg.Color = selected ? UiTokens.AccentTrace : UiTokens.Alpha(UiTokens.Accent, 0f);
 			}
 
 			private void UpdateTextColor()
 			{
 				var color = _enabled
-					? new Color(0.85f, 0.85f, 0.9f)
-					: new Color(0.45f, 0.45f, 0.5f);
+					? UiTokens.Ink
+					: UiTokens.Faint;
 				_nameLabel.AddThemeColorOverride("font_color", color);
 			}
 

@@ -37,7 +37,7 @@ Subscription entry fields:
 
 The `"template": "default"` means the cooking UI code runs inside the default wrapper template.
 
-## Real example — `core/wrappers/default.wrappertmpl`
+## Real example — `visual_novel_core/wrappers/default.wrappertmpl`
 
 A wrapper template is plain C# source defining a static class named `SceneBuilderScript` with a few helper methods and a `Run(Node root)` method containing the `{{USER_CODE}}` substitution marker:
 

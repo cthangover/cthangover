@@ -24,7 +24,10 @@ public enum CategoryType
     UI = 1 << 5,
     Locale = 1 << 6,
     Library = 1 << 7,
-    Overhaul = 1 << 8,
-    Tools = 1 << 9,
-    Other = 1 << 10,
+    Engine = 1 << 8,
+    Overhaul = 1 << 9,
+    Tools = 1 << 10,
+    Editor = 1 << 11,
+    Debug = 1 << 12,
+    Other = 1 << 13,
 }

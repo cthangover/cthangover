@@ -9,10 +9,12 @@ namespace Cthangover.Core.Scenarios
     /// elements from the dialog screen without advancing the dialog. Useful for
     /// creating dramatic pauses or scene transitions between text segments.
     /// </summary>
-    public class EmptyCommandStrategy : IScenarioCommandStrategy
+    public class EmptyCommandStrategy : IScenarioCommandStrategy, IScenarioCommandSpec
     {
         /// <inheritdoc/>
         public string Command => "empty";
+        /// <inheritdoc/>
+        public int MaxPositional => 0;
 
         /// <inheritdoc/>
         public void Execute(DialogQueue dlg, List<string> positional, Dictionary<string, string> named, string arrowTarget, ILocalizationProvider locale)

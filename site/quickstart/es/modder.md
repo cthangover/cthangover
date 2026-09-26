@@ -45,7 +45,7 @@ mods/
   "name": "Mi Bar",                         // Nombre del mod mostrado en el menú de mods
   "description": "Añade un bar al pueblo",  // Descripción del mod mostrada en el menú de mods
   "author": "modder",                       // Autor del mod
-  "depends": ["core"]                       // Dependencia del juego base (así no se requiere ordenar manualmente la carga de mods)
+  "depends": ["visual_novel_core"]          // Dependencia del juego base (así no se requiere ordenar manualmente la carga de mods)
 }
 ```
 
@@ -79,7 +79,7 @@ Coloca una imagen en `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png`.
 
 Cualquier imagen PNG servirá. El juego soporta iluminación por shader y hora del día — el fondo se iluminará automáticamente.
 
-> Si no tienes una imagen, copia temporalmente `mods/core/backgrounds/home/kitchen.png` → `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png`.
+> Si no tienes una imagen, copia temporalmente `mods/visual_novel_core/backgrounds/home/kitchen.png` → `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png`.
 
 ---
 
@@ -121,7 +121,7 @@ end
 
 ## Paso 6: Extender el pueblo (prioridad de escena)
 
-Ahora añadimos una opción "Ir al bar" a la escena del pueblo, **sin tocar** el archivo original de `core`.
+Ahora añadimos una opción "Ir al bar" a la escena del pueblo, **sin tocar** el archivo original de `visual_novel_core`.
 
 `mods/quickstart_modder/scenarios/town_entry_override.scenario`:
 
@@ -145,7 +145,7 @@ end
 ### Por qué funciona
 
 La escena `town_entry` ahora tiene dos escenarios:
-- `priority: 10` — por defecto (del mod `core`)
+- `priority: 10` — por defecto (del mod `visual_novel_core`)
 - `priority: 1` — el nuestro (de `quickstart_modder`)
 
 El motor ejecuta el escenario con la **menor** `priority`. Nuestra `priority: 1` gana — el jugador ve la nueva opción.

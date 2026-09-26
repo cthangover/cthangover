@@ -12,10 +12,16 @@ namespace Cthangover.Core.Scenarios
     /// <c>hide_color</c> and <c>wait</c> behavior flags. Text content
     /// can be provided directly or resolved via a <c>key=</c> localization key.
     /// </summary>
-    public class PTextCommandStrategy : IScenarioCommandStrategy
+    public class PTextCommandStrategy : IScenarioCommandStrategy, IScenarioCommandSpec
     {
         /// <inheritdoc/>
         public string Command => "ptext";
+        /// <inheritdoc/>
+        public int MinArguments => 1;
+        /// <inheritdoc/>
+        public int MaxPositional => 1;
+        /// <inheritdoc/>
+        public IReadOnlyList<string> AllowedNamed => new[] { "key", "first", "second", "hide_color", "wait" };
 
         /// <inheritdoc/>
         public void Execute(DialogQueue dlg, List<string> positional, Dictionary<string, string> named, string arrowTarget, ILocalizationProvider locale)

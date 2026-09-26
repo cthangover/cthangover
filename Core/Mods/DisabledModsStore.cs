@@ -77,5 +77,17 @@ namespace Cthangover.Core.Mods
                 set.Add(modId);
             Save(set);
         }
+
+        /// <summary>
+        /// Forgets a mod id entirely. Called by <see cref="ModUninstaller"/> so a
+        /// deleted mod does not leave a stale entry (which would otherwise disable
+        /// a re-installed mod of the same id).
+        /// </summary>
+        public static void Remove(string modId)
+        {
+            var set = Load();
+            if (set.Remove(modId))
+                Save(set);
+        }
     }
 }

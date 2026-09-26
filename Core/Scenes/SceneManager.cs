@@ -11,6 +11,7 @@ using Cthangover.Core.UI.Dialog;
 using Cthangover.Core.UI.Event;
 using Cthangover.Core.UI.Executable;
 using Cthangover.Core.UI.Lights;
+using Cthangover.Core.UI.Menu;
 using Cthangover.Core.UI.Tool;
 using Cthangover.Core.UI.View;
 using Cthangover.Core.Utils;
@@ -158,6 +159,7 @@ namespace Cthangover.Core.Scenes
             SceneEventRegistry.Initialize();
             allScenes = SceneDefinitions.Collect();
             UiRegistry.Initialize();
+            MainMenuRegistry.Initialize();
             ModInitializerRegistry.NotifyResourcesReady();
             ModSettingsRegistry.LoadAll();
             isInitialized = true;
@@ -427,11 +429,22 @@ namespace Cthangover.Core.Scenes
             return result;
         }
 
-        private static bool IsGodotScene(string sceneName)
+        /// <summary>
+        /// True when the name is a built-in Godot scene route
+        /// (<c>mainmenu</c>/<c>menu</c>/<c>battle</c>) rather than a mod-defined
+        /// logical scene. Exposed so tooling — the validator mod — can classify
+        /// scenario scene references with the same rules as the runtime.
+        /// </summary>
+        public static bool IsNativeSceneName(string sceneName)
         {
+            if (string.IsNullOrEmpty(sceneName))
+                return false;
+
             var lower = sceneName.ToLowerInvariant();
             return lower == "mainmenu" || lower == "menu" || lower == "battle";
         }
+
+        private static bool IsGodotScene(string sceneName) => IsNativeSceneName(sceneName);
 
         /// <summary>
         /// Checks whether a logical scene name can be switched to: either a

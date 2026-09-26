@@ -1,29 +1,29 @@
 {
   "catalog": {
     "version": 1,
-    "updated_at": "2026-09-10T00:00:00Z"
+    "updated_at": "2026-09-24T00:00:00Z"
   },
   "mods": [
     {
-      "id": "core",
-      "name": "Core",
+      "id": "visual_novel_core",
+      "name": "Visual Novel Core",
       "author": "ct",
       "version": "1.0.0",
       "description": "Game core",
       "category": "Library",
       "tags": ["core", "kernel"],
-      "icon_url": "https://git.cthangover.ru/cthangover/mod_core/raw/branch/master/mod.png",
+      "icon_url": "https://git.cthangover.ru/cthangover/mod_visual_novel_core/raw/branch/master/mod.png",
       "depends": [],
       "conflicts_with": [],
       "downloads": [
         {
           "version": "1.0.0",
           "urls": [
-            "https://git.cthangover.ru/cthangover/mod_core/releases/download/v1.0.0/mod_core-v1.0.0.zip"
+            "https://git.cthangover.ru/cthangover/mod_visual_novel_core/releases/download/v1.0.0/mod_visual_novel_core-v1.0.0.zip"
           ],
-          "size_bytes": 141598121,
-          "archive_sha256": "39c42500e7495ed8ef54fbd60b9abb36cffc1606a74bb08763524503edbc2e7c",
-          "install_sha256": "80b160d43bb804478562d249c7142aa89d8764e89b4abed11bac24857cf32c2c"
+          "size_bytes": 141571314,
+          "archive_sha256": "feb675e213fa5605455926426d785335ee0c4226e7551a195c56c6110bbc1cce",
+          "install_sha256": "12cced70ba958fa4609d2181a8bc301b6532d45a177a02a9295bed10b7baba90"
         }
       ],
       "status": "stable"
@@ -37,7 +37,7 @@
       "category": "UI",
       "tags": ["ui", "interface"],
       "icon_url": "https://git.cthangover.ru/cthangover/mod_interface/raw/branch/master/mod.png",
-      "depends": ["core>=1"],
+      "depends": ["visual_novel_core>=1"],
       "conflicts_with": [],
       "downloads": [
         {
@@ -61,7 +61,7 @@
       "category": "Gameplay",
       "tags": ["battle", "cards", "gameplay"],
       "icon_url": "https://git.cthangover.ru/cthangover/mod_card_battle/raw/branch/master/mod.png",
-      "depends": ["core>=1", "interface>=1"],
+      "depends": ["visual_novel_core>=1", "interface>=1"],
       "conflicts_with": [],
       "downloads": [
         {
@@ -85,7 +85,7 @@
       "category": "Gameplay",
       "tags": ["battle", "final-fantasy", "gameplay"],
       "icon_url": "https://git.cthangover.ru/cthangover/mod_ff_battle/raw/branch/master/mod.png",
-      "depends": ["core>=1", "interface>=1"],
+      "depends": ["visual_novel_core>=1", "interface>=1"],
       "conflicts_with": [],
       "downloads": [
         {
@@ -109,7 +109,7 @@
       "category": "Gameplay",
       "tags": ["cooking", "crafting", "survival"],
       "icon_url": "https://git.cthangover.ru/cthangover/mod_cooking/raw/branch/master/mod.png",
-      "depends": ["core>=1", "interface>=1"],
+      "depends": ["visual_novel_core>=1", "interface>=1"],
       "conflicts_with": [],
       "downloads": [
         {
@@ -133,7 +133,7 @@
       "category": "Library",
       "tags": ["live2d", "ui", "graphics", "2d"],
       "icon_url": "https://git.cthangover.ru/cthangover/mod_live2d/raw/branch/master/mod.png",
-      "depends": ["core>=1"],
+      "depends": ["visual_novel_core>=1"],
       "conflicts_with": [],
       "downloads": [
         {
@@ -157,7 +157,7 @@
       "category": "Visual",
       "tags": ["live2d", "test"],
       "icon_url": "https://git.cthangover.ru/cthangover/mod_live2d_test/raw/branch/master/mod.png",
-      "depends": ["core>=1", "live2d>=1"],
+      "depends": ["visual_novel_core>=1", "live2d>=1"],
       "conflicts_with": [],
       "downloads": [
         {
@@ -181,7 +181,7 @@
       "category": "Story",
       "tags": ["story", "character"],
       "icon_url": "https://git.cthangover.ru/cthangover/mod_murakami/raw/branch/master/mod.png",
-      "depends": ["core>=1", "interface>=1"],
+      "depends": ["visual_novel_core>=1", "interface>=1"],
       "conflicts_with": [],
       "downloads": [
         {
@@ -204,7 +204,7 @@
       "description": "Integration tests for GDScript mod actions. Exercises the full pipeline: .gd load -> compile -> action registration -> scenario execution.",
       "category": "Other",
       "tags": ["test", "gdscript"],
-      "depends": ["core>=1"],
+      "depends": ["visual_novel_core>=1"],
       "conflicts_with": [],
       "downloads": [
         {
@@ -227,7 +227,7 @@
       "description": "Test mod demonstrating property patches system with wildcard and targeted patches",
       "category": "Other",
       "tags": ["test", "patches"],
-      "depends": ["core>=1"],
+      "depends": ["visual_novel_core>=1"],
       "conflicts_with": [],
       "downloads": [
         {
@@ -250,7 +250,7 @@
       "description": "Test mod demonstrating the interactive object system - clickable elements on scene with highlight",
       "category": "Other",
       "tags": ["test", "interactives"],
-      "depends": ["core>=1", "interface>=1"],
+      "depends": ["visual_novel_core>=1", "interface>=1"],
       "conflicts_with": [],
       "downloads": [
         {
@@ -273,7 +273,7 @@
       "description": "Development tools",
       "category": "Other",
       "tags": ["tools", "editor", "development"],
-      "depends": ["core>=1"],
+      "depends": ["visual_novel_core>=1"],
       "conflicts_with": [],
       "downloads": [
         {

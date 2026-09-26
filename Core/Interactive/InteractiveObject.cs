@@ -1,9 +1,10 @@
-using System;
+﻿using System;
 using Cthangover.Core.Mods;
 using Cthangover.Core.Mods.Resolvers;
 using Cthangover.Core.Scenes;
 using Cthangover.Core.UI.Executable;
 using Cthangover.Core.Utils;
+using Cthangover.Core.UI.Theming;
 using Godot;
 
 namespace Cthangover.Core.Interactive
@@ -209,8 +210,8 @@ namespace Cthangover.Core.Interactive
 				_debugRect.Size = _hitRectPx.Size;
 				_debugRect.Visible = true;
 				_debugRect.Color = IsHovered
-					? new Color(1f, 1f, 0f, 0.35f)
-					: new Color(0f, 1f, 0f, 0.2f);
+					? UiTokens.Alpha(UiTokens.Accent, 0.35f)
+					: UiTokens.Alpha(UiTokens.Success, 0.2f);
 
 				_debugLabel.Visible = true;
 				_debugLabel.Text = DefinitionId ?? ID;
@@ -389,3 +390,5 @@ namespace Cthangover.Core.Interactive
 		}
 	}
 }
+
+

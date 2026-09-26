@@ -1,7 +1,6 @@
 using System;
 using Cthangover.Core.Audio;
 using Cthangover.Core.Events;
-using Cthangover.Core.Mods;
 using Cthangover.Core.Mods.Resolvers;
 using Cthangover.Core.Utils;
 using Godot;
@@ -322,9 +321,9 @@ namespace Cthangover.Core.Scenes
 		}
 
 		/// <summary>
-		/// Loads the native base shell scene. Encapsulates the shell path so that
+		/// Loads the base shell scene. Encapsulates the shell path so that
 		/// menus, the battle return flow and mods never hardcode
-		/// <c>res://scenes/ui/base_scene.tscn</c>. Unlike
+		/// <c>scenes/ui/base_scene.tscn</c>. Unlike
 		/// <see cref="SwitchScene(GodotSceneType)"/> this keeps the current
 		/// pending-logical-scene flow: the shell's event chain picks up
 		/// <see cref="SceneManager.PendingSceneName"/> after the load and switches
@@ -337,10 +336,11 @@ namespace Cthangover.Core.Scenes
 
 		/// <summary>
 		/// Single source of truth for scene paths by <see cref="GodotSceneType"/>.
-		/// Native shells and menus return <c>res://</c> paths handled by Godot's
-		/// loader; the battle path comes from <see cref="BattleSceneRegistry"/>
-		/// (mod-relative, built by the runtime tscn pipeline). Callers should ask
-		/// for a scene type instead of hardcoding paths themselves.
+		/// Only menus remain <c>res://</c> paths handled by Godot's loader; the
+		/// shell and battle paths are mod-relative and built by the runtime tscn
+		/// pipeline (<see cref="TscnSceneResolver"/>, shell scene provided by the
+		/// <c>core</c> mod). Callers should ask for a scene type instead of
+		/// hardcoding paths themselves.
 		/// </summary>
 		public static string GetScenePath(GodotSceneType type)
 		{
@@ -349,7 +349,7 @@ namespace Cthangover.Core.Scenes
 			if (type == GodotSceneType.MainMenu)
 				return "res://scenes/menu/main_menu.tscn";
 			if (type == GodotSceneType.BaseScene)
-				return "res://scenes/ui/base_scene.tscn";
+				return "scenes/ui/base_scene.tscn";
 			return null;
 		}
 	}

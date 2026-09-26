@@ -18,6 +18,15 @@ namespace Cthangover.Core.Scenarios
         /// </summary>
         public string Command => "notify";
 
+        /// <inheritdoc/>
+        public int MinArguments => 1;
+
+        /// <inheritdoc/>
+        public int MaxPositional => 1;
+
+        /// <inheritdoc/>
+        public IReadOnlyList<string> AllowedNamed => new[] { "key" };
+
         /// <summary>
         /// Extracts the notification text from the first positional argument
         /// and enqueues it into <see cref="NotificationBuffer"/>. Supports

@@ -11,10 +11,14 @@ namespace Cthangover.Core.Scenarios
     /// If the <c>hidden</c> flag is set, the delay runs without visible text.
     /// Supports localization via the <c>key=</c> named parameter.
     /// </summary>
-    public class DelayCommandStrategy : IScenarioCommandStrategy
+    public class DelayCommandStrategy : IScenarioCommandStrategy, IScenarioCommandSpec
     {
         /// <inheritdoc/>
         public string Command => "delay";
+        /// <inheritdoc/>
+        public int MaxPositional => 2;
+        /// <inheritdoc/>
+        public IReadOnlyList<string> AllowedNamed => new[] { "key", "hidden" };
 
         /// <inheritdoc/>
         public void Execute(DialogQueue dlg, List<string> positional, Dictionary<string, string> named, string arrowTarget, ILocalizationProvider locale)

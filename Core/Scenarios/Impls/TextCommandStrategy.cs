@@ -12,10 +12,16 @@ namespace Cthangover.Core.Scenarios
     /// that controls whether the dialog waits for user input before continuing.
     /// Text can be literal or resolved from a <c>key=</c> localization entry.
     /// </summary>
-    public class TextCommandStrategy : IScenarioCommandStrategy
+    public class TextCommandStrategy : IScenarioCommandStrategy, IScenarioCommandSpec
     {
         /// <inheritdoc/>
         public string Command => "text";
+        /// <inheritdoc/>
+        public int MinArguments => 1;
+        /// <inheritdoc/>
+        public int MaxPositional => 1;
+        /// <inheritdoc/>
+        public IReadOnlyList<string> AllowedNamed => new[] { "key", "first", "second", "hide_color", "wait" };
 
         /// <inheritdoc/>
         public void Execute(DialogQueue dlg, List<string> positional, Dictionary<string, string> named, string arrowTarget, ILocalizationProvider locale)

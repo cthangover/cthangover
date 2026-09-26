@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Cthangover.Core.UI.Theming;
 using Cthangover.Core.Utils;
 using Godot;
 
@@ -88,6 +89,7 @@ namespace Cthangover.Core.UI.Tool
         {
             if (window is ToolWindow tw)
                 tw.SetupChrome();
+            CthangoverTheme.Apply(window);
             var tree = Godot.Engine.GetMainLoop() as SceneTree;
             tree?.Root.AddChild(window);
             window.PopupCentered();
@@ -128,6 +130,8 @@ namespace Cthangover.Core.UI.Tool
             if (_chromeBuilt)
                 return;
             _chromeBuilt = true;
+
+            CthangoverTheme.Apply(this);
 
             var initialSize = Size;
 
@@ -278,12 +282,12 @@ namespace Cthangover.Core.UI.Tool
 
             var style = new StyleBoxFlat
             {
-                BgColor = new Color(0.11f, 0.11f, 0.11f, 1f),
+                BgColor = UiTokens.Surface0,
                 BorderWidthLeft = 1,
                 BorderWidthRight = 1,
                 BorderWidthBottom = 1,
                 BorderWidthTop = 1,
-                BorderColor = new Color(0.22f, 0.22f, 0.22f),
+                BorderColor = UiTokens.Line,
                 ContentMarginLeft = 4,
                 ContentMarginRight = 4,
                 ContentMarginBottom = 4,
@@ -310,15 +314,17 @@ namespace Cthangover.Core.UI.Tool
                 VerticalAlignment = VerticalAlignment.Center,
                 MouseFilter = Control.MouseFilterEnum.Ignore
             };
-            _titleLabel.AddThemeColorOverride("font_color", new Color(0.82f, 0.82f, 0.82f));
+            _titleLabel.AddThemeColorOverride("font_color", UiTokens.InkBright);
             _titleBar.AddChild(_titleLabel);
 
             _maximizeBtn = CreateTitleButton("\u25A1", OnMaximizeToggle,
-                new Color(0.235f, 0.235f, 0.235f));
+                UiTokens.Muted);
+            CthangoverTheme.ApplyIcon(_maximizeBtn);
             _titleBar.AddChild(_maximizeBtn);
 
             var closeBtn = CreateTitleButton("\u2715", OnClose,
-                new Color(0.91f, 0.07f, 0.14f));
+                UiTokens.Danger);
+            CthangoverTheme.ApplyDanger(closeBtn);
             _titleBar.AddChild(closeBtn);
 
             _titleBar.GuiInput += OnTitleBarInput;
@@ -328,7 +334,7 @@ namespace Cthangover.Core.UI.Tool
 
             var titleBg = new StyleBoxFlat
             {
-                BgColor = new Color(0.18f, 0.18f, 0.18f, 1f),
+                BgColor = UiTokens.Surface2,
                 ContentMarginLeft = 10,
                 ContentMarginRight = 2,
             };
@@ -348,12 +354,12 @@ namespace Cthangover.Core.UI.Tool
                 Flat = true
             };
 
-            btn.AddThemeColorOverride("font_color", new Color(0.82f, 0.82f, 0.82f));
-            btn.AddThemeColorOverride("font_hover_color", new Color(1f, 1f, 1f));
-            btn.AddThemeColorOverride("font_hover_pressed_color", new Color(1f, 1f, 1f));
-            btn.AddThemeFontSizeOverride("font_size", 14);
+            btn.AddThemeColorOverride("font_color", UiTokens.Ink);
+            btn.AddThemeColorOverride("font_hover_color", UiTokens.InkBright);
+            btn.AddThemeColorOverride("font_hover_pressed_color", UiTokens.InkBright);
+            btn.AddThemeFontSizeOverride("font_size", UiTokens.FontBodyLarge);
 
-            var normalStyle = new StyleBoxFlat { BgColor = new Color(0, 0, 0, 0) };
+            var normalStyle = new StyleBoxFlat { BgColor = Colors.Transparent };
             btn.AddThemeStyleboxOverride("normal", normalStyle);
 
             var hoverStyle = new StyleBoxFlat { BgColor = hoverColor };

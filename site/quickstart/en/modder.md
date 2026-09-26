@@ -45,7 +45,7 @@ mods/
   "name": "My Booze Bar",                              // Mod name shown in the mod menu
   "description": "Adds a booze bar scene to the town", // Mod description shown in the mod menu
   "author": "modder",                                  // Mod author
-  "depends": ["core"]                                  // Dependency on the core game (so manual mod load ordering is not required)
+  "depends": ["visual_novel_core"]                     // Dependency on the core game (so manual mod load ordering is not required)
 }
 ```
 
@@ -79,7 +79,7 @@ Place an image at `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png`.
 
 Any PNG image will work. The game supports shader-based lighting and time of day — the background will be automatically lit.
 
-> If you don't have an image, temporarily copy `mods/core/backgrounds/home/kitchen.png` → `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png`.
+> If you don't have an image, temporarily copy `mods/visual_novel_core/backgrounds/home/kitchen.png` → `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png`.
 
 ---
 
@@ -121,7 +121,7 @@ end
 
 ## Step 6: Extending the town (scene priority)
 
-Now let's add a "Go to the bar" option to the town scene, **without touching** the original `core` file.
+Now let's add a "Go to the bar" option to the town scene, **without touching** the original `visual_novel_core` file.
 
 `mods/quickstart_modder/scenarios/town_entry_override.scenario`:
 
@@ -145,7 +145,7 @@ end
 ### Why this works
 
 The `town_entry` scene now has two scenarios:
-- `priority: 10` — default (from the `core` mod)
+- `priority: 10` — default (from the `visual_novel_core` mod)
 - `priority: 1` — ours (from `quickstart_modder`)
 
 The engine runs the scenario with the **lowest** `priority`. Our `priority: 1` wins — the player sees the new option.

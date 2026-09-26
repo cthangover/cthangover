@@ -2,7 +2,23 @@
 
 # Documentation
 
-Welcome to the cthangover documentation. Here you'll find guides, code examples, and configuration references for mod development.
+Welcome to the cthangover documentation. Here you'll find guides, code examples, and configuration references for mod and core development.
+
+## Kernel and game cores
+
+cthangover is not tied to a single genre. The C# kernel (`Core/`) provides genre-neutral infrastructure only: scenes and scenarios with the DSL, the mod registry, saves, resources, UI hosting, events, audio, and pluggable battle rulesets. It makes no assumptions about dialogue, portraits, or the shape of the game.
+
+A **game core** is an ordinary mod that turns the kernel into a concrete game. `visual_novel_core` is the reference core shipped with the project: it defines characters, avatars, backgrounds, quests, items, and scenarios for a dialogue-driven story game. It is only one possible core — the kernel does not require it, and it uses the same public interfaces available to every mod.
+
+Any genre can be built the same way. For example, a 2D sprite RPG with tile movement, turn-based encounters, and its own inventory UI can be plugged in as a core mod: it reuses the kernel (scenes, saves, events, resource pipeline) and brings its own assets, scenarios, actions, and UI scenes. The same approach works for other genres.
+
+| Layer | Location | Responsibility |
+|---|---|---|
+| Kernel | `Core/` | Genre-neutral services: scenes, scenario DSL, mods, saves, events, resources, UI, audio |
+| Game core | `mods/<core>` | Defines a concrete game: content, rules, scenes, actions, UI |
+| Gameplay mods | `mods/<mod>` | Extend a core or the kernel: patches, assets, custom actions, battle rulesets |
+
+A core can be disabled or replaced. Mods that depend on a specific core must declare it in `depends` — see [Configs — manifest.json](mods/configs/). The kernel itself never depends on a core.
 
 ## Mod assets & data
 

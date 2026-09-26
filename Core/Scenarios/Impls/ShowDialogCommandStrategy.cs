@@ -9,10 +9,12 @@ namespace Cthangover.Core.Scenarios
     /// (text box, avatars, and UI chrome) visible on screen. The inverse of
     /// <see cref="HideDialogCommandStrategy"/>.
     /// </summary>
-    public class ShowDialogCommandStrategy : IScenarioCommandStrategy
+    public class ShowDialogCommandStrategy : IScenarioCommandStrategy, IScenarioCommandSpec
     {
         /// <inheritdoc/>
         public string Command => "show_dialog";
+        /// <inheritdoc/>
+        public int MaxPositional => 0;
 
         /// <inheritdoc/>
         public void Execute(DialogQueue dlg, List<string> positional, Dictionary<string, string> named, string arrowTarget, ILocalizationProvider locale)

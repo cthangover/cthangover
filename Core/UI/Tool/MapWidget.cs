@@ -4,6 +4,7 @@ using Cthangover.Core.Factories.Impls;
 using Cthangover.Core.Mods;
 using Cthangover.Core.Mods.Resolvers;
 using Cthangover.Core.Scenes;
+using Cthangover.Core.UI.Theming;
 using Cthangover.Core.Utils;
 using Godot;
 
@@ -29,9 +30,8 @@ namespace Cthangover.Core.UI.Tool
     public partial class MapWidget : Widget
     {
         private const float MapMarginPercent = 0.08f;
-        private const float ZonePolygonAlpha = 0.12f;
-        private static readonly Color ZonePolygonColor = new(1f, 1f, 1f, ZonePolygonAlpha);
-        private static readonly Color OverlayColor = new(0f, 0f, 0f, 0.85f);
+        private static readonly Color ZonePolygonColor = UiTokens.WhiteTrace;
+        private static readonly Color OverlayColor = UiTokens.Backdrop;
 
         private Control _mapContainer;
         private List<MapZone> _zones;
@@ -244,8 +244,14 @@ namespace Cthangover.Core.UI.Tool
                 StretchMode = TextureButton.StretchModeEnum.KeepAspectCentered,
                 CustomMinimumSize = iconSize,
                 Position = anchorPos - iconSize / 2f,
-                ZIndex = 2
+                ZIndex = 2,
+                Modulate = UiTokens.Accent,
             };
+
+            var highlight = UiKit.Frame(UiTokens.RadiusSm, UiTokens.AccentTrace, UiTokens.AccentBright);
+            btn.AddThemeStyleboxOverride("hover", highlight);
+            btn.AddThemeStyleboxOverride("pressed", highlight);
+            btn.AddThemeStyleboxOverride("focus", new StyleBoxEmpty());
 
             var zoneCopy = zone;
             btn.Pressed += () => OnZoneClicked(zoneCopy);
@@ -261,8 +267,8 @@ namespace Cthangover.Core.UI.Tool
                     ZIndex = 3,
                     MouseFilter = MouseFilterEnum.Ignore
                 };
-                label.AddThemeColorOverride("font_color", Colors.White);
-                label.AddThemeFontSizeOverride("font_size", 14);
+                label.AddThemeColorOverride("font_color", UiTokens.Ink);
+                label.AddThemeFontSizeOverride("font_size", UiTokens.FontBodyLarge);
 
                 label.Position = new Vector2(
                     anchorPos.X - 60f,
@@ -276,7 +282,7 @@ namespace Cthangover.Core.UI.Tool
 
         private void CreateCloseButton()
         {
-            var closeBtn = new TextureButton
+            var closeBtn = new Button
             {
                 Name = "CloseButton",
                 AnchorRight = 1f,
@@ -286,13 +292,11 @@ namespace Cthangover.Core.UI.Tool
                 OffsetRight = -10f,
                 OffsetBottom = -10f,
                 CustomMinimumSize = new Vector2(50f, 50f),
-                IgnoreTextureSize = true,
-                StretchMode = TextureButton.StretchModeEnum.KeepAspectCentered
+                ExpandIcon = true,
+                IconAlignment = HorizontalAlignment.Center,
+                Icon = Textures.Resolve("close"),
             };
-
-            var closeIcon = Textures.Resolve("close");
-            if (closeIcon != null)
-                closeBtn.TextureNormal = closeIcon;
+            CthangoverTheme.ApplyIcon(closeBtn);
 
             closeBtn.Pressed += Hide;
             AddChild(closeBtn);

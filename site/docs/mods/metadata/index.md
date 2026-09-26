@@ -77,7 +77,7 @@ Every mod's `manifest.json` is deserialized into `ModManifest` (`Core/Mods/ModMa
 | `version` | string | Semver mod version (e.g. `"1.0.0"`). Used by the save system to detect downgrades and trigger migrations |
 | `author` | string | Author credit string |
 | `description` | string | Short description of what the mod does |
-| `category` | string | Optional catalog category, or a comma-separated combination for mods that belong to several groups (e.g. `"library, gameplay"`). Slugs: `story`, `characters`, `gameplay`, `visual`, `audio`, `ui`, `locale`, `library`, `overhaul`, `tools`, or `other` (default). Parsed case-insensitively into the `[Flags]` `CategoryType`; all selected categories are pre-checked in the Catalog Export dialog (`ModsMenu`) |
+| `category` | string | Optional catalog category, or a comma-separated combination for mods that belong to several groups (e.g. `"library, gameplay"`). Slugs: `story`, `characters`, `gameplay`, `visual`, `audio`, `ui`, `locale`, `library`, `engine`, `overhaul`, `tools`, `editor`, `debug`, or `other` (default). Parsed case-insensitively into the `[Flags]` `CategoryType`; all selected categories are pre-checked in the Catalog Export dialog (`ModsMenu`) |
 | `sources` | string[] | Glob-style paths to C# source files (e.g. `"src/"`, `"scripts/*.cs"`). Collected and compiled via Roslyn by `ModCompiler` |
 | `gd_sources` | string[] | Glob-style paths to GDScript files (e.g. `"scripts/*.gd"`, `"gd/**/*.gd"`). `ModGDScriptLoader` collects them, compiles via Godot's GDScript runtime, and registers them as scenario actions or mod initializers |
 | `depends` | string[] | Versioned dependencies in format `modId[op][version][?]` — see below. Parsed into `ModDependency` entries via `ModDependencyListConverter`; affects topological compile order and version validation |
@@ -92,8 +92,8 @@ Each `depends` entry is a string `[modId][op][version][?]`, parsed by `ModDepend
 ```jsonc
 {
     "depends": [
-        "core",           // bare id — any version
-        "core>=1",        // core 1 or newer
+        "visual_novel_core",           // bare id — any version
+        "visual_novel_core>=1",        // core 1 or newer
         "my_lib^1.2.0",   // version starting with segments 1.2.0
         "extra_icons<2",
         "soft_dep?"       // trailing ? — optional dependency

@@ -145,6 +145,8 @@ namespace Cthangover.Core.Mods
                         var catalog = JsonSerializer.Deserialize<CatalogRoot>(json, JsonOptionsProvider.ReadOptions);
                         if (catalog?.Mods != null)
                         {
+                            foreach (var mod in catalog.Mods)
+                                CatalogMerger.TagSource(mod, url);
                             allEntries.AddRange(catalog.Mods);
                             GameLogger.Log("CATALOG", $"Fetched {catalog.Mods.Count} entr(y/ies) from '{url}'");
                         }
@@ -163,7 +165,7 @@ namespace Cthangover.Core.Mods
 
                 if (allEntries.Count > 0)
                 {
-                    _cachedEntries = MergeAndDeduplicate(allEntries);
+                    _cachedEntries = CatalogMerger.MergeAndDeduplicate(allEntries);
                     SaveCache(_cachedEntries);
                     GameLogger.Log("CATALOG", $"Catalog refresh complete: {_cachedEntries.Count} total entr(y/ies) merged");
                     OnRefreshed?.Invoke();
@@ -238,70 +240,6 @@ namespace Cthangover.Core.Mods
             return null;
         }
 
-        private static List<CatalogExportEntry> MergeAndDeduplicate(List<CatalogExportEntry> entries)
-        {
-            return entries
-                .GroupBy(e => e.Id)
-                .Select(g =>
-                {
-                    var best = g.OrderByDescending(e => e.Version ?? "0.0.0",
-                        Comparer<string>.Create((a, b) => VersionHelper.Compare(a, b)))
-                        .First();
-
-                    var allDownloads = g.SelectMany(e => e.Downloads ?? new List<CatalogEntryDownload>());
-                    best.Downloads = MergeDownloadVersions(allDownloads);
-
-                    return best;
-                })
-                .ToList();
-        }
-
-        private static List<CatalogEntryDownload> MergeDownloadVersions(
-            IEnumerable<CatalogEntryDownload> downloads)
-        {
-            var merged = new Dictionary<string, CatalogEntryDownload>();
-
-            foreach (var dl in downloads)
-            {
-                if (string.IsNullOrEmpty(dl.Version))
-                    continue;
-
-                if (merged.TryGetValue(dl.Version, out var existing))
-                {
-                    var urlSet = new HashSet<string>(existing.Urls ?? new List<string>());
-                    if (dl.Urls != null)
-                        foreach (var u in dl.Urls)
-                            if (!string.IsNullOrWhiteSpace(u))
-                                urlSet.Add(u);
-                    existing.Urls = urlSet.ToList();
-
-                    if (dl.SizeBytes > 0 && existing.SizeBytes == 0)
-                        existing.SizeBytes = dl.SizeBytes;
-
-                    if (!string.IsNullOrEmpty(dl.ArchiveSha256) && string.IsNullOrEmpty(existing.ArchiveSha256))
-                        existing.ArchiveSha256 = dl.ArchiveSha256;
-
-                    if (!string.IsNullOrEmpty(dl.InstallSha256) && string.IsNullOrEmpty(existing.InstallSha256))
-                        existing.InstallSha256 = dl.InstallSha256;
-                }
-                else
-                {
-                    merged[dl.Version] = new CatalogEntryDownload
-                    {
-                        Version = dl.Version,
-                        Urls = dl.Urls?.Where(u => !string.IsNullOrWhiteSpace(u)).ToList()
-                            ?? new List<string>(),
-                        SizeBytes = dl.SizeBytes,
-                        ArchiveSha256 = dl.ArchiveSha256,
-                        InstallSha256 = dl.InstallSha256,
-                    };
-                }
-            }
-
-            return merged.Values.OrderByDescending(d => d.Version ?? "0.0.0",
-                System.Collections.Generic.Comparer<string>.Create(
-                    (a, b) => VersionHelper.Compare(a, b))).ToList();
-        }
 
         private static void SaveCache(List<CatalogExportEntry> entries)
         {

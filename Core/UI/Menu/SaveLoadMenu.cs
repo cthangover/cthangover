@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Cthangover.Core.Scenes;
 using Cthangover.Core.Settings;
+using Cthangover.Core.UI.Theming;
 using Godot;
 
 namespace Cthangover.Core.UI.Menu
@@ -35,6 +36,7 @@ namespace Cthangover.Core.UI.Menu
             _titleLabel = GetNode<Label>("Panel/Margin/VBox/Title");
             _slotList = GetNode<SaveSlotList>("Panel/Margin/VBox/SlotGrid");
             _backBtn = GetNode<Button>("Panel/Margin/VBox/BackBtn");
+            CthangoverTheme.ApplyIcon(_backBtn);
 
             _slotList.SlotPressed += OnSlotPressed;
             _backBtn.Pressed += OnBackPressed;
@@ -142,6 +144,7 @@ namespace Cthangover.Core.UI.Menu
             dialog.CancelButtonText = TranslationServer.Translate("ui/save/cancel_button");
             dialog.Exclusive = true;
             AddChild(dialog);
+            CthangoverTheme.ApplyPrimary(dialog.GetOkButton());
 
             dialog.Confirmed += () =>
             {

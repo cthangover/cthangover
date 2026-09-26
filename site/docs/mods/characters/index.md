@@ -105,7 +105,7 @@ Be honest with yourself about what this gives you:
 
 ## Real examples
 
-### Player character — `core/characters/player/marao.json`
+### Player character — `visual_novel_core/characters/player/marao.json`
 
 ```jsonc
 {
@@ -130,7 +130,7 @@ Be honest with yourself about what this gives you:
 }
 ```
 
-### Enemy — `core/characters/enemies/wolf_1.json`
+### Enemy — `visual_novel_core/characters/enemies/wolf_1.json`
 
 ```jsonc
 {
@@ -166,7 +166,7 @@ Be honest with yourself about what this gives you:
 }
 ```
 
-### Boss enemy — `core/characters/enemies/werewolf_girl_1.json`
+### Boss enemy — `visual_novel_core/characters/enemies/werewolf_girl_1.json`
 
 ```jsonc
 {
@@ -245,7 +245,7 @@ read whatever keys they care about (the stock physics actions use
 executors (`IActionExecutor`) can read their own via the `GetStr` / `GetInt` /
 `GetFloat` / `GetBool` helpers on `ActionCharacter`.
 
-The core mod keeps its actions in `characters/actions/*.json` registered through
+The visual_novel_core mod keeps its actions in `characters/actions/*.json` registered through
 a `characters/actions.json` index with `${}` includes:
 
 ```jsonc

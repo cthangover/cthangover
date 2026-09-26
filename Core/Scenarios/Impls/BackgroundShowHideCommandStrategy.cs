@@ -11,10 +11,14 @@ namespace Cthangover.Core.Scenarios
     /// in (<c>show</c>) or out (<c>hide</c>) with configurable <c>duration</c> and
     /// <c>wait</c> flag. Delegates to <see cref="DialogQueue.BackgroundShowHide"/>.
     /// </summary>
-    public class BackgroundShowHideCommandStrategy : IScenarioCommandStrategy
+    public class BackgroundShowHideCommandStrategy : IScenarioCommandStrategy, IScenarioCommandSpec
     {
         /// <inheritdoc/>
         public string Command => "background_show_hide";
+        /// <inheritdoc/>
+        public int MaxPositional => 1;
+        /// <inheritdoc/>
+        public IReadOnlyList<string> AllowedNamed => new[] { "duration", "wait" };
 
         /// <inheritdoc/>
         public void Execute(DialogQueue dlg, List<string> positional, Dictionary<string, string> named, string arrowTarget, ILocalizationProvider locale)

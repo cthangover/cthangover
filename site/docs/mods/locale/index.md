@@ -52,7 +52,7 @@ settings/volume = Volume
 
 ## Real examples
 
-From `mods/core/locale/en.properties`:
+From `mods/visual_novel_core/locale/en.properties`:
 
 ```properties
 # Character names

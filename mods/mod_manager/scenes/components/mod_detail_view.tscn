@@ -1,0 +1,180 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="src/UI/ModDetailView.cs" id="1_detail"]
+
+[node name="ModDetailView" type="VBoxContainer"]
+theme_override_constants/separation = 8
+script = ExtResource("1_detail")
+
+[node name="Scroll" type="ScrollContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Content" type="VBoxContainer" parent="Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 14
+
+[node name="Hero" type="PanelContainer" parent="Scroll/Content"]
+layout_mode = 2
+
+[node name="HeroMargin" type="MarginContainer" parent="Scroll/Content/Hero"]
+layout_mode = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 14
+
+[node name="HeroRow" type="HBoxContainer" parent="Scroll/Content/Hero/HeroMargin"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Cover" type="Control" parent="Scroll/Content/Hero/HeroMargin/HeroRow"]
+custom_minimum_size = Vector2(180, 180)
+layout_mode = 2
+clip_contents = true
+mouse_filter = 2
+
+[node name="Placeholder" type="ColorRect" parent="Scroll/Content/Hero/HeroMargin/HeroRow/Cover"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.054902, 0.058824, 0.082353, 1)
+
+[node name="Image" type="TextureRect" parent="Scroll/Content/Hero/HeroMargin/HeroRow/Cover"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Info" type="VBoxContainer" parent="Scroll/Content/Hero/HeroMargin/HeroRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="Back" type="Button" parent="Scroll/Content/Hero/HeroMargin/HeroRow/Info"]
+layout_mode = 2
+size_flags_horizontal = 0
+
+[node name="Title" type="Label" parent="Scroll/Content/Hero/HeroMargin/HeroRow/Info"]
+layout_mode = 2
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 22
+
+[node name="Author" type="Label" parent="Scroll/Content/Hero/HeroMargin/HeroRow/Info"]
+layout_mode = 2
+
+[node name="Meta" type="Label" parent="Scroll/Content/Hero/HeroMargin/HeroRow/Info"]
+layout_mode = 2
+
+[node name="VersionRow" type="HBoxContainer" parent="Scroll/Content/Hero/HeroMargin/HeroRow/Info"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Caption" type="Label" parent="Scroll/Content/Hero/HeroMargin/HeroRow/Info/VersionRow"]
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="Versions" type="OptionButton" parent="Scroll/Content/Hero/HeroMargin/HeroRow/Info/VersionRow"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+
+[node name="Installed" type="Label" parent="Scroll/Content/Hero/HeroMargin/HeroRow/Info/VersionRow"]
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="Size" type="Label" parent="Scroll/Content/Hero/HeroMargin/HeroRow/Info/VersionRow"]
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="ActionsRow" type="HBoxContainer" parent="Scroll/Content"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ConflictBox" type="VBoxContainer" parent="Scroll/Content"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Caption" type="Label" parent="Scroll/Content/ConflictBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+
+[node name="Text" type="Label" parent="Scroll/Content/ConflictBox"]
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="DescriptionBox" type="VBoxContainer" parent="Scroll/Content"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Caption" type="Label" parent="Scroll/Content/DescriptionBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+
+[node name="Text" type="Label" parent="Scroll/Content/DescriptionBox"]
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="ChangelogBox" type="VBoxContainer" parent="Scroll/Content"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Caption" type="Label" parent="Scroll/Content/ChangelogBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+
+[node name="Text" type="Label" parent="Scroll/Content/ChangelogBox"]
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="DependsBox" type="VBoxContainer" parent="Scroll/Content"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Caption" type="Label" parent="Scroll/Content/DependsBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+
+[node name="Text" type="Label" parent="Scroll/Content/DependsBox"]
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="UsedByBox" type="VBoxContainer" parent="Scroll/Content"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Caption" type="Label" parent="Scroll/Content/UsedByBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+
+[node name="Text" type="Label" parent="Scroll/Content/UsedByBox"]
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="ConflictsBox" type="VBoxContainer" parent="Scroll/Content"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Caption" type="Label" parent="Scroll/Content/ConflictsBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+
+[node name="Text" type="Label" parent="Scroll/Content/ConflictsBox"]
+layout_mode = 2
+autowrap_mode = 3

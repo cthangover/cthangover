@@ -32,7 +32,7 @@ Quest definitions with status-based progression and tag-based conditions that co
 
 ## Real examples
 
-### Prologue quest — `core/quests/quests.json`
+### Prologue quest — `visual_novel_core/quests/quests.json`
 
 ```jsonc
 {

@@ -12,9 +12,18 @@ namespace Cthangover.Core.Scenarios
 	/// Usage: <c>interactive_add door_to_kitchen</c>
 	///        <c>interactive_add door_to_kitchen layer=foreground</c>
 	/// </summary>
-	public class InteractiveAddCommandStrategy : IScenarioCommandStrategy
+	public class InteractiveAddCommandStrategy : IScenarioCommandStrategy, IScenarioCommandSpec
 	{
 		public string Command => "interactive_add";
+
+		/// <inheritdoc/>
+		public int MinPositional => 1;
+
+		/// <inheritdoc/>
+		public int MaxPositional => 1;
+
+		/// <inheritdoc/>
+		public IReadOnlyList<string> AllowedNamed => new[] { "layer" };
 
 		public void Execute(DialogQueue dlg, List<string> positional, Dictionary<string, string> named, string arrowTarget, ILocalizationProvider locale)
 		{

@@ -1,5 +1,6 @@
 ﻿using Cthangover.Core.Events;
 using Cthangover.Core.Scenes;
+using Cthangover.Core.UI.Theming;
 using Cthangover.Core.Utils;
 using Godot;
 
@@ -42,14 +43,13 @@ namespace Cthangover.Core.UI.Messages
         }
 
         /// <summary>
-        /// Shows a yellow message at the next vertical slot. Convenience overload
-        /// using the default warning/accent color.
+        /// Shows a message in the default warning colour at the next vertical slot.
         /// </summary>
         /// <param name="text">The message text to display.</param>
         /// <param name="speed">Fade speed multiplier (higher = faster fade, default 1).</param>
         public static void AddMessage(string text, float speed = 1f)
         {
-            AddMessage(text, Colors.Yellow, speed);
+            AddMessage(text, UiTokens.Warning, speed);
         }
 
 
@@ -70,15 +70,15 @@ namespace Cthangover.Core.UI.Messages
 
 
         /// <summary>
-        /// Shows a yellow message at a specific vertical position, bypassing
-        /// the cycling slot system.
+        /// Shows a message in the default warning colour at a specific vertical
+        /// position, bypassing the cycling slot system.
         /// </summary>
         /// <param name="position">Y-offset in pixels for this message.</param>
         /// <param name="text">The message text to display.</param>
         /// <param name="speed">Fade speed multiplier (default 1).</param>
         public static void AddMessage(float position, string text, float speed = 1f)
         {
-            AddMessage(position, text, Colors.Yellow, speed);
+            AddMessage(position, text, UiTokens.Warning, speed);
         }
 
         /// <summary>

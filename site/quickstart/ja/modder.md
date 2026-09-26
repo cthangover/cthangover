@@ -45,7 +45,7 @@ mods/
   "name": "私の酒場",                   // Modメニューに表示されるMod名
   "description": "町に酒場シーンを追加",  // Modメニューに表示されるModの説明
   "author": "modder",                 // Mod作者
-  "depends": ["core"]                 // コアゲームへの依存（手動でMod読み込み順序を設定する必要なし）
+  "depends": ["visual_novel_core"]    // コアゲームへの依存（手動でMod読み込み順序を設定する必要なし）
 }
 ```
 
@@ -79,7 +79,7 @@ mods/
 
 任意のPNG画像が使用可能です。ゲームはシェーダーベースのライティングと時間帯をサポートしており — 背景は自動的に照らされます。
 
-> 画像がない場合は、一時的に `mods/core/backgrounds/home/kitchen.png` → `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png` をコピーしてください。
+> 画像がない場合は、一時的に `mods/visual_novel_core/backgrounds/home/kitchen.png` → `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png` をコピーしてください。
 
 ---
 
@@ -121,7 +121,7 @@ end
 
 ## ステップ 6：町の拡張（シーン優先度）
 
-元の `core` ファイルに**触れずに**、町のシーンに「酒場へ行く」オプションを追加しましょう。
+元の `visual_novel_core` ファイルに**触れずに**、町のシーンに「酒場へ行く」オプションを追加しましょう。
 
 `mods/quickstart_modder/scenarios/town_entry_override.scenario`：
 
@@ -145,7 +145,7 @@ end
 ### なぜこれが機能するのか
 
 `town_entry` シーンには2つのシナリオがあります：
-- `priority: 10` — デフォルト（`core` Modから）
+- `priority: 10` — デフォルト（`visual_novel_core` Modから）
 - `priority: 1` — 私たちのもの（`quickstart_modder` から）
 
 エンジンは**最も低い** `priority` のシナリオを実行します。私たちの `priority: 1` が勝ち — プレイヤーは新しいオプションを見ます。

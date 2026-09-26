@@ -15,7 +15,7 @@ namespace Cthangover.Core.UI.Executable
     /// dialog queue. Resolves the scenario path via convention: if ScenarioPath
     /// is set, uses that; otherwise searches all mods for a matching file name
     /// derived from the class name (stripping "Event" suffix), with a fallback
-    /// to res://mods/core/scenarios/. CustomMappings allows code to register
+    /// to res://mods/visual_novel_core/scenarios/. CustomMappings allows code to register
     /// arbitrary class-to-path bindings for mod-provided scenarios. Supports
     /// inline ScenarioText for embedded scenarios that don't need a separate
     /// file. Checks conditions through ScenarioCondition.Evaluate before triggering.

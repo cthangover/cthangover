@@ -114,5 +114,16 @@ namespace Cthangover.Core.Mods
             order.RemoveAll(id => !allModIds.Contains(id));
             return order;
         }
+
+        /// <summary>
+        /// Removes a mod id from the saved manual order and persists the change.
+        /// Called by <see cref="ModUninstaller"/> after the mod's files are gone.
+        /// </summary>
+        public static void Remove(string modId)
+        {
+            var order = Load();
+            if (order.Remove(modId))
+                Save(order);
+        }
     }
 }

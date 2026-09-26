@@ -34,7 +34,7 @@ Every mod needs a manifest. Create `mods/quickstart_player/manifest.json`:
   "name": "Marao Buff",             // Display name shown in the mod management menu
   "description": "My first mod!",   // Description visible in the mod list and catalog
   "author": "player",               // Mod author (arbitrary string)
-  "depends": ["core"]               // Dependency on the core game (so manual mod load ordering is not required)
+  "depends": ["visual_novel_core"]  // Dependency on the core game (so manual mod load ordering is not required)
 }
 ```
 
@@ -64,7 +64,7 @@ Create `mods/quickstart_player/patches/characters.json`:
 
 ### How it works
 
-- **`"Id": "Marao"`** — the patch target: character with identifier `Marao` (defined in the `core` mod).
+- **`"Id": "Marao"`** — the patch target: character with identifier `Marao` (defined in the `visual_novel_core` mod).
 - **`"Health": 5000`**, **`"Attack": 1200`**, **`"Points": 2`** — overwrite the character's fields. New values replace old ones.
 - **`"Actions$add": ["physics/stun"]`** — the `$add` suffix means "append to the array". The action `physics/stun` is added to the list. The default `physics/attack` and `physics/defence` remain.
 

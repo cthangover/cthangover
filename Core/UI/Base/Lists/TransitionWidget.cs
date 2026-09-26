@@ -1,5 +1,6 @@
-using Cthangover.Core.Mods;
+﻿using Cthangover.Core.Mods;
 using Cthangover.Core.Mods.Resolvers;
+using Cthangover.Core.UI.Theming;
 using Godot;
 
 namespace Cthangover.Core.UI.Base.Lists
@@ -71,7 +72,7 @@ namespace Cthangover.Core.UI.Base.Lists
         {
             if (contentGroup != null)
             {
-                contentGroup.Modulate = new Color(1, 1, 1, 0);
+                contentGroup.Modulate = UiTokens.Alpha(UiTokens.White, 0f);
                 contentGroup.MouseFilter = MouseFilterEnum.Ignore;
             }
 
@@ -98,7 +99,7 @@ namespace Cthangover.Core.UI.Base.Lists
             {
                 if (contentGroup != null)
                 {
-                    contentGroup.Modulate = new Color(1, 1, 1, 1);
+                    contentGroup.Modulate = UiTokens.White;
                     contentGroup.MouseFilter = MouseFilterEnum.Stop;
                 }
             };
@@ -122,3 +123,5 @@ namespace Cthangover.Core.UI.Base.Lists
         }
     }
 }
+
+

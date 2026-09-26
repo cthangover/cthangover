@@ -10,10 +10,16 @@ namespace Cthangover.Core.Scenarios
     /// Text can be literal or resolved from a <c>key=</c> localization entry.
     /// Silently does nothing if no text value is provided or resolved.
     /// </summary>
-    public class TitleCommandStrategy : IScenarioCommandStrategy
+    public class TitleCommandStrategy : IScenarioCommandStrategy, IScenarioCommandSpec
     {
         /// <inheritdoc/>
         public string Command => "title";
+        /// <inheritdoc/>
+        public int MinArguments => 1;
+        /// <inheritdoc/>
+        public int MaxPositional => 1;
+        /// <inheritdoc/>
+        public IReadOnlyList<string> AllowedNamed => new[] { "key" };
 
         /// <inheritdoc/>
         public void Execute(DialogQueue dlg, List<string> positional, Dictionary<string, string> named, string arrowTarget, ILocalizationProvider locale)

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Cthangover.Core.Factories.Impls;
 using Cthangover.Core.Mods;
 using Cthangover.Core.Scenes;
+using Cthangover.Core.UI.Theming;
 using Cthangover.Core.Utils;
 using Godot;
 
@@ -48,31 +49,38 @@ namespace Cthangover.Core.UI.Tool
             var title = TranslationServer.Translate(entry.Button.Locale);
             var icon = UIIconFactory.Instance.Get(entry.Button.Icon);
 
-            BaseButton button;
+            var button = CreateToolbarButton(title, icon);
+            var id = entry.Id;
+            button.Pressed += () => UiRegistry.Toggle(id);
+            return button;
+        }
+
+        private static BaseButton CreateToolbarButton(string title, Texture2D icon)
+        {
+            var button = new Button
+            {
+                CustomMinimumSize = new Vector2(60, 60),
+                SizeFlagsVertical = SizeFlags.ShrinkCenter,
+                TooltipText = title,
+            };
+
             if (icon != null)
             {
-                button = new TextureButton
-                {
-                    TextureNormal = icon,
-                    CustomMinimumSize = new Vector2(60, 60),
-                    SizeFlagsVertical = SizeFlags.ShrinkCenter,
-                    IgnoreTextureSize = true,
-                    StretchMode = TextureButton.StretchModeEnum.KeepAspectCentered
-                };
+                var iconRect = UiKit.Icon(icon, 60);
+                button.AddChild(iconRect);
+                iconRect.SetAnchorsPreset(LayoutPreset.FullRect);
             }
             else
             {
-                button = new Button
-                {
-                    Text = title,
-                    CustomMinimumSize = new Vector2(60, 60),
-                    SizeFlagsVertical = SizeFlags.ShrinkCenter
-                };
+                button.Text = title;
             }
 
-            var id = entry.Id;
-            button.TooltipText = title;
-            button.Pressed += () => UiRegistry.Toggle(id);
+            button.AddThemeStyleboxOverride("normal", UiKit.Frame(UiTokens.RadiusSm, UiTokens.Surface0, UiTokens.Line));
+            button.AddThemeStyleboxOverride("hover", UiKit.Frame(UiTokens.RadiusSm, UiTokens.Surface1, UiTokens.AccentLine));
+            button.AddThemeStyleboxOverride("pressed", UiKit.Frame(UiTokens.RadiusSm, UiTokens.Surface1, UiTokens.AccentLineStrong));
+            button.AddThemeStyleboxOverride("disabled", UiKit.Frame(UiTokens.RadiusSm, UiTokens.Surface0, UiTokens.LineDisabled));
+            button.AddThemeStyleboxOverride("focus", new StyleBoxEmpty());
+
             return button;
         }
 
@@ -90,29 +98,7 @@ namespace Cthangover.Core.UI.Tool
                 if (!string.IsNullOrEmpty(buttonDef.IconPath) && ResourceLoader.Exists(buttonDef.IconPath))
                     icon = ResourceLoader.Load<Texture2D>(buttonDef.IconPath);
 
-                BaseButton btn;
-                if (icon != null)
-                {
-                    btn = new TextureButton
-                    {
-                        TextureNormal = icon,
-                        CustomMinimumSize = new Vector2(60, 60),
-                        SizeFlagsVertical = SizeFlags.ShrinkCenter,
-                        IgnoreTextureSize = true,
-                        StretchMode = TextureButton.StretchModeEnum.KeepAspectCentered
-                    };
-                }
-                else
-                {
-                    btn = new Button
-                    {
-                        Text = title,
-                        CustomMinimumSize = new Vector2(60, 60),
-                        SizeFlagsVertical = SizeFlags.ShrinkCenter
-                    };
-                }
-
-                btn.TooltipText = title;
+                var btn = CreateToolbarButton(title, icon);
                 btn.Pressed += () =>
                 {
                     var tool = ToolFactory.Instance.Get(toolId);

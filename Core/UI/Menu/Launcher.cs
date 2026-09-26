@@ -6,6 +6,7 @@ using Cthangover.Core.Mods;
 using Cthangover.Core.Scenes;
 using Cthangover.Core.Settings;
 using Cthangover.Core.UI.Base;
+using Cthangover.Core.UI.Theming;
 using Godot;
 
 namespace Cthangover.Core.UI.Menu
@@ -51,6 +52,8 @@ namespace Cthangover.Core.UI.Menu
 
         public override void _Ready()
         {
+            CthangoverTheme.Apply(this);
+
             if (BootController.IsLauncherBoot)
             {
                 ShowBootOverlay();
@@ -95,7 +98,7 @@ namespace Cthangover.Core.UI.Menu
 
             var bg = new ColorRect();
             bg.SetAnchorsPreset(LayoutPreset.FullRect);
-            bg.Color = new Color(0.08f, 0.06f, 0.09f, 1f);
+            bg.Color = UiTokens.Page;
             _bootOverlay.AddChild(bg);
 
             var log = new BootLogPanel();
@@ -183,7 +186,7 @@ namespace Cthangover.Core.UI.Menu
         {
             var bg = new ColorRect();
             bg.AnchorsPreset = (int)LayoutPreset.FullRect;
-            bg.Color = new Color(0.1f, 0.08f, 0.1f, 1f);
+            bg.Color = UiTokens.Page;
             AddChild(bg);
 
             var centerPanel = new Panel();
@@ -207,7 +210,9 @@ namespace Cthangover.Core.UI.Menu
             var title = new Label();
             title.Text = Tr("launcher/title");
             title.HorizontalAlignment = HorizontalAlignment.Center;
-            title.AddThemeFontSizeOverride("font_size", 28);
+            title.Uppercase = true;
+            title.AddThemeFontSizeOverride("font_size", UiTokens.FontTitle);
+            title.AddThemeColorOverride("font_color", UiTokens.InkBright);
             vbox.AddChild(title);
 
             vbox.AddChild(new HSeparator());
@@ -247,11 +252,13 @@ namespace Cthangover.Core.UI.Menu
             var exitBtn = new Button();
             exitBtn.Text = Tr("launcher/exit");
             exitBtn.Pressed += OnExitClick;
+            CthangoverTheme.ApplyDanger(exitBtn);
             btnRow.AddChild(exitBtn);
 
             var playBtn = new Button();
             playBtn.Text = Tr("launcher/play");
             playBtn.Pressed += OnPlayClick;
+            CthangoverTheme.ApplyPrimary(playBtn);
             btnRow.AddChild(playBtn);
 
             vbox.AddChild(btnRow);

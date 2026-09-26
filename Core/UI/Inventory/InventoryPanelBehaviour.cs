@@ -1,80 +1,115 @@
+using System;
 using System.Collections.Generic;
 using Cthangover.Core.Audio;
 using Cthangover.Core.Battle;
+using Cthangover.Core.Characters;
+using Cthangover.Core.Factories.Impls;
 using Cthangover.Core.Items;
 using Cthangover.Core.Scenes;
 using Cthangover.Core.Settings;
-using Cthangover.Core.Utils;
+using Cthangover.Core.UI.Theming;
 using Godot;
 
 namespace Cthangover.Core.UI.Inventory
 {
     /// <summary>
-    /// Full-screen inventory panel with a left-side item grid and a
-    /// right-side detail panel. Extends <see cref="Widget"/> so its
-    /// lifecycle is managed by the ToolBox toolbar — tapping the bag
-    /// button toggles Show/Hide via <see cref="Switch"/>.
+    /// Full-screen inventory panel following mockup 1: a header with type
+    /// tabs and battle action-point pips, a search/sort toolbar, a six-column
+    /// item grid on the left and an "item passport" on the right. The passport
+    /// shows the translated name, type badges, description, a stats table, the
+    /// mod-defined <c>PropertyData</c> bag and the contextual actions for the
+    /// selected item (use/apply/learn/drop) with a quantity slider.
     ///
-    /// The left split is a 6-column scrollable grid of
-    /// <see cref="InventoryItemBehaviour"/> cells. Hovering highlights a
-    /// cell, clicking selects it and populates the right panel with the
-    /// item's translated name, description, count, and contextual action
-    /// buttons. When the inventory mutates
-    /// (<see cref="IInventory.Change"/>), the grid rebuilds and the
-    /// selection survives if the same item ID is still present.
+    /// Affordances are centralised in <see cref="InventoryItemUi"/> so the grid
+    /// cell, the passport buttons and the target list never disagree. Actions
+    /// that fail (<c>UseAction</c> returning <c>false</c>) do not consume the
+    /// item and surface the reason in the passport message area instead.
+    /// During battle every use/apply/drop costs one action point from the
+    /// active character; outside battle actions are free.
     ///
-    /// Action costs are context-dependent: outside battle actions are
-    /// free; during an active battle
-    /// (<see cref="BattleSceneContext.Instance"/>), every item action
-    /// costs 1 action point from the active character
-    /// (<see cref="BattleSceneContext.ActiveCharacter"/>). If the
-    /// character has insufficient AP, an error message is displayed and
-    /// the action is blocked.
-    ///
-    /// For <see cref="ItemType.TargetUsed"/> items, clicking "Use"
-    /// opens a <see cref="CharacterTargetPanel"/> sub-panel so the
-    /// player can choose which party member receives the item effect.
+    /// The grid rebuilds on every <see cref="IInventory.Change"/>, preserving
+    /// the selected item by ID when it still exists.
     /// </summary>
     public partial class InventoryPanelBehaviour : Widget
     {
-        private VBoxContainer _rightPanel;
-        private Label _itemName;
-        private RichTextLabel _itemDescription;
-        private Label _itemCount;
-        private Button _useButton;
-        private Button _dropButton;
-        private Label _messageLabel;
-        private Label _quantityLabel;
-        private HSlider _quantitySlider;
-        private Button _plusButton;
-        private Button _minusButton;
-        private Button _maxButton;
-        private Button _dropConfirmButton;
-        private HBoxContainer _quantityRow;
-        private VBoxContainer _quantityContainer;
-        private ScrollContainer _scrollContainer;
-        private Control _gridContent;
+        private enum BagFilter
+        {
+            All,
+            Food,
+            Resource,
+            Recipe,
+            Quest,
+        }
 
+        private enum SortMode
+        {
+            Type,
+            Name,
+            Cost,
+            Count,
+        }
+
+        private enum MessageKind
+        {
+            None,
+            Ok,
+            Error,
+        }
+
+        private const int Columns = 6;
+        private const float CellGap = 10f;
+        private const float PassportWidth = 430f;
+
+        private static readonly (BagFilter Filter, string Key)[] FilterTabs =
+        {
+            (BagFilter.All, "ui/inventory/tab_all"),
+            (BagFilter.Food, "ui/inventory/tab_food"),
+            (BagFilter.Resource, "ui/inventory/tab_resource"),
+            (BagFilter.Recipe, "ui/inventory/tab_recipe"),
+            (BagFilter.Quest, "ui/inventory/tab_quest"),
+        };
+
+        private static readonly Color BackdropColor = UiTokens.Backdrop;
+        private static readonly Color PanelColor = UiTokens.Surface0;
+        private static readonly Color CellColor = UiTokens.Surface1;
+        private static readonly Color StatColor = UiTokens.Surface2;
+        private static readonly Color LineColor = UiTokens.Line;
+        private static readonly Color CellLineColor = UiTokens.LineSoft;
+        private static readonly Color InkColor = UiTokens.Ink;
+        private static readonly Color InkBrightColor = UiTokens.InkBright;
+        private static readonly Color BodyColor = UiTokens.Body;
+        private static readonly Color MutedColor = UiTokens.Muted;
+        private static readonly Color FaintColor = UiTokens.Faint;
+        private static readonly Color GoldColor = UiTokens.Accent;
+        private static readonly Color GoldBrightColor = UiTokens.AccentBright;
+        private static readonly Color DangerColor = UiTokens.Danger;
+        private static readonly Color OkColor = UiTokens.Ok;
+        private static readonly Color ErrorColor = UiTokens.DangerText;
+
+        private BagFilter _filter = BagFilter.All;
+        private SortMode _sort = SortMode.Type;
+        private string _search = string.Empty;
         private IItemContainer _selectedContainer;
         private InventoryItemBehaviour _selectedCell;
         private int _dropQuantity = 1;
+        private bool _dropOpen;
+        private bool _targetOpen;
+        private MessageKind _messageKind = MessageKind.None;
+        private string _messageText;
+
         private readonly List<InventoryItemBehaviour> _itemCells = new();
-        private CharacterTargetPanel _targetPanel;
-        private ModScenePrefab _itemScene;
+
+        private Control _gridContent;
+        private HBoxContainer _tabsRow;
+        private LineEdit _searchEdit;
+        private OptionButton _sortOption;
+        private HBoxContainer _apBox;
+        private HBoxContainer _apPips;
+        private Label _shownLabel;
+        private VBoxContainer _passport;
+        private Label _dropQuantityLabel;
         private System.Action<string, int> _onInventoryChange;
 
-        private const int Columns = 6;
-        private const float CellPadding = 4f;
-        private static readonly Color HoverColor = new Color(1f, 1f, 1f, 1f);
-        private static readonly Color NormalColor = new Color(0.7f, 0.7f, 0.7f, 1f);
-        private static readonly Color SelectedColor = new Color(1f, 1f, 0.6f, 1f);
-        private static readonly Color ErrorColor = new Color(0.9f, 0.3f, 0.3f, 1f);
-
-        /// <summary>
-        /// Subscribes to inventory change events for auto-refresh,
-        /// wires the close button from the scene tree, and ensures mouse
-        /// events are captured.
-        /// </summary>
         public override void _Ready()
         {
             base._Ready();
@@ -83,271 +118,399 @@ namespace Cthangover.Core.UI.Inventory
             MouseFilter = MouseFilterEnum.Stop;
         }
 
-        /// <summary>
-        /// Unsubscribes from the inventory change event to prevent
-        /// leaks when leaving the scene tree.
-        /// </summary>
         public override void _ExitTree()
         {
             base._ExitTree();
             GameData.Instance.Runtime.Inventory.Change -= _onInventoryChange;
         }
 
-        /// <summary>
-        /// Builds all UI elements programmatically: background overlay,
-        /// title, left/right split with scrollable grid and detail panel,
-        /// quantity selector for dropping, and close button. Called
-        /// exactly once on the first Show().
-        /// </summary>
         protected override void OnceConstruct()
         {
             SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
             MouseFilter = MouseFilterEnum.Stop;
 
-            _itemScene = new ModScenePrefab("scenes/ui/inventory_item.tscn");
+            var backdrop = new ColorRect();
+            backdrop.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+            backdrop.Color = BackdropColor;
+            backdrop.MouseFilter = MouseFilterEnum.Ignore;
+            AddChild(backdrop);
 
-            var bg = new ColorRect();
-            bg.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-            bg.Color = new Color(0, 0, 0, 0.9f);
-            bg.MouseFilter = MouseFilterEnum.Ignore;
-            AddChild(bg);
+            var panel = new Panel();
+            panel.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+            panel.OffsetLeft = 40;
+            panel.OffsetTop = 78;
+            panel.OffsetRight = -40;
+            panel.OffsetBottom = -30;
+            panel.AddThemeStyleboxOverride("panel", MakePanelStyle(PanelColor, LineColor, 8, 0f, 0f, true));
+            AddChild(panel);
 
-            var title = new Label();
-            title.Text = TranslationServer.Translate("ui/inventory/title");
-            title.AddThemeFontSizeOverride("font_size", 22);
-            title.HorizontalAlignment = HorizontalAlignment.Center;
-            title.SetAnchorsAndOffsetsPreset(LayoutPreset.TopWide);
-            title.OffsetTop = 10;
-            title.OffsetBottom = 40;
-            title.OffsetLeft = 20;
-            title.OffsetRight = -20;
-            title.MouseFilter = MouseFilterEnum.Ignore;
-            AddChild(title);
+            var margin = new MarginContainer();
+            margin.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+            margin.AddThemeConstantOverride("margin_left", 24);
+            margin.AddThemeConstantOverride("margin_right", 24);
+            margin.AddThemeConstantOverride("margin_top", 16);
+            margin.AddThemeConstantOverride("margin_bottom", 14);
+            panel.AddChild(margin);
 
-            var hbox = new HBoxContainer();
-            hbox.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-            hbox.OffsetTop = 50;
-            hbox.OffsetBottom = -60;
-            hbox.OffsetLeft = 20;
-            hbox.OffsetRight = -20;
-            hbox.AddThemeConstantOverride("separation", 10);
-            AddChild(hbox);
+            var root = new VBoxContainer();
+            root.AddThemeConstantOverride("separation", 12);
+            margin.AddChild(root);
 
-            var leftPanel = new VBoxContainer();
-            leftPanel.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-            leftPanel.SizeFlagsStretchRatio = 3;
-            hbox.AddChild(leftPanel);
-
-            _scrollContainer = new ScrollContainer();
-            _scrollContainer.SizeFlagsVertical = SizeFlags.ExpandFill;
-            _scrollContainer.HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled;
-            leftPanel.AddChild(_scrollContainer);
-
-            _gridContent = new Control();
-            _gridContent.MouseFilter = MouseFilterEnum.Pass;
-            _scrollContainer.AddChild(_gridContent);
-
-            _rightPanel = new VBoxContainer();
-            _rightPanel.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-            _rightPanel.SizeFlagsStretchRatio = 2;
-            _rightPanel.CustomMinimumSize = new Vector2(250, 0);
-            _rightPanel.AddThemeConstantOverride("separation", 8);
-            hbox.AddChild(_rightPanel);
-
-            _itemName = new Label();
-            _itemName.AddThemeFontSizeOverride("font_size", 18);
-            _itemName.HorizontalAlignment = HorizontalAlignment.Center;
-            _itemName.Visible = false;
-            _rightPanel.AddChild(_itemName);
-
-            _itemDescription = new RichTextLabel();
-            _itemDescription.BbcodeEnabled = true;
-            _itemDescription.ScrollActive = true;
-            _itemDescription.CustomMinimumSize = new Vector2(0, 100);
-            _itemDescription.SizeFlagsVertical = SizeFlags.ExpandFill;
-            _itemDescription.Visible = false;
-            _rightPanel.AddChild(_itemDescription);
-
-            _itemCount = new Label();
-            _itemCount.AddThemeFontSizeOverride("font_size", 16);
-            _itemCount.HorizontalAlignment = HorizontalAlignment.Center;
-            _itemCount.Visible = false;
-            _rightPanel.AddChild(_itemCount);
-
-            _useButton = new Button();
-            _useButton.Text = TranslationServer.Translate("ui/inventory/use");
-            _useButton.Visible = false;
-            _useButton.Pressed += OnUseClicked;
-            _rightPanel.AddChild(_useButton);
-
-            _dropButton = new Button();
-            _dropButton.Text = TranslationServer.Translate("ui/inventory/drop");
-            _dropButton.Visible = false;
-            _dropButton.Pressed += OnDropClicked;
-            _rightPanel.AddChild(_dropButton);
-
-            _quantityContainer = new VBoxContainer();
-            _quantityContainer.Visible = false;
-            _quantityContainer.AddThemeConstantOverride("separation", 4);
-            _rightPanel.AddChild(_quantityContainer);
-
-            _quantityLabel = new Label();
-            _quantityLabel.AddThemeFontSizeOverride("font_size", 14);
-            _quantityLabel.HorizontalAlignment = HorizontalAlignment.Center;
-            _quantityContainer.AddChild(_quantityLabel);
-
-            _quantitySlider = new HSlider();
-            _quantitySlider.MinValue = 1;
-            _quantitySlider.Step = 1;
-            _quantitySlider.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-            _quantitySlider.ValueChanged += OnQuantitySliderChanged;
-            _quantityContainer.AddChild(_quantitySlider);
-
-            _quantityRow = new HBoxContainer();
-            _quantityRow.AddThemeConstantOverride("separation", 4);
-            _quantityContainer.AddChild(_quantityRow);
-
-            _minusButton = new Button();
-            _minusButton.Text = "-";
-            _minusButton.Pressed += OnMinusClicked;
-            _quantityRow.AddChild(_minusButton);
-
-            _plusButton = new Button();
-            _plusButton.Text = "+";
-            _plusButton.Pressed += OnPlusClicked;
-            _quantityRow.AddChild(_plusButton);
-
-            _maxButton = new Button();
-            _maxButton.Text = TranslationServer.Translate("ui/inventory/drop_all");
-            _maxButton.Pressed += OnMaxClicked;
-            _quantityRow.AddChild(_maxButton);
-
-            _dropConfirmButton = new Button();
-            _dropConfirmButton.Text = TranslationServer.Translate("ui/inventory/drop_confirm");
-            _dropConfirmButton.Pressed += OnDropConfirm;
-            _quantityContainer.AddChild(_dropConfirmButton);
-
-            _messageLabel = new Label();
-            _messageLabel.AddThemeFontSizeOverride("font_size", 14);
-            _messageLabel.HorizontalAlignment = HorizontalAlignment.Center;
-            _messageLabel.Modulate = ErrorColor;
-            _messageLabel.Visible = false;
-            _rightPanel.AddChild(_messageLabel);
-
-            var closePanel = new Panel();
-            closePanel.SetAnchorsAndOffsetsPreset(LayoutPreset.BottomRight);
-            closePanel.AnchorLeft = 0.85f;
-            closePanel.AnchorTop = 0.94f;
-            closePanel.OffsetLeft = 0;
-            closePanel.OffsetTop = 0;
-            closePanel.OffsetRight = 0;
-            closePanel.OffsetBottom = 0;
-            AddChild(closePanel);
-
-            var closeButton = new Button();
-            closeButton.Text = TranslationServer.Translate("ui/inventory/close");
-            closeButton.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-            closeButton.Pressed += () =>
-            {
-                PlaySound("ui/close_click");
-                Hide();
-            };
-            closePanel.AddChild(closeButton);
+            root.AddChild(BuildHeader());
+            root.AddChild(MakeRule());
+            root.AddChild(BuildToolbar());
+            root.AddChild(BuildBody());
         }
 
-        /// <summary>
-        /// Resets selection and rebuilds the item grid from the current
-        /// inventory state each time the panel is shown.
-        /// </summary>
         protected override void ShowConstruct()
         {
+            _filter = BagFilter.All;
+            _sort = SortMode.Type;
+            _search = string.Empty;
+            _messageKind = MessageKind.None;
+            _messageText = null;
+
+            if (_searchEdit != null)
+                _searchEdit.Text = string.Empty;
+            if (_sortOption != null)
+                _sortOption.Selected = 0;
+
+            ClearGrid();
             ClearSelection();
+            RebuildTabs();
             RebuildGrid();
+            UpdateBattleState();
+            SelectFirst();
         }
 
-        /// <summary>
-        /// Clears the grid, selection, and any open target panel when
-        /// the panel is hidden.
-        /// </summary>
         protected override void HideDestruct()
         {
             ClearGrid();
             ClearSelection();
-            HideTargetPanel();
+            ClearChildren(_passport);
         }
 
         /// <summary>
-        /// Rebuilds the entire grid from the inventory, preserving the
-        /// current selection by item ID if the item still exists.
-        /// Called automatically by <see cref="IInventory.Change"/>.
+        /// Rebuilds the grid and passport from the current inventory state,
+        /// preserving the selected item by ID when it is still present. Called
+        /// automatically by <see cref="IInventory.Change"/>.
         /// </summary>
         public void Refresh()
         {
-            if (!Visible)
+            if (!Visible || _gridContent == null)
                 return;
 
-            var prevSelectedId = _selectedContainer?.Item?.ID;
+            var previousId = _selectedContainer?.Item?.ID;
             ClearGrid();
             ClearSelection();
             RebuildGrid();
 
-            if (prevSelectedId != null)
+            if (previousId != null)
             {
-                var container = GameData.Instance.Runtime.Inventory.TryGet(prevSelectedId);
+                var container = GameData.Instance.Runtime.Inventory.TryGet(previousId);
                 if (container != null)
+                {
                     SelectItem(container);
+                    return;
+                }
             }
+
+            SelectFirst();
+        }
+
+        private Control BuildHeader()
+        {
+            var row = new HBoxContainer();
+            row.AddThemeConstantOverride("separation", 18);
+
+            var title = MakeLabel(InventoryItemUi.Translate("ui/inventory/title").ToUpperInvariant(), 24, InkBrightColor);
+            row.AddChild(title);
+
+            _tabsRow = new HBoxContainer();
+            _tabsRow.AddThemeConstantOverride("separation", 6);
+            row.AddChild(_tabsRow);
+
+            var spacer = new Control();
+            spacer.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+            row.AddChild(spacer);
+
+            _apBox = new HBoxContainer();
+            _apBox.AddThemeConstantOverride("separation", 8);
+            _apBox.Visible = false;
+
+            var apLabel = MakeLabel(InventoryItemUi.Translate("ui/inventory/ap").ToUpperInvariant(), 11, MutedColor);
+            _apBox.AddChild(apLabel);
+
+            _apPips = new HBoxContainer();
+            _apPips.AddThemeConstantOverride("separation", 5);
+            _apBox.AddChild(_apPips);
+            row.AddChild(_apBox);
+
+            var close = BuildCloseButton();
+            row.AddChild(close);
+
+            return row;
+        }
+
+        private Button BuildCloseButton()
+        {
+            var close = new Button();
+            close.Text = "✕";
+            close.FocusMode = FocusModeEnum.None;
+            close.CustomMinimumSize = new Vector2(38, 38);
+            CthangoverTheme.ApplyIcon(close);
+            close.Pressed += OnClosePressed;
+            return close;
+        }
+
+        private Control BuildToolbar()
+        {
+            var row = new HBoxContainer();
+            row.AddThemeConstantOverride("separation", 10);
+
+            _searchEdit = new LineEdit();
+            _searchEdit.PlaceholderText = InventoryItemUi.Translate("ui/inventory/search");
+            _searchEdit.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+            _searchEdit.AddThemeFontSizeOverride("font_size", 13);
+            _searchEdit.AddThemeStyleboxOverride("normal", MakeInputStyle(false));
+            _searchEdit.AddThemeStyleboxOverride("focus", MakeInputStyle(true));
+            _searchEdit.AddThemeColorOverride("font_color", InkColor);
+            _searchEdit.AddThemeColorOverride("font_placeholder_color", FaintColor);
+            _searchEdit.AddThemeColorOverride("caret_color", GoldColor);
+            _searchEdit.TextChanged += OnSearchChanged;
+            row.AddChild(_searchEdit);
+
+            _sortOption = new OptionButton();
+            _sortOption.AddItem(InventoryItemUi.Translate("ui/inventory/sort_type"), (int)SortMode.Type);
+            _sortOption.AddItem(InventoryItemUi.Translate("ui/inventory/sort_name"), (int)SortMode.Name);
+            _sortOption.AddItem(InventoryItemUi.Translate("ui/inventory/sort_cost"), (int)SortMode.Cost);
+            _sortOption.AddItem(InventoryItemUi.Translate("ui/inventory/sort_count"), (int)SortMode.Count);
+            _sortOption.Selected = 0;
+            _sortOption.AddThemeFontSizeOverride("font_size", 13);
+            _sortOption.AddThemeStyleboxOverride("normal", MakeInputStyle(false));
+            _sortOption.AddThemeStyleboxOverride("hover", MakeInputStyle(true));
+            _sortOption.AddThemeStyleboxOverride("pressed", MakeInputStyle(true));
+            _sortOption.AddThemeStyleboxOverride("focus", new StyleBoxEmpty());
+            _sortOption.AddThemeColorOverride("font_color", BodyColor);
+            _sortOption.AddThemeColorOverride("font_hover_color", InkBrightColor);
+            var popup = _sortOption.GetPopup();
+            popup.AddThemeStyleboxOverride("panel", MakePanelStyle(StatColor, LineColor, 6, 4f, 4f, true));
+            popup.AddThemeStyleboxOverride("hover", MakeHoverRowStyle());
+            popup.AddThemeColorOverride("font_color", BodyColor);
+            popup.AddThemeColorOverride("font_hover_color", GoldBrightColor);
+            popup.AddThemeConstantOverride("v_separation", 8);
+            _sortOption.ItemSelected += OnSortSelected;
+            row.AddChild(_sortOption);
+
+            return row;
+        }
+
+        private Control BuildBody()
+        {
+            var body = new HBoxContainer();
+            body.SizeFlagsVertical = SizeFlags.ExpandFill;
+            body.AddThemeConstantOverride("separation", 14);
+
+            var left = new VBoxContainer();
+            left.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+            left.AddThemeConstantOverride("separation", 10);
+            body.AddChild(left);
+
+            var scroll = new ScrollContainer();
+            scroll.SizeFlagsVertical = SizeFlags.ExpandFill;
+            scroll.HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled;
+            left.AddChild(scroll);
+
+            _gridContent = new Control();
+            _gridContent.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+            _gridContent.MouseFilter = MouseFilterEnum.Pass;
+            scroll.AddChild(_gridContent);
+
+            var footer = new HBoxContainer();
+            footer.AddThemeConstantOverride("separation", 16);
+            _shownLabel = MakeLabel(string.Empty, 12, FaintColor);
+            footer.AddChild(_shownLabel);
+            footer.AddChild(MakeLabel(InventoryItemUi.Translate("ui/inventory/hint_select"), 12, FaintColor));
+            left.AddChild(footer);
+
+            var right = new PanelContainer();
+            right.CustomMinimumSize = new Vector2(PassportWidth, 0);
+            right.AddThemeStyleboxOverride("panel", MakeRightColumnStyle());
+            body.AddChild(right);
+
+            var passportScroll = new ScrollContainer();
+            passportScroll.HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled;
+            right.AddChild(passportScroll);
+
+            _passport = new VBoxContainer();
+            _passport.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+            _passport.AddThemeConstantOverride("separation", 14);
+            passportScroll.AddChild(_passport);
+
+            return body;
+        }
+
+        private void RebuildTabs()
+        {
+            ClearChildren(_tabsRow);
+            var inventory = GameData.Instance.Runtime.Inventory;
+            var total = inventory.Items.Count;
+
+            foreach (var tab in FilterTabs)
+            {
+                var count = tab.Filter == BagFilter.All ? total : CountByFilter(tab.Filter);
+                var button = new Button();
+                button.Text = InventoryItemUi.Translate(tab.Key) + " " + count;
+                button.FocusMode = FocusModeEnum.None;
+                StyleTabButton(button, _filter == tab.Filter);
+                var filter = tab.Filter;
+                button.Pressed += () => OnTabPressed(filter);
+                _tabsRow.AddChild(button);
+            }
+        }
+
+        private int CountByFilter(BagFilter filter)
+        {
+            var flag = FilterFlag(filter);
+            var count = 0;
+            foreach (var container in GameData.Instance.Runtime.Inventory.Items)
+            {
+                if (container?.Item != null && container.Item.ItemType.HasFlag(flag))
+                    count++;
+            }
+            return count;
         }
 
         private void RebuildGrid()
         {
             ClearGrid();
-
-            var items = GameData.Instance.Runtime.Inventory.Items;
-            if (items.Count == 0 || _gridContent == null)
+            if (_gridContent == null)
                 return;
 
+            var inventory = GameData.Instance.Runtime.Inventory;
+            var containers = GetFilteredContainers();
             var cellSize = CalculateCellSize();
 
-            for (int i = 0; i < items.Count; i++)
+            for (var i = 0; i < containers.Count; i++)
             {
-                var container = items[i];
-                var cell = _itemScene.Instantiate<InventoryItemBehaviour>();
-                cell.MouseFilter = MouseFilterEnum.Stop;
-                cell.Modulate = NormalColor;
-
-                var captured = container;
-                cell.MouseEntered += () =>
-                {
-                    if (cell != _selectedCell)
-                        cell.Modulate = HoverColor;
-                };
-                cell.MouseExited += () =>
-                {
-                    if (cell != _selectedCell)
-                        cell.Modulate = NormalColor;
-                };
-                cell.GuiInput += (InputEvent e) =>
-                {
-                    if (e is InputEventMouseButton mb && mb.Pressed && mb.ButtonIndex == MouseButton.Left)
-                    {
-                        SelectItem(captured);
-                        PlaySound("ui/skip");
-                        AcceptEvent();
-                    }
-                };
-
+                var container = containers[i];
+                var cell = new InventoryItemBehaviour();
                 cell.Construct(container);
+                cell.Clicked += OnCellClicked;
                 _gridContent.AddChild(cell);
-                PlaceCell(cell, i, cellSize, cellSize);
+                PlaceCell(cell, i, cellSize);
                 _itemCells.Add(cell);
             }
 
             if (_itemCells.Count > 0)
             {
-                var lastCell = _itemCells[_itemCells.Count - 1];
-                var lastRow = lastCell.Position.Y + lastCell.Size.Y;
-                _gridContent.CustomMinimumSize = new Vector2(0, lastRow + CellPadding);
+                var last = _itemCells[_itemCells.Count - 1];
+                var height = last.Position.Y + last.Size.Y + CellGap;
+                _gridContent.CustomMinimumSize = new Vector2(0, height);
+            }
+            else
+            {
+                _gridContent.CustomMinimumSize = Vector2.Zero;
+            }
+
+            if (_shownLabel != null)
+            {
+                _shownLabel.Text = string.Format(
+                    InventoryItemUi.Translate("ui/inventory/shown"),
+                    containers.Count,
+                    inventory.Items.Count);
+            }
+        }
+
+        private List<IItemContainer> GetFilteredContainers()
+        {
+            var result = new List<IItemContainer>();
+            foreach (var container in GameData.Instance.Runtime.Inventory.Items)
+            {
+                if (container?.Item == null)
+                    continue;
+                if (!MatchesFilter(container.Item) || !MatchesSearch(container.Item))
+                    continue;
+                result.Add(container);
+            }
+            SortContainers(result);
+            return result;
+        }
+
+        private bool MatchesFilter(IItem item)
+        {
+            return _filter == BagFilter.All || item.ItemType.HasFlag(FilterFlag(_filter));
+        }
+
+        private bool MatchesSearch(IItem item)
+        {
+            if (string.IsNullOrWhiteSpace(_search))
+                return true;
+
+            var needle = _search.Trim().ToLowerInvariant();
+            if (InventoryItemUi.Translate(item.Name).ToLowerInvariant().Contains(needle))
+                return true;
+            return item.ID != null && item.ID.ToLowerInvariant().Contains(needle);
+        }
+
+        private void SortContainers(List<IItemContainer> containers)
+        {
+            switch (_sort)
+            {
+                case SortMode.Name:
+                    containers.Sort((a, b) => string.Compare(TranslateName(a), TranslateName(b), StringComparison.OrdinalIgnoreCase));
+                    break;
+                case SortMode.Cost:
+                    containers.Sort((a, b) => b.Item.Cost.CompareTo(a.Item.Cost));
+                    break;
+                case SortMode.Count:
+                    containers.Sort((a, b) => b.Count.CompareTo(a.Count));
+                    break;
+                default:
+                    containers.Sort(CompareByType);
+                    break;
+            }
+        }
+
+        private static int CompareByType(IItemContainer a, IItemContainer b)
+        {
+            var rankA = TypeRank(a.Item.ItemType);
+            var rankB = TypeRank(b.Item.ItemType);
+            if (rankA != rankB)
+                return rankA - rankB;
+            return string.Compare(TranslateName(a), TranslateName(b), StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static int TypeRank(ItemType type)
+        {
+            if (type.HasFlag(ItemType.Quest))
+                return 0;
+            if (type.HasFlag(ItemType.Recipe))
+                return 1;
+            if (type.HasFlag(ItemType.Food))
+                return 2;
+            return 3;
+        }
+
+        private static string TranslateName(IItemContainer container)
+        {
+            return InventoryItemUi.Translate(container.Item.Name);
+        }
+
+        private static ItemType FilterFlag(BagFilter filter)
+        {
+            switch (filter)
+            {
+                case BagFilter.Food:
+                    return ItemType.Food;
+                case BagFilter.Resource:
+                    return ItemType.Resource;
+                case BagFilter.Recipe:
+                    return ItemType.Recipe;
+                case BagFilter.Quest:
+                    return ItemType.Quest;
+                default:
+                    return ItemType.None;
             }
         }
 
@@ -356,19 +519,56 @@ namespace Cthangover.Core.UI.Inventory
             var viewportWidth = GetViewportRect().Size.X;
             if (viewportWidth <= 0)
                 viewportWidth = 1920f;
-            var contentWidth = viewportWidth - 40f;
-            var leftPanelWidth = contentWidth * 3f / 5f - 5f;
-            return (leftPanelWidth - (Columns - 1) * CellPadding) / Columns;
+
+            var panelWidth = viewportWidth - 80f - 48f;
+            var leftWidth = Mathf.Max(320f, panelWidth - PassportWidth - 14f);
+            var cellSize = (leftWidth - (Columns - 1) * CellGap) / Columns;
+            return Mathf.Clamp(cellSize, 72f, 220f);
         }
 
-        private void PlaceCell(InventoryItemBehaviour cell, int index, float cellW, float cellH)
+        private void PlaceCell(InventoryItemBehaviour cell, int index, float cellSize)
         {
-            var col = index % Columns;
+            var column = index % Columns;
             var row = index / Columns;
-            var x = col * (cellW + CellPadding);
-            var y = row * (cellH + CellPadding);
-            cell.Position = new Vector2(x, y);
-            cell.Size = new Vector2(cellW, cellH);
+            cell.Position = new Vector2(column * (cellSize + CellGap), row * (cellSize + CellGap));
+            cell.Size = new Vector2(cellSize, cellSize);
+        }
+
+        private void SelectItem(IItemContainer container)
+        {
+            if (_selectedCell != null)
+            {
+                _selectedCell.SetSelected(false);
+                _selectedCell = null;
+            }
+
+            _selectedContainer = container;
+            _dropOpen = false;
+            _dropQuantity = 1;
+            _targetOpen = false;
+
+            if (container != null)
+            {
+                foreach (var cell in _itemCells)
+                {
+                    if (ReferenceEquals(cell.Model, container))
+                    {
+                        _selectedCell = cell;
+                        cell.SetSelected(true);
+                        break;
+                    }
+                }
+            }
+
+            BuildPassport();
+        }
+
+        private void SelectFirst()
+        {
+            if (_itemCells.Count > 0)
+                SelectItem(_itemCells[0].Model);
+            else
+                SelectItem(null);
         }
 
         private void ClearGrid()
@@ -376,225 +576,775 @@ namespace Cthangover.Core.UI.Inventory
             foreach (var cell in _itemCells)
                 cell.QueueFree();
             _itemCells.Clear();
-        }
-
-        private void SelectItem(IItemContainer container)
-        {
-            ClearSelection();
-            HideTargetPanel();
-
-            _selectedContainer = container;
-            var item = container.Item;
-
-            foreach (var cell in _itemCells)
-            {
-                if (cell.Model == container)
-                {
-                    _selectedCell = cell;
-                    cell.Modulate = SelectedColor;
-                    break;
-                }
-            }
-
-            _itemName.Text = TranslationServer.Translate(item.Name);
-            _itemName.Visible = true;
-
-            _itemDescription.Text = TranslationServer.Translate(item.Description);
-            _itemDescription.Visible = true;
-
-            _itemCount.Text = "×" + container.Count.ToString();
-            _itemCount.Visible = true;
-
-            var isUsable = (item.ItemType.HasFlag(ItemType.Used) || item.ItemType.HasFlag(ItemType.TargetUsed))
-                && item.ItemAction != null;
-            _useButton.Visible = isUsable;
-
-            var canDrop = !item.ItemType.HasFlag(ItemType.CantDrop);
-            _dropButton.Visible = canDrop;
-
-            _quantityContainer.Visible = false;
-            _messageLabel.Visible = false;
+            _selectedCell = null;
         }
 
         private void ClearSelection()
         {
             if (_selectedCell != null)
             {
-                _selectedCell.Modulate = NormalColor;
+                _selectedCell.SetSelected(false);
                 _selectedCell = null;
             }
-
             _selectedContainer = null;
+            _dropOpen = false;
+            _dropQuantity = 1;
+            _targetOpen = false;
+        }
 
-            _itemName.Visible = false;
-            _itemDescription.Visible = false;
-            _itemCount.Visible = false;
-            _useButton.Visible = false;
-            _dropButton.Visible = false;
-            _quantityContainer.Visible = false;
-            _messageLabel.Visible = false;
+        private void BuildPassport()
+        {
+            ClearChildren(_passport);
+            var container = _selectedContainer;
+            if (container?.Item == null)
+            {
+                var hasAny = GameData.Instance.Runtime.Inventory.Items.Count > 0;
+                var placeholder = MakeLabel(
+                    InventoryItemUi.Translate(hasAny ? "ui/inventory/select" : "ui/inventory/empty"),
+                    14, FaintColor);
+                placeholder.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+                placeholder.HorizontalAlignment = HorizontalAlignment.Center;
+                _passport.AddChild(placeholder);
+                return;
+            }
+
+            var item = container.Item;
+            _passport.AddChild(BuildPassportHeader(container));
+
+            var description = MakeLabel(InventoryItemUi.Translate(item.Description), 14, BodyColor);
+            description.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+            _passport.AddChild(description);
+
+            _passport.AddChild(BuildStatsBlock(container));
+            _passport.AddChild(BuildPropertiesBlock(item));
+            _passport.AddChild(BuildActionsBlock(container));
+        }
+
+        private Control BuildPassportHeader(IItemContainer container)
+        {
+            var item = container.Item;
+            var row = new HBoxContainer();
+            row.AddThemeConstantOverride("separation", 16);
+
+            var iconPanel = new PanelContainer();
+            iconPanel.CustomMinimumSize = new Vector2(96, 96);
+            iconPanel.AddThemeStyleboxOverride("panel", MakePanelStyle(CellColor, CellLineColor, 8));
+            var icon = new TextureRect();
+            icon.Texture = item.Sprite;
+            icon.ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize;
+            icon.StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered;
+            icon.CustomMinimumSize = new Vector2(80, 80);
+            icon.MouseFilter = MouseFilterEnum.Ignore;
+            iconPanel.AddChild(icon);
+            row.AddChild(iconPanel);
+
+            var titleColumn = new VBoxContainer();
+            titleColumn.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+            titleColumn.AddThemeConstantOverride("separation", 8);
+
+            var name = MakeLabel(InventoryItemUi.Translate(item.Name), 25, InkBrightColor);
+            name.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+            titleColumn.AddChild(name);
+
+            var badges = new HFlowContainer();
+            badges.AddThemeConstantOverride("h_separation", 5);
+            badges.AddThemeConstantOverride("v_separation", 5);
+            foreach (var type in InventoryItemUi.BadgeOrder)
+            {
+                if (item.ItemType.HasFlag(type))
+                    badges.AddChild(MakeBadge(type));
+            }
+            titleColumn.AddChild(badges);
+            row.AddChild(titleColumn);
+
+            var costColumn = new VBoxContainer();
+            costColumn.SizeFlagsVertical = SizeFlags.ShrinkCenter;
+            var cost = MakeLabel(item.Cost.ToString(), 22, GoldBrightColor);
+            cost.HorizontalAlignment = HorizontalAlignment.Right;
+            var costLabel = MakeLabel(InventoryItemUi.Translate("ui/inventory/cost").ToUpperInvariant(), 10, FaintColor);
+            costLabel.HorizontalAlignment = HorizontalAlignment.Right;
+            costColumn.AddChild(cost);
+            costColumn.AddChild(costLabel);
+            row.AddChild(costColumn);
+
+            return row;
+        }
+
+        private static Control MakeBadge(ItemType type)
+        {
+            return UiKit.Badge(
+                InventoryItemUi.Translate(InventoryItemUi.TypeBadgeKey(type)),
+                InventoryItemUi.AccentColor(type));
+        }
+
+        private static Control BuildStatsBlock(IItemContainer container)
+        {
+            var item = container.Item;
+            var wrapper = new PanelContainer();
+            wrapper.AddThemeStyleboxOverride("panel", MakePanelStyle(LineColor, LineColor, 6));
+
+            var grid = new GridContainer();
+            grid.Columns = 2;
+            grid.AddThemeConstantOverride("h_separation", 1);
+            grid.AddThemeConstantOverride("v_separation", 1);
+            grid.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+            wrapper.AddChild(grid);
+
+            grid.AddChild(MakeStatCell(InventoryItemUi.Translate("ui/inventory/stack"), "×" + container.Count));
+            grid.AddChild(MakeStatCell(InventoryItemUi.Translate("ui/inventory/id"), item.ID));
+            grid.AddChild(MakeStatCell(InventoryItemUi.Translate("ui/inventory/action"), item.ItemAction?.ID ?? "—"));
+            grid.AddChild(MakeStatCell(InventoryItemUi.Translate("ui/inventory/verb"), InventoryItemUi.Translate(InventoryItemUi.VerbKey(item))));
+            return wrapper;
+        }
+
+        private static Control MakeStatCell(string key, string value)
+        {
+            var cell = new PanelContainer();
+            cell.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+            cell.AddThemeStyleboxOverride("panel", MakePanelStyle(StatColor, StatColor, 0, 12f, 8f));
+
+            var column = new VBoxContainer();
+            column.AddThemeConstantOverride("separation", 3);
+            column.AddChild(MakeLabel(key.ToUpperInvariant(), 10, FaintColor));
+
+            var valueLabel = MakeLabel(value, 13, InkColor);
+            valueLabel.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+            column.AddChild(valueLabel);
+            cell.AddChild(column);
+            return cell;
+        }
+
+        private static Control BuildPropertiesBlock(IItem item)
+        {
+            var block = new VBoxContainer();
+            block.AddThemeConstantOverride("separation", 7);
+            block.AddChild(MakeLabel(InventoryItemUi.Translate("ui/inventory/props_header").ToUpperInvariant(), 10, FaintColor));
+
+            var values = item.Properties?.Values;
+            if (values == null || values.Count == 0)
+            {
+                block.AddChild(MakePropertyRow(InventoryItemUi.Translate("ui/inventory/props_none"), string.Empty));
+                return block;
+            }
+
+            var keys = new List<string>(values.Keys);
+            keys.Sort(StringComparer.Ordinal);
+            foreach (var key in keys)
+                block.AddChild(MakePropertyRow(key, values[key]));
+            return block;
+        }
+
+        private static Control MakePropertyRow(string key, string value)
+        {
+            var row = new PanelContainer();
+            row.AddThemeStyleboxOverride("panel", MakePanelStyle(StatColor, StatColor, 0, 12f, 7f));
+
+            var box = new HBoxContainer();
+            box.AddThemeConstantOverride("separation", 12);
+
+            var keyLabel = MakeLabel(key, 12, MutedColor);
+            keyLabel.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+            box.AddChild(keyLabel);
+
+            var valueLabel = MakeLabel(value, 12, GoldBrightColor);
+            box.AddChild(valueLabel);
+            row.AddChild(box);
+            return row;
+        }
+
+        private Control BuildActionsBlock(IItemContainer container)
+        {
+            var item = container.Item;
+            var block = new VBoxContainer();
+            block.AddThemeConstantOverride("separation", 9);
+
+            var usable = InventoryItemUi.IsUsable(item);
+            var verb = InventoryItemUi.Translate(InventoryItemUi.VerbKey(item));
+
+            var useButton = new Button();
+            useButton.Text = IsBattleActive
+                ? verb + "  " + InventoryItemUi.Translate("ui/inventory/ap_cost")
+                : verb;
+            useButton.Disabled = !usable;
+            useButton.FocusMode = FocusModeEnum.None;
+            StyleButton(useButton, true, false);
+            useButton.Pressed += OnUseClicked;
+            block.AddChild(useButton);
+
+            if (!usable)
+            {
+                var hint = MakeLabel(InventoryItemUi.Translate("ui/inventory/no_action"), 12, FaintColor);
+                hint.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+                block.AddChild(hint);
+            }
+
+            var canDrop = InventoryItemUi.CanDrop(item);
+            var dropButton = new Button();
+            dropButton.Text = InventoryItemUi.Translate(canDrop ? "ui/inventory/drop" : "ui/inventory/drop_cant");
+            dropButton.Disabled = !canDrop;
+            dropButton.FocusMode = FocusModeEnum.None;
+            StyleButton(dropButton, false, true);
+            dropButton.Pressed += OnDropClicked;
+            block.AddChild(dropButton);
+
+            if (_dropOpen)
+                block.AddChild(BuildDropQuantity(container));
+
+            if (_targetOpen && item.ItemType.HasFlag(ItemType.TargetUsed))
+                block.AddChild(BuildTargetPanel());
+
+            if (_messageKind != MessageKind.None)
+                block.AddChild(BuildMessage());
+
+            return block;
+        }
+
+        private Control BuildDropQuantity(IItemContainer container)
+        {
+            var wrapper = new PanelContainer();
+            wrapper.AddThemeStyleboxOverride("panel", MakePanelStyle(StatColor, LineColor, 6, 12f, 12f));
+
+            var column = new VBoxContainer();
+            column.AddThemeConstantOverride("separation", 8);
+
+            var head = new HBoxContainer();
+            var title = MakeLabel(InventoryItemUi.Translate("ui/inventory/drop_quantity"), 12, MutedColor);
+            title.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+            head.AddChild(title);
+            _dropQuantityLabel = MakeLabel(_dropQuantity + " / " + container.Count, 12, GoldBrightColor);
+            head.AddChild(_dropQuantityLabel);
+            column.AddChild(head);
+
+            var slider = new HSlider();
+            slider.MinValue = 1;
+            slider.MaxValue = Mathf.Max(1, container.Count);
+            slider.Step = 1;
+            slider.Value = Mathf.Clamp(_dropQuantity, 1, Mathf.Max(1, container.Count));
+            slider.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+            slider.AddThemeStyleboxOverride("slider", MakeSliderTrack(UiTokens.LineDisabled));
+            slider.AddThemeStyleboxOverride("grabber_area", MakeSliderTrack(GoldColor));
+            slider.AddThemeStyleboxOverride("grabber_area_highlight", MakeSliderTrack(GoldBrightColor));
+            slider.ValueChanged += OnDropSliderChanged;
+            column.AddChild(slider);
+
+            var row = new HBoxContainer();
+            row.AddThemeConstantOverride("separation", 6);
+            row.AddChild(MakeSmallButton("−", OnDropMinus));
+            row.AddChild(MakeSmallButton("+", OnDropPlus));
+            row.AddChild(MakeSmallButton(InventoryItemUi.Translate("ui/inventory/drop_all"), OnDropMax));
+
+            var confirm = new Button();
+            confirm.Text = InventoryItemUi.Translate("ui/inventory/drop_confirm");
+            confirm.FocusMode = FocusModeEnum.None;
+            confirm.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+            StyleButton(confirm, false, true);
+            confirm.Pressed += OnDropConfirm;
+            row.AddChild(confirm);
+            column.AddChild(row);
+
+            wrapper.AddChild(column);
+            return wrapper;
+        }
+
+        private Control BuildTargetPanel()
+        {
+            var targetPanel = new CharacterTargetPanel();
+            targetPanel.CharacterSelected += OnTargetSelected;
+            targetPanel.Cancelled += OnTargetCancelled;
+            return targetPanel;
+        }
+
+        private Control BuildMessage()
+        {
+            var accent = _messageKind == MessageKind.Ok ? OkColor : ErrorColor;
+            var wrapper = new PanelContainer();
+            wrapper.AddThemeStyleboxOverride("panel", MakePanelStyle(
+                UiTokens.Alpha(accent, 0.1f),
+                UiTokens.Alpha(accent, 0.5f), 5, 12f, 9f));
+
+            var label = MakeLabel(_messageText, 12, accent);
+            label.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+            wrapper.AddChild(label);
+            return wrapper;
+        }
+
+        private Button MakeSmallButton(string text, Action handler)
+        {
+            var button = new Button();
+            button.Text = text;
+            button.FocusMode = FocusModeEnum.None;
+            button.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+            StyleButton(button, false, false);
+            button.AddThemeFontSizeOverride("font_size", 13);
+            button.Pressed += handler;
+            return button;
+        }
+
+        private bool IsBattleActive
+        {
+            get
+            {
+                var context = BattleSceneContext.Instance;
+                return context != null && !context.IsDestroyed && context.ActiveCharacter != null;
+            }
+        }
+
+        private void UpdateBattleState()
+        {
+            if (_apBox == null)
+                return;
+
+            _apBox.Visible = IsBattleActive;
+            if (!IsBattleActive || _apPips == null)
+                return;
+
+            ClearChildren(_apPips);
+            var point = BattleSceneContext.Instance.ActiveCharacter.Attributes.Point;
+            var total = point.BaseValue > 0 ? point.BaseValue : point.Value;
+            total = Mathf.Clamp(total, 1, 6);
+            for (var i = 0; i < total; i++)
+            {
+                var pip = new Panel();
+                pip.CustomMinimumSize = new Vector2(11, 11);
+                var style = new StyleBoxFlat();
+                style.CornerRadiusTopLeft = 6;
+                style.CornerRadiusTopRight = 6;
+                style.CornerRadiusBottomLeft = 6;
+                style.CornerRadiusBottomRight = 6;
+                if (i < point.Value)
+                {
+                    style.BgColor = GoldBrightColor;
+                    style.BorderColor = GoldColor;
+                }
+                else
+                {
+                    style.BgColor = UiTokens.LineDisabled;
+                    style.BorderColor = UiTokens.LineFaint;
+                }
+                style.BorderWidthLeft = 1;
+                style.BorderWidthRight = 1;
+                style.BorderWidthTop = 1;
+                style.BorderWidthBottom = 1;
+                pip.AddThemeStyleboxOverride("panel", style);
+                pip.MouseFilter = MouseFilterEnum.Ignore;
+                _apPips.AddChild(pip);
+            }
+        }
+
+        private bool HasActionPoint()
+        {
+            if (!IsBattleActive)
+                return true;
+
+            var point = BattleSceneContext.Instance.ActiveCharacter.Attributes.Point;
+            if (point.Value >= 1)
+                return true;
+
+            SetMessage(MessageKind.Error, InventoryItemUi.Translate("ui/inventory/no_ap"));
+            BuildPassport();
+            PlaySound("ui/close_click");
+            return false;
+        }
+
+        private void SpendActionPoint()
+        {
+            if (!IsBattleActive)
+                return;
+            BattleSceneContext.Instance.ActiveCharacter.Attributes.Point.Value -= 1;
+            UpdateBattleState();
         }
 
         private void OnUseClicked()
         {
-            if (_selectedContainer == null)
+            var container = _selectedContainer;
+            var item = container?.Item;
+            if (item?.ItemAction == null || !InventoryItemUi.IsUsable(item))
                 return;
-
-            var item = _selectedContainer.Item;
 
             if (item.ItemType.HasFlag(ItemType.TargetUsed))
             {
-                ShowCharacterTargetPanel();
+                _targetOpen = true;
+                _dropOpen = false;
+                BuildPassport();
                 return;
             }
 
-            if (!TryConsumeActionPoint())
+            if (!HasActionPoint())
                 return;
 
-            item.ItemAction.UseAction(item);
+            if (!item.ItemAction.UseAction(item))
+            {
+                SetMessage(MessageKind.Error, InventoryItemUi.Translate("ui/inventory/use_failed"));
+                BuildPassport();
+                return;
+            }
+
+            SpendActionPoint();
+            var messageKey = item.ItemType.HasFlag(ItemType.Recipe)
+                ? "ui/inventory/used_recipe"
+                : "ui/inventory/used";
+            SetMessage(MessageKind.Ok, string.Format(
+                InventoryItemUi.Translate(messageKey),
+                InventoryItemUi.Translate(item.Name)));
             GameData.Instance.Runtime.Inventory.Remove(item, 1);
             PlaySound("ui/cook");
         }
 
         private void OnDropClicked()
         {
-            if (_selectedContainer == null)
+            if (_selectedContainer?.Item == null)
                 return;
 
             _dropQuantity = 1;
-            _quantitySlider.MaxValue = _selectedContainer.Count;
-            _quantitySlider.Value = 1;
-            UpdateQuantityLabel();
-            _quantityContainer.Visible = true;
+            _dropOpen = !_dropOpen;
+            _targetOpen = false;
+            BuildPassport();
         }
 
-        private void OnQuantitySliderChanged(double value)
+        private void OnDropSliderChanged(double value)
         {
             _dropQuantity = Mathf.RoundToInt((float)value);
-            UpdateQuantityLabel();
+            if (_dropQuantityLabel != null && _selectedContainer != null)
+                _dropQuantityLabel.Text = _dropQuantity + " / " + _selectedContainer.Count;
         }
 
-        private void OnPlusClicked()
+        private void OnDropMinus()
+        {
+            if (_selectedContainer == null)
+                return;
+            _dropQuantity = Mathf.Max(_dropQuantity - 1, 1);
+            RefreshDropQuantity();
+        }
+
+        private void OnDropPlus()
         {
             if (_selectedContainer == null)
                 return;
             _dropQuantity = Mathf.Min(_dropQuantity + 1, _selectedContainer.Count);
-            _quantitySlider.Value = _dropQuantity;
+            RefreshDropQuantity();
         }
 
-        private void OnMinusClicked()
-        {
-            _dropQuantity = Mathf.Max(_dropQuantity - 1, 1);
-            _quantitySlider.Value = _dropQuantity;
-        }
-
-        private void OnMaxClicked()
+        private void OnDropMax()
         {
             if (_selectedContainer == null)
                 return;
             _dropQuantity = _selectedContainer.Count;
-            _quantitySlider.Value = _dropQuantity;
+            RefreshDropQuantity();
+        }
+
+        private void RefreshDropQuantity()
+        {
+            BuildPassport();
         }
 
         private void OnDropConfirm()
         {
-            if (_selectedContainer == null)
+            var container = _selectedContainer;
+            var item = container?.Item;
+            if (item == null || !InventoryItemUi.CanDrop(item))
+                return;
+            if (!HasActionPoint())
                 return;
 
-            if (!TryConsumeActionPoint())
-                return;
-
-            var item = _selectedContainer.Item;
-            GameData.Instance.Runtime.Inventory.Remove(item, _dropQuantity);
+            SpendActionPoint();
+            var quantity = Mathf.Clamp(_dropQuantity, 1, container.Count);
+            SetMessage(MessageKind.Ok, string.Format(
+                InventoryItemUi.Translate("ui/inventory/dropped"),
+                InventoryItemUi.Translate(item.Name),
+                quantity));
+            GameData.Instance.Runtime.Inventory.Remove(item, quantity);
             PlaySound("ui/close_click");
-            _quantityContainer.Visible = false;
-        }
-
-        private void UpdateQuantityLabel()
-        {
-            var qtyText = TranslationServer.Translate("ui/inventory/drop_quantity");
-            _quantityLabel.Text = qtyText + ": " + _dropQuantity.ToString() + "/" + _selectedContainer.Count.ToString();
-        }
-
-        /// <summary>
-        /// Checks whether the action can proceed in the current battle
-        /// context. Outside battle (no <see cref="BattleSceneContext"/>
-        /// or <see cref="BattleSceneContext.IsDestroyed"/>) returns
-        /// <c>true</c> immediately — actions are free. Inside an active
-        /// battle when <see cref="BattleSceneContext.ActiveCharacter"/>
-        /// is set, consumes 1 action point from that character. If
-        /// insufficient AP, displays an error message and returns
-        /// <c>false</c>.
-        /// </summary>
-        private bool TryConsumeActionPoint()
-        {
-            if (BattleSceneContext.Instance == null || BattleSceneContext.Instance.IsDestroyed)
-                return true;
-
-            var character = BattleSceneContext.Instance.ActiveCharacter;
-            if (character == null)
-                return true;
-
-            if (character.Attributes.Point.Value < 1)
-            {
-                ShowMessage(TranslationServer.Translate("ui/inventory/no_ap"));
-                PlaySound("ui/close_click");
-                return false;
-            }
-
-            character.Attributes.Point.Value -= 1;
-            return true;
-        }
-
-        private void ShowCharacterTargetPanel()
-        {
-            HideTargetPanel();
-
-            _targetPanel = new CharacterTargetPanel();
-            _targetPanel.CharacterSelected += OnTargetSelected;
-            _targetPanel.Cancelled += HideTargetPanel;
-            _rightPanel.AddChild(_targetPanel);
-        }
-
-        private void HideTargetPanel()
-        {
-            if (_targetPanel != null)
-            {
-                _targetPanel.CharacterSelected -= OnTargetSelected;
-                _targetPanel.Cancelled -= HideTargetPanel;
-                _targetPanel.QueueFree();
-                _targetPanel = null;
-            }
         }
 
         private void OnTargetSelected(CharacterInfoData info)
         {
-            if (_selectedContainer == null)
+            var item = _selectedContainer?.Item;
+            if (item?.ItemAction == null)
                 return;
 
-            if (!TryConsumeActionPoint())
+            if (!HasActionPoint())
+                return;
+
+            if (!item.ItemAction.UseAction(item))
             {
-                HideTargetPanel();
+                SetMessage(MessageKind.Error, InventoryItemUi.Translate("ui/inventory/applied_failed"));
+                _targetOpen = false;
+                BuildPassport();
                 return;
             }
 
-            var item = _selectedContainer.Item;
-            item.ItemAction.UseAction(item);
+            SpendActionPoint();
+            var template = info != null ? CharacterFactory.Instance.Get(info.ID) : null;
+            var targetName = InventoryItemUi.Translate(template?.Name ?? info?.ID ?? "?");
+            SetMessage(MessageKind.Ok, string.Format(
+                InventoryItemUi.Translate("ui/inventory/applied"),
+                InventoryItemUi.Translate(item.Name),
+                targetName));
             GameData.Instance.Runtime.Inventory.Remove(item, 1);
             PlaySound("battle/card_pick");
-            HideTargetPanel();
         }
 
-        private void ShowMessage(string text)
+        private void OnTargetCancelled()
         {
-            _messageLabel.Text = text;
-            _messageLabel.Visible = true;
+            _targetOpen = false;
+            BuildPassport();
+        }
+
+        private void OnCellClicked(InventoryItemBehaviour cell)
+        {
+            _messageKind = MessageKind.None;
+            _messageText = null;
+            SelectItem(cell.Model);
+            PlaySound("ui/skip");
+        }
+
+        private void OnTabPressed(BagFilter filter)
+        {
+            _filter = filter;
+            _messageKind = MessageKind.None;
+            _messageText = null;
+            ClearSelection();
+            RebuildTabs();
+            RebuildGrid();
+            SelectFirst();
+        }
+
+        private void OnSearchChanged(string text)
+        {
+            _search = text;
+            ClearSelection();
+            RebuildGrid();
+            SelectFirst();
+        }
+
+        private void OnSortSelected(long index)
+        {
+            _sort = (SortMode)index;
+            ClearSelection();
+            RebuildGrid();
+            SelectFirst();
+        }
+
+        private void OnClosePressed()
+        {
+            PlaySound("ui/close_click");
+            Hide();
+        }
+
+        private void SetMessage(MessageKind kind, string text)
+        {
+            _messageKind = kind;
+            _messageText = text;
         }
 
         private void PlaySound(string id)
         {
             var audio = SceneContextNode.FindNode<AudioService>("AudioService");
             audio?.PlaySound(id, SoundType.UI);
+        }
+
+        private static Label MakeLabel(string text, int size, Color color)
+        {
+            var label = new Label();
+            label.Text = text ?? string.Empty;
+            label.AddThemeFontSizeOverride("font_size", size);
+            label.AddThemeColorOverride("font_color", color);
+            label.MouseFilter = MouseFilterEnum.Ignore;
+            return label;
+        }
+
+        private static Control MakeRule()
+        {
+            var rule = new Panel();
+            rule.CustomMinimumSize = new Vector2(0, 1);
+            rule.AddThemeStyleboxOverride("panel", MakePanelStyle(LineColor, LineColor, 0));
+            rule.MouseFilter = MouseFilterEnum.Ignore;
+            return rule;
+        }
+
+        private static StyleBoxFlat MakePanelStyle(Color background, Color border, int radius,
+            float paddingX = 0f, float paddingY = 0f, bool shadow = false)
+        {
+            var style = new StyleBoxFlat();
+            style.BgColor = background;
+            style.BorderColor = border;
+            style.BorderWidthLeft = 1;
+            style.BorderWidthRight = 1;
+            style.BorderWidthTop = 1;
+            style.BorderWidthBottom = 1;
+            style.CornerRadiusTopLeft = radius;
+            style.CornerRadiusTopRight = radius;
+            style.CornerRadiusBottomLeft = radius;
+            style.CornerRadiusBottomRight = radius;
+            style.ContentMarginLeft = paddingX;
+            style.ContentMarginRight = paddingX;
+            style.ContentMarginTop = paddingY;
+            style.ContentMarginBottom = paddingY;
+            if (shadow)
+            {
+                style.ShadowColor = new Color(0f, 0f, 0f, 0.6f);
+                style.ShadowSize = 18;
+                style.ShadowOffset = new Vector2(0f, 8f);
+            }
+            return style;
+        }
+
+        private static StyleBoxFlat MakeRightColumnStyle()
+        {
+            var style = new StyleBoxFlat();
+            style.BgColor = UiTokens.SideBg;
+            style.BorderColor = LineColor;
+            style.BorderWidthLeft = 1;
+            style.ContentMarginLeft = 20;
+            style.ContentMarginRight = 18;
+            style.ContentMarginTop = 16;
+            style.ContentMarginBottom = 16;
+            return style;
+        }
+
+        private static StyleBoxFlat MakeInputStyle(bool focus)
+        {
+            var style = new StyleBoxFlat();
+            style.BgColor = UiTokens.Well;
+            style.BorderColor = focus ? UiTokens.AccentRing : LineColor;
+            style.BorderWidthLeft = 1;
+            style.BorderWidthRight = 1;
+            style.BorderWidthTop = 1;
+            style.BorderWidthBottom = 1;
+            style.CornerRadiusTopLeft = 4;
+            style.CornerRadiusTopRight = 4;
+            style.CornerRadiusBottomLeft = 4;
+            style.CornerRadiusBottomRight = 4;
+            style.ContentMarginLeft = 10;
+            style.ContentMarginRight = 10;
+            style.ContentMarginTop = 8;
+            style.ContentMarginBottom = 8;
+            return style;
+        }
+
+        private static StyleBoxFlat MakeHoverRowStyle()
+        {
+            var style = new StyleBoxFlat();
+            style.BgColor = UiTokens.AccentTrace;
+            style.CornerRadiusTopLeft = 4;
+            style.CornerRadiusTopRight = 4;
+            style.CornerRadiusBottomLeft = 4;
+            style.CornerRadiusBottomRight = 4;
+            style.ContentMarginLeft = 8;
+            style.ContentMarginRight = 8;
+            style.ContentMarginTop = 4;
+            style.ContentMarginBottom = 4;
+            return style;
+        }
+
+        private static StyleBoxFlat MakeSliderTrack(Color color)
+        {
+            var style = new StyleBoxFlat();
+            style.BgColor = color;
+            style.CornerRadiusTopLeft = 3;
+            style.CornerRadiusTopRight = 3;
+            style.CornerRadiusBottomLeft = 3;
+            style.CornerRadiusBottomRight = 3;
+            style.ContentMarginTop = 2;
+            style.ContentMarginBottom = 2;
+            return style;
+        }
+
+        private static StyleBoxFlat MakeButtonStyle(bool primary, bool danger, bool hover)
+        {
+            var style = new StyleBoxFlat();
+            if (primary)
+                style.BgColor = hover ? UiTokens.BtnPrimaryHover : UiTokens.BtnPrimary;
+            else
+                style.BgColor = hover ? UiTokens.BtnHover : UiTokens.Surface3;
+
+            if (danger && hover)
+                style.BorderColor = DangerColor;
+            else if (primary)
+                style.BorderColor = hover ? UiTokens.AccentLineStrong : UiTokens.Alpha(UiTokens.Accent, 0.55f);
+            else
+                style.BorderColor = hover ? UiTokens.Alpha(UiTokens.Accent, 0.55f) : LineColor;
+
+            style.BorderWidthLeft = 1;
+            style.BorderWidthRight = 1;
+            style.BorderWidthTop = 1;
+            style.BorderWidthBottom = 1;
+            style.CornerRadiusTopLeft = 4;
+            style.CornerRadiusTopRight = 4;
+            style.CornerRadiusBottomLeft = 4;
+            style.CornerRadiusBottomRight = 4;
+            style.ContentMarginLeft = 12;
+            style.ContentMarginRight = 12;
+            style.ContentMarginTop = 11;
+            style.ContentMarginBottom = 11;
+            return style;
+        }
+
+        private static void StyleButton(Button button, bool primary, bool danger)
+        {
+            button.AddThemeFontSizeOverride("font_size", 14);
+            button.AddThemeStyleboxOverride("normal", MakeButtonStyle(primary, danger, false));
+            button.AddThemeStyleboxOverride("hover", MakeButtonStyle(primary, danger, true));
+            button.AddThemeStyleboxOverride("pressed", MakeButtonStyle(primary, danger, true));
+
+            var disabled = MakeButtonStyle(primary, danger, false);
+            disabled.BgColor = UiTokens.BtnDisabled;
+            disabled.BorderColor = UiTokens.LineDisabled;
+            button.AddThemeStyleboxOverride("disabled", disabled);
+            button.AddThemeStyleboxOverride("focus", new StyleBoxEmpty());
+
+            var normalColor = primary ? GoldBrightColor : BodyColor;
+            var hoverColor = danger ? ErrorColor : (primary ? UiTokens.AccentHover : InkBrightColor);
+            button.AddThemeColorOverride("font_color", normalColor);
+            button.AddThemeColorOverride("font_hover_color", hoverColor);
+            button.AddThemeColorOverride("font_pressed_color", hoverColor);
+            button.AddThemeColorOverride("font_disabled_color", FaintColor);
+        }
+
+        private static void StyleTabButton(Button button, bool active)
+        {
+            button.AddThemeFontSizeOverride("font_size", 13);
+            button.AddThemeStyleboxOverride("normal", MakeTabStyle(active, false));
+            button.AddThemeStyleboxOverride("hover", MakeTabStyle(active, true));
+            button.AddThemeStyleboxOverride("pressed", MakeTabStyle(active, true));
+            button.AddThemeStyleboxOverride("focus", new StyleBoxEmpty());
+            button.AddThemeColorOverride("font_color", active ? GoldBrightColor : MutedColor);
+            button.AddThemeColorOverride("font_hover_color", active ? GoldBrightColor : InkColor);
+            button.AddThemeColorOverride("font_pressed_color", active ? GoldBrightColor : InkColor);
+        }
+
+        private static StyleBoxFlat MakeTabStyle(bool active, bool hover)
+        {
+            var style = new StyleBoxFlat();
+            if (active)
+                style.BgColor = UiTokens.AccentSoft;
+            else
+                style.BgColor = hover ? UiTokens.WhiteTrace : Colors.Transparent;
+            style.BorderColor = active ? UiTokens.AccentLine : Colors.Transparent;
+            style.BorderWidthLeft = 1;
+            style.BorderWidthRight = 1;
+            style.BorderWidthTop = 1;
+            style.BorderWidthBottom = 1;
+            style.CornerRadiusTopLeft = 4;
+            style.CornerRadiusTopRight = 4;
+            style.CornerRadiusBottomLeft = 4;
+            style.CornerRadiusBottomRight = 4;
+            style.ContentMarginLeft = 13;
+            style.ContentMarginRight = 13;
+            style.ContentMarginTop = 7;
+            style.ContentMarginBottom = 7;
+            return style;
+        }
+
+        private static void ClearChildren(Node container)
+        {
+            if (container == null)
+                return;
+            foreach (var child in container.GetChildren())
+            {
+                container.RemoveChild(child);
+                child.QueueFree();
+            }
         }
     }
 }

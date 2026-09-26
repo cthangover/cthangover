@@ -100,6 +100,7 @@ namespace Cthangover.Core.Mods
                 resolver.ClearCache();
             ModConflictRegistry.Clear();
             UiRegistry.Clear();
+            UI.Menu.MainMenuRegistry.Clear();
             UiHost.Instance?.ClearAll();
             Scenes.BattleSceneRegistry.Clear();
             registry.Reload();
@@ -118,6 +119,7 @@ namespace Cthangover.Core.Mods
                 resolver.ClearCache();
             ModConflictRegistry.Clear();
             UiRegistry.Clear();
+            UI.Menu.MainMenuRegistry.Clear();
             UiHost.Instance?.ClearAll();
             Scenes.BattleSceneRegistry.Clear();
         }

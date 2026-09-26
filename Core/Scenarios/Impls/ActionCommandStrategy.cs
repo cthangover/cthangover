@@ -11,12 +11,16 @@ namespace Cthangover.Core.Scenarios
     /// Implements <see cref="ICommandReferenceMetadata"/> to signal that the
     /// first positional argument is an <see cref="PositionalReferenceKind.Action"/> reference.
     /// </summary>
-    public class ActionCommandStrategy : IScenarioCommandStrategy, ICommandReferenceMetadata
+    public class ActionCommandStrategy : IScenarioCommandStrategy, ICommandReferenceMetadata, IScenarioCommandSpec
     {
         /// <inheritdoc/>
         public string Command => "action";
         /// <inheritdoc/>
         public PositionalReferenceKind Positional0Kind => PositionalReferenceKind.Action;
+        /// <inheritdoc/>
+        public int MinPositional => 1;
+        /// <inheritdoc/>
+        public int MaxPositional => 1;
 
         /// <inheritdoc/>
         public void Execute(DialogQueue dlg, List<string> positional, Dictionary<string, string> named, string arrowTarget, ILocalizationProvider locale)

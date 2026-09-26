@@ -1,11 +1,11 @@
 [
   {
-    "id": "core",
-    "asset": "mod_core-v1.0.0.zip",
-    "size_bytes": 141598121,
-    "archive_sha256": "39c42500e7495ed8ef54fbd60b9abb36cffc1606a74bb08763524503edbc2e7c",
-    "install_sha256": "80b160d43bb804478562d249c7142aa89d8764e89b4abed11bac24857cf32c2c",
-    "files": 201
+    "id": "visual_novel_core",
+    "asset": "mod_visual_novel_core-v1.0.0.zip",
+    "size_bytes": 141571314,
+    "archive_sha256": "feb675e213fa5605455926426d785335ee0c4226e7551a195c56c6110bbc1cce",
+    "install_sha256": "12cced70ba958fa4609d2181a8bc301b6532d45a177a02a9295bed10b7baba90",
+    "files": 231
   },
   {
     "id": "interface",

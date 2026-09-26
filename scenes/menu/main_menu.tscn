@@ -40,6 +40,7 @@ theme_override_constants/separation = 12
 [node name="NewGameBtn" type="Button" parent="MenuContainer" unique_id=1986231427]
 layout_mode = 2
 text = "Новая игра"
+theme_type_variation = "CthangoverPrimary"
 
 [node name="LoadBtn" type="Button" parent="MenuContainer" unique_id=1516273091]
 layout_mode = 2
@@ -53,6 +54,10 @@ text = "Настройки"
 layout_mode = 2
 text = "Моды"
 
+[node name="ModMenuButtons" type="VBoxContainer" parent="MenuContainer" unique_id=484218081]
+layout_mode = 2
+theme_override_constants/separation = 12
+
 [node name="space1" type="Control" parent="MenuContainer" unique_id=484218079]
 custom_minimum_size = Vector2(0, 20)
 layout_mode = 2
@@ -60,6 +65,7 @@ layout_mode = 2
 [node name="ExitBtn" type="Button" parent="MenuContainer" unique_id=1512499401]
 layout_mode = 2
 text = "Выход"
+theme_type_variation = "CthangoverDanger"
 
 [node name="space2" type="Control" parent="MenuContainer" unique_id=1261364549]
 custom_minimum_size = Vector2(0, 100)

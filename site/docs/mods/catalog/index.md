@@ -32,10 +32,10 @@ locally-installed mods.
           "description": "Live2D Cubism C# рантайм: загрузка моделей, отрисовка, физика, анимации, эффекты"
         }
       ],
-      "category": "library",                               // Category slug or comma-separated combination (e.g. "library, gameplay"): story, characters, gameplay, visual, audio, ui, locale, library, overhaul, tools, other
+      "category": "library",                               // Category slug or comma-separated combination (e.g. "library, gameplay"): story, characters, gameplay, visual, audio, ui, locale, library, engine, overhaul, tools, other
       "tags": ["live2d", "ui", "graphics", "2d"],          // Search/filter tags
       "icon_url": "https://git.cthangover.ru/cthangover/mod_live2d/raw/branch/master/mod.png", // Full URL to preview icon (PNG or JPEG)
-      "depends": ["core>=1"],                              // Versioned dependency strings
+      "depends": ["visual_novel_core>=1"],                              // Versioned dependency strings
       "conflicts_with": [],                                // Mutually exclusive mod IDs
       "downloads": [                                       // Version-specific download entries with mirrors
         {
@@ -75,10 +75,10 @@ locally-installed mods.
 | `version` | string | Semver version of the latest release (e.g. "1.0.0") |
 | `description` | string | Fallback short description (used when no `locale` entry matches the player's language) |
 | `locale` | object[] | Localized name/description entries for different languages (see below) |
-| `category` | string | Category slug or comma-separated combination of slugs (e.g. `"library, gameplay"`): `story`, `characters`, `gameplay`, `visual`, `audio`, `ui`, `locale`, `library`, `overhaul`, `tools`, `other` |
+| `category` | string | Category slug or comma-separated combination of slugs (e.g. `"library, gameplay"`): `story`, `characters`, `gameplay`, `visual`, `audio`, `ui`, `locale`, `library`, `engine`, `overhaul`, `tools`, `other` |
 | `tags` | string[] | Search/filter tags |
 | `icon_url` | string | Full URL to preview icon (PNG or JPEG) |
-| `depends` | string[] | Versioned dependency strings (e.g. `"core>=1"`) |
+| `depends` | string[] | Versioned dependency strings (e.g. `"visual_novel_core>=1"`) |
 | `conflicts_with` | string[] | Mutually exclusive mod IDs |
 | `downloads` | object[] | Version-specific download entries with mirrors |
 | `downloads[].version` | string | Semver version of this download entry |

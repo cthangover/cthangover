@@ -2,210 +2,92 @@ using System.Collections.Generic;
 using System.Linq;
 using Cthangover.Core.Characters;
 using Cthangover.Core.Factories.Impls;
-using Cthangover.Core.Scenes;
 using Cthangover.Core.Settings;
+using Cthangover.Core.UI.Theming;
 using Cthangover.Core.Utils;
 using Godot;
 
 namespace Cthangover.Core.UI.CharacterPanel
 {
+	/// <summary>
+	/// Character action panel following mockup 1: a header with the five type
+	/// legend chips and the standard close button, a party column of
+	/// <see cref="CharacterCardBehaviour"/> and the <see cref="ActionPoolBehaviour"/>
+	/// on the right, and a footer with the assignment counter and reset button.
+	/// The panel builds its whole tree in code because the card language (type
+	/// accents, badges, property chips, tooltips) is data-driven and cannot live
+	/// in a tscn.
+	///
+	/// Input model: drag orchestration and click-assignment both run through
+	/// the node-level <c>_Input</c>, not per-card <c>GuiInput</c> — during a
+	/// drag the cursor leaves the card rect and GuiInput would stop firing.
+	/// A press on a card starts a potential drag; passing the 5 px threshold
+	/// promotes it to a real drag. A press without motion selects the card
+	/// (gold frame); clicking a socket afterwards moves or swaps it. Dropping
+	/// outside a socket and outside the pool returns the card to its origin.
+	/// </summary>
 	public partial class CharacterPanelBehaviour : Widget
 	{
-		private VBoxContainer _charactersContainer;
+		private const int DragThreshold = 5;
+
 		private ActionPoolBehaviour _actionPool;
 		private ActionPoolData _actionPoolData;
-		private Button _resetButton;
-		private Button _closeButton;
+		private Label _statusLabel;
+		private Label _partyCountLabel;
+		private HFlowContainer _charactersContainer;
+		private CanvasLayer _dragCanvas;
 
 		private readonly List<CharacterCardBehaviour> _characterCards = new();
 		private ActionCardBehaviour _draggedCard;
-		private ActionCardBehaviour _potentialDragCard;
+		private ActionCardBehaviour _potentialCard;
+		private ActionCardBehaviour _selectedCard;
 		private ActionSlotBehaviour _hoveredSlot;
 		private Vector2 _localMouseOffset;
 		private Vector2 _dragStartMousePos;
 		private int _skipFrames;
 
-		private ModScenePrefab _characterCardScene;
-		private ModScenePrefab _actionCardScene;
-		private CanvasLayer _dragCanvas;
-
-		private const int DragThreshold = 5;
-
-		public override void _Ready()
+		protected override void OnceConstruct()
 		{
-			base._Ready();
-			_charactersContainer = GetNodeOrNull<VBoxContainer>("LeftPanel/LeftVBox/ScrollContainer/CharactersContainer");
-			_actionPool = GetNodeOrNull<ActionPoolBehaviour>("RightPanel/ActionPoolScroll/ActionPool");
+			SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+			MouseFilter = MouseFilterEnum.Stop;
 			_actionPoolData = GameData.Instance.Runtime.ActionPool;
-
-			_characterCardScene = new ModScenePrefab("scenes/ui/character_panel/character_card.tscn");
-			_actionCardScene = new ModScenePrefab("scenes/ui/character_panel/action_card.tscn");
 
 			_dragCanvas = new CanvasLayer { Name = "DragCanvas", Layer = 100 };
 			AddChild(_dragCanvas);
 
-			_closeButton = GetNodeOrNull<Button>("CloseButton");
-			if (_closeButton != null)
-			{
-				_closeButton.Pressed += () => Hide();
-				_closeButton.Text = TranslationServer.Translate("ui/character_panel/close");
-			}
+			var backdrop = new ColorRect();
+			backdrop.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+			backdrop.Color = UiTokens.Backdrop;
+			backdrop.MouseFilter = MouseFilterEnum.Ignore;
+			AddChild(backdrop);
 
-			_resetButton = GetNodeOrNull<Button>("ResetButton");
-			if (_resetButton != null)
-			{
-				_resetButton.Pressed += OnResetClick;
-				_resetButton.Text = TranslationServer.Translate("ui/character_panel/reset");
-			}
-		}
+			var panel = new Panel();
+			panel.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+			panel.OffsetLeft = 40;
+			panel.OffsetTop = 70;
+			panel.OffsetRight = -40;
+			panel.OffsetBottom = -30;
+			panel.AddThemeStyleboxOverride("panel", UiKit.Frame(
+				UiTokens.RadiusLg, UiTokens.Surface0, UiTokens.Line));
+			AddChild(panel);
 
-		public override void _Process(double delta)
-		{
-			if (_skipFrames > 0)
-				_skipFrames--;
-		}
+			var margin = new MarginContainer();
+			margin.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+			margin.AddThemeConstantOverride("margin_left", 24);
+			margin.AddThemeConstantOverride("margin_right", 24);
+			margin.AddThemeConstantOverride("margin_top", 14);
+			margin.AddThemeConstantOverride("margin_bottom", 14);
+			panel.AddChild(margin);
 
-		private int _dragFrameCounter;
+			var root = new VBoxContainer();
+			root.AddThemeConstantOverride("separation", 10);
+			margin.AddChild(root);
 
-		public override void _Input(InputEvent @event)
-		{
-			if (!Visible || _skipFrames > 0)
-				return;
-
-			if (@event is InputEventMouseButton mb && mb.ButtonIndex == MouseButton.Left)
-			{
-				if (mb.Pressed)
-				{
-					var card = FindValidCardAt(mb.GlobalPosition);
-					if (card != null)
-					{
-						_potentialDragCard = card;
-						_dragStartMousePos = mb.GlobalPosition;
-					}
-				}
-				else if (_draggedCard != null)
-				{
-					FinishDrag(mb.GlobalPosition);
-					AcceptEvent();
-				}
-				else
-				{
-					_potentialDragCard = null;
-				}
-			}
-
-			if (@event is InputEventMouseMotion mm)
-			{
-				if (_draggedCard != null)
-				{
-					var newPos = mm.GlobalPosition - _localMouseOffset;
-					_draggedCard.GlobalPosition = newPos;
-					_dragFrameCounter++;
-					if (_dragFrameCounter % 10 == 0)
-					{
-						GameLogger.Log("DRAG", $"DragMotion: frame={_dragFrameCounter}, "
-							+ $"mouse=({mm.GlobalPosition.X:F0},{mm.GlobalPosition.Y:F0}), "
-							+ $"cardPos=({newPos.X:F0},{newPos.Y:F0}), "
-							+ $"offset=({_localMouseOffset.X:F0},{_localMouseOffset.Y:F0})");
-					}
-					UpdateSlotHighlight(mm.GlobalPosition);
-					AcceptEvent();
-				}
-				else if (_potentialDragCard != null)
-				{
-					if ((mm.GlobalPosition - _dragStartMousePos).Length() > DragThreshold)
-					{
-						_dragFrameCounter = 0;
-						StartDrag(_potentialDragCard);
-						_potentialDragCard = null;
-					}
-				}
-			}
-		}
-
-		private void StartDrag(ActionCardBehaviour card)
-		{
-			_draggedCard = card;
-
-			var mouseGlobal = GetGlobalMousePosition();
-			var globalPos = card.GlobalPosition;
-			var cardSize = card.Size;
-			_localMouseOffset = mouseGlobal - globalPos;
-
-			var source = card.CurrentSlot != null
-				? $"slot[{card.CurrentSlot.SlotIndex}] char='{card.CurrentSlot.CharacterId}'"
-				: "pool";
-			GameLogger.Log("DRAG", $"StartDrag: action='{card.ActionData?.ID}', source={source}, "
-				+ $"mouse=({mouseGlobal.X:F0},{mouseGlobal.Y:F0}), cardPos=({globalPos.X:F0},{globalPos.Y:F0}), "
-				+ $"offset=({_localMouseOffset.X:F0},{_localMouseOffset.Y:F0}), cardSize=({cardSize.X:F0},{cardSize.Y:F0})");
-
-			if (card.CurrentSlot == null)
-			{
-				_actionPool?.RemoveCard(card);
-				_actionPoolData?.ActionIds.Remove(card.ActionData?.ID);
-			}
-
-			card.GetParent()?.RemoveChild(card);
-			_dragCanvas.AddChild(card);
-			card.SetAnchorsPreset(Control.LayoutPreset.TopLeft, false);
-			card.Size = cardSize;
-			card.GlobalPosition = globalPos;
-			GameLogger.Log("DRAG", $"StartDrag: after reparent, card.GlobalPosition=({card.GlobalPosition.X:F0},{card.GlobalPosition.Y:F0}), card.Size=({card.Size.X:F0},{card.Size.Y:F0})");
-			card.ZIndex = 100;
-		}
-
-		private void FinishDrag(Vector2 mousePos)
-		{
-			ClearHoverHighlight();
-
-			var card = _draggedCard;
-			_draggedCard = null;
-			_hoveredSlot = null;
-
-			var targetSlot = FindSlotAt(mousePos);
-
-			if (targetSlot != null && targetSlot != card.CurrentSlot)
-			{
-				GameLogger.Log("DRAG", $"FinishDrag: action='{card.ActionData?.ID}' -> "
-					+ $"slot[{targetSlot.SlotIndex}] char='{targetSlot.CharacterId}', "
-					+ $"mouse=({mousePos.X:F0},{mousePos.Y:F0})");
-				MoveCardToSlot(card, targetSlot);
-			}
-			else if (IsOverPool(mousePos))
-			{
-				GameLogger.Log("DRAG", $"FinishDrag: action='{card.ActionData?.ID}' -> pool, "
-					+ $"mouse=({mousePos.X:F0},{mousePos.Y:F0})");
-				var sourceSlot = card.CurrentSlot;
-				sourceSlot?.RemoveCard();
-				_actionPool.AcceptCard(card);
-				if (sourceSlot != null)
-				{
-					var sourceCard = _characterCards.FirstOrDefault(c => c.CharacterId == sourceSlot.CharacterId);
-					sourceCard?.CommitSlots();
-				}
-				if (card.ActionData != null)
-				{
-					_actionPoolData?.ActionIds.Add(card.ActionData.ID);
-					RefreshPool();
-				}
-			}
-			else
-			{
-				GameLogger.Log("DRAG", $"FinishDrag: action='{card.ActionData?.ID}' -> returnToOrigin, "
-					+ $"mouse=({mousePos.X:F0},{mousePos.Y:F0})");
-				card.ReturnToOrigin();
-			}
-		}
-
-		private void UpdateSlotHighlight(Vector2 mousePos)
-		{
-			var newHovered = FindSlotAt(mousePos);
-			if (newHovered != _hoveredSlot)
-			{
-				ClearHoverHighlight();
-				_hoveredSlot = newHovered;
-				HighlightSlot(_hoveredSlot);
-			}
+			root.AddChild(BuildHeader());
+			root.AddChild(MakeRule());
+			root.AddChild(BuildBody());
+			root.AddChild(MakeRule());
+			root.AddChild(BuildFooter());
 		}
 
 		protected override void ShowConstruct()
@@ -217,86 +99,14 @@ namespace Cthangover.Core.UI.CharacterPanel
 		protected override void HideDestruct()
 		{
 			ClearCharacterCards();
+			ClearSelection();
 		}
 
-		private void ReloadCharacters()
-		{
-			GameLogger.Log("UI", $"CharacterPanel.ReloadCharacters: container={_charactersContainer != null}, cardsBefore={_characterCards.Count}, battleSet={GameData.Instance?.Runtime?.CharacterData?.BattleSet?.Count ?? 0}");
-			ClearCharacterCards();
-
-			var characterData = GameData.Instance.Runtime.CharacterData;
-			if (characterData?.BattleSet == null || characterData.Characters == null)
-				return;
-
-			foreach (var characterId in characterData.BattleSet)
-			{
-				if (!characterData.Characters.TryGetValue(characterId, out var info))
-					continue;
-
-				var card = _characterCardScene.Instantiate<CharacterCardBehaviour>();
-				card.Name = $"Card_{characterId}";
-				_charactersContainer.AddChild(card);
-				card.SetCharacter(characterId, info, _actionCardScene);
-				_characterCards.Add(card);
-			}
-
-			_actionPool?.SetActionCardScene(_actionCardScene);
-			RefreshPool();
-			GameLogger.Log("UI", $"CharacterPanel.ReloadCharacters: cardsAfter={_characterCards.Count}, containerChildren={_charactersContainer?.GetChildCount() ?? -1}");
-		}
-
-		private void ClearCharacterCards()
-		{
-			if (_characterCards.Count > 0)
-				GameLogger.Log("UI", $"CharacterPanel.ClearCharacterCards: removing {_characterCards.Count} card(s)");
-			foreach (var card in _characterCards)
-				card.QueueFree();
-			_characterCards.Clear();
-		}
-
-		private void MoveCardToSlot(ActionCardBehaviour card, ActionSlotBehaviour targetSlot)
-		{
-			var sourceSlot = card.CurrentSlot;
-			var sourceCard = sourceSlot != null
-				? _characterCards.FirstOrDefault(c => c.CharacterId == sourceSlot.CharacterId)
-				: null;
-			var targetCard = _characterCards.FirstOrDefault(c => c.CharacterId == targetSlot.CharacterId);
-
-			var movedFromPool = sourceSlot == null;
-
-			if (targetSlot.IsEmpty)
-			{
-				targetSlot.PlaceCard(card);
-			}
-			else
-			{
-				var displacedCard = targetSlot.CurrentCard;
-				targetSlot.PlaceCard(card);
-
-				if (sourceSlot != null)
-				{
-					sourceSlot.PlaceCard(displacedCard);
-				}
-				else
-				{
-					_actionPool.AcceptCard(displacedCard);
-					if (displacedCard.ActionData != null)
-						_actionPoolData?.ActionIds.Add(displacedCard.ActionData.ID);
-				}
-			}
-
-			sourceCard?.CommitSlots();
-			if (targetCard != null && targetCard != sourceCard)
-				targetCard.CommitSlots();
-
-			RefreshPool();
-		}
-
-		private void RefreshPool()
-		{
-			_actionPool?.Refresh(_actionPoolData?.ActionIds);
-		}
-
+		/// <summary>
+		/// Appends an action ID to the persistent pool and refreshes the list.
+		/// Public entry point for scenarios and mods that award collectible
+		/// action cards.
+		/// </summary>
 		public void AddActionToPool(string actionId)
 		{
 			if (string.IsNullOrEmpty(actionId))
@@ -305,13 +115,523 @@ namespace Cthangover.Core.UI.CharacterPanel
 			RefreshPool();
 		}
 
+		public override void _Process(double delta)
+		{
+			if (_skipFrames > 0)
+				_skipFrames--;
+		}
+
+		public override void _Input(InputEvent @event)
+		{
+			if (!Visible || _skipFrames > 0)
+				return;
+
+			if (@event is InputEventMouseButton mb && mb.ButtonIndex == MouseButton.Left)
+			{
+				if (mb.Pressed)
+					OnLeftPressed(mb.GlobalPosition);
+				else
+					OnLeftReleased(mb.GlobalPosition);
+				return;
+			}
+
+			if (@event is InputEventMouseMotion mm)
+			{
+				if (_draggedCard != null)
+				{
+					_draggedCard.GlobalPosition = mm.GlobalPosition - _localMouseOffset;
+					UpdateSlotHighlight(mm.GlobalPosition);
+					AcceptEvent();
+				}
+				else if (_potentialCard != null
+					&& (mm.GlobalPosition - _dragStartMousePos).Length() > DragThreshold)
+				{
+					StartDrag(_potentialCard);
+				}
+			}
+		}
+
+		private void OnLeftPressed(Vector2 mousePos)
+		{
+			if (_draggedCard != null)
+				return;
+
+			var card = FindValidCardAt(mousePos);
+			if (card != null)
+			{
+				_potentialCard = card;
+				_dragStartMousePos = mousePos;
+				return;
+			}
+
+			var slot = FindSlotAt(mousePos);
+			if (slot != null)
+			{
+				if (_selectedCard != null)
+					MoveToSlot(_selectedCard, slot);
+				return;
+			}
+
+			if (_selectedCard != null && !IsOverPool(mousePos))
+				ClearSelection();
+		}
+
+		private void OnLeftReleased(Vector2 mousePos)
+		{
+			if (_draggedCard != null)
+			{
+				FinishDrag(mousePos);
+				AcceptEvent();
+				return;
+			}
+
+			if (_potentialCard == null)
+				return;
+
+			var card = _potentialCard;
+			_potentialCard = null;
+			HandleCardClick(card);
+		}
+
+		private void StartDrag(ActionCardBehaviour card)
+		{
+			if (!GodotObject.IsInstanceValid(card))
+				return;
+
+			_potentialCard = null;
+			_draggedCard = card;
+			var sourceSlot = card.CurrentSlot;
+			ClearSelection();
+
+			_localMouseOffset = GetGlobalMousePosition() - card.GlobalPosition;
+			var globalPos = card.GlobalPosition;
+			var cardSize = card.Size;
+
+			GameLogger.Log("DRAG", $"StartDrag: action='{card.ActionData?.ID}', "
+				+ $"source={(sourceSlot != null ? $"slot[{sourceSlot.SlotIndex}] char='{sourceSlot.CharacterId}'" : "pool")}");
+
+			if (sourceSlot == null)
+			{
+				_actionPool?.RemoveCard(card);
+				RemovePoolId(card.ActionData?.ID);
+			}
+
+			card.GetParent()?.RemoveChild(card);
+			_dragCanvas.AddChild(card);
+			card.SetAnchorsPreset(LayoutPreset.TopLeft, false);
+			card.Size = cardSize;
+			card.GlobalPosition = globalPos;
+			card.ZIndex = 100;
+			card.SetDragging(true);
+		}
+
+		private void FinishDrag(Vector2 mousePos)
+		{
+			ClearHoverHighlight();
+
+			var card = _draggedCard;
+			_draggedCard = null;
+
+			var targetSlot = FindSlotAt(mousePos);
+			if (targetSlot != null && targetSlot != card.CurrentSlot)
+				MoveToSlot(card, targetSlot);
+			else if (IsOverPool(mousePos))
+				MoveToPool(card);
+			else
+				RestoreCard(card);
+
+			if (GodotObject.IsInstanceValid(card))
+				card.SetDragging(false);
+			UpdateStatus();
+		}
+
+		private void HandleCardClick(ActionCardBehaviour card)
+		{
+			if (!GodotObject.IsInstanceValid(card))
+				return;
+
+			if (_selectedCard == card)
+			{
+				ClearSelection();
+				return;
+			}
+
+			if (_selectedCard != null && card.CurrentSlot != null)
+			{
+				MoveToSlot(_selectedCard, card.CurrentSlot);
+				return;
+			}
+
+			SelectCard(card);
+		}
+
+		private void SelectCard(ActionCardBehaviour card)
+		{
+			ClearSelection();
+			_selectedCard = card;
+			card.SetSelected(true);
+		}
+
+		private void ClearSelection()
+		{
+			if (_selectedCard != null && GodotObject.IsInstanceValid(_selectedCard))
+				_selectedCard.SetSelected(false);
+			_selectedCard = null;
+		}
+
+		/// <summary>
+		/// Moves (or swaps) a card into the target slot. A card dragged from
+		/// another slot swaps with its displaced occupant; a card taken from
+		/// the pool sends the displaced card back to the pool and consumes one
+		/// pool-list entry (duplicates remain untouched).
+		/// </summary>
+		private void MoveToSlot(ActionCardBehaviour card, ActionSlotBehaviour target)
+		{
+			if (card == null || target == null || !GodotObject.IsInstanceValid(card))
+				return;
+
+			var source = card.CurrentSlot;
+			if (source == target)
+			{
+				ClearSelection();
+				return;
+			}
+
+			var displaced = target.CurrentCard;
+			var poolChanged = source == null;
+
+			if (source == null)
+				_actionPool?.RemoveCard(card);
+
+			target.PlaceCard(card);
+
+			if (displaced != null)
+			{
+				if (source != null)
+					source.PlaceCard(displaced);
+				else
+					AddPoolId(displaced.ActionData?.ID);
+			}
+
+			if (poolChanged)
+				RemovePoolId(card.ActionData?.ID);
+
+			CommitCards();
+			if (poolChanged)
+				RefreshPool();
+			ClearSelection();
+			UpdateStatus();
+
+			GameLogger.Log("DRAG", $"Move: action='{card.ActionData?.ID}' -> "
+				+ $"slot[{target.SlotIndex}] char='{target.CharacterId}'{(displaced != null ? $", displaced='{displaced.ActionData?.ID}'" : string.Empty)}");
+		}
+
+		private void MoveToPool(ActionCardBehaviour card)
+		{
+			var source = card.CurrentSlot;
+			source?.RemoveCard();
+			card.SetCompact(true);
+			_actionPool?.AcceptCard(card);
+			AddPoolId(card.ActionData?.ID);
+
+			if (source != null)
+				CommitCards();
+			RefreshPool();
+			UpdateStatus();
+		}
+
+		private void RestoreCard(ActionCardBehaviour card)
+		{
+			if (card.CurrentSlot != null)
+			{
+				card.ReturnToOrigin();
+				return;
+			}
+
+			card.QueueFree();
+			AddPoolId(card.ActionData?.ID);
+			RefreshPool();
+			UpdateStatus();
+		}
+
+		private void UpdateSlotHighlight(Vector2 mousePos)
+		{
+			var newHovered = FindSlotAt(mousePos);
+			if (newHovered == _hoveredSlot)
+				return;
+
+			ClearHoverHighlight();
+			_hoveredSlot = newHovered;
+			_hoveredSlot?.SetHighlight(true);
+		}
+
+		private void ClearHoverHighlight()
+		{
+			_hoveredSlot?.SetHighlight(false);
+			_hoveredSlot = null;
+		}
+
+		private void ReloadCharacters()
+		{
+			ClearCharacterCards();
+
+			var characterData = GameData.Instance.Runtime.CharacterData;
+			if (characterData?.BattleSet == null || characterData.Characters == null)
+			{
+				RefreshPool();
+				UpdateStatus();
+				return;
+			}
+
+			foreach (var characterId in characterData.BattleSet)
+			{
+				if (!characterData.Characters.TryGetValue(characterId, out var info))
+					continue;
+
+				var card = new CharacterCardBehaviour { Name = $"Card_{characterId}" };
+				_charactersContainer.AddChild(card);
+				card.SetCharacter(characterId, info);
+				_characterCards.Add(card);
+			}
+
+			RefreshPool();
+			UpdateStatus();
+		}
+
+		private void ClearCharacterCards()
+		{
+			foreach (var card in _characterCards)
+				card.QueueFree();
+			_characterCards.Clear();
+		}
+
+		private void RefreshPool()
+		{
+			_actionPool?.Refresh(_actionPoolData?.ActionIds);
+		}
+
+		private void CommitCards()
+		{
+			foreach (var card in _characterCards)
+				card.CommitSlots();
+		}
+
+		private void AddPoolId(string id)
+		{
+			if (!string.IsNullOrEmpty(id))
+				_actionPoolData?.ActionIds.Add(id);
+		}
+
+		private void RemovePoolId(string id)
+		{
+			if (!string.IsNullOrEmpty(id))
+				_actionPoolData?.ActionIds.Remove(id);
+		}
+
+		private void UpdateStatus()
+		{
+			if (_statusLabel == null)
+				return;
+
+			var assigned = _characterCards.Sum(card => card.Slots.Count(slot => slot != null && !slot.IsEmpty));
+			var total = _characterCards.Count * 3;
+			var pool = _actionPoolData?.ActionIds?.Count ?? 0;
+			_statusLabel.Text = string.Format(
+				ActionCharacterUi.Translate("ui/character_panel/assigned"), assigned, total, pool)
+				+ " · " + ActionCharacterUi.Translate("ui/character_panel/hint_select");
+
+			if (_partyCountLabel != null)
+				_partyCountLabel.Text = _characterCards.Count.ToString();
+		}
+
+		private ActionCardBehaviour FindValidCardAt(Vector2 globalPos)
+		{
+			foreach (var characterCard in _characterCards)
+			{
+				foreach (var slot in characterCard.Slots)
+				{
+					var card = slot?.CurrentCard;
+					if (card == null || !GodotObject.IsInstanceValid(card))
+						continue;
+					if (card.GetGlobalRect().HasPoint(globalPos))
+						return card;
+				}
+			}
+
+			if (_actionPool != null)
+			{
+				foreach (var poolCard in _actionPool.VisibleCards)
+				{
+					if (GodotObject.IsInstanceValid(poolCard) && poolCard.GetGlobalRect().HasPoint(globalPos))
+						return poolCard;
+				}
+			}
+
+			return null;
+		}
+
+		private ActionSlotBehaviour FindSlotAt(Vector2 globalPos)
+		{
+			foreach (var characterCard in _characterCards)
+			{
+				foreach (var slot in characterCard.Slots)
+				{
+					if (slot != null && slot.GetGlobalRect().HasPoint(globalPos))
+						return slot;
+				}
+			}
+			return null;
+		}
+
+		private bool IsOverPool(Vector2 globalPos)
+		{
+			return _actionPool != null && _actionPool.GetGlobalRect().HasPoint(globalPos);
+		}
+
+		private Control BuildHeader()
+		{
+			var row = new HBoxContainer();
+			row.AddThemeConstantOverride("separation", 18);
+			row.MouseFilter = MouseFilterEnum.Ignore;
+
+			row.AddChild(ActionCharacterUi.MakeLabel(
+				ActionCharacterUi.Translate("ui/character_panel/title").ToUpperInvariant(), 22, ActionCharacterUi.InkBright));
+
+			var legend = new HFlowContainer();
+			legend.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+			legend.AddThemeConstantOverride("h_separation", 5);
+			legend.AddThemeConstantOverride("v_separation", 4);
+			legend.MouseFilter = MouseFilterEnum.Ignore;
+			foreach (var type in ActionCharacterUi.LegendTypes)
+			{
+				legend.AddChild(ActionCharacterUi.MakeBadge(
+					ActionCharacterUi.Translate(ActionCharacterUi.TypeLabelKey(type)).ToUpperInvariant(),
+					ActionCharacterUi.AccentColor(type)));
+			}
+			row.AddChild(legend);
+
+			row.AddChild(ActionCharacterUi.MakeLabel(
+				ActionCharacterUi.Translate("ui/character_panel/drag_hint"), 11, ActionCharacterUi.Faint));
+
+			var closeButton = new Button
+			{
+				Text = "✕",
+				TooltipText = ActionCharacterUi.Translate("ui/character_panel/close"),
+				FocusMode = FocusModeEnum.None,
+				CustomMinimumSize = new Vector2(38, 38),
+			};
+			CthangoverTheme.ApplyIcon(closeButton);
+			closeButton.Pressed += Hide;
+			row.AddChild(closeButton);
+
+			return row;
+		}
+
+		private Control BuildBody()
+		{
+			var body = new HBoxContainer();
+			body.SizeFlagsVertical = SizeFlags.ExpandFill;
+			body.AddThemeConstantOverride("separation", 14);
+			body.MouseFilter = MouseFilterEnum.Pass;
+
+			var left = new VBoxContainer();
+			left.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+			left.AddThemeConstantOverride("separation", 8);
+			left.MouseFilter = MouseFilterEnum.Pass;
+			body.AddChild(left);
+
+			var titleRow = new HBoxContainer();
+			titleRow.AddThemeConstantOverride("separation", 8);
+			titleRow.MouseFilter = MouseFilterEnum.Ignore;
+			titleRow.AddChild(ActionCharacterUi.MakeLabel(
+				ActionCharacterUi.Translate("ui/character_panel/party").ToUpperInvariant(), 12, ActionCharacterUi.Muted));
+			_partyCountLabel = ActionCharacterUi.MakeLabel("0", 11, ActionCharacterUi.Body);
+			titleRow.AddChild(_partyCountLabel);
+
+			var titleSpacer = new Control();
+			titleSpacer.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+			titleSpacer.MouseFilter = MouseFilterEnum.Ignore;
+			titleRow.AddChild(titleSpacer);
+			titleRow.AddChild(ActionCharacterUi.MakeLabel(
+				ActionCharacterUi.Translate("ui/character_panel/party_sub"), 11, ActionCharacterUi.Faint));
+			left.AddChild(titleRow);
+
+			var scroll = new ScrollContainer();
+			scroll.SizeFlagsVertical = SizeFlags.ExpandFill;
+			scroll.HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled;
+			left.AddChild(scroll);
+
+			_charactersContainer = new HFlowContainer();
+			_charactersContainer.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+			_charactersContainer.AddThemeConstantOverride("h_separation", 14);
+			_charactersContainer.AddThemeConstantOverride("v_separation", 14);
+			_charactersContainer.MouseFilter = MouseFilterEnum.Pass;
+			scroll.AddChild(_charactersContainer);
+
+			var right = new PanelContainer();
+			right.CustomMinimumSize = new Vector2(420, 0);
+			right.AddThemeStyleboxOverride("panel", MakePoolPanelStyle());
+			body.AddChild(right);
+
+			_actionPool = new ActionPoolBehaviour();
+			right.AddChild(_actionPool);
+
+			return body;
+		}
+
+		private Control BuildFooter()
+		{
+			var row = new HBoxContainer();
+			row.AddThemeConstantOverride("separation", 10);
+			row.MouseFilter = MouseFilterEnum.Ignore;
+
+			_statusLabel = ActionCharacterUi.MakeLabel(string.Empty, 12, ActionCharacterUi.Faint);
+			row.AddChild(_statusLabel);
+
+			var spacer = new Control();
+			spacer.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+			spacer.MouseFilter = MouseFilterEnum.Ignore;
+			row.AddChild(spacer);
+
+			var resetButton = new Button();
+			resetButton.Text = ActionCharacterUi.Translate("ui/character_panel/reset");
+			resetButton.FocusMode = FocusModeEnum.None;
+			CthangoverTheme.ApplyDanger(resetButton);
+			resetButton.Pressed += OnResetClick;
+			row.AddChild(resetButton);
+
+			return row;
+		}
+
+		private static StyleBoxFlat MakePoolPanelStyle()
+		{
+			var style = UiKit.Frame(0, UiTokens.SideBg);
+			style.BorderColor = UiTokens.Line;
+			style.BorderWidthLeft = 1;
+			style.ContentMarginLeft = 16;
+			style.ContentMarginRight = 16;
+			style.ContentMarginTop = 14;
+			style.ContentMarginBottom = 14;
+			return style;
+		}
+
+		private static Control MakeRule()
+		{
+			var rule = new Panel();
+			rule.CustomMinimumSize = new Vector2(0, 1);
+			rule.AddThemeStyleboxOverride("panel", UiKit.Frame(
+				0, UiTokens.Line, UiTokens.Line));
+			rule.MouseFilter = MouseFilterEnum.Ignore;
+			return rule;
+		}
+
 		private void OnResetClick()
 		{
 			var dialog = new ConfirmationDialog();
-			dialog.Title = TranslationServer.Translate("ui/character_panel/reset_title");
-			dialog.DialogText = TranslationServer.Translate("ui/character_panel/reset_text");
-			dialog.OkButtonText = TranslationServer.Translate("ui/character_panel/reset_ok");
-			dialog.CancelButtonText = TranslationServer.Translate("ui/character_panel/reset_cancel");
+			dialog.Title = ActionCharacterUi.Translate("ui/character_panel/reset_title");
+			dialog.DialogText = ActionCharacterUi.Translate("ui/character_panel/reset_text");
+			dialog.OkButtonText = ActionCharacterUi.Translate("ui/character_panel/reset_ok");
+			dialog.CancelButtonText = ActionCharacterUi.Translate("ui/character_panel/reset_cancel");
 			dialog.Exclusive = true;
 			AddChild(dialog);
 
@@ -320,7 +640,6 @@ namespace Cthangover.Core.UI.CharacterPanel
 				PerformReset();
 				dialog.QueueFree();
 			};
-
 			dialog.Canceled += () => dialog.QueueFree();
 			dialog.PopupCentered();
 		}
@@ -340,11 +659,11 @@ namespace Cthangover.Core.UI.CharacterPanel
 					continue;
 
 				var template = CharacterFactory.Instance.Get(characterId);
-				var defaultActionIds = template?.Actions?.Select(a => a.ID).ToList()
+				var defaultActionIds = template?.Actions?.Select(action => action.ID).ToList()
 					?? new List<string>();
 
 				var slots = new List<string>();
-				for (int i = 0; i < 3; i++)
+				for (var i = 0; i < 3; i++)
 				{
 					if (i < defaultActionIds.Count)
 					{
@@ -357,10 +676,8 @@ namespace Cthangover.Core.UI.CharacterPanel
 					}
 				}
 
-				for (int i = 3; i < defaultActionIds.Count; i++)
-				{
+				for (var i = 3; i < defaultActionIds.Count; i++)
 					extraPoolIds.Add(defaultActionIds[i]);
-				}
 
 				info.ActionSlots = slots;
 			}
@@ -369,79 +686,7 @@ namespace Cthangover.Core.UI.CharacterPanel
 			_actionPoolData.ActionIds = extraPoolIds.ToList();
 
 			ReloadCharacters();
-		}
-
-		private ActionCardBehaviour FindValidCardAt(Vector2 globalPos)
-		{
-			foreach (var characterCard in _characterCards)
-			{
-				foreach (var slot in characterCard.Slots)
-				{
-					var card = slot?.CurrentCard;
-					if (card == null || !GodotObject.IsInstanceValid(card))
-						continue;
-					if (card.GetGlobalRect().HasPoint(globalPos))
-						return card;
-				}
-			}
-
-			if (_actionPool != null)
-			{
-				var container = _actionPool.GetNodeOrNull<VBoxContainer>("Container");
-				if (container != null)
-				{
-					foreach (var child in container.GetChildren())
-					{
-						if (child is ActionCardBehaviour poolCard
-							&& GodotObject.IsInstanceValid(poolCard)
-							&& poolCard.GetGlobalRect().HasPoint(globalPos))
-							return poolCard;
-					}
-				}
-			}
-
-			return null;
-		}
-
-		private ActionSlotBehaviour FindSlotAt(Vector2 globalPos)
-		{
-			foreach (var characterCard in _characterCards)
-			{
-				foreach (var slot in characterCard.Slots)
-				{
-					if (slot == null)
-						continue;
-					if (slot.GetGlobalRect().HasPoint(globalPos))
-						return slot;
-				}
-			}
-			return null;
-		}
-
-		private bool IsOverPool(Vector2 globalPos)
-		{
-			if (_actionPool == null)
-				return false;
-			return _actionPool.GetGlobalRect().HasPoint(globalPos);
-		}
-
-		private void HighlightSlot(ActionSlotBehaviour slot)
-		{
-			if (slot == null)
-				return;
-			var bg = slot.GetNodeOrNull<ColorRect>("Bg");
-			if (bg != null)
-				bg.Color = new Color(0.2f, 0.4f, 0.2f, 0.6f);
-		}
-
-		private void ClearHoverHighlight()
-		{
-			if (_hoveredSlot != null)
-			{
-				var bg = _hoveredSlot.GetNodeOrNull<ColorRect>("Bg");
-				if (bg != null)
-					bg.Color = new Color(0.1f, 0.1f, 0.15f, 0.5f);
-			}
+			GameLogger.Log("UI", "CharacterPanel.PerformReset: assignments restored to templates");
 		}
 	}
 }

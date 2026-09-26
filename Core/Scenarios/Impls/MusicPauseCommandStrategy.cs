@@ -9,10 +9,12 @@ namespace Cthangover.Core.Scenarios
     /// playing background music stream. Playback can be resumed later with
     /// <see cref="MusicPlayCommandStrategy"/>.
     /// </summary>
-    public class MusicPauseCommandStrategy : IScenarioCommandStrategy
+    public class MusicPauseCommandStrategy : IScenarioCommandStrategy, IScenarioCommandSpec
     {
         /// <inheritdoc/>
         public string Command => "music_pause";
+        /// <inheritdoc/>
+        public int MaxPositional => 0;
 
         /// <inheritdoc/>
         public void Execute(DialogQueue dlg, List<string> positional, Dictionary<string, string> named, string arrowTarget, ILocalizationProvider locale)

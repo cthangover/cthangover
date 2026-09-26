@@ -37,7 +37,7 @@ mods/
   "description": "新しいアクションとMod設定",  // Modリストに表示されるModの説明
   "sources": ["src/*.cs"],                 // ソースファイルを収集するグロブパターン（すべての ".cs" ファイルを含む）
   "author": "programmer",                  // 作者
-  "depends": ["core"]                      // コアゲームへの依存（手動でMod読み込み順序を設定する必要なし）
+  "depends": ["visual_novel_core"]         // コアゲームへの依存（手動でMod読み込み順序を設定する必要なし）
 }
 ```
 

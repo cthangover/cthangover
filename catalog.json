@@ -29,7 +29,7 @@
 		}
 	],
 	"depends": [
-		"core\u003E=1"
+		"visual_novel_core\u003E=1"
 	],
 	"downloads": [
 		{

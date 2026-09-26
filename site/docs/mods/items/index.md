@@ -104,7 +104,7 @@ effect.
 
 ## Real examples
 
-### Consumable — `core/items/food/ration.json`
+### Consumable — `visual_novel_core/items/food/ration.json`
 
 ```jsonc
 {
@@ -123,7 +123,7 @@ effect.
 }
 ```
 
-### Crafting material — `core/items/food/wolf_meat.json`
+### Crafting material — `visual_novel_core/items/food/wolf_meat.json`
 
 ```jsonc
 {

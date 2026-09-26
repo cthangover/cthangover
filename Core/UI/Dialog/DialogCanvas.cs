@@ -5,8 +5,7 @@ using Godot;
 namespace Cthangover.Core.UI.Dialog
 {
     /// <summary>
-    /// Thin wrapper node that hosts the dialog UI. The shell's scene tree is native
-    /// and cannot reference mod scenes, so the canvas instantiates its
+    /// Thin wrapper node that hosts the dialog UI. The canvas instantiates its
     /// <see cref="DialogBox"/> child at runtime from the core mod through
     /// <see cref="ModScenePrefab"/> and keeps the well-known node name
     /// <c>DialogBox</c>. The rest of the game locates it by that name via

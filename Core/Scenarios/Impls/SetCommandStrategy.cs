@@ -10,10 +10,14 @@ namespace Cthangover.Core.Scenarios
     /// These variables can be read later by <c>if</c> conditions or passed to
     /// interactive actions as context.
     /// </summary>
-    public class SetCommandStrategy : IScenarioCommandStrategy
+    public class SetCommandStrategy : IScenarioCommandStrategy, IScenarioCommandSpec
     {
         /// <inheritdoc/>
         public string Command => "set";
+        /// <inheritdoc/>
+        public int MinPositional => 2;
+        /// <inheritdoc/>
+        public int MaxPositional => 2;
 
         /// <inheritdoc/>
         public void Execute(DialogQueue dlg, List<string> positional, Dictionary<string, string> named, string arrowTarget, ILocalizationProvider locale)

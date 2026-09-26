@@ -34,7 +34,7 @@ Mỗi mod cần một tệp kê khai. Tạo `mods/quickstart_player/manifest.jso
   "name": "Cường Hóa Marao",        // Tên hiển thị trong menu quản lý mod
   "description": "Mod đầu tiên!",   // Mô tả hiển thị trong danh sách mod và catalog
   "author": "player",               // Tác giả mod (chuỗi tùy ý)
-  "depends": ["core"]               // Phụ thuộc vào game lõi (không cần sắp xếp thứ tự tải mod thủ công)
+  "depends": ["visual_novel_core"]  // Phụ thuộc vào game lõi (không cần sắp xếp thứ tự tải mod thủ công)
 }
 ```
 
@@ -64,7 +64,7 @@ Tạo `mods/quickstart_player/patches/characters.json`:
 
 ### Cách hoạt động
 
-- **`"Id": "Marao"`** — mục tiêu vá: nhân vật có định danh `Marao` (được định nghĩa trong mod `core`).
+- **`"Id": "Marao"`** — mục tiêu vá: nhân vật có định danh `Marao` (được định nghĩa trong mod `visual_novel_core`).
 - **`"Health": 5000`**, **`"Attack": 1200`**, **`"Points": 2`** — ghi đè các trường của nhân vật. Giá trị mới thay thế giá trị cũ.
 - **`"Actions$add": ["physics/stun"]`** — hậu tố `$add` nghĩa là "thêm vào mảng". Hành động `physics/stun` được thêm vào danh sách. Các hành động mặc định `physics/attack` và `physics/defence` vẫn được giữ lại.
 

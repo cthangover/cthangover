@@ -14,7 +14,7 @@ namespace Cthangover.Core.Mods
     ///
     /// <see cref="Depends"/> and <see cref="ConflictsWith"/> use the
     /// same string format as the local <c>manifest.json</c>
-    /// (e.g. <c>"core>=1"</c>, <c>"interface>=1?"</c>).
+    /// (e.g. <c>"visual_novel_core>=1"</c>, <c>"interface>=1?"</c>).
     /// </summary>
     public class CatalogExportEntry
     {
@@ -63,7 +63,7 @@ namespace Cthangover.Core.Mods
 
         /// <summary>
         /// Versioned dependency strings in the same format as local
-        /// manifest.json (e.g. "core>=1", "interface>=2?").
+        /// manifest.json (e.g. "visual_novel_core>=1", "interface>=2?").
         /// </summary>
         [JsonPropertyName("depends")]
         public List<string> Depends { get; set; }
@@ -91,6 +91,26 @@ namespace Cthangover.Core.Mods
         /// <summary>Maximum compatible game version, or null if unbounded.</summary>
         [JsonPropertyName("max_game_version")]
         public string MaxGameVersion { get; set; }
+
+        /// <summary>
+        /// Catalog URLs this entry was fetched from. Filled by
+        /// <see cref="CatalogService"/> during refresh (one URL per catalog that
+        /// published the mod) and persisted in the on-disk cache so the UI can show
+        /// where a mod comes from without a network round-trip. Null for entries
+        /// built for export — exporters omit it.
+        /// </summary>
+        [JsonPropertyName("source_urls")]
+        public List<string> SourceUrls { get; set; }
+
+        /// <summary>
+        /// Set when several catalogs publish the same id with the same version and
+        /// title but different content hashes. Such entries are not merged: each
+        /// variant stays a separate entry flagged for the UI to highlight, because
+        /// one of the catalogs is likely serving a modified build. Null (omitted)
+        /// for normal entries so catalog export JSON stays clean.
+        /// </summary>
+        [JsonPropertyName("variant_conflict")]
+        public bool? VariantConflict { get; set; }
 
         public string GetLocalizedName(string language)
         {

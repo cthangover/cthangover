@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Cthangover.Core.UI.Theming;
 using Cthangover.Core.Utils;
 using Godot;
 
@@ -44,8 +45,9 @@ namespace Cthangover.Core.UI.Menu
             {
                 var label = new Label();
                 label.AddThemeFontSizeOverride("font_size", 15);
+                label.AddThemeColorOverride("font_color", UiTokens.Body);
                 label.HorizontalAlignment = HorizontalAlignment.Left;
-                label.Modulate = new Color(1, 1, 1, 0f);
+                label.Modulate = UiTokens.Alpha(UiTokens.White, 0f);
                 box.AddChild(label);
                 _labels[i] = label;
             }
@@ -108,12 +110,12 @@ namespace Cthangover.Core.UI.Menu
                     var line = _lines[start + i];
                     var alpha = Mathf.Clamp(1f - line.Age / FadeSeconds, 0f, 1f);
                     _labels[labelIndex].Text = line.Text;
-                    _labels[labelIndex].Modulate = new Color(1, 1, 1, alpha);
+                    _labels[labelIndex].Modulate = UiTokens.Alpha(UiTokens.White, alpha);
                 }
                 else
                 {
                     _labels[labelIndex].Text = "";
-                    _labels[labelIndex].Modulate = new Color(1, 1, 1, 0f);
+                    _labels[labelIndex].Modulate = UiTokens.Alpha(UiTokens.White, 0f);
                 }
             }
         }

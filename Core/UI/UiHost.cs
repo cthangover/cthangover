@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Cthangover.Core.Events;
 using Cthangover.Core.Mods;
 using Cthangover.Core.Scenes;
+using Cthangover.Core.UI.Theming;
 using Cthangover.Core.Utils;
 using Godot;
 
@@ -132,6 +133,7 @@ namespace Cthangover.Core.UI
             }
 
             control.Name = entry.Id;
+            CthangoverTheme.Apply(control);
             if (IsHosted(entry))
             {
                 layer.AddChild(control);
@@ -182,6 +184,7 @@ namespace Cthangover.Core.UI
         {
             PurgeInvalidInstances();
             shellRoot = e.Root;
+            CthangoverTheme.Apply(e.Root);
             UiBuilder.Build(e.Root);
 
             foreach (var entry in UiRegistry.Entries)

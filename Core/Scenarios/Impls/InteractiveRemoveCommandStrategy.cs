@@ -10,9 +10,15 @@ namespace Cthangover.Core.Scenarios
 	///
 	/// Usage: <c>interactive_remove door_to_kitchen</c>
 	/// </summary>
-	public class InteractiveRemoveCommandStrategy : IScenarioCommandStrategy
+	public class InteractiveRemoveCommandStrategy : IScenarioCommandStrategy, IScenarioCommandSpec
 	{
 		public string Command => "interactive_remove";
+
+		/// <inheritdoc/>
+		public int MinPositional => 1;
+
+		/// <inheritdoc/>
+		public int MaxPositional => 1;
 
 		public void Execute(DialogQueue dlg, List<string> positional, Dictionary<string, string> named, string arrowTarget, ILocalizationProvider locale)
 		{

@@ -34,7 +34,7 @@ mods/
   "name": "Marao 강화",             // 모드 관리 메뉴에 표시되는 이름
   "description": "내 첫 모드!",      // 모드 목록과 카탈로그에 표시되는 설명
   "author": "player",               // 모드 작성자 (임의의 문자열)
-  "depends": ["core"]               // 코어 게임 의존성 (수동으로 모드 로드 순서를 정할 필요 없음)
+  "depends": ["visual_novel_core"]  // 코어 게임 의존성 (수동으로 모드 로드 순서를 정할 필요 없음)
 }
 ```
 
@@ -50,7 +50,7 @@ mods/
 {
   "Items": [
     {
-      "Id": "Marao",  // 패치할 캐릭터 ID (core 모드에서 정의됨)
+      "Id": "Marao",  // 패치할 캐릭터 ID (visual_novel_core 모드에서 정의됨)
 
       "Health": 5000, // 새 속성 값 — 원본을 덮어씀
       "Attack": 1200,
@@ -64,7 +64,7 @@ mods/
 
 ### 작동 원리
 
-- **`"Id": "Marao"`** — 패치 대상: 식별자 `Marao`를 가진 캐릭터 (`core` 모드에서 정의).
+- **`"Id": "Marao"`** — 패치 대상: 식별자 `Marao`를 가진 캐릭터 (`visual_novel_core` 모드에서 정의).
 - **`"Health": 5000`**, **`"Attack": 1200`**, **`"Points": 2`** — 캐릭터 필드를 덮어씁니다. 새 값이 이전 값을 대체합니다.
 - **`"Actions$add": ["physics/stun"]`** — 접미사 `$add`는 "배열에 추가"를 의미합니다. 액션 `physics/stun`이 목록에 추가됩니다. 기본 `physics/attack`과 `physics/defence`는 그대로 유지됩니다.
 

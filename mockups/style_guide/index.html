@@ -1,0 +1,866 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cthangover UI — единый стиль и палитра</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="ui-kit.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:radial-gradient(ellipse at 50% -10%,#171923 0%,#08090c 60%);color:var(--ct-ink);font-family:var(--ct-font);min-height:100vh}
+.sg-wrap{max-width:1500px;margin:0 auto;padding:48px 28px 90px}
+.sg-hero h1{font-size:34px;font-weight:600;letter-spacing:.6px}
+.sg-hero .sub{color:var(--ct-muted);margin-top:10px;font-size:15px;line-height:1.65;max-width:960px}
+.sg-hero .sub b{color:var(--ct-accent-bright);font-weight:600}
+.sg-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.sg-metachip{font-family:var(--ct-mono);font-size:11px;color:var(--ct-body);border:1px solid var(--ct-line);background:rgba(23,25,35,.6);border-radius:var(--ct-r-sm);padding:4px 10px}
+.sg-layout{display:grid;grid-template-columns:220px minmax(0,1fr);gap:28px;margin-top:38px}
+.sg-nav{position:sticky;top:24px;align-self:start;display:flex;flex-direction:column;gap:2px;border-left:1px solid var(--ct-line);padding-left:14px;max-height:calc(100vh - 48px);overflow:auto}
+.sg-nav a{color:var(--ct-muted);text-decoration:none;font-size:13px;padding:4px 0;transition:.15s}
+.sg-nav a:hover{color:var(--ct-accent-bright)}
+.sg-nav .grp{color:var(--ct-faint);font-size:10px;letter-spacing:1.4px;text-transform:uppercase;margin:14px 0 4px}
+.sg-main{min-width:0;display:flex;flex-direction:column;gap:26px}
+.sg-section{background:linear-gradient(180deg,rgba(29,32,44,.7),rgba(17,18,25,.85));border:1px solid var(--ct-line);border-radius:12px;padding:24px 26px 28px;scroll-margin-top:20px}
+.sg-section>h2{font-size:17px;letter-spacing:1.6px;text-transform:uppercase;color:#cfccc4;margin-bottom:6px}
+.sg-section>.lead{color:var(--ct-muted);font-size:13.5px;line-height:1.65;margin-bottom:18px;max-width:1000px}
+.sg-sub{font-size:14px;color:var(--ct-ink-bright);margin:24px 0 10px;letter-spacing:.3px}
+.sg-sub:first-child{margin-top:0}
+.sg-demo{padding:26px;background:linear-gradient(180deg,rgba(23,25,35,.72),rgba(13,14,19,.9));border:1px solid var(--ct-line);border-radius:10px}
+.sg-demo+.sg-demo,.sg-demo+.sg-spec,.sg-spec+.sg-demo{margin-top:14px}
+.sg-note{margin-top:12px;color:var(--ct-muted);font-size:13px;line-height:1.65}
+.sg-note b{color:#d9d5cc}
+.sg-note code,.sg-token{font-family:var(--ct-mono);font-size:12px;color:#b8a06d}
+.sg-row{display:flex;flex-wrap:wrap;align-items:flex-start;gap:14px}
+.sg-spec{width:100%;border-collapse:collapse;font-size:13px;margin-top:14px}
+.sg-spec th,.sg-spec td{text-align:left;padding:8px 10px;border-bottom:1px solid rgba(42,44,56,.7);vertical-align:top;line-height:1.5}
+.sg-spec th{color:var(--ct-faint);font-size:10.5px;letter-spacing:1.4px;text-transform:uppercase;font-weight:600}
+.sg-spec td:first-child{color:var(--ct-accent-bright);font-family:var(--ct-mono);font-size:12px;white-space:nowrap}
+.sg-dot{display:inline-block;width:20px;height:20px;border-radius:4px;border:1px solid rgba(255,255,255,.12);vertical-align:-4px;margin-right:9px}
+.sg-swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(285px,1fr));gap:10px}
+.sg-swatch{display:flex;align-items:center;gap:12px;padding:10px 12px;background:rgba(13,14,19,.65);border:1px solid var(--ct-line);border-radius:8px}
+.sg-swatch .sg-dot{width:34px;height:34px;border-radius:6px;margin:0;flex:0 0 auto}
+.sg-swatch .nm{font-family:var(--ct-mono);font-size:11.5px;color:var(--ct-accent-bright)}
+.sg-swatch .hx{font-family:var(--ct-mono);font-size:10.5px;color:var(--ct-faint)}
+.sg-swatch .role{font-size:12px;color:var(--ct-muted);line-height:1.4;margin-top:2px}
+.sg-radius{display:flex;gap:22px;flex-wrap:wrap;align-items:flex-end}
+.sg-radius .box{width:86px;height:70px;background:var(--ct-surface-1);border:1px solid var(--ct-line-strong);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-family:var(--ct-mono);font-size:11px;color:var(--ct-faint)}
+.sg-radius .box b{font-size:16px;color:var(--ct-accent-bright)}
+.sg-borders{display:flex;flex-wrap:wrap;gap:12px}
+.sg-border{width:150px;padding:12px 14px;font-family:var(--ct-mono);font-size:11px;color:var(--ct-faint);background:var(--ct-surface-2)}
+.sg-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.sg-tile{background:var(--ct-surface-2);border:1px solid var(--ct-line);border-radius:8px;padding:14px;font-family:var(--ct-mono);font-size:11px;color:var(--ct-body)}
+.sg-book-demo .ct-page{min-height:360px}
+.sg-map-wrap{overflow-x:auto}
+.sg-map{width:100%;border-collapse:collapse;font-size:12.5px;min-width:920px}
+.sg-map th,.sg-map td{text-align:left;padding:8px 10px;border-bottom:1px solid rgba(42,44,56,.7);vertical-align:top;line-height:1.5}
+.sg-map th{color:var(--ct-faint);font-size:10.5px;letter-spacing:1.4px;text-transform:uppercase;font-weight:600}
+.sg-map td:first-child{color:var(--ct-ink-bright);font-size:12.5px}
+.sg-map .yes{color:var(--ct-type-passive);font-weight:600}
+.sg-map .no{color:var(--ct-faint)}
+.sg-map .src{font-family:var(--ct-mono);font-size:10.5px;color:var(--ct-faint);line-height:1.6}
+.sg-map .cls{font-family:var(--ct-mono);font-size:11px;color:var(--ct-accent-bright);white-space:nowrap}
+.sg-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px}
+.sg-rule-card{background:rgba(13,14,19,.65);border:1px solid var(--ct-line);border-radius:8px;padding:16px 18px}
+.sg-rule-card h4{font-size:13px;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:10px}
+.sg-rule-card.ok h4{color:var(--ct-type-passive)}
+.sg-rule-card.no h4{color:var(--ct-danger-text)}
+.sg-rule-card ul{list-style:none;display:flex;flex-direction:column;gap:7px;font-size:12.5px;color:var(--ct-muted);line-height:1.55}
+.sg-rule-card li::before{content:"— ";color:var(--ct-faint)}
+.sg-rule-card code{font-family:var(--ct-mono);font-size:11.5px;color:#b8a06d}
+.sg-footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--ct-line);color:var(--ct-faint);font-size:12px;line-height:1.8}
+.sg-footer code{font-family:var(--ct-mono);color:var(--ct-body)}
+@media (max-width:1020px){.sg-layout{grid-template-columns:1fr}.sg-nav{position:static;flex-direction:row;flex-wrap:wrap;gap:4px 14px;border-left:0;border-bottom:1px solid var(--ct-line);padding:0 0 10px;max-height:none}.sg-nav .grp{width:100%;margin:6px 0 0}}
+</style>
+</head>
+<body>
+<div class="sg-wrap">
+
+  <header class="sg-hero">
+    <h1>Cthangover UI — единый стиль</h1>
+    <p class="sub">Единая палитра, геометрия и набор элементов для трёх интерфейсов: <b>инвентарь</b>, <b>журнал заданий</b>, <b>действия персонажа</b>. Целевое разрешение — <b>1920×1024</b>. Всё, что показано ниже, собрано только из <span class="sg-token">tokens.css</span> и <span class="sg-token">ui-kit.css</span> — это и есть закреплённый источник стиля.</p>
+    <div class="sg-meta">
+      <span class="sg-metachip">tokens.css · палитра и метрики</span>
+      <span class="sg-metachip">ui-kit.css · компоненты</span>
+      <span class="sg-metachip">2 материала: графит / бумага</span>
+      <span class="sg-metachip">38 элементов из трёх GUI</span>
+      <span class="sg-metachip">4 радиуса: 8 / 6 / 4 / 3</span>
+    </div>
+  </header>
+
+  <div class="sg-layout">
+    <nav class="sg-nav">
+      <span class="grp">Основа</span>
+      <a href="#palette">Палитра</a>
+      <a href="#type">Типографика</a>
+      <a href="#geometry">Геометрия и тени</a>
+      <a href="#shell">Каркас панели</a>
+      <span class="grp">Компоненты</span>
+      <a href="#buttons">Кнопки</a>
+      <a href="#tabs">Вкладки и фильтры</a>
+      <a href="#inputs">Поля и слайдер</a>
+      <a href="#badges">Бейджи и чипы</a>
+      <a href="#cards">Ячейки и карточки</a>
+      <a href="#journal">Журнал</a>
+      <a href="#indicators">Индикаторы</a>
+      <a href="#feedback">Сообщения и оверлеи</a>
+      <span class="grp">Сводка</span>
+      <a href="#map">Карта элементов</a>
+      <a href="#rules">Правила</a>
+    </nav>
+
+    <main class="sg-main">
+
+      <!-- ═══════════════ ПАЛИТРА ═══════════════ -->
+      <section class="sg-section" id="palette">
+        <h2>Палитра</h2>
+        <p class="lead">Каждый цвет — именованная переменная <code>--ct-*</code>. Прямые hex-значения в интерфейсах запрещены: любая правка оттенка делается здесь и расходится по всем трём GUI. Ниже — роль и текущее место применения каждого токена.</p>
+
+        <div class="sg-sub">Поверхности «графит» — панели, инвентарь, действия, меню</div>
+        <div class="sg-swatches">
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-page)"></span><div><div class="nm">--ct-page</div><div class="hx">#07080b</div><div class="role">фон демо-страницы, подложка мира</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-backdrop)"></span><div><div class="nm">--ct-backdrop</div><div class="hx">rgba(0,0,0,.9)</div><div class="role">затемнение под модальной панелью</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-surface-0)"></span><div><div class="nm">--ct-surface-0</div><div class="hx">#0e0f15</div><div class="role">окно панели, пустой слот</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-surface-1)"></span><div><div class="nm">--ct-surface-1</div><div class="hx">#171923</div><div class="role">ячейка предмета, занятый слот, карточка</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-surface-2)"></span><div><div class="nm">--ct-surface-2</div><div class="hx">#101118</div><div class="role">стат-строки, колодец свойств, панель цели</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-surface-3)"></span><div><div class="nm">--ct-surface-3</div><div class="hx">#1b1d26</div><div class="role">вторичная кнопка, спокойная кнопка</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-surface-raised)"></span><div><div class="nm">--ct-surface-raised</div><div class="hx">#1a1c26</div><div class="role">крупная карточка персонажа</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-surface-hover)"></span><div><div class="nm">--ct-surface-hover</div><div class="hx">#1b1e2a</div><div class="role">фон ячейки и карточки под курсором</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-surface-selected)"></span><div><div class="nm">--ct-surface-selected</div><div class="hx">#1e1a10</div><div class="role">выбранная ячейка или карточка</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-well)"></span><div><div class="nm">--ct-well</div><div class="hx">#0d0e14</div><div class="role">поле поиска, выпадающий список</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-count-bg)"></span><div><div class="nm">--ct-count-bg</div><div class="hx">#242733</div><div class="role">плашка счётчика во вкладке</div></div></div>
+        </div>
+
+        <div class="sg-sub">Материал «бумага» — разворот журнала (вариант поверхности, не вторая палитра)</div>
+        <div class="sg-swatches">
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-paper-top)"></span><div><div class="nm">--ct-paper-top</div><div class="hx">#261f18</div><div class="role">верх градиента страницы</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-paper)"></span><div><div class="nm">--ct-paper</div><div class="hx">#15110d</div><div class="role">низ страницы, корешок</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-paper-line)"></span><div><div class="nm">--ct-paper-line</div><div class="hx">#3a3229</div><div class="role">обложка: рамки страниц и закладок</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-paper-inset)"></span><div><div class="nm">--ct-paper-inset</div><div class="hx">rgba(200,170,120,.16)</div><div class="role">внутренняя декоративная рамка</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-paper-rule)"></span><div><div class="nm">--ct-paper-rule</div><div class="hx">rgba(200,170,120,.45)</div><div class="role">затухающие линии и разделители</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-seal)"></span><div><div class="nm">--ct-seal</div><div class="hx">#a2603f</div><div class="role">контур печати-метки</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-seal-text)"></span><div><div class="nm">--ct-seal-text</div><div class="hx">#cd8f66</div><div class="role">текст печати</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-seal-soft)"></span><div><div class="nm">--ct-seal-soft</div><div class="hx">rgba(162,96,63,.07)</div><div class="role">заливка печати</div></div></div>
+        </div>
+
+        <div class="sg-sub">Границы</div>
+        <div class="sg-swatches">
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-line)"></span><div><div class="nm">--ct-line</div><div class="hx">#2a2c38</div><div class="role">основная граница: окно, поля, кнопки</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-line-soft)"></span><div><div class="nm">--ct-line-soft</div><div class="hx">#262935</div><div class="role">мягкая граница ячейки</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-line-card)"></span><div><div class="nm">--ct-line-card</div><div class="hx">#2f3242</div><div class="role">граница карточки и занятого слота</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-line-strong)"></span><div><div class="nm">--ct-line-strong</div><div class="hx">#4a4e61</div><div class="role">граница под курсором</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-line-faint)"></span><div><div class="nm">--ct-line-faint</div><div class="hx">#3a3d4d</div><div class="role">пустой слот, пустой пипс</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-line-disabled)"></span><div><div class="nm">--ct-line-disabled</div><div class="hx">#23252f</div><div class="role">disabled-рамка, трек HP и слайдера</div></div></div>
+        </div>
+
+        <div class="sg-sub">Текст</div>
+        <div class="sg-swatches">
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-ink-bright)"></span><div><div class="nm">--ct-ink-bright</div><div class="hx">#f4f0e7</div><div class="role">заголовки, имена, выбранный квест</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-ink)"></span><div><div class="nm">--ct-ink</div><div class="hx">#e8e5de</div><div class="role">основной текст и значения</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-body)"></span><div><div class="nm">--ct-body</div><div class="hx">#c9c5bc</div><div class="role">описания, вторичные кнопки, счётчики</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-muted)"></span><div><div class="nm">--ct-muted</div><div class="hx">#8b8894</div><div class="role">подписи, неактивные вкладки, глиф закрытия</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-faint)"></span><div><div class="nm">--ct-faint</div><div class="hx">#5c5966</div><div class="role">placeholder, хинты, disabled-текст, пустые состояния</div></div></div>
+        </div>
+
+        <div class="sg-sub">Акцент «золото» — единый для всех трёх GUI</div>
+        <div class="sg-swatches">
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-accent)"></span><div><div class="nm">--ct-accent</div><div class="hx">#d9a441</div><div class="role">рамка выделения, caret, активная вкладка</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-accent-bright)"></span><div><div class="nm">--ct-accent-bright</div><div class="hx">#f0c169</div><div class="role">текст акцента, цена, значения свойств</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-accent-hover)"></span><div><div class="nm">--ct-accent-hover</div><div class="hx">#ffe1a0</div><div class="role">текст primary-кнопки под курсором</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-accent-dim)"></span><div><div class="nm">--ct-accent-dim</div><div class="hx">#a8946a</div><div class="role">служебные заголовки на бумаге</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-accent-soft)"></span><div><div class="nm">--ct-accent-soft</div><div class="hx">rgba(217,164,65,.08)</div><div class="role">заливка активной вкладки, фокус-кольцо</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-accent-trace)"></span><div><div class="nm">--ct-accent-trace</div><div class="hx">rgba(217,164,65,.12)</div><div class="role">hover строки списка</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-accent-line)"></span><div><div class="nm">--ct-accent-line</div><div class="hx">rgba(217,164,65,.45)</div><div class="role">рамка активного элемента и primary-кнопки</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-accent-line-strong)"></span><div><div class="nm">--ct-accent-line-strong</div><div class="hx">rgba(217,164,65,.75)</div><div class="role">рамка под курсором</div></div></div>
+        </div>
+
+        <div class="sg-sub">Статусы</div>
+        <div class="sg-swatches">
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-danger)"></span><div><div class="nm">--ct-danger</div><div class="hx">#a63d40</div><div class="role">опасное действие, контур</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-danger-text)"></span><div><div class="nm">--ct-danger-text</div><div class="hx">#e8a9ab</div><div class="role">текст ошибки и опасной кнопки под курсором</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-danger-soft)"></span><div><div class="nm">--ct-danger-soft</div><div class="hx">rgba(166,61,64,.15)</div><div class="role">заливка опасной кнопки под курсором</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-success)"></span><div><div class="nm">--ct-success</div><div class="hx">#8fae6b</div><div class="role">успех, зелёный тип еды и пассивных</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-success-text)"></span><div><div class="nm">--ct-success-text</div><div class="hx">#b9d3ae</div><div class="role">текст успешного сообщения</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-warning)"></span><div><div class="nm">--ct-warning</div><div class="hx">#cfa96a</div><div class="role">тёплый статус, тип «используемый»</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-info)"></span><div><div class="nm">--ct-info</div><div class="hx">#7f95b5</div><div class="role">холодный статус, ресурсы, стоимость ОД</div></div></div>
+        </div>
+
+        <div class="sg-sub">Акценты типов предметов и действий</div>
+        <div class="sg-swatches">
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-type-quest)"></span><div><div class="nm">--ct-type-quest</div><div class="hx">#d9a441</div><div class="role">квестовый предмет · совпадает с акцентом</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-type-used)"></span><div><div class="nm">--ct-type-used</div><div class="hx">#cfa96a</div><div class="role">используемый предмет</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-type-target)"></span><div><div class="nm">--ct-type-target</div><div class="hx">#4fb3a5</div><div class="role">применение к цели · ToAlias</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-type-food)"></span><div><div class="nm">--ct-type-food</div><div class="hx">#8fae6b</div><div class="role">еда · Passive</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-type-resource)"></span><div><div class="nm">--ct-type-resource</div><div class="hx">#7f95b5</div><div class="role">ресурс · ToSelf</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-type-recipe)"></span><div><div class="nm">--ct-type-recipe</div><div class="hx">#c78fc9</div><div class="role">рецепт · Active</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-type-locked)"></span><div><div class="nm">--ct-type-locked</div><div class="hx">#c96b6e</div><div class="role">нельзя выбросить · ToEnemy</div></div></div>
+        </div>
+
+        <div class="sg-sub">Здоровье, ОД, перезарядка, стаки</div>
+        <div class="sg-swatches">
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-hp-ok)"></span><div><div class="nm">--ct-hp-ok</div><div class="hx">#8fae6b</div><div class="role">заливка HP выше порога</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-hp-low)"></span><div><div class="nm">--ct-hp-low</div><div class="hx">#c96b6e</div><div class="role">заливка HP ниже 40%</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-hp-text)"></span><div><div class="nm">--ct-hp-text</div><div class="hx">#9dbb8f</div><div class="role">число HP в стат-чипе</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-cooldown)"></span><div><div class="nm">--ct-cooldown</div><div class="hx">#d9c79a</div><div class="role">бейдж перезарядки Active-карты</div></div></div>
+          <div class="sg-swatch"><span class="sg-dot" style="background:var(--ct-stack)"></span><div><div class="nm">--ct-stack</div><div class="hx">#f0ece2</div><div class="role">счётчик стака в ячейке</div></div></div>
+        </div>
+      </section>
+
+      <!-- ═══════════════ ТИПОГРАФИКА ═══════════════ -->
+      <section class="sg-section" id="type">
+        <h2>Типографика</h2>
+        <p class="lead">Семейство — системное (в Godot это fallback-шрифт темы), моноширинное — только для ID, чисел, счётчиков и технических значений. Кегли фиксированы шкалой: не вводить промежуточные размеры.</p>
+        <table class="sg-spec">
+          <tr><th>Токен</th><th>Кегль</th><th>Где применяется</th><th>Образец</th></tr>
+          <tr><td>--ct-fs-h1</td><td>30px</td><td>название квеста на странице журнала</td><td><span style="font-size:30px">Пролог</span></td></tr>
+          <tr><td>--ct-fs-h2</td><td>25px</td><td>имя предмета в паспорте</td><td><span style="font-size:25px">Рацион</span></td></tr>
+          <tr><td>--ct-fs-title</td><td>24px</td><td>заголовок панели (капс, слева в шапке)</td><td><span style="font-size:24px;letter-spacing:2.4px">ИНВЕНТАРЬ</span></td></tr>
+          <tr><td>--ct-fs-h3</td><td>19px</td><td>имя персонажа в карточке</td><td><span style="font-size:19px">Марао</span></td></tr>
+          <tr><td>--ct-fs-lead</td><td>16px</td><td>текст записи журнала</td><td><span style="font-size:16px">Запись подошла к концу.</span></td></tr>
+          <tr><td>--ct-fs-body-l</td><td>14px</td><td>кнопки, имена карточек, заголовки секций</td><td><span style="font-size:14px">Простая атака</span></td></tr>
+          <tr><td>--ct-fs-body</td><td>13px</td><td>вкладки, поля, описания, HP-число</td><td><span style="font-size:13px">Поиск по инвентарю…</span></td></tr>
+          <tr><td>--ct-fs-body-s</td><td>12px</td><td>статусы, футер, пустые состояния</td><td><span style="font-size:12px">Показано 4 из 9</span></td></tr>
+          <tr><td>--ct-fs-small</td><td>11px</td><td>счётчики, статы, стоимость, хинты</td><td><span style="font-size:11px">1 ОД</span></td></tr>
+          <tr><td>--ct-fs-tiny</td><td>10px</td><td>бейджи, ключи свойств</td><td><span style="font-size:10px;letter-spacing:1.2px">РЕСУРС</span></td></tr>
+          <tr><td>--ct-fs-micro</td><td>9px</td><td>ID, подписи слотов, микро-теги</td><td><span style="font-size:9px">physics/attack</span></td></tr>
+        </table>
+        <p class="sg-note"><b>Правило:</b> капс — только для заголовков панели, секций и бейджей. Длинные названия (предметы, квесты, персонажи) — обычным регистром. Перенос длинного текста — <code>WordSmart</code> в Godot, в HTML — обычный перенос.</p>
+      </section>
+
+      <!-- ═══════════════ ГЕОМЕТРИЯ ═══════════════ -->
+      <section class="sg-section" id="geometry">
+        <h2>Геометрия и тени</h2>
+        <p class="lead">Четыре радиуса по роли, одна толщина рамки 1px (2px — только подсветка drop-цели), тени — мягкие и тёмные.</p>
+
+        <div class="sg-sub">Радиусы</div>
+        <div class="sg-radius">
+          <div class="box" style="border-radius:var(--ct-r-lg)"><b>8</b>окно, панель</div>
+          <div class="box" style="border-radius:var(--ct-r-md)"><b>6</b>карточка, слот, страница</div>
+          <div class="box" style="border-radius:var(--ct-r-sm)"><b>4</b>кнопка, поле, вкладка</div>
+          <div class="box" style="border-radius:var(--ct-r-xs)"><b>3</b>бейдж, чип, тег</div>
+        </div>
+        <table class="sg-spec">
+          <tr><th>Токен</th><th>Значение</th><th>Носители</th></tr>
+          <tr><td>--ct-r-lg</td><td>8px</td><td>окно панели, модальный диалог</td></tr>
+          <tr><td>--ct-r-md</td><td>6px</td><td>карточка действия и персонажа, ячейка предмета, слот, страница книги</td></tr>
+          <tr><td>--ct-r-sm</td><td>4px</td><td>кнопки, поля ввода, вкладки, печать, кнопка закрытия</td></tr>
+          <tr><td>--ct-r-xs</td><td>3px</td><td>бейджи, чипы свойств, тег ячейки, малые вкладки пула</td></tr>
+        </table>
+
+        <div class="sg-sub">Границы</div>
+        <div class="sg-borders">
+          <div class="sg-border" style="border:1px solid var(--ct-line)">--ct-line</div>
+          <div class="sg-border" style="border:1px solid var(--ct-line-soft)">--ct-line-soft</div>
+          <div class="sg-border" style="border:1px solid var(--ct-line-card)">--ct-line-card</div>
+          <div class="sg-border" style="border:1px solid var(--ct-line-strong)">--ct-line-strong</div>
+          <div class="sg-border" style="border:1px solid var(--ct-accent)">accent · 1px</div>
+          <div class="sg-border" style="border:2px solid var(--ct-type-passive)">drop-цель · 2px</div>
+          <div class="sg-border" style="border:1px solid var(--ct-danger)">danger · 1px</div>
+        </div>
+
+        <div class="sg-sub">Отступы</div>
+        <div class="sg-row" style="align-items:center">
+          <div class="sg-tile">s-1 = 4</div><div class="sg-tile">s-2 = 6</div><div class="sg-tile">s-3 = 8</div><div class="sg-tile">s-4 = 10</div><div class="sg-tile">s-5 = 12</div><div class="sg-tile">s-6 = 14</div><div class="sg-tile">s-7 = 16</div><div class="sg-tile">s-8 = 24</div><div class="sg-tile">s-9 = 32</div>
+        </div>
+
+        <div class="sg-sub">Тени и фокус</div>
+        <table class="sg-spec">
+          <tr><th>Токен</th><th>Значение</th><th>Где</th></tr>
+          <tr><td>--ct-shadow-window</td><td>0 18px 50px rgba(0,0,0,.6)</td><td>окно панели, модальный диалог</td></tr>
+          <tr><td>--ct-shadow-card</td><td>0 10px 26px rgba(0,0,0,.5)</td><td>выбранная ячейка, тултип, тост</td></tr>
+          <tr><td>--ct-shadow-paper</td><td>0 24px 60px rgba(0,0,0,.85)</td><td>книга журнала</td></tr>
+          <tr><td>--ct-glow</td><td>0 0 8px rgba(217,164,65,.55)</td><td>заполненный пипс ОД</td></tr>
+          <tr><td>фокус</td><td>0 0 0 2px var(--ct-accent-soft)</td><td>поля ввода; у кнопок фокус-рамка отключена</td></tr>
+        </table>
+      </section>
+
+      <!-- ═══════════════ КАРКАС ═══════════════ -->
+      <section class="sg-section" id="shell">
+        <h2>Каркас панели</h2>
+        <p class="lead">Все три интерфейса — модальные окна поверх затемнения и собираются по одной схеме: шапка с заголовком слева и закрытием справа, разделитель, тело, футер. Это главное, что унифицируется: заголовки и закрытие встают на свои места, композиция и функции панелей не меняются.</p>
+        <table class="sg-spec">
+          <tr><th>Зона</th><th>Правило</th></tr>
+          <tr><td>Заголовок</td><td>слева в шапке, 24px, капс, --ct-ink-bright; в журнале добавляется «ЖУРНАЛ», в действиях был 22px → 24px</td></tr>
+          <tr><td>Закрытие</td><td>справа в шапке, кнопка 38×38 с глифом «✕», обычное — контур --ct-line, под курсором — красная рамка и заливка</td></tr>
+          <tr><td>Разделитель</td><td>1px --ct-line во всю ширину под шапкой</td></tr>
+          <tr><td>Тело</td><td>отступ 24px; двухколоночные панели имеют правую колонку --ct-side с отступом 16px и левой границей</td></tr>
+          <tr><td>Футер</td><td>только служебное: статус, «Сброс», счётчики; закрытие здесь больше не дублируется</td></tr>
+        </table>
+
+        <div class="sg-demo">
+          <div class="ct-window" style="max-width:1020px">
+            <div class="ct-window__header">
+              <span class="ct-window__title">Инвентарь</span>
+              <div class="ct-tabs">
+                <button class="ct-tab is-active">Все <span class="ct-tab__count">9</span></button>
+                <button class="ct-tab">Еда <span class="ct-tab__count">3</span></button>
+                <button class="ct-tab">Ресурсы <span class="ct-tab__count">2</span></button>
+                <button class="ct-tab">Рецепты <span class="ct-tab__count">1</span></button>
+              </div>
+              <span style="flex:1"></span>
+              <div class="ct-row" style="gap:var(--ct-s-3)"><span class="ct-mono ct-faint ct-upper" style="font-size:11px;letter-spacing:1.2px">ОД</span><div class="ct-pips"><span class="ct-pip is-on"></span><span class="ct-pip is-on"></span><span class="ct-pip is-on"></span><span class="ct-pip"></span><span class="ct-pip"></span></div></div>
+              <button class="ct-icon-btn" title="Закрыть">✕</button>
+            </div>
+            <div class="ct-rule"></div>
+            <div class="ct-window__body">
+              <div class="sg-row" style="margin-bottom:16px">
+                <input class="ct-input ct-input--search" style="flex:1;min-width:240px" placeholder="Поиск по инвентарю…">
+                <select class="ct-select"><option>Сначала типы</option><option>По названию</option><option>По цене</option></select>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;max-width:640px">
+                <div class="ct-slot is-selected"><span class="ct-slot__dot" style="background:var(--ct-accent)"></span><img class="ct-slot__img" src="../../mods/cooking/items/recipe/cooking_recipe.png" alt=""><span class="ct-slot__tag">рецепт</span></div>
+                <div class="ct-slot"><span class="ct-slot__dot" style="background:var(--ct-type-food)"></span><img class="ct-slot__img" src="../../mods/visual_novel_core/items/food/ration.png" alt=""><span class="ct-slot__stack">×4</span></div>
+                <div class="ct-slot is-dim"><span class="ct-slot__dot" style="background:var(--ct-type-resource)"></span><img class="ct-slot__img" src="../../mods/visual_novel_core/items/resource/branches.png" alt=""><span class="ct-slot__stack">×10</span></div>
+                <div class="ct-slot"><span class="ct-slot__dot" style="background:var(--ct-type-food)"></span><img class="ct-slot__img" src="../../mods/visual_novel_core/items/food/wolf_meat.png" alt=""><span class="ct-slot__stack">×6</span></div>
+              </div>
+            </div>
+            <div class="ct-window__footer">
+              <span class="ct-hint">Показано 4 из 9 · ЛКМ — выбрать</span>
+              <span style="flex:1"></span>
+              <button class="ct-btn ct-btn--sm">Сброс</button>
+              <button class="ct-btn ct-btn--sm ct-btn--primary">Использовать</button>
+            </div>
+          </div>
+          <p class="sg-note">Окно панели: <code>--ct-r-lg</code>, фон <code>--ct-surface-0</code>, рамка <code>--ct-line</code>, тень <code>--ct-shadow-window</code>. Заголовок — единственный капс-текст в шапке, справа — счётчики и закрытие.</p>
+        </div>
+      </section>
+
+      <!-- ═══════════════ КНОПКИ ═══════════════ -->
+      <section class="sg-section" id="buttons">
+        <h2>Кнопки</h2>
+        <p class="lead">Четыре роли: основная (золотая), вторичная (тёмная), опасная и недоступная. Размер обычный и малый, плюс иконочная кнопка закрытия и кнопка-иконка тулбара. Радиус 4px, рамка 1px, паддинг 18/11 (малая — 12/8).</p>
+        <div class="sg-demo">
+          <div class="sg-row" style="margin-bottom:18px">
+            <button class="ct-btn ct-btn--primary">Использовать <span class="ct-btn__cost">−1 ОД</span></button>
+            <button class="ct-btn">Выбросить</button>
+            <button class="ct-btn ct-btn--danger">Ошеломление</button>
+            <button class="ct-btn" disabled>Нет действия</button>
+          </div>
+          <div class="sg-row" style="margin-bottom:18px">
+            <button class="ct-btn ct-btn--sm">−</button>
+            <button class="ct-btn ct-btn--sm">+</button>
+            <button class="ct-btn ct-btn--sm">Все</button>
+            <button class="ct-btn ct-btn--sm ct-btn--primary">Подтвердить</button>
+          </div>
+          <div class="sg-row" style="align-items:center">
+            <button class="ct-icon-btn" title="Закрыть">✕</button>
+            <button class="ct-toolbar-btn" title="Инвентарь"><img src="../../mods/interface/ui/icons/bag.png" alt="Инвентарь"></button>
+            <span class="ct-hint">иконочная кнопка 38×38 и тулбар 60×60</span>
+          </div>
+        </div>
+        <table class="sg-spec">
+          <tr><th>Вариант</th><th>Обычное</th><th>Под курсором</th><th>Текст</th></tr>
+          <tr><td>.ct-btn--primary</td><td>фон #241f12, рамка accent 45%</td><td>фон #2f2816, рамка accent 75%</td><td>accent-bright → accent-hover</td></tr>
+          <tr><td>.ct-btn</td><td>фон --ct-surface-3, рамка --ct-line</td><td>фон #232633, рамка accent 45%</td><td>--ct-body → --ct-ink-bright</td></tr>
+          <tr><td>.ct-btn--danger</td><td>как вторичная</td><td>фон danger 15%, рамка --ct-danger</td><td>--ct-danger-text</td></tr>
+          <tr><td>:disabled</td><td>фон #15161d, рамка --ct-line-disabled</td><td>—</td><td>--ct-faint</td></tr>
+        </table>
+        <p class="sg-note"><b>Единое решение:</b> hover основной кнопки — <code>#2f2816</code> (у панели действий было #38301c). Опасная кнопка везде использует красную заливку 15%, как кнопка закрытия.</p>
+      </section>
+
+      <!-- ═══════════════ ВКЛАДКИ ═══════════════ -->
+      <section class="sg-section" id="tabs">
+        <h2>Вкладки и фильтры</h2>
+        <p class="lead">Два вида: обычные вкладки-фильтры (инвентарь и пул действий) и книжные закладки-ленты журнала. У обоих активное состояние — золотое.</p>
+        <div class="sg-demo">
+          <div class="sg-sub">Фильтры панелей</div>
+          <div class="ct-tabs" style="margin-bottom:16px">
+            <button class="ct-tab is-active">Все <span class="ct-tab__count">9</span></button>
+            <button class="ct-tab">Еда <span class="ct-tab__count">3</span></button>
+            <button class="ct-tab">Ресурсы <span class="ct-tab__count">2</span></button>
+            <button class="ct-tab">Рецепты <span class="ct-tab__count">1</span></button>
+            <button class="ct-tab">Квесты <span class="ct-tab__count">1</span></button>
+          </div>
+          <div class="ct-tabs">
+            <button class="ct-tab ct-tab--sm is-active">Все <span class="ct-tab__count">3</span></button>
+            <button class="ct-tab ct-tab--sm">По врагу <span class="ct-tab__count">2</span></button>
+            <button class="ct-tab ct-tab--sm">По союзнику <span class="ct-tab__count">3</span></button>
+            <button class="ct-tab ct-tab--sm">На себя</button>
+            <button class="ct-tab ct-tab--sm">Пассивная</button>
+            <button class="ct-tab ct-tab--sm">Активная</button>
+          </div>
+          <div class="sg-sub">Закладки журнала</div>
+          <div style="display:flex;gap:12px;align-items:flex-end">
+            <button class="ct-ribbon is-active">В процессе</button>
+            <button class="ct-ribbon">Завершённые</button>
+          </div>
+        </div>
+        <table class="sg-spec">
+          <tr><th>Состояние</th><th>Фильтр</th><th>Закладка</th></tr>
+          <tr><td>обычное</td><td>прозрачный, текст --ct-muted</td><td>фон #2a241b, рамка --ct-paper-line, текст #d9cdb2</td></tr>
+          <tr><td>hover</td><td>фон white 4%, текст --ct-ink</td><td>фон #38301f, текст --ct-ink-bright</td></tr>
+          <tr><td>активное</td><td>фон accent 8%, рамка accent 45%, текст accent-bright</td><td>фон --ct-accent, текст #1a1409</td></tr>
+        </table>
+        <p class="sg-note"><b>Единое решение:</b> рамка активной вкладки — accent 45% и радиус 4px у обоих видов (в пуле действий было 50% и 3px). Счётчик — моно-плашка радиуса 9px.</p>
+      </section>
+
+      <!-- ═══════════════ ПОЛЯ ═══════════════ -->
+      <section class="sg-section" id="inputs">
+        <h2>Поля и слайдер</h2>
+        <p class="lead">Поле поиска, выпадающий список и ползунок количества. Все — на поверхности <code>--ct-well</code>, рамка 1px, фокус — золотая рамка 45% с мягким кольцом.</p>
+        <div class="sg-demo">
+          <div class="sg-row" style="margin-bottom:18px">
+            <input class="ct-input ct-input--search" style="min-width:300px;flex:1" placeholder="Поиск по названию и ID…">
+            <select class="ct-select"><option>Сначала типы</option><option>По названию</option><option>По цене</option><option>По количеству</option></select>
+          </div>
+          <div class="ct-well" style="max-width:420px">
+            <div class="ct-row" style="justify-content:space-between;margin-bottom:10px">
+              <span style="font-size:12px;color:var(--ct-muted)">Выбросить</span>
+              <span class="ct-mono" style="font-size:12px"><b style="color:var(--ct-accent-bright)">3</b> <span class="ct-faint">/ 10</span></span>
+            </div>
+            <input class="ct-range" type="range" min="1" max="10" value="3" style="margin-bottom:10px">
+            <div class="ct-row" style="gap:8px">
+              <button class="ct-btn ct-btn--sm" style="flex:1">−</button>
+              <button class="ct-btn ct-btn--sm" style="flex:1">+</button>
+              <button class="ct-btn ct-btn--sm" style="flex:1">Все</button>
+            </div>
+          </div>
+        </div>
+        <table class="sg-spec">
+          <tr><th>Элемент</th><th>Спецификация</th></tr>
+          <tr><td>.ct-input</td><td>фон --ct-well, рамка --ct-line, радиус 4, паддинг 12/9, placeholder --ct-faint, caret --ct-accent</td></tr>
+          <tr><td>.ct-input:focus</td><td>рамка accent 45% + кольцо accent 8%</td></tr>
+          <tr><td>.ct-select</td><td>как поле; выпадающий список — фон --ct-surface-2, радиус 6, hover-строка accent 12%</td></tr>
+          <tr><td>.ct-range</td><td>трек --ct-line-disabled, заливка --ct-accent, бегунок — акцентный</td></tr>
+          <tr><td>.ct-well</td><td>фон --ct-surface-2, рамка --ct-line, радиус 6, паддинг 12 — блок «выбросить количество»</td></tr>
+        </table>
+      </section>
+
+      <!-- ═══════════════ БЕЙДЖИ ═══════════════ -->
+      <section class="sg-section" id="badges">
+        <h2>Бейджи и чипы</h2>
+        <p class="lead">Один компонент бейджа на все типы: заливка цветом типа 9%, рамка 50%, текст цветом типа, капс 10px, радиус 3px. Отдельно — чипы свойств и стат-чипы персонажа.</p>
+        <div class="sg-demo">
+          <div class="sg-sub">Типы предметов</div>
+          <div class="ct-wrap" style="margin-bottom:16px">
+            <span class="ct-badge ct-badge--quest">Квест</span>
+            <span class="ct-badge ct-badge--used">Используемый</span>
+            <span class="ct-badge ct-badge--target">По цели</span>
+            <span class="ct-badge ct-badge--food">Еда</span>
+            <span class="ct-badge ct-badge--resource">Ресурс</span>
+            <span class="ct-badge ct-badge--recipe">Рецепт</span>
+            <span class="ct-badge ct-badge--locked">Не выбросить</span>
+          </div>
+          <div class="sg-sub">Типы действий</div>
+          <div class="ct-wrap" style="margin-bottom:16px">
+            <span class="ct-badge ct-badge--enemy">По врагу</span>
+            <span class="ct-badge ct-badge--alias">По союзнику</span>
+            <span class="ct-badge ct-badge--self">На себя</span>
+            <span class="ct-badge ct-badge--passive">Пассивная</span>
+            <span class="ct-badge ct-badge--active">Активная</span>
+            <span class="ct-badge ct-badge--cost">1 ОД</span>
+            <span class="ct-badge ct-badge--cooldown">КД 42:10</span>
+          </div>
+          <div class="sg-sub">Свойства и статы</div>
+          <div class="ct-wrap" style="margin-bottom:12px">
+            <span class="ct-chip"><span class="ct-chip__k">Attack</span><span class="ct-chip__v">1.0</span></span>
+            <span class="ct-chip"><span class="ct-chip__k">Turn</span><span class="ct-chip__v">3</span></span>
+            <span class="ct-chip"><span class="ct-chip__k">AttackType</span><span class="ct-chip__v">Physics</span></span>
+          </div>
+          <div class="ct-wrap">
+            <span class="ct-stat ct-stat--hp"><span class="ct-stat__k">HP</span><span class="ct-stat__v">100/100</span></span>
+            <span class="ct-stat ct-stat--ap"><span class="ct-stat__k">ОД</span><span class="ct-stat__v">3</span></span>
+            <span class="ct-stat"><span class="ct-stat__k">АТК</span><span class="ct-stat__v">5</span></span>
+            <span class="ct-stat"><span class="ct-stat__k">ЗАЩ</span><span class="ct-stat__v">2</span></span>
+          </div>
+        </div>
+        <p class="sg-note"><b>Правило:</b> цвет бейджа всегда равен цвету акцента карточки/ячейки; не смешивать тип «еда» с зелёным успеха в одном контексте. Квестовый бейдж совпадает с основным акцентом — это осознанное исключение из семантики типов.</p>
+      </section>
+
+      <!-- ═══════════════ ЯЧЕЙКИ И КАРТОЧКИ ═══════════════ -->
+      <section class="sg-section" id="cards">
+        <h2>Ячейки и карточки</h2>
+        <p class="lead">Основные носители контента: ячейка предмета, карточка действия (полная и компактная), слот действия, карточка персонажа, строка выбора цели. Состояния — обычное, под курсором, выбранное, недоступное.</p>
+
+        <div class="sg-demo">
+          <div class="sg-sub">Ячейка предмета</div>
+          <div style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;max-width:620px">
+            <div class="ct-slot"><span class="ct-slot__dot" style="background:var(--ct-type-food)"></span><img class="ct-slot__img" src="../../mods/visual_novel_core/items/food/ration.png" alt="Рацион"><span class="ct-slot__stack">×4</span></div>
+            <div class="ct-slot is-selected"><span class="ct-slot__dot" style="background:var(--ct-accent)"></span><img class="ct-slot__img" src="../../mods/cooking/items/recipe/cooking_recipe.png" alt="Рецепт"><span class="ct-slot__tag">рецепт</span></div>
+            <div class="ct-slot"><span class="ct-slot__dot" style="background:var(--ct-type-resource)"></span><img class="ct-slot__img" src="../../mods/visual_novel_core/items/resource/branches.png" alt="Ветки"><span class="ct-slot__stack">×10</span></div>
+            <div class="ct-slot is-dim"><span class="ct-slot__dot" style="background:var(--ct-type-food)"></span><img class="ct-slot__img" src="../../mods/visual_novel_core/items/food/wolf_meat.png" alt="Мясо"><span class="ct-slot__stack">×6</span></div>
+            <div class="ct-slot" title="под курсором"><span class="ct-slot__dot" style="background:var(--ct-type-resource)"></span><img class="ct-slot__img" src="../../mods/visual_novel_core/items/resource/branches.png" alt=""></div>
+            <div class="ct-slot"><span class="ct-slot__dot" style="background:var(--ct-muted)"></span></div>
+          </div>
+          <table class="sg-spec">
+            <tr><th>Состояние</th><th>Рамка</th><th>Фон</th></tr>
+            <tr><td>обычное</td><td>--ct-line-soft</td><td>--ct-surface-1</td></tr>
+            <tr><td>hover</td><td>--ct-line-strong</td><td>--ct-surface-hover, сдвиг вверх 2px</td></tr>
+            <tr><td>выбранное</td><td>--ct-accent + свечение 50%</td><td>--ct-surface-selected</td></tr>
+            <tr><td>недоступное</td><td>как обычное</td><td>иконка opacity .38 + grayscale</td></tr>
+          </table>
+        </div>
+
+        <div class="sg-demo">
+          <div class="sg-sub">Карточка действия</div>
+          <div style="display:flex;flex-direction:column;gap:12px;max-width:560px">
+            <div class="ct-action-card" style="--card-accent:var(--ct-type-enemy)">
+              <span class="ct-action-card__accent"></span>
+              <img class="ct-action-card__icon" src="../../mods/visual_novel_core/characters/actions/physics_attack.png" alt="">
+              <div class="ct-action-card__body">
+                <div class="ct-action-card__name-row"><span class="ct-action-card__name">Простая атака</span><span class="ct-action-card__id">physics/attack</span></div>
+                <div class="ct-action-card__badges"><span class="ct-badge ct-badge--enemy">По врагу</span><span class="ct-badge ct-badge--cost">1 ОД</span></div>
+                <div class="ct-action-card__props"><span class="ct-chip"><span class="ct-chip__k">Attack</span><span class="ct-chip__v">1.0</span></span></div>
+              </div>
+            </div>
+            <div class="ct-action-card is-selected" style="--card-accent:var(--ct-type-target)">
+              <span class="ct-action-card__accent"></span>
+              <img class="ct-action-card__icon" src="../../mods/visual_novel_core/characters/actions/physics_defence.png" alt="">
+              <div class="ct-action-card__body">
+                <div class="ct-action-card__name-row"><span class="ct-action-card__name">Защита</span><span class="ct-action-card__id">physics/defence</span></div>
+                <div class="ct-action-card__badges"><span class="ct-badge ct-badge--alias">По союзнику</span><span class="ct-badge ct-badge--cost">1 ОД</span></div>
+                <div class="ct-action-card__props"><span class="ct-chip"><span class="ct-chip__k">Defence</span><span class="ct-chip__v">4</span></span></div>
+              </div>
+            </div>
+            <div class="ct-action-card is-dragging" style="--card-accent:var(--ct-type-active)">
+              <span class="ct-action-card__accent"></span>
+              <img class="ct-action-card__icon" src="../../mods/visual_novel_core/characters/actions/physics_stun.png" alt="">
+              <div class="ct-action-card__body">
+                <div class="ct-action-card__name-row"><span class="ct-action-card__name">Ошеломление</span><span class="ct-action-card__id">physics/stun</span></div>
+                <div class="ct-action-card__badges"><span class="ct-badge ct-badge--active">Активная</span><span class="ct-badge ct-badge--cost">2 ОД</span><span class="ct-badge ct-badge--cooldown">КД 42:10</span></div>
+                <div class="ct-action-card__props"><span class="ct-chip"><span class="ct-chip__k">Turn</span><span class="ct-chip__v">3</span></span><span class="ct-chip"><span class="ct-chip__k">AttackType</span><span class="ct-chip__v">Physics</span></span></div>
+              </div>
+            </div>
+            <div class="ct-action-card ct-action-card--compact" style="--card-accent:var(--ct-type-passive)">
+              <span class="ct-action-card__accent"></span>
+              <img class="ct-action-card__icon" src="../../mods/visual_novel_core/characters/actions/physics_attack.png" alt="">
+              <div class="ct-action-card__body">
+                <div class="ct-action-card__name-row"><span class="ct-action-card__name">Пассивный эффект</span><span class="ct-action-card__id">demo/passive</span></div>
+                <div class="ct-action-card__badges"><span class="ct-badge ct-badge--passive">Пассивная</span></div>
+              </div>
+            </div>
+          </div>
+          <p class="sg-note">Полная карточка — 86px, компактная (пул) — 60px. Слева акцент-полоса 4px цвета типа, иконка 52px, имя 14px, ID 9px моно, ниже — бейджи, ещё ниже (только полная) — чипы свойств. Перетаскивание — прозрачность 55%.</p>
+        </div>
+
+        <div class="sg-demo">
+          <div class="sg-sub">Слот действия</div>
+          <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;max-width:760px">
+            <div class="ct-action-slot is-filled" style="--card-accent:var(--ct-type-enemy)">
+              <span class="ct-action-slot__label">СЛОТ 1</span>
+              <div class="ct-action-card">
+                <span class="ct-action-card__accent" style="background:var(--ct-type-enemy)"></span>
+                <img class="ct-action-card__icon" src="../../mods/visual_novel_core/characters/actions/physics_attack.png" alt="">
+                <div class="ct-action-card__body">
+                  <div class="ct-action-card__name-row"><span class="ct-action-card__name">Простая атака</span></div>
+                  <div class="ct-action-card__badges"><span class="ct-badge ct-badge--enemy">По врагу</span><span class="ct-badge ct-badge--cost">1 ОД</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="ct-action-slot is-highlight">
+              <span class="ct-action-slot__label">СЛОТ 2</span>
+              <div class="ct-action-slot__empty">+ слот пуст — перетащите карту</div>
+            </div>
+            <div class="ct-action-slot">
+              <span class="ct-action-slot__label">СЛОТ 3</span>
+              <div class="ct-action-slot__empty">+ слот пуст — перетащите карту</div>
+            </div>
+          </div>
+          <table class="sg-spec">
+            <tr><th>Состояние</th><th>Спецификация</th></tr>
+            <tr><td>пустой</td><td>фон --ct-surface-0, рамка --ct-line-faint, подпись «СЛОТ N» 9px --ct-faint</td></tr>
+            <tr><td>занятый</td><td>фон --ct-surface-1, рамка --ct-line-card</td></tr>
+            <tr><td>drop-цель</td><td>фон #1a2019, рамка 2px --ct-type-passive (зелёная подсветка)</td></tr>
+          </table>
+        </div>
+
+        <div class="sg-demo">
+          <div class="sg-sub">Карточка персонажа</div>
+          <div class="ct-character">
+            <div class="ct-character__head">
+              <div class="ct-character__portrait"><img src="../../mods/visual_novel_core/characters/player/marao.png" alt="Марао"></div>
+              <div class="ct-character__info">
+                <span class="ct-character__name">Марао</span>
+                <span class="ct-character__sub">player/marao · шаблон: 3</span>
+                <div class="ct-character__stats">
+                  <span class="ct-stat ct-stat--hp"><span class="ct-stat__k">HP</span><span class="ct-stat__v">100/100</span></span>
+                  <span class="ct-stat ct-stat--ap"><span class="ct-stat__k">ОД</span><span class="ct-stat__v">3</span></span>
+                  <span class="ct-stat"><span class="ct-stat__k">АТК</span><span class="ct-stat__v">5</span></span>
+                  <span class="ct-stat"><span class="ct-stat__k">ЗАЩ</span><span class="ct-stat__v">2</span></span>
+                </div>
+              </div>
+            </div>
+            <div class="ct-character__slots">
+              <div class="ct-action-slot is-filled" style="--card-accent:var(--ct-type-enemy)">
+                <span class="ct-action-slot__label">СЛОТ 1</span>
+                <div class="ct-action-card">
+                  <span class="ct-action-card__accent" style="background:var(--ct-type-enemy)"></span>
+                  <img class="ct-action-card__icon" src="../../mods/visual_novel_core/characters/actions/physics_attack.png" alt="">
+                  <div class="ct-action-card__body">
+                    <div class="ct-action-card__name-row"><span class="ct-action-card__name">Простая атака</span></div>
+                    <div class="ct-action-card__badges"><span class="ct-badge ct-badge--enemy">По врагу</span><span class="ct-badge ct-badge--cost">1 ОД</span></div>
+                  </div>
+                </div>
+              </div>
+              <div class="ct-action-slot is-filled" style="--card-accent:var(--ct-type-target)">
+                <span class="ct-action-slot__label">СЛОТ 2</span>
+                <div class="ct-action-card">
+                  <span class="ct-action-card__accent" style="background:var(--ct-type-target)"></span>
+                  <img class="ct-action-card__icon" src="../../mods/visual_novel_core/characters/actions/physics_defence.png" alt="">
+                  <div class="ct-action-card__body">
+                    <div class="ct-action-card__name-row"><span class="ct-action-card__name">Защита</span></div>
+                    <div class="ct-action-card__badges"><span class="ct-badge ct-badge--alias">По союзнику</span><span class="ct-badge ct-badge--cost">1 ОД</span></div>
+                  </div>
+                </div>
+              </div>
+              <div class="ct-action-slot">
+                <span class="ct-action-slot__label">СЛОТ 3</span>
+                <div class="ct-action-slot__empty">+ слот пуст — перетащите карту</div>
+              </div>
+            </div>
+          </div>
+          <p class="sg-note">Карточка персонажа: фон --ct-surface-raised, рамка --ct-line, радиус 6px (был 8px — выровнен по шкале карточек), паддинг 14px. Портрет — колодец 58×58 радиуса 6px. Статы — стат-чипы.</p>
+        </div>
+
+        <div class="sg-demo">
+          <div class="sg-sub">Выбор цели</div>
+          <div style="display:flex;flex-direction:column;gap:8px;max-width:460px">
+            <span class="ct-target-title">Применить к цели</span>
+            <div class="ct-target">
+              <span class="ct-target__name">Марао</span>
+              <span class="ct-hp"><span class="ct-hp__fill" style="width:100%"></span></span>
+              <span class="ct-target__hp">100/100</span>
+            </div>
+            <div class="ct-target">
+              <span class="ct-target__name">Азиф</span>
+              <span class="ct-hp ct-hp--low"><span class="ct-hp__fill" style="width:52%"></span></span>
+              <span class="ct-target__hp">42/80</span>
+            </div>
+            <button class="ct-btn ct-btn--sm" style="align-self:flex-start">Отмена</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════ ЖУРНАЛ ═══════════════ -->
+      <section class="sg-section" id="journal">
+        <h2>Журнал</h2>
+        <p class="lead">Книжный разворот сохраняет материал «бумага», но подчиняется общим правилам: шапка с заголовком и закрытием, единый акцент, единая шкала текста, те же радиусы и закладки-вкладки.</p>
+        <div class="sg-demo sg-book-demo">
+          <div style="display:flex;gap:12px;align-items:flex-end;margin-bottom:-1px">
+            <button class="ct-ribbon is-active">В процессе</button>
+            <button class="ct-ribbon">Завершённые</button>
+          </div>
+          <div class="ct-book">
+            <div class="ct-page">
+              <div class="ct-section-title" style="margin-bottom:18px">Оглавление</div>
+              <div style="display:flex;flex-direction:column;gap:4px">
+                <div class="ct-quest is-selected">
+                  <span class="ct-quest__marker"></span>
+                  <span class="ct-quest__name">Пролог</span>
+                  <span class="ct-quest__line"></span>
+                  <span class="ct-quest__stage">II</span>
+                </div>
+                <div class="ct-quest">
+                  <span class="ct-quest__marker"></span>
+                  <span class="ct-quest__name">Утренний гость</span>
+                  <span class="ct-quest__line"></span>
+                  <span class="ct-quest__stage">I</span>
+                </div>
+                <div class="ct-quest is-completed">
+                  <span class="ct-quest__marker"></span>
+                  <span class="ct-quest__name">Пробуждение</span>
+                  <span class="ct-quest__line"></span>
+                  <span class="ct-quest__stage">Завершено</span>
+                </div>
+              </div>
+            </div>
+            <div class="ct-page">
+              <div class="ct-section-title" style="margin-bottom:16px">Запись</div>
+              <div style="font-size:var(--ct-fs-h1);color:var(--ct-ink-bright);line-height:1.15;margin-bottom:6px">Пролог</div>
+              <div style="font-size:var(--ct-fs-body);color:var(--ct-accent);margin-bottom:18px">Запись 2 из 4</div>
+              <div class="ct-divider" style="margin-bottom:20px"><span class="ct-divider__diamond"></span></div>
+              <div class="ct-entry ct-entry--done">Ты проснулся в чужом доме и не помнил, как здесь оказался.</div>
+              <div class="ct-entry ct-entry--current">Найти хоть одну живую душу и понять, что произошло.</div>
+              <div style="margin-top:28px">
+                <div class="ct-section-title" style="margin-bottom:12px">Печати</div>
+                <div class="ct-seals">
+                  <span class="ct-seal">Дом</span>
+                  <span class="ct-seal">Подвал</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="sg-note">Строка квеста: маркер-ромб 9px, выбранная — заливка accent 10% и левая рамка 2px, завершённая — приглушённый маркер и зачёркнутый текст. Записи: пройденные — зачёркнуты --ct-faint, текущая — золотой буллет и --ct-ink-bright, будущие не показываются.</p>
+        </div>
+        <div class="sg-demo" style="max-width:520px">
+          <div class="ct-empty">Нет квестов</div>
+        </div>
+      </section>
+
+      <!-- ═══════════════ ИНДИКАТОРЫ ═══════════════ -->
+      <section class="sg-section" id="indicators">
+        <h2>Индикаторы</h2>
+        <p class="lead">Пипсы очков действия, полоса здоровья, бейдж перезарядки и пустые состояния. Никаких других прогресс-баров и цветов не вводится.</p>
+        <div class="sg-demo">
+          <div class="sg-row" style="gap:34px;align-items:center;margin-bottom:20px">
+            <div class="ct-row"><span class="ct-mono ct-faint ct-upper" style="font-size:11px;letter-spacing:1.2px">ОД</span><div class="ct-pips"><span class="ct-pip is-on"></span><span class="ct-pip is-on"></span><span class="ct-pip is-on"></span><span class="ct-pip"></span><span class="ct-pip"></span><span class="ct-pip"></span></div></div>
+            <div class="ct-row"><span class="ct-hp"><span class="ct-hp__fill" style="width:76%"></span></span><span class="ct-mono" style="font-size:12px;color:var(--ct-muted)">76/100</span></div>
+            <div class="ct-row"><span class="ct-hp ct-hp--low"><span class="ct-hp__fill" style="width:28%"></span></span><span class="ct-mono" style="font-size:12px;color:var(--ct-muted)">22/80</span></div>
+            <span class="ct-badge ct-badge--cooldown">КД 42:10</span>
+          </div>
+          <div class="ct-empty">Инвентарь пуст</div>
+        </div>
+        <table class="sg-spec">
+          <tr><th>Элемент</th><th>Спецификация</th></tr>
+          <tr><td>.ct-pip.is-on</td><td>11px, фон --ct-accent-bright, рамка --ct-accent, свечение --ct-glow</td></tr>
+          <tr><td>.ct-pip</td><td>11px, фон --ct-line-disabled, рамка --ct-line-faint</td></tr>
+          <tr><td>.ct-hp</td><td>трек 96×7 радиуса 4, заливка --ct-hp-ok, ниже 40% — --ct-hp-low</td></tr>
+          <tr><td>.ct-empty</td><td>текст 14px --ct-faint по центру, «Инвентарь пуст» / «Нет квестов» / «Пул пуст»</td></tr>
+        </table>
+      </section>
+
+      <!-- ═══════════════ СООБЩЕНИЯ ═══════════════ -->
+      <section class="sg-section" id="feedback">
+        <h2>Сообщения и оверлеи</h2>
+        <p class="lead">Инлайн-сообщения паспорта, тултипы карточек, HUD-уведомления, диалог подтверждения и единый тёмный скроллбар.</p>
+        <div class="sg-demo">
+          <div style="display:flex;flex-direction:column;gap:10px;max-width:520px;margin-bottom:24px">
+            <div class="ct-message ct-message--ok">Предмет использован. Здоровье восстановлено.</div>
+            <div class="ct-message ct-message--err">Недостаточно ОД для действия.</div>
+            <div class="ct-message ct-message--info">Выброшено 3 из 10.</div>
+          </div>
+          <div class="sg-row" style="align-items:flex-start;gap:24px;margin-bottom:24px">
+            <div class="ct-tooltip">
+              <div class="ct-tooltip__title">Простая атака</div>
+              <div>Тип: По врагу · physics/attack</div>
+              <div style="margin-top:6px">Наносит физический урон. Расход: 1 ОД.</div>
+            </div>
+            <div class="ct-toast"><span class="ct-toast__icon">✦</span><span>Новая запись в журнале</span></div>
+          </div>
+          <div class="ct-modal-overlay" style="max-width:560px">
+            <div class="ct-modal">
+              <div class="ct-modal__title">Сбросить действия?</div>
+              <div class="ct-modal__text">Все карточки вернутся к шаблонам персонажей. Текущая раскладка слотов будет потеряна.</div>
+              <div class="ct-modal__actions">
+                <button class="ct-btn">Отмена</button>
+                <button class="ct-btn ct-btn--primary">Сбросить</button>
+              </div>
+            </div>
+          </div>
+          <div class="sg-sub">Скроллбар</div>
+          <div class="ct-scroll" style="height:130px;max-width:420px;padding:12px;background:var(--ct-surface-2);border:1px solid var(--ct-line);border-radius:6px">
+            <p style="font-size:13px;color:var(--ct-muted);line-height:1.7">Трек прозрачный, бегунок #252734 радиусом 5px, по краям — 2px отступ. Под курсором бегунок светлеет до --ct-line-strong. Один стиль для инвентаря, пула действий и журнала.</p>
+            <p style="font-size:13px;color:var(--ct-muted);line-height:1.7;margin-top:10px">Раньше скроллбары были дефолтными у Godot и выбивались из тёмной палитры — теперь это часть кита.</p>
+            <p style="font-size:13px;color:var(--ct-muted);line-height:1.7;margin-top:10px">Прокрутите, чтобы увидеть бегунок.</p>
+            <p style="font-size:13px;color:var(--ct-muted);line-height:1.7;margin-top:10px">Конец.</p>
+          </div>
+        </div>
+        <table class="sg-spec">
+          <tr><th>Элемент</th><th>Спецификация</th></tr>
+          <tr><td>.ct-message--ok</td><td>текст --ct-ok, рамка success 50%, заливка 10%</td></tr>
+          <tr><td>.ct-message--err</td><td>текст --ct-danger-text, рамка danger 55%, заливка 10%</td></tr>
+          <tr><td>.ct-tooltip</td><td>фон rgba(16,17,24,.97), рамка --ct-line, радиус 4, тень --ct-shadow-card</td></tr>
+          <tr><td>.ct-toast</td><td>фон rgba(33,33,33,.8), рамка --ct-line, радиус 6; иконка accent-bright</td></tr>
+          <tr><td>.ct-modal</td><td>окно поверх затемнения, как обычная панель: --ct-r-lg, --ct-shadow-window</td></tr>
+          <tr><td>.ct-scroll</td><td>ширина 9px, бегунок #252734, hover --ct-line-strong, радиус 5</td></tr>
+        </table>
+      </section>
+
+      <!-- ═══════════════ КАРТА ЭЛЕМЕНТОВ ═══════════════ -->
+      <section class="sg-section" id="map">
+        <h2>Карта элементов и стилей</h2>
+        <p class="lead">Все элементы, встречающиеся в трёх GUI, и то, во что они приводятся. «Где задано сейчас» — исходное место в коде до унификации; после внедрения кита источником становится tokens.css.</p>
+        <div class="sg-map-wrap">
+          <table class="sg-map">
+            <tr><th>Элемент</th><th>Инвентарь</th><th>Журнал</th><th>Действия</th><th>Класс кита</th><th>Где задано сейчас</th></tr>
+            <tr><td>Затемнение фона</td><td class="yes">да</td><td class="yes">да</td><td class="yes">да</td><td class="cls">.ct-backdrop</td><td class="src">InventoryPanelBehaviour · BackdropColor; QuestJournalBehaviour · ColorRect; CharacterPanelBehaviour · Backdrop</td></tr>
+            <tr><td>Окно панели</td><td class="yes">да</td><td class="yes">книга</td><td class="yes">да</td><td class="cls">.ct-window / .ct-window--paper</td><td class="src">PanelColor #0e0f15, радиус 8; журнал — PaperBottom #15110d</td></tr>
+            <tr><td>Заголовок панели</td><td class="yes">«Инвентарь» 24px</td><td class="no">нет</td><td class="yes">«Действия персонажей» 22px</td><td class="cls">.ct-window__title</td><td class="src">InventoryPanelBehaviour; CharacterPanelBehaviour · header</td></tr>
+            <tr><td>Кнопка закрытия</td><td class="yes">✕ 38×38 справа</td><td class="yes">× 40×40 над книгой</td><td class="yes">текстовая «Закрыть» в футере</td><td class="cls">.ct-icon-btn</td><td class="src">InventoryPanelBehaviour · close; QuestJournalBehaviour · close; CharacterPanelBehaviour · footer close</td></tr>
+            <tr><td>Горизонтальный разделитель</td><td class="yes">да</td><td class="no">нет</td><td class="yes">да</td><td class="cls">.ct-rule / .ct-window__rule</td><td class="src">Panel 1px #2a2c38</td></tr>
+            <tr><td>Вкладки-фильтры</td><td class="yes">5 шт.</td><td class="no">нет</td><td class="yes">6 шт.</td><td class="cls">.ct-tab / .ct-tab--sm</td><td class="src">InventoryPanelBehaviour · tabs; ActionPoolBehaviour · tabs</td></tr>
+            <tr><td>Закладки-ленты</td><td class="no">нет</td><td class="yes">2 шт.</td><td class="no">нет</td><td class="cls">.ct-ribbon</td><td class="src">QuestJournalBehaviour · ribbons</td></tr>
+            <tr><td>Поиск</td><td class="yes">да</td><td class="no">нет</td><td class="yes">да</td><td class="cls">.ct-input--search</td><td class="src">InventoryPanelBehaviour; ActionPoolBehaviour · search</td></tr>
+            <tr><td>Сортировка / список</td><td class="yes">да</td><td class="no">нет</td><td class="no">нет</td><td class="cls">.ct-select</td><td class="src">InventoryPanelBehaviour · OptionButton + PopupMenu</td></tr>
+            <tr><td>Ползунок количества</td><td class="yes">да</td><td class="no">нет</td><td class="no">нет</td><td class="cls">.ct-range</td><td class="src">InventoryPanelBehaviour · HSlider</td></tr>
+            <tr><td>Ячейка предмета</td><td class="yes">да</td><td class="no">нет</td><td class="no">нет</td><td class="cls">.ct-slot</td><td class="src">InventoryItemBehaviour · три состояния рамки</td></tr>
+            <tr><td>Точка типа предмета</td><td class="yes">да</td><td class="no">нет</td><td class="no">нет</td><td class="cls">.ct-slot__dot</td><td class="src">InventoryItemUi · AccentColor</td></tr>
+            <tr><td>Тег действия в ячейке</td><td class="yes">да</td><td class="no">нет</td><td class="no">нет</td><td class="cls">.ct-slot__tag</td><td class="src">InventoryItemBehaviour · tag «рецепт/цель/пить/use»</td></tr>
+            <tr><td>Счётчик стака</td><td class="yes">«×N»</td><td class="no">нет</td><td class="no">нет</td><td class="cls">.ct-slot__stack</td><td class="src">InventoryItemBehaviour · stack label</td></tr>
+            <tr><td>Правая колонка панели</td><td class="yes">паспорт 430px</td><td class="no">нет</td><td class="yes">пул 420px</td><td class="cls">.ct-side</td><td class="src">PanelContainer · левая рамка, фон black 20%</td></tr>
+            <tr><td>Бейдж типа</td><td class="yes">да</td><td class="yes">печати</td><td class="yes">легенда и карточки</td><td class="cls">.ct-badge--*</td><td class="src">InventoryPanelBehaviour · badges; ActionCharacterUi · MakeBadge; QuestJournalBehaviour · seals</td></tr>
+            <tr><td>Строка свойства</td><td class="yes">да</td><td class="no">нет</td><td class="yes">чипы на карточке</td><td class="cls">.ct-chip</td><td class="src">InventoryPanelBehaviour · PropertyData; ActionCharacterUi · props</td></tr>
+            <tr><td>Стат-чип персонажа</td><td class="no">нет</td><td class="no">нет</td><td class="yes">HP/ОД/АТК/ЗАЩ</td><td class="cls">.ct-stat</td><td class="src">CharacterCardBehaviour · stats</td></tr>
+            <tr><td>Основная кнопка</td><td class="yes">«Использовать»</td><td class="no">нет</td><td class="yes">«Закрыть»</td><td class="cls">.ct-btn--primary</td><td class="src">InventoryPanelBehaviour · MakeButtonStyle; CharacterPanelBehaviour · footer</td></tr>
+            <tr><td>Вторичная кнопка</td><td class="yes">«Выбросить», −/+/Все</td><td class="no">нет</td><td class="yes">«Сброс»</td><td class="cls">.ct-btn</td><td class="src">InventoryPanelBehaviour; CharacterPanelBehaviour</td></tr>
+            <tr><td>Опасная кнопка</td><td class="yes">выброс</td><td class="no">нет</td><td class="yes">сброс</td><td class="cls">.ct-btn--danger</td><td class="src">Danger #a63d40</td></tr>
+            <tr><td>Недоступная кнопка</td><td class="yes">нет действия</td><td class="no">нет</td><td class="no">нет</td><td class="cls">:disabled</td><td class="src">InventoryPanelBehaviour · disabled style</td></tr>
+            <tr><td>Панель количества</td><td class="yes">да</td><td class="no">нет</td><td class="no">нет</td><td class="cls">.ct-well</td><td class="src">InventoryPanelBehaviour · drop panel</td></tr>
+            <tr><td>Выбор цели</td><td class="yes">да</td><td class="no">нет</td><td class="no">нет</td><td class="cls">.ct-target / .ct-hp</td><td class="src">CharacterTargetPanel</td></tr>
+            <tr><td>Полоса здоровья</td><td class="yes">у цели</td><td class="no">нет</td><td class="yes">текстом в чипе</td><td class="cls">.ct-hp</td><td class="src">CharacterTargetPanel · ProgressBar; CharacterCardBehaviour · HP value</td></tr>
+            <tr><td>Пипсы ОД</td><td class="yes">да</td><td class="no">нет</td><td class="no">нет</td><td class="cls">.ct-pips / .ct-pip</td><td class="src">InventoryPanelBehaviour · AP pips</td></tr>
+            <tr><td>Карточка персонажа</td><td class="no">нет</td><td class="no">нет</td><td class="yes">да</td><td class="cls">.ct-character</td><td class="src">CharacterCardBehaviour</td></tr>
+            <tr><td>Слот действия</td><td class="no">нет</td><td class="no">нет</td><td class="yes">3 на персонажа</td><td class="cls">.ct-action-slot</td><td class="src">ActionSlotBehaviour · empty/filled/highlight</td></tr>
+            <tr><td>Карточка действия</td><td class="no">нет</td><td class="no">нет</td><td class="yes">полная и компактная</td><td class="cls">.ct-action-card</td><td class="src">ActionCardBehaviour · 86/60, акцент-полоса</td></tr>
+            <tr><td>Строка квеста</td><td class="no">нет</td><td class="yes">да</td><td class="no">нет</td><td class="cls">.ct-quest</td><td class="src">QuestJournalBehaviour · quest row</td></tr>
+            <tr><td>Запись этапа</td><td class="no">нет</td><td class="yes">да</td><td class="no">нет</td><td class="cls">.ct-entry</td><td class="src">QuestJournalBehaviour · RichTextLabel BBCode</td></tr>
+            <tr><td>Заголовок секции</td><td class="no">нет</td><td class="yes">3 шт.</td><td class="no">нет</td><td class="cls">.ct-section-title</td><td class="src">QuestJournalBehaviour · «ОГЛАВЛЕНИЕ/ЗАПИСЬ/ПЕЧАТИ»</td></tr>
+            <tr><td>Разделитель с ромбом</td><td class="no">нет</td><td class="yes">да</td><td class="no">нет</td><td class="cls">.ct-divider</td><td class="src">QuestJournalBehaviour · diamond</td></tr>
+            <tr><td>Печать-метка</td><td class="no">нет</td><td class="yes">да</td><td class="no">нет</td><td class="cls">.ct-seal</td><td class="src">QuestJournalBehaviour · seals</td></tr>
+            <tr><td>Пустое состояние</td><td class="yes">да</td><td class="yes">да</td><td class="yes">да</td><td class="cls">.ct-empty</td><td class="src">InventoryPanelBehaviour; QuestJournalBehaviour; ActionPoolBehaviour</td></tr>
+            <tr><td>Инлайн-сообщение</td><td class="yes">ok / error</td><td class="no">нет</td><td class="no">нет</td><td class="cls">.ct-message--*</td><td class="src">InventoryPanelBehaviour · message panel</td></tr>
+            <tr><td>HUD-уведомление</td><td class="no">нет</td><td class="yes">новая запись</td><td class="no">нет</td><td class="cls">.ct-toast</td><td class="src">NotificationPanel; ModsMenu toast</td></tr>
+            <tr><td>Тултип</td><td class="no">нет</td><td class="yes">у закрытия</td><td class="yes">у карточек</td><td class="cls">.ct-tooltip</td><td class="src">ActionCardBehaviour · TooltipText; дефолт Godot</td></tr>
+            <tr><td>Диалог подтверждения</td><td class="no">нет</td><td class="no">нет</td><td class="yes">сброс</td><td class="cls">.ct-modal</td><td class="src">CharacterPanelBehaviour · ConfirmationDialog</td></tr>
+            <tr><td>Скроллбар</td><td class="yes">да</td><td class="yes">да</td><td class="yes">да</td><td class="cls">.ct-scroll</td><td class="src">дефолт Godot во всех трёх панелях</td></tr>
+            <tr><td>Кнопка-иконка тулбара</td><td class="yes">сумка</td><td class="yes">журнал</td><td class="yes">карты</td><td class="cls">.ct-toolbar-btn</td><td class="src">ToolBox · TextureButton 60×60</td></tr>
+          </table>
+        </div>
+      </section>
+
+      <!-- ═══════════════ ПРАВИЛА ═══════════════ -->
+      <section class="sg-section" id="rules">
+        <h2>Правила и решения унификации</h2>
+        <p class="lead">Стиль закрепляется двумя файлами: <span class="sg-token">tokens.css</span> — значения, <span class="sg-token">ui-kit.css</span> — компоненты. Эта страница — их живая демонстрация; любое расхождение с ней считается ошибкой стиля.</p>
+
+        <div class="sg-cards">
+          <div class="sg-rule-card ok">
+            <h4>Можно</h4>
+            <ul>
+              <li>брать цвет только как <code>var(--ct-*)</code>;</li>
+              <li>заголовок — слева в шапке, закрытие — справа;</li>
+              <li>радиус по роли: 8 окно, 6 карточка, 4 кнопка, 3 бейдж;</li>
+              <li>моноширинный шрифт для ID, чисел и счётчиков;</li>
+              <li>одно активное состояние — золотое, одно опасное — красное.</li>
+            </ul>
+          </div>
+          <div class="sg-rule-card no">
+            <h4>Нельзя</h4>
+            <ul>
+              <li>собственные hex-значения в панелях и сценах;</li>
+              <li>второй оттенок золота «рядом» с основным;</li>
+              <li>закрытие в футере или в случайном углу;</li>
+              <li>радиусы и кегли вне шкалы;</li>
+              <li>капс для названий предметов, квестов и персонажей;</li>
+              <li>дефолтные скроллбары и тултипы Godot.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="sg-sub">Что именно меняется при внедрении</div>
+        <table class="sg-spec">
+          <tr><th>Решение</th><th>Было</th><th>Стало</th></tr>
+          <tr><td>единый акцент</td><td>журнал #c79a4b, панели #d9a441</td><td>#d9a441 везде</td></tr>
+          <tr><td>единый текст</td><td>#f2e8cf / #d8cdb4 / #7d7462 / #59513f в журнале</td><td>ink-bright / ink / muted / faint</td></tr>
+          <tr><td>заголовок панели</td><td>инвентарь 24, действия 22, журнал без заголовка</td><td>24px, капс, слева; «ЖУРНАЛ» добавлен</td></tr>
+          <tr><td>закрытие</td><td>38×38 ✕, 40×40 ×, текстовая кнопка</td><td>38×38 ✕ справа в шапке у всех</td></tr>
+          <tr><td>затемнение</td><td>0.88 / 0.9 / 0.9</td><td>--ct-backdrop 0.9</td></tr>
+          <tr><td>активная вкладка</td><td>рамка 45% (инвентарь), 50% (пул)</td><td>accent 45%, радиус 4</td></tr>
+          <tr><td>primary под курсором</td><td>#2f2816 / #38301c</td><td>#2f2816</td></tr>
+          <tr><td>карточка персонажа</td><td>радиус 8</td><td>радиус 6, как у карточек</td></tr>
+          <tr><td>скроллбар и тултип</td><td>дефолт Godot</td><td>тёмные, из кита</td></tr>
+          <tr><td>материал журнала</td><td>отдельная коричневая палитра</td><td>тёплая поверхность + общие текст и акцент</td></tr>
+        </table>
+      </section>
+
+      <footer class="sg-footer">
+        Cthangover UI · <code>mockups/style_guide/</code> · <code>tokens.css</code> — значения, <code>ui-kit.css</code> — компоненты, <code>index.html</code> — демонстрация и карта элементов.<br>
+        Страница собрана по трём интерфейсам: инвентарь (<code>Core/UI/Inventory</code>), журнал (<code>Core/UI/Quests</code>), действия персонажа (<code>Core/UI/CharacterPanel</code>). Композиция и функции панелей не менялись — только цвета, радиусы, заголовки и закрытие.
+      </footer>
+
+    </main>
+  </div>
+</div>
+</body>
+</html>

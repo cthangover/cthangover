@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Cthangover.Core.Mods;
 using Cthangover.Core.Mods.Providers;
+using Cthangover.Core.Utils;
 using Xunit;
 
 namespace Engine.Tests.Mods
@@ -157,6 +158,46 @@ namespace Engine.Tests.Mods
 			Assert.Null(restored.Locale);
 			Assert.Null(restored.Depends);
 			Assert.Null(restored.Downloads);
+		}
+
+		[Fact]
+		public void JsonRoundTrip_SourceUrlsAndVariantConflict()
+		{
+			var original = new CatalogExportEntry
+			{
+				Id = "mod",
+				Version = "1.0",
+				SourceUrls = new List<string>
+				{
+					"https://catalog-a.example/catalog.json",
+					"https://catalog-b.example/catalog.json",
+				},
+				VariantConflict = true,
+			};
+
+			var json = JsonSerializer.Serialize(original);
+			var restored = JsonSerializer.Deserialize<CatalogExportEntry>(json);
+
+			Assert.NotNull(restored.SourceUrls);
+			Assert.Equal(2, restored.SourceUrls.Count);
+			Assert.Equal("https://catalog-a.example/catalog.json", restored.SourceUrls[0]);
+			Assert.Equal("https://catalog-b.example/catalog.json", restored.SourceUrls[1]);
+			Assert.True(restored.VariantConflict);
+		}
+
+		[Fact]
+		public void JsonRoundTrip_NormalEntry_OmitsProvenance()
+		{
+			var original = new CatalogExportEntry { Id = "mod", Version = "1.0" };
+
+			var exportJson = JsonSerializer.Serialize(original, JsonOptionsProvider.WriteIndentedIgnoreNullOptions);
+
+			Assert.DoesNotContain("source_urls", exportJson);
+			Assert.DoesNotContain("variant_conflict", exportJson);
+
+			var restored = JsonSerializer.Deserialize<CatalogExportEntry>(exportJson);
+			Assert.Null(restored.SourceUrls);
+			Assert.Null(restored.VariantConflict);
 		}
 
 		[Fact]

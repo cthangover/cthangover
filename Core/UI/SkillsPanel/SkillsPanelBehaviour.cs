@@ -4,6 +4,7 @@ using Cthangover.Core.Factories.Impls;
 using Cthangover.Core.Scenes;
 using Cthangover.Core.Settings;
 using Cthangover.Core.Skills;
+using Cthangover.Core.UI.Theming;
 using Cthangover.Core.Utils;
 using Godot;
 
@@ -37,9 +38,14 @@ namespace Cthangover.Core.UI.SkillsPanel
 			_scrollContainer = GetNodeOrNull<ScrollContainer>("ScrollContainer");
 			_gridContent = GetNodeOrNull<Control>("ScrollContainer/GridContent");
 
-			_closeButton = GetNodeOrNull<Button>("ClosePanel/CloseButton");
+			_closeButton = GetNodeOrNull<Button>("CloseButton") ?? GetNodeOrNull<Button>("ClosePanel/CloseButton");
 			if (_closeButton != null)
+			{
+				_closeButton.Text = "✕";
+				_closeButton.TooltipText = TranslationServer.Translate("ui/journal/close");
+				CthangoverTheme.ApplyIcon(_closeButton);
 				_closeButton.Pressed += () => Hide();
+			}
 
 			_expandedOverlay = GetNodeOrNull<Control>("ExpandedOverlay");
 			if (_expandedOverlay != null)
@@ -51,17 +57,38 @@ namespace Cthangover.Core.UI.SkillsPanel
 			_expandedName = GetNodeOrNull<Label>("ExpandedOverlay/ExpandedName");
 			_descriptionLabel = GetNodeOrNull<RichTextLabel>("ExpandedOverlay/DescriptionBg/DescriptionLabel");
 
+			var bg = GetNodeOrNull<ColorRect>("Bg");
+			if (bg != null)
+				bg.Color = UiTokens.Alpha(UiTokens.Surface0, 0.9f);
+
+			var title = GetNodeOrNull<Label>("Title");
+			if (title != null)
+			{
+				title.Text = TranslationServer.Translate("ui/skills/title").ToString().ToUpperInvariant();
+				title.HorizontalAlignment = HorizontalAlignment.Left;
+				title.AddThemeFontSizeOverride("font_size", UiTokens.FontTitle);
+				title.AddThemeColorOverride("font_color", UiTokens.InkBright);
+			}
+
+			var expandedBg = GetNodeOrNull<ColorRect>("ExpandedOverlay/ExpandedBg");
+			if (expandedBg != null)
+				expandedBg.Color = UiTokens.Backdrop;
+
+			var descriptionBg = GetNodeOrNull<ColorRect>("ExpandedOverlay/DescriptionBg");
+			if (descriptionBg != null)
+				descriptionBg.Color = UiTokens.Alpha(UiTokens.Surface0, 0.85f);
+
 			_skillCardPrefab = new ModScenePrefab("scenes/ui/skills_panel/skill_card.tscn");
 			_frameTexture = TextureUtils.LoadFromModGroup("ui/skills", "skill_frame");
 			_frameFullTexture = TextureUtils.LoadFromModGroup("ui/skills", "skill_frame_full");
 
 			_rareColors = new Godot.Collections.Array<Color>
 			{
-				new Color(0.5f, 0.5f, 0.5f, 1f),
-				new Color(0.2f, 0.8f, 0.2f, 1f),
-				new Color(0.2f, 0.5f, 1f, 1f),
-				new Color(0.6f, 0.2f, 1f, 1f),
-				new Color(1f, 0.55f, 0f, 1f),
+				UiTokens.Muted,
+				UiTokens.Success,
+				UiTokens.Info,
+				UiTokens.TypeRecipe,
+				UiTokens.Accent,
 			};
 
 			GameLogger.Log("SKILLSPANEL", $"_Ready: scroll={_scrollContainer != null} grid={_gridContent != null} closeBtn={_closeButton != null} overlay={_expandedOverlay != null} prefab={_skillCardPrefab != null} frameTex={_frameTexture != null} fullTex={_frameFullTexture != null}");

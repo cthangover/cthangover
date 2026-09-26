@@ -45,7 +45,7 @@ mods/
   "name": "Quán Rượu Của Tôi",                        // Tên mod hiển thị trong menu mod
   "description": "Thêm cảnh quán rượu vào thị trấn",  // Mô tả mod hiển thị trong menu mod
   "author": "modder",                                 // Tác giả mod
-  "depends": ["core"]                                 // Phụ thuộc vào game lõi (không cần sắp xếp thứ tự tải mod thủ công)
+  "depends": ["visual_novel_core"]                    // Phụ thuộc vào game lõi (không cần sắp xếp thứ tự tải mod thủ công)
 }
 ```
 
@@ -79,7 +79,7 @@ mods/
 
 Bất kỳ ảnh PNG nào cũng được. Trò chơi hỗ trợ ánh sáng dựa trên shader và thời gian trong ngày — nền sẽ được chiếu sáng tự động.
 
-> Nếu không có ảnh, tạm thời sao chép `mods/core/backgrounds/home/kitchen.png` → `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png`.
+> Nếu không có ảnh, tạm thời sao chép `mods/visual_novel_core/backgrounds/home/kitchen.png` → `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png`.
 
 ---
 
@@ -121,7 +121,7 @@ end
 
 ## Bước 6: Mở rộng thị trấn (ưu tiên cảnh)
 
-Bây giờ thêm tùy chọn "Đến quán rượu" vào cảnh thị trấn, **không chạm vào** tệp `core` gốc.
+Bây giờ thêm tùy chọn "Đến quán rượu" vào cảnh thị trấn, **không chạm vào** tệp `visual_novel_core` gốc.
 
 `mods/quickstart_modder/scenarios/town_entry_override.scenario`：
 
@@ -145,7 +145,7 @@ end
 ### Tại sao điều này hoạt động
 
 Cảnh `town_entry` giờ có hai kịch bản:
-- `priority: 10` — mặc định (từ mod `core`)
+- `priority: 10` — mặc định (từ mod `visual_novel_core`)
 - `priority: 1` — của chúng ta (từ `quickstart_modder`)
 
 Engine chạy kịch bản có `priority` **thấp nhất**. `priority: 1` của chúng ta thắng — người chơi thấy tùy chọn mới.

@@ -21,7 +21,7 @@ Every mod needs a manifest and optionally a properties file. These define the mo
   // Glob patterns for GDScript files (.gd)
   "gd_sources": ["scripts/*.gd"],
   // List of mod IDs that must be loaded before this mod
-  "depends": ["core", "interface"],
+  "depends": ["visual_novel_core", "interface"],
   // Scene lifecycle subscriptions
   "subscriptions": [
     {
@@ -68,10 +68,10 @@ GDScript files are compiled by Godot's GDScript engine (no Roslyn needed). A sin
 ### Dependencies
 
 ```jsonc
-"depends": ["core"]
+"depends": ["visual_novel_core"]
 ```
 
-The kernel resolves dependencies in topological order. Circular dependencies cause a load error. `core` is always loaded first.
+The kernel resolves dependencies in topological order. Circular dependencies cause a load error. `visual_novel_core` is always loaded first.
 
 ### Subscriptions — scene lifecycle hooks
 
@@ -139,7 +139,7 @@ From `mods/test_interactives/manifest.json`:
   "author": "ct",
   "description": "Test mod demonstrating the interactive object system",
   // core and interface are guaranteed to load before this mod
-  "depends": ["core", "interface"]
+  "depends": ["visual_novel_core", "interface"]
 }
 ```
 

@@ -96,6 +96,13 @@ namespace Cthangover.Core.Scenes
                 var provider = ResolveProviderForPath(scenePath, out modId);
                 if (provider == null)
                 {
+                    var native = LoadNative(scenePath);
+                    if (native != null)
+                    {
+                        GameLogger.Log("TSCN", $"TscnSceneResolver.LoadAndBuild: native fallback '{scenePath}' → root='{native.Name}' ({native.GetType().Name})");
+                        return native;
+                    }
+
                     GameLogger.Log("TSCN", $"TscnSceneResolver.LoadAndBuild: scene '{scenePath}' not found in any mod", LogLevel.Error);
                     return null;
                 }
@@ -239,6 +246,29 @@ namespace Cthangover.Core.Scenes
             if (n.StartsWith("res://", StringComparison.OrdinalIgnoreCase))
                 n = n.Substring(6);
             return n.TrimStart('/');
+        }
+
+        /// <summary>
+        /// Fallback for scenes that still live in the project (res://) rather than
+        /// in a mod. Godot's <c>ResourceLoader</c> cannot see files inside
+        /// <c>mods/</c>, but native PackedScenes referenced from mod scenes (or
+        /// deliberately left native) must still instantiate, mirroring
+        /// PackedScene's instantiate-per-call contract for the resolver.
+        /// </summary>
+        private static Node LoadNative(string scenePath)
+        {
+            var resPath = "res://" + scenePath;
+            var ext = Path.GetExtension(resPath);
+            if (!ext.Equals(".tscn", StringComparison.OrdinalIgnoreCase)
+                && !ext.Equals(".scn", StringComparison.OrdinalIgnoreCase)
+                && !ext.Equals(".escn", StringComparison.OrdinalIgnoreCase))
+                return null;
+
+            if (!ResourceLoader.Exists(resPath))
+                return null;
+
+            var packed = ResourceLoader.Load<PackedScene>(resPath);
+            return packed?.Instantiate();
         }
 
         private IModFileProvider ResolveProviderForPath(string scenePath, out string modId)

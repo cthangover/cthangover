@@ -10,10 +10,13 @@ namespace Cthangover.Core.Scenarios.Impls
 	/// <see cref="DialogQueue.LightSet"/>. The JSON structure is forwarded
 	/// as-is to the rendering layer for point-light setup.
 	/// </summary>
-	public class LightSetCommandStrategy : IScenarioCommandStrategy
+	public class LightSetCommandStrategy : IScenarioCommandStrategy, IScenarioCommandSpec
 	{
 		/// <inheritdoc/>
 		public string Command => "light_set";
+
+		/// <inheritdoc/>
+		public int MaxPositional => 1;
 
 		/// <inheritdoc/>
 		public void Execute(DialogQueue dlg, List<string> positional,

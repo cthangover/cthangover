@@ -11,10 +11,16 @@ namespace Cthangover.Core.Scenarios
     /// (b) a single sprite base with <c>start</c>, <c>count</c>, <c>speed</c>, and <c>loop</c> controls.
     /// Delegates to <see cref="DialogQueue.Animation"/>.
     /// </summary>
-    public class AnimationCommandStrategy : IScenarioCommandStrategy
+    public class AnimationCommandStrategy : IScenarioCommandStrategy, IScenarioCommandSpec
     {
         /// <inheritdoc/>
         public string Command => "animation";
+        /// <inheritdoc/>
+        public int MinArguments => 1;
+        /// <inheritdoc/>
+        public int MaxPositional => 1;
+        /// <inheritdoc/>
+        public IReadOnlyList<string> AllowedNamed => new[] { "sprites", "speed", "loop", "start", "count" };
 
         /// <inheritdoc/>
         public void Execute(DialogQueue dlg, List<string> positional, Dictionary<string, string> named, string arrowTarget, ILocalizationProvider locale)

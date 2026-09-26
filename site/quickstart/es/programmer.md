@@ -37,7 +37,7 @@ mods/
   "description": "Nueva acción y ajustes del mod",  // Descripción del mod mostrada en la lista de mods
   "sources": ["src/*.cs"],                          // Patrón glob para recopilar archivos fuente (incluye todos los archivos ".cs")
   "author": "programmer",                           // Autor
-  "depends": ["core"]                               // Dependencia del juego base (así no se requiere ordenar manualmente la carga de mods)
+  "depends": ["visual_novel_core"]                  // Dependencia del juego base (así no se requiere ordenar manualmente la carga de mods)
 }
 ```
 

@@ -37,7 +37,7 @@ mods/
   "description": "Hành động mới và cài đặt mod", // Mô tả mod hiển thị trong danh sách mod
   "sources": ["src/*.cs"],                       // Mẫu glob để thu thập tệp nguồn (bao gồm tất cả tệp ".cs")
   "author": "programmer",                        // Tác giả
-  "depends": ["core"]                            // Phụ thuộc vào game lõi (không cần sắp xếp thứ tự tải mod thủ công)
+  "depends": ["visual_novel_core"]               // Phụ thuộc vào game lõi (không cần sắp xếp thứ tự tải mod thủ công)
 }
 ```
 

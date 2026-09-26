@@ -10,10 +10,18 @@ namespace Cthangover.Core.Scenarios
     /// <c>goto target_name</c> via <c>target=</c> named parameter, or
     /// <c>goto -&gt; target_name</c> via the arrow target syntax.
     /// </summary>
-    public class GotoCommandStrategy : IScenarioCommandStrategy
+    public class GotoCommandStrategy : IScenarioCommandStrategy, IScenarioCommandSpec
     {
         /// <inheritdoc/>
         public string Command => "goto";
+        /// <inheritdoc/>
+        public int MinArguments => 1;
+        /// <inheritdoc/>
+        public int MaxPositional => 0;
+        /// <inheritdoc/>
+        public IReadOnlyList<string> AllowedNamed => new[] { "target" };
+        /// <inheritdoc/>
+        public string JumpTargetNamedKey => "target";
 
         /// <inheritdoc/>
         public void Execute(DialogQueue dlg, List<string> positional, Dictionary<string, string> named, string arrowTarget, ILocalizationProvider locale)

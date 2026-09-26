@@ -34,7 +34,7 @@ Todo mod necesita un manifiesto. Crea `mods/quickstart_player/manifest.json`:
   "name": "Mejora de Marao",        // Nombre mostrado en el menú de gestión de mods
   "description": "¡Mi primer mod!", // Descripción visible en la lista de mods y catálogo
   "author": "player",               // Autor del mod (cadena arbitraria)
-  "depends": ["core"]               // Dependencia del juego base (así no se requiere ordenar manualmente la carga de mods)
+  "depends": ["visual_novel_core"]  // Dependencia del juego base (así no se requiere ordenar manualmente la carga de mods)
 }
 ```
 
@@ -64,7 +64,7 @@ Crea `mods/quickstart_player/patches/characters.json`:
 
 ### Cómo funciona
 
-- **`"Id": "Marao"`** — el objetivo del parche: personaje con identificador `Marao` (definido en el mod `core`).
+- **`"Id": "Marao"`** — el objetivo del parche: personaje con identificador `Marao` (definido en el mod `visual_novel_core`).
 - **`"Health": 5000`**, **`"Attack": 1200`**, **`"Points": 2`** — sobrescriben los campos del personaje. Los nuevos valores reemplazan a los antiguos.
 - **`"Actions$add": ["physics/stun"]`** — el sufijo `$add` significa "añadir al array". La acción `physics/stun` se agrega a la lista. Las acciones por defecto `physics/attack` y `physics/defence` permanecen.
 

@@ -125,5 +125,14 @@ namespace Cthangover.Core.Mods
         /// </summary>
         [JsonPropertyName("ui")]
         public List<UiEntry> Ui { get; set; }
+
+        /// <summary>
+        /// Mod-provided buttons for the title screen. Each entry adds a button to
+        /// the main menu that opens a fullscreen mod scene. Collected and validated
+        /// by <c>MainMenuRegistry</c>; built once per menu instantiation by
+        /// <c>MainMenuBuilder</c>. Only enabled mods contribute buttons.
+        /// </summary>
+        [JsonPropertyName("main_menu")]
+        public List<MainMenuEntry> MainMenu { get; set; }
     }
 }

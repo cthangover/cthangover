@@ -10,9 +10,12 @@ namespace Cthangover.Core.Scenarios
 	///
 	/// Usage: <c>interactive_clear</c>
 	/// </summary>
-	public class InteractiveClearCommandStrategy : IScenarioCommandStrategy
+	public class InteractiveClearCommandStrategy : IScenarioCommandStrategy, IScenarioCommandSpec
 	{
 		public string Command => "interactive_clear";
+
+		/// <inheritdoc/>
+		public int MaxPositional => 0;
 
 		public void Execute(DialogQueue dlg, List<string> positional, Dictionary<string, string> named, string arrowTarget, ILocalizationProvider locale)
 		{

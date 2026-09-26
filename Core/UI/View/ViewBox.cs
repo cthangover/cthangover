@@ -1,7 +1,8 @@
-using Cthangover.Core.Mods;
+﻿using Cthangover.Core.Mods;
 using Cthangover.Core.Mods.Resolvers;
 using Cthangover.Core.Scenes;
 using Cthangover.Core.Utils;
+using Cthangover.Core.UI.Theming;
 using Godot;
 
 namespace Cthangover.Core.UI.View
@@ -179,7 +180,7 @@ namespace Cthangover.Core.UI.View
 
 			var overlay = GetOrCreateTransitionOverlay();
 			overlay.Visible = true;
-			overlay.Modulate = new Color(0, 0, 0, 0);
+			overlay.Modulate = UiTokens.Alpha(Colors.Black, 0f);
 			overlay.MouseFilter = MouseFilterEnum.Ignore;
 
 			var halfDuration = duration / 2f;
@@ -213,7 +214,7 @@ namespace Cthangover.Core.UI.View
 			if (transitionOverlay != null)
 			{
 				transitionOverlay.Visible = false;
-				transitionOverlay.Modulate = new Color(0, 0, 0, 0);
+				transitionOverlay.Modulate = UiTokens.Alpha(Colors.Black, 0f);
 			}
 		}
 
@@ -224,7 +225,7 @@ namespace Cthangover.Core.UI.View
 				transitionOverlay = new ColorRect
 				{
 					Name = "TransitionOverlay",
-					Color = new Color(0, 0, 0, 1),
+					Color = UiTokens.Alpha(Colors.Black, 1f),
 					MouseFilter = MouseFilterEnum.Ignore,
 					Visible = false
 				};
@@ -271,3 +272,5 @@ namespace Cthangover.Core.UI.View
     }
 
 }
+
+

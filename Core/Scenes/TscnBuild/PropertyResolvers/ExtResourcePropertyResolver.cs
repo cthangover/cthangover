@@ -1,6 +1,7 @@
 using System.Linq;
 using Cthangover.Core.Mods;
 using Cthangover.Core.Scenes.TscnParsing;
+using Cthangover.Core.Utils;
 using Godot;
 
 namespace Cthangover.Core.Scenes.TscnBuild.PropertyResolvers
@@ -28,7 +29,15 @@ namespace Cthangover.Core.Scenes.TscnBuild.PropertyResolvers
             if (extRes.Type == "PackedScene" && ctx.InstanceLoader != null)
             {
                 var sub = ctx.InstanceLoader(extRes.Path);
-                if (sub != null) { var packed = new PackedScene(); if (packed.Pack(sub) == Error.Ok) node.Set(key, packed); }
+                if (sub != null)
+                {
+                    AssignSceneOwners(sub, sub);
+                    var packed = new PackedScene();
+                    if (packed.Pack(sub) == Error.Ok)
+                        node.Set(key, packed);
+                    else
+                        GameLogger.Log("TSCN_BUILD", $"ExtResourcePropertyResolver: failed to pack '{extRes.Path}' for '{key}'", LogLevel.Warning);
+                }
                 return;
             }
 
@@ -36,6 +45,23 @@ namespace Cthangover.Core.Scenes.TscnBuild.PropertyResolvers
             {
                 var r = ctx.ExtResourceResolver(pv.RefId);
                 if (r != null) node.Set(key, Variant.From(r));
+            }
+        }
+
+        /// <summary>
+        /// <see cref="PackedScene.Pack"/> serializes only nodes whose <c>Owner</c>
+        /// is the packed root, while the runtime builder produces
+        /// owner-less trees (Godot assigns owners only when loading native scenes).
+        /// Without this, PackedScene-typed exports (e.g. <c>DialogBox.answerBoxScene</c>)
+        /// instantiate as a bare root with no children. Owners are assigned on the
+        /// throwaway instance built for packing, not on the cached resolver tree.
+        /// </summary>
+        private static void AssignSceneOwners(Node root, Node current)
+        {
+            foreach (var child in current.GetChildren())
+            {
+                child.Owner = root;
+                AssignSceneOwners(root, child);
             }
         }
     }

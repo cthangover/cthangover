@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Cthangover.Core.Localization;
 using Cthangover.Core.Mods;
 using Cthangover.Core.Settings;
+using Cthangover.Core.UI.Theming;
 using Cthangover.Core.Utils;
 using Godot;
 
@@ -93,10 +94,12 @@ namespace Cthangover.Core.UI.Menu
             _vsyncToggle = GetNode<CheckButton>("Panel/Margin/VBox/Tabs/DisplayMargin/Display/VSyncRow/VSyncToggle");
 
             _backBtn = GetNode<Button>("Panel/Margin/VBox/BackBtn");
+            CthangoverTheme.ApplyIcon(_backBtn);
 
             _modListContainer = GetNode<VBoxContainer>("Panel/Margin/VBox/Tabs/ModSettingsMargin/ModSettings/LeftPanel/ModScroll/ModList");
             _selectedModName = GetNode<Label>("Panel/Margin/VBox/Tabs/ModSettingsMargin/ModSettings/RightPanel/TopBar/SelectedModName");
             _resetModSettingsBtn = GetNode<Button>("Panel/Margin/VBox/Tabs/ModSettingsMargin/ModSettings/RightPanel/TopBar/ResetBtn");
+            CthangoverTheme.ApplyDanger(_resetModSettingsBtn);
             _settingsContainer = GetNode<VBoxContainer>("Panel/Margin/VBox/Tabs/ModSettingsMargin/ModSettings/RightPanel/SettingsScroll/SettingsContainer");
 
             RegisterLabel(GetNode<Label>("Panel/Margin/VBox/Title"), "menu/settings");

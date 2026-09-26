@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Cthangover.Core.Scenes;
 using Cthangover.Core.Settings;
+using Cthangover.Core.UI.Theming;
 using Cthangover.Core.UI.Tool;
 using Cthangover.Core.Utils;
 using Godot;
@@ -25,6 +26,8 @@ namespace Cthangover.Core.UI.Menu
 
         public override void _Ready()
         {
+            CthangoverTheme.Apply(this);
+
             GetNode<Button>("MenuContainer/NewGameBtn").Pressed += OnNewGameClick;
             GetNode<Button>("MenuContainer/LoadBtn").Pressed += OnLoadClick;
             GetNode<Button>("MenuContainer/SettingsBtn").Pressed += OnSettingsClick;
@@ -56,7 +59,29 @@ namespace Cthangover.Core.UI.Menu
             var sceneManager = GetNode<SceneManager>("/root/SceneManager");
             sceneManager.Initialize();
 
+            BuildModButtons();
             CheckModCompilationErrors();
+        }
+
+        /// <summary>
+        /// Materializes buttons declared by enabled mods in their manifest's
+        /// <c>main_menu</c> section. Runs after <see cref="SceneManager.Initialize"/>
+        /// because the registry reads the mod list; each button's translation key is
+        /// registered so <see cref="RefreshButtons"/> keeps it localized.
+        /// </summary>
+        private void BuildModButtons()
+        {
+            var container = GetNodeOrNull<VBoxContainer>("MenuContainer/ModMenuButtons");
+            if (container == null)
+                return;
+
+            MainMenuBuilder.Build(this, container);
+
+            foreach (var child in container.GetChildren())
+            {
+                if (child is Button button && button.HasMeta(MainMenuBuilder.LocaleMetaKey))
+                    _btnKeys[button] = button.GetMeta(MainMenuBuilder.LocaleMetaKey).AsString();
+            }
         }
 
         private void CheckModCompilationErrors()
@@ -75,6 +100,7 @@ namespace Cthangover.Core.UI.Menu
             panel.Unresizable = true;
             panel.Size = new Vector2I(300, 160);
             panel.CloseRequested += () => panel.QueueFree();
+            CthangoverTheme.Apply(panel);
 
             var vbox = new VBoxContainer();
             vbox.AnchorRight = 1f;

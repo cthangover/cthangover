@@ -1,5 +1,6 @@
 using Cthangover.Core.Scenes;
 using Cthangover.Core.UI.Event;
+using Cthangover.Core.UI.Theming;
 using Godot;
 
 namespace Cthangover.Core.UI.Messages
@@ -16,7 +17,7 @@ namespace Cthangover.Core.UI.Messages
     {
 
         [Export] private Label textField;
-        [Export] public  Color Color { get; set; } = Colors.Yellow;
+        [Export] public  Color Color { get; set; } = UiTokens.Warning;
         [Export] public  float Speed { get; set; } = 1f;
         private         float timestamp;
 
@@ -88,7 +89,7 @@ namespace Cthangover.Core.UI.Messages
 			var fadeDuration = 2f / Speed;
 			var fadeElapsed = elapsed - 3f;
 			var progress = Mathf.Clamp(fadeElapsed / fadeDuration, 0f, 1f);
-			textField.SelfModulate = new Color(1, 1, 1, 1f - progress);
+			textField.SelfModulate = UiTokens.Alpha(Colors.White, 1f - progress);
 
 			if (progress >= 1f)
 				QueueFree();

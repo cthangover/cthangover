@@ -11,9 +11,18 @@ namespace Cthangover.Core.Scenarios
 	/// Usage: <c>interactive_set door_to_kitchen enabled=false</c>
 	///        <c>interactive_set door_to_kitchen visible=true</c>
 	/// </summary>
-	public class InteractiveSetCommandStrategy : IScenarioCommandStrategy
+	public class InteractiveSetCommandStrategy : IScenarioCommandStrategy, IScenarioCommandSpec
 	{
 		public string Command => "interactive_set";
+
+		/// <inheritdoc/>
+		public int MinPositional => 1;
+
+		/// <inheritdoc/>
+		public int MinArguments => 2;
+
+		/// <inheritdoc/>
+		public IReadOnlyList<string> AllowedNamed => new[] { "enabled", "visible" };
 
 		public void Execute(DialogQueue dlg, List<string> positional, Dictionary<string, string> named, string arrowTarget, ILocalizationProvider locale)
 		{

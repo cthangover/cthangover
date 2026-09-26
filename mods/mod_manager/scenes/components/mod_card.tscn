@@ -1,0 +1,145 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="src/UI/ModCard.cs" id="1_card"]
+
+[node name="ModCard" type="PanelContainer"]
+custom_minimum_size = Vector2(236, 0)
+size_flags_horizontal = 0
+mouse_filter = 0
+script = ExtResource("1_card")
+
+[node name="VBox" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Cover" type="Control" parent="VBox"]
+custom_minimum_size = Vector2(0, 132)
+layout_mode = 2
+clip_contents = true
+mouse_filter = 2
+
+[node name="Placeholder" type="ColorRect" parent="VBox/Cover"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.054902, 0.058824, 0.082353, 1)
+
+[node name="Image" type="TextureRect" parent="VBox/Cover"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Body" type="MarginContainer" parent="VBox"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="Box" type="VBoxContainer" parent="VBox/Body"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="Title" type="Label" parent="VBox/Body/Box"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+mouse_filter = 2
+clip_text = true
+autowrap_mode = 3
+max_lines_visible = 2
+text_overrun_behavior = 3
+
+[node name="Author" type="Label" parent="VBox/Body/Box"]
+custom_minimum_size = Vector2(0, 16)
+layout_mode = 2
+mouse_filter = 2
+clip_text = true
+text_overrun_behavior = 3
+theme_override_font_sizes/font_size = 11
+
+[node name="Source" type="Label" parent="VBox/Body/Box"]
+custom_minimum_size = Vector2(0, 16)
+layout_mode = 2
+mouse_filter = 2
+clip_text = true
+text_overrun_behavior = 3
+theme_override_font_sizes/font_size = 11
+
+[node name="MetaRow" type="HBoxContainer" parent="VBox/Body/Box"]
+custom_minimum_size = Vector2(0, 28)
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Status" type="Label" parent="VBox/Body/Box/MetaRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+mouse_filter = 2
+clip_text = true
+text_overrun_behavior = 3
+theme_override_font_sizes/font_size = 11
+vertical_alignment = 1
+
+[node name="VersionHost" type="Control" parent="VBox/Body/Box/MetaRow"]
+custom_minimum_size = Vector2(102, 28)
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+mouse_filter = 2
+clip_contents = true
+
+[node name="Versions" type="OptionButton" parent="VBox/Body/Box/MetaRow/VersionHost"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 11
+
+[node name="ActionRow" type="HBoxContainer" parent="VBox/Body/Box"]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="ActionHost" type="Control" parent="VBox/Body/Box/ActionRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+mouse_filter = 2
+
+[node name="Action" type="Button" parent="VBox/Body/Box/ActionRow/ActionHost"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+clip_text = true
+text_overrun_behavior = 3
+
+[node name="EnabledHost" type="Control" parent="VBox/Body/Box/ActionRow"]
+custom_minimum_size = Vector2(40, 32)
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+mouse_filter = 2
+clip_contents = true
+
+[node name="Enabled" type="CheckButton" parent="VBox/Body/Box/ActionRow/EnabledHost"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2

@@ -24,7 +24,7 @@ Scene definitions map scene IDs to default backgrounds, ambient music, and entry
 
 ## Real examples
 
-From `mods/core/scenes/`:
+From `mods/visual_novel_core/scenes/`:
 
 ```jsonc
 {
@@ -104,7 +104,7 @@ Mods hook into scene lifecycle via their `manifest.json`:
 }
 ```
 
-Multiple mods can subscribe to the same scene — they run in priority order. This is how the Cooking mod adds a "Cook" option to the kitchen scene without modifying `core`.
+Multiple mods can subscribe to the same scene — they run in priority order. This is how the Cooking mod adds a "Cook" option to the kitchen scene without modifying `visual_novel_core`.
 
 ## Scenario priority system
 
