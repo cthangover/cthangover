@@ -102,7 +102,7 @@ namespace Cthangover.Core.Mods
             UiRegistry.Clear();
             UI.Menu.MainMenuRegistry.Clear();
             UiHost.Instance?.ClearAll();
-            Scenes.BattleSceneRegistry.Clear();
+            Scenes.SceneRouteRegistry.Clear();
             registry.Reload();
         }
 
@@ -121,7 +121,7 @@ namespace Cthangover.Core.Mods
             UiRegistry.Clear();
             UI.Menu.MainMenuRegistry.Clear();
             UiHost.Instance?.ClearAll();
-            Scenes.BattleSceneRegistry.Clear();
+            Scenes.SceneRouteRegistry.Clear();
         }
 
         public void RegisterResolver(IModAssetResolver resolver)

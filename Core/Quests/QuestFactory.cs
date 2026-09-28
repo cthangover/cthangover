@@ -54,13 +54,14 @@ namespace Cthangover.Core.Quests
         {
             if (isLoaded)
                 return;
-            isLoaded = true;
 
             if (!ModManager.Instance.IsInitialized)
             {
                 GameLogger.Log("QUEST", "mods not initialized, quest loading deferred");
                 return;
             }
+
+            isLoaded = true;
 
             try
             {
@@ -123,12 +124,14 @@ namespace Cthangover.Core.Quests
         /// Iterates over every quest in the provided list, looks up the
         /// corresponding entry by ID, and overwrites its
         /// <see cref="QuestBase.Data"/> and <see cref="QuestBase.Status"/>
-        /// properties. Reads from empty or <c>null</c> lists are silently
-        /// ignored so that save files created before the quest system existed
-        /// (or with no quest progress) do not break the pipeline. Publishes a
-        /// single <see cref="QuestStateRestoredEvent"/> marker after the restore
-        /// loop (not per-quest) so condition caches invalidate once without a
-        /// per-quest event storm.
+        /// properties. Entries whose ID is not registered (a removed mod or a
+        /// quest renamed between sessions) are skipped with a warning so that
+        /// an ageing save cannot block loading. Reads from empty or <c>null</c>
+        /// lists are silently ignored so that save files created before the
+        /// quest system existed (or with no quest progress) do not break the
+        /// pipeline. Publishes a single <see cref="QuestStateRestoredEvent"/>
+        /// marker after the restore loop (not per-quest) so condition caches
+        /// invalidate once without a per-quest event storm.
         /// </summary>
         public void SetAll(List<QuestBase> quests)
         {
@@ -138,9 +141,37 @@ namespace Cthangover.Core.Quests
                 return;
             foreach (var questFromSave in quests)
             {
-                var quest = Get(questFromSave.ID);
+                if(!dataByID.TryGetValue(questFromSave.ID, out var quest))
+                {
+                    GameLogger.Log("QUEST", "quest '" + questFromSave.ID + "' from save is not registered, skipped", LogLevel.Warning);
+                    continue;
+                }
                 quest.Data   = questFromSave.Data;
                 quest.Status = questFromSave.Status;
+            }
+
+            ModEventBus.Publish(new QuestStateRestoredEvent());
+        }
+
+        /// <summary>
+        /// Returns every quest to the state it has right after mod loading:
+        /// <see cref="QuestStatus.NotStarted"/>, numeric stage zero, and an
+        /// empty tag set. Called by <c>GameData.StartNewGame</c> because the
+        /// factory is a process‑wide singleton that survives returning to the
+        /// main menu — without this reset, tags and statuses earned in the
+        /// previous playthrough would leak into a new game and satisfy (or
+        /// block) prologue conditions that test for absent tags. Publishes
+        /// <see cref="QuestStateRestoredEvent"/> so cached scenario conditions
+        /// invalidate once.
+        /// </summary>
+        public void ResetAll()
+        {
+            EnsureLoaded();
+
+            foreach (var quest in dataByID.Values)
+            {
+                quest.Status = QuestStatus.NotStarted;
+                quest.Data = new QuestData();
             }
 
             ModEventBus.Publish(new QuestStateRestoredEvent());

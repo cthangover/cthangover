@@ -1,6 +1,6 @@
 # Status Effects
 
-Status effects are temporary buffs, debuffs, or crowd-control effects applied to characters during battle. Defined as JSON data and managed through `StatusEffectQueue` on each character.
+Status effects are temporary buffs, debuffs, or crowd-control effects applied to characters during battle. Defined as JSON data and managed through `StatusEffectQueue`; the runtime is owned by the turn-battle mod (`turn_battle_base`) and keyed per character via `StatusEffectService`, so the core character model stays free of battle state.
 
 ## JSON structure
 
@@ -58,7 +58,7 @@ Status effects are registered via an index file:
 
 ## Runtime behaviour
 
-- Each character has a `StatusEffectQueue` — an ordered list of active status effects
+- Each battle combatant gets a `StatusEffectQueue` from `StatusEffectService.Of(character)` — an ordered list of active status effects
 - `RemainingTurns` decrements in both turn phases: in `OnTurnStart` (only for timed effects with `Duration > 0`) and unconditionally in `OnTurnEnd`
 - When `RemainingTurns` reaches 0, natural expiry fires `OnFinalAction`; manual removal via `Remove()` fires `OnRemove` instead
 - The battle engine checks `HasStun()` to skip a stunned character's turn
@@ -66,7 +66,7 @@ Status effects are registered via an index file:
 
 ## StatusEffectQueue API reference
 
-The queue lives in `Core/Battle/StatusEffect/StatusEffectQueue.cs` (namespace `Cthangover.Core.Cards.StatusEffect`). It is attached per character as `Character.StatusEffectQueue`, created automatically in the `Character` constructor.
+The queue lives in `mods/turn_battle_base/src/StatusEffect/StatusEffectQueue.cs` (namespace `Cthangover.Core.Cards.StatusEffect`). It is not a field of `Character` any more: `StatusEffectService.Of(character)` returns (and lazily creates) the queue from a `ConditionalWeakTable`, so queues die with their characters and the core model never references battle types. Battle code must go through the service instead of a `character.StatusEffectQueue` property.
 
 | Member | Description |
 |---|---|
@@ -87,11 +87,11 @@ Timing semantics worth knowing:
 - `StatusEffectItem.RemainingTurns` is tracked independently of the definition's `Duration`, so the original value survives for display or re-apply logic
 - `StatusEffectItem.Copy()` is a shallow clone: primitives are copied while the stateless `Actions` singleton is shared by reference
 
-Built-in behaviour sets live under `Core/Battle/StatusEffect/Impls/` — e.g. `StunStatusEffect` (`ID = "basic/stun"`) implements every `IStatusActions` hook as a no-op, because stun is detected via `HasStun()` rather than through action callbacks.
+Built-in behaviour sets live under `mods/turn_battle_base/src/StatusEffect/Impls/` — e.g. `StunStatusEffect` (`ID = "basic/stun"`) implements every `IStatusActions` hook as a no-op, because stun is detected via `HasStun()` rather than through action callbacks.
 
 ## Implementing custom status effect behaviour
 
-Create an `IStatusActions` implementation. Registration is fully automatic: the `StatusEffectActionFactory` constructor calls `Reflections.FindAndCreate<IStatusActions>()`, and mod assemblies are scanned by `ModAssemblyLoader` — no manual registration is needed:
+Create an `IStatusActions` implementation. Registration is fully automatic: the `StatusEffectActionFactory` constructor calls `Reflections.FindAndCreate<IStatusActions>()`, which scans every assembly loaded in the AppDomain (mod assemblies included) — no manual registration is needed:
 
 ```csharp
 public class PoisonStatusActions : IStatusActions

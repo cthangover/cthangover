@@ -1,8 +1,6 @@
 #if TOOLS
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using Cthangover.Core.Battle;
 using Cthangover.Core.Mods;
 using Cthangover.Core.Utils;
 using Godot;
@@ -10,14 +8,16 @@ using Godot;
 namespace Cthangover.Core.Autotest
 {
     /// <summary>
-    /// Reports integration-test coverage of battle cores. The registry is the
-    /// single source of truth for how many battle cores the current mod set
-    /// ships; <see cref="DeclaredTests"/> maps each core to the runner test
-    /// type that drives it. A registered core without a declaration — or
-    /// without <see cref="IBattleAutoPlayable"/> — fails the run, so adding a
-    /// new core forces adding its test and the automation contract. The
-    /// machine-readable lines are parsed by <c>tests/Cthangover.TestRunner</c>,
-    /// which executes every declared test and reports the coverage summary.
+    /// Reports integration-test coverage of battle cores. The battle mod's registry
+    /// is the single source of truth for how many battle cores the current mod set
+    /// ships; <see cref="DeclaredTests"/> maps each core to the runner test type
+    /// that drives it. A registered core without a declaration — or without the
+    /// mod's IBattleAutoPlayable contract — fails the run, so adding a new core
+    /// forces adding its test and the automation contract. The machine-readable
+    /// lines are parsed by <c>tests/Cthangover.TestRunner</c>.
+    /// <para/>
+    /// Registry and contract types live in the turn-battle mod, so this setup goes
+    /// through <see cref="TurnBattleBridge"/> instead of referencing them directly.
     /// </summary>
     public partial class BattleCoverageTestSetup : Node
     {
@@ -38,7 +38,7 @@ namespace Cthangover.Core.Autotest
             if (!ModManager.Instance.IsInitialized)
                 ModManager.Instance.Initialize();
 
-            var coreIds = BattleCoreRegistry.Instance.CoreIds;
+            var coreIds = TurnBattleBridge.CoreIds();
             GameLogger.Log("BATTLE_COVERAGE", $"registered cores: {coreIds.Count}");
 
             foreach (var id in coreIds)
@@ -49,9 +49,9 @@ namespace Cthangover.Core.Autotest
                     continue;
                 }
 
-                var autoPlayable = typeof(IBattleAutoPlayable)
-                    .IsAssignableFrom(BattleCoreRegistry.Instance.GetCoreType(id));
-                if (!autoPlayable)
+                var autoPlayableType = TurnBattleBridge.AutoPlayableType();
+                var coreType = TurnBattleBridge.GetCoreType(id);
+                if (autoPlayableType == null || coreType == null || !autoPlayableType.IsAssignableFrom(coreType))
                 {
                     Fail($"core={id} test={testName} does not implement IBattleAutoPlayable");
                     continue;

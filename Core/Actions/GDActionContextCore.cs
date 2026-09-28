@@ -10,7 +10,6 @@ public class GDActionContextCore
 			_inner = value;
 			Quests.Inner = value?.Quests;
 			Character.Inner = value?.Character;
-			Battle.Inner = value?.Battle;
 			Lighting.Inner = value?.Lighting;
 			Scene.Inner = value?.Scene;
 			Inventory.Inner = value?.Inventory;
@@ -24,7 +23,6 @@ public class GDActionContextCore
 
 	public readonly GDQuestService Quests = new();
 	public readonly GDCharacterService Character = new();
-	public readonly GDBattleService Battle = new();
 	public readonly GDLightingService Lighting = new();
 	public readonly GDSceneNodeService Scene = new();
 	public readonly Items.GDInventoryService Inventory = new();

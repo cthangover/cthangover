@@ -12,12 +12,12 @@ flowchart TD
     end
 
     subgraph Kernel
-        MMA[MainMenu] -->|GetAll| TF
+        MMA[MainMenu] -->|GetAll + AddMenuButton| TF
         TB[ToolBox] -->|GetVisible| TBF
     end
 
     subgraph Runtime
-        MMA -->|CreateWindow| TW[ToolWindow popup]
+        MMB[Main-menu tool buttons] -->|Pressed: ShowWindow(CreateWindow())| TW[ToolWindow popup]
         TB -->|AddToolButtons| BTN[Dynamic toolbar buttons]
         BTN -->|Pressed: Get + ShowWindow(CreateWindow())| TW
     end
@@ -36,7 +36,7 @@ Tools bootstrapping happens at startup:
 1. `ToolFactory.Instance` scans all loaded assemblies for `IToolProvider` implementations via `Reflections.FindAndCreate`.
 2. `ToolBoxButtonFactory.Instance` scans for `IToolBoxButton` implementations.
 3. When a mod assembly loads (`ModAssemblyLoader`), both factories call `RegisterAssembly(assembly)` to discover mod-provided tools.
-4. `MainMenu` populates a **Tools** dropdown from `ToolFactory.GetAll()`.
+4. `MainMenu` asks every registered tool to append its launcher button to the tool block below **Exit** via `IToolProvider.AddMenuButton`.
 5. `ToolBox` dynamically creates HUD toolbar buttons from `ToolBoxButtonFactory.GetVisible()`.
 
 ## Core interfaces
@@ -50,6 +50,7 @@ The entry point for a custom tool. Every tool window must have a provider that i
 | `Id` | `string` | Unique identifier used as the registry key (e.g. `"scenario_editor"`) |
 | `LocaleKey` | `string` | Translation key for the tool's display name, resolved via `TranslationServer.Translate` |
 | `CreateWindow()` | `Window` | Creates a new `Window` instance for this tool. The caller is responsible for adding it to the scene tree and displaying it |
+| `AddMenuButton(Container)` | `void` | Appends the tool's launcher button to the main menu's tool block. Use `ToolMenuButton.Attach(container, this)` for the standard button (localized caption, opens the window on press, retranslated on language change) |
 
 ### `IToolBoxButton`
 
@@ -100,7 +101,7 @@ Singleton registry (`ToolFactory.Instance`) for `IToolProvider` implementations.
 | `Register(IToolProvider)` | Adds a tool; duplicates by `Id` are silently ignored (first-wins) |
 | `RegisterAssembly(Assembly)` | Scans an assembly for `IToolProvider` implementations and registers them — the primary hook for mods |
 | `Get(string id)` | Looks up a tool by `Id`, returns `null` if not found |
-| `GetAll()` | Returns all registered tools as a read-only list — used by `MainMenu` for the Tools dropdown |
+| `GetAll()` | Returns all registered tools as a read-only list — used by `MainMenu` to ask each tool for its menu button |
 
 Logging uses the `"TOOLS"` category.
 
@@ -132,7 +133,7 @@ During `_Ready()`:
 
 ## Built-in tools
 
-The `tools` mod provides four development tools:
+The `tools` mod provides five development tools:
 
 | Tool ID | Description | Locale Key |
 |---|---|---|
@@ -140,8 +141,9 @@ The `tools` mod provides four development tools:
 | `scene_builder` | Interactive Godot scene inspector — wrapper template picker, live viewport with node hierarchy tree, C# code editor with compile-and-run | `tools/scene_builder/title` |
 | `light_editor` | Edits static lights on backgrounds — light list (max 10), per-light radius/influence/color editors, draggable handles, shader preview, JSON export/import | `tools/light_editor/title` |
 | `interactive_editor` | Creates/edits interactive object definitions — BG preview with draggable collider handles (rect, circle, polygon), JSON output, load/save to mod directories | `tools/interactive_editor/title` |
+| `catalog_export` | Exports a catalog entry (`catalog.json`) for a mod — download URL, category, tags, changelog, status, min game version, icon URL | `mods/catalog_title` |
 
-Each tool has a provider class (`ScenarioEditorToolProvider`, `SceneBuilderToolProvider`, `LightEditorToolProvider`, `InteractiveEditorToolProvider`) implementing `IToolProvider`, and a dedicated window class extending `ToolWindow`.
+Each tool has a provider class (`ScenarioEditorToolProvider`, `SceneBuilderToolProvider`, `LightEditorToolProvider`, `InteractiveEditorToolProvider`, `CatalogExportToolProvider`) implementing `IToolProvider`, and a dedicated window class extending `ToolWindow`.
 
 Two tools also provide `IToolBoxButton` implementations for quick access from the HUD toolbar:
 - `LightEditorToolBoxButton` — always visible

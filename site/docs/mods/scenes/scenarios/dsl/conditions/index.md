@@ -97,7 +97,7 @@ This scenario only fires **after** the player fought the wolf but **before** the
 ### Multiple quest dependencies
 
 ```scenario
-condition: PrologQuest.hasTag("met_marao") && MeetingMurakamiQuest.hasTag("recruited")
+condition: AwakeningQuest.hasTag("met_marao") && MeetingMurakamiQuest.hasTag("recruited")
 ```
 
 Both conditions must be met.
@@ -105,7 +105,7 @@ Both conditions must be met.
 ### Either/or branching
 
 ```scenario
-condition: PrologQuest.hasTag("found_book") || PrologQuest.hasTag("found_map")
+condition: AwakeningQuest.hasTag("found_book") || AwakeningQuest.hasTag("found_map")
 ```
 
 Runs if the player found either the book OR the map.
@@ -113,7 +113,7 @@ Runs if the player found either the book OR the map.
 ### Negation with OR
 
 ```scenario
-condition: !PrologQuest.hasTag("tutorial_done") && (PrologQuest.hasTag("woke_up") || PrologQuest.hasTag("in_alley"))
+condition: !AwakeningQuest.hasTag("tutorial_done") && (AwakeningQuest.hasTag("woke_up") || AwakeningQuest.hasTag("in_alley"))
 ```
 
 The tutorial hasn't been done yet, but the player has woken up or is in the alley.
@@ -121,10 +121,10 @@ The tutorial hasn't been done yet, but the player has woken up or is in the alle
 ### Status-based progression
 
 ```scenario
-condition: PrologQuest.Status >= 2
+condition: AwakeningQuest.Status >= 2
 ```
 
-Runs when PrologQuest reaches status 2 or higher.
+Runs when AwakeningQuest reaches status 2 or higher.
 
 ### Using DataStatus for numeric progress
 
@@ -137,7 +137,7 @@ Runs when the quest's numeric progress counter reaches 10 or more.
 ### Combining quest conditions with flags
 
 ```scenario
-condition: PrologQuest.hasTag("met_marao") && boss_battle == "done"
+condition: AwakeningQuest.hasTag("met_marao") && boss_battle == "done"
 ```
 
 Runs when the prolog tag is set AND the scene flag `boss_battle` equals `"done"`.

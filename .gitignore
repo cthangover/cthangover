@@ -6,6 +6,7 @@
 sdk/
 bin/
 obj/
+mockups/
 
 #ai
 .omo/

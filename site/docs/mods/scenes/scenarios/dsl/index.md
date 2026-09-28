@@ -127,7 +127,7 @@ The target is a scene name defined in `scenes/{name}.json`.
 | `speed=` | Transition speed as a float (default `4`) |
 | `hidden=` | `hidden=true` transitions showing only the scene background |
 
-The names `mainmenu`, `menu`, and `battle` are built-in: they are routed to the engine's native Godot scenes (main menu / battle) instead of mod-defined scenes.
+The names `mainmenu` and `menu` are built-in: they are routed to the engine's native Godot scenes instead of mod-defined scenes. Any other name may be a scenario scene or a scene route registered by a mod through `SceneRouteRegistry` — for example `battle` is registered by `turn_battle_base` (fade transition plus combat music), so the core does not hardcode it.
 
 ### `foreground`
 Sets or clears the foreground layer image (rendered above characters).

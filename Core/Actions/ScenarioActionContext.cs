@@ -34,12 +34,6 @@ namespace Cthangover.Core.Actions
         /// </summary>
         public ICharacterService Character   { get; } = new CharacterServiceImpl();
         /// <summary>
-        /// Service accessor for battle initiation. Instantiated
-        /// per-context. Constructs BattleData capturing current background
-        /// and lighting state at the moment of Init() call.
-        /// </summary>
-        public IBattleService    Battle      { get; } = new BattleServiceImpl();
-        /// <summary>
         /// Service accessor for lighting control. Instantiated per-context.
         /// Thin wrapper around UiLightController singleton.
         /// </summary>

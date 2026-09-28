@@ -44,6 +44,7 @@ settings/volume = Volume
 | `items/` | Item names and descriptions |
 | `rooms/` | Room/scene interaction prompts |
 | `quest/` | Quest names and status descriptions |
+| `quest/.../tag/` | Quest tag stamps in the journal (`{quest Name}/tag/{tag}`) |
 | `ui/` | Interface labels (menus, battle UI, cooking) |
 | `settings/` | Settings screen labels |
 | `prolog/` | Prologue narrative text |

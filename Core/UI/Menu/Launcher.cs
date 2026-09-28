@@ -86,9 +86,10 @@ namespace Cthangover.Core.UI.Menu
         private Control _bootOverlay;
 
         /// <summary>
-        /// Full-screen dark overlay with a streaming boot log. Drawn before mod
-        /// initialisation so the player sees live progress instead of a frozen
-        /// window while mods compile on a background thread.
+        /// Full-screen dark overlay with a streaming boot log and a localized
+        /// first-launch hint. Drawn before mod initialisation so the player sees
+        /// live progress instead of a frozen window while mods compile on a
+        /// background thread.
         /// </summary>
         private void ShowBootOverlay()
         {
@@ -100,6 +101,19 @@ namespace Cthangover.Core.UI.Menu
             bg.SetAnchorsPreset(LayoutPreset.FullRect);
             bg.Color = UiTokens.Page;
             _bootOverlay.AddChild(bg);
+
+            var hint = new Label();
+            hint.Text = BootMessages.FirstLaunchHint(GameData.Instance?.Settings?.Language);
+            hint.SetAnchorsPreset(LayoutPreset.TopWide);
+            hint.OffsetLeft = UiTokens.Space8;
+            hint.OffsetRight = -UiTokens.Space8;
+            hint.OffsetTop = UiTokens.Space9;
+            hint.OffsetBottom = UiTokens.Space9;
+            hint.HorizontalAlignment = HorizontalAlignment.Center;
+            hint.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+            hint.AddThemeFontSizeOverride("font_size", UiTokens.FontLead);
+            hint.AddThemeColorOverride("font_color", UiTokens.Body);
+            _bootOverlay.AddChild(hint);
 
             var log = new BootLogPanel();
             log.SetAnchorsPreset(LayoutPreset.FullRect);

@@ -7,7 +7,7 @@ namespace Cthangover.Core.Actions;
 ///     Context passed to IScenarioAction.Run — provides dialog variable access
 ///     (GetParam) and references to all subsystem service interfaces. Acts as a
 ///     facade: a single object that grants the action access to quests, characters,
-///     battle, lighting, scene nodes, mod registry, and inventory, plus logging.
+///     lighting, scene nodes, mod registry, and inventory, plus logging.
 ///     GetParam reads from the DialogRuntime's variable store, so actions can
 ///     consume values set by the scenario DSL's "set" command or by earlier actions.
 /// </summary>
@@ -26,13 +26,6 @@ public interface IActionContext
     ///     ID strings from scenario parameters.
     /// </summary>
     ICharacterService Character { get; }
-
-    /// <summary>
-    ///     Battle subsystem: constructs BattleData from scenario parameters
-    ///     (scene type, enemy list, quest binding) and stores it in runtime
-    ///     data for consumption by the battle scene loader.
-    /// </summary>
-    IBattleService Battle { get; }
 
     /// <summary>
     ///     Lighting subsystem: controls depth/albedo texture maps on the

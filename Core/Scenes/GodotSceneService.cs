@@ -9,7 +9,7 @@ namespace Cthangover.Core.Scenes
 {
 	/// <summary>
 	/// Manages native Godot scene file (.tscn) transitions with a shader-based fade
-	/// overlay. Handles scene routing for menus, battle, and the main base scene.
+	/// overlay. Handles scene routing for menus, mod scene routes and the main base scene.
 	/// Orchestrates the full transition lifecycle: fade-out, synchronous scene change
 	/// via <see cref="SceneTree.ChangeSceneToFile"/>, deferred shader patching, subscription
 	/// execution, and fade-in. The static <see cref="IsTransitioning"/> flag is consumed
@@ -43,23 +43,26 @@ namespace Cthangover.Core.Scenes
 
 		/// <summary>
 		/// Initiates loading a .tscn scene file. Notifies all music players in the
-		/// "music_player" group about the scene type, then delegates to
-		/// <see cref="BeginSceneTransition"/> for the actual transition. Battle scenes
-		/// receive a fade effect; non-battle scenes switch immediately.
+		/// "music_player" group when the target is a registered mod route, then
+		/// delegates to <see cref="BeginSceneTransition"/> for the actual transition.
+		/// Routes registered with fade enabled receive the shader transition;
+		/// everything else switches immediately.
 		/// </summary>
 		/// <param name="nextScene">The resource path to the .tscn file to load.</param>
 		public void LoadScene(string nextScene)
 		{
 			GameLogger.Log("SCENE", $"load scene '{nextScene}'...");
 
-			foreach (var musicPlayer in GetTree().GetNodesInGroup("music_player"))
+			var route = SceneRouteRegistry.FindByPath(nextScene);
+			if (route != null && !string.IsNullOrEmpty(route.MusicScene))
 			{
-				if (musicPlayer is MusicPlayerBehaviour cast)
+				foreach (var musicPlayer in GetTree().GetNodesInGroup("music_player"))
 				{
-					GameLogger.Log("AUDIO", $"GodotSceneService notifying MusicPlayer about scene '{nextScene}'");
-					var fileName = System.IO.Path.GetFileNameWithoutExtension(nextScene);
-					if (System.Enum.TryParse<GodotSceneType>(fileName, true, out var sceneType))
-						cast.UpdateMusicType(sceneType);
+					if (musicPlayer is MusicPlayerBehaviour cast)
+					{
+						GameLogger.Log("AUDIO", $"GodotSceneService notifying MusicPlayer about route '{route.LogicalName}'");
+						cast.UpdateMusicType(route.MusicScene);
+					}
 				}
 			}
 
@@ -70,7 +73,7 @@ namespace Cthangover.Core.Scenes
 		{
 			pendingScenePath = nextScene;
 
-			if (!IsBattlePath(pendingScenePath))
+			if (!ShouldFade(pendingScenePath))
 			{
 				PerformSceneSwitch();
 				return;
@@ -103,9 +106,10 @@ namespace Cthangover.Core.Scenes
 			}
 		}
 
-		private static bool IsBattlePath(string scenePath)
+		private static bool ShouldFade(string scenePath)
 		{
-			return scenePath != null && scenePath.IndexOf("battle", StringComparison.OrdinalIgnoreCase) >= 0;
+			var route = SceneRouteRegistry.FindByPath(scenePath);
+			return route != null && route.Fade;
 		}
 
 		private void EnsureOverlay(Node root)
@@ -195,7 +199,7 @@ namespace Cthangover.Core.Scenes
 			CallDeferred(nameof(PatchShaderMaterialsAfterLoad));
 			CallDeferred(nameof(RunSubscriptionAfterLoad));
 
-			if (IsBattlePath(pendingScenePath))
+			if (ShouldFade(pendingScenePath))
 				CallDeferred(nameof(StartFadeInAfterSwitch));
 		}
 
@@ -303,6 +307,28 @@ namespace Cthangover.Core.Scenes
 		}
 
 		/// <summary>
+		/// Switches to a scene registered by a mod through
+		/// <see cref="SceneRouteRegistry"/>. Publishes the exit event for the
+		/// current scene and remembers the route's logical name so the entered
+		/// event carries it, then loads the mod-relative tscn. This is the route
+		/// counterpart of <see cref="SwitchScene(GodotSceneType)"/>.
+		/// </summary>
+		public void SwitchRoute(SceneRoute route)
+		{
+			if (route == null || string.IsNullOrEmpty(route.ScenePath))
+				return;
+
+			if (!string.IsNullOrEmpty(currentGodotSceneName))
+				ModEventBus.Publish(new SceneExitedEvent { SceneName = currentGodotSceneName });
+
+			// Keep the logical name exactly as the mod registered it: playlist
+			// scene keys and mod sound groups are matched case-sensitively.
+			pendingSubscriptionSceneName = route.LogicalName;
+			currentGodotSceneName = route.LogicalName;
+			LoadScene(route.ScenePath);
+		}
+
+		/// <summary>
 		/// Convenience method that switches to the main menu scene.
 		/// Equivalent to <c>SwitchScene(GodotSceneType.MainMenu)</c>.
 		/// </summary>
@@ -312,17 +338,8 @@ namespace Cthangover.Core.Scenes
 		}
 
 		/// <summary>
-		/// Convenience method that switches to the battle scene.
-		/// Equivalent to <c>SwitchScene(GodotSceneType.Battle)</c>.
-		/// </summary>
-		public void SwitchToBattle()
-		{
-			SwitchScene(GodotSceneType.Battle);
-		}
-
-		/// <summary>
 		/// Loads the base shell scene. Encapsulates the shell path so that
-		/// menus, the battle return flow and mods never hardcode
+		/// menus, return flows and mods never hardcode
 		/// <c>scenes/ui/base_scene.tscn</c>. Unlike
 		/// <see cref="SwitchScene(GodotSceneType)"/> this keeps the current
 		/// pending-logical-scene flow: the shell's event chain picks up
@@ -336,16 +353,12 @@ namespace Cthangover.Core.Scenes
 
 		/// <summary>
 		/// Single source of truth for scene paths by <see cref="GodotSceneType"/>.
-		/// Only menus remain <c>res://</c> paths handled by Godot's loader; the
-		/// shell and battle paths are mod-relative and built by the runtime tscn
-		/// pipeline (<see cref="TscnSceneResolver"/>, shell scene provided by the
-		/// <c>core</c> mod). Callers should ask for a scene type instead of
-		/// hardcoding paths themselves.
+		/// Only the main menu and the shell remain here; every gameplay scene is a
+		/// mod route resolved through <see cref="SceneRouteRegistry"/>. Callers
+		/// should ask for a scene type instead of hardcoding paths themselves.
 		/// </summary>
 		public static string GetScenePath(GodotSceneType type)
 		{
-			if (type == GodotSceneType.Battle)
-				return BattleSceneRegistry.ScenePath;
 			if (type == GodotSceneType.MainMenu)
 				return "res://scenes/menu/main_menu.tscn";
 			if (type == GodotSceneType.BaseScene)

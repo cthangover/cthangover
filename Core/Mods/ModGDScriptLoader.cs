@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Cthangover.Core.Actions;
-using Cthangover.Core.Battle;
-using Cthangover.Core.Battle.Actions;
 using Cthangover.Core.Events;
 using Cthangover.Core.Factories.Impls;
 using Cthangover.Core.Items;
@@ -50,6 +48,8 @@ public static class ModGDScriptLoader
 
 					AutoRegisterEventHandlers(obj, modInfo.Id);
 
+					GDScriptHookRegistry.TryRegisterAll(obj, modInfo.Id, filePath);
+
 					if (obj.HasMethod("get_name") && obj.HasMethod("run"))
 					{
 						var name = obj.Call("get_name").AsString();
@@ -74,18 +74,6 @@ public static class ModGDScriptLoader
 						}
 					}
 
-					if (obj.HasMethod("get_action_id") && obj.HasMethod("execute"))
-					{
-						var actionId = obj.Call("get_action_id").AsString();
-						if (!string.IsNullOrEmpty(actionId))
-						{
-							var executor = new GDBattleActionExecutor(actionId, obj);
-							ActionExecutorHub.Instance.RegisterGlobal(executor);
-							GameLogger.Log("GDS_MOD",
-								$"Registered GDScript battle executor '{actionId}' from mod '{modInfo.Id}'");
-						}
-					}
-
 					if (obj.HasMethod("get_item_action_id") && obj.HasMethod("use"))
 					{
 						var itemActionId = obj.Call("get_item_action_id").AsString();
@@ -103,21 +91,6 @@ public static class ModGDScriptLoader
 						ModInitializerRegistry.RegisterGDScript(initializer, kvp.Key);
 						GameLogger.Log("GDS_MOD",
 							$"Registered GDScript initializer for mod '{modInfo.Id}'");
-					}
-
-					if ((obj.HasMethod("on_winground_before_exp") ||
-					     obj.HasMethod("on_winground_after_loot") ||
-					     obj.HasMethod("on_winground_before_show")) &&
-					    obj.HasMethod("get_winground_listener_id"))
-					{
-						var listenerId = obj.Call("get_winground_listener_id").AsString();
-						if (!string.IsNullOrEmpty(listenerId))
-						{
-							var listener = new GDWingroundListener(listenerId, obj);
-							WingroundListenerRegistry.Instance.RegisterListener(listener);
-							GameLogger.Log("GDS_MOD",
-								$"Registered GDScript winground listener '{listenerId}' from mod '{modInfo.Id}'");
-						}
 					}
 				});
 			}

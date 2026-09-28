@@ -28,8 +28,6 @@ namespace Cthangover.Core.Autotest
 			Test_QuestNotify_DelegatesToInner();
 			Test_CharAddToParty_DelegatesToInner();
 			Test_CharNotify_DelegatesToInner();
-			Test_BattleInit_DelegatesToInner_WithAllArgs();
-			Test_BattleInit_DelegatesToInner_EmptyOptionalArgsBecomeNull();
 			Test_LightingClearMap_DelegatesToInner();
 			Test_LightingSetTime_DelegatesToInner();
 			Test_SceneInstantiate_DelegatesToInner();
@@ -185,36 +183,6 @@ namespace Cthangover.Core.Autotest
 			AssertEqual("al_azif", charSvc.LastNotifyType, "SendNotification type");
 		}
 
-		private void Test_BattleInit_DelegatesToInner_WithAllArgs()
-		{
-			var mock = new MockActionContext();
-			var battleSvc = new MockBattleService();
-			mock.Battle = battleSvc;
-			var core = new GDActionContextCore { Inner = mock };
-
-			core.Battle.Init("battle_scene", "enemy1,enemy2", "quest_bind", "started");
-
-			AssertEqual("battle_scene", battleSvc.LastSceneType, "Init sceneType");
-			AssertEqual("enemy1,enemy2", battleSvc.LastEnemies, "Init enemies");
-			AssertEqual("quest_bind", battleSvc.LastQuestId, "Init questId");
-			AssertEqual("started", battleSvc.LastNewTag, "Init newTag");
-		}
-
-		private void Test_BattleInit_DelegatesToInner_EmptyOptionalArgsBecomeNull()
-		{
-			var mock = new MockActionContext();
-			var battleSvc = new MockBattleService();
-			mock.Battle = battleSvc;
-			var core = new GDActionContextCore { Inner = mock };
-
-			core.Battle.Init("s", "e", "", "");
-
-			AssertEqual("s", battleSvc.LastSceneType, "Init sceneType (empty optionals)");
-			AssertEqual("e", battleSvc.LastEnemies, "Init enemies (empty optionals)");
-			AssertNull(battleSvc.LastQuestId, "Init questId null");
-			AssertNull(battleSvc.LastNewTag, "Init newTag null");
-		}
-
 		private void Test_LightingClearMap_DelegatesToInner()
 		{
 			var mock = new MockActionContext();
@@ -328,7 +296,6 @@ namespace Cthangover.Core.Autotest
 
 		public IQuestService Quests { get; set; }
 		public ICharacterService Character { get; set; }
-		public IBattleService Battle { get; set; }
 		public ILightingService Lighting { get; set; }
 		public ISceneNodeService Scene { get; set; }
 		public IModRegistry ModRegistry { get; set; }
@@ -397,22 +364,6 @@ namespace Cthangover.Core.Autotest
 
 		public void AddToParty(string type) => LastAddToPartyType = type;
 		public void SendNotification(string type) => LastNotifyType = type;
-	}
-
-	internal class MockBattleService : IBattleService
-	{
-		public string LastSceneType { get; private set; }
-		public string LastEnemies { get; private set; }
-		public string LastQuestId { get; private set; }
-		public string LastNewTag { get; private set; }
-
-		public void Init(string sceneType, string enemies, string questId = null, string newTag = null)
-		{
-			LastSceneType = sceneType;
-			LastEnemies = enemies;
-			LastQuestId = questId;
-			LastNewTag = newTag;
-		}
 	}
 
 	internal class MockLightingService : ILightingService

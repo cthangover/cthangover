@@ -19,10 +19,7 @@ Step 4 happens in `ModAssemblyLoader.RegisterAssembly` (`Core/Mods/ModAssemblyLo
 | `ScenarioCommandStrategyFactory` | `IScenarioCommandStrategy` implementations, indexed by `Command` name |
 | `SceneEventRegistry` (`Core/Scenes/`) | Classes decorated with `[SceneEvent]` deriving from `ExecutableEvent` |
 | `ItemActionFactory` | `IItemAction` implementations — item on-use behaviours, indexed by ID |
-| `BattleCoreRegistry` | `IBattleCore` implementations — custom battle systems |
-| `RecruitBehaviourRegistry` | `IRecruitBehaviour` behaviours and `IRecruitCondition` recruitment gates |
-| `WingroundListenerRegistry` | `IWingroundListener` implementations receiving winground lifecycle hooks |
-| `ToolFactory` | `IToolProvider` implementations — tools in the main-menu tools dropdown |
+| `ToolFactory` | `IToolProvider` implementations — tools that add launcher buttons to the main menu's tool block |
 | `ToolBoxButtonFactory` | `IToolBoxButton` implementations — toolbox UI buttons |
 | `ModInitializerRegistry` | `IModInitializer` mod entry points |
 | `ModSaveableRegistry` | `IModSaveable` implementations participating in save/load |
@@ -35,6 +32,8 @@ Step 4 happens in `ModAssemblyLoader.RegisterAssembly` (`Core/Mods/ModAssemblyLo
 | `ModManager.RegisterResolversFromAssembly` | `IModAssetResolver` implementations |
 
 Adding a new reflection-based plugin system to the kernel requires exactly one line in this method. Note that `ScriptTypeRegistry` (below) is populated separately — by `ModCompiler` right after each assembly compiles.
+
+Subsystems that now live in mods register their own implementations through an `IModInitializer` instead of this fan-out: battle cores and winground listeners (`turn_battle_base`) and recruit behaviours/conditions (`recruiting`). `ModEventBus` typed events with `[EventKey]` can also be declared in any mod — the GDScript bridge reads the attribute at publish time.
 
 ## ScriptTypeRegistry — resolving `.tscn` script paths
 

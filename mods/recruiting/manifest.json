@@ -1,0 +1,12 @@
+{
+  "id": "recruiting",
+  "name": "Recruiting",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Recruitment roster, conditions, behaviours and their save state",
+  "category": "gameplay",
+  "sources": [
+    "src/**/*.cs"
+  ],
+  "depends": []
+}

@@ -223,7 +223,7 @@ namespace Engine.Tests.Scenarios
         [Fact]
         public void Parse_Action_CreatesActionScenario()
         {
-            var dlg = ScenarioParser.Parse("action quest.set_status quest_id=PrologQuest status=Progress");
+            var dlg = ScenarioParser.Parse("action quest.set_status quest_id=AwakeningQuest status=Progress");
 
             Assert.Equal(3, dlg.Queue.Count);
             Assert.IsType<ActionSet>(dlg.Queue[0]);

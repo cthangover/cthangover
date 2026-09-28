@@ -15,6 +15,11 @@
       "timeoutSeconds": 120
     },
     {
+      "name": "recruiting",
+      "scene": "res://tests/Cthangover.Tests.Integration/Scenes/recruiting_test.tscn",
+      "timeoutSeconds": 120
+    },
+    {
       "name": "tscn",
       "scene": "res://tests/Cthangover.Tests.Integration/Scenes/tscn_test_scene.tscn",
       "timeoutSeconds": 120
@@ -51,6 +56,12 @@
       "name": "mod_manager",
       "scene": "res://tests/Cthangover.Tests.Integration/Scenes/main_menu_test_scene.tscn",
       "args": ["--test=mod_manager", "--timeout=60"],
+      "timeoutSeconds": 120
+    },
+    {
+      "name": "mod_collections",
+      "scene": "res://tests/Cthangover.Tests.Integration/Scenes/main_menu_test_scene.tscn",
+      "args": ["--test=mod_collections", "--timeout=60"],
       "timeoutSeconds": 120
     }
   ]

@@ -11,7 +11,6 @@ public class MockActionContext : IActionContext
 
     public IQuestService Quests { get; set; }
     public ICharacterService Character { get; set; }
-    public IBattleService Battle { get; set; }
     public ILightingService Lighting { get; set; }
     public ISceneNodeService Scene { get; set; }
     public Cthangover.Core.Mods.IModRegistry ModRegistry { get; set; }

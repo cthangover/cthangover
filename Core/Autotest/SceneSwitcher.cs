@@ -78,7 +78,7 @@ namespace Cthangover.Core.Autotest
 		/// Test hook for arbitrary mod scenes: builds every path from <c>--load=</c>
 		/// through <see cref="TscnScenes.LoadAndBuild"/> and logs the resulting root
 		/// type. Unlike <c>--ui=</c> it needs no registry entry, so it can validate
-		/// scenes that are only reachable through other UI (e.g. mods_menu).
+		/// scenes that are only reachable through other UI (e.g. settings_menu).
 		/// </summary>
 		private void ScheduleLoadCheck()
 		{
@@ -159,8 +159,8 @@ namespace Cthangover.Core.Autotest
 
 		/// <summary>
 		/// Instantiates a scene target for testing: native <c>res://</c> scenes go
-		/// through Godot's loader, while mod-relative paths (the shell and battle
-		/// scenes moved into mods) are built by the runtime tscn pipeline. Keeps
+		/// through Godot's loader, while mod-relative paths (the shell and route
+		/// scenes provided by mods) are built by the runtime tscn pipeline. Keeps
 		/// <c>--scene=</c> usable for both kinds without hardcoding which is which.
 		/// </summary>
 		private static Node InstantiateScene(string path)

@@ -4,7 +4,6 @@ using System.Text.Json;
 using Cthangover.Core.Factories.Impls;
 using Cthangover.Core.Items;
 using Cthangover.Core.Quests;
-using Cthangover.Core.Relationship;
 using Cthangover.Core.Utils;
 
 namespace Cthangover.Core.Settings
@@ -35,7 +34,7 @@ namespace Cthangover.Core.Settings
         /// <summary>
         /// Builds the <c>"__core__"</c> <see cref="ModSlot"/> with
         /// named <see cref="DataBlob"/> blocks for each subsystem
-        /// (Time, Lamp, Characters, Quests, Recruits, BattleSet,
+        /// (Time, Lamp, Characters, Quests, BattleSet,
         /// Inventory, Recipes, ActionPool, CompletedScenarios) and
         /// slot-level preview metadata in
         /// <see cref="ModMetadata.CustomData"/>.
@@ -66,7 +65,6 @@ namespace Cthangover.Core.Settings
 
             slot.Data["Characters"] = new DataBlob(1, runtime.CharacterData.Characters.Values.ToList());
             slot.Data["Quests"]     = new DataBlob(1, QuestFactory.Instance.GetAll());
-            slot.Data["Recruits"]   = new DataBlob(1, runtime.RecruitingData.Data);
             slot.Data["BattleSet"]  = new DataBlob(1, runtime.CharacterData.BattleSet.ToList());
             slot.Data["Inventory"]  = new DataBlob(1, runtime.Inventory.Items.Select(o =>
                 new CItem { ID = o.Item.ID, Count = o.Count }).ToList());
@@ -122,9 +120,6 @@ namespace Cthangover.Core.Settings
 
             if (coreSlot.Data.TryGetValue("Quests", out var questBlob))
                 QuestFactory.Instance.SetAll(questBlob.ReadJson<List<QuestBase>>());
-
-            if (coreSlot.Data.TryGetValue("Recruits", out var recBlob))
-                runtime.RecruitingData.Data = recBlob.ReadJson<List<Recruit>>() ?? new List<Recruit>();
 
             if (coreSlot.Data.TryGetValue("BattleSet", out var bsBlob))
                 runtime.CharacterData.BattleSet = bsBlob.ReadJson<List<string>>()?.ToHashSet()

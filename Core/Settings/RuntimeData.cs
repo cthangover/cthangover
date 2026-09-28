@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using Cthangover.Core.Characters;
 using Cthangover.Core.Items;
-using Cthangover.Core.Relationship;
 using Cthangover.Core.Scenes;
 using Cthangover.Core.Skills;
 
@@ -9,8 +8,8 @@ namespace Cthangover.Core.Settings
 {
     /// <summary>
     /// Central mutable state bag for the entire game session. Every subsystem
-    /// — time, characters, inventory, recipes, lamp, recruiting, skills,
-    /// and battle state — lives here. <see cref="SaveService.Save"/> samples
+    /// — time, characters, inventory, recipes, lamp and skills —
+    /// lives here. <see cref="SaveService.Save"/> samples
     /// all these fields into a <see cref="SavePackage"/> DTO; <see cref="SaveService.Load"/>
     /// writes them back. The <see cref="CurrentScene"/> property resolves
     /// the active scene name into a <see cref="Cthangover.Core.Scenes.GodotSceneType"/>
@@ -21,12 +20,8 @@ namespace Cthangover.Core.Settings
         /// <summary>In-game clock (minutes-based) driving day/night cycles.</summary>
         public TimeData Time { get; set; } = new TimeData(143546335);
 
-        /// <summary>Active battle encounter data; <c>null</c> when not in battle.</summary>
-        public BattleData     BattleData     { get; set; } = null;
         /// <summary>Recruited character roster with attributes and battle party set.</summary>
         public CharacterData  CharacterData  { get; set; } = new();
-        /// <summary>Active recruiting entries with cooldown timers.</summary>
-        public RecruitingData RecruitingData { get; set; } = new();
         /// <summary>Unlocked skills and their cooldown state.</summary>
         public SkillData      SkillData      { get; set; } = new();
         /// <summary>Player inventory of item stacks.</summary>

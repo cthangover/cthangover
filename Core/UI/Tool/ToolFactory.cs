@@ -10,7 +10,7 @@ namespace Cthangover.Core.UI.Tool
     /// Singleton registry for modding/dev tools (IToolProvider implementations).
     /// Discovers tools via reflection on construction; supports RegisterAssembly
     /// for mod-injected tools. Deduplicates by Id. Get/GetAll provide lookup
-    /// for the tools dropdown in MainMenu.
+    /// for the tool block of the main menu and the in-game toolbox.
     /// </summary>
     public class ToolFactory
     {

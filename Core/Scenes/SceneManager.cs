@@ -23,7 +23,8 @@ namespace Cthangover.Core.Scenes
     /// Central orchestrator for visual novel scene progression. Composes and schedules
     /// executable events from C# attributes and .scenario files, applies scene defaults
     /// (random background, ambient audio), and routes to native Godot scenes for menus
-    /// and battles. Manages the <see cref="ExecutableMainEventChain"/> queue and
+    /// and to mod-registered scene routes (see <see cref="SceneRouteRegistry"/>).
+    /// Manages the <see cref="ExecutableMainEventChain"/> queue and
     /// drives scene enter/exit lifecycle events consumed by mod GUI and gameplay hooks.
     /// </summary>
     public partial class SceneManager : Node
@@ -197,7 +198,7 @@ namespace Cthangover.Core.Scenes
         /// <see cref="ScenarioCondition.Evaluate"/>, valid events are instantiated and
         /// enqueued in the <see cref="ExecutableMainEventChain"/>. If no events exist,
         /// falls back to the scene's <see cref="SceneDefinition.DefaultScenario"/>.
-        /// Godot-native scenes (mainmenu, battle) are routed through <see cref="GodotSceneService"/>.
+        /// Godot-native scenes (mainmenu) and mod scene routes are routed through <see cref="GodotSceneService"/>.
         /// Publishes enter/exit lifecycle events consumed by mod hooks,
         /// applies a random default background, and updates music/ambient.
         /// </summary>
@@ -236,15 +237,17 @@ namespace Cthangover.Core.Scenes
                 }
             }
 
+            if (SceneRouteRegistry.TryGet(sceneName, out var route))
+            {
+                var routeService = GetNode<GodotSceneService>("/root/GodotSceneService");
+                routeService?.SwitchRoute(route);
+                return;
+            }
+
             if (IsGodotScene(sceneName))
             {
                 var sceneService = GetNode<GodotSceneService>("/root/GodotSceneService");
-                if (sceneService != null)
-                {
-                    var lower = sceneName.ToLowerInvariant();
-                    var sceneType = (lower == "mainmenu" || lower == "menu") ? GodotSceneType.MainMenu : GodotSceneType.Battle;
-                    sceneService.SwitchScene(sceneType);
-                }
+                sceneService?.SwitchScene(GodotSceneType.MainMenu);
                 return;
             }
 
@@ -431,9 +434,10 @@ namespace Cthangover.Core.Scenes
 
         /// <summary>
         /// True when the name is a built-in Godot scene route
-        /// (<c>mainmenu</c>/<c>menu</c>/<c>battle</c>) rather than a mod-defined
-        /// logical scene. Exposed so tooling — the validator mod — can classify
-        /// scenario scene references with the same rules as the runtime.
+        /// (<c>mainmenu</c>/<c>menu</c>) rather than a mod-provided route or a
+        /// mod-defined logical scene. Exposed so tooling — the validator mod —
+        /// can classify scenario scene references with the same rules as the
+        /// runtime.
         /// </summary>
         public static bool IsNativeSceneName(string sceneName)
         {
@@ -441,17 +445,18 @@ namespace Cthangover.Core.Scenes
                 return false;
 
             var lower = sceneName.ToLowerInvariant();
-            return lower == "mainmenu" || lower == "menu" || lower == "battle";
+            return lower == "mainmenu" || lower == "menu";
         }
 
         private static bool IsGodotScene(string sceneName) => IsNativeSceneName(sceneName);
 
         /// <summary>
-        /// Checks whether a logical scene name can be switched to: either a
-        /// Godot-native route (mainmenu/menu/battle) or a scenario scene
-        /// collected from the mods. Tools such as <c>SceneSwitcher</c> use it
-        /// to reject typos with a non-zero exit code instead of silently
-        /// running an empty scene and reporting success.
+        /// Checks whether a logical scene name can be switched to: a Godot-native
+        /// route (mainmenu/menu), a scene route registered by a mod through
+        /// <see cref="SceneRouteRegistry"/>, or a scenario scene collected from the
+        /// mods. Tools such as <c>SceneSwitcher</c> use it to reject typos with a
+        /// non-zero exit code instead of silently running an empty scene and
+        /// reporting success.
         /// </summary>
         public bool HasScene(string sceneName)
         {
@@ -460,6 +465,8 @@ namespace Cthangover.Core.Scenes
             if (!isInitialized)
                 Initialize();
             if (IsGodotScene(sceneName))
+                return true;
+            if (SceneRouteRegistry.TryGet(sceneName, out _))
                 return true;
             return allScenes != null && allScenes.ContainsKey(sceneName);
         }

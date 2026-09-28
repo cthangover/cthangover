@@ -24,7 +24,6 @@ namespace Engine.Tests.Settings
             Assert.True(slot.Data.ContainsKey("Lamp"));
             Assert.True(slot.Data.ContainsKey("Characters"));
             Assert.True(slot.Data.ContainsKey("Quests"));
-            Assert.True(slot.Data.ContainsKey("Recruits"));
             Assert.True(slot.Data.ContainsKey("BattleSet"));
             Assert.True(slot.Data.ContainsKey("Inventory"));
             Assert.True(slot.Data.ContainsKey("Recipes"));

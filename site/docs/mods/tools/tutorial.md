@@ -15,6 +15,9 @@ namespace MyMod
         public string Id => "my_tool";
         public string LocaleKey => "tools/my_tool/title";
         public Window CreateWindow() => new MyToolWindow();
+
+        // Adds the launcher button to the main menu's tool block (below Exit).
+        public void AddMenuButton(Container container) => ToolMenuButton.Attach(container, this);
     }
 }
 ```
@@ -37,7 +40,7 @@ namespace MyMod
             var toolbar = CreateToolbar();
             root.AddChild(toolbar);
 
-            var closeBtn = new Button { Text = TranslationServer.Translate("tools/close") };
+            var closeBtn = new Button { Text = TranslationServer.Translate("tools/my_tool/close") };
             closeBtn.Pressed += () => QueueFree();
             toolbar.AddChild(closeBtn);
         }
@@ -68,13 +71,14 @@ In your mod's `locale/ui_en.properties`:
 
 ```properties
 tools/my_tool/title = My Custom Tool
+tools/my_tool/close = Close
 ```
 
 ## Registration checklist
 
 | Step | Action |
 |---|---|
-| 1 | Create provider class implementing `IToolProvider` with a unique `Id` |
+| 1 | Create provider class implementing `IToolProvider` with a unique `Id` and an `AddMenuButton` that attaches the launcher button |
 | 2 | Create window class extending `ToolWindow` — use `CreateFillContainer`, `CreateToolbar`, etc. |
 | 3 | (Optional) Create `IToolBoxButton` class for a persistent HUD button |
 | 4 | Add locale keys in your mod's `locale/ui_en.properties` |
@@ -88,12 +92,10 @@ Common UI locale keys used by the tool system:
 
 | Key | Context |
 |---|---|
-| `tools/title` | Main menu "Tools" label |
-| `tools/select_tool` | Tool selection dialog |
-| `tools/launch` | Launch button |
-| `tools/close` | Close button |
 | `tools/unsaved_title` | Unsaved changes dialog title |
 | `tools/unsaved_text` | Unsaved changes dialog body |
+
+Tool-specific keys (`tools/<tool_id>/...`) live in the tool mod's own locale files.
 
 ## Related
 

@@ -12,9 +12,9 @@ namespace Cthangover.Core.UI
     /// <summary>
     /// Persistent autoload that owns the mod-built GUI for the whole session.
     /// Panels live under its own <see cref="CanvasLayer"/> instead of the base
-    /// scene, so entering a separate native scene (battle) and coming back does
-    /// not rebuild them — the registry only re-attaches and re-shows what is
-    /// already cached.
+    /// scene, so entering a separate native or mod-routed scene (e.g. battle)
+    /// and coming back does not rebuild them — the registry only re-attaches
+    /// and re-shows what is already cached.
     /// <para/>
     /// Responsibilities: instance cache keyed by <see cref="UiEntry.Id"/>, lazy
     /// construction through <see cref="TscnScenes"/>, scene-based visibility

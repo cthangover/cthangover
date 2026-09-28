@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Cthangover.Core.Cards.StatusEffect;
 using Cthangover.Core.Factories;
 using Godot;
 
@@ -10,9 +9,11 @@ namespace Cthangover.Core.Characters
     /// runtime. The Behaviour string is an extensibility hook — it names a
     /// behaviour class not defined here, resolved externally (likely by the AI
     /// or battle system). RecruitmentChance is the percentage for the recruit
-    /// system. Copy() deep-clones Attributes and StatusEffectQueue with the new
-    /// character reference — battle needs isolated copies so stat changes and
-    /// status effects during combat don't mutate the template data.
+    /// system. Copy() deep-clones Attributes so battle stat changes do not leak
+    /// back into the template data. Battle-only state that is not part of the
+    /// character identity (for example status effects) is owned by the battle
+    /// mod in a side table keyed by the character instance, so this model stays
+    /// free of battle subsystems.
     /// </summary>
     public class Character : IIdentifiable
     {
@@ -77,33 +78,24 @@ namespace Cthangover.Core.Characters
         /// range, and drop probability.
         /// </summary>
         public List<LootEntry>   Loot              { get; set; }
-        /// <summary>
-        /// Queue of active status effects (buffs, debuffs, DoTs). Owned
-        /// by this character — <see cref="Copy"/> passes a new owner
-        /// reference so effect callbacks target the correct instance.
-        /// </summary>
-        public StatusEffectQueue  StatusEffectQueue { get; set; }
 
         /// <summary>
-        /// Default constructor. Initializes Actions, Attributes, and
-        /// StatusEffectQueue with empty/default collections to prevent
-        /// null-reference errors in downstream code that iterates them.
-        /// StatusEffectQueue receives <c>this</c> as its owner.
+        /// Default constructor. Initializes Actions and Attributes with
+        /// empty/default collections to prevent null-reference errors in
+        /// downstream code that iterates them.
         /// </summary>
         public Character()
         {
             Actions           = new List<ActionCharacter>();
             Attributes        = new CharacterAttributes();
-            StatusEffectQueue = new StatusEffectQueue(this);
         }
         
         /// <summary>
         /// Creates an independent deep copy of this character. All scalar
-        /// fields are value-copied. <see cref="Attributes"/> and
-        /// <see cref="StatusEffectQueue"/> are deep-cloned — this is
-        /// critical for battle, where each combatant operates on an
-        /// isolated copy so temporary stat changes and status effects
-        /// don't leak back into the character template.
+        /// fields are value-copied. <see cref="Attributes"/> is deep-cloned —
+        /// this is critical for battle, where each combatant operates on an
+        /// isolated copy so temporary stat changes don't leak back into the
+        /// character template.
         /// </summary>
         public Character Copy()
         {
@@ -121,7 +113,6 @@ namespace Cthangover.Core.Characters
                 Loot              = Loot,
                 Attributes        = Attributes?.Copy(),
             };
-            character.StatusEffectQueue = StatusEffectQueue?.Copy(character);
             return character;
         }
     }

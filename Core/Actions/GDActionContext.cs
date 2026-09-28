@@ -10,7 +10,6 @@ public partial class GDActionContext : RefCounted
 
 	public GDQuestService Quests => Core.Quests;
 	public GDCharacterService Character => Core.Character;
-	public GDBattleService Battle => Core.Battle;
 	public GDLightingService Lighting => Core.Lighting;
 	public GDSceneNodeService Scene => Core.Scene;
 	public Items.GDInventoryService Inventory => Core.Inventory;

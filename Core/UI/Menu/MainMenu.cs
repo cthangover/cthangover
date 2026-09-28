@@ -13,10 +13,12 @@ namespace Cthangover.Core.UI.Menu
     /// (triggering mod discovery and IModInitializer callbacks), then
     /// checks GameLogger.CompilationErrors and shows a popup if any mods
     /// failed to compile. New Game sets the pending scene to "start_scene"
-    /// and loads BaseScene. The Tools button dynamically builds a
-    /// tool-selection Window from ToolFactory at click time, avoiding
-    /// hardcoding tool references. SettingsMenu and SaveLoadMenu are
-    /// created at ready time but hidden.
+    /// and loads BaseScene. The buttons form two blocks: game actions (with
+    /// mod-provided buttons collected by <see cref="MainMenuRegistry"/>) and,
+    /// below Exit, tool launchers — every tool appends its own button via
+    /// <see cref="IToolProvider.AddMenuButton"/>, so no tool list is
+    /// hardcoded here. SettingsMenu and SaveLoadMenu are created at ready
+    /// time but hidden.
     /// </summary>
     public partial class MainMenu : Control
     {
@@ -31,9 +33,7 @@ namespace Cthangover.Core.UI.Menu
             GetNode<Button>("MenuContainer/NewGameBtn").Pressed += OnNewGameClick;
             GetNode<Button>("MenuContainer/LoadBtn").Pressed += OnLoadClick;
             GetNode<Button>("MenuContainer/SettingsBtn").Pressed += OnSettingsClick;
-            GetNode<Button>("MenuContainer/ModsBtn").Pressed += OnModsClick;
             GetNode<Button>("MenuContainer/ExitBtn").Pressed += OnExitClick;
-            GetNode<Button>("MenuContainer/ToolsBtn").Pressed += OnToolsClick;
 
             var telegramLink = GetNode<RichTextLabel>("TelegramLink");
             telegramLink.MetaClicked += OnTelegramLinkClicked;
@@ -41,9 +41,7 @@ namespace Cthangover.Core.UI.Menu
             _btnKeys[GetNode<Button>("MenuContainer/NewGameBtn")] = "menu/newgame";
             _btnKeys[GetNode<Button>("MenuContainer/LoadBtn")] = "ui/menu/load";
             _btnKeys[GetNode<Button>("MenuContainer/SettingsBtn")] = "menu/settings";
-            _btnKeys[GetNode<Button>("MenuContainer/ModsBtn")] = "menu/mods";
             _btnKeys[GetNode<Button>("MenuContainer/ExitBtn")] = "menu/exit";
-            _btnKeys[GetNode<Button>("MenuContainer/ToolsBtn")] = "menu/tools";
 
             _settingsMenu = new ModScenePrefab("scenes/menu/settings_menu.tscn").Instantiate<SettingsMenu>();
             _settingsMenu.Visible = false;
@@ -60,6 +58,7 @@ namespace Cthangover.Core.UI.Menu
             sceneManager.Initialize();
 
             BuildModButtons();
+            BuildToolButtons();
             CheckModCompilationErrors();
         }
 
@@ -84,6 +83,33 @@ namespace Cthangover.Core.UI.Menu
             }
         }
 
+        /// <summary>
+        /// Lets every registered tool append its launcher button to the tool block
+        /// below Exit (<c>MenuContainer/ToolMenuButtons</c>). Tools register
+        /// themselves in <see cref="ToolFactory"/>, so the block stays empty when no
+        /// tools are installed and needs no changes when a mod introduces a new tool.
+        /// Runs after <see cref="SceneManager.Initialize"/> so mod assemblies are
+        /// already registered. Each button carries its translation key in metadata,
+        /// keeping <see cref="RefreshButtons"/> aware of it.
+        /// </summary>
+        private void BuildToolButtons()
+        {
+            var container = GetNodeOrNull<VBoxContainer>("MenuContainer/ToolMenuButtons");
+            if (container == null)
+                return;
+
+            foreach (var tool in ToolFactory.Instance.GetAll())
+                tool.AddMenuButton(container);
+
+            foreach (var child in container.GetChildren())
+            {
+                if (child is Button button && button.HasMeta(MainMenuBuilder.LocaleMetaKey))
+                    _btnKeys[button] = button.GetMeta(MainMenuBuilder.LocaleMetaKey).AsString();
+            }
+
+            GameLogger.Log("MAIN_MENU", $"Built {container.GetChildCount()} tool button(s)");
+        }
+
         private void CheckModCompilationErrors()
         {
             if (GameLogger.CompilationErrors.Count == 0)
@@ -91,62 +117,6 @@ namespace Cthangover.Core.UI.Menu
 
             var errorText = string.Join("\r\n", GameLogger.CompilationErrors);
             ShowModErrorPopup(errorText);
-        }
-
-        private void OnToolsClick()
-        {
-            var panel = new Window();
-            panel.Title = TranslationServer.Translate("tools/title");
-            panel.Unresizable = true;
-            panel.Size = new Vector2I(300, 160);
-            panel.CloseRequested += () => panel.QueueFree();
-            CthangoverTheme.Apply(panel);
-
-            var vbox = new VBoxContainer();
-            vbox.AnchorRight = 1f;
-            vbox.AnchorBottom = 1f;
-            vbox.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-            vbox.SizeFlagsVertical = SizeFlags.ExpandFill;
-            panel.AddChild(vbox);
-
-            vbox.AddChild(new Label { Text = TranslationServer.Translate("tools/select_tool") });
-
-            var dropdown = new OptionButton();
-            var tools = ToolFactory.Instance.GetAll();
-            foreach (var tool in tools)
-            {
-                dropdown.AddItem(TranslationServer.Translate(tool.LocaleKey));
-                dropdown.SetItemMetadata(dropdown.ItemCount - 1, tool.Id);
-            }
-            dropdown.Selected = 0;
-            dropdown.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-            vbox.AddChild(dropdown);
-
-            var btnHBox = new HBoxContainer();
-            btnHBox.Alignment = BoxContainer.AlignmentMode.End;
-            vbox.AddChild(btnHBox);
-
-            var launchBtn = new Button
-            {
-                Text = TranslationServer.Translate("tools/launch"),
-                Disabled = tools.Count == 0
-            };
-            launchBtn.Pressed += () =>
-            {
-                var meta = dropdown.GetItemMetadata(dropdown.Selected).AsString();
-                var tool = ToolFactory.Instance.Get(meta);
-                if (tool != null)
-                    ToolWindow.ShowWindow(tool.CreateWindow());
-                panel.QueueFree();
-            };
-            btnHBox.AddChild(launchBtn);
-
-            var closeBtn = new Button { Text = TranslationServer.Translate("tools/close") };
-            closeBtn.Pressed += () => panel.QueueFree();
-            btnHBox.AddChild(closeBtn);
-
-            AddChild(panel);
-            panel.PopupCentered();
         }
 
         private void RefreshButtons()
@@ -199,17 +169,6 @@ namespace Cthangover.Core.UI.Menu
         public void OnSettingsClick()
         {
             _settingsMenu.Visible = true;
-        }
-
-        /// <summary>
-        /// Opens the <see cref="ModsMenu"/> as a fullscreen overlay for
-        /// managing mod enable/disable state. Changes take effect after
-        /// restart.
-        /// </summary>
-        public void OnModsClick()
-        {
-            var modsMenu = new ModScenePrefab("scenes/menu/mods_menu.tscn").Instantiate<ModsMenu>();
-            AddChild(modsMenu);
         }
 
         /// <summary>

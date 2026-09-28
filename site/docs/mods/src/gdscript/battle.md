@@ -2,7 +2,11 @@
 
 A GDScript that has both `get_action_id()` and `execute(action, user, target)` is registered as a **battle action executor**. The `action_id` must match an `ActionCharacter.ID` in the character's JSON data.
 
+Recognition and registration happen in the turn-battle mod: `TurnBattleGDScriptHook` is installed into the core's `GDScriptHookRegistry`, which `ModGDScriptLoader` offers every compiled `.gd` file. A script that returns a dictionary from `execute` is wrapped in `GDBattleActionExecutor` and added to the global `ActionExecutorHub` pool.
+
 ## Executor contract
+
+Arguments are plain Godot dictionaries — mod-authored C# classes get no Godot source generation, so custom RefCounted DTOs would be invisible to GDScript.
 
 ```gdscript
 extends RefCounted
@@ -11,58 +15,60 @@ func get_action_id():
     return "my.custom_attack"
 
 func execute(action, user, target):
-    var result = GDBattleResult.new()
-
-    var damage = user.AttackValue * 2 - target.DefenceValue
+    var damage = user["attack_value"] * 2 - target["defence_value"]
     if damage < 1:
         damage = 1
 
-    result.TargetDamage = damage
-    result.TargetDefence = target.DefenceValue
-    result.Result = true
-
-    return result
+    return {
+        "target_damage": damage,
+        "target_defence": target["defence_value"],
+        "result": true,
+    }
 ```
 
 ## Parameters
 
 | Parameter | Type | Description |
 |---|---|---|
-| `action` | `GDActionCharacter` | The ActionCharacter definition (Id, Name, Description, Type) |
-| `user` | `GDCharacter` | The character performing the action |
-| `target` | `GDCharacter` | The character receiving the action |
+| `action` | `Dictionary` | The ActionCharacter definition (`id`, `name`, `description`, `type`, `properties`) |
+| `user` | `Dictionary` | The character performing the action |
+| `target` | `Dictionary` | The character receiving the action |
 
-## GDActionCharacter fields
+## `action` fields
 
 | Field | Type |
 |---|---|
-| `Id` | `string` |
-| `Name` | `string` |
-| `Description` | `string` |
-| `Type` | `int` |
+| `id` | `String` |
+| `name` | `String` |
+| `description` | `String` |
+| `type` | `int` |
+| `properties` | `Dictionary` (string → string, the raw `PropertyData` bag) |
 
-## GDCharacter fields
-
-| Field | Type | Description |
-|---|---|---|
-| `Id` | `string` | Character identifier |
-| `Name` | `string` | Display name |
-| `Level` | `int` | Current level |
-| `Exp` | `int` | Experience points |
-| `RecruitmentChance` | `int` | Recruitment chance (0-100) |
-| `HealthValue` / `HealthMax` | `int` | Current / max health |
-| `DefenceValue` / `DefenceMax` | `int` | Current / max defence |
-| `AttackValue` / `AttackMax` | `int` | Current / max attack |
-| `StrengthValue` / `StrengthMax` | `int` | Current / max strength |
-| `MagicValue` / `MagicMax` | `int` | Current / max magic |
-| `PointValue` / `PointMax` | `int` | Current / max action points |
-
-## GDBattleResult fields
+## Character fields
 
 | Field | Type | Description |
 |---|---|---|
-| `SourceDamage` | `int` | Damage dealt by source |
-| `SourceDefence` | `int` | Source defence value |
-| `TargetDamage` | `int` | Damage dealt to target |
-| `TargetDefence` | `int` | Target defence value |
-| `Result` | `bool` | Whether the action succeeded (default `true`) |
+| `id` | `String` | Character identifier |
+| `name` | `String` | Display name |
+| `level` | `int` | Current level |
+| `exp` | `int` | Experience points |
+| `recruitment_chance` | `int` | Recruitment chance (0-100) |
+| `health_value` / `health_max` | `int` | Current / max health |
+| `defence_value` / `defence_max` | `int` | Current / max defence |
+| `attack_value` / `attack_max` | `int` | Current / max attack |
+| `point_value` / `point_max` | `int` | Current / max action points |
+| `properties` | `Dictionary` | Raw string properties (`Speed`, `StunImmune`, …) |
+
+## Return value
+
+`execute` must return a `Dictionary`. Missing keys default to zero; `result` defaults to `true`, so a script that only reports deltas counts as a successful action.
+
+| Key | Type | Description |
+|---|---|---|
+| `source_damage` | `int` | Damage dealt by the source |
+| `source_defence` | `int` | Source defence delta |
+| `target_damage` | `int` | Damage dealt to the target |
+| `target_defence` | `int` | Target defence delta |
+| `result` | `bool` | Whether the action succeeded (default `true`) |
+
+A script that returns a non-dictionary value yields a failed result (`Result = false`), so one broken mod cannot abort the action pipeline.

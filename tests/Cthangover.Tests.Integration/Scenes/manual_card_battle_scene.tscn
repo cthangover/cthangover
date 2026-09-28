@@ -1,0 +1,8 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://tests/Cthangover.Tests.Integration/Battle/ManualCardBattleSetup.cs" id="manual_setup_script"]
+
+[node name="ManualCardBattleRoot" type="Node"]
+
+[node name="ManualCardBattleSetup" type="Node" parent="."]
+script = ExtResource("manual_setup_script")

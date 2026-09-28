@@ -17,7 +17,7 @@ namespace Cthangover.Core.Audio
         /// </summary>
         Force,
         /// <summary>
-        /// Battle music. Transitioning to Combat saves the current
+        /// Combat music. Transitioning to Combat saves the current
         /// Ambient track and position for later restoration.
         /// </summary>
         Combat,

@@ -10,7 +10,7 @@ namespace Cthangover.Core.UI.Quests
 {
 	/// <summary>
 	/// Quest journal widget styled as an open folio: a two-page spread on a dark
-	/// backdrop, with ribbon tabs overlapping the top edge. The left page is a
+	/// backdrop, with filter tabs tucked into the top of the left page. The left page is a
 	/// table of contents listing quests filtered by active
 	/// (<see cref="QuestStatus.Progress"/>) or completed (<see cref="QuestStatus.End"/>)
 	/// state; <see cref="QuestStatus.NotStarted"/> quests are never shown. The right
@@ -18,9 +18,11 @@ namespace Cthangover.Core.UI.Quests
 	/// the current <see cref="QuestData.Status"/> are struck through, the entry at the
 	/// current status is highlighted, and entries beyond it are hidden. For completed
 	/// quests every entry is struck through. Earned <see cref="QuestData.Tags"/> are
-	/// displayed as wax seals under the entry. All decoration (parchment gradients,
-	/// inner borders, spine shading, stamps) is generated in code because mod scenes
-	/// ignore theme overrides and the project ships no font or paper assets.
+	/// displayed as gold tags under the entry. All decoration (surface gradients,
+	/// inner borders, spine shading, tags) is generated in code because mod scenes
+	/// ignore theme overrides and the project ships no font or texture assets.
+	/// The palette is the shared graphite/gold one (<see cref="UiTokens"/>) so the
+	/// journal does not stand out from the inventory and character panels.
 	/// </summary>
 	public partial class QuestJournalBehaviour : Widget
 	{
@@ -34,21 +36,20 @@ namespace Cthangover.Core.UI.Quests
 		private static readonly Color InkBrightColor = UiTokens.InkBright;
 		private static readonly Color InkDimColor = UiTokens.Muted;
 		private static readonly Color InkFaintColor = UiTokens.Faint;
-		private static readonly Color PaperTopColor = UiTokens.PaperTop;
-		private static readonly Color PaperBottomColor = UiTokens.Paper;
-		private static readonly Color PageLineColor = UiTokens.PaperInset;
-		private static readonly Color RuleColor = UiTokens.PaperRule;
-		private static readonly Color CoverLineColor = UiTokens.PaperLine;
+		private static readonly Color PageTopColor = UiTokens.Surface1;
+		private static readonly Color PageColor = UiTokens.Surface0;
+		private static readonly Color PageLineColor = UiTokens.LineSoft;
+		private static readonly Color RuleColor = UiTokens.LineFaint;
+		private static readonly Color CoverLineColor = UiTokens.Line;
 		private static readonly Color GoldColor = UiTokens.Accent;
 		private static readonly Color GoldGlowColor = UiTokens.AccentGlow;
 		private static readonly Color GoldTraceColor = UiTokens.AccentFaint;
-		private static readonly Color SealColor = UiTokens.Seal;
-		private static readonly Color SealTextColor = UiTokens.SealText;
-		private static readonly Color SealFillColor = UiTokens.SealSoft;
-		private static readonly Color RibbonColor = UiTokens.Ribbon;
-		private static readonly Color RibbonHoverColor = UiTokens.RibbonHover;
-		private static readonly Color RibbonTextColor = UiTokens.RibbonText;
-		private static readonly Color RibbonActiveTextColor = UiTokens.RibbonTextActive;
+		private static readonly Color SealColor = UiTokens.AccentLine;
+		private static readonly Color SealTextColor = UiTokens.AccentBright;
+		private static readonly Color SealFillColor = UiTokens.AccentSoft;
+
+		private const int FilterTabsHeight = 34;
+		private const int FilterTabsGap = 14;
 
 		private FilterType _currentFilter = FilterType.Active;
 		private string _selectedQuestId;
@@ -92,7 +93,6 @@ namespace Cthangover.Core.UI.Quests
 			book.AddChild(BuildSpine());
 			book.AddChild(BuildRightPage());
 
-			BuildRibbons(bookArea);
 			BuildHeader();
 			BuildCloseButton();
 		}
@@ -128,9 +128,10 @@ namespace Cthangover.Core.UI.Quests
 			page.AddChild(content);
 
 			var column = new VBoxContainer();
-			column.AddThemeConstantOverride("separation", 14);
+			column.AddThemeConstantOverride("separation", FilterTabsGap);
 			content.AddChild(column);
 
+			column.AddChild(BuildFilterTabs());
 			column.AddChild(MakeSectionHeader("ui/journal/toc"));
 
 			_emptyLabel = new Label();
@@ -167,7 +168,7 @@ namespace Cthangover.Core.UI.Quests
 			content.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
 			content.AddThemeConstantOverride("margin_left", 44);
 			content.AddThemeConstantOverride("margin_right", 38);
-			content.AddThemeConstantOverride("margin_top", 32);
+			content.AddThemeConstantOverride("margin_top", 32 + FilterTabsHeight + FilterTabsGap);
 			content.AddThemeConstantOverride("margin_bottom", 28);
 			page.AddChild(content);
 
@@ -244,7 +245,7 @@ namespace Cthangover.Core.UI.Quests
 			spine.CustomMinimumSize = new Vector2(56, 0);
 
 			var style = new StyleBoxFlat();
-			style.BgColor = PaperBottomColor;
+			style.BgColor = PageColor;
 			style.BorderColor = CoverLineColor;
 			style.BorderWidthTop = 1;
 			style.BorderWidthBottom = 1;
@@ -275,66 +276,71 @@ namespace Cthangover.Core.UI.Quests
 			return spine;
 		}
 
-		private void BuildRibbons(Control bookArea)
+		private Control BuildFilterTabs()
 		{
-			var ribbons = new HBoxContainer();
-			ribbons.SetAnchorsAndOffsetsPreset(LayoutPreset.TopLeft);
-			ribbons.OffsetLeft = 26;
-			ribbons.OffsetTop = -30;
-			ribbons.AddThemeConstantOverride("separation", 12);
-			ribbons.MouseFilter = MouseFilterEnum.Ignore;
+			var row = new HBoxContainer();
+			row.CustomMinimumSize = new Vector2(0, FilterTabsHeight);
+			row.AddThemeConstantOverride("separation", 6);
 
-			_activeFilterBtn = MakeRibbonButton("ui/journal/active", FilterType.Active);
-			_completedFilterBtn = MakeRibbonButton("ui/journal/completed", FilterType.Completed);
-			ribbons.AddChild(_activeFilterBtn);
-			ribbons.AddChild(_completedFilterBtn);
-			bookArea.AddChild(ribbons);
-			ribbons.Size = ribbons.GetCombinedMinimumSize();
+			_activeFilterBtn = MakeFilterButton("ui/journal/active", FilterType.Active);
+			_completedFilterBtn = MakeFilterButton("ui/journal/completed", FilterType.Completed);
+			row.AddChild(_activeFilterBtn);
+			row.AddChild(_completedFilterBtn);
+
+			var spacer = new Control();
+			spacer.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+			spacer.MouseFilter = MouseFilterEnum.Ignore;
+			row.AddChild(spacer);
+			return row;
 		}
 
-		private Button MakeRibbonButton(string localeKey, FilterType filter)
+		private Button MakeFilterButton(string localeKey, FilterType filter)
 		{
 			var button = new Button();
 			button.Text = TranslationServer.Translate(localeKey);
 			button.FocusMode = FocusModeEnum.None;
-			button.AddThemeFontSizeOverride("font_size", 15);
-			button.AddThemeStyleboxOverride("focus", new StyleBoxEmpty());
+			button.CustomMinimumSize = new Vector2(0, FilterTabsHeight);
 			button.Pressed += () => ApplyFilter(filter);
-			StyleRibbon(button, filter == _currentFilter);
+			StyleFilterTab(button, filter == _currentFilter);
 			return button;
 		}
 
-		private static void StyleRibbon(Button button, bool active)
+		private static void StyleFilterTab(Button button, bool active)
 		{
-			button.AddThemeStyleboxOverride("normal", MakeRibbonStyle(active, false));
-			button.AddThemeStyleboxOverride("hover", MakeRibbonStyle(active, true));
-			button.AddThemeStyleboxOverride("pressed", MakeRibbonStyle(active, true));
-			button.AddThemeColorOverride("font_color", active ? RibbonActiveTextColor : RibbonTextColor);
-			button.AddThemeColorOverride("font_hover_color", active ? RibbonActiveTextColor : InkBrightColor);
-			button.AddThemeColorOverride("font_pressed_color", active ? RibbonActiveTextColor : InkBrightColor);
+			button.AddThemeFontSizeOverride("font_size", UiTokens.FontBody);
+			button.AddThemeStyleboxOverride("normal", MakeFilterTabStyle(active, false));
+			button.AddThemeStyleboxOverride("hover", MakeFilterTabStyle(active, true));
+			button.AddThemeStyleboxOverride("pressed", MakeFilterTabStyle(active, true));
+			button.AddThemeStyleboxOverride("focus", new StyleBoxEmpty());
+			button.AddThemeColorOverride("font_color", active ? UiTokens.AccentBright : UiTokens.Muted);
+			button.AddThemeColorOverride("font_hover_color", active ? UiTokens.AccentBright : UiTokens.Ink);
+			button.AddThemeColorOverride("font_pressed_color", active ? UiTokens.AccentBright : UiTokens.Ink);
 		}
 
-		private static StyleBoxFlat MakeRibbonStyle(bool active, bool hover)
+		private static StyleBoxFlat MakeFilterTabStyle(bool active, bool hover)
 		{
 			var style = new StyleBoxFlat();
-			style.BgColor = active ? GoldColor : (hover ? RibbonHoverColor : RibbonColor);
-			style.BorderColor = active ? GoldColor : CoverLineColor;
+			style.BgColor = active ? UiTokens.AccentSoft : (hover ? UiTokens.WhiteTrace : Colors.Transparent);
+			style.BorderColor = active ? UiTokens.AccentLine : Colors.Transparent;
 			style.BorderWidthLeft = 1;
 			style.BorderWidthRight = 1;
 			style.BorderWidthTop = 1;
-			style.ContentMarginLeft = 22;
-			style.ContentMarginRight = 22;
-			style.ContentMarginTop = 12;
-			style.ContentMarginBottom = 20;
-			style.CornerRadiusTopLeft = 4;
-			style.CornerRadiusTopRight = 4;
+			style.BorderWidthBottom = 1;
+			style.CornerRadiusTopLeft = UiTokens.RadiusSm;
+			style.CornerRadiusTopRight = UiTokens.RadiusSm;
+			style.CornerRadiusBottomLeft = UiTokens.RadiusSm;
+			style.CornerRadiusBottomRight = UiTokens.RadiusSm;
+			style.ContentMarginLeft = 13;
+			style.ContentMarginRight = 13;
+			style.ContentMarginTop = 7;
+			style.ContentMarginBottom = 7;
 			return style;
 		}
 
 		private static StyleBoxFlat MakePageStyle(bool left)
 		{
 			var style = new StyleBoxFlat();
-			style.BgColor = PaperBottomColor;
+			style.BgColor = PageColor;
 			style.BorderColor = CoverLineColor;
 			style.BorderWidthLeft = 1;
 			style.BorderWidthRight = 1;
@@ -361,8 +367,8 @@ namespace Cthangover.Core.UI.Quests
 		private static TextureRect MakePageGradient()
 		{
 			var gradient = new Gradient();
-			gradient.SetColor(0, PaperTopColor);
-			gradient.SetColor(1, PaperBottomColor);
+			gradient.SetColor(0, PageTopColor);
+			gradient.SetColor(1, PageColor);
 
 			var texture = new GradientTexture2D();
 			texture.Gradient = gradient;
@@ -500,32 +506,7 @@ namespace Cthangover.Core.UI.Quests
 			close.OffsetTop = 28;
 			close.OffsetRight = -8;
 			close.OffsetBottom = 66;
-			close.AddThemeFontSizeOverride("font_size", 18);
 			CthangoverTheme.ApplyIcon(close);
-
-			var normal = new StyleBoxFlat();
-			normal.BgColor = UiTokens.Alpha(Colors.Black, 0.35f);
-			normal.BorderColor = UiTokens.PaperLine;
-			normal.BorderWidthLeft = 1;
-			normal.BorderWidthRight = 1;
-			normal.BorderWidthTop = 1;
-			normal.BorderWidthBottom = 1;
-			normal.CornerRadiusTopLeft = UiTokens.RadiusSm;
-			normal.CornerRadiusTopRight = UiTokens.RadiusSm;
-			normal.CornerRadiusBottomLeft = UiTokens.RadiusSm;
-			normal.CornerRadiusBottomRight = UiTokens.RadiusSm;
-
-			var hover = normal.Duplicate() as StyleBoxFlat;
-			hover.BgColor = UiTokens.DangerSoft;
-			hover.BorderColor = UiTokens.AccentLine;
-
-			close.AddThemeStyleboxOverride("normal", normal);
-			close.AddThemeStyleboxOverride("hover", hover);
-			close.AddThemeStyleboxOverride("pressed", hover);
-			close.AddThemeStyleboxOverride("focus", new StyleBoxEmpty());
-			close.AddThemeColorOverride("font_color", InkDimColor);
-			close.AddThemeColorOverride("font_hover_color", InkBrightColor);
-			close.AddThemeColorOverride("font_pressed_color", InkBrightColor);
 			close.Pressed += () => Hide();
 			AddChild(close);
 		}
@@ -533,8 +514,8 @@ namespace Cthangover.Core.UI.Quests
 		private void ApplyFilter(FilterType filter)
 		{
 			_currentFilter = filter;
-			StyleRibbon(_activeFilterBtn, filter == FilterType.Active);
-			StyleRibbon(_completedFilterBtn, filter == FilterType.Completed);
+			StyleFilterTab(_activeFilterBtn, filter == FilterType.Active);
+			StyleFilterTab(_completedFilterBtn, filter == FilterType.Completed);
 
 			ClearChildren(_questListContainer);
 
@@ -722,10 +703,10 @@ namespace Cthangover.Core.UI.Quests
 				return;
 
 			foreach (var tag in tags.OrderBy(t => t))
-				_sealsContainer.AddChild(MakeSeal(tag));
+				_sealsContainer.AddChild(MakeSeal(quest, tag));
 		}
 
-		private static Control MakeSeal(string tag)
+		private static Control MakeSeal(QuestBase quest, string tag)
 		{
 			var seal = new PanelContainer();
 
@@ -750,7 +731,7 @@ namespace Cthangover.Core.UI.Quests
 			seal.Resized += () => seal.PivotOffset = seal.Size / 2f;
 
 			var label = new Label();
-			label.Text = TranslationServer.Translate(tag);
+			label.Text = QuestTagLocale.Translate(quest, tag);
 			label.AddThemeFontSizeOverride("font_size", 13);
 			label.AddThemeColorOverride("font_color", SealTextColor);
 			label.MouseFilter = MouseFilterEnum.Ignore;

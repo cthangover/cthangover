@@ -24,10 +24,13 @@ namespace Cthangover.Core.Mods
     /// single point through which every new assembly enters the game.
     /// It calls into every subsystem that uses reflection to find
     /// implementations: scenario actions, command strategies, scene
-    /// events, item actions, battle behaviour, recruit behaviours,
+    /// events, item actions, mod saveables,
     /// tool factories, toolbox button factories, and mod initialisers.
-    /// Adding a new reflection-based plugin system to the game requires
-    /// adding exactly one line here.
+    /// Gameplay subsystems owned by mods (for example battle cores,
+    /// winground listeners and recruit behaviours) register themselves
+    /// from their <c>IModInitializer</c> instead. Adding a new
+    /// reflection-based plugin system to the game requires adding
+    /// exactly one line here.
     ///
     /// <b>Assembly resolve hook</b> — the static constructor subscribes
     /// to <c>AppDomain.AssemblyResolve</c> so that when a mod DLL
@@ -70,9 +73,6 @@ namespace Cthangover.Core.Mods
             ScenarioCommandStrategyFactory.RegisterAssembly(assembly);
             Scenes.SceneEventRegistry.RegisterAssembly(assembly);
             ItemActionFactory.RegisterAssembly(assembly);
-			Battle.BattleCoreRegistry.Instance.RegisterAssembly(assembly);
-			Relationship.RecruitBehaviourRegistry.Instance.RegisterAssembly(assembly);
-			Battle.WingroundListenerRegistry.Instance.RegisterAssembly(assembly);
             UI.Tool.ToolFactory.Instance.RegisterAssembly(assembly);
             UI.Tool.ToolBoxButtonFactory.Instance.RegisterAssembly(assembly);
             ModInitializerRegistry.RegisterAssembly(assembly, modId);

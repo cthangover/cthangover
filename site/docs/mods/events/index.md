@@ -36,13 +36,14 @@ Note that scenario event composition (`ComposeEvents`) is **not** a bus subscrib
 
 | Event | Key | Payload |
 |-------|-----|---------|
-| `CharacterDiedEvent` | `"character_died"` | `character_id`, `character_name`, `source` ("battle"/"world") |
+| `CharacterDiedEvent` | `"character_died"` | `character_id`, `character_name`, `source` ("battle"/"world") *(declared by `turn_battle_base`)* |
+| `CharactersDefeatedEvent` | `"characters_defeated"` | `source`, `character_ids` — a group defeat (battle won, trap); subscribers like the recruiting mod resolve ids through `CharacterFactory` |
 | `QuestStatusChangedEvent` | `"quest_status_changed"` | `quest_id`, `old_status`, `new_status` |
 | `QuestTagChangedEvent` | `"quest_tag_changed"` | `quest_id`, `tag`, `added` (bool) |
 | `InventoryChangedEvent` | `"inventory_changed"` | `item_id`, `delta`, `new_count` |
 | `TimeTickEvent` | `"time_tick"` | `time_tick`, `normalized_time` |
-| `RecruitJoinedEvent` | `"recruit_joined"` | `recruit_id`, `recruit_name` *(declared, not yet published by the engine)* |
-| `RecruitLeftEvent` | `"recruit_left"` | `recruit_id`, `recruit_name` *(declared, not yet published by the engine)* |
+| `RecruitJoinedEvent` | `"recruit_joined"` | `recruit_id`, `recruit_name` *(declared by the `recruiting` mod, not yet published)* |
+| `RecruitLeftEvent` | `"recruit_left"` | `recruit_id`, `recruit_name` *(declared by the `recruiting` mod, not yet published)* |
 
 ### UI events
 

@@ -176,6 +176,7 @@ namespace Cthangover.Core.Mods
                 _ = ModNativeLoader.CacheRoot;
                 _ = ModConfig.Instance;
                 DisabledModsStore.WarmUp();
+                ModCollectionStore.WarmUp();
 
                 resolvedRoots.Clear();
                 foreach (var scanner in ModDiscoveryRegistry.Scanners)

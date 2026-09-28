@@ -160,7 +160,7 @@ namespace Cthangover.Core.Audio
 			if (!IsCanAutoPlay)
 				return;
 
-			var newType = string.Equals(sceneName, "Battle", System.StringComparison.OrdinalIgnoreCase) ? MusicType.Combat : MusicType.Ambient;
+			var newType = SceneRouteRegistry.TryGet(sceneName, out var route) ? route.Music : MusicType.Ambient;
 			GameLogger.Log("AUDIO", $"Scene '{sceneName}' -> music type {newType} (was {previousType})");
 
 			if (newType == previousType)
@@ -238,18 +238,6 @@ namespace Cthangover.Core.Audio
 
 			playlistContext.LastMusicType = newType;
 			NextSound();
-		}
-
-        /// <summary>
-        /// Resolves the music type for a scene enum value: returns
-        /// <c>MusicType.Combat</c> for <c>GodotSceneType.Battle</c>,
-        /// otherwise <c>MusicType.Ambient</c>. Used by external systems
-        /// that need to know the music category without entering the
-        /// full scene-transition flow.
-        /// </summary>
-        public MusicType GetMusicType(GodotSceneType scene)
-        {
-			return scene == GodotSceneType.Battle ? MusicType.Combat : MusicType.Ambient;
 		}
 
         /// <summary>

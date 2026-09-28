@@ -19,7 +19,6 @@ The core slot uses these blob keys:
 | `Lamp` | key-value | `Radius` (float), `Influence` (float) |
 | `Characters` | `List<CharacterInfoData>` | Recruited character snapshots |
 | `Quests` | `List<QuestBase>` | Quest instances with progress |
-| `Recruits` | `List<Recruit>` | Recruiting entries |
 | `BattleSet` | `List<string>` | Active battle party character IDs |
 | `Inventory` | `List<CItem>` | Inventory item stacks |
 | `Recipes` | `List<string>` | Unlocked recipe IDs |
@@ -28,7 +27,7 @@ The core slot uses these blob keys:
 
 Slot preview metadata (`CurrentSceneName`, `GameTime`, `CharacterCount`) is stored in `ModMetadata.CustomData` as a JSON object, so the slot list UI can read it without deserialising game-state blobs.
 
-Subsystems **not persisted** by `BuildCoreSlot` today: there are no blob keys for `RuntimeData.BattleData` (active encounter) or `RuntimeData.SkillData` (skill unlocks/cooldowns) — this state resets between sessions.
+Subsystems **not persisted** by `BuildCoreSlot` today: there are no blob keys for the active battle encounter (held by the turn-battle mod in `BattleRequest.Current`) or `RuntimeData.SkillData` (skill unlocks/cooldowns) — this state resets between sessions. The recruit roster is not a core blob either: it is persisted by the `recruiting` mod in its own `ModSlot` through `IModSaveable`.
 
 The saved `CurrentSceneName` is used for the slot-list UI and scene navigation after loading; `RuntimeData.CurrentScene` itself is not stored — it is a read-only property resolved live from the `SceneManager`/current scene at runtime.
 

@@ -37,12 +37,19 @@ namespace Cthangover.Core.Mods
         };
 
         private static List<CatalogExportEntry> _cachedEntries;
+        private static List<ModCollection> _cachedCollections;
         private static bool _isFetching;
         private static DateTime _lastFetchTime = DateTime.MinValue;
         private static readonly TimeSpan FetchCooldown = TimeSpan.FromSeconds(5);
 
         /// <summary>The current merged catalog data, or null until first load.</summary>
         public static List<CatalogExportEntry> CachedEntries => _cachedEntries;
+
+        /// <summary>
+        /// The current merged collection list from every catalog, or null until
+        /// first load. Consumed by <see cref="ModCollectionStore.LoadAll"/>.
+        /// </summary>
+        public static List<ModCollection> CachedCollections => _cachedCollections;
 
         /// <summary>True while an async refresh is in flight.</summary>
         public static bool IsFetching => _isFetching;
@@ -68,14 +75,44 @@ namespace Cthangover.Core.Mods
                 try
                 {
                     var json = File.ReadAllText(path);
+                    if (TryLoadEnvelope(json))
+                    {
+                        GameLogger.Log("CATALOG",
+                            $"Loaded catalog cache: {_cachedEntries?.Count ?? 0} mod(s), {_cachedCollections?.Count ?? 0} collection(s)");
+                        return;
+                    }
+
                     _cachedEntries = JsonSerializer.Deserialize<List<CatalogExportEntry>>(json, JsonOptionsProvider.ReadOptions);
-                    GameLogger.Log("CATALOG", $"Loaded catalog cache: {_cachedEntries?.Count ?? 0} entr(y/ies)");
+                    GameLogger.Log("CATALOG", $"Loaded legacy catalog cache: {_cachedEntries?.Count ?? 0} entr(y/ies)");
                 }
                 catch (Exception ex)
                 {
                     GameLogger.Log("CATALOG", $"Failed to load catalog cache: {ex.Message}", LogLevel.Warning);
                 }
             }
+        }
+
+        /// <summary>
+        /// Reads the two-list cache envelope. Returns false for the legacy
+        /// array-only format (a bare JSON array), which the caller then parses
+        /// as a plain mod list.
+        /// </summary>
+        private static bool TryLoadEnvelope(string json)
+        {
+            if (string.IsNullOrWhiteSpace(json))
+                return false;
+
+            var trimmed = json.TrimStart();
+            if (trimmed[0] != '{')
+                return false;
+
+            var root = JsonSerializer.Deserialize<CatalogCacheRoot>(json, JsonOptionsProvider.ReadOptions);
+            if (root == null)
+                return false;
+
+            _cachedEntries = root.Mods ?? new List<CatalogExportEntry>();
+            _cachedCollections = root.Collections ?? new List<ModCollection>();
+            return true;
         }
 
         /// <summary>
@@ -119,12 +156,14 @@ namespace Cthangover.Core.Mods
                 }
 
                 var allEntries = new List<CatalogExportEntry>();
+                var allCollections = new List<ModCollection>();
                 var errors = new List<string>();
                 var urls = ModConfig.Instance.CatalogUrls;
 
                 if (urls == null || urls.Count == 0)
                 {
                     _cachedEntries = new List<CatalogExportEntry>();
+                    _cachedCollections = new List<ModCollection>();
                     OnRefreshed?.Invoke();
                     return;
                 }
@@ -150,6 +189,14 @@ namespace Cthangover.Core.Mods
                             allEntries.AddRange(catalog.Mods);
                             GameLogger.Log("CATALOG", $"Fetched {catalog.Mods.Count} entr(y/ies) from '{url}'");
                         }
+
+                        if (catalog?.Collections != null)
+                        {
+                            foreach (var collection in catalog.Collections)
+                                CatalogCollectionMerger.TagSource(collection, url);
+                            allCollections.AddRange(catalog.Collections);
+                            GameLogger.Log("CATALOG", $"Fetched {catalog.Collections.Count} collection(s) from '{url}'");
+                        }
                     }
                     catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
                     {
@@ -163,11 +210,13 @@ namespace Cthangover.Core.Mods
                     }
                 }
 
-                if (allEntries.Count > 0)
+                if (allEntries.Count > 0 || allCollections.Count > 0)
                 {
                     _cachedEntries = CatalogMerger.MergeAndDeduplicate(allEntries);
-                    SaveCache(_cachedEntries);
-                    GameLogger.Log("CATALOG", $"Catalog refresh complete: {_cachedEntries.Count} total entr(y/ies) merged");
+                    _cachedCollections = CatalogCollectionMerger.MergeAndDeduplicate(allCollections);
+                    SaveCache(_cachedEntries, _cachedCollections);
+                    GameLogger.Log("CATALOG",
+                        $"Catalog refresh complete: {_cachedEntries.Count} total mod(s), {_cachedCollections.Count} collection(s) merged");
                     OnRefreshed?.Invoke();
                 }
                 else if (_cachedEntries == null && errors.Count > 0)
@@ -195,6 +244,7 @@ namespace Cthangover.Core.Mods
         public static void ClearCache()
         {
             _cachedEntries = null;
+            _cachedCollections = null;
             var path = GetCachePath();
             if (File.Exists(path))
                 File.Delete(path);
@@ -241,12 +291,13 @@ namespace Cthangover.Core.Mods
         }
 
 
-        private static void SaveCache(List<CatalogExportEntry> entries)
+        private static void SaveCache(List<CatalogExportEntry> entries, List<ModCollection> collections)
         {
             try
             {
                 var path = GetCachePath();
-                var json = JsonSerializer.Serialize(entries, JsonOptionsProvider.WriteIndentedOptions);
+                var root = new CatalogCacheRoot { Mods = entries, Collections = collections };
+                var json = JsonSerializer.Serialize(root, JsonOptionsProvider.WriteIndentedOptions);
                 File.WriteAllText(path, json);
             }
             catch (Exception ex)

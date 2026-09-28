@@ -1,6 +1,6 @@
 # Battle System
 
-The battle engine is a pluggable, mod-driven system. Each battle ruleset is implemented as a mod (e.g. `card_battle`, `ff_battle`) following the `IBattleCore` interface. Battles are initiated from scenario scripts via `action battle.init`.
+The battle engine is a pluggable, mod-driven system that lives entirely in the `turn_battle_base` mod. Each battle ruleset is implemented as a mod (e.g. `card_battle`, `ff_battle`) following the `IBattleCore` interface; the platform types (`BattleData`, `BattleCoreRegistry`, `BattleSceneContext`, action executors, status effects, victory screen) all ship in `turn_battle_base`, so the core only knows generic mod infrastructure. Battles are initiated from scenario scripts via `action battle.init`.
 
 ## Architecture overview
 
@@ -9,23 +9,25 @@ flowchart LR
     subgraph DSL["Scenario DSL"]
         A["action battle.init<br/>scene=<br/>enemies=<br/>quest_id=<br/>new_tag="]
     end
-    subgraph Actions["Core / Actions"]
-        B["BattleInitAction<br/>ctx.GetParam<br/>ctx.Battle.Init<br/>Log event"]
+    subgraph Mod1["Mod / turn_battle_base"]
+        B["BattleInitAction<br/>ctx.GetParam<br/>BattleService.Init<br/>Log event"]
+        C["BattleRequest.Current<br/>BattleData<br/>Quest / NewTag<br/>EnemiesCards<br/>Background / DepthMap / AlbedoMap<br/>BattleSide<br/>ActiveBattleCore<br/>ReturnScene"]
+        S["SceneRouteRegistry<br/>'Battle' -> scenes/battle/battle.tscn"]
     end
-    subgraph Battle["Core / Battle"]
-        C["BattleData<br/>Quest / NewTag<br/>EnemiesCards<br/>Background / DepthMap / AlbedoMap<br/>BattleSide<br/>ActiveBattleCore<br/>ReturnScene"]
-    end
-    subgraph Mod["Mod (e.g. card_battle)"]
+    subgraph Mod2["Mod (e.g. card_battle)"]
         D["IBattleCore.Init()<br/>Character panels<br/>Action executors<br/>UI widgets<br/>Status effects"]
     end
     A --> B --> C --> D
+    S -.->|"switch_scene Battle"| D
 ```
+
+The scenario switches to the battle view with `switch_scene Battle`; the mod registered that logical name as a scene route with the core, so `SceneManager` routes it to the mod-relative tscn (with fade transition and combat music) without any battle knowledge in the core.
 
 ## Key interfaces
 
 ### `IBattleCore` — Combat ruleset
 
-Every battle system mod defines a class implementing `IBattleCore`:
+Every battle system mod defines a class implementing `IBattleCore` (`mods/turn_battle_base/src/Adapters/IBattleCore.cs`):
 
 | Member | Description |
 |---|---|
@@ -33,6 +35,8 @@ Every battle system mod defines a class implementing `IBattleCore`:
 | `ActionProvider` | Returns `IActionExecutorProvider` for overriding action executors |
 | `Init(Character[] playerChars, Character[] enemyChars, IBattleContext ctx)` | Called when battle starts — sets up UI, spawns enemies |
 | `Start()` | Called after Init — begins the battle loop |
+
+Cores are discovered by `TurnBattleSceneInitializer`: it rescans mod assemblies as they announce themselves and calls `BattleCoreRegistry.RegisterAssembly`. Mods that add a core should declare `"depends": ["turn_battle_base>=1"]` so their assembly compiles after the platform.
 
 ### `IActionExecutor` — Ability resolution
 
@@ -45,11 +49,11 @@ Each battle action type (attack, defence, stun, item, etc.) has an executor:
 
 Executors are registered through `ActionExecutorHub`, which routes actions by ID at runtime.
 
-GDScript mods can register executors as well — a `.gd` file with `get_action_id()` + `execute(action, user, target)` is auto-registered into the global executor registry. See [GDScript in Mods](site/docs/mods/src/gdscript) for the full API.
+GDScript mods can register executors as well — a `.gd` file with `get_action_id()` + `execute(action, user, target)` is auto-registered into the global executor registry; see [GDScript in Mods](site/docs/mods/src/gdscript) for the dictionary-based contract.
 
 ### `IBattleContext` — Engine bridge
 
-Bridge from the battle core back to the engine so cores stay engine-agnostic:
+Bridge from the battle core back to the Godot scene so cores stay engine-agnostic:
 
 | Member | Description |
 |---|---|
@@ -63,23 +67,23 @@ Bridge from the battle core back to the engine so cores stay engine-agnostic:
 
 1. Scenario runs `action battle.set_core core=card_battle` — selects the ruleset by ID. The registry is a case-sensitive dictionary and **throws on an unknown ID**; built-in IDs are `card_battle` and `ff_battle`
 2. Scenario runs `action battle.init scene=... enemies=... quest_id=... new_tag=...`
-3. `BattleInitAction` reads dialog variables, calls `BattleService.Init()`
+3. `BattleInitAction` reads dialog variables and calls `BattleService.Init()`
 4. `BattleData` captures the current background
 5. `BattleData.InitBattle` resolves enemy character IDs to `Character` instances via `CharacterFactory`; unknown IDs get a fallback template character (20 HP, 3 action points)
-6. Active `IBattleCore.Init()` is called — mod sets up its UI panels
-7. `IBattleCore.Start()` begins the battle loop
+6. `BattleService.Init` stores the encounter in `BattleRequest.Current` (the mod's static hand-off slot — the core runtime data no longer carries battle state)
+7. Scenario switches to `battle`, the core routes it through `SceneRouteRegistry`, and `BattleSceneContext` resolves the active `IBattleCore` and calls `Init()` then `Start()`
 
 **Important**: `battle.init` must run *after* the background has been set in the scenario, otherwise the battle gets a null backdrop.
 
 ## Status effects
 
-Status effects (buff, debuff, stun) are applied during battle via the `StatusEffectQueue` on each character. Effects have a duration in turns and expire automatically.
+Status effects (buff, debuff, stun) are applied during battle via the `StatusEffectQueue` of each combatant. Queues are not fields of `Character` — battle code obtains them through `StatusEffectService.Of(character)`, a `ConditionalWeakTable` side table owned by the turn-battle mod. Effects have a duration in turns and expire automatically.
 
 See [Status Effects](../status_effects/) for the JSON definition format.
 
 ## Victory screen listeners (winground)
 
-The victory screen (`Winground.tscn`, driven by `WingroundBehaviour`) exposes an extension point for mods that want to modify EXP awards, alter generated loot, or run logic right before the UI appears. Implement `IWingroundListener` (`Core/Battle/IWingroundListener.cs`):
+The victory screen (`Winground.tscn`, driven by `WingroundBehaviour`) exposes an extension point for mods that want to modify EXP awards, alter generated loot, or run logic right before the UI appears. Implement `IWingroundListener` (`mods/turn_battle_base/src/IWingroundListener.cs`):
 
 | Member | Description |
 |---|---|
@@ -92,12 +96,12 @@ Hooks fire in that order during `WingroundBehaviour.Show`. The same `WingroundCo
 
 Registration goes through the `WingroundListenerRegistry` singleton:
 
-- **C# mods**: implement `IWingroundListener` with a parameterless constructor — `ModAssemblyLoader` calls `WingroundListenerRegistry.Instance.RegisterAssembly(assembly)`, which discovers and instantiates implementations automatically
+- **C# mods**: implement `IWingroundListener` with a parameterless constructor — `TurnBattleSceneInitializer` scans mod assemblies and registers implementations automatically (replaces the old core-side fan-out; the battle mod no longer lives in the core)
 - Exceptions thrown by individual listeners are logged and swallowed so one broken mod cannot break the victory screen for others
 
 ### `WingroundContext`
 
-Mutable context shared by all listeners (`Core/Battle/WingroundContext.cs`):
+Mutable context shared by all listeners (`mods/turn_battle_base/src/WingroundContext.cs`):
 
 | Field | Type | Description |
 |---|---|---|
@@ -108,9 +112,9 @@ Mutable context shared by all listeners (`Core/Battle/WingroundContext.cs`):
 
 ### GDScript variant
 
-A `.gd` script exposing `get_winground_listener_id()` returning a unique string, plus any of the optional hooks `on_winground_before_exp(ctx)` / `on_winground_after_loot(ctx)` / `on_winground_before_show(ctx)`, is detected by method signature in `ModGDScriptLoader`, wrapped in a `GDWingroundListener`, and registered automatically. All three hooks are optional — only the methods the script actually implements are called.
+A `.gd` script exposing `get_winground_listener_id()` returning a unique string, plus any of the optional hooks `on_winground_before_exp(ctx)` / `on_winground_after_loot(ctx)` / `on_winground_before_show(ctx)`, is detected by `TurnBattleGDScriptHook`, wrapped in a `GDWingroundListener`, and registered automatically. All three hooks are optional — only the methods the script actually implements are called.
 
-The C# context is marshalled into a `GDWingroundContext` (`RefCounted`) before each call and synced back afterwards: mutations to `ExpGained` and `GeneratedLoot` propagate to the C# victory pipeline, while `DefeatedEnemies` are exposed as read-only `GDCharacter` DTO snapshots whose changes are *not* written back.
+The C# context is marshalled into a plain `Dictionary` before each call and synced back afterwards: mutations to `exp_gained` and `generated_loot` propagate to the C# victory pipeline, while `defeated_enemies` are read-only dictionary snapshots whose changes are *not* written back. Dictionaries replace the old RefCounted DTOs because mod-authored C# classes get no Godot source generation and would be invisible to GDScript.
 
 ```gdscript
 extends RefCounted
@@ -119,30 +123,30 @@ func get_winground_listener_id() -> String:
     return "my_mod.double_exp"
 
 func on_winground_before_exp(ctx) -> void:
-    for id in ctx.ExpGained:
-        ctx.ExpGained[id] *= 2
+    for id in ctx["exp_gained"]:
+        ctx["exp_gained"][id] *= 2
 ```
 
 ## Battle speed control
 
-`BattleSpeedControl` (`Core/Battle/BattleSpeedControl.cs`) is the x1/x4/x8 toggle bar shown during battle:
+`BattleSpeedControl` (`mods/turn_battle_base/src/BattleSpeedControl.cs`) is the x1/x4/x8 toggle bar shown during battle:
 
 | Member | Description |
 |---|---|
-| `ApplySavedSpeed()` | Restores `Engine.TimeScale` from `GameData.Settings.BattleSpeed` (out-of-range values fall back to x1); called automatically on `_Ready()` |
-| `ResetToNormal()` | Resets `Engine.TimeScale` to 1.0 *without* saving — used when the battle ends so menus run at normal speed |
+| `ApplySavedSpeed()` | Restores `Engine.TimeScale` from `GameData.Settings.BattleSpeed` (out-of-range values fall back to x1); called from the widget constructor |
+| `ResetToNormal()` | Resets `Engine.TimeScale` to 1.0 *without* saving — the battle scene calls it when the battle ends so menus run at normal speed |
 
 Picking a speed sets `Engine.TimeScale`, which accelerates the entire game loop (not just animations), and persists the choice to `GameData.Settings.BattleSpeed`.
 
 ## Animation layer
 
-Visual feedback is decoupled from combat logic so battle cores stay engine-agnostic (`Core/Battle/Adapters/`):
+Visual feedback is decoupled from combat logic so battle cores stay engine-agnostic (`mods/turn_battle_base/src/Adapters/`):
 
 | Type | Role |
 |---|---|
 | `IBattleAnimation` | Data-only description: `Source`/`Target` characters, `AnimationType` dispatch key, `Speed` multiplier, open-ended `Parameters` dictionary |
 | `IBattleAnimationPlayer` | Plays one animation type — `Play(anim, onComplete)` must invoke the callback so the action machine can advance |
-| `AnimationRegistry` | Singleton index (`Instance`) keyed by `AnimationType`; `Register()` replaces any existing player for the same key (last write wins), `Get()` looks up |
+| `AnimationRegistry` | Singleton index (`Instance`) keyed by `AnimationType`; `Register()` replaces any existing player for the same key, `Get()` looks up |
 
 Executors never play animations directly — they request them via `IBattleContext.ScheduleAnimation(IBattleAnimation)`, and the playback layer resolves the matching player from the registry.
 
@@ -173,7 +177,7 @@ flowchart LR
      "name": "MyBattle",                                   // Human-readable mod name
      "description": "Custom battle system",                // Short description
      "sources": ["src/**/*.cs"],                           // Glob patterns for C# source files
-     "depends": ["visual_novel_core"]                                   // Versioned dependency strings
+     "depends": ["visual_novel_core", "turn_battle_base"]  // Battle platform dependency
    }
 ```
 
@@ -216,15 +220,17 @@ flowchart LR
    ```scenario
    action battle.set_core core=MyBattle
    action battle.init scene=town_entry enemies=wolf_1
+   switch_scene Battle
    ```
 
 ## Battle-related Godot scenes
 
+All battle scenes live in the `turn_battle_base` mod and are resolved through the runtime tscn pipeline by mod-relative path:
+
 | Path | Purpose |
 |---|---|
-| `scenes/battle/Battle.tscn` | Main battle scene container |
-| `scenes/battle/Winground.tscn` | Victory screen overlay |
-| `scenes/battle/Deadground.tscn` | Defeat screen overlay |
-| `scenes/battle/exp_report_card.tscn` | Experience/loot report |
-
-Note the file casing above (`Battle.tscn`, not `battle.tscn`) — it works on Windows but breaks on case-sensitive filesystems.
+| `scenes/battle/battle.tscn` | Main battle scene container (`BattleSceneContext`) |
+| `scenes/battle/winground.tscn` | Victory screen overlay |
+| `scenes/battle/deadground.tscn` | Defeat screen overlay |
+| `scenes/battle/exp_report_card.tscn` | Experience report card |
+| `scenes/battle/loot_report_item.tscn` | Loot grid item |

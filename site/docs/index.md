@@ -42,6 +42,7 @@ A core can be disabled or replaced. Mods that depend on a specific core must dec
 | [Game Config](mods/configs/game_config) | Default game settings |
 | [Mod Config](mods/configs/mod_config) | Mod system cache and file discovery |
 | [Catalog & Network](mods/catalog/) | Online mod catalog schema, merging, and export |
+| [Collections](mods/collections/) | Curated mod sets implementing a mechanic, shown as a dependency graph |
 
 ## Scenarios & DSL
 

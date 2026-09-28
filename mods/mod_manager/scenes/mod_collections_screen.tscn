@@ -1,0 +1,150 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="src/ModCollectionsScreen.cs" id="1_screen"]
+[ext_resource type="PackedScene" path="scenes/components/collection_graph_view.tscn" id="2_graph"]
+
+[node name="ModCollectionsScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+script = ExtResource("1_screen")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.054902, 0.058824, 0.082353, 1)
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 12
+
+[node name="Root" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Header" type="HBoxContainer" parent="Margin/Root"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Close" type="Button" parent="Margin/Root/Header"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="Margin/Root/Header"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 24
+uppercase = true
+
+[node name="Spacer" type="Control" parent="Margin/Root/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Result" type="Label" parent="Margin/Root/Header"]
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="Refresh" type="Button" parent="Margin/Root/Header"]
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="Body" type="HSplitContainer" parent="Margin/Root"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Sidebar" type="PanelContainer" parent="Margin/Root/Body"]
+custom_minimum_size = Vector2(240, 0)
+layout_mode = 2
+
+[node name="SideScroll" type="ScrollContainer" parent="Margin/Root/Body/Sidebar"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="CollectionList" type="VBoxContainer" parent="Margin/Root/Body/Sidebar/SideScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="Graph" parent="Margin/Root/Body" instance=ExtResource("2_graph")]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Details" type="PanelContainer" parent="Margin/Root/Body"]
+custom_minimum_size = Vector2(360, 0)
+layout_mode = 2
+
+[node name="DetailScroll" type="ScrollContainer" parent="Margin/Root/Body/Details"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Detail" type="VBoxContainer" parent="Margin/Root/Body/Details/DetailScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="DetailTitle" type="Label" parent="Margin/Root/Body/Details/DetailScroll/Detail"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+autowrap_mode = 3
+
+[node name="DetailMeta" type="Label" parent="Margin/Root/Body/Details/DetailScroll/Detail"]
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="DetailDescription" type="Label" parent="Margin/Root/Body/Details/DetailScroll/Detail"]
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="MechanicsCaption" type="Label" parent="Margin/Root/Body/Details/DetailScroll/Detail"]
+layout_mode = 2
+
+[node name="MechanicsList" type="VBoxContainer" parent="Margin/Root/Body/Details/DetailScroll/Detail"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="NodeCaption" type="Label" parent="Margin/Root/Body/Details/DetailScroll/Detail"]
+layout_mode = 2
+
+[node name="NodeBox" type="VBoxContainer" parent="Margin/Root/Body/Details/DetailScroll/Detail"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="PlanCaption" type="Label" parent="Margin/Root/Body/Details/DetailScroll/Detail"]
+layout_mode = 2
+
+[node name="PlanBox" type="VBoxContainer" parent="Margin/Root/Body/Details/DetailScroll/Detail"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="Apply" type="Button" parent="Margin/Root/Body/Details/DetailScroll/Detail"]
+layout_mode = 2
+
+[node name="Banner" type="PanelContainer" parent="Margin/Root"]
+visible = false
+layout_mode = 2
+
+[node name="BannerLabel" type="Label" parent="Margin/Root/Banner"]
+layout_mode = 2
+size_flags_horizontal = 3
+horizontal_alignment = 1

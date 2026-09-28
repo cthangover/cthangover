@@ -1,5 +1,6 @@
 #if TOOLS
 using System.Collections.Generic;
+using Cthangover.Core.UI.Menu;
 using Cthangover.Core.Utils;
 using Godot;
 
@@ -16,6 +17,10 @@ namespace Cthangover.Core.Autotest
 	/// mod <c>main_menu</c> registry (the mod_manager button), then verifies the
 	/// mod scene was built, its grid exists and at least one mod card was created
 	/// (exit code 0).</item>
+	/// <item><c>--test=mod_collections</c> — clicks the collections button by its
+	/// translation key, then verifies the collections scene was built, its list
+	/// is populated and the dependency graph contains at least one frame and one
+	/// mod node (exit code 0).</item>
 	/// </list>
 	/// A watchdog quits with exit code 1 if the flow does not finish within
 	/// <c>--timeout=</c> seconds (default 120), so a run can never hang.
@@ -40,7 +45,7 @@ namespace Cthangover.Core.Autotest
 				if (arg.StartsWith("--test="))
 				{
 					var testName = arg.Substring("--test=".Length).ToLower();
-					if (testName == "menu" || testName == "mod_manager")
+					if (testName == "menu" || testName == "mod_manager" || testName == "mod_collections")
 					{
 						_testName = testName;
 						_enabled = true;
@@ -68,6 +73,8 @@ namespace Cthangover.Core.Autotest
 
 			if (_testName == "mod_manager")
 				RunModManagerTest();
+			else if (_testName == "mod_collections")
+				RunModCollectionsTest();
 			else
 				RunNewGameTest();
 		}
@@ -229,6 +236,79 @@ namespace Cthangover.Core.Autotest
 
 			GameLogger.Log("TEST", "MainMenuTestSetup: mod detail page opened");
 			GameLogger.Log("TEST", "[TEST_RESULT] name=mod_manager passed=1 failed=0");
+			GetTree().Quit(0);
+		}
+
+		private void RunModCollectionsTest()
+		{
+			var container = GetParent().GetNodeOrNull<Control>("MenuContainer/ModMenuButtons");
+			var button = FindMenuButton(container, "mod_manager/collections_menu_title");
+
+			if (button == null)
+			{
+				GameLogger.Log("TEST", "MainMenuTestSetup: collections main-menu button not found, quitting", LogLevel.Error);
+				Fail("mod_collections");
+				return;
+			}
+
+			GameLogger.Log("TEST", "MainMenuTestSetup: clicking collections button");
+			button.EmitSignal("pressed");
+
+			GetTree().CreateTimer(ModManagerSettleSeconds).Timeout += VerifyCollectionsScreen;
+			GetTree().CreateTimer(_timeoutSeconds).Timeout += () =>
+			{
+				GameLogger.Log("TEST", $"MainMenuTestSetup: timeout ({_timeoutSeconds}s) reached in mod_collections test, quitting", LogLevel.Error);
+				Fail("mod_collections");
+			};
+		}
+
+		private static Button FindMenuButton(Node container, string localeKey)
+		{
+			if (container == null)
+				return null;
+
+			foreach (var child in container.GetChildren())
+			{
+				if (child is Button button
+					&& button.HasMeta(MainMenuBuilder.LocaleMetaKey)
+					&& button.GetMeta(MainMenuBuilder.LocaleMetaKey).AsString() == localeKey)
+					return button;
+			}
+
+			return null;
+		}
+
+		private void VerifyCollectionsScreen()
+		{
+			if (!GodotObject.IsInstanceValid(this))
+				return;
+
+			var screen = GetParent().GetNodeOrNull<Node>("ModCollectionsScreen");
+			if (screen == null)
+			{
+				GameLogger.Log("TEST", "MainMenuTestSetup: ModCollectionsScreen not found after button click", LogLevel.Error);
+				Fail("mod_collections");
+				return;
+			}
+
+			var graph = FindFirstDescendantByTypeName(screen, "CollectionGraphView");
+			var frames = CountDescendantsByTypeName(screen, "GraphFrame");
+			var nodes = CountDescendantsByTypeName(screen, "GraphNode");
+			var list = screen.GetNodeOrNull<VBoxContainer>("Margin/Root/Body/Sidebar/SideScroll/CollectionList");
+			var collectionButtons = list?.GetChildCount() ?? 0;
+
+			if (graph == null || frames == 0 || nodes == 0 || collectionButtons == 0)
+			{
+				GameLogger.Log("TEST",
+					$"MainMenuTestSetup: collections screen built incompletely (graph={graph != null}, frames={frames}, nodes={nodes}, collections={collectionButtons})",
+					LogLevel.Error);
+				Fail("mod_collections");
+				return;
+			}
+
+			GameLogger.Log("TEST",
+				$"MainMenuTestSetup: collections OK, {collectionButtons} collection(s), {frames} frame(s), {nodes} node(s)");
+			GameLogger.Log("TEST", "[TEST_RESULT] name=mod_collections passed=1 failed=0");
 			GetTree().Quit(0);
 		}
 

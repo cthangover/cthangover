@@ -1,21 +1,22 @@
-"""Build ai.html - all documentation on a single plain HTML page.
+"""Build ai.html - all documentation, sources and scenarios in one page.
 
-The page is a no-JS, no-CSS, no-styling dump of every known document,
-meant to be used by AI agents (and humans) as one entry point:
-
-    https://cthangover.ru/ai.html
+The page is a plain-text dump for AI agents (and humans): the whole payload
+is a single <pre> block, so there is no formatting markup beyond the bare
+HTML frame. Markdown links lose their URLs, embedded HTML loses its tags,
+C# code is whitespace-compacted (comments are kept).
 
 Sources:
     docs/**/*.md            - the main documentation
     quickstart/en/*.md      - the English quick start guide
     ../mods/*/manifest.json - existing mods (manifest + file list)
+    ../**/*.cs              - C# sources of the project and the mods
+    ../mods/**/*.scenario   - scenario scripts of the mods
 
 Output:
     ai.html
 """
 
 import html
-import html.parser
 import json
 import os
 import re
@@ -24,349 +25,366 @@ import sys
 DOCS_DIR = "docs"
 QUICKSTART_DIR = "quickstart"
 QUICKSTART_LANGS = ("en",)
+ROOT_DIR = ".."
 MODS_DIR = os.path.join("..", "mods")
 OUT_FILE = "ai.html"
-SITE_URL = "https://cthangover.ru"
+CS_EXT = ".cs"
+SCENARIO_EXT = ".scenario"
+SKIP_DIRS = {
+    ".git", ".godot", ".idea", ".omo", ".opencode",
+    "obj", "bin", "node_modules", "site",
+}
 
 FENCE_RE = re.compile(r"^(`{3,}|~{3,})\s*([\w+-]*)\s*$")
-HEADING_RE = re.compile(r"^(#{1,6})\s+(.*?)(?:\s+#+)?\s*$")
-LIST_RE = re.compile(r"^(\s*)([-*+]|\d+[.)])\s+(.*)$")
-HR_RE = re.compile(r"^\s*([-*_]\s*){3,}$")
-TABLE_SEP_RE = re.compile(r"^\s*\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?\s*$")
-RAW_HTML_RE = re.compile(r"^\s*<([a-zA-Z][\w-]*)[\s/>]")
-
-CODE_SPAN_RE = re.compile(r"(`+)(.+?)\1", re.DOTALL)
-IMAGE_RE = re.compile(r"!\[([^\]]*)\]\(([^)\s]*)(?:\s+\"[^\"]*\")?\)")
-LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)\s]*)(?:\s+\"[^\"]*\")?\)")
-AUTOLINK_RE = re.compile(r"&lt;((?:https?://|mailto:)[^<>\s]+)&gt;")
-STRIKE_RE = re.compile(r"~~(?=[^\s~])([^~\n]+?)(?<=[^\s~])~~")
-BOLD_RE = re.compile(r"\*\*(?=[^\s*])([^*\n]+?)(?<=[^\s*])\*\*")
-ITALIC_RE = re.compile(r"(?<![\w*/])\*(?=[^\s*])([^*\n]+?)(?<=[^\s*])\*(?![\w*])")
-PLACEHOLDER_RE = re.compile("\x00(\\d+)\x00")
+MD_LINK_RE = re.compile(r"(!?)\[([^\]]*)\]\(([^)\s]*)(?:\s+\"[^\"]*\")?\)")
+AUTOLINK_RE = re.compile(r"<((?:https?://|mailto:)[^<>\s]+)>")
+HTML_TAG_RE = re.compile(
+    r"</?(?:a|b|br|blockquote|code|dd|del|details|div|dl|dt|em|h[1-6]|hr|i|"
+    r"img|li|ol|p|path|pre|s|span|strong|summary|svg|table|tbody|td|th|"
+    r"thead|tr|u|ul)\b[^>]*>",
+    re.IGNORECASE,
+)
+HTML_COMMENT_RE = re.compile(r"<!--.*?-->")
 
 
 # --------------------------------------------------------------------------
-# inline markdown
+# C# whitespace compaction
 # --------------------------------------------------------------------------
 
-def inline(text):
-    """Render inline markdown (code spans, links, emphasis) to HTML."""
-    stash = []
-
-    def keep(value):
-        stash.append(value)
-        return f"\x00{len(stash) - 1}\x00"
-
-    text = CODE_SPAN_RE.sub(
-        lambda m: keep(f"<code>{html.escape(m.group(2), quote=False)}</code>"), text
-    )
-    text = html.escape(text, quote=False)
-
-    def image(m):
-        alt, url = m.group(1), m.group(2)
-        label = f"[image: {alt}]" if alt else "[image]"
-        return keep(f'<a href="{url}">{label}</a>')
-
-    text = IMAGE_RE.sub(image, text)
-
-    def link(m):
-        return keep(f'<a href="{m.group(2)}">{m.group(1)}</a>')
-
-    text = LINK_RE.sub(link, text)
-    text = AUTOLINK_RE.sub(lambda m: keep(f'<a href="{m.group(1)}">{m.group(1)}</a>'), text)
-    text = STRIKE_RE.sub(r"<del>\1</del>", text)
-    text = BOLD_RE.sub(lambda m: f"<strong>{m.group(1)}</strong>", text)
-    text = ITALIC_RE.sub(lambda m: f"<em>{m.group(1)}</em>", text)
-
-    while True:
-        text, count = PLACEHOLDER_RE.subn(lambda m: stash[int(m.group(1))], text)
-        if count == 0:
-            return text
+_CS_DROP = set("()[]{};,:")
+_CS_OPER = set("+-*/%<>=!&|^~?")
 
 
-# --------------------------------------------------------------------------
-# raw HTML blocks (quickstart pages embed layout markup)
-# --------------------------------------------------------------------------
-
-class _HtmlTextExtractor(html.parser.HTMLParser):
-    """Turn a raw HTML fragment into plain text; links keep their URLs."""
-
-    _BLOCK = {
-        "div", "p", "h1", "h2", "h3", "h4", "h5", "h6", "ul", "ol", "li",
-        "table", "tr", "td", "th", "pre", "blockquote", "section", "br",
-        "details", "summary", "hr",
-    }
-
-    def __init__(self):
-        super().__init__(convert_charrefs=True)
-        self.parts = []
-        self._hrefs = []
-
-    def _image(self, attrs):
-        self.parts.append(f"[image: {dict(attrs).get('alt', '')}]")
-
-    def handle_starttag(self, tag, attrs):
-        if tag == "a":
-            self._hrefs.append(dict(attrs).get("href", ""))
-        elif tag == "img":
-            self._image(attrs)
-        elif tag in self._BLOCK:
-            self.parts.append("\n")
-
-    def handle_startendtag(self, tag, attrs):
-        if tag == "img":
-            self._image(attrs)
-        elif tag in self._BLOCK:
-            self.parts.append("\n")
-
-    def handle_endtag(self, tag):
-        if tag == "a":
-            href = self._hrefs.pop() if self._hrefs else ""
-            if href:
-                self.parts.append(f" ({href})")
-        elif tag in self._BLOCK:
-            self.parts.append("\n")
-
-    def handle_data(self, data):
-        self.parts.append(data)
+def _cs_needs_space(prev, nxt):
+    """Whether adjacent characters need a space to remain separate tokens."""
+    if not prev or not nxt or prev == "\n":
+        return False
+    if prev == "." or nxt == ".":
+        other = nxt if prev == "." else prev
+        return other.isdigit()
+    if prev in _CS_DROP or nxt in _CS_DROP:
+        return False
+    if prev in _CS_OPER and nxt in _CS_OPER:
+        return True
+    return (prev.isalnum() or prev == "_") and (nxt.isalnum() or nxt == "_")
 
 
-def raw_html_to_text(fragment):
-    """Convert a raw HTML block to a plain paragraph without tags."""
-    parser = _HtmlTextExtractor()
-    parser.feed(fragment)
-    parser.close()
-    text = html.unescape("".join(parser.parts))
-    lines = [line.strip() for line in text.splitlines()]
-    lines = [line for line in lines if line]
-    body = "<br>\n".join(html.escape(line, quote=False) for line in lines)
-    return f"<p>{body}</p>"
-
-
-# --------------------------------------------------------------------------
-# block markdown
-# --------------------------------------------------------------------------
-
-def split_row(line):
-    row = line.strip()
-    if row.startswith("|"):
-        row = row[1:]
-    if row.endswith("|"):
-        row = row[:-1]
-    return [cell.strip() for cell in row.split("|")]
-
-
-def is_table_start(lines, i):
-    return (
-        i + 1 < len(lines)
-        and "|" in lines[i]
-        and bool(TABLE_SEP_RE.match(lines[i + 1]))
-    )
-
-
-def render_table(lines, i):
-    header = split_row(lines[i])
-    i += 2
-    rows = []
-    while i < len(lines) and lines[i].strip() and "|" in lines[i]:
-        rows.append(split_row(lines[i]))
-        i += 1
-    head = "".join(f"<th>{inline(cell)}</th>" for cell in header)
-    body = "".join(
-        "<tr>" + "".join(f"<td>{inline(cell)}</td>" for cell in row) + "</tr>"
-        for row in rows
-    )
-    return f"<table><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table>", i
-
-
-def _indent_len(line):
-    expanded = line.expandtabs(4)
-    return len(expanded) - len(expanded.lstrip(" "))
-
-
-def parse_list_items(lines):
-    """Split raw list lines into items with their nested sub-blocks."""
-    items = []
-    i = 0
-    while i < len(lines):
-        match = LIST_RE.match(lines[i])
-        if not match:
-            i += 1
+def _cs_scan_quoted(text, i):
+    """Skip a regular "..." or '...' literal; i points at the opening quote."""
+    quote = text[i]
+    j = i + 1
+    n = len(text)
+    while j < n:
+        if text[j] == "\\":
+            j += 2
             continue
-        indent = _indent_len(lines[i])
-        item = {"ordered": match.group(2)[0].isdigit(), "text": match.group(3), "sub": []}
+        if text[j] == quote or text[j] == "\n":
+            return j + 1
+        j += 1
+    return n
+
+
+def _cs_scan_verbatim(text, i):
+    """Skip a verbatim @"..." literal; i points at the opening quote."""
+    j = i + 1
+    n = len(text)
+    while j < n:
+        if text[j] == '"':
+            if j + 1 < n and text[j + 1] == '"':
+                j += 2
+                continue
+            return j + 1
+        j += 1
+    return n
+
+
+def _cs_scan_raw(text, i, quotes):
+    """Skip a raw string literal; i points at the opening quote run."""
+    j = i + quotes
+    n = len(text)
+    while j < n:
+        if text[j] == '"':
+            run = 1
+            while j + run < n and text[j + run] == '"':
+                run += 1
+            if run >= quotes:
+                return j + run
+            j += run
+            continue
+        j += 1
+    return n
+
+
+def _cs_scan_hole(text, i):
+    """Skip an interpolation hole; i points right after the opening '{'."""
+    depth = 1
+    n = len(text)
+    while i < n:
+        literal_end = _cs_scan_literal(text, i)
+        if literal_end is not None:
+            i = literal_end
+            continue
+        if text.startswith("//", i):
+            newline = text.find("\n", i)
+            i = n if newline < 0 else newline + 1
+            continue
+        if text.startswith("/*", i):
+            end = text.find("*/", i + 2)
+            i = n if end < 0 else end + 2
+            continue
+        if text[i] == "{":
+            depth += 1
+        elif text[i] == "}":
+            depth -= 1
+            if depth == 0:
+                return i + 1
         i += 1
-        while i < len(lines):
-            line = lines[i]
-            if not line.strip():
-                j = i + 1
-                while j < len(lines) and not lines[j].strip():
-                    j += 1
-                if j < len(lines) and _indent_len(lines[j]) > indent:
-                    item["sub"].append("")
-                    i += 1
-                    continue
-                break
-            if _indent_len(line) > indent:
-                item["sub"].append(line)
-                i += 1
-            else:
-                break
-        items.append(item)
-    return items
+    return n
 
 
-def render_list_html(items):
-    parts = []
-    buffer = []
-    ordered = None
+def _cs_scan_interp(text, i, dollars, verbatim):
+    """Skip an interpolated "..." or @"..." literal; i points at the quote."""
+    j = i + 1
+    n = len(text)
+    while j < n:
+        char = text[j]
+        if char == '"':
+            if verbatim and j + 1 < n and text[j + 1] == '"':
+                j += 2
+                continue
+            return j + 1
+        if char == "\\" and not verbatim:
+            j += 2
+            continue
+        if char == "{":
+            if dollars == 1 and j + 1 < n and text[j + 1] == "{":
+                j += 2
+                continue
+            j = _cs_scan_hole(text, j + 1)
+            continue
+        if char == "}":
+            if dollars == 1 and j + 1 < n and text[j + 1] == "}":
+                j += 2
+                continue
+            j += 1
+            continue
+        j += 1
+    return n
 
-    def flush():
-        if not buffer:
-            return
-        tag = "ol" if ordered else "ul"
-        parts.append(f"<{tag}>" + "".join(buffer) + f"</{tag}>")
-        buffer.clear()
 
-    for item in items:
-        if ordered is not None and item["ordered"] != ordered:
-            flush()
-        ordered = item["ordered"]
-        inner = inline(item["text"])
-        if item["sub"]:
-            inner += render_blocks(item["sub"])
-        buffer.append(f"<li>{inner}</li>")
-    flush()
-    return "".join(parts)
+def _cs_scan_literal(text, i):
+    """Return the index after a string or char literal at i, or None."""
+    char = text[i]
+    if char == "'":
+        return _cs_scan_quoted(text, i)
+    if char == '"':
+        quotes = 1
+        n = len(text)
+        while i + quotes < n and text[i + quotes] == '"':
+            quotes += 1
+        if quotes >= 3:
+            return _cs_scan_raw(text, i, quotes)
+        return _cs_scan_quoted(text, i)
+    if char not in "$@":
+        return None
 
-
-def render_list(lines, i):
-    raw = []
-    while i < len(lines):
-        line = lines[i]
-        if LIST_RE.match(line):
-            raw.append(line)
-            i += 1
-        elif line.strip() and _indent_len(line) > 0 and raw:
-            raw.append(line)
-            i += 1
-        elif not line.strip():
-            j = i + 1
-            while j < len(lines) and not lines[j].strip():
-                j += 1
-            if j < len(lines) and (LIST_RE.match(lines[j]) or _indent_len(lines[j]) > 0):
-                raw.append("")
-                i += 1
-            else:
-                break
+    j = i
+    dollars = 0
+    verbatim = False
+    n = len(text)
+    while j < n and text[j] in "$@":
+        if text[j] == "$":
+            dollars += 1
         else:
-            break
-    return render_list_html(parse_list_items(raw)), i
+            verbatim = True
+        j += 1
+    if j >= n or text[j] != '"':
+        return None
+
+    quotes = 0
+    while j + quotes < n and text[j + quotes] == '"':
+        quotes += 1
+    if quotes >= 3:
+        return _cs_scan_raw(text, j, quotes)
+    if verbatim:
+        return _cs_scan_interp(text, j, dollars, True) if dollars else _cs_scan_verbatim(text, j)
+    return _cs_scan_interp(text, j, dollars, False) if dollars else _cs_scan_quoted(text, j)
 
 
-def block_start(lines, i):
-    line = lines[i]
-    stripped = line.strip()
-    return (
-        bool(FENCE_RE.match(stripped))
-        or bool(HEADING_RE.match(stripped))
-        or bool(HR_RE.match(stripped))
-        or stripped.startswith(">")
-        or bool(LIST_RE.match(line))
-        or bool(RAW_HTML_RE.match(line))
-        or is_table_start(lines, i)
-    )
+def compact_csharp(text):
+    """Remove indentation, line breaks and redundant spaces from C# code.
 
-
-def render_blocks(lines):
-    out = []
+    Strings and comments are preserved: multi-line and verbatim strings
+    keep their newlines, runs of ``//`` comments are merged into one line,
+    preprocessor directives keep a line of their own.
+    """
+    parts = []
+    last = ""
+    pending_ws = False
+    after_line_comment = False
+    at_line_start = True
     i = 0
-    while i < len(lines):
-        line = lines[i]
-        stripped = line.strip()
-        if not stripped:
+    n = len(text)
+
+    def put(chunk):
+        nonlocal last
+        parts.append(chunk)
+        last = chunk[-1]
+
+    def begin_token(first):
+        nonlocal pending_ws, after_line_comment
+        if after_line_comment:
+            put("\n")
+            after_line_comment = False
+            pending_ws = False
+        elif pending_ws and last and last != "\n":
+            if _cs_needs_space(last, first):
+                put(" ")
+        pending_ws = False
+
+    while i < n:
+        char = text[i]
+
+        if char in " \t\r\n":
+            if parts:
+                pending_ws = True
+            if char == "\n":
+                at_line_start = True
             i += 1
             continue
 
-        match = FENCE_RE.match(stripped)
-        if match:
-            marker = match.group(1)[0]
-            lang = match.group(2)
-            i += 1
-            code = []
-            while i < len(lines):
-                closing = lines[i].strip()
-                if len(closing) >= 3 and set(closing) == {marker}:
-                    i += 1
-                    break
-                code.append(lines[i])
-                i += 1
-            attr = f' class="language-{html.escape(lang, quote=True)}"' if lang else ""
-            out.append(f"<pre><code{attr}>{html.escape(chr(10).join(code), quote=False)}</code></pre>")
+        if at_line_start and char == "#":
+            newline = text.find("\n", i)
+            if newline < 0:
+                newline = n
+            directive = re.sub(r"[ \t]+", " ", text[i:newline].strip())
+            if parts and last != "\n":
+                put("\n")
+            put(directive + "\n")
+            pending_ws = False
+            after_line_comment = False
+            at_line_start = True
+            i = newline + 1
             continue
 
-        match = HEADING_RE.match(stripped)
-        if match:
-            level = min(len(match.group(1)) + 1, 6)
-            out.append(f"<h{level}>{inline(match.group(2))}</h{level}>")
-            i += 1
+        if text.startswith("//", i):
+            newline = text.find("\n", i)
+            if newline < 0:
+                newline = n
+            comment = re.sub(r"[ \t]+", " ", text[i:newline].rstrip())
+            if after_line_comment:
+                body = comment.lstrip("/").strip()
+                if body:
+                    put(" " + body)
+            else:
+                if pending_ws and last == "/":
+                    put(" ")
+                put(comment)
+            after_line_comment = True
+            pending_ws = False
+            at_line_start = False
+            i = newline + 1
             continue
 
-        if is_table_start(lines, i):
-            table, i = render_table(lines, i)
-            out.append(table)
+        if text.startswith("/*", i):
+            end = text.find("*/", i + 2)
+            if end < 0:
+                comment = text[i:]
+                i = n
+            else:
+                comment = text[i:end + 2]
+                i = end + 2
+            begin_token("/")
+            put(re.sub(r"\s+", " ", comment))
+            after_line_comment = False
+            at_line_start = False
+            pending_ws = False
             continue
 
-        if HR_RE.match(stripped):
-            out.append("<hr>")
-            i += 1
+        literal_end = _cs_scan_literal(text, i)
+        if literal_end is not None:
+            begin_token(char)
+            put(text[i:literal_end])
+            after_line_comment = False
+            at_line_start = False
+            pending_ws = False
+            i = literal_end
             continue
 
-        if stripped.startswith(">"):
-            quote = []
-            while i < len(lines) and lines[i].strip().startswith(">"):
-                inner = lines[i].strip()[1:]
-                quote.append(inner[1:] if inner.startswith(" ") else inner)
-                i += 1
-            out.append(f"<blockquote>{render_blocks(quote)}</blockquote>")
+        if char.isalnum() or char == "_":
+            j = i + 1
+            while j < n and (text[j].isalnum() or text[j] == "_"):
+                j += 1
+            begin_token(char)
+            put(text[i:j])
+            after_line_comment = False
+            at_line_start = False
+            pending_ws = False
+            i = j
             continue
 
-        if LIST_RE.match(line):
-            list_html, i = render_list(lines, i)
-            out.append(list_html)
+        begin_token(char)
+        put(char)
+        after_line_comment = False
+        at_line_start = False
+        pending_ws = False
+        i += 1
+
+    return "".join(parts).strip()
+
+
+# --------------------------------------------------------------------------
+# plain text conversion
+# --------------------------------------------------------------------------
+
+def _link_text(match):
+    if match.group(1) == "!":
+        alt = match.group(2)
+        return f"[image: {alt}]" if alt else "[image]"
+    return match.group(2)
+
+
+def _outside_code(line, transform):
+    """Apply a transform only to the parts of a line outside `code` spans."""
+    parts = line.split("`")
+    for k in range(0, len(parts), 2):
+        parts[k] = transform(parts[k])
+    return "`".join(parts)
+
+
+def plain_markdown(text):
+    """Turn markdown into plain text.
+
+    Links and images keep only their text, embedded HTML loses its tags,
+    fenced code blocks are passed through unchanged.
+    """
+    out = []
+    in_fence = False
+    for line in text.splitlines():
+        if FENCE_RE.match(line.strip()):
+            in_fence = not in_fence
+            out.append(line)
             continue
-
-        raw = RAW_HTML_RE.match(line)
-        if raw:
-            tag = raw.group(1).lower()
-            fragment = [line]
-            i += 1
-            closed = re.search(r"</" + re.escape(tag) + r"\s*>\s*$", line, re.IGNORECASE)
-            if not closed and not line.rstrip().endswith("/>"):
-                close_re = re.compile(r"</" + re.escape(tag) + r"\s*>", re.IGNORECASE)
-                while i < len(lines):
-                    fragment.append(lines[i])
-                    i += 1
-                    if close_re.search(fragment[-1]):
-                        break
-            out.append(raw_html_to_text("\n".join(fragment)))
+        if in_fence:
+            out.append(line)
             continue
-
-        para = []
-        while i < len(lines) and lines[i].strip() and not (para and block_start(lines, i)):
-            para.append(lines[i].strip())
-            i += 1
-        out.append("<p>" + inline(" ".join(para)) + "</p>")
-
+        line = AUTOLINK_RE.sub(r"\1", line)
+        line = MD_LINK_RE.sub(_link_text, line)
+        line = _outside_code(
+            line,
+            lambda s: html.unescape(HTML_COMMENT_RE.sub("", HTML_TAG_RE.sub("", s))),
+        )
+        out.append(line.rstrip())
     return "\n".join(out)
 
 
-def render_markdown(text):
-    return render_blocks(text.splitlines())
+def escape_pre(text):
+    """Escape text for a <pre> block; '>' needs no escaping in HTML."""
+    return text.replace("&", "&amp;").replace("<", "&lt;")
 
 
 # --------------------------------------------------------------------------
-# page assembly
+# collection
 # --------------------------------------------------------------------------
 
 def read_md(path):
@@ -462,99 +480,137 @@ def collect_mods():
     return mods
 
 
-def anchor(key):
-    return re.sub(r"[^0-9a-z]+", "-", key.lower()).strip("-")
+def read_text(path):
+    with open(path, encoding="utf-8-sig", errors="replace") as f:
+        return f.read()
 
 
-def mod_anchor(name):
-    return anchor("mods/" + name)
+def collect_sources():
+    """Collect every .cs file of the project and the mods.
+
+    Returns (project, mod_sources) mapping a top-level directory (mods use
+    "mods/<name>") to a sorted list of (repository-relative path, source).
+    """
+    project = {}
+    mod_sources = {}
+    if not os.path.isdir(ROOT_DIR):
+        return project, mod_sources
+
+    for root, dirs, files in os.walk(ROOT_DIR):
+        dirs[:] = sorted(
+            d for d in dirs if d not in SKIP_DIRS and not d.startswith(".")
+        )
+        for name in sorted(files):
+            if not name.endswith(CS_EXT):
+                continue
+            path = os.path.join(root, name)
+            rel = os.path.relpath(path, ROOT_DIR).replace("\\", "/")
+            parts = rel.split("/")
+            if len(parts) > 2 and parts[0] == "mods":
+                group = f"mods/{parts[1]}"
+                mod_sources.setdefault(group, []).append((rel, read_text(path)))
+            else:
+                group = parts[0] if len(parts) > 1 else "(root)"
+                project.setdefault(group, []).append((rel, read_text(path)))
+
+    for files in (*project.values(), *mod_sources.values()):
+        files.sort(key=lambda item: item[0])
+    return project, mod_sources
 
 
-def build_page(entries, mods):
+def collect_scenarios():
+    """Collect every .scenario file of the mods, grouped by mod directory."""
+    scenarios = {}
+    if not os.path.isdir(MODS_DIR):
+        return scenarios
+
+    for root, dirs, files in os.walk(MODS_DIR):
+        dirs[:] = sorted(d for d in dirs if not d.startswith("."))
+        for name in sorted(files):
+            if not name.endswith(SCENARIO_EXT):
+                continue
+            path = os.path.join(root, name)
+            rel = os.path.relpath(path, MODS_DIR).replace("\\", "/")
+            if "/" not in rel:
+                continue
+            mod, inner = rel.split("/", 1)
+            scenarios.setdefault("mods/" + mod, []).append((inner, read_text(path)))
+
+    for files in scenarios.values():
+        files.sort(key=lambda item: item[0])
+    return scenarios
+
+
+# --------------------------------------------------------------------------
+# page assembly
+# --------------------------------------------------------------------------
+
+def build_page(entries, mods, project_sources, mod_sources, scenarios):
+    project_total = sum(len(files) for files in project_sources.values())
+    mod_total = sum(len(files) for files in mod_sources.values())
+    source_total = project_total + mod_total
+    scenario_total = sum(len(files) for files in scenarios.values())
+
+    body = [
+        "cthangover - full documentation",
+        f"Plain-text dump for AI agents: {len(entries)} markdown documents, "
+        f"{len(mods)} mods, {source_total} C# files, {scenario_total} scenarios.",
+        "",
+        "===== DOCUMENTATION =====",
+    ]
+    for entry in entries:
+        body.append("")
+        body.append(f"===== DOC {entry['key']}.md: {entry['title']} =====")
+        body.append(plain_markdown(entry["content"]).strip())
+
+    if mods:
+        body.append("")
+        body.append("===== EXISTING MODS =====")
+        for mod in mods:
+            body.append("")
+            body.append(f"===== MOD mods/{mod['name']}: {mod['title']} =====")
+            body.append("manifest.json:")
+            body.append(mod["manifest"].strip())
+            body.append(f"files ({len(mod['files'])}):")
+            body.extend(mod["files"])
+
+    if source_total:
+        body.append("")
+        body.append("===== SOURCE CODE (C#) =====")
+        for area in sorted(project_sources):
+            for rel, text in project_sources[area]:
+                body.append("")
+                body.append(f"===== FILE {rel} =====")
+                body.append(compact_csharp(text))
+        for group in sorted(mod_sources):
+            for rel, text in mod_sources[group]:
+                body.append("")
+                body.append(f"===== FILE {rel} =====")
+                body.append(compact_csharp(text))
+
+    if scenario_total:
+        body.append("")
+        body.append("===== SCENARIOS =====")
+        for group in sorted(scenarios):
+            for rel, text in scenarios[group]:
+                body.append("")
+                body.append(f"===== SCENARIO {group}/{rel} =====")
+                body.append(text.strip())
+
     lines = [
         "<!DOCTYPE html>",
         '<html lang="en">',
         "<head>",
         '<meta charset="utf-8">',
         "<title>cthangover - full documentation</title>",
-        '<meta name="description" content="Complete cthangover documentation on a single page '
-        'without JavaScript or CSS, for AI agents and offline reading.">',
         "</head>",
         "<body>",
-        "<h1>cthangover - full documentation</h1>",
-        "<p>Single-page documentation dump for AI agents. No JavaScript, no CSS, no styling. "
-        f"Generated from {len(entries)} markdown files and {len(mods)} mods. Canonical location: "
-        f'<a href="{SITE_URL}/ai.html">{SITE_URL}/ai.html</a></p>',
-        "<hr>",
-        "<h2>Contents</h2>",
+        "<pre>",
+        escape_pre("\n".join(body)),
+        "</pre>",
+        "</body>",
+        "</html>",
     ]
-
-    group = None
-    for entry in entries:
-        if entry["group"] != group:
-            if group is not None:
-                lines.append("</ul>")
-            group = entry["group"]
-            lines.append(f"<h3>{html.escape(group)}</h3>")
-            lines.append("<ul>")
-        lines.append(
-            f'<li><a href="#{anchor(entry["key"])}">'
-            f'{html.escape(entry["key"])} - {html.escape(entry["title"])}</a></li>'
-        )
-    if group is not None:
-        lines.append("</ul>")
-
-    if mods:
-        lines.append("<h3>Mods</h3>")
-        lines.append("<ul>")
-        for mod in mods:
-            lines.append(
-                f'<li><a href="#{mod_anchor(mod["name"])}">'
-                f'mods/{html.escape(mod["name"])} - {html.escape(mod["title"])}</a></li>'
-            )
-        lines.append("</ul>")
-
-    for entry in entries:
-        lines.append("<hr>")
-        lines.append(f'<section id="{anchor(entry["key"])}">')
-        lines.append(f'<h2>{html.escape(entry["title"])}</h2>')
-        lines.append(
-            f'<p>Source: <code>{html.escape(entry["key"])}.md</code> - '
-            f'<a href="{SITE_URL}/{entry["key"]}">{SITE_URL}/{entry["key"]}</a></p>'
-        )
-        lines.append(render_markdown(entry["content"]))
-        lines.append("</section>")
-
-    if mods:
-        lines.append("<hr>")
-        lines.append('<h2 id="mods">Existing mods</h2>')
-        lines.append(
-            f"<p>Mods available in <code>mods/</code>: {len(mods)}. "
-            "Each entry lists the mod's <code>manifest.json</code> and all files.</p>"
-        )
-        for mod in mods:
-            lines.append(f'<section id="{mod_anchor(mod["name"])}">')
-            lines.append(
-                f'<h3>{html.escape(mod["name"])} - {html.escape(mod["title"])}</h3>'
-            )
-            lines.append(
-                f'<p>Path: <code>mods/{html.escape(mod["name"])}</code> - '
-                f'{len(mod["files"])} files</p>'
-            )
-            lines.append("<h4>manifest.json</h4>")
-            lines.append(
-                '<pre><code class="language-json">'
-                f'{html.escape(mod["manifest"], quote=False)}</code></pre>'
-            )
-            lines.append("<h4>Files</h4>")
-            lines.append("<ul>")
-            for rel in mod["files"]:
-                lines.append(f'<li><code>{html.escape(rel, quote=False)}</code></li>')
-            lines.append("</ul>")
-            lines.append("</section>")
-
-    lines.append("</body>")
-    lines.append("</html>")
     return "\n".join(lines) + "\n"
 
 
@@ -565,13 +621,22 @@ def main():
 
     entries = collect_entries()
     mods = collect_mods()
-    page = build_page(entries, mods)
+    project_sources, mod_sources = collect_sources()
+    scenarios = collect_scenarios()
+    page = build_page(entries, mods, project_sources, mod_sources, scenarios)
 
     with open(OUT_FILE, "w", encoding="utf-8", newline="\n") as f:
         f.write(page)
 
+    source_total = sum(len(files) for files in project_sources.values()) + sum(
+        len(files) for files in mod_sources.values()
+    )
+    scenario_total = sum(len(files) for files in scenarios.values())
     total_bytes = os.path.getsize(OUT_FILE)
-    print(f"OK  {OUT_FILE}  ({len(entries)} documents, {len(mods)} mods, {total_bytes} bytes)")
+    print(
+        f"OK  {OUT_FILE}  ({len(entries)} documents, {len(mods)} mods, "
+        f"{source_total} C# files, {scenario_total} scenarios, {total_bytes} bytes)"
+    )
 
 
 if __name__ == "__main__":

@@ -1,5 +1,6 @@
 using Cthangover.Core.Localization;
 using Cthangover.Core.Mods;
+using Cthangover.Core.Quests;
 using Cthangover.Core.Utils;
 using Godot;
 
@@ -83,7 +84,10 @@ namespace Cthangover.Core.Settings
         }
 
         /// <summary>
-        /// Begins a "New Game": wipes the runtime state and then publishes
+        /// Begins a "New Game": wipes the runtime state, resets every quest to
+        /// its freshly loaded state (the quest factory survives returning to
+        /// the menu, so without this step tags and statuses from the previous
+        /// playthrough would poison the new one), and then publishes
         /// <see cref="Events.NewGameStartedEvent"/>. Mods listen to that event to
         /// re-seed per-session data — the core mod restores the starter party there,
         /// because <see cref="ResetRuntime"/> discards it and
@@ -93,6 +97,7 @@ namespace Cthangover.Core.Settings
         public void StartNewGame()
         {
             ResetRuntime();
+            QuestFactory.Instance.ResetAll();
             Events.ModEventBus.Publish(new Events.NewGameStartedEvent());
         }
 

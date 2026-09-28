@@ -9,7 +9,7 @@ namespace Cthangover.Core.Mods
     /// <summary>
     /// Persistent storage for disabled mod IDs in <c>user://disabled_mods.json</c>.
     /// Used by <see cref="ModRegistry"/> to filter out disabled mods during
-    /// loading and by <see cref="ModsMenu"/> to display and toggle mod states.
+    /// loading and by the mod manager screen to display and toggle mod states.
     /// The file is a simple JSON array of mod ID strings.
     /// </summary>
     public static class DisabledModsStore

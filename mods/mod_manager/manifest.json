@@ -14,6 +14,11 @@
       "id": "mod_manager",
       "scene_path": "scenes/mod_manager_screen.tscn",
       "button": { "icon": "mod_manager", "locale": "mod_manager/menu_title", "index": 100 }
+    },
+    {
+      "id": "mod_collections",
+      "scene_path": "scenes/mod_collections_screen.tscn",
+      "button": { "locale": "mod_manager/collections_menu_title", "index": 101 }
     }
   ]
 }

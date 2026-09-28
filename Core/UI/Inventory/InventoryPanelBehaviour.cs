@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Cthangover.Core.Audio;
-using Cthangover.Core.Battle;
 using Cthangover.Core.Characters;
 using Cthangover.Core.Factories.Impls;
 using Cthangover.Core.Items;
@@ -179,7 +178,7 @@ namespace Cthangover.Core.UI.Inventory
             ClearSelection();
             RebuildTabs();
             RebuildGrid();
-            UpdateBattleState();
+            UpdateActiveActorState();
             SelectFirst();
         }
 
@@ -762,7 +761,7 @@ namespace Cthangover.Core.UI.Inventory
             var verb = InventoryItemUi.Translate(InventoryItemUi.VerbKey(item));
 
             var useButton = new Button();
-            useButton.Text = IsBattleActive
+            useButton.Text = HasActiveActor
                 ? verb + "  " + InventoryItemUi.Translate("ui/inventory/ap_cost")
                 : verb;
             useButton.Disabled = !usable;
@@ -880,26 +879,19 @@ namespace Cthangover.Core.UI.Inventory
             return button;
         }
 
-        private bool IsBattleActive
-        {
-            get
-            {
-                var context = BattleSceneContext.Instance;
-                return context != null && !context.IsDestroyed && context.ActiveCharacter != null;
-            }
-        }
+        private bool HasActiveActor => ActiveCharacterRegistry.ActiveCharacter != null;
 
-        private void UpdateBattleState()
+        private void UpdateActiveActorState()
         {
             if (_apBox == null)
                 return;
 
-            _apBox.Visible = IsBattleActive;
-            if (!IsBattleActive || _apPips == null)
+            _apBox.Visible = HasActiveActor;
+            if (!HasActiveActor || _apPips == null)
                 return;
 
             ClearChildren(_apPips);
-            var point = BattleSceneContext.Instance.ActiveCharacter.Attributes.Point;
+            var point = ActiveCharacterRegistry.ActiveCharacter.Attributes.Point;
             var total = point.BaseValue > 0 ? point.BaseValue : point.Value;
             total = Mathf.Clamp(total, 1, 6);
             for (var i = 0; i < total; i++)
@@ -933,10 +925,10 @@ namespace Cthangover.Core.UI.Inventory
 
         private bool HasActionPoint()
         {
-            if (!IsBattleActive)
+            if (!HasActiveActor)
                 return true;
 
-            var point = BattleSceneContext.Instance.ActiveCharacter.Attributes.Point;
+            var point = ActiveCharacterRegistry.ActiveCharacter.Attributes.Point;
             if (point.Value >= 1)
                 return true;
 
@@ -948,10 +940,10 @@ namespace Cthangover.Core.UI.Inventory
 
         private void SpendActionPoint()
         {
-            if (!IsBattleActive)
+            if (!HasActiveActor)
                 return;
-            BattleSceneContext.Instance.ActiveCharacter.Attributes.Point.Value -= 1;
-            UpdateBattleState();
+            ActiveCharacterRegistry.ActiveCharacter.Attributes.Point.Value -= 1;
+            UpdateActiveActorState();
         }
 
         private void OnUseClicked()

@@ -8,11 +8,14 @@ namespace Cthangover.Core.Mods
     /// <code>
     /// {
     ///   "catalog": { "version": 1, "updated_at": "2026-..." },
-    ///   "mods": [ ...CatalogExportEntry... ]
+    ///   "mods": [ ...CatalogExportEntry... ],
+    ///   "collections": [ ...ModCollection... ]
     /// }
     /// </code>
     /// <see cref="CatalogService"/> fetches this from each configured URL,
-    /// deserializes, and merges the <c>"mods"</c> arrays.
+    /// deserializes, and merges the <c>"mods"</c> and <c>"collections"</c>
+    /// arrays independently. The <c>collections</c> key is optional so catalogs
+    /// written before collections existed keep working.
     /// </summary>
     public class CatalogRoot
     {
@@ -23,6 +26,10 @@ namespace Cthangover.Core.Mods
         /// <summary>List of mod entries available in this catalog.</summary>
         [JsonPropertyName("mods")]
         public List<CatalogExportEntry> Mods { get; set; }
+
+        /// <summary>Curated mod collections this catalog distributes; see <see cref="ModCollectionStore"/>.</summary>
+        [JsonPropertyName("collections")]
+        public List<ModCollection> Collections { get; set; }
     }
 
     /// <summary>

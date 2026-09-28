@@ -1,5 +1,4 @@
 #if TOOLS
-using Cthangover.Core.Battle;
 using Cthangover.Core.Utils;
 using Godot;
 
@@ -8,14 +7,16 @@ namespace Cthangover.Core.Autotest
     /// <summary>
     /// Headless driver for the battle integration test. Both shipped battle
     /// cores wait for player input, so the driver periodically presses the
-    /// "end turn" button of the active core, letting the enemy AI act until
-    /// <see cref="BattleSceneContext.IsDestroyed"/> flips (victory or defeat).
-    /// The core is selected by <c>--core=</c> (card_battle by default) and
-    /// only affects how the end-turn button is located: card_battle nests it
-    /// under a named node, ff_battle adds a plain Button directly to
-    /// ToolPanel. A missing battle scene or an endless battle is reported as a
-    /// failure and quits with exit code 1, so the CI run fails instead of
-    /// hanging.
+    /// "end turn" button of the active core, letting the enemy AI act until the
+    /// battle scene reports <c>IsDestroyed</c> (victory or defeat). The core is
+    /// selected by <c>--core=</c> (card_battle by default) and only affects how
+    /// the end-turn button is located: card_battle nests it under a named node,
+    /// ff_battle adds a plain Button directly to ToolPanel. A missing battle
+    /// scene or an endless battle is reported as a failure and quits with exit
+    /// code 1, so the CI run fails instead of hanging.
+    /// <para/>
+    /// The battle scene, core registry and autoplay contract live in the
+    /// turn-battle mod, so all typed access goes through <see cref="TurnBattleBridge"/>.
     /// </summary>
     public partial class BattleTestDriver : Node
     {
@@ -43,21 +44,26 @@ namespace Cthangover.Core.Autotest
         }
 
         /// <summary>
-        /// Preferred universal path: cores implementing
-        /// <see cref="IBattleAutoPlayable"/> report when they wait for the
-        /// player and accept a turn advance directly, so the driver does not
-        /// depend on core-specific UI layout. The UI lookup in
-        /// <see cref="FindEndTurnButton"/> remains as a fallback for cores
+        /// Preferred universal path: cores implementing the mod's IBattleAutoPlayable
+        /// report when they wait for the player and accept a turn advance directly,
+        /// so the driver does not depend on core-specific UI layout. The UI lookup
+        /// in <see cref="FindEndTurnButton"/> remains as a fallback for cores
         /// without the contract.
         /// </summary>
-        private bool TryAdvanceAutoPlayable(BattleSceneContext battle)
+        private bool TryAdvanceAutoPlayable(Node battle)
         {
-            if (battle.ActiveBattleCore is not IBattleAutoPlayable auto || !auto.IsWaitingForPlayerInput)
+            var core = TurnBattleBridge.GetActiveCore(battle);
+            var autoType = TurnBattleBridge.AutoPlayableType();
+            if (core == null || autoType == null || !autoType.IsInstanceOfType(core))
+                return false;
+
+            var waiting = (bool?)autoType.GetProperty("IsWaitingForPlayerInput")?.GetValue(core) ?? false;
+            if (!waiting)
                 return false;
 
             _turnPresses++;
             GameLogger.Log("BATTLE_TEST", $"BattleTestDriver: auto turn #{_turnPresses}");
-            auto.AdvancePlayerTurn();
+            autoType.GetMethod("AdvancePlayerTurn")?.Invoke(core, null);
             return true;
         }
 
@@ -66,7 +72,7 @@ namespace Cthangover.Core.Autotest
         /// named widget at a fixed path; ff_battle creates an unnamed Button
         /// and adds it as a direct child of ToolPanel.
         /// </summary>
-        private Button FindEndTurnButton(BattleSceneContext battle)
+        private Button FindEndTurnButton(Node battle)
         {
             if (_core != CardBattleCore)
             {
@@ -94,7 +100,7 @@ namespace Cthangover.Core.Autotest
                 return;
             _nextPoll = _elapsed + PollIntervalSeconds;
 
-            var battle = BattleSceneContext.Instance;
+            var battle = TurnBattleBridge.GetSceneContext();
             if (battle == null)
             {
                 if (_elapsed >= SetupTimeoutSeconds)
@@ -118,7 +124,7 @@ namespace Cthangover.Core.Autotest
                 }
             }
 
-            if (battle.IsDestroyed)
+            if (TurnBattleBridge.IsDestroyed(battle))
             {
                 Finish(true, $"battle finished in {_elapsed:F1}s, end-turn presses={_turnPresses}");
                 return;
