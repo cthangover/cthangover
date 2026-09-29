@@ -1,19 +1,25 @@
-"""Build ai.html - all documentation, sources and scenarios in one page.
+"""Build the AI reference pages: documentation, code, tests and mod resources.
 
-The page is a plain-text dump for AI agents (and humans): the whole payload
-is a single <pre> block, so there is no formatting markup beyond the bare
-HTML frame. Markdown links lose their URLs, embedded HTML loses its tags,
-C# code is whitespace-compacted (comments are kept).
+The content is split into four plain-text dumps, so an AI agent can load
+only what it needs. Every page is a single <pre> block, so there is no
+formatting markup beyond the bare HTML frame. Markdown links lose their
+URLs, embedded HTML loses its tags, C# code is whitespace-compacted
+(comments are kept).
 
 Sources:
     docs/**/*.md            - the main documentation
     quickstart/en/*.md      - the English quick start guide
-    ../mods/*/manifest.json - existing mods (manifest + file list)
     ../**/*.cs              - C# sources of the project and the mods
+    ../tests/**/*.cs        - unit and integration tests
+    ../Core/Autotest/*.cs   - test tooling (SceneSwitcher, drivers)
+    ../mods/*/manifest.json - existing mods (manifest + file list)
     ../mods/**/*.scenario   - scenario scripts of the mods
 
 Output:
-    ai.html
+    ai_docs.html  - documentation
+    ai_code.html  - C# sources, tests excluded
+    ai_tests.html - C# test sources and test tooling
+    ai_res.html   - mod manifests and scenario scripts
 """
 
 import html
@@ -27,7 +33,13 @@ QUICKSTART_DIR = "quickstart"
 QUICKSTART_LANGS = ("en",)
 ROOT_DIR = ".."
 MODS_DIR = os.path.join("..", "mods")
-OUT_FILE = "ai.html"
+TEST_DIR = "tests"
+AUTOTEST_DIR = "Core/Autotest"
+DOCS_OUT_FILE = "ai_docs.html"
+CODE_OUT_FILE = "ai_code.html"
+TESTS_OUT_FILE = "ai_tests.html"
+RES_OUT_FILE = "ai_res.html"
+LEGACY_OUT_FILE = "ai.html"
 CS_EXT = ".cs"
 SCENARIO_EXT = ".scenario"
 SKIP_DIRS = {
@@ -485,16 +497,22 @@ def read_text(path):
         return f.read()
 
 
+def is_test_source(rel):
+    """Whether a repository-relative path is a test or test-tooling source."""
+    return rel.startswith(TEST_DIR + "/") or rel.startswith(AUTOTEST_DIR + "/")
+
+
 def collect_sources():
     """Collect every .cs file of the project and the mods.
 
-    Returns (project, mod_sources) mapping a top-level directory (mods use
-    "mods/<name>") to a sorted list of (repository-relative path, source).
+    Returns (code_sources, test_sources) mapping a top-level directory (mods
+    use "mods/<name>") to a sorted list of (repository-relative path, source).
+    Tests are the files under tests/ and Core/Autotest/.
     """
-    project = {}
-    mod_sources = {}
+    code_sources = {}
+    test_sources = {}
     if not os.path.isdir(ROOT_DIR):
-        return project, mod_sources
+        return code_sources, test_sources
 
     for root, dirs, files in os.walk(ROOT_DIR):
         dirs[:] = sorted(
@@ -508,14 +526,14 @@ def collect_sources():
             parts = rel.split("/")
             if len(parts) > 2 and parts[0] == "mods":
                 group = f"mods/{parts[1]}"
-                mod_sources.setdefault(group, []).append((rel, read_text(path)))
             else:
                 group = parts[0] if len(parts) > 1 else "(root)"
-                project.setdefault(group, []).append((rel, read_text(path)))
+            target = test_sources if is_test_source(rel) else code_sources
+            target.setdefault(group, []).append((rel, read_text(path)))
 
-    for files in (*project.values(), *mod_sources.values()):
+    for files in (*code_sources.values(), *test_sources.values()):
         files.sort(key=lambda item: item[0])
-    return project, mod_sources
+    return code_sources, test_sources
 
 
 def collect_scenarios():
@@ -545,16 +563,21 @@ def collect_scenarios():
 # page assembly
 # --------------------------------------------------------------------------
 
-def build_page(entries, mods, project_sources, mod_sources, scenarios):
-    project_total = sum(len(files) for files in project_sources.values())
-    mod_total = sum(len(files) for files in mod_sources.values())
-    source_total = project_total + mod_total
-    scenario_total = sum(len(files) for files in scenarios.values())
+def _source_sections(sources):
+    """Render the ===== FILE ... ===== sections of grouped C# sources."""
+    body = []
+    for group in sorted(sources):
+        for rel, text in sources[group]:
+            body.append("")
+            body.append(f"===== FILE {rel} =====")
+            body.append(compact_csharp(text))
+    return body
 
+
+def build_docs_page(entries):
     body = [
-        "cthangover - full documentation",
-        f"Plain-text dump for AI agents: {len(entries)} markdown documents, "
-        f"{len(mods)} mods, {source_total} C# files, {scenario_total} scenarios.",
+        "cthangover - documentation",
+        f"Plain-text dump for AI agents: {len(entries)} markdown documents.",
         "",
         "===== DOCUMENTATION =====",
     ]
@@ -562,6 +585,41 @@ def build_page(entries, mods, project_sources, mod_sources, scenarios):
         body.append("")
         body.append(f"===== DOC {entry['key']}.md: {entry['title']} =====")
         body.append(plain_markdown(entry["content"]).strip())
+    return body
+
+
+def build_code_page(sources):
+    total = sum(len(files) for files in sources.values())
+    body = [
+        "cthangover - source code",
+        f"Plain-text dump for AI agents: {total} C# files, tests excluded.",
+        "",
+        "===== SOURCE CODE (C#) =====",
+    ]
+    body.extend(_source_sections(sources))
+    return body
+
+
+def build_tests_page(sources):
+    total = sum(len(files) for files in sources.values())
+    body = [
+        "cthangover - test code",
+        f"Plain-text dump for AI agents: {total} C# files "
+        "(tests and test tooling).",
+        "",
+        "===== TEST CODE (C#) =====",
+    ]
+    body.extend(_source_sections(sources))
+    return body
+
+
+def build_res_page(mods, scenarios):
+    scenario_total = sum(len(files) for files in scenarios.values())
+    body = [
+        "cthangover - mod resources",
+        f"Plain-text dump for AI agents: {len(mods)} mods, "
+        f"{scenario_total} scenarios.",
+    ]
 
     if mods:
         body.append("")
@@ -574,20 +632,6 @@ def build_page(entries, mods, project_sources, mod_sources, scenarios):
             body.append(f"files ({len(mod['files'])}):")
             body.extend(mod["files"])
 
-    if source_total:
-        body.append("")
-        body.append("===== SOURCE CODE (C#) =====")
-        for area in sorted(project_sources):
-            for rel, text in project_sources[area]:
-                body.append("")
-                body.append(f"===== FILE {rel} =====")
-                body.append(compact_csharp(text))
-        for group in sorted(mod_sources):
-            for rel, text in mod_sources[group]:
-                body.append("")
-                body.append(f"===== FILE {rel} =====")
-                body.append(compact_csharp(text))
-
     if scenario_total:
         body.append("")
         body.append("===== SCENARIOS =====")
@@ -597,12 +641,16 @@ def build_page(entries, mods, project_sources, mod_sources, scenarios):
                 body.append(f"===== SCENARIO {group}/{rel} =====")
                 body.append(text.strip())
 
+    return body
+
+
+def render_page(title, body):
     lines = [
         "<!DOCTYPE html>",
         '<html lang="en">',
         "<head>",
         '<meta charset="utf-8">',
-        "<title>cthangover - full documentation</title>",
+        f"<title>{html.escape(title)}</title>",
         "</head>",
         "<body>",
         "<pre>",
@@ -621,22 +669,53 @@ def main():
 
     entries = collect_entries()
     mods = collect_mods()
-    project_sources, mod_sources = collect_sources()
+    code_sources, test_sources = collect_sources()
     scenarios = collect_scenarios()
-    page = build_page(entries, mods, project_sources, mod_sources, scenarios)
 
-    with open(OUT_FILE, "w", encoding="utf-8", newline="\n") as f:
-        f.write(page)
-
-    source_total = sum(len(files) for files in project_sources.values()) + sum(
-        len(files) for files in mod_sources.values()
-    )
+    code_total = sum(len(files) for files in code_sources.values())
+    test_total = sum(len(files) for files in test_sources.values())
     scenario_total = sum(len(files) for files in scenarios.values())
-    total_bytes = os.path.getsize(OUT_FILE)
-    print(
-        f"OK  {OUT_FILE}  ({len(entries)} documents, {len(mods)} mods, "
-        f"{source_total} C# files, {scenario_total} scenarios, {total_bytes} bytes)"
+
+    docs_title = "cthangover - documentation"
+    code_title = "cthangover - source code"
+    tests_title = "cthangover - test code"
+    res_title = "cthangover - mod resources"
+
+    pages = (
+        (
+            DOCS_OUT_FILE,
+            docs_title,
+            build_docs_page(entries),
+            f"{len(entries)} documents",
+        ),
+        (
+            CODE_OUT_FILE,
+            code_title,
+            build_code_page(code_sources),
+            f"{code_total} C# files",
+        ),
+        (
+            TESTS_OUT_FILE,
+            tests_title,
+            build_tests_page(test_sources),
+            f"{test_total} C# files",
+        ),
+        (
+            RES_OUT_FILE,
+            res_title,
+            build_res_page(mods, scenarios),
+            f"{len(mods)} mods, {scenario_total} scenarios",
+        ),
     )
+
+    for path, title, body, summary in pages:
+        with open(path, "w", encoding="utf-8", newline="\n") as f:
+            f.write(render_page(title, body))
+        print(f"OK  {path}  ({summary}, {os.path.getsize(path)} bytes)")
+
+    if os.path.isfile(LEGACY_OUT_FILE):
+        os.remove(LEGACY_OUT_FILE)
+        print(f"REMOVED  {LEGACY_OUT_FILE} (replaced by the split pages)")
 
 
 if __name__ == "__main__":

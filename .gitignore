@@ -30,6 +30,8 @@ bin/
 *.zip
 *.log
 
+ai_*.html
+
 # OS
 .DS_Store
 Thumbs.db

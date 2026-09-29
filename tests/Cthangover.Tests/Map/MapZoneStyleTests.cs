@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Cthangover.Core.UI.Tool;
 using Godot;
 
@@ -6,10 +7,10 @@ namespace Engine.Tests.Map
     /// <summary>
     /// Tests for the pure part of the shared map zone style. The drawing
     /// itself needs a Godot rendering context, but the hatch pattern is the
-    /// foundation of the readability guarantee on same-coloured backdrops, so
-    /// its geometry is verified here: the pattern must tile seamlessly and
-    /// every tile must carry both a light and a dark stripe, otherwise a zone
-    /// could again vanish on a matching map patch.
+    /// foundation of every zone fill, so its geometry is verified here: the
+    /// pattern must tile seamlessly and every tile must carry both accent
+    /// colours (gold and orange) in equal measure — a tile that loses one of
+    /// the pair would turn the two-tone hatch into a flat wash.
     /// </summary>
     public class MapZoneStyleTests
     {
@@ -37,10 +38,10 @@ namespace Engine.Tests.Map
         }
 
         [Fact]
-        public void HatchPixel_EveryTileContainsBothStripes()
+        public void HatchPixel_EveryTileContainsBothAccentColours()
         {
-            var light = 0;
-            var dark = 0;
+            var colors = new List<Color>();
+            var counts = new List<int>();
 
             for (var x = 0; x < MapZoneStyle.HatchTile; x++)
             {
@@ -50,18 +51,23 @@ namespace Engine.Tests.Map
                     if (pixel.A == 0f)
                         continue;
 
-                    if (Luminance(pixel) > 0.5f)
-                        light++;
+                    var index = colors.FindIndex(color => color == pixel);
+                    if (index < 0)
+                    {
+                        colors.Add(pixel);
+                        counts.Add(1);
+                    }
                     else
-                        dark++;
+                    {
+                        counts[index]++;
+                    }
                 }
             }
 
-            Assert.Equal(MapZoneStyle.HatchTile * MapZoneStyle.HatchStripe, light);
-            Assert.Equal(MapZoneStyle.HatchTile * MapZoneStyle.HatchStripe, dark);
+            Assert.Equal(2, colors.Count);
+            Assert.Contains(MapZoneStyle.Gold, colors);
+            Assert.Contains(MapZoneStyle.Orange, colors);
+            Assert.All(counts, count => Assert.Equal(MapZoneStyle.HatchTile * MapZoneStyle.HatchStripe, count));
         }
-
-        private static float Luminance(Color color)
-            => 0.2126f * color.R + 0.7152f * color.G + 0.0722f * color.B;
     }
 }

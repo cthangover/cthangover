@@ -58,6 +58,12 @@ namespace Cthangover.Core.Scenes.TscnParsing
         public string Parent { get; set; }
         public string InstanceRef { get; set; }
         public string ScriptRef { get; set; }
+        /// <summary>
+        /// Editor-written sibling position (<c>index="N"</c> in the [node] heading).
+        /// Null for ordinary scenes; inherited scenes use it to order overridden and
+        /// added nodes, which is why the scene patcher re-sorts siblings when any node sets it.
+        /// </summary>
+        public int? Index { get; set; }
         public string[] Groups { get; set; }
         public Dictionary<string, string> NodePathVars { get; set; } = new();
         public Dictionary<string, object> Properties { get; set; } = new();

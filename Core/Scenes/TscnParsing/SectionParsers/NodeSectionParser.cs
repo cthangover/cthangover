@@ -22,6 +22,8 @@ namespace Cthangover.Core.Scenes.TscnParsing.SectionParsers
                 InstanceRef = h.GetValueOrDefault("instance"), 
                 ScriptRef = h.GetValueOrDefault("script")
             };
+            if (h.TryGetValue("index", out var rawIndex) && int.TryParse(rawIndex, out var index))
+                _current.Index = index;
             if (h.TryGetValue("groups", out var gr))
                 _current.Groups = ParseGroupArray(gr);
             if (h.TryGetValue("node_paths", out var np))

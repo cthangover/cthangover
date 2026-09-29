@@ -179,7 +179,7 @@ namespace Cthangover.Core.Scenes
 
 			GameLogger.Log("SCENE", $"PerformSceneSwitch: changing scene to '{pendingScenePath}'...");
 
-			if (IsModScene(pendingScenePath))
+			if (IsModScene(pendingScenePath) || TscnScenes.HasPatches(pendingScenePath))
 			{
 				var node = TscnScenes.LoadAndBuild(pendingScenePath);
 				if (node == null)

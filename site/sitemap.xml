@@ -6,7 +6,7 @@
   </url>
   <url>
     <loc>https://cthangover.ru/docs/index</loc>
-    <lastmod>2026-09-24</lastmod>
+    <lastmod>2026-09-28</lastmod>
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/avatars/index</loc>
@@ -26,7 +26,11 @@
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/characters/index</loc>
-    <lastmod>2026-09-24</lastmod>
+    <lastmod>2026-09-28</lastmod>
+  </url>
+  <url>
+    <loc>https://cthangover.ru/docs/mods/collections/index</loc>
+    <lastmod>2026-09-28</lastmod>
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/configs/game_config</loc>
@@ -50,7 +54,7 @@
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/items/index</loc>
-    <lastmod>2026-09-24</lastmod>
+    <lastmod>2026-09-28</lastmod>
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/load-order/index</loc>
@@ -74,15 +78,19 @@
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/patches/arrays-and-identity</loc>
-    <lastmod>2026-08-25</lastmod>
+    <lastmod>2026-09-28</lastmod>
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/patches/index</loc>
-    <lastmod>2026-08-25</lastmod>
+    <lastmod>2026-09-29</lastmod>
+  </url>
+  <url>
+    <loc>https://cthangover.ru/docs/mods/patches/scenes</loc>
+    <lastmod>2026-09-29</lastmod>
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/quests/index</loc>
-    <lastmod>2026-09-27</lastmod>
+    <lastmod>2026-09-28</lastmod>
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/recruiting/index</loc>
@@ -94,7 +102,7 @@
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/save/data-model</loc>
-    <lastmod>2026-09-27</lastmod>
+    <lastmod>2026-09-28</lastmod>
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/save/index</loc>
@@ -114,7 +122,7 @@
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/scenes/scenarios/actions/index</loc>
-    <lastmod>2026-08-25</lastmod>
+    <lastmod>2026-09-28</lastmod>
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/scenes/scenarios/dsl/index</loc>
@@ -126,7 +134,7 @@
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/scenes/tscn-runtime/index</loc>
-    <lastmod>2026-08-25</lastmod>
+    <lastmod>2026-09-29</lastmod>
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/settings/index</loc>
@@ -138,7 +146,7 @@
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/skills/index</loc>
-    <lastmod>2026-07-24</lastmod>
+    <lastmod>2026-09-28</lastmod>
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/sounds/index</loc>
@@ -174,7 +182,7 @@
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/status_effects/index</loc>
-    <lastmod>2026-09-27</lastmod>
+    <lastmod>2026-09-28</lastmod>
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/time/index</loc>
@@ -194,7 +202,7 @@
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/zip/index</loc>
-    <lastmod>2026-08-25</lastmod>
+    <lastmod>2026-09-28</lastmod>
   </url>
   <url>
     <loc>https://cthangover.ru/docs/resources/index</loc>

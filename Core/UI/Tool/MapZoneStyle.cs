@@ -10,50 +10,57 @@ namespace Cthangover.Core.UI.Tool
     /// the game read the same colours, pattern and outline parameters here, so
     /// the two views cannot drift apart when the style is tuned.
     /// <para/>
-    /// Zone readability must not depend on the backdrop: a zone lying on a
-    /// same-hue patch of the map image still has to be visible, and colour
-    /// inversion is not an option. The style therefore avoids flat washes of a
-    /// single hue:
+    /// Zone visuals are built from a two-tone accent pair — gold with orange
+    /// as its partner — instead of flat washes of a single hue, so a zone reads
+    /// as an area while staying in the gold UI family:
     /// <list type="bullet">
-    /// <item>the fill is a diagonal hatch whose stripes alternate between a
-    /// light and a dark tone, modulated by the state colour — on any backdrop
-    /// at least one stripe keeps its contrast, and the semi-transparent gaps
-    /// let the map texture stay readable;</item>
-    /// <item>hover and selection are outlined with a two-tone dashed keyline:
-    /// a solid dark polyline with light dashes stamped on top, producing the
-    /// classic marching-ants alternation that stays visible on both bright and
-    /// dark map areas.</item>
+    /// <item>the fill is a diagonal hatch whose stripes alternate gold and
+    /// orange, stamped through polygon UVs at a low state-dependent alpha so
+    /// the map texture stays readable through the gaps;</item>
+    /// <item>hover and selection use a two-tone dashed keyline: a solid orange
+    /// polyline with gold dashes stamped on top, the classic marching-ants
+    /// alternation repeated in the same accent pair.</item>
     /// </list>
-    /// State only changes the hatch modulation and the outline weight, so the
+    /// State only changes the hatch opacity and the outline weight, so the
     /// visual language is identical across normal, hover, selected and locked
-    /// zones. The hatch is a tiny repeating texture stamped through polygon
-    /// UVs rather than CPU line clipping, because the editor redraws on every
-    /// drag frame and geometry clipping per frame would be wasteful.
+    /// zones; the editor additionally uses the muted hidden state for zones the
+    /// game would omit. The hatch is a tiny repeating texture stamped through
+    /// polygon UVs rather than CPU line clipping, because the editor redraws on
+    /// every drag frame and geometry clipping per frame would be wasteful.
     /// </summary>
     public static class MapZoneStyle
     {
         /// <summary>Side of the repeating hatch tile in pixels.</summary>
         public const int HatchTile = 12;
 
-        /// <summary>Thickness of one hatch stripe in pixels; the dark stripe follows the light one immediately.</summary>
+        /// <summary>Thickness of one hatch stripe in pixels; the orange stripe follows the gold one immediately.</summary>
         public const int HatchStripe = 2;
 
-        private static readonly Color HatchLightPixel = new(1f, 1f, 1f, 1f);
-        private static readonly Color HatchDarkPixel = new(0.1f, 0.1f, 0.13f, 1f);
+        /// <summary>Gold half of the zone accent pair, used for hatch stripes and keyline dashes.</summary>
+        public static readonly Color Gold = UiTokens.AccentBright;
 
-        private static readonly Color NormalFill = UiTokens.Alpha(UiTokens.White, 0.32f);
-        private static readonly Color HoverFill = UiTokens.Alpha(UiTokens.Accent, 0.5f);
-        private static readonly Color SelectedFill = UiTokens.Alpha(UiTokens.AccentBright, 0.7f);
-        private static readonly Color LockedFill = UiTokens.Alpha(UiTokens.White, 0.14f);
+        /// <summary>
+        /// Orange half of the zone accent pair, the deeper tone of the hatch
+        /// and the keyline underlay. Deliberately close to <see cref="Gold"/>
+        /// (the <c>TypeUsed</c> token) so the hatch reads as one warm texture
+        /// instead of two fighting colours.
+        /// </summary>
+        public static readonly Color Orange = UiTokens.TypeUsed;
 
-        private static readonly Color OutlineDark = new(0.03f, 0.03f, 0.05f, 0.9f);
-        private static readonly Color OutlineLight = new(0.96f, 0.94f, 0.9f, 0.95f);
-        private static readonly Color OutlineDarkSoft = new(0.03f, 0.03f, 0.05f, 0.65f);
-        private static readonly Color OutlineLightSoft = new(0.96f, 0.94f, 0.9f, 0.8f);
+        private static readonly Color NormalFill = UiTokens.Alpha(UiTokens.White, 0.4f);
+        private static readonly Color HoverFill = UiTokens.Alpha(UiTokens.White, 0.6f);
+        private static readonly Color SelectedFill = UiTokens.Alpha(UiTokens.White, 0.8f);
+        private static readonly Color LockedFill = UiTokens.Alpha(UiTokens.White, 0.18f);
+        private static readonly Color HiddenFill = UiTokens.Alpha(UiTokens.Faint, 0.8f);
+
+        private static readonly Color OutlineSolid = UiTokens.Alpha(Orange, 0.95f);
+        private static readonly Color OutlineDash = UiTokens.Alpha(Gold, 0.95f);
+        private static readonly Color OutlineSolidSoft = UiTokens.Alpha(Orange, 0.6f);
+        private static readonly Color OutlineDashSoft = UiTokens.Alpha(Gold, 0.7f);
 
         private const float HoverOutlineWidth = 1.6f;
         private const float SelectedOutlineWidth = 2.6f;
-        private const float OutlineDash = 7f;
+        private const float OutlineDashLength = 7f;
 
         /// <summary>Handle colour of a polygon vertex on the editing canvas.</summary>
         public static readonly Color VertexHandle = UiTokens.AccentBright;
@@ -84,29 +91,33 @@ namespace Cthangover.Core.UI.Tool
         /// report a native triangulation error on every frame; the keyline is
         /// still drawn for the selected and hovered states, which is enough
         /// for the author to find and repair the shape.
+        /// <para/>
+        /// <paramref name="hidden"/> is only passed by the editing canvas: the
+        /// game and the preview omit hidden zones entirely, but the author
+        /// still has to see and edit them, so they are painted with the muted
+        /// hidden hatch and a soft keyline instead of disappearing.
         /// </summary>
-        public static void Draw(CanvasItem canvas, Vector2[] polygon, bool selected, bool hovered, bool locked)
+        public static void Draw(CanvasItem canvas, Vector2[] polygon, bool selected, bool hovered, bool locked, bool hidden = false)
         {
             if (canvas == null || polygon == null || polygon.Length < 2)
                 return;
 
-            var fill = locked ? LockedFill : selected ? SelectedFill : hovered ? HoverFill : NormalFill;
+            var fill = hidden ? HiddenFill : locked ? LockedFill : selected ? SelectedFill : hovered ? HoverFill : NormalFill;
             if (polygon.Length >= 3 && Geometry2D.TriangulatePolygon(polygon).Length > 0)
                 DrawHatch(canvas, polygon, fill);
 
             if (selected)
-                DrawDashedKeyline(canvas, polygon, OutlineDark, OutlineLight, SelectedOutlineWidth);
-            else if (hovered && !locked)
-                DrawDashedKeyline(canvas, polygon, OutlineDarkSoft, OutlineLightSoft, HoverOutlineWidth);
+                DrawDashedKeyline(canvas, polygon, OutlineSolid, OutlineDash, SelectedOutlineWidth);
+            else if (hidden || (hovered && !locked))
+                DrawDashedKeyline(canvas, polygon, OutlineSolidSoft, OutlineDashSoft, HoverOutlineWidth);
         }
 
         /// <summary>
         /// Colour of the repeating hatch pattern at a pixel offset: a 45°
-        /// diagonal where the light stripe is immediately followed by the dark
+        /// diagonal where the gold stripe is immediately followed by the orange
         /// one. Kept pure (no Godot resources) so the two guarantees the whole
-        /// style rests on — the pattern tiles and every tile carries both a
-        /// light and a dark stripe — are unit tested without a rendering
-        /// context.
+        /// style rests on — the pattern tiles and every tile carries both
+        /// accent colours — are unit tested without a rendering context.
         /// </summary>
         public static Color HatchPixel(int x, int y)
         {
@@ -115,9 +126,9 @@ namespace Cthangover.Core.UI.Tool
                 band += HatchTile;
 
             if (band < HatchStripe)
-                return HatchLightPixel;
+                return Gold;
             if (band < HatchStripe * 2)
-                return HatchDarkPixel;
+                return Orange;
             return new Color(0f, 0f, 0f, 0f);
         }
 
@@ -131,20 +142,20 @@ namespace Cthangover.Core.UI.Tool
         }
 
         /// <summary>
-        /// Two-tone dashed keyline: the dark line is drawn solid first and the
-        /// light dashes — whose gaps equal their length — are stamped on top,
-        /// so the perimeter alternates dark and light and one of the two
-        /// always contrasts with the map underneath.
+        /// Two-tone dashed keyline: the orange line is drawn solid first and
+        /// the gold dashes — whose gaps equal their length — are stamped on
+        /// top, so the perimeter alternates the two accent colours like
+        /// marching ants.
         /// </summary>
-        private static void DrawDashedKeyline(CanvasItem canvas, Vector2[] polygon, Color dark, Color light, float width)
+        private static void DrawDashedKeyline(CanvasItem canvas, Vector2[] polygon, Color solid, Color dash, float width)
         {
             var loop = new Vector2[polygon.Length + 1];
             polygon.CopyTo(loop, 0);
             loop[polygon.Length] = polygon[0];
-            canvas.DrawPolyline(loop, dark, width, true);
+            canvas.DrawPolyline(loop, solid, width, true);
 
             for (var i = 0; i < polygon.Length; i++)
-                canvas.DrawDashedLine(polygon[i], loop[i + 1], light, width, OutlineDash, true, true);
+                canvas.DrawDashedLine(polygon[i], loop[i + 1], dash, width, OutlineDashLength, true, true);
         }
 
         private static Texture2D HatchTexture => _hatchTexture ??= BuildHatchTexture();

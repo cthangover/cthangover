@@ -155,10 +155,25 @@ namespace Cthangover.Core.Autotest
                 label.ID = "autotest_label";
                 label.Title = "ui/map/test/autotest_label";
 
+                var hiddenLabel = (MapZone)controllerType.GetMethod("AddLabel").Invoke(controller, Array.Empty<object>());
+                hiddenLabel.ID = "autotest_hidden_label";
+                hiddenLabel.Title = "ui/map/test/autotest_hidden_label";
+                hiddenLabel.Hidden = true;
+
                 var region = (MapZone)controllerType.GetMethod("AddRegion").Invoke(controller, Array.Empty<object>());
                 region.ID = "autotest_region";
                 region.Title = "ui/map/test/autotest_region";
-                region.Scene = "test_scene";
+                region.Scene = "home_outside";
+
+                var lockedRegion = (MapZone)controllerType.GetMethod("AddRegion").Invoke(controller, Array.Empty<object>());
+                lockedRegion.ID = "autotest_locked_region";
+                lockedRegion.Title = "ui/map/test/autotest_locked_region";
+                lockedRegion.Scene = "home_outside";
+                lockedRegion.Locked = true;
+
+                var noSceneRegion = (MapZone)controllerType.GetMethod("AddRegion").Invoke(controller, Array.Empty<object>());
+                noSceneRegion.ID = "autotest_no_scene_region";
+                noSceneRegion.Title = "ui/map/test/autotest_no_scene_region";
 
                 await CheckPreview(windowType);
             }
@@ -189,12 +204,15 @@ namespace Cthangover.Core.Autotest
             if (preview != null)
             {
                 var markers = preview.GetNodeOrNull<Control>("MapRoot/Sheet/MarkersLayer");
-                Check(markers is { } && markers.GetChildCount() > 0, "preview renders the edited zone label");
+                Check(markers is { } && markers.GetChildCount() == 1, "preview renders only the visible zone label");
 
                 var zonesLayer = preview.GetNodeOrNull<MapZonesLayer>("MapRoot/Sheet/ZonesLayer");
                 Check(zonesLayer != null, "preview hosts the interactive zones layer");
                 if (zonesLayer != null)
                 {
+                    var go = preview.GetNodeOrNull<Button>("ZoneCard/Column/GoButton");
+                    var lockedNote = preview.GetNodeOrNull<Control>("ZoneCard/Column/Message");
+
                     zonesLayer.EmitSignal(MapZonesLayer.SignalName.ZoneClicked, "autotest_region");
                     var card = preview.GetNodeOrNull<Control>("ZoneCard");
                     Check(card is { Visible: true }, "clicking a region opens the location card");
@@ -202,6 +220,16 @@ namespace Cthangover.Core.Autotest
                     var cardName = preview.GetNodeOrNull<Label>("ZoneCard/Column/Head/Info/Name");
                     Check(cardName is { } && cardName.Text == "ui/map/test/autotest_region",
                         "location card shows the edited zone title");
+                    Check(go is { Disabled: false }, "open zone stays enterable in preview");
+                    Check(lockedNote is { Visible: false }, "open zone shows no locked note");
+
+                    zonesLayer.EmitSignal(MapZonesLayer.SignalName.ZoneClicked, "autotest_locked_region");
+                    Check(go is { } && go.Disabled, "locked zone blocks the transition in preview");
+                    Check(lockedNote is { Visible: true }, "locked zone shows the locked note in preview");
+
+                    zonesLayer.EmitSignal(MapZonesLayer.SignalName.ZoneClicked, "autotest_no_scene_region");
+                    Check(go is { } && go.Disabled, "zone without a scene stays blocked in preview");
+                    Check(lockedNote is { Visible: true }, "zone without a scene shows the locked note in preview");
                 }
             }
 

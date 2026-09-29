@@ -107,7 +107,7 @@ visible = false
 
 [node name="DeepChild" parent="Root/Panel" type="Label"]
 text = "Hello"
-theme_override_font_sizes/font_size = 14        ; nested property — IGNORED
+theme_override_font_sizes/font_size = 14        ; applied via AddThemeFontSizeOverride
 metadata/_tab_index = 0                          ; editor metadata — IGNORED
 ```
 
@@ -252,7 +252,7 @@ Godot native objects are deliberately **not** created during parsing — `TscnPr
 | `load_steps=N` | Editor metadata |
 | `unique_id=N` on nodes | Editor annotation for scene diffing |
 | `[editable ...]` | Editor-only placeholder for inherited scenes |
-| `theme_override_*` (nested properties like `theme_override_constants/separation`) | Too many godot-specific variants; mods should use scripts for theming |
+| `theme_override_*` (nested properties like `theme_override_constants/separation`) | Applied for plain values through `AddTheme*Override`; overrides whose value is an `ExtResource(...)`/`SubResource(...)` reference are not applied |
 | `metadata/*` | Editor metadata only |
 | `connection` with `to != "."` | Non-script connections (animation callbacks, visual tweens) |
 | `binds=` / `unbinds=` on connections | Not used in any scene in this project |

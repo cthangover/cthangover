@@ -193,7 +193,28 @@ namespace Cthangover.Core.UI.Menu
                     : DisplayServer.VSyncMode.Disabled);
                 ProjectSettings.SetSetting("display/window/stretch/scale", (float)s.Scale);
             }
-            GetTree().ChangeSceneToFile("res://scenes/menu/main_menu.tscn");
+            OpenMainMenu();
+        }
+
+        /// <summary>
+        /// Enters the title screen, preferring the runtime pipeline when the scene is patched
+        /// so scene patches declared by mods apply to the native main menu as well. Unpatched
+        /// scenes keep the engine loader.
+        /// </summary>
+        private void OpenMainMenu()
+        {
+            const string path = "res://scenes/menu/main_menu.tscn";
+            if (TscnScenes.HasPatches(path))
+            {
+                var node = TscnScenes.LoadAndBuild(path);
+                if (node != null)
+                {
+                    GetTree().ChangeSceneToNode(node);
+                    return;
+                }
+            }
+
+            GetTree().ChangeSceneToFile(path);
         }
 
         private void BuildUI()
@@ -347,7 +368,7 @@ namespace Cthangover.Core.UI.Menu
         private void OnPlayClick()
         {
             ApplyAndSave();
-            GetTree().ChangeSceneToFile("res://scenes/menu/main_menu.tscn");
+            OpenMainMenu();
         }
 
         private void OnExitClick()

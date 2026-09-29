@@ -745,14 +745,7 @@ namespace Cthangover.Core.UI.Tool
 
         private bool IsLocked(MapZone zone)
         {
-            if (string.IsNullOrEmpty(zone.Scene))
-                return true;
-
-            if (!IsOpen(zone))
-                return true;
-
-            var sceneManager = SceneContextNode.FindNode<SceneManager>("SceneManager");
-            return sceneManager != null && !sceneManager.HasScene(zone.Scene);
+            return MapZoneRules.IsLocked(zone, IsOpen(zone));
         }
 
         private void OnZoneClicked(string zoneId)

@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using Cthangover.Core.Mods;
 using Cthangover.Core.Mods.Resolvers;
+using Cthangover.Core.Scenes.Patching;
 using Cthangover.Core.Scenes.TscnBuild;
 using Cthangover.Core.Scenes.TscnParsing;
 using Cthangover.Core.Utils;
@@ -96,6 +97,9 @@ namespace Cthangover.Core.Scenes
                 var provider = ResolveProviderForPath(scenePath, out modId);
                 if (provider == null)
                 {
+                    if (HasScenePatches(scenePath))
+                        return BuildNativePatched(scenePath);
+
                     var native = LoadNative(scenePath);
                     if (native != null)
                     {
@@ -184,11 +188,108 @@ namespace Cthangover.Core.Scenes
             }
 
             GameLogger.Log("TSCN", $"TscnSceneResolver.LoadAndParse: got {text.Length} chars, parsing...");
-            var parsed = _parser.Parse(text);
+            var parsed = ApplyScenePatches(scenePath, _parser.Parse(text));
             _parsedCache[cacheKey] = parsed;
             GameLogger.Log("TSCN", $"TscnSceneResolver.LoadAndParse: parsed OK — {parsed.ExtResources.Count} ext_resources, {parsed.SubResources.Count} sub_resources, {parsed.Nodes.Count} nodes, entry_point='{parsed.EntryPointClass ?? "none"}'");
 
             return parsed;
+        }
+
+        /// <summary>
+        /// Applies all scene patches targeting <paramref name="scenePath"/> to the freshly parsed
+        /// scene, before it is cached. Patch layers cascade in mod load order (see
+        /// <see cref="ScenePatchResolver"/>); a scene without patches passes through untouched.
+        /// </summary>
+        private ParsedScene ApplyScenePatches(string scenePath, ParsedScene parsed)
+        {
+            var patchResolver = Context?.GetResolver<ScenePatchResolver>();
+            var patches = patchResolver?.GetPatches(scenePath);
+            if (patches == null || patches.Count == 0)
+                return parsed;
+
+            var applier = new ScenePatchApplier();
+            if (applier.ApplyAll(parsed, patches))
+                GameLogger.Log("TSCN", $"TscnSceneResolver: applied {patches.Count} patch layer(s) to '{scenePath}'");
+            else
+                GameLogger.Log("TSCN", $"TscnSceneResolver: patch layers for '{scenePath}' reported errors", LogLevel.Warning);
+
+            return parsed;
+        }
+
+        /// <summary>
+        /// True when at least one mod patches this scene, including native <c>res://</c> scenes.
+        /// The static facade uses it to route patched native scenes through the runtime builder
+        /// instead of Godot's native loader.
+        /// </summary>
+        public bool HasScenePatches(string scenePath)
+        {
+            var patchResolver = Context?.GetResolver<ScenePatchResolver>();
+            return patchResolver?.HasPatches(NormalizeResourcePath(scenePath)) == true;
+        }
+
+        /// <summary>
+        /// Builds a native <c>res://</c> scene through the runtime pipeline so its patches apply.
+        /// Native scenes normally bypass <see cref="TscnParser"/> via <see cref="LoadNative"/>,
+        /// which is exactly why a patched one must be read from disk and patched before build.
+        /// Parsed and built results are cached like mod scenes.
+        /// </summary>
+        private Node BuildNativePatched(string scenePath)
+        {
+            if (_builtCache.TryGetValue(scenePath, out var cached))
+                return (Node)cached.Duplicate();
+
+            if (!_buildingPaths.Add(scenePath))
+            {
+                GameLogger.Log("TSCN", $"TscnSceneResolver: circular reference detected for '{scenePath}'", LogLevel.Error);
+                return null;
+            }
+
+            try
+            {
+                var text = ReadNativeText(scenePath);
+                if (text == null)
+                {
+                    GameLogger.Log("TSCN", $"TscnSceneResolver.BuildNativePatched: cannot read 'res://{scenePath}'", LogLevel.Error);
+                    return null;
+                }
+
+                var parsed = ApplyScenePatches(scenePath, _parser.Parse(text));
+                _parsedCache[scenePath] = parsed;
+
+                var previousScene = _resolvingScene;
+                _resolvingScene = parsed;
+                var root = new SceneBuilder().Build(parsed, InstanceLoader, ResolveExtResource);
+                _resolvingScene = previousScene;
+
+                if (root != null)
+                {
+                    _builtCache[scenePath] = root;
+                    GameLogger.Log("TSCN", $"TscnSceneResolver.BuildNativePatched: OK '{scenePath}' → root='{root.Name}' ({root.GetType().Name})");
+                    return (Node)root.Duplicate();
+                }
+
+                return null;
+            }
+            finally
+            {
+                _buildingPaths.Remove(scenePath);
+            }
+        }
+
+        private static string ReadNativeText(string scenePath)
+        {
+            if (!GameEnvironment.IsRuntime)
+                return null;
+
+            try
+            {
+                return Godot.FileAccess.GetFileAsString("res://" + scenePath);
+            }
+            catch (Exception ex)
+            {
+                GameLogger.Log("TSCN", $"TscnSceneResolver: failed to read 'res://{scenePath}': {ex.Message}", LogLevel.Error);
+                return null;
+            }
         }
 
         private Node InstanceLoader(string scenePath)
@@ -333,5 +434,13 @@ namespace Cthangover.Core.Scenes
     {
         public static Node LoadAndBuild(string scenePath)
             => ModManager.Instance.GetResolver<TscnSceneResolver>()?.LoadAndBuild(scenePath);
+
+        /// <summary>
+        /// True when the scene is patched, including native <c>res://</c> scenes that normally
+        /// bypass the runtime pipeline. Scene routing uses this to send patched native scenes
+        /// through <see cref="LoadAndBuild"/>.
+        /// </summary>
+        public static bool HasPatches(string scenePath)
+            => ModManager.Instance.GetResolver<TscnSceneResolver>()?.HasScenePatches(scenePath) ?? false;
     }
 }

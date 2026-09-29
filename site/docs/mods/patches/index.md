@@ -178,3 +178,4 @@ are available to C# code:
 ## Pages
 
 - [Array Operations & Identity Keys](arrays-and-identity.md) — $add/$remove/$set, per-field merge, identity key detection
+- [Scene Patches](scenes.md) — patching `.tscn` scenes with inherited scenes and `metadata/_patch_*` operations
