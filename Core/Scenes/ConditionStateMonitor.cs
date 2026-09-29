@@ -61,6 +61,7 @@ namespace Cthangover.Core.Scenes
                 ModEventBus.Subscribe<FlagChangedEvent>(Notify);
                 ModEventBus.Subscribe<QuestStateRestoredEvent>(Notify);
                 ModEventBus.Subscribe<InteractiveStateChangedEvent>(Notify);
+                ModEventBus.Subscribe<MapZoneChangedEvent>(Notify);
             }
         }
 

@@ -37,6 +37,13 @@ namespace Cthangover.Core.Relationship
                 data = blob.ReadJson<List<Recruit>>() ?? new List<Recruit>();
 
             RecruitingData.Instance.Data = data;
+
+            // The core slot (party cards) is restored before mod slots, so any
+            // squad recruit already has a placeholder card again. The mod owns
+            // its data outside battle, so push the saved health onto that card.
+            foreach (var recruit in data)
+                RecruitPartyBridge.SyncToCard(recruit);
+
             return true;
         }
     }

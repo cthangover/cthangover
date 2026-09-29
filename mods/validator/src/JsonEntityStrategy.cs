@@ -8,13 +8,15 @@ namespace Cthangover.Validator
 {
     /// <summary>
     /// Phase: Contracts. Walks every mod's JSON entities the same way the
-    /// runtime resolvers do — top-level <c>{"Items": [...]}</c> envelopes with
-    /// <c>${include}</c> expansion for items, quests, recipes, status effects and
-    /// characters, recursive scene and interactive definitions, and raw asset
-    /// files for backgrounds and avatars — and records declarations and
-    /// references in the shared graph. It also validates manifest
-    /// <c>ui</c>/<c>main_menu</c> <c>scene_path</c> entries against the owning
-    /// mod's files and turns <c>ui[].scene</c> into a scene reference.
+    /// runtime resolver does — every <c>.json</c> file is opened and routed by
+    /// its top-level <c>"Kind"</c>, with <c>${include}</c> expansion applied —
+    /// and records declarations and references in the shared graph. Files
+    /// without a kind (manifests, collections, live2d models, scene
+    /// definitions, patches) are not entity data and are skipped; scene and
+    /// interactive definitions plus raw asset files keep their directory-based
+    /// collection. It also validates manifest <c>ui</c>/<c>main_menu</c>
+    /// <c>scene_path</c> entries against the owning mod's files and turns
+    /// <c>ui[].scene</c> into a scene reference.
     ///
     /// Extraction is intentionally schema-light (raw <see cref="JsonDocument"/>
     /// plus case-insensitive reads) so it keeps working when DTOs gain fields
@@ -40,11 +42,7 @@ namespace Cthangover.Validator
                 if (provider == null)
                     continue;
 
-                CollectItems(context, mod, provider);
-                CollectQuests(context, mod, provider);
-                CollectRecipes(context, mod, provider);
-                CollectStatusEffects(context, mod, provider);
-                CollectCharacters(context, mod, provider);
+                CollectEntities(context, mod, provider);
                 CollectSceneDefinitions(context, mod, provider);
                 CollectEnvelopes(context, mod, provider, "interactives", true, ValidationKind.Interactive);
 
@@ -61,96 +59,48 @@ namespace Cthangover.Validator
             }
         }
 
-        private static void CollectItems(ValidationContext context, IModInfo mod, IModFileProvider provider)
+        /// <summary>
+        /// Scans every JSON file of the mod and routes it by its declared
+        /// <c>"Kind"</c>, mirroring the runtime <c>EntityResolver</c>. The kind
+        /// resolves to an <see cref="IEntityKindStrategy"/> that records the
+        /// declarations, declared keys and references for that entity type — so
+        /// an action can no longer be mistaken for a character just because both
+        /// lived in the same directory, and a new kind is a new strategy class
+        /// instead of a new switch case.
+        /// </summary>
+        private static void CollectEntities(ValidationContext context, IModInfo mod, IModFileProvider provider)
         {
-            var documents = new List<JsonDocument>();
-            var items = new List<JsonElement>();
-            try
+            foreach (var file in ModFileReader.ListFiles(provider, string.Empty, true))
             {
-                OpenEnvelopes(context, mod, provider, "items", false, documents, items);
+                context.ThrowIfCancellationRequested();
+                if (!file.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+                    continue;
 
-                foreach (var item in items)
+                var document = ReadDocument(context, mod, file);
+                if (document == null)
+                    continue;
+
+                using (document)
                 {
-                    var id = JsonReadHelper.GetString(item, "Id", "ID", "id");
-                    if (string.IsNullOrWhiteSpace(id))
+                    var kind = JsonReadHelper.GetString(document.RootElement, "Kind", "kind");
+                    if (string.IsNullOrWhiteSpace(kind))
                         continue;
 
-                    context.Graph.AddDeclaration(ValidationKind.Item, id, mod.Id, "items", 0);
-                    CollectObjectKeys(context.Graph, item);
-                }
-            }
-            finally
-            {
-                DisposeAll(documents);
-            }
-        }
-
-        private static void CollectQuests(ValidationContext context, IModInfo mod, IModFileProvider provider)
-        {
-            CollectEnvelopes(context, mod, provider, "quests", false, ValidationKind.Quest);
-        }
-
-        private static void CollectStatusEffects(ValidationContext context, IModInfo mod, IModFileProvider provider)
-        {
-            CollectEnvelopes(context, mod, provider, "status_effects", false, ValidationKind.StatusEffect);
-        }
-
-        private static void CollectRecipes(ValidationContext context, IModInfo mod, IModFileProvider provider)
-        {
-            var documents = new List<JsonDocument>();
-            var items = new List<JsonElement>();
-            try
-            {
-                OpenEnvelopes(context, mod, provider, "recipes", false, documents, items);
-
-                foreach (var item in items)
-                {
-                    var id = JsonReadHelper.GetString(item, "Id", "ID", "id");
-                    if (string.IsNullOrWhiteSpace(id))
+                    var envelope = JsonReadHelper.GetProperty(document.RootElement, "Items");
+                    if (!JsonReadHelper.IsArray(envelope))
                         continue;
 
-                    context.Graph.AddDeclaration(ValidationKind.Recipe, id, mod.Id, "recipes", 0);
-                    CollectIngredientReferences(context, mod, item, "Input");
-                    CollectIngredientReferences(context, mod, item, "Output");
-                }
-            }
-            finally
-            {
-                DisposeAll(documents);
-            }
-        }
-
-        private static void CollectCharacters(ValidationContext context, IModInfo mod, IModFileProvider provider)
-        {
-            var documents = new List<JsonDocument>();
-            var items = new List<JsonElement>();
-            try
-            {
-                OpenEnvelopes(context, mod, provider, "characters", false, documents, items);
-
-                foreach (var item in items)
-                {
-                    var id = JsonReadHelper.GetString(item, "Id", "ID", "id");
-                    if (string.IsNullOrWhiteSpace(id))
+                    var strategy = EntityKindStrategyRegistry.Resolve(kind);
+                    if (strategy == null)
+                    {
+                        context.AddWarning("UNKNOWN_ENTITY_KIND",
+                            $"unknown entity kind '{kind}'",
+                            mod.Id, file, 0);
                         continue;
+                    }
 
-                    var values = JsonReadHelper.GetProperty(item, "Values");
-                    var isAction = JsonReadHelper.IsArray(values);
-                    var kind = isAction ? ValidationKind.Action : ValidationKind.Character;
-
-                    context.Graph.AddDeclaration(kind, id, mod.Id, "characters", 0);
-                    CollectObjectKeys(context.Graph, item);
-
-                    if (isAction)
-                        CollectActionKeys(context.Graph, values.Value);
-
-                    CollectLootReferences(context, mod, item);
-                    CollectActionReferences(context, mod, item);
+                    strategy.Collect(context, mod, file, envelope.Value);
                 }
-            }
-            finally
-            {
-                DisposeAll(documents);
             }
         }
 
@@ -329,51 +279,6 @@ namespace Cthangover.Validator
             }
         }
 
-        private static void CollectIngredientReferences(ValidationContext context, IModInfo mod, JsonElement entity, string field)
-        {
-            var ingredients = JsonReadHelper.GetProperty(entity, field);
-            if (!JsonReadHelper.IsArray(ingredients))
-                return;
-
-            foreach (var ingredient in ingredients.Value.EnumerateArray())
-            {
-                var itemId = JsonReadHelper.GetString(ingredient, "Id", "ID", "id");
-                if (!string.IsNullOrWhiteSpace(itemId))
-                    context.Graph.AddReference(ValidationKind.Item, itemId, mod.Id, "recipes", 0);
-            }
-        }
-
-        private static void CollectLootReferences(ValidationContext context, IModInfo mod, JsonElement entity)
-        {
-            var loot = JsonReadHelper.GetProperty(entity, "Loot");
-            if (!JsonReadHelper.IsArray(loot))
-                return;
-
-            foreach (var drop in loot.Value.EnumerateArray())
-            {
-                var itemId = JsonReadHelper.GetString(drop, "ItemId");
-                if (!string.IsNullOrWhiteSpace(itemId))
-                    context.Graph.AddReference(ValidationKind.Item, itemId, mod.Id, "characters", 0);
-            }
-        }
-
-        private static void CollectActionReferences(ValidationContext context, IModInfo mod, JsonElement entity)
-        {
-            var actions = JsonReadHelper.GetProperty(entity, "Actions");
-            if (!JsonReadHelper.IsArray(actions))
-                return;
-
-            foreach (var action in actions.Value.EnumerateArray())
-            {
-                if (action.ValueKind != JsonValueKind.String)
-                    continue;
-
-                var actionId = action.GetString();
-                if (!string.IsNullOrWhiteSpace(actionId))
-                    context.Graph.AddReference(ValidationKind.Action, actionId, mod.Id, "characters", 0);
-            }
-        }
-
         private static void CollectBackgroundReferences(ValidationContext context, IModInfo mod, JsonElement root, string file)
         {
             var background = JsonReadHelper.GetProperty(root, "defaultBackground", "DefaultBackground");
@@ -393,32 +298,6 @@ namespace Cthangover.Validator
             {
                 if (entry.ValueKind == JsonValueKind.String)
                     context.Graph.AddReference(ValidationKind.Background, entry.GetString(), mod.Id, file, 0);
-            }
-        }
-
-        private static void CollectObjectKeys(ValidationGraph graph, JsonElement entity)
-        {
-            if (entity.ValueKind != JsonValueKind.Object)
-                return;
-
-            foreach (var property in entity.EnumerateObject())
-                graph.AddDeclaredKey(property.Name);
-        }
-
-        private static void CollectActionKeys(ValidationGraph graph, JsonElement values)
-        {
-            foreach (var value in values.EnumerateArray())
-            {
-                if (value.ValueKind != JsonValueKind.String)
-                    continue;
-
-                var text = value.GetString();
-                if (string.IsNullOrEmpty(text))
-                    continue;
-
-                var separator = text.IndexOf('=');
-                if (separator > 0)
-                    graph.AddDeclaredKey(text.Substring(0, separator));
             }
         }
 

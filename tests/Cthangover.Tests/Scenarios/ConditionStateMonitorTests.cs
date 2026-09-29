@@ -101,6 +101,14 @@ namespace Engine.Tests.Scenarios
         }
 
         [Fact]
+        public void MapZoneChangedEvent_Published_Bumps()
+        {
+            var before = ConditionStateMonitor.Version;
+            ModEventBus.Publish(new MapZoneChangedEvent { ZoneId = "z", Change = MapZoneChangeKind.Open });
+            Assert.Equal(before + 1, ConditionStateMonitor.Version);
+        }
+
+        [Fact]
         public void SetAll_NonEmpty_Bumps()
         {
             RegisterTestQuest("SaveQ", QuestStatus.NotStarted);

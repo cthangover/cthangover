@@ -9,8 +9,8 @@ namespace Cthangover.Core.Interactive
 	/// JSON-driven definition of an interactive scene object loaded from mods.
 	/// The texture is always full-screen (alpha determines visibility outside the collider).
 	/// The collider defines the clickable region in normalised 0..1 viewport coordinates.
-	/// JSON files follow the <c>{"Items": [...]}</c> envelope for
-	/// <c>ModManager.CollectJsonGroup</c> compatibility.
+	/// Interactives keep their own resolver and <c>{"Items": [...]}</c> envelope;
+	/// unlike other entity kinds they are not part of the kind-routed pipeline.
 	/// </summary>
 	public class InteractiveDefinition : IIdentifiable
 	{

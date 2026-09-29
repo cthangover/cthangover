@@ -10,13 +10,13 @@ namespace Cthangover.Core.Mods.Resolvers
 {
     /// <summary>
     /// Collects and merges JSON property patches from mods. Patches are
-    /// organised by entity type (e.g. "items", "characters") and stored
-    /// in <c>patches/{entityType}/</c> directories. Each patch specifies
+    /// organised per entity kind (e.g. "item", "character") and stored
+    /// in <c>patches/{kind}/</c> directories. Each patch specifies
     /// a target entity ID, a property path, and the value to apply.
     ///
-    /// Also reads flat patch files named <c>patches/{entityType}.json</c>
+    /// Also reads flat patch files named <c>patches/{kind}.json</c>
     /// for simpler single-file patch sets. The collected patches are
-    /// applied by <see cref="JsonGroupResolver"/> after collecting base
+    /// applied by <see cref="EntityResolver"/> after collecting base
     /// entity data — patches from later mods override earlier ones.
     /// </summary>
     public class PatchResolver : ModAssetResolver

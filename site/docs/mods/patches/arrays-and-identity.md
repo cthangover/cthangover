@@ -13,15 +13,15 @@ When a patch modifies a JSON **array** property (e.g. `Skills`, `Perks`, `Tags`)
 
 ### Examples
 
-**Base character definition** (in `characters/player/marao.json`):
+**Base character definition** (the entity object inside a `Kind: "character"` file):
 ```jsonc
-// Base entity definition
+// Base entity definition (Items entry of a character file)
 { "Id": "Marao", "Skills": ["slash", "block"] }  // Id is the entity identifier; Skills is the array to patch
 ```
 
 **Add elements** — a cooking mod extends skills:
 ```jsonc
-// patches/characters.json
+// patches/character.json
 // $add appends elements to the existing array (creates if missing)
 { "Items": [{ "Id": "Marao", "Skills$add": ["cook"] }] }
 ```

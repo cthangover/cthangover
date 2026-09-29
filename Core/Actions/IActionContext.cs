@@ -56,6 +56,15 @@ public interface IActionContext
     IInventory Inventory { get; }
 
     /// <summary>
+    ///     World map subsystem: open/close zones for travel and show/hide them
+    ///     on the map. Backed by <c>MapZoneServiceImpl</c> over the
+    ///     process-wide <c>MapZoneService</c> singleton; state changes are
+    ///     persisted by the core save slot and invalidate scenario conditions
+    ///     through <c>ConditionStateMonitor</c>.
+    /// </summary>
+    IMapZoneService Map { get; }
+
+    /// <summary>
     ///     Reads a named variable from the dialog runtime's variable store.
     ///     Variables are populated by the scenario DSL's "set" command or by
     ///     earlier actions during dialog execution. Returns null when the

@@ -9,5 +9,6 @@ namespace Cthangover.Core.Actions
 
 		public void AddToParty(string type) => Inner.AddToParty(type);
 		public void SendNotification(string type) => Inner.SendNotification(type);
+		public void AddSkill(string id) => Inner.AddSkill(id);
 	}
 }

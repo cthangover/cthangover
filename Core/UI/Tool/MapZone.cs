@@ -17,9 +17,13 @@ namespace Cthangover.Core.UI.Tool
     /// and safe to share across mods.
     ///
     /// Maps use the standard <c>{"Items": [...]}</c> JSON envelope in
-    /// <c>mods/&lt;name&gt;/map/</c>, compatible with
-    /// <c>ModManager.CollectJsonGroup&lt;MapZone&gt;("map")</c> so that later
+    /// <c>mods/&lt;name&gt;/map/</c>. Zones are read per mod in load order, so later
     /// mods can override zones by <see cref="ID"/>.
+    /// <para/>
+    /// This type is raw authoring data only. The live open/hidden state of a
+    /// zone is owned by <see cref="MapZoneService"/>, which seeds itself from
+    /// <see cref="Locked"/>/<see cref="Hidden"/> and lets scenarios and code
+    /// change it at runtime; only those runtime overrides are saved.
     /// </summary>
     public class MapZone : IIdentifiable
     {
@@ -50,9 +54,20 @@ namespace Cthangover.Core.UI.Tool
         /// Target scene identifier passed directly to
         /// <c>SceneManager.SwitchScene</c> when the marker is clicked.
         /// Causes the current visual-novel scene to transition to this zone.
+        /// An empty or unresolved scene marks the zone as closed: the map shows
+        /// its marker and polygon dimmed and blocks the transition button, which
+        /// lets authors sketch future regions without breaking navigation.
         /// </summary>
         [JsonPropertyName("scene")]
         public string Scene { get; set; }
+
+        /// <summary>
+        /// Optional localisation key for the flavour text shown in the location
+        /// card. Zones without a description show only the state badge and the
+        /// transition button, so map data can stay minimal.
+        /// </summary>
+        [JsonPropertyName("description")]
+        public string Description { get; set; }
 
         /// <summary>
         /// Asset ID of the marker icon texture, resolved through the mod texture
@@ -68,5 +83,39 @@ namespace Cthangover.Core.UI.Tool
         [JsonPropertyName("image_pos")]
         [JsonConverter(typeof(Vector2JsonConverter))]
         public Vector2 ImagePos { get; set; }
+
+        /// <summary>
+        /// Normalised [0..1] position of a free-standing text label drawn
+        /// directly on the map. <c>null</c> (absent in JSON) means the zone has
+        /// no label. A zone with a label but no <see cref="Image"/> is a pure
+        /// inscription — it is not a clickable location, does not open the
+        /// location card and is excluded from the zone counter. Used for
+        /// region names that have no icon of their own.
+        /// </summary>
+        [JsonPropertyName("label_pos")]
+        [JsonConverter(typeof(Vector2NullableJsonConverter))]
+        public Vector2? LabelPos { get; set; }
+
+        /// <summary>
+        /// Authoring default for the zone being closed to travel. <c>false</c>
+        /// (the default) means the zone is enterable as soon as its scene
+        /// resolves. Runtime state is owned by <see cref="MapZoneService"/>:
+        /// scenarios open and close zones through the <c>map.open_zone</c> /
+        /// <c>map.close_zone</c> actions, and those overrides are persisted in
+        /// the save, while this field only seeds the state of an untouched zone.
+        /// </summary>
+        [JsonPropertyName("locked")]
+        public bool Locked { get; set; }
+
+        /// <summary>
+        /// Authoring default for the zone being completely hidden from the
+        /// map. <c>false</c> (the default) draws the zone. Hidden zones are
+        /// absent from the map until a scenario reveals them with the
+        /// <c>map.show_zone</c> action; like <see cref="Locked"/>, this is only
+        /// the initial value and the runtime override lives in
+        /// <see cref="MapZoneService"/>.
+        /// </summary>
+        [JsonPropertyName("hidden")]
+        public bool Hidden { get; set; }
     }
 }

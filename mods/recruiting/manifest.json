@@ -1,12 +1,22 @@
 {
   "id": "recruiting",
   "name": "Recruiting",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": "ct",
   "description": "Recruitment roster, conditions, behaviours and their save state",
   "category": "gameplay",
   "sources": [
     "src/**/*.cs"
   ],
-  "depends": []
+  "depends": [],
+  "ui": [
+    {
+      "id": "recruits",
+      "kind": "panel",
+      "slot": "ModBeforeUIPanel",
+      "scene_path": "scenes/recruit_panel.tscn",
+      "button": { "icon": "recruits", "locale": "ui/recruit/title", "index": 35 },
+      "priority": 10
+    }
+  ]
 }

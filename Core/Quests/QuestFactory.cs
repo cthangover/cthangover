@@ -17,9 +17,10 @@ namespace Cthangover.Core.Quests
     /// the first access (via <see cref="Get"/> or <see cref="GetAll"/>) and
     /// guards against re‑initialisation through the <c>isLoaded</c> flag.
     /// Because quest definitions come from <see cref="QuestDefinition"/>
-    /// objects read by <see cref="ModManager.GetResolver<JsonGroupResolver>()?.Collect<T>()"/>, the factory
-    /// remains decoupled from any single storage format — new mods can
-    /// register quests simply by placing JSON files in the correct group folder.
+    /// objects collected by <see cref="ModManager.GetResolver{EntityResolver}()"/> through the
+    /// DTO's <c>[EntityKind("quest")]</c> attribute, the factory remains
+    /// decoupled from any directory layout — new mods register quests simply
+    /// by shipping a JSON file whose envelope declares the quest kind.
     /// </summary>
     public class QuestFactory
     {
@@ -65,7 +66,7 @@ namespace Cthangover.Core.Quests
 
             try
             {
-                var definitions = JsonGroup.Collect<QuestDefinition>("quests");
+                var definitions = Entities.Collect<QuestDefinition>();
                 if (definitions != null)
                 {
                     foreach (var (id, def) in definitions)

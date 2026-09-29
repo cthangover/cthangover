@@ -34,17 +34,27 @@ namespace Cthangover.Core.Factories.Impls
 
         IRecipe ICacheLoader<string, IRecipe>.Load(string id)
         {
-            EnsureInfos();
-            if (_allInfos.TryGetValue(id, out var info))
+            var infos = EnsureInfos();
+            if (infos.TryGetValue(id, out var info))
                 return CreateRecipe(info);
             return null;
         }
 
-        private void EnsureInfos()
+        /// <summary>
+        /// Returns the recipe definitions, collecting them on first use.
+        /// Publication to <c>_allInfos</c> waits until the mod registry is
+        /// finalized so an early lookup from the launcher boot window cannot
+        /// freeze an empty snapshot for the session.
+        /// </summary>
+        private Dictionary<string, RecipeInfo> EnsureInfos()
         {
             if (_allInfos != null)
-                return;
-            _allInfos = JsonGroup.Collect<RecipeInfo>("recipes");
+                return _allInfos;
+
+            var infos = Entities.Collect<RecipeInfo>();
+            if (ModManager.Instance.IsInitialized)
+                _allInfos = infos;
+            return infos;
         }
 
         public IRecipe Get(string id)

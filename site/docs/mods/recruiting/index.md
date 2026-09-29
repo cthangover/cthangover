@@ -54,11 +54,35 @@ The roster is a session singleton — there is exactly one per playthrough:
 | `Data` | `List<Recruit>` - current roster |
 | `HasID(id)` | Check if a recruit exists |
 | `GetByID(id)` | Look up a recruit by instance ID |
-| `Add(id, characterID)` | Create a new recruit (uses the given `id`, falling back to a fresh Guid if taken; initialises Health=10 via `Recruit.PROP_HEALTH`; fires `OnConfigure`). **Returns the created `Recruit` instance** so callers can set additional state immediately |
-| `Remove(id)` | Remove a recruit from the roster |
+| `HasCharacterID(characterID)` | Check if an enemy template is already captured |
+| `GetByCharacterID(characterID)` | Look up the recruit spawned from an enemy template |
+| `Add(id, characterID)` | Create a new recruit (uses the given `id`, falling back to a fresh Guid if taken; initialises Health=10 via `Recruit.PROP_HEALTH`; fires `OnConfigure`). **Only one recruit per enemy template is allowed** - a duplicate request returns the existing entry and creates nothing. Returns the `Recruit` instance |
+| `Remove(id)` | Remove a recruit from the roster; also detaches it from the party and deletes its placeholder card |
 
 A new game clears `Data` through the `NewGameStartedEvent` subscription in
 `RecruitingInitializer`; loading a save replaces it via `RecruitingSaveable`.
+
+## Party integration
+
+The roster itself lives entirely in the mod, but the player can put a captured
+recruit into the active party from the mod's own **Recruits** panel (a
+`kind:panel` toolbar entry). The panel is a pure view over `RecruitingData`; the
+crossing into core data happens in `RecruitPartyBridge`:
+
+| Member | Description |
+|---|---|
+| `IsInSquad(recruit)` | True when the template ID is in `CharacterData.BattleSet` |
+| `AddToSquad(recruit)` | Creates the placeholder `CharacterInfoData` (keyed by `CharacterID`, so the one-per-enemy rule keeps the key unique) via `CharacterData.AddCharacterToParty`, adds it to `BattleSet` and syncs health. Core panels, battle, item targeting and the core save pick the recruit up as a normal party member |
+| `RemoveFromSquad(recruit)` | Leaves `BattleSet` but keeps the card, so action assignments and experience survive a temporary leave |
+| `Forget(recruit)` | Drops the party entry and deletes the card - used by `RecruitingData.Remove` |
+| `SyncToCard(recruit)` | Pushes `Recruit.Properties["Health"]` onto the card, mutating `Attributes.Health` **in place** (battle copies share the object) |
+| `SyncFromCard(recruit)` | Pulls the final battle health from the card back into the recruit's property bag |
+
+Synchronization is push-based and owned by the mod: `SyncToCard` runs when the
+mod changes its own data (starvation tick, joining the squad) and on save load;
+`SyncFromCard` runs on the core-neutral `characters_defeated` event, which marks
+the post-battle moment. Outside battle the mod never reads the placeholder card,
+so the roster stays the single source of truth.
 
 ### `RecruitBehaviourRegistry`
 
@@ -156,13 +180,13 @@ Periodic tick handler that processes recruit-related updates (e.g. hunger deplet
 
 ## Recruitment flow
 
-1. Characters are defeated and a system publishes `CharactersDefeatedEvent` (e.g. `turn_battle_base`'s victory screen);
-2. `DefeatedCharactersRecruiter` resolves each id through `CharacterFactory` and skips templates with `RecruitmentChance <= 0`;
+1. Characters are defeated and a system publishes `CharactersDefeatedEvent` (e.g. `turn_battle_base`'s victory screen); the event also pulls the final battle health of every squad recruit back through `RecruitPartyBridge.SyncFromCard`;
+2. `DefeatedCharactersRecruiter` resolves each id through `CharacterFactory` and skips templates with `RecruitmentChance <= 0` and enemies that are already captured (one recruit per enemy type);
 3. The condition gate must pass: `RecruitBehaviourRegistry.CanRecruit` (all `IRecruitCondition`s, including the built-in `EnslaveCondition`);
 4. The engine rolls 1-100 against the enemy's `RecruitmentChance`;
 5. On success the enemy is registered via `RecruitingData.Instance.Add`;
-6. On acceptance in the UI: `character.add_to_party` action fires → `CharacterData.AddCharacterToParty()` → creates `CharacterInfoData` entry;
-7. Character joins the battle set and becomes controllable.
+6. In the Recruits panel the player presses "Add to party": `RecruitPartyBridge.AddToSquad` creates the placeholder `CharacterInfoData` entry and adds the template ID to `BattleSet`;
+7. Character joins the battle set and becomes controllable; the recruit's health is pushed onto the card, and the character actions panel exposes the standard three action slots.
 
 ## Save state
 

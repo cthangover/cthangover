@@ -19,10 +19,10 @@ namespace Cthangover.Core.Factories.Impls
     /// or zero in JSON receive nonzero fallback values so incomplete
     /// mod data doesn't produce unplayable characters.
     ///
-    /// Patching is handled transparently by
-    /// <c>ModManager.CollectJsonGroup</c> — the factory receives
-    /// already-merged <c>CharacterInfo</c> DTOs and simply maps them to
-    /// the runtime model.
+    /// Patching is handled transparently by the shared
+    /// <c>EntityResolver</c> — the factory receives already-merged
+    /// <c>CharacterInfo</c> DTOs routed by their <c>character</c> kind and
+    /// simply maps them to the runtime model.
     /// </summary>
     public class CharacterFactory : ICacheLoader<string, Character>
     {
@@ -40,32 +40,43 @@ namespace Cthangover.Core.Factories.Impls
 
         Character ICacheLoader<string, Character>.Load(string id)
         {
-            EnsureInfos();
+            var infos = EnsureInfos();
 
-            GameLogger.Log("FACTORY", $"CharacterFactory.Load('{id}'): infos count={_allInfos?.Count ?? -1}", LogLevel.Debug);
-            if (_allInfos.TryGetValue(id, out var info))
+            GameLogger.Log("FACTORY", $"CharacterFactory.Load('{id}'): infos count={infos?.Count ?? -1}", LogLevel.Debug);
+            if (infos.TryGetValue(id, out var info))
                 return CreateCharacter(info);
 
             return null;
         }
 
-        private void EnsureInfos()
+        /// <summary>
+        /// Returns the character definitions, collecting them on first use.
+        /// The result is published to <c>_allInfos</c> only after the mod
+        /// registry is finalized: a lookup during the launcher boot window
+        /// would otherwise cache an empty snapshot that survives
+        /// <c>ModManager.ClearCaches</c> and makes every character
+        /// unresolvable for the rest of the session.
+        /// </summary>
+        private Dictionary<string, CharacterInfo> EnsureInfos()
         {
             if (_allInfos != null)
-                return;
+                return _allInfos;
 
             GameLogger.Log("FACTORY", $"CharacterFactory.EnsureInfos: START, ModRegistry.IsInitialized={ModRegistry.Instance.IsInitialized}, mods count={ModRegistry.Instance.Mods?.Count ?? 0}", LogLevel.Debug);
 
-            _allInfos = JsonGroup.Collect<CharacterInfo>("characters");
+            var infos = Entities.Collect<CharacterInfo>();
+            if (ModManager.Instance.IsInitialized)
+                _allInfos = infos;
 
-            GameLogger.Log("FACTORY", $"CharacterFactory.EnsureInfos: END, loaded {_allInfos?.Count ?? 0} infos", LogLevel.Debug);
+            GameLogger.Log("FACTORY", $"CharacterFactory.EnsureInfos: END, loaded {infos?.Count ?? 0} infos", LogLevel.Debug);
+            return infos;
         }
 
         public Character Get(string id)
         {
-            EnsureInfos();
+            var infos = EnsureInfos();
 
-            if (!_allInfos.ContainsKey(id))
+            if (!infos.ContainsKey(id))
             {
                 GameLogger.Log("FACTORY", $"CharacterFactory.Get('{id}'): NOT FOUND in infos", LogLevel.Error);
                 return null;

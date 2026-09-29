@@ -16,6 +16,7 @@ namespace Cthangover.Core.Characters
     /// changing the DTO schema.
     /// </summary>
     [Serializable]
+    [EntityKind("character")]
     public class CharacterInfo : IIdentifiable
     {
         /// <summary>

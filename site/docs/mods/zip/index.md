@@ -21,7 +21,7 @@ my_mod.zip/
 ├── scenarios/
 │   └── my_scene.scenario
 ├── items/
-│   └── items.json
+│   └── rations.json
 ├── backgrounds/
 │   └── my_bg.png
 ├── locale/

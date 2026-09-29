@@ -15,6 +15,7 @@ public class MockActionContext : IActionContext
     public ISceneNodeService Scene { get; set; }
     public Cthangover.Core.Mods.IModRegistry ModRegistry { get; set; }
     public Cthangover.Core.Items.IInventory Inventory { get; set; }
+    public IMapZoneService Map { get; set; }
 
     public string GetParam(string name)
     {

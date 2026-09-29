@@ -19,10 +19,16 @@ namespace Cthangover.Core.Factories.Impls
             if (string.IsNullOrEmpty(id))
                 return null;
 
-            if (items == null)
-                items = JsonGroup.Collect<ItemInfo>("items");
+            var infos = items ?? Entities.Collect<ItemInfo>();
 
-            if (!items.TryGetValue(id, out var info))
+            // The inventory autoload resolves starter items before the
+            // launcher finishes loading mods. Publishing that empty snapshot
+            // would keep every item unresolvable for the whole session, since
+            // ModManager.ClearCaches flushes resolvers, not factory fields.
+            if (ModManager.Instance.IsInitialized)
+                items ??= infos;
+
+            if (!infos.TryGetValue(id, out var info))
             {
                 GameLogger.Log("FACTORY", $"item '{id}' not found", LogLevel.Error);
                 return null;

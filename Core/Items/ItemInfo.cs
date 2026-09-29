@@ -7,6 +7,7 @@ using Cthangover.Core.Utils;
 namespace Cthangover.Core.Items
 {
     [Serializable]
+    [EntityKind("item")]
     public class ItemInfo : IIdentifiable
     {
         [JsonPropertyName("Id")]

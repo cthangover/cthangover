@@ -49,7 +49,10 @@ namespace Cthangover.Core.Relationship
             {
                 var hp = recruit.Properties.GetInt(Recruit.PROP_HEALTH);
                 if (hp > 0)
+                {
                     recruit.Properties.SetInt(Recruit.PROP_HEALTH, hp - 1);
+                    RecruitPartyBridge.SyncToCard(recruit);
+                }
             }
         }
 

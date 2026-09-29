@@ -68,7 +68,6 @@ namespace Cthangover.Core.UI.Inventory
             (BagFilter.Quest, "ui/inventory/tab_quest"),
         };
 
-        private static readonly Color BackdropColor = UiTokens.Backdrop;
         private static readonly Color PanelColor = UiTokens.Surface0;
         private static readonly Color CellColor = UiTokens.Surface1;
         private static readonly Color StatColor = UiTokens.Surface2;
@@ -130,9 +129,9 @@ namespace Cthangover.Core.UI.Inventory
 
             var backdrop = new ColorRect();
             backdrop.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-            backdrop.Color = BackdropColor;
             backdrop.MouseFilter = MouseFilterEnum.Ignore;
             AddChild(backdrop);
+            UiKit.ApplyPanelBackdrop(backdrop);
 
             var panel = new Panel();
             panel.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);

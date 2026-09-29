@@ -14,6 +14,7 @@ namespace Cthangover.Validator
         public const string Character = "character";
         public const string Action = "action";
         public const string StatusEffect = "status_effect";
+        public const string Skill = "skill";
         public const string Recipe = "recipe";
         public const string Scene = "scene";
         public const string Interactive = "interactive";

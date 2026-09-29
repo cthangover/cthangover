@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using Cthangover.Core.Factories;
 using Cthangover.Core.Utils;
@@ -17,6 +18,7 @@ namespace Cthangover.Core.Skills
     /// construction.
     /// </summary>
     [Serializable]
+    [EntityKind("skill")]
     public class SkillInfo : IIdentifiable
     {
         /// <summary>
@@ -46,6 +48,29 @@ namespace Cthangover.Core.Skills
         /// when the <see cref="Sprite"/> property is first accessed.
         /// </summary>
         public string Image { get; set; }
+
+        /// <summary>
+        /// Optional ID of the action card this skill gifts to the player when
+        /// acquired (e.g. an active skill that hands over a battle card).
+        /// Resolved against <see cref="Cthangover.Core.Factories.Impls.ActionCharacterFactory"/>
+        /// when the skills panel renders the detail view, and pushed into
+        /// <see cref="Cthangover.Core.Settings.ActionPoolData.ActionIds"/> by
+        /// <see cref="SkillService"/> so the card becomes assignable to a
+        /// character. Empty for skills that only act as passive gates and
+        /// never produce a card.
+        /// </summary>
+        public string GrantsAction { get; set; }
+
+        /// <summary>
+        /// Numeric bonuses this skill grants while owned. They are the card's
+        /// actual payload: the skills panel shows the first effect on the grid
+        /// card, lists all of them in the study plate, and sums every owned
+        /// skill's effects into the global "collection effect" plate via
+        /// <see cref="SkillEffectAggregator"/>. Empty for skills that only gate
+        /// content (e.g. unlock an action) without touching stats.
+        /// </summary>
+        [JsonPropertyName("Effects")]
+        public List<SkillEffectInfo> Effects { get; set; }
         
         /// <summary>
         /// The gameplay classification of this skill (<c>Active</c>, <c>Passive</c>,
@@ -59,7 +84,8 @@ namespace Cthangover.Core.Skills
         /// <summary>
         /// The rarity tier of this skill, serialised as a string in JSON and
         /// converted via <see cref="JsonStringEnumConverter"/>. Drives the colour
-        /// applied to the card frame by <see cref="SkillCardFrameBehaviour"/>.
+        /// of the card frame, study plate and rarity badge through
+        /// <see cref="SkillPalette"/>.
         /// </summary>
         [JsonConverter(typeof(JsonStringEnumConverter))]
         [JsonPropertyName("Rare")]

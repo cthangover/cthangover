@@ -16,6 +16,7 @@ namespace Cthangover.Core.Items
     /// validates that every referenced item exists in <c>ItemFactory</c>.
     /// </summary>
     [Serializable]
+    [EntityKind("recipe")]
     public class RecipeInfo : IIdentifiable
     {
         [JsonPropertyName("Id")]

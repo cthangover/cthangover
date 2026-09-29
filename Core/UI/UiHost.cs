@@ -112,6 +112,26 @@ namespace Cthangover.Core.UI
         }
 
         /// <summary>
+        /// Returns the cached instance for an entry <b>without</b> creating it,
+        /// for mod code that wants to reach an already-built panel (e.g. the map
+        /// editor asking the map widget to reload). Returns <c>false</c> when the
+        /// panel was never opened; use <see cref="EnsureInstance"/> to force
+        /// construction.
+        /// </summary>
+        public bool TryGetInstance(string id, out Control control)
+        {
+            control = null;
+            if (string.IsNullOrEmpty(id))
+                return false;
+
+            if (!instances.TryGetValue(id, out var cached) || !GodotObject.IsInstanceValid(cached))
+                return false;
+
+            control = cached;
+            return true;
+        }
+
+        /// <summary>
         /// Returns the cached instance for an entry, building it on first use.
         /// Hosted entries (panels and once-overlays) are parented to the host layer;
         /// transient overlays are joined to their slot in the current shell.

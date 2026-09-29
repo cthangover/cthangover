@@ -35,7 +35,7 @@ namespace Cthangover.Core.Settings
         /// Builds the <c>"__core__"</c> <see cref="ModSlot"/> with
         /// named <see cref="DataBlob"/> blocks for each subsystem
         /// (Time, Lamp, Characters, Quests, BattleSet,
-        /// Inventory, Recipes, ActionPool, CompletedScenarios) and
+        /// Inventory, Recipes, ActionPool, Skills, CompletedScenarios) and
         /// slot-level preview metadata in
         /// <see cref="ModMetadata.CustomData"/>.
         /// </summary>
@@ -70,7 +70,9 @@ namespace Cthangover.Core.Settings
                 new CItem { ID = o.Item.ID, Count = o.Count }).ToList());
             slot.Data["Recipes"]    = new DataBlob(1, runtime.RecipeData.Data.ToList());
             slot.Data["ActionPool"] = new DataBlob(1, runtime.ActionPool.ActionIds.ToList());
+            slot.Data["Skills"]     = new DataBlob(1, runtime.SkillData.Skills.ToList());
             slot.Data["CompletedScenarios"] = new DataBlob(1, completedScenarioIds.ToList());
+            slot.Data["MapZones"]   = new DataBlob(1, Cthangover.Core.UI.Tool.MapZoneService.Instance.ExportState());
 
             var preview = new CoreSlotPreview
             {
@@ -141,12 +143,25 @@ namespace Cthangover.Core.Settings
             if (coreSlot.Data.TryGetValue("ActionPool", out var apBlob))
                 runtime.ActionPool.ActionIds = apBlob.ReadJson<List<string>>() ?? new List<string>();
 
+            if (coreSlot.Data.TryGetValue("Skills", out var skillsBlob))
+            {
+                runtime.SkillData.Skills.Clear();
+                var skills = skillsBlob.ReadJson<List<string>>();
+                if (skills != null)
+                    foreach (var id in skills)
+                        runtime.SkillData.AddSkill(id);
+            }
+
             if (coreSlot.Data.TryGetValue("CompletedScenarios", out var csBlob))
             {
                 runtime.LoadedCompletedScenarioIds = csBlob.ReadJson<List<string>>()?.ToHashSet()
                     ?? new HashSet<string>();
                 runtime.CompletedScenarioIds.UnionWith(runtime.LoadedCompletedScenarioIds);
             }
+
+            if (coreSlot.Data.TryGetValue("MapZones", out var mapBlob))
+                Cthangover.Core.UI.Tool.MapZoneService.Instance.ImportState(
+                    mapBlob.ReadJson<Cthangover.Core.UI.Tool.MapZoneStateData>());
         }
 
         /// <summary>

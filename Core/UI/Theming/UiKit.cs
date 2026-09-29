@@ -1,3 +1,4 @@
+using Cthangover.Core.Mods.Resolvers;
 using Godot;
 
 namespace Cthangover.Core.UI.Theming
@@ -199,6 +200,35 @@ namespace Cthangover.Core.UI.Theming
                 StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
                 MouseFilter = Control.MouseFilterEnum.Ignore,
             };
+        }
+
+        /// <summary>
+        /// Dresses the full-screen backdrop of a gameplay panel: the panel keeps
+        /// its own <see cref="ColorRect"/> but it becomes an opaque dark surface,
+        /// and the shared <c>panels_background</c> texture is stretched over the
+        /// whole rect. Panels sit above live scenes, and the previous 0.9-alpha
+        /// backdrop let scene buttons bleed through, which made the panel close
+        /// buttons look noisy; an opaque backing removes them. The colour stays
+        /// underneath as a fallback because the texture ships in the optional
+        /// "interface" mod and may not resolve, in which case the panel still
+        /// gets a solid surface.
+        /// </summary>
+        public static void ApplyPanelBackdrop(ColorRect backdrop)
+        {
+            if (backdrop == null)
+                return;
+
+            backdrop.Color = UiTokens.Page;
+
+            var texture = new TextureRect
+            {
+                Texture = Textures.Resolve("panels_background"),
+                ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+                StretchMode = TextureRect.StretchModeEnum.Scale,
+                MouseFilter = Control.MouseFilterEnum.Ignore,
+            };
+            texture.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+            backdrop.AddChild(texture);
         }
     }
 }

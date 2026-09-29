@@ -1,8 +1,10 @@
 using System.Text.Json;
 using Cthangover.Core.Settings;
+using Cthangover.Core.UI.Tool;
 
 namespace Engine.Tests.Settings
 {
+    [Collection("ConditionStateMonitor")]
     public class RuntimeSerializerTests
     {
         private static RuntimeData CreateRuntime()
@@ -28,7 +30,9 @@ namespace Engine.Tests.Settings
             Assert.True(slot.Data.ContainsKey("Inventory"));
             Assert.True(slot.Data.ContainsKey("Recipes"));
             Assert.True(slot.Data.ContainsKey("ActionPool"));
+            Assert.True(slot.Data.ContainsKey("Skills"));
             Assert.True(slot.Data.ContainsKey("CompletedScenarios"));
+            Assert.True(slot.Data.ContainsKey("MapZones"));
         }
 
         [Fact]
@@ -125,6 +129,24 @@ namespace Engine.Tests.Settings
         }
 
         [Fact]
+        public void BuildCoreSlot_ThenRestoreCoreState_RestoresSkills()
+        {
+            var runtime = CreateRuntime();
+            runtime.SkillData.AddSkill("slave_master");
+            runtime.SkillData.AddSkill("battle_instinct");
+
+            var slot = RuntimeSerializer.BuildCoreSlot(runtime, "1.0.0", "test", new HashSet<string>());
+
+            var restored = CreateRuntime();
+            restored.SkillData.AddSkill("stale_from_previous_game");
+            RuntimeSerializer.RestoreCoreState(slot, restored);
+
+            Assert.True(restored.SkillData.HasSkill("slave_master"));
+            Assert.True(restored.SkillData.HasSkill("battle_instinct"));
+            Assert.False(restored.SkillData.HasSkill("stale_from_previous_game"));
+        }
+
+        [Fact]
         public void RestoreCoreState_NullData_NoCrash()
         {
             var slot = new ModSlot { Data = null };
@@ -179,6 +201,37 @@ namespace Engine.Tests.Settings
             RuntimeSerializer.RestoreCoreState(slot, runtime);
 
             Assert.Equal(originalTick, runtime.Time.Tick);
+        }
+
+        [Fact]
+        public void MapZonesBlob_ThenRestoreCoreState_Roundtrip()
+        {
+            try
+            {
+                MapZoneService.Instance.LoadZones(new[]
+                {
+                    new MapZone { ID = "locked_zone", Locked = true },
+                    new MapZone { ID = "hidden_zone", Hidden = true },
+                });
+                MapZoneService.Instance.Open("locked_zone");
+                MapZoneService.Instance.Hide("hidden_zone");
+
+                var slot = RuntimeSerializer.BuildCoreSlot(CreateRuntime(), "1.0.0", "test", new HashSet<string>());
+
+                MapZoneService.Instance.ResetOverrides();
+                Assert.False(MapZoneService.Instance.IsOpen("locked_zone"));
+
+                var restored = CreateRuntime();
+                RuntimeSerializer.RestoreCoreState(slot, restored);
+
+                Assert.True(MapZoneService.Instance.IsOpen("locked_zone"));
+                Assert.False(MapZoneService.Instance.IsVisible("hidden_zone"));
+            }
+            finally
+            {
+                MapZoneService.Instance.ResetOverrides();
+                MapZoneService.Instance.LoadZones(new List<MapZone>());
+            }
         }
 
         [Fact]

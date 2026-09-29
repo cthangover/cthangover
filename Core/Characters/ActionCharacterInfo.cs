@@ -14,6 +14,7 @@ namespace Cthangover.Core.Characters
     /// resource path string, resolved to Texture2D by the factory at load time.
     /// </summary>
     [Serializable]
+    [EntityKind("action")]
     public class ActionCharacterInfo : IIdentifiable
     {
         /// <summary>

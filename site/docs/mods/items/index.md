@@ -163,30 +163,36 @@ Recipe items are items that represent a craftable recipe in the player's invento
 }
 ```
 
-## Item index file
+## Item file format
 
-`items/items.json` registers items using `$ref` syntax:
+Every item file is a self-describing envelope routed by `Kind` — the file may
+live anywhere in the mod and there is no index file:
 
 ```jsonc
 {
-  // $ref entries — each ${...} path expands to items/{path}.json and its contents are merged in
+  // Entity kind — routing discriminator for the shared entity resolver
+  "Kind": "item",
   "Items": [
-    "${food/ration}",
-    "${food/wolf_meat}",
-    "${resource/branches}"
+    {
+      // Unique item ID
+      "Id": "food/ration",
+      "Name": "items/food/ration/name",
+      "Description": "items/food/ration/desc",
+      "Sprite": "food/ration",
+      "ItemType": "Food"
+    }
   ]
 }
 ```
 
-`${food/ration}` expands to `items/food/ration.json`.
-
 ## Recipes
 
-Recipes are defined separately in `recipes/` and describe input→output transformations:
+Recipes are their own entity kind and follow the same envelope:
 
 ```jsonc
 {
-  // Wrapping array — recipe definitions are listed under Items
+  // Recipes are separate entities, not items
+  "Kind": "recipe",
   "Items": [{
     // Unique recipe ID
     "Id": "recipe/wolf_meat_to_ration",
@@ -301,8 +307,7 @@ recipe/wolf_meat_to_ration/desc = A recipe for cooking wolf meat safely
 
 ## Adding a new item
 
-1. Create `items/{type}/{id}.json` with all fields
-2. Add it to `items/items.json`: `"${type/id}"`
-3. Add locale keys for name and description
-4. Optionally add a sprite icon
-5. If the item has an active use, reference it via the factory — implement either an `IItemAction` C# class or a GDScript with `get_item_action_id()` + `use(item)`. See [GDScript in Mods](site/docs/mods/src/gdscript) for details.
+1. Create a JSON file anywhere in your mod with the `{ "Kind": "item", "Items": [ ... ] }` envelope and all fields
+2. Add locale keys for name and description
+3. Optionally add a sprite icon
+4. If the item has an active use, reference it via the factory — implement either an `IItemAction` C# class or a GDScript with `get_item_action_id()` + `use(item)`. See [GDScript in Mods](site/docs/mods/src/gdscript) for details.

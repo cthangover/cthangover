@@ -270,6 +270,11 @@ namespace Cthangover.Core.Mods
 
                 ModGDScriptLoader.LoadGDScripts(mods);
 
+                // Discard any order computed during the launcher boot window:
+                // a main-thread caller can reach GetOrderedModIds while the
+                // background compile is still filling the registry, and that
+                // partial order must not survive into the finalized mod set.
+                orderedModIds = null;
                 var orderedIds = GetOrderedModIds();
                 var orderedList = new List<(string ModId, int Priority)>();
                 for (var i = 0; i < orderedIds.Count; i++)
@@ -341,10 +346,15 @@ namespace Cthangover.Core.Mods
 		/// for determinism. Dependencies always precede their dependents —
 		/// manual ordering only applies between unrelated mods.
 		/// When <paramref name="filterDisabled"/> is <c>true</c> (default),
-		/// the result is cached. When <c>false</c>, the order is computed
-		/// from <see cref="AllDiscoveredMods"/> every call (no caching)
-		/// and is NOT persisted to <see cref="ModLoadOrderStore"/> — this
-		/// variant is intended for the mod configuration UI.
+		/// the result is cached and persisted, but only once the registry
+		/// has been finalized: during the launcher boot window a main-thread
+		/// caller would otherwise freeze an order computed from the
+		/// half-built mod set for the rest of the session — and overwrite
+		/// the saved manual order with an empty list. When
+		/// <paramref name="filterDisabled"/> is <c>false</c>, the order is
+		/// computed from <see cref="AllDiscoveredMods"/> every call (no
+		/// caching) and is NOT persisted to <see cref="ModLoadOrderStore"/>
+		/// — this variant is intended for the mod configuration UI.
 		/// </summary>
 		public IReadOnlyList<string> GetOrderedModIds(bool filterDisabled = true)
 		{
@@ -365,7 +375,7 @@ namespace Cthangover.Core.Mods
 			var manualOrder = ModLoadOrderStore.Sync(source.Keys.ToList());
 			var result = ModLoadOrder.Compute(dependsMap, manualOrder);
 
-			if (filterDisabled)
+			if (filterDisabled && IsInitialized)
 			{
 				orderedModIds = result;
 				ModLoadOrderStore.Save(orderedModIds);

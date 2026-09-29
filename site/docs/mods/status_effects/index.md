@@ -43,15 +43,24 @@ Status effects are temporary buffs, debuffs, or crowd-control effects applied to
 | `Debuff` | Negative effect that harms the bearer (e.g. damage over time, stat reduction). Rendered with a hostile tint |
 | `Stun` | Crowd-control — causes the bearer to skip their turn. Checked by the battle engine via `StatusEffectQueue.HasStun()` |
 
-## Status effect index file
+## Status effect file format
 
-Status effects are registered via an index file:
+Status effect files are self-describing envelopes routed by `Kind`, with no
+index file:
 
 ```jsonc
 {
-  // $ref entries — ${stun} expands to status_effects/stun.json with its contents merged in
+  "Kind": "status_effect",
   "Items": [
-    "${stun}"
+    {
+      "Id": "effect/physics/stun",
+      "Name": "status/",
+      "Description": "",
+      "Icon": "characters/effects/stun",
+      "Type": "Stun",
+      "Duration": 3,
+      "Actions": "basic/stun"
+    }
   ]
 }
 ```

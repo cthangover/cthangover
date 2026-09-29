@@ -6,7 +6,9 @@ Quest definitions with status-based progression and tag-based conditions that co
 
 ```jsonc
 {
-  // Wrapping array — all quests are listed under Items
+  // Entity kind — routes the file to the quest collector
+  "Kind": "quest",
+  // All quests of the file are listed under Items
   "Items": [{
     // Unique quest identifier (PascalCase); used in scenario condition expressions
     "Id": "QuestId",
@@ -36,6 +38,7 @@ Quest definitions with status-based progression and tag-based conditions that co
 
 ```jsonc
 {
+  "Kind": "quest",
   "Items": [{
     // Quest ID — checked in scenario condition expressions
     "Id": "AwakeningQuest",
@@ -63,6 +66,7 @@ name with the "pages are still empty" placeholder:
 
 ```jsonc
 {
+  "Kind": "quest",
   "Items": [{
     "Id": "OldHouseQuest",
     "Name": "quest/old_house"
@@ -74,6 +78,7 @@ name with the "pages are still empty" placeholder:
 
 ```jsonc
 {
+  "Kind": "quest",
   "Items": [{
     // Quest ID — used in scenario conditions like MeetingMurakamiQuest.hasTag(...)
     "Id": "MeetingMurakamiQuest",
@@ -261,7 +266,7 @@ a tag without locale entries still appears as a stamp.
 
 ## Adding a new quest
 
-1. Create `quests/quests.json` in your mod
+1. Create a JSON file in your mod with the `{ "Kind": "quest", "Items": [ ... ] }` envelope (e.g. `quests/quests.json`)
 2. Define `Id`, `Name`, and `StatusToDescription`
 3. Add locale keys for all status descriptions
 4. Set tags via `action battle.init new_tag=X` or dedicated quest actions

@@ -85,6 +85,7 @@ namespace Engine.Tests.Actions
 
             Assert.Contains(charActions, a => a.Name == "character.add_to_party");
             Assert.Contains(charActions, a => a.Name == "character.send_notification");
+            Assert.Contains(charActions, a => a.Name == "character.add_skill");
         }
 
         [Fact]

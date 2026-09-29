@@ -20,6 +20,21 @@
       "timeoutSeconds": 120
     },
     {
+      "name": "map_zones",
+      "scene": "res://tests/Cthangover.Tests.Integration/Scenes/map_zones_test.tscn",
+      "timeoutSeconds": 120
+    },
+    {
+      "name": "entities",
+      "scene": "res://tests/Cthangover.Tests.Integration/Scenes/entity_pipeline_test.tscn",
+      "timeoutSeconds": 120
+    },
+    {
+      "name": "skills_panel",
+      "scene": "res://tests/Cthangover.Tests.Integration/Scenes/skills_panel_test.tscn",
+      "timeoutSeconds": 120
+    },
+    {
       "name": "tscn",
       "scene": "res://tests/Cthangover.Tests.Integration/Scenes/tscn_test_scene.tscn",
       "timeoutSeconds": 120
@@ -27,6 +42,11 @@
     {
       "name": "scene_builder",
       "scene": "res://scenes/test/scene_builder_autotest.tscn",
+      "timeoutSeconds": 120
+    },
+    {
+      "name": "map_editor",
+      "scene": "res://scenes/test/map_editor_autotest.tscn",
       "timeoutSeconds": 120
     },
     {

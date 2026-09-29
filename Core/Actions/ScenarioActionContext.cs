@@ -58,6 +58,13 @@ namespace Cthangover.Core.Actions
         /// Consumers must tolerate a null inventory.
         /// </summary>
         public IInventory        Inventory   { get; }
+        /// <summary>
+        /// Map zone control. Stateless adapter over the
+        /// <c>MapZoneService</c> singleton, which owns the actual state;
+        /// safe to instantiate per-context like the quest service, because the
+        /// state does not live in the adapter.
+        /// </summary>
+        public IMapZoneService   Map         { get; } = new MapZoneServiceImpl();
 
         /// <summary>
         /// Creates a context wired to the given DialogRuntime. The

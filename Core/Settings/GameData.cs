@@ -87,7 +87,8 @@ namespace Cthangover.Core.Settings
         /// Begins a "New Game": wipes the runtime state, resets every quest to
         /// its freshly loaded state (the quest factory survives returning to
         /// the menu, so without this step tags and statuses from the previous
-        /// playthrough would poison the new one), and then publishes
+        /// playthrough would poison the new one), drops the world map's
+        /// open/hidden overrides for the same reason, and then publishes
         /// <see cref="Events.NewGameStartedEvent"/>. Mods listen to that event to
         /// re-seed per-session data — the core mod restores the starter party there,
         /// because <see cref="ResetRuntime"/> discards it and
@@ -98,6 +99,7 @@ namespace Cthangover.Core.Settings
         {
             ResetRuntime();
             QuestFactory.Instance.ResetAll();
+            Cthangover.Core.UI.Tool.MapZoneService.Instance.ResetOverrides();
             Events.ModEventBus.Publish(new Events.NewGameStartedEvent());
         }
 

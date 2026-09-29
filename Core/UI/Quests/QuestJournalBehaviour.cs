@@ -71,9 +71,9 @@ namespace Cthangover.Core.UI.Quests
 
 			var bg = new ColorRect();
 			bg.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-			bg.Color = UiTokens.Backdrop;
 			bg.MouseFilter = MouseFilterEnum.Ignore;
 			AddChild(bg);
+			UiKit.ApplyPanelBackdrop(bg);
 
 			var bookArea = new Control();
 			bookArea.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);

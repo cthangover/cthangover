@@ -57,9 +57,9 @@ namespace Cthangover.Core.UI.CharacterPanel
 
 			var backdrop = new ColorRect();
 			backdrop.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-			backdrop.Color = UiTokens.Backdrop;
 			backdrop.MouseFilter = MouseFilterEnum.Ignore;
 			AddChild(backdrop);
+			UiKit.ApplyPanelBackdrop(backdrop);
 
 			var panel = new Panel();
 			panel.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
@@ -650,43 +650,10 @@ namespace Cthangover.Core.UI.CharacterPanel
 			if (characterData?.BattleSet == null || characterData.Characters == null)
 				return;
 
-			var extraPoolIds = new HashSet<string>(_actionPoolData?.ActionIds ?? new List<string>());
-			var assignedAfterReset = new HashSet<string>();
-
-			foreach (var characterId in characterData.BattleSet)
-			{
-				if (!characterData.Characters.TryGetValue(characterId, out var info))
-					continue;
-
-				var template = CharacterFactory.Instance.Get(characterId);
-				var defaultActionIds = template?.Actions?.Select(action => action.ID).ToList()
-					?? new List<string>();
-
-				var slots = new List<string>();
-				for (var i = 0; i < 3; i++)
-				{
-					if (i < defaultActionIds.Count)
-					{
-						slots.Add(defaultActionIds[i]);
-						assignedAfterReset.Add(defaultActionIds[i]);
-					}
-					else
-					{
-						slots.Add(null);
-					}
-				}
-
-				for (var i = 3; i < defaultActionIds.Count; i++)
-					extraPoolIds.Add(defaultActionIds[i]);
-
-				info.ActionSlots = slots;
-			}
-
-			extraPoolIds.ExceptWith(assignedAfterReset);
-			_actionPoolData.ActionIds = extraPoolIds.ToList();
+			ActionAssignmentReset.Apply(characterData, _actionPoolData, CharacterFactory.Instance.Get);
 
 			ReloadCharacters();
-			GameLogger.Log("UI", "CharacterPanel.PerformReset: assignments restored to templates");
+			GameLogger.Log("UI", "CharacterPanel.PerformReset: assignments restored to templates, awarded cards returned to pool");
 		}
 	}
 }

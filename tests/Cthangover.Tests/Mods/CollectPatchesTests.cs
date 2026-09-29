@@ -18,9 +18,9 @@ namespace Engine.Tests.Mods
         public void ListFiles_FlatFile_NotFoundAsDirectory()
         {
             var provider = new MockModFileProvider("test_flat_mod");
-            provider.AddFile("patches/characters.json", "{}");
+            provider.AddFile("patches/character.json", "{}");
 
-            var result = provider.ListFiles("patches/characters").ToList();
+            var result = provider.ListFiles("patches/character").ToList();
 
             Assert.Empty(result);
         }
@@ -29,34 +29,34 @@ namespace Engine.Tests.Mods
         public void ListFiles_FlatFile_FoundInPatchesRoot()
         {
             var provider = new MockModFileProvider("test_flat_mod");
-            provider.AddFile("patches/characters.json", "{}");
+            provider.AddFile("patches/character.json", "{}");
 
             var result = provider.ListFiles("patches").ToList();
 
-            Assert.Contains("patches/characters.json", result);
+            Assert.Contains("patches/character.json", result);
         }
 
         [Fact]
         public void ListFiles_Directory_FoundCorrectly()
         {
             var provider = new MockModFileProvider("test_dir_mod");
-            provider.AddFile("patches/characters/marao.json", "{}");
+            provider.AddFile("patches/character/marao.json", "{}");
 
-            var result = provider.ListFiles("patches/characters").ToList();
+            var result = provider.ListFiles("patches/character").ToList();
 
-            Assert.Contains("patches/characters/marao.json", result);
+            Assert.Contains("patches/character/marao.json", result);
         }
 
         [Fact]
         public void ListFiles_Directory_NotFoundInPatchesRoot()
         {
             var provider = new MockModFileProvider("test_dir_mod");
-            provider.AddFile("patches/characters/marao.json", "{}");
+            provider.AddFile("patches/character/marao.json", "{}");
 
             var result = provider.ListFiles("patches").ToList();
 
-            Assert.Contains("patches/characters/", result);
-            Assert.DoesNotContain("patches/characters/marao.json", result);
+            Assert.Contains("patches/character/", result);
+            Assert.DoesNotContain("patches/character/marao.json", result);
         }
 
         [Fact]

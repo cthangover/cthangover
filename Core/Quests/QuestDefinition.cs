@@ -4,8 +4,8 @@ using Cthangover.Core.Factories;
 namespace Cthangover.Core.Quests
 {
     /// <summary>
-    /// Immutable data template loaded from a mod's JSON group file (stored
-    /// under the <c>"quests"</c> key). Each definition carries the quest's
+    /// Immutable data template loaded from a mod JSON file whose envelope
+    /// declares the <c>quest</c> kind. Each definition carries the quest's
     /// identity, display name, and a mapping from
     /// <see cref="QuestStatus"/> integer values to localised description
     /// strings. <see cref="QuestFactory"/> reads these definitions once on
@@ -15,6 +15,7 @@ namespace Cthangover.Core.Quests
     /// Implements <see cref="IIdentifiable"/> so the factory can store
     /// quest definitions in a keyed collection.
     /// </summary>
+    [EntityKind("quest")]
     public class QuestDefinition : IIdentifiable
     {
         /// <summary>

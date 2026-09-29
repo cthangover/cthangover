@@ -28,6 +28,7 @@ namespace Cthangover.Core.Autotest
 			Test_QuestNotify_DelegatesToInner();
 			Test_CharAddToParty_DelegatesToInner();
 			Test_CharNotify_DelegatesToInner();
+			Test_CharAddSkill_DelegatesToInner();
 			Test_LightingClearMap_DelegatesToInner();
 			Test_LightingSetTime_DelegatesToInner();
 			Test_SceneInstantiate_DelegatesToInner();
@@ -183,6 +184,18 @@ namespace Cthangover.Core.Autotest
 			AssertEqual("al_azif", charSvc.LastNotifyType, "SendNotification type");
 		}
 
+		private void Test_CharAddSkill_DelegatesToInner()
+		{
+			var mock = new MockActionContext();
+			var charSvc = new MockCharacterService();
+			mock.Character = charSvc;
+			var core = new GDActionContextCore { Inner = mock };
+
+			core.Character.AddSkill("slave_master");
+
+			AssertEqual("slave_master", charSvc.LastSkillId, "AddSkill id");
+		}
+
 		private void Test_LightingClearMap_DelegatesToInner()
 		{
 			var mock = new MockActionContext();
@@ -300,6 +313,7 @@ namespace Cthangover.Core.Autotest
 		public ISceneNodeService Scene { get; set; }
 		public IModRegistry ModRegistry { get; set; }
 		public Items.IInventory Inventory { get; set; }
+		public IMapZoneService Map { get; set; }
 
 		public string GetParam(string name)
 		{
@@ -361,9 +375,11 @@ namespace Cthangover.Core.Autotest
 	{
 		public string LastAddToPartyType { get; private set; }
 		public string LastNotifyType { get; private set; }
+		public string LastSkillId { get; private set; }
 
 		public void AddToParty(string type) => LastAddToPartyType = type;
 		public void SendNotification(string type) => LastNotifyType = type;
+		public void AddSkill(string id) => LastSkillId = id;
 	}
 
 	internal class MockLightingService : ILightingService

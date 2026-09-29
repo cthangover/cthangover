@@ -26,6 +26,12 @@ action character.send_notification type=Murakami
 
 Triggers the "new party member" UI notification for character `Murakami`.
 
+```scenario
+action character.add_skill skill_id=slave_master
+```
+
+Grants the skill `slave_master` to the player. If the skill defines a `GrantsAction`, the action card is placed into the action pool for assignment in the character panel. Already owned skills are ignored; unknown IDs are logged and skipped.
+
 ### Battle initiation
 
 ```scenario
@@ -58,6 +64,7 @@ Toggles a named UI panel. The action name alone is enough — no extra parameter
 |---|---|---|
 | `character.add_to_party` | `type=CharId` | Add character to player's party |
 | `character.send_notification` | `type=CharId` | Show "new member" notification |
+| `character.add_skill` | `skill_id=SkillId` | Grant a skill and its action card |
 
 ### `battle.*`
 

@@ -18,8 +18,8 @@ namespace Cthangover.Validator
         /// <summary>
         /// Lists files under a mod-relative directory. Directories are pushed
         /// onto the work stack only when <paramref name="recursive"/> is set, so
-        /// the caller can mirror the shallow group reads of
-        /// <c>JsonGroupResolver</c> or the recursive scene scan.
+        /// the caller can mirror the recursive entity scan or the recursive
+        /// scene scan.
         /// </summary>
         public static List<string> ListFiles(IModFileProvider provider, string directory, bool recursive)
         {

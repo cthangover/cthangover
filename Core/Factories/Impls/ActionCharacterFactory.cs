@@ -18,8 +18,9 @@ namespace Cthangover.Core.Factories.Impls
     ///
     /// Images are loaded via <c>TextureUtils.LoadFromModGroup</c> — not
     /// through a texture factory — because action character assets live
-    /// inside the same <c>"characters"</c> group as their JSON definitions,
-    /// making co-location of data and art the default mod layout.
+    /// inside the same <c>"characters"</c> asset group as their PNGs,
+    /// making co-location of data and art the default mod layout. The JSON
+    /// definitions themselves are found by kind, not by that directory.
     /// </summary>
     public class ActionCharacterFactory : ICacheLoader<string, ActionCharacter>
     {
@@ -37,17 +38,27 @@ namespace Cthangover.Core.Factories.Impls
 
         ActionCharacter ICacheLoader<string, ActionCharacter>.Load(string id)
         {
-            EnsureInfos();
-            if (_allInfos.TryGetValue(id, out var info))
+            var infos = EnsureInfos();
+            if (infos.TryGetValue(id, out var info))
                 return CreateActionCharacter(info);
             return null;
         }
 
-        private void EnsureInfos()
+        /// <summary>
+        /// Returns the action definitions, collecting them on first use.
+        /// Publication to <c>_allInfos</c> waits until the mod registry is
+        /// finalized so an early lookup from the launcher boot window cannot
+        /// freeze an empty snapshot for the session.
+        /// </summary>
+        private Dictionary<string, ActionCharacterInfo> EnsureInfos()
         {
             if (_allInfos != null)
-                return;
-            _allInfos = JsonGroup.Collect<ActionCharacterInfo>("characters");
+                return _allInfos;
+
+            var infos = Entities.Collect<ActionCharacterInfo>();
+            if (ModManager.Instance.IsInitialized)
+                _allInfos = infos;
+            return infos;
         }
 
         public ActionCharacter Get(string id)
@@ -63,8 +74,7 @@ namespace Cthangover.Core.Factories.Impls
         /// </summary>
         public IReadOnlyCollection<string> GetAllActionIds()
         {
-            EnsureInfos();
-            return _allInfos?.Keys;
+            return EnsureInfos()?.Keys;
         }
 
         private ActionCharacter CreateActionCharacter(ActionCharacterInfo info)

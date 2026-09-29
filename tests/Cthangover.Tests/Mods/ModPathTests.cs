@@ -21,9 +21,9 @@ namespace Engine.Tests.Mods
         }
 
         [Theory]
-        [InlineData("patches/characters", "patches/characters/")]
-        [InlineData("patches/characters/", "patches/characters/")]
-        [InlineData("patches\\characters", "patches/characters/")]
+        [InlineData("patches/character", "patches/character/")]
+        [InlineData("patches/character/", "patches/character/")]
+        [InlineData("patches\\character", "patches/character/")]
         [InlineData("", "")]
         public void NormalizeDirectory_AppendsTrailingSlash(string input, string expected)
         {
