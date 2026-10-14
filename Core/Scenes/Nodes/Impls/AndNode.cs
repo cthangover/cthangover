@@ -19,12 +19,16 @@ namespace Cthangover.Core.Scenes.Nodes.Impls
         /// <summary>Evaluated only when <see cref="Left"/> returns <c>true</c>.</summary>
         public ICondition Right { get; }
 
+        /// <summary>Creates an AND node over two operand sub-expressions.</summary>
+        /// <param name="left">Operand evaluated first.</param>
+        /// <param name="right">Operand evaluated only when <paramref name="left"/> is true.</param>
         public AndNode(ICondition left, ICondition right)
         {
             Left = left;
             Right = right;
         }
 
+        /// <summary>Short-circuits: <see cref="Right"/> runs only when <see cref="Left"/> is true.</summary>
         public override bool Evaluate(EvaluationContext ctx) =>
             Left.Evaluate(ctx) && Right.Evaluate(ctx);
     }

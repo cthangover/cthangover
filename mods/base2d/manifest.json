@@ -1,0 +1,10 @@
+{
+  "id": "base2d",
+  "name": "2D Platform",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "2D presentation platform: base shell scene with the view box, toolbar, panel slots and notifications. Parent for all 2D mods; content mods fill the shell through scene patches.",
+  "category": "engine, library",
+  "depends": ["time_base>=1", "interface>=1"],
+  "ui": []
+}

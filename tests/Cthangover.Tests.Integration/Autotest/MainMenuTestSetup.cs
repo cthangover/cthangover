@@ -1,5 +1,6 @@
 #if TOOLS
 using System.Collections.Generic;
+using Cthangover.Core.Scenes;
 using Cthangover.Core.UI.Menu;
 using Cthangover.Core.Utils;
 using Godot;
@@ -7,23 +8,26 @@ using Godot;
 namespace Cthangover.Core.Autotest
 {
 	/// <summary>
-	/// Automated smoke runs of the main menu. Two modes share the same setup:
+	/// Automated smoke runs of the main menu. Three modes share the same setup:
 	/// <list type="bullet">
 	/// <item><c>--test=menu</c> — waits for the menu to settle, clicks "New Game",
 	/// then attaches a <see cref="DialogAutoDriver"/> to the tree root so it
 	/// survives the scene change and auto-advances the opening scenario until it
 	/// ends (exit code 0).</item>
-	/// <item><c>--test=mod_manager</c> — clicks the first button provided by the
-	/// mod <c>main_menu</c> registry (the mod_manager button), then verifies the
-	/// mod scene was built, its grid exists and at least one mod card was created
-	/// (exit code 0).</item>
-	/// <item><c>--test=mod_collections</c> — clicks the collections button by its
-	/// translation key, then verifies the collections scene was built, its list
-	/// is populated and the dependency graph contains at least one frame and one
-	/// mod node (exit code 0).</item>
+	/// <item><c>--test=mod_manager</c> — clicks the single hub button from the
+	/// mod <c>main_menu</c> registry, then verifies the hub opened on the mods
+	/// tab with the embedded manager: its grid exists and at least one mod card
+	/// was created (exit code 0).</item>
+	/// <item><c>--test=mod_collections</c> — opens the same hub, switches to the
+	/// collections tab, verifies the games gallery, opens the scheme editor from
+	/// the first game card and checks the game picker is populated and the
+	/// canvas contains at least one group card and one mod chip (exit code 0).</item>
 	/// </list>
 	/// A watchdog quits with exit code 1 if the flow does not finish within
-	/// <c>--timeout=</c> seconds (default 120), so a run can never hang.
+	/// <c>--timeout=</c> seconds (default 120), so a run can never hang. The hub
+	/// hosts the manager/gallery/editor screens, so every check below addresses
+	/// them through type-name searches inside <c>ModHubScreen</c> — the test
+	/// assembly cannot reference mod types directly.
 	/// </summary>
 	public partial class MainMenuTestSetup : Node
 	{
@@ -32,6 +36,7 @@ namespace Cthangover.Core.Autotest
 		private const float ModManagerSettleSeconds = 1.0f;
 		private const float DefaultTimeoutSeconds = 120f;
 
+		private Node _menu;
 		private float _timer = ClickDelaySeconds;
 		private float _timeoutSeconds = DefaultTimeoutSeconds;
 		private string _testName;
@@ -64,6 +69,9 @@ namespace Cthangover.Core.Autotest
 			if (!_enabled || _started)
 				return;
 
+			if (_menu == null)
+				BuildMenu();
+
 			_timer -= (float)delta;
 			if (_timer > 0)
 				return;
@@ -79,12 +87,33 @@ namespace Cthangover.Core.Autotest
 				RunNewGameTest();
 		}
 
+		/// <summary>
+		/// Builds the main menu from the base_menu mod at runtime. The old native
+		/// res://scenes/menu/main_menu.tscn no longer exists, so the test scene
+		/// cannot instance it statically; the mod-resolved scene is attached as a
+		/// child of this setup node and all lookups go through <c>_menu</c>.
+		/// </summary>
+		private void BuildMenu()
+		{
+			_menu = TscnScenes.LoadAndBuild("scenes/menu/main_menu.tscn");
+			if (_menu == null)
+			{
+				GameLogger.Log("TEST", "MainMenuTestSetup: failed to build the main menu scene from mods", LogLevel.Error);
+				Fail("menu");
+				return;
+			}
+
+			_menu.Name = "MainMenuScene";
+			AddChild(_menu);
+			GameLogger.Log("TEST", "MainMenuTestSetup: main menu scene built from mods");
+		}
+
 		private void RunNewGameTest()
 		{
-			var newGameBtn = GetParent().GetNodeOrNull<Button>("MenuContainer/NewGameBtn");
+			var newGameBtn = _menu?.GetNodeOrNull<Button>("MenuContainer/GameButtons/new_game");
 			if (newGameBtn == null)
 			{
-				GameLogger.Log("TEST", "MainMenuTestSetup: NewGameBtn not found, quitting", LogLevel.Error);
+				GameLogger.Log("TEST", "MainMenuTestSetup: new_game button not found, quitting", LogLevel.Error);
 				Fail("menu");
 				return;
 			}
@@ -106,13 +135,24 @@ namespace Cthangover.Core.Autotest
 			newGameBtn.EmitSignal("pressed");
 		}
 
-		private void RunModManagerTest()
+		/// <summary>
+		/// Clicks the single hub button (the only <c>main_menu</c> entry since
+		/// the mods and collections screens merged into one hub).
+		/// </summary>
+		private Button FindHubButton()
 		{
-			var container = GetParent().GetNodeOrNull<Control>("MenuContainer/ModMenuButtons");
-			var button = container != null && container.GetChildCount() > 0
+			var container = _menu?.GetNodeOrNull<Control>("MenuContainer/ModMenuButtons");
+			return container != null && container.GetChildCount() > 0
 				? container.GetChild(0) as Button
 				: null;
+		}
 
+		private Node FindHub()
+			=> _menu?.GetNodeOrNull<Node>("ModHubScreen");
+
+		private void RunModManagerTest()
+		{
+			var button = FindHubButton();
 			if (button == null)
 			{
 				GameLogger.Log("TEST", "MainMenuTestSetup: no mod main-menu buttons found, quitting", LogLevel.Error);
@@ -120,7 +160,7 @@ namespace Cthangover.Core.Autotest
 				return;
 			}
 
-			GameLogger.Log("TEST", "MainMenuTestSetup: clicking first mod main-menu button");
+			GameLogger.Log("TEST", "MainMenuTestSetup: clicking mods & collections hub button");
 			button.EmitSignal("pressed");
 
 			GetTree().CreateTimer(ModManagerSettleSeconds).Timeout += VerifyModManagerScreen;
@@ -136,10 +176,12 @@ namespace Cthangover.Core.Autotest
 			if (!GodotObject.IsInstanceValid(this))
 				return;
 
-			var screen = GetParent().GetNodeOrNull<Node>("ModManagerScreen");
+			// The hub opens on the mods tab with the manager embedded inside.
+			var hub = FindHub();
+			var screen = hub != null ? FindFirstDescendantByTypeName(hub, "ModManagerScreen") : null;
 			if (screen == null)
 			{
-				GameLogger.Log("TEST", "MainMenuTestSetup: ModManagerScreen not found after button click", LogLevel.Error);
+				GameLogger.Log("TEST", "ModManagerScreen not found inside the hub after button click", LogLevel.Error);
 				Fail("mod_manager");
 				return;
 			}
@@ -241,20 +283,18 @@ namespace Cthangover.Core.Autotest
 
 		private void RunModCollectionsTest()
 		{
-			var container = GetParent().GetNodeOrNull<Control>("MenuContainer/ModMenuButtons");
-			var button = FindMenuButton(container, "mod_manager/collections_menu_title");
-
+			var button = FindHubButton();
 			if (button == null)
 			{
-				GameLogger.Log("TEST", "MainMenuTestSetup: collections main-menu button not found, quitting", LogLevel.Error);
+				GameLogger.Log("TEST", "MainMenuTestSetup: hub button not found, quitting", LogLevel.Error);
 				Fail("mod_collections");
 				return;
 			}
 
-			GameLogger.Log("TEST", "MainMenuTestSetup: clicking collections button");
+			GameLogger.Log("TEST", "MainMenuTestSetup: clicking mods & collections hub button");
 			button.EmitSignal("pressed");
 
-			GetTree().CreateTimer(ModManagerSettleSeconds).Timeout += VerifyCollectionsScreen;
+			GetTree().CreateTimer(ModManagerSettleSeconds).Timeout += OpenCollectionsTab;
 			GetTree().CreateTimer(_timeoutSeconds).Timeout += () =>
 			{
 				GameLogger.Log("TEST", $"MainMenuTestSetup: timeout ({_timeoutSeconds}s) reached in mod_collections test, quitting", LogLevel.Error);
@@ -262,20 +302,26 @@ namespace Cthangover.Core.Autotest
 			};
 		}
 
-		private static Button FindMenuButton(Node container, string localeKey)
+		/// <summary>Switches the hub to the collections tab via its segment button.</summary>
+		private void OpenCollectionsTab()
 		{
-			if (container == null)
-				return null;
+			if (!GodotObject.IsInstanceValid(this))
+				return;
 
-			foreach (var child in container.GetChildren())
+			var hub = FindHub();
+			var tab = hub != null
+				? FindButtonByText(hub, TranslationServer.Translate("mod_manager/hub_tab_collections"))
+				: null;
+
+			if (tab == null)
 			{
-				if (child is Button button
-					&& button.HasMeta(MainMenuBuilder.LocaleMetaKey)
-					&& button.GetMeta(MainMenuBuilder.LocaleMetaKey).AsString() == localeKey)
-					return button;
+				GameLogger.Log("TEST", "MainMenuTestSetup: collections tab button not found in the hub", LogLevel.Error);
+				Fail("mod_collections");
+				return;
 			}
 
-			return null;
+			tab.EmitSignal("pressed");
+			GetTree().CreateTimer(ModManagerSettleSeconds).Timeout += VerifyCollectionsScreen;
 		}
 
 		private void VerifyCollectionsScreen()
@@ -283,33 +329,81 @@ namespace Cthangover.Core.Autotest
 			if (!GodotObject.IsInstanceValid(this))
 				return;
 
-			var screen = GetParent().GetNodeOrNull<Node>("ModCollectionsScreen");
-			if (screen == null)
+			var hub = FindHub();
+			var gallery = hub != null ? FindFirstDescendantByTypeName(hub, "CollectionsGallery") : null;
+			if (gallery == null)
 			{
-				GameLogger.Log("TEST", "MainMenuTestSetup: ModCollectionsScreen not found after button click", LogLevel.Error);
+				GameLogger.Log("TEST", "MainMenuTestSetup: CollectionsGallery not found on the collections tab", LogLevel.Error);
 				Fail("mod_collections");
 				return;
 			}
 
-			var graph = FindFirstDescendantByTypeName(screen, "CollectionGraphView");
-			var frames = CountDescendantsByTypeName(screen, "GraphFrame");
-			var nodes = CountDescendantsByTypeName(screen, "GraphNode");
-			var list = screen.GetNodeOrNull<VBoxContainer>("Margin/Root/Body/Sidebar/SideScroll/CollectionList");
-			var collectionButtons = list?.GetChildCount() ?? 0;
+			// Open the scheme editor from the first game card ("Edit scheme").
+			var edit = FindButtonByText(gallery, TranslationServer.Translate("mod_manager/gallery_edit_scheme"));
+			if (edit == null)
+			{
+				GameLogger.Log("TEST", "MainMenuTestSetup: no game cards in the gallery (no edit-scheme button)", LogLevel.Error);
+				Fail("mod_collections");
+				return;
+			}
 
-			if (graph == null || frames == 0 || nodes == 0 || collectionButtons == 0)
+			GameLogger.Log("TEST", "MainMenuTestSetup: gallery OK, opening the scheme editor");
+			edit.EmitSignal("pressed");
+
+			GetTree().CreateTimer(ModManagerSettleSeconds).Timeout += VerifySchemeEditor;
+		}
+
+		private void VerifySchemeEditor()
+		{
+			if (!GodotObject.IsInstanceValid(this))
+				return;
+
+			var hub = FindHub();
+			var screen = hub != null ? FindFirstDescendantByTypeName(hub, "ModCollectionsScreen") : null;
+			if (screen == null)
+			{
+				GameLogger.Log("TEST", "ModCollectionsScreen not found after opening the editor", LogLevel.Error);
+				Fail("mod_collections");
+				return;
+			}
+
+			var canvas = FindFirstDescendantByTypeName(screen, "CollectionSchemeCanvas");
+			var cards = CountDescendantsByTypeName(screen, "CollectionGroupCard");
+			var chips = CountDescendantsByTypeName(screen, "CollectionModChip");
+
+			// The game picker moved from the header into the breadcrumbs, so it
+			// is located by type — it is the only OptionButton on this screen.
+			var gameSelect = FindFirstDescendantByTypeName(screen, "OptionButton") as OptionButton;
+			var games = gameSelect?.ItemCount ?? 0;
+
+			if (canvas == null || cards == 0 || chips == 0 || games == 0)
 			{
 				GameLogger.Log("TEST",
-					$"MainMenuTestSetup: collections screen built incompletely (graph={graph != null}, frames={frames}, nodes={nodes}, collections={collectionButtons})",
+					$"MainMenuTestSetup: collections scheme built incompletely (canvas={canvas != null}, cards={cards}, chips={chips}, games={games})",
 					LogLevel.Error);
 				Fail("mod_collections");
 				return;
 			}
 
 			GameLogger.Log("TEST",
-				$"MainMenuTestSetup: collections OK, {collectionButtons} collection(s), {frames} frame(s), {nodes} node(s)");
+				$"MainMenuTestSetup: collections OK, {games} game(s), {cards} group(s), {chips} mod(s)");
 			GameLogger.Log("TEST", "[TEST_RESULT] name=mod_collections passed=1 failed=0");
 			GetTree().Quit(0);
+		}
+
+		/// <summary>Finds the first descendant button with the given visible text.</summary>
+		private static Button FindButtonByText(Node root, string text)
+		{
+			foreach (var child in root.GetChildren())
+			{
+				if (child is Button button && button.Text == text)
+					return button;
+
+				var found = FindButtonByText(child, text);
+				if (found != null)
+					return found;
+			}
+			return null;
 		}
 
 		/// <summary>

@@ -1,0 +1,13 @@
+{
+  "id": "skills_base",
+  "name": "Skills Engine",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Engine skills subsystem: card-based skill definitions, the grant service (skill + granted action pairing), the skills panel UI and the collection effect plate. Replaces the former Core/Skills implementations and Core/Factories/Impls/SkillFactory.",
+  "category": "engine, library",
+  "sources": [
+    "src/**/*.cs"
+  ],
+  "depends": ["interface>=1"],
+  "ui": []
+}

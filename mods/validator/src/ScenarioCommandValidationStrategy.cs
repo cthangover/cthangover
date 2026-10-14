@@ -1,4 +1,5 @@
 using System;
+using Cthangover.Mods.Dialog.Scenarios;
 using System.Collections.Generic;
 using Cthangover.Core.Factories.Impls;
 using Cthangover.Core.Mods;
@@ -39,6 +40,7 @@ namespace Cthangover.Validator
         public int Order => 300;
         public ValidationFeature Feature => ValidationFeature.Scenarios;
 
+        /// <summary>Parses every .scenario file and validates DSL commands, named parameters and known action names.</summary>
         public void Validate(ValidationContext context)
         {
             foreach (var mod in context.Mods)

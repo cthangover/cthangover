@@ -1,7 +1,17 @@
 namespace Cthangover.Core.Utils
 {
+    /// <summary>
+    /// Process-wide runtime environment flags shared across the core.
+    /// Distinguishes a real Godot runtime from unit-test and design-time hosts
+    /// and tracks the Godot main thread so subsystems can guard Godot API calls.
+    /// </summary>
     public static class GameEnvironment
     {
+        /// <summary>
+        /// True when the process is a real game run whose boot pipeline has executed.
+        /// Unit tests and design-time tooling leave it <c>false</c>, which routes
+        /// file access and singleton reloads through safe non-Godot defaults.
+        /// </summary>
         public static bool IsRuntime { get; set; }
 
         /// <summary>

@@ -19,9 +19,9 @@ namespace Cthangover.Core.Mods
     /// dependencies (format: modId[op][version][?]) that affect topological
     /// compile order and assembly reference resolution;
     /// <c>ConflictsWith</c> declares mutually exclusive mods;
-    /// <c>Subscriptions</c> binds wrapper templates to scene lifecycle
-    /// events so that mods can inject UI layers without patching scene
-    /// files.
+    /// <c>Ui</c> declares panels and overlays anchored to shell slots
+    /// (collected by <c>UiRegistry</c>), and <c>MainMenu</c> adds
+    /// title-screen buttons opening fullscreen mod scenes.
     /// </summary>
     public class ModManifest
     {
@@ -74,6 +74,17 @@ namespace Cthangover.Core.Mods
         /// </summary>
         [JsonPropertyName("gd_sources")]
         public List<string> GdSources { get; set; }
+
+        /// <summary>
+        /// Glob-style paths to C# test files (e.g. "tests/*.cs"). Read ONLY by
+        /// <c>ModTestEngine</c> in the explicit test mode
+        /// (<c>--run-tests</c> / <c>run_mod_tests</c>) and compiled into a
+        /// separate <c>{modId}__tests</c> assembly; the production pipeline
+        /// (<c>ModCompiler.CompileAll</c>) never touches this field, so tests
+        /// stay off the player's path (plan-mod-testing.md §3.1).
+        /// </summary>
+        [JsonPropertyName("test_sources")]
+        public List<string> TestSources { get; set; }
 
         /// <summary>
         /// Glob-style paths to native shared libraries (e.g. "bin/*.dll",
@@ -129,8 +140,8 @@ namespace Cthangover.Core.Mods
         /// <summary>
         /// Mod-provided buttons for the title screen. Each entry adds a button to
         /// the main menu that opens a fullscreen mod scene. Collected and validated
-        /// by <c>MainMenuRegistry</c>; built once per menu instantiation by
-        /// <c>MainMenuBuilder</c>. Only enabled mods contribute buttons.
+        /// by <c>MenuRegistry</c>; built once per menu instantiation by
+        /// <c>MenuBuilder</c>. Only enabled mods contribute buttons.
         /// </summary>
         [JsonPropertyName("main_menu")]
         public List<MainMenuEntry> MainMenu { get; set; }

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quick Starts — cthangover</title>
+<meta name="description" content="Three quick start tracks for cthangover: patch a character with JSON, build a DSL scene, write a C# mod — available in 7 languages.">
+<link rel="canonical" href="https://cthangover.ru/quickstart.html">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Quick Starts — cthangover">
+<meta property="og:url" content="https://cthangover.ru/quickstart.html">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="/img/favicon-32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/img/favicon-16.png" sizes="16x16">
+<link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+<link rel="stylesheet" href="/css/highlight-theme.css">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+
+<header class="top">
+  <div class="wrap hbar">
+    <a class="brand" href="/">
+      <img src="/img/logo.png" alt="cthangover">
+      <span class="name">cthangover</span>
+    </a>
+    <nav class="main">
+      <a href="/" data-nav="home" data-i18n="nav_home">Home</a>
+      <a href="/docs.html" data-nav="docs" data-i18n="nav_docs">Documentation</a>
+      <a href="/quickstart.html" data-nav="quickstart" data-i18n="nav_quickstart">Quick Starts</a>
+    </nav>
+    <div class="hright">
+      <div class="langsel">
+        <button id="langBtn" aria-haspopup="true"><span id="langCurName">English</span><span class="caret">▼</span></button>
+        <div class="langmenu" id="langMenu"></div>
+      </div>
+      <button class="nav-toggle" id="navToggle" aria-label="Menu"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+  <nav class="mobile-nav" id="mobileNav">
+    <a href="/" data-nav="home" data-i18n="nav_home">Home</a>
+    <a href="/docs.html" data-nav="docs" data-i18n="nav_docs">Documentation</a>
+    <a href="/quickstart.html" data-nav="quickstart" data-i18n="nav_quickstart">Quick Starts</a>
+  </nav>
+</header>
+
+<section class="intro">
+  <div class="wrap">
+    <div class="cap" data-i18n="nav_quickstart">Quick Starts</div>
+    <h1 data-i18n="qs_title">Quick starts</h1>
+    <p class="sub" data-i18n="qs_sub">Three tracks — each ends with a working result…</p>
+  </div>
+</section>
+
+<div class="wrap">
+  <div class="tracks">
+    <button class="track" data-tab="player">
+      <div class="lvl" data-i18n="qs_l1k">Track 1</div>
+      <h3 data-i18n="qs_l1t">Player</h3>
+      <p data-i18n="qs_l1d">Buff the character with a JSON patch — zero code.</p>
+      <div class="tm" data-i18n="qs_m1">JSON patch · 5 minutes</div>
+    </button>
+    <button class="track" data-tab="modder">
+      <div class="lvl" data-i18n="qs_l2k">Track 2</div>
+      <h3 data-i18n="qs_l2t">Modder</h3>
+      <p data-i18n="qs_l2d">Your own scene: dialogue, choices and jumps in DSL.</p>
+      <div class="tm" data-i18n="qs_m2">JSON + DSL · 15 minutes</div>
+    </button>
+    <button class="track" data-tab="programmer">
+      <div class="lvl" data-i18n="qs_l3k">Track 3</div>
+      <h3 data-i18n="qs_l3t">Programmer</h3>
+      <p data-i18n="qs_l3d">A C# mod: custom action, menu settings, event subscriptions.</p>
+      <div class="tm" data-i18n="qs_m3">C# + Godot API · 20 minutes</div>
+    </button>
+  </div>
+
+  <div class="controls">
+    <span class="lbl" data-i18n="qs_lang">Material language</span>
+    <div class="pills" id="qsPills"></div>
+    <div class="qtabs" id="qsTabs">
+      <button data-tab="index" class="on" data-i18n="qs_overview">Overview</button>
+      <button data-tab="player" data-i18n="qs_l1t">Player</button>
+      <button data-tab="modder" data-i18n="qs_l2t">Modder</button>
+      <button data-tab="programmer" data-i18n="qs_l3t">Programmer</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="bar">
+      📄 <span class="file" id="qsFile">quickstart/en/index.md</span>
+      <span data-i18n="built_from">built from</span>&nbsp;build-quickstart-index.py
+      <span class="fallback" id="qsFallback" style="display:none" data-i18n="fallback_note">material shown in English</span>
+    </div>
+    <div class="qs-content" id="qsContent"></div>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap fgrid">
+    <span>© 2026 Isaev Ilya · <span data-i18n="license">MIT License</span> · Godot 4.6 / C# / .NET 8</span>
+    <span class="build"><b>▮</b> <span data-i18n="built_by">assembled from</span> 84 <span data-i18n="md_files">Markdown files</span> · build.py · v2.0</span>
+  </div>
+</footer>
+
+<script src="/js/vendor/highlight.min.js"></script>
+<script src="/js/vendor/hljs-scenario.js"></script>
+<script src="/js/vendor/hljs-gdscript.js"></script>
+<script src="/js/vendor/hljs-filestree.js"></script>
+<script src="/js/vendor/hljs-jsonc.js"></script>
+<script src="/js/vendor/marked.min.js"></script>
+<script src="/js/i18n.js"></script>
+<script src="/js/render.js"></script>
+<script src="/js/quickstart.js"></script>
+</body>
+</html>

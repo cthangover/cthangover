@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Cthangover.Core.Bootstrap;
 using Cthangover.Core.Settings.Configs;
 using Cthangover.Core.Utils;
 using Godot;
@@ -15,17 +16,32 @@ namespace Cthangover.Core.Settings
     /// <see cref="Instance"/> accessor triggers <see cref="Load"/> on first
     /// use. If the Godot engine is not running (e.g. in unit tests), loading
     /// is silently skipped so the class degrades to defaults.
+    /// <para/>
+    /// The single instance is owned by the <see cref="AppServices"/>
+    /// composition root; the static facade stays as the public API during
+    /// migration, with laziness preserved by the owning <c>Lazy</c> slot.
     /// </summary>
     public class GameConfig
     {
-        private static readonly Lazy<GameConfig> instance = new(() =>
+        /// <summary>
+        /// Facade over the AppServices-owned instance; kept as the public API
+        /// during migration. Constructed on first access through the owning
+        /// <c>Lazy</c> slot.
+        /// </summary>
+        public static GameConfig Instance => AppServices.Current.GameConfigService.Value;
+
+        /// <summary>
+        /// Creates the instance for the composition root: a fresh config
+        /// with defaults, populated from game_config.json when the file is
+        /// reachable (runtime uses the Godot-globalized path; outside the
+        /// runtime the relative path is tried and defaults are kept).
+        /// </summary>
+        internal static GameConfig CreateInstance()
         {
             var config = new GameConfig();
             config.Load();
             return config;
-        });
-        /// <summary>Global singleton instance, constructed on first access.</summary>
-        public static GameConfig Instance => instance.Value;
+        }
         
         /// <summary>Audio bus preferences (volume, toggles).</summary>
         [JsonPropertyName("audio")]    public AudioSection    Audio    { get; set; } = new();

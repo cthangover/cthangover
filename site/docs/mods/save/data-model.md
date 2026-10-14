@@ -25,6 +25,7 @@ The core slot uses these blob keys:
 | `ActionPool` | `List<string>` | Persistent action card pool IDs |
 | `Skills` | `List<string>` | Owned skill IDs |
 | `CompletedScenarios` | `List<string>` | One-shot scenario IDs already run |
+| `MapZones` | `MapZoneStateData` | World-map zone open/visible overrides (delta against the mod-authored defaults) |
 
 Slot preview metadata (`CurrentSceneName`, `GameTime`, `CharacterCount`) is stored in `ModMetadata.CustomData` as a JSON object, so the slot list UI can read it without deserialising game-state blobs.
 

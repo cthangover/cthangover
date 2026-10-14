@@ -1,0 +1,104 @@
+[gd_scene format=3 uid="uid://d3m4jm0xk8ruc"]
+
+[ext_resource type="Script" uid="uid://bf3qln30mdj5w" path="res://mods/time_base/src/Lights/LampBehaviour.cs" id="LampBehaviourScript"]
+[ext_resource type="Script" uid="uid://brtwe4dkubjxe" path="res://mods/interface/src/Menu/SaveIcon.cs" id="TextureRectModIconLoaderScript"]
+[ext_resource type="Script" uid="uid://6a38jpevrxy4" path="res://mods/time_base/src/TimeController.cs" id="TimeControllerScript"]
+[ext_resource type="Script" uid="uid://dxr0u22mgwkay" path="res://mods/interface/src/Tool/ToolBox.cs" id="ToolBoxScript"]
+
+[node name="TopView" type="Control" unique_id=1316944324]
+layout_mode = 3
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 40.0
+grow_horizontal = 2
+grow_vertical = 0
+script = ExtResource("ToolBoxScript")
+
+[node name="Background" type="ColorRect" parent="." unique_id=542862483]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 1.8650001
+offset_bottom = 0.3999939
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.2)
+
+[node name="TimeController" type="Control" parent="." unique_id=662729322]
+layout_mode = 1
+anchor_right = 0.062000003
+anchor_bottom = 1.8750001
+offset_right = 0.95999146
+grow_vertical = 2
+script = ExtResource("TimeControllerScript")
+
+[node name="TimeLabel" type="Label" parent="TimeController" unique_id=952812546]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 22
+text = "14:35"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Buttons" type="HBoxContainer" parent="." unique_id=55236251]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.70000005
+anchor_right = 1.0
+anchor_bottom = 1.7500001
+offset_left = -0.00012207031
+offset_top = 10.0
+offset_right = -10.0
+grow_horizontal = 0
+grow_vertical = 2
+alignment = 2
+
+[node name="CenterTools" type="Control" parent="." unique_id=1513615082]
+layout_mode = 1
+anchor_left = 0.46600002
+anchor_right = 0.546
+anchor_bottom = 1.8750001
+offset_left = 2.2799683
+offset_right = 1.6799316
+offset_bottom = -1.0000076
+grow_vertical = 2
+
+[node name="Save" type="TextureRect" parent="CenterTools" unique_id=1223109404]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = -0.24200001
+anchor_top = 0.122
+anchor_right = 0.14400001
+anchor_bottom = 0.905
+offset_left = 0.026004791
+offset_top = 0.007999897
+offset_right = -0.032001495
+offset_bottom = -0.008003235
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 3
+stretch_mode = 5
+script = ExtResource("TextureRectModIconLoaderScript")
+
+[node name="Lamp" type="TextureRect" parent="CenterTools" unique_id=40403627]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.32700002
+anchor_top = 0.12200001
+anchor_right = 0.712
+anchor_bottom = 0.90500003
+offset_left = -0.031002045
+offset_top = -0.028000832
+offset_right = 0.06399536
+offset_bottom = 0.02999878
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 3
+stretch_mode = 5
+script = ExtResource("LampBehaviourScript")
+IconId = "lamp"

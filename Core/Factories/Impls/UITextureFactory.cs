@@ -1,4 +1,4 @@
-using System;
+using Cthangover.Core.Bootstrap;
 
 namespace Cthangover.Core.Factories.Impls
 {
@@ -8,14 +8,19 @@ namespace Cthangover.Core.Factories.Impls
     /// <c>"ui"</c> group so that UI textures sit alongside their companion
     /// files (theme JSON, font atlases) without needing a separate
     /// subdirectory per asset type.
+    /// <para/>
+    /// The single instance is owned by the <see cref="AppServices"/>
+    /// composition root; the static facade stays as the public API during
+    /// migration, with laziness preserved by the owning <c>Lazy</c> slot.
     /// </summary>
     public class UITextureFactory : Texture2DFactory
     {
-        private static readonly Lazy<UITextureFactory> instance = new(() => new UITextureFactory());
-        private UITextureFactory() : base("ui", 64) { }
+        internal UITextureFactory() : base("ui", 64) { }
 
-        public static UITextureFactory Instance => instance.Value;
+        /// <summary>Facade over the AppServices-owned instance; kept as the public API during migration.</summary>
+        public static UITextureFactory Instance => AppServices.Current.UITextures.Value;
 
+        /// <summary>Mod asset group scanned by this factory — files live under <c>mods/*/</c><b>ui</b>.</summary>
         public override string GroupName => "ui";
     }
 }

@@ -19,6 +19,7 @@ namespace Cthangover.Validator
         public int Order => 300;
         public ValidationFeature Feature => ValidationFeature.Json;
 
+        /// <summary>Reports items and actions that are declared but never referenced (DECL_UNUSED).</summary>
         public void Validate(ValidationContext context)
         {
             var used = new HashSet<string>(StringComparer.OrdinalIgnoreCase);

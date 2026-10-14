@@ -19,6 +19,7 @@ namespace Cthangover.Validator
         public int Order => 100;
         public ValidationFeature Feature => ValidationFeature.Json;
 
+        /// <summary>Re-checks every manifest's depends pins and cycles, reporting broken chains the loader only logs at runtime.</summary>
         public void Validate(ValidationContext context)
         {
             var manifests = new Dictionary<string, ModManifest>(StringComparer.OrdinalIgnoreCase);

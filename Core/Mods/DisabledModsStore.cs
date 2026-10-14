@@ -32,6 +32,7 @@ namespace Cthangover.Core.Mods
         private static string ResolvedPath =>
             _resolvedPath ?? (GameEnvironment.IsRuntime ? ProjectSettings.GlobalizePath(FilePath) : "disabled_mods.json");
 
+        /// <summary>Reads the disabled-mod id set; returns an empty set when the file is absent or broken.</summary>
         public static HashSet<string> Load()
         {
             var path = ResolvedPath;
@@ -50,6 +51,7 @@ namespace Cthangover.Core.Mods
             }
         }
 
+        /// <summary>Persists the disabled-mod id set as a sorted JSON array.</summary>
         public static void Save(HashSet<string> disabledIds)
         {
             var path = ResolvedPath;
@@ -63,11 +65,13 @@ namespace Cthangover.Core.Mods
             File.WriteAllText(path, json);
         }
 
+        /// <summary>Convenience check backed by <see cref="Load"/>; allocates a fresh set per call.</summary>
         public static bool IsDisabled(string modId)
         {
             return Load().Contains(modId);
         }
 
+        /// <summary>Adds or removes a single id and persists the change; used by the mod manager toggle.</summary>
         public static void SetEnabled(string modId, bool enabled)
         {
             var set = Load();

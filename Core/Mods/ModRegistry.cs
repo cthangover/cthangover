@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text.Json;
 using System.Threading;
+using Cthangover.Core.Bootstrap;
 using Cthangover.Core.Events;
 using Cthangover.Core.Mods.Discovery;
 using Godot;
@@ -56,14 +57,6 @@ namespace Cthangover.Core.Mods
         private bool pipelineRunning;
 
         /// <summary>
-        /// How long a background caller waits for the launcher-driven load
-        /// before giving up. The launcher finalizes on the main thread, so a
-        /// background thread may safely block here; 2 minutes covers large
-        /// modpacks with cold Roslyn compilation.
-        /// </summary>
-        private const int LauncherReadyTimeoutMs = 120000;
-
-        /// <summary>
         /// Roots resolved on the main thread during <see cref="PreparePaths"/>.
         /// Discovery itself is pure file I/O, but scanners resolve their roots via
         /// <c>ProjectSettings.GlobalizePath</c>, which is Godot-API and must stay
@@ -83,8 +76,10 @@ namespace Cthangover.Core.Mods
             Mods = mods;
         }
 
+        /// <summary>Primary mods root (the first accessible scanner root, lowest priority number).</summary>
         public static string ModsPath => ResolveModsRoots().FirstOrDefault().Path;
 
+        /// <summary>All currently accessible mods roots with their dedup priorities; used by the uninstaller's writable-root check.</summary>
         public static List<(string Path, int Priority)> AllModsRoots => ResolveModsRoots();
 
         /// <summary>True once discovery has run at least once.</summary>
@@ -106,31 +101,35 @@ namespace Cthangover.Core.Mods
         /// version, loads precompiled DLLs, then compiles source-based
         /// mods. Returns immediately on subsequent calls.
         ///
-        /// This is the synchronous single-threaded entry point used by tests,
-        /// tooling, and non-launcher scene launches. The launcher boot path
-        /// instead calls <see cref="PreparePaths"/>, <see cref="DiscoverAndCompile"/>
+        /// Synchronous entry point for <see cref="Boot.RunSync"/>, tests and
+        /// tooling. During a launcher boot the pipeline belongs to Boot alone:
+        /// it drives <see cref="PreparePaths"/>, <see cref="DiscoverAndCompile"/>
         /// (on a background thread) and <see cref="FinalizeGodotInit"/> in order,
         /// so the heavy compile phase never blocks the main thread's rendering.
+        /// Any other caller reaching here before <see cref="Boot.ModsReady"/> is
+        /// refused with an error in the log — lazy self-initialization outside
+        /// these paths is deliberately forbidden.
         /// </summary>
         public void Initialize()
         {
             if (Volatile.Read(ref initialized))
                 return;
 
-            // When booting through the launcher scene, the launcher drives the
-            // pipeline itself (background compile + main-thread finalize) so the
-            // main thread can keep rendering. A main-thread caller must return
-            // rather than block — the main thread is the one that will finalize.
-            // A background caller waits for the launcher instead of silently
-            // observing an empty registry, which is what used to make lazy
-            // factories cache "no mods" during the boot window.
-            if (BootController.IsLauncherBoot && !BootController.ModsInitialized)
+            // The launcher boot owns the pipeline: Boot.RunLauncherAsync drives the
+            // phases in order. Any other caller reaching this point during that window
+            // is a boot-order bug: refuse loudly instead of silently self-booting on
+            // the main thread or blocking background callers on a wait handle.
+            // Re-entrant calls from the pipeline itself (GetOrderedModIds during
+            // FinalizeGodotInit) are exempt — pipelineRunning marks them. The window
+            // ends at ModsReady: Boot itself consumes mod data (EnsureRuntime, starter
+            // inventory seeding) from that phase on, so data becomes consumable there.
+            if (BootController.IsLauncherBoot && !Boot.ModsReady && !pipelineRunning)
             {
-                if (GameEnvironment.IsMainThread)
-                    return;
-
-                if (!BootController.WaitForModsInitialized(LauncherReadyTimeoutMs))
-                    GameLogger.Log("MODS_REGISTRY", "Timed out waiting for launcher mod initialization", LogLevel.Error);
+                GameLogger.Log("MODS_REGISTRY",
+                    "Initialize refused: launcher boot owns the mod pipeline " +
+                    $"(Boot.Phase={Boot.Phase}). Consume mod data only after Boot.ModsReady, " +
+                    "or add a readiness guard like the audio mod's music player does.",
+                    LogLevel.Error);
                 return;
             }
 
@@ -177,6 +176,7 @@ namespace Cthangover.Core.Mods
                 _ = ModConfig.Instance;
                 DisabledModsStore.WarmUp();
                 ModCollectionStore.WarmUp();
+                CollectionLayoutStore.WarmUp();
 
                 resolvedRoots.Clear();
                 foreach (var scanner in ModDiscoveryRegistry.Scanners)
@@ -259,38 +259,50 @@ namespace Cthangover.Core.Mods
                 if (initialized)
                     return;
 
-                foreach (var (modId, assembly) in _precompiledAssemblies)
-                    ModAssemblyLoader.RegisterAssembly(assembly, modId);
-
-                foreach (var (modId, assembly, sourceFiles) in _compiledAssemblies)
+                // Mark the pipeline as running for the duration of the finalize:
+                // GetOrderedModIds below re-enters Initialize, and the
+                // launcher-boot refusal guard must exempt the pipeline's own
+                // re-entrant calls (pipelineRunning marks them).
+                pipelineRunning = true;
+                try
                 {
-                    ModAssemblyLoader.RegisterAssembly(assembly, modId);
-                    ScriptTypeRegistry.RegisterAssembly(assembly, modId, sourceFiles);
+                    foreach (var (modId, assembly) in _precompiledAssemblies)
+                        ModAssemblyLoader.RegisterAssembly(assembly, modId);
+
+                    foreach (var (modId, assembly, sourceFiles) in _compiledAssemblies)
+                    {
+                        ModAssemblyLoader.RegisterAssembly(assembly, modId);
+                        ScriptTypeRegistry.RegisterAssembly(assembly, modId, sourceFiles);
+                    }
+
+                    ModGDScriptLoader.LoadGDScripts(mods);
+
+                    // Discard any order computed during the launcher boot window:
+                    // a main-thread caller can reach GetOrderedModIds while the
+                    // background compile is still filling the registry, and that
+                    // partial order must not survive into the finalized mod set.
+                    orderedModIds = null;
+                    var orderedIds = GetOrderedModIds();
+                    var orderedList = new List<(string ModId, int Priority)>();
+                    for (var i = 0; i < orderedIds.Count; i++)
+                        orderedList.Add((orderedIds[i], i));
+                    ScriptTypeRegistry.SetModOrder(orderedList);
+
+                    // Publish readiness only after every registry is populated:
+                    // a concurrent reader must never observe IsInitialized while
+                    // scripts/GDScripts are still missing. The volatile write is
+                    // ordered, so readiness becomes visible to other threads only
+                    // once every registry above is fully filled.
+                    Volatile.Write(ref initialized, true);
+
+                    GameLogger.Log("MODS_REGISTRY", $"ModRegistry.Initialize: loaded {mods.Count} mod(s)");
+                    foreach (var kvp in mods)
+                        GameLogger.Log("MODS_REGISTRY", $"  [{kvp.Key}] '{kvp.Value.Name}' v{kvp.Value.Version ?? "?"} provider={kvp.Value.FileProvider.GetType().Name}", LogLevel.Debug);
                 }
-
-                ModGDScriptLoader.LoadGDScripts(mods);
-
-                // Discard any order computed during the launcher boot window:
-                // a main-thread caller can reach GetOrderedModIds while the
-                // background compile is still filling the registry, and that
-                // partial order must not survive into the finalized mod set.
-                orderedModIds = null;
-                var orderedIds = GetOrderedModIds();
-                var orderedList = new List<(string ModId, int Priority)>();
-                for (var i = 0; i < orderedIds.Count; i++)
-                    orderedList.Add((orderedIds[i], i));
-                ScriptTypeRegistry.SetModOrder(orderedList);
-
-                // Publish readiness only after every registry is populated:
-                // a concurrent reader must never observe IsInitialized while
-                // scripts/GDScripts are still missing. The volatile write is
-                // ordered before the wait-handle release in MarkModsInitialized.
-                Volatile.Write(ref initialized, true);
-                BootController.MarkModsInitialized();
-
-                GameLogger.Log("MODS_REGISTRY", $"ModRegistry.Initialize: loaded {mods.Count} mod(s)");
-                foreach (var kvp in mods)
-                    GameLogger.Log("MODS_REGISTRY", $"  [{kvp.Key}] '{kvp.Value.Name}' v{kvp.Value.Version ?? "?"} provider={kvp.Value.FileProvider.GetType().Name}", LogLevel.Debug);
+                finally
+                {
+                    pipelineRunning = false;
+                }
             }
         }
 
@@ -359,6 +371,16 @@ namespace Cthangover.Core.Mods
 		public IReadOnlyList<string> GetOrderedModIds(bool filterDisabled = true)
 		{
 			Initialize();
+
+			// Initialize above already refused and logged when the launcher boot
+			// owns the pipeline. Computing here would return a misleading empty
+			// order built from a half-built registry, so refuse as well. The
+			// pipeline's own re-entrant call from FinalizeGodotInit is exempt —
+			// pipelineRunning marks it, exactly as in Initialize. Ends at
+			// ModsReady: the starter-inventory seeding legitimately reads the
+			// (now final) mod set during that phase.
+			if (BootController.IsLauncherBoot && !Boot.ModsReady && !pipelineRunning)
+				return new List<string>();
 
 			if (filterDisabled && orderedModIds != null)
 				return orderedModIds;

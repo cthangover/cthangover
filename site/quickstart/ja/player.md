@@ -19,7 +19,7 @@ mods/
 └── quickstart_player/
     ├── manifest.json
     └── patches/
-        └── characters.json
+        └── character.json
 ```
 
 ---
@@ -38,13 +38,13 @@ mods/
 }
 ```
 
-最小限のマニフェストは `name` だけで十分ですが、`id` も記入することをお勧めします。カーネルがフォルダを自動検出し、Modとしてロードします。
+manifest.json ファイル自体は必須です（ないModは読み込まれません）が、個々の項目は厳密には必須ではありません。`id` を省略するとフォルダ名がModのIDとして使われます。とはいえ `id` と `name` の記入をお勧めします。カーネルがフォルダを自動検出し、Modとしてロードします。
 
 ---
 
 ## ステップ 3：キャラクターパッチ
 
-`mods/quickstart_player/patches/characters.json` を作成：
+`mods/quickstart_player/patches/character.json` を作成：
 
 ```jsonc
 {
@@ -54,7 +54,7 @@ mods/
 
       "Health": 5000, // 新しいプロパティ値 — 元の値を上書き
       "Attack": 1200,
-      "Points": 2,
+      "Point": 2,
 
       "Actions$add": ["physics/stun"] // $add は配列に要素を追加
     }
@@ -65,7 +65,7 @@ mods/
 ### 仕組み
 
 - **`"Id": "Marao"`** — パッチの対象：識別子 `Marao` のキャラクター（`visual_novel_core` Modで定義）。
-- **`"Health": 5000`**、**`"Attack": 1200`**、**`"Points": 2`** — キャラクターのフィールドを上書きします。新しい値が古い値を置き換えます。
+- **`"Health": 5000`**、**`"Attack": 1200`**、**`"Point": 2`** — キャラクターのフィールドを上書きします。新しい値が古い値を置き換えます。
 - **`"Actions$add": ["physics/stun"]`** — 接尾辞 `$add` は「配列に追加」を意味します。アクション `physics/stun` がリストに追加されます。デフォルトの `physics/attack` と `physics/defence` はそのまま残ります。
 
 > パッチの詳細：[Patches](site/docs/mods/patches/) と [配列操作](site/docs/mods/patches/arrays-and-identity)。
@@ -76,7 +76,7 @@ mods/
 
 ゲームを起動します。任意の戦闘に入ると — Marao は次のように変わります：
 
-- **5000 HP** （10の代わりに）
+- **5000 HP** （16の代わりに）
 - **1200 ATK** （5の代わりに）
 - **2 AP** （1の代わりに）
 - 3つ目のアクション **「スタン」** が「攻撃」「防御」と並んで表示
@@ -101,4 +101,4 @@ mods/
 quickstart_player.zip をダウンロード
 </a>
 
-ダウンロード可能なModは英語です。
+ダウンロード可能なModは英語です。インストールするには、Modをゲームの `mods/` フォルダに展開してください。ゲーム内のModマネージャーを使えば、ダウンロードしたModは `user://mods/` にインストールされ、同じIDの内蔵Modより優先されます。

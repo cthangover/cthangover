@@ -36,6 +36,7 @@ namespace Cthangover.Validator
         public int Order => 110;
         public ValidationFeature Feature => ValidationFeature.Json;
 
+        /// <summary>Validates scene patch .tscn files: known patch operations and target scenes that actually exist.</summary>
         public void Validate(ValidationContext context)
         {
             var sceneKeys = CollectSceneKeys(context);

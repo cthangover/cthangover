@@ -48,6 +48,10 @@ namespace Cthangover.Core.Relationship
         /// Called by <see cref="SceneEventController"/> on every
         /// timer tick. Delegates to
         /// <see cref="RecruitBehaviourRegistry.OnTick"/>.
+        /// Ticks also fire during the launcher boot window, so the registry
+        /// side must not touch <c>GameData.Instance.Runtime</c> or mod data
+        /// until <c>Boot.ModsReady</c> (see the boot-window contract on
+        /// <c>IOnTimeEvent</c>; core-side reference: TimeTickController).
         /// </summary>
         public void OnTimerTick()
         {

@@ -10,12 +10,12 @@ using Godot;
 namespace Cthangover.Core.Mods
 {
     /// <summary>
-    /// Loads native shared libraries from mod <c>native_dlls</c>
-    /// declarations and wires them into the P/Invoke resolution chain
+    /// Loads native shared libraries from mod <c>depends_native</c>
+    /// manifest declarations and wires them into the P/Invoke resolution chain
     /// via <c>NativeLibrary.SetDllImportResolver</c>.
     ///
     /// <b>Discovery</b> — iterates every mod whose manifest declares
-    /// <c>native_dlls</c> glob patterns, collects platform-appropriate
+    /// <c>depends_native</c> glob patterns, collects platform-appropriate
     /// files (.dll / .so / .dylib), and copies them to a stable cache
     /// directory so that even zip-based mods can serve native code.
     ///
@@ -72,7 +72,7 @@ namespace Cthangover.Core.Mods
         }
 
         /// <summary>
-        /// Scans each loaded mod's <c>native_dlls</c> patterns for
+        /// Scans each loaded mod's <c>depends_native</c> patterns for
         /// platform-native shared libraries, copies them to the cache,
         /// and registers a <c>DllImportResolver</c> on the core assembly.
         /// Must be called before any managed code that triggers P/Invoke

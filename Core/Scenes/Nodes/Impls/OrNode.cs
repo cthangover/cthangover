@@ -17,12 +17,16 @@ namespace Cthangover.Core.Scenes.Nodes.Impls
         /// <summary>Evaluated only when <see cref="Left"/> returns <c>false</c>.</summary>
         public ICondition Right { get; }
 
+        /// <summary>Creates an OR node over two operand sub-expressions.</summary>
+        /// <param name="left">Operand evaluated first.</param>
+        /// <param name="right">Operand evaluated only when <paramref name="left"/> is false.</param>
         public OrNode(ICondition left, ICondition right)
         {
             Left = left;
             Right = right;
         }
 
+        /// <summary>Short-circuits: <see cref="Right"/> runs only when <see cref="Left"/> is false.</summary>
         public override bool Evaluate(EvaluationContext ctx) =>
             Left.Evaluate(ctx) || Right.Evaluate(ctx);
     }

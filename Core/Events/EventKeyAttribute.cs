@@ -10,7 +10,9 @@ namespace Cthangover.Core.Events
     [AttributeUsage(AttributeTargets.Class)]
     public class EventKeyAttribute : Attribute
     {
+        /// <summary>The string event bus key the annotated class bridges to (snake_case, e.g. "scene_entered").</summary>
         public string Key { get; }
+        /// <summary>Binds the annotated event class to <paramref name="key"/> on the string (GDScript) bus layer.</summary>
         public EventKeyAttribute(string key) => Key = key;
     }
 }

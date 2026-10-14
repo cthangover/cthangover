@@ -9,9 +9,11 @@ namespace Cthangover.Core.Scenes.TscnParsing.SectionParsers
     /// </summary>
     public class NodeSectionParser : ISectionParser
     {
+        /// <summary>Section type name handled by this parser: <c>node</c>.</summary>
         public string SectionType => "node";
         private ParsedNode _current;
 
+        /// <summary>Starts a node from the heading attributes: name, type, parent, instance, script, index, groups, node_paths.</summary>
         public void Open(Dictionary<string, string> h)
         {
             _current = new ParsedNode
@@ -33,6 +35,7 @@ namespace Cthangover.Core.Scenes.TscnParsing.SectionParsers
             }
         }
 
+        /// <summary>Routes <c>script=</c> into <see cref="ParsedNode.ScriptRef"/>, node-path variables into their dictionary, and everything else into the ordered property map.</summary>
         public void Property(string key, string rawValue)
         {
             if (_current == null)
@@ -50,6 +53,7 @@ namespace Cthangover.Core.Scenes.TscnParsing.SectionParsers
             _current.PropertyOrder.Add(key);
         }
 
+        /// <summary>Extracts <c>__entry_point</c> from root nodes into <see cref="ParsedScene.EntryPointClass"/> and appends the node to the scene.</summary>
         public void Close(ParsedScene s)
         {
             if (_current == null) return;

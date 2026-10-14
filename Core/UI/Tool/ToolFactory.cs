@@ -2,24 +2,30 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Cthangover.Core.Bootstrap;
 using Cthangover.Core.Utils;
 
 namespace Cthangover.Core.UI.Tool
 {
     /// <summary>
-    /// Singleton registry for modding/dev tools (IToolProvider implementations).
+    /// Registry for modding/dev tools (IToolProvider implementations).
     /// Discovers tools via reflection on construction; supports RegisterAssembly
     /// for mod-injected tools. Deduplicates by Id. Get/GetAll provide lookup
     /// for the tool block of the main menu and the in-game toolbox.
+    /// <para/>
+    /// The single instance is owned by the <see cref="AppServices"/>
+    /// composition root; the static facade stays as the public API during
+    /// migration. Initialization moves from eager (static field) to lazy
+    /// (first access through the owning <c>Lazy</c> slot).
     /// </summary>
     public class ToolFactory
     {
-        /// <summary>Singleton instance auto-constructed at field init time, triggering reflection-based tool discovery.</summary>
-        public static readonly ToolFactory Instance = new();
+        /// <summary>Facade over the AppServices-owned instance; kept as the public API during migration.</summary>
+        public static ToolFactory Instance => AppServices.Current.Tools.Value;
 
         private readonly Dictionary<string, IToolProvider> _tools = new();
 
-        private ToolFactory()
+        internal ToolFactory()
         {
             foreach (var tool in Reflections.FindAndCreate<IToolProvider>())
                 Register(tool);

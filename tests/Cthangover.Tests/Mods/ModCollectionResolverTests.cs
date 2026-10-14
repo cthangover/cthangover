@@ -180,6 +180,252 @@ namespace Engine.Tests.Mods
             Assert.Equal(ModCollectionNodeState.Installed, graph.Nodes[0].State);
         }
 
+        [Fact]
+        public void Resolve_Include_ExpandsChildMechanicsIntoOneGroup()
+        {
+            var game = new ModCollection
+            {
+                Id = "game",
+                Name = "Game",
+                Includes = new List<ModCollectionInclude> { new() { Ref = "rpg_2d", Role = "systems" } },
+            };
+            var child = new ModCollection
+            {
+                Id = "rpg_2d",
+                Name = "2D RPG",
+                Description = "2D systems",
+                Mechanics = new List<ModCollectionMechanic>
+                {
+                    new() { Id = "core", Name = "Core", Role = "foundation", Mods = new List<string> { "base_2d" } },
+                    new() { Id = "chars", Name = "Chars", Role = "characters", Mods = new List<string> { "character_data" } },
+                },
+            };
+            var mods = Mods(Local("base_2d", "1.0"), Local("character_data", "1.0"));
+
+            var graph = ModCollectionResolver.Resolve(
+                game, Collections(game, child), mods, new HashSet<string>(), new List<CatalogExportEntry>());
+
+            Assert.Empty(graph.Problems);
+            var group = Assert.Single(graph.Groups);
+            Assert.True(group.IsInclude);
+            Assert.Equal("rpg_2d", group.CollectionId);
+            Assert.Equal("systems", group.Role);
+            Assert.Equal(2, group.Mods.Count);
+            Assert.Equal("base_2d", group.Mods[0].ModId);
+            Assert.Equal("core", group.Mods[0].MechanicId);
+            Assert.Contains(graph.Nodes, n => n.ModId == "base_2d" && n.MechanicId == "core");
+            Assert.Contains(graph.Nodes, n => n.ModId == "character_data");
+        }
+
+        [Fact]
+        public void Resolve_IncludeLabelAndNote_OverrideGroupText()
+        {
+            var game = new ModCollection
+            {
+                Id = "game",
+                Includes = new List<ModCollectionInclude>
+                {
+                    new() { Ref = "rpg_2d", Role = "systems", Label = "Основа", Note = "Подпись игры" },
+                },
+            };
+            var child = new ModCollection { Id = "rpg_2d", Name = "2D RPG", Description = "Original" };
+
+            var graph = ModCollectionResolver.Resolve(
+                game, Collections(game, child), Mods(), new HashSet<string>(), new List<CatalogExportEntry>());
+
+            var group = Assert.Single(graph.Groups);
+            Assert.Equal("Основа", group.Name);
+            Assert.Equal("Подпись игры", group.Description);
+        }
+
+        [Fact]
+        public void Resolve_MissingInclude_ReportsProblemAndSkipsGroup()
+        {
+            var game = new ModCollection
+            {
+                Id = "game",
+                Name = "Game",
+                Includes = new List<ModCollectionInclude> { new() { Ref = "gone>=1", Role = "systems" } },
+            };
+
+            var graph = ModCollectionResolver.Resolve(
+                game, Collections(game), Mods(), new HashSet<string>(), new List<CatalogExportEntry>());
+
+            Assert.Empty(graph.Groups);
+            var problem = Assert.Single(graph.Problems);
+            Assert.Equal(ModCollectionProblemKind.MissingCollection, problem.Kind);
+            Assert.Equal("game", problem.ParentCollectionId);
+            Assert.Equal("gone>=1", problem.Ref);
+        }
+
+        [Fact]
+        public void Resolve_CycleInclude_ReportsProblem()
+        {
+            var a = new ModCollection
+            {
+                Id = "a",
+                Includes = new List<ModCollectionInclude> { new() { Ref = "b", Role = "x" } },
+            };
+            var b = new ModCollection
+            {
+                Id = "b",
+                Includes = new List<ModCollectionInclude> { new() { Ref = "a", Role = "y" } },
+            };
+
+            var graph = ModCollectionResolver.Resolve(
+                a, Collections(a, b), Mods(), new HashSet<string>(), new List<CatalogExportEntry>());
+
+            Assert.Contains(graph.Problems, p => p.Kind == ModCollectionProblemKind.Cycle);
+            Assert.Single(graph.Groups);
+        }
+
+        [Fact]
+        public void Resolve_TwoRequiredIncludesSameRole_ReportsConflict()
+        {
+            var game = new ModCollection
+            {
+                Id = "game",
+                Name = "Game",
+                Includes = new List<ModCollectionInclude>
+                {
+                    new() { Ref = "story_a", Role = "story" },
+                    new() { Ref = "story_b", Role = "story" },
+                },
+            };
+            var a = new ModCollection { Id = "story_a", Name = "Story A" };
+            var b = new ModCollection { Id = "story_b", Name = "Story B" };
+
+            var graph = ModCollectionResolver.Resolve(
+                game, Collections(game, a, b), Mods(), new HashSet<string>(), new List<CatalogExportEntry>());
+
+            var problem = Assert.Single(graph.Problems);
+            Assert.Equal(ModCollectionProblemKind.RoleConflict, problem.Kind);
+        }
+
+        [Fact]
+        public void Resolve_OptionalIncludeOff_StaysAsInactiveGroup()
+        {
+            var game = new ModCollection
+            {
+                Id = "game",
+                Includes = new List<ModCollectionInclude>
+                {
+                    new() { Ref = "voice_ru", Role = "locale", Optional = true, Selected = false },
+                },
+            };
+            var child = new ModCollection
+            {
+                Id = "voice_ru",
+                Name = "Voice",
+                Mechanics = new List<ModCollectionMechanic>
+                {
+                    new() { Id = "voice", Mods = new List<string> { "voice_ru" } },
+                },
+            };
+
+            var graph = ModCollectionResolver.Resolve(
+                game, Collections(game, child), Mods(), new HashSet<string>(), new List<CatalogExportEntry>());
+
+            var group = Assert.Single(graph.Groups);
+            Assert.False(group.Selected);
+            Assert.Empty(group.Mods);
+            Assert.Empty(graph.Nodes);
+        }
+
+        [Fact]
+        public void Resolve_OptionalMechanicOff_StaysAsDimmedGroupWithoutNodes()
+        {
+            var collection = Collection(
+                Mechanic("core", "app"),
+                Mechanic("extra", "skin"));
+            collection.Mechanics[1].Optional = true;
+            collection.Mechanics[1].Selected = false;
+            var mods = Mods(Local("app", "1.0"), Local("skin", "1.0"));
+
+            var graph = ModCollectionResolver.Resolve(
+                collection, mods, new HashSet<string>(), new List<CatalogExportEntry>());
+
+            // The turned-off contour must stay on the canvas (dimmed) so the
+            // player can re-enable it, without its mods joining the graph or
+            // the install plan.
+            Assert.Equal(2, graph.Groups.Count);
+            var off = graph.Groups.Single(g => g.MechanicId == "extra");
+            Assert.False(off.Selected);
+            Assert.True(off.Optional);
+            Assert.Empty(off.Mods);
+            Assert.DoesNotContain(graph.Nodes, n => n.ModId == "skin");
+            Assert.Single(graph.Nodes);
+
+            var plan = ModCollectionPlan.Build(graph, new List<CatalogExportEntry>());
+            Assert.Empty(plan.Install);
+            Assert.Empty(plan.Enable);
+        }
+
+        [Fact]
+        public void Resolve_OptionalMechanicReenabled_GroupRegainsMods()
+        {
+            var collection = Collection(Mechanic("extra", "skin"));
+            collection.Mechanics[0].Optional = true;
+            var mods = Mods(Local("skin", "1.0"));
+
+            var graph = ModCollectionResolver.Resolve(
+                collection, mods, new HashSet<string>(), new List<CatalogExportEntry>());
+
+            var group = Assert.Single(graph.Groups);
+            Assert.True(group.Selected);
+            Assert.Single(group.Mods);
+            Assert.Single(graph.Nodes);
+        }
+
+        [Fact]
+        public void Resolve_RequirementNotProvided_ReportsProblem()
+        {
+            var game = new ModCollection
+            {
+                Id = "game",
+                Name = "Game",
+                Includes = new List<ModCollectionInclude> { new() { Ref = "cards", Role = "battle" } },
+            };
+            var cards = new ModCollection { Id = "cards", Name = "Cards", Requires = new List<string> { "character_system" } };
+
+            var graph = ModCollectionResolver.Resolve(
+                game, Collections(game, cards), Mods(), new HashSet<string>(), new List<CatalogExportEntry>());
+
+            var problem = Assert.Single(graph.Problems);
+            Assert.Equal(ModCollectionProblemKind.RequirementMissing, problem.Kind);
+            Assert.Equal("character_system", problem.Title.Split('\'')[3]);
+            Assert.Equal("cards", problem.CollectionId);
+        }
+
+        [Fact]
+        public void Resolve_RequirementProvidedBySibling_NoProblem()
+        {
+            var game = new ModCollection
+            {
+                Id = "game",
+                Includes = new List<ModCollectionInclude>
+                {
+                    new() { Ref = "cards", Role = "battle" },
+                    new() { Ref = "rpg_2d", Role = "systems" },
+                },
+            };
+            var cards = new ModCollection { Id = "cards", Requires = new List<string> { "character_system" } };
+            var rpg = new ModCollection { Id = "rpg_2d", Provides = new List<string> { "character_system" } };
+
+            var graph = ModCollectionResolver.Resolve(
+                game, Collections(game, cards, rpg), Mods(), new HashSet<string>(), new List<CatalogExportEntry>());
+
+            Assert.Empty(graph.Problems);
+        }
+
+        private static Dictionary<string, ModCollection> Collections(params ModCollection[] items)
+        {
+            var result = new Dictionary<string, ModCollection>(StringComparer.OrdinalIgnoreCase);
+            foreach (var collection in items)
+                result[collection.Id] = collection;
+            return result;
+        }
+
         private static ModCollectionNode Node(ModCollectionGraph graph, string modId)
             => graph.Nodes.First(n => n.ModId == modId);
 

@@ -39,3 +39,5 @@ Thumbs.db
 # Editor
 *.import
 *.godot.uid
+# DeepSeek Harness: локальные скиллы (junction-ссылки на .opencode/skills)
+.dsh/

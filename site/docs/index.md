@@ -63,6 +63,7 @@ A core can be disabled or replaced. Mods that depend on a specific core must dec
 | [Quests](mods/quests/) | Quest definitions and progression |
 | [Status Effects](mods/status_effects/) | Buff, debuff, and stun effect definitions |
 | [Time](mods/time/) | In-game clock, day/night phases, lighting |
+| [Map & Travel Zones](mods/map/) | World map, travel zones, map DSL actions, in-game map editor |
 | [Recruiting](mods/recruiting/) | Character recruitment system |
 | [Save System](mods/save/) | Save/load data structure and persistence |
 | [Mod Settings](mods/settings/) | Per-mod settings in the in-game menu |

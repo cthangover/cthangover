@@ -1,0 +1,279 @@
+{
+ "generated": "2026-10-07",
+ "stats": {
+  "mods": 17,
+  "dslCommands": 29,
+  "coreFiles": 606,
+  "coreLoc": 58511,
+  "modFiles": 274,
+  "modLoc": 37007
+ },
+ "battle": [
+  {
+   "id": "turn_battle_base",
+   "version": "2.0.0",
+   "deps": [
+    "visual_novel_core",
+    "interface"
+   ]
+  },
+  {
+   "id": "card_battle",
+   "version": "1.0.0",
+   "deps": [
+    "visual_novel_core",
+    "interface",
+    "turn_battle_base"
+   ]
+  },
+  {
+   "id": "ff_battle",
+   "version": "1.0.0",
+   "deps": [
+    "visual_novel_core",
+    "interface",
+    "turn_battle_base"
+   ]
+  }
+ ],
+ "mods": [
+  {
+   "id": "base2d",
+   "name": "2D Platform",
+   "version": "1.0.0",
+   "desc": "2D presentation platform: base shell scene with the view box, toolbar, panel slots and notifications. Parent for all 2D mods; content mods fill the shell through scene patches.",
+   "cat": [
+    "engine",
+    "library"
+   ],
+   "deps": [],
+   "test": false
+  },
+  {
+   "id": "card_battle",
+   "name": "CardBattle",
+   "version": "1.0.0",
+   "desc": "Card battle mechanics",
+   "cat": [
+    "gameplay"
+   ],
+   "deps": [
+    "visual_novel_core",
+    "interface",
+    "turn_battle_base"
+   ],
+   "test": false
+  },
+  {
+   "id": "cooking",
+   "name": "Cooking",
+   "version": "1.0.0",
+   "desc": "Cooking mechanic - full autonomous mod",
+   "cat": [
+    "gameplay"
+   ],
+   "deps": [
+    "visual_novel_core",
+    "interface"
+   ],
+   "test": false
+  },
+  {
+   "id": "ff_battle",
+   "name": "FFBattle",
+   "version": "1.0.0",
+   "desc": "Final Fantasy style battle system",
+   "cat": [
+    "gameplay"
+   ],
+   "deps": [
+    "visual_novel_core",
+    "interface",
+    "turn_battle_base"
+   ],
+   "test": false
+  },
+  {
+   "id": "gdscript_test",
+   "name": "GDScript Integration Test Mod",
+   "version": "1.0.0",
+   "desc": "Integration tests for GDScript mod actions. Exercises the full pipeline: .gd load -> compile -> action registration -> scenario execution.",
+   "cat": [
+    "other"
+   ],
+   "deps": [
+    "visual_novel_core"
+   ],
+   "test": true
+  },
+  {
+   "id": "interface",
+   "name": "Interface",
+   "version": "1.0.0",
+   "desc": "Game interface",
+   "cat": [
+    "ui"
+   ],
+   "deps": [
+    "visual_novel_core"
+   ],
+   "test": false
+  },
+  {
+   "id": "live2d",
+   "name": "Live2D Cubism",
+   "version": "1.0.0",
+   "desc": "Live2D Cubism C# runtime: model loading, rendering, physics, animation, effects",
+   "cat": [
+    "library",
+    "visual"
+   ],
+   "deps": [
+    "visual_novel_core"
+   ],
+   "test": false
+  },
+  {
+   "id": "live2d_test",
+   "name": "Live2D Cubism",
+   "version": "1.0.0",
+   "desc": "Live2D Cubism C# runtime: model loading, rendering, physics, animation, effects",
+   "cat": [
+    "visual",
+    "other"
+   ],
+   "deps": [
+    "visual_novel_core",
+    "live2d"
+   ],
+   "test": true
+  },
+  {
+   "id": "mod_manager",
+   "name": "Mod Manager",
+   "version": "1.0.0",
+   "desc": "Nexus-style mod manager: browse the catalog, filter by category and status, install, update and remove mods.",
+   "cat": [
+    "tools",
+    "ui"
+   ],
+   "deps": [
+    "visual_novel_core"
+   ],
+   "test": false
+  },
+  {
+   "id": "murakami",
+   "name": "Murakami",
+   "version": "1.0.0",
+   "desc": "Murakami line",
+   "cat": [
+    "story",
+    "characters"
+   ],
+   "deps": [
+    "visual_novel_core",
+    "interface"
+   ],
+   "test": false
+  },
+  {
+   "id": "recruiting",
+   "name": "Recruiting",
+   "version": "1.1.0",
+   "desc": "Recruitment roster, conditions, behaviours and their save state",
+   "cat": [
+    "gameplay"
+   ],
+   "deps": [
+    "base2d"
+   ],
+   "test": false
+  },
+  {
+   "id": "test_defaults_and_patches",
+   "name": "Test Defaults and Patches",
+   "version": "1.0.0",
+   "desc": "Test mod demonstrating property patches system with wildcard and targeted patches",
+   "cat": [
+    "other"
+   ],
+   "deps": [
+    "visual_novel_core"
+   ],
+   "test": true
+  },
+  {
+   "id": "test_interactives",
+   "name": "Test Interactives",
+   "version": "1.0.0",
+   "desc": "Test mod demonstrating the interactive object system — clickable elements on scene with highlight",
+   "cat": [
+    "other"
+   ],
+   "deps": [
+    "visual_novel_core",
+    "interface"
+   ],
+   "test": true
+  },
+  {
+   "id": "tools",
+   "name": "Tools",
+   "version": "1.0.0",
+   "desc": "Development tools",
+   "cat": [
+    "tools",
+    "editor"
+   ],
+   "deps": [
+    "visual_novel_core"
+   ],
+   "test": false
+  },
+  {
+   "id": "turn_battle_base",
+   "name": "Turn-based battle engine",
+   "version": "2.0.0",
+   "desc": "Turn-based battle platform: battle ruleset contracts, core registry, action executors, status effects, battle scene, victory/defeat screens, EXP and loot reports",
+   "cat": [
+    "engine",
+    "gameplay"
+   ],
+   "deps": [
+    "visual_novel_core",
+    "interface"
+   ],
+   "test": false
+  },
+  {
+   "id": "validator",
+   "name": "Validator",
+   "version": "0.1.0",
+   "desc": "Static validation of mod entities and properties",
+   "cat": [
+    "debug"
+   ],
+   "deps": [],
+   "test": false
+  },
+  {
+   "id": "visual_novel_core",
+   "name": "Visual Novel Core",
+   "version": "2.0.0",
+   "desc": "Visual novel content and UI on top of the 2D platform: scenarios, characters, items, quests and the dialog layer patched into the base shell",
+   "cat": [
+    "engine",
+    "story"
+   ],
+   "deps": [
+    "base2d"
+   ],
+   "test": false
+  }
+ ],
+ "dslSample": {
+  "file": "mods/murakami/scenarios/murakami/meeting/murakami_meeting_after_battle.scenario",
+  "text": "scene: town_entry\npriority: 20\ncondition: MeetingMurakamiQuest.hasTag(\"wolf_battle\") && MeetingMurakamiQuest.notHasTag(\"boss_battle\")\n---\nbackground \"town/meetingmurakami/00002-1920617752\"\ntext \"[Волк определённо целился в этот дом — следы вели прямо к порогу]\" key=meeting_murakami/after_wolf/tracks\n\nselect \"[Марао решил осмотреть жилище]\" key=meeting_murakami/after_wolf/inspect\noption \"Подойти к двери\" key=meeting_murakami/after_wolf/opt_approach -> :approach\n\n:approach\nbackground \"town/meetingmurakami/00014-1724512349\"\ntext \"- Милая леди!\" key=meeting_murakami/after_wolf/greeting first=marao/think\ntext \"- Что вы тут делаете в одиночестве?\" key=meeting_murakami/after_wolf/alone first=marao/think\ntext \".\" key=meeting_murakami/after_wolf/dot1\ntext \"..\" key=meeting_murakami/after_wolf/dot2\ntext \"...\" key=meeting_murakami/after_wolf/dot3\ntext \"- Помогите...\" key=meeting_murakami/after_wolf/help second=murakami/fear_1\ntext \"- Оно там... внутри...\" key=meeting_murakami/after_wolf/inside second=murakami/fear_2\n\nselect \"[Девушка дрожит от страха]\" key=meeting_murakami/after_wolf/fear\noption \"Войти\" key=meeting_murakami/after_wolf/opt_enter -> :enter\n\n:enter\nlight_set [{\"x\":0.8433963,\"y\":0.037922725,\"radius\":600,\"influence\":1,\"color\":\"#ffff00\"},{\"x\":0.29016176,\"y\":0.16111115,\"radius\":600,\"influence\":1,\"color\":\"#ffff00\"}]\nbackground \"town/meetingmurakami/00079-2783395178\"\ntext \"[Марао, не колеблясь, перешагнул порог]\" key=meeting_murakami/after_wolf/enter\ntext \"- Так-так...\" key=meeting_murakami/after_wolf/look_around first=marao/think\n\nbackground \"town/meetingmurakami/00078-2783395178\""
+ }
+}

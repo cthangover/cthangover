@@ -64,11 +64,18 @@ namespace Cthangover.Core.Mods
             }
         }
 
+        /// <summary>Sets the mod priority order (id + load position) used by all lookups; supplied by <see cref="ModRegistry"/> after load order is computed.</summary>
         public static void SetModOrder(List<(string ModId, int Priority)> orderedMods)
         {
             _orderedModIds = orderedMods;
         }
 
+        /// <summary>
+        /// Indexes a freshly compiled mod assembly: adds its non-abstract
+        /// <see cref="Godot.Node"/> subclasses to the name maps and, for every
+        /// source file whose file name matches a class, records the
+        /// path-to-type mapping used by .tscn script resolution.
+        /// </summary>
         public static void RegisterAssembly(Assembly assembly, string modId, IEnumerable<(string FilePath, string Source)> sourceFiles)
         {
             if (!_modPathToType.ContainsKey(modId))
@@ -128,6 +135,7 @@ namespace Cthangover.Core.Mods
             }
         }
 
+        /// <summary>Priority-ordered lookup by normalized script path; first matching mod wins, then registration order.</summary>
         public static Type ResolveByPath(string tscnPath)
         {
             var normalized = NormalizePath(tscnPath);
@@ -151,6 +159,7 @@ namespace Cthangover.Core.Mods
             return null;
         }
 
+        /// <summary>Priority-ordered lookup by class name or full name, with a case-insensitive fallback scan over all indexed types.</summary>
         public static Type ResolveByName(string className)
         {
             if (_orderedModIds != null)
@@ -174,6 +183,11 @@ namespace Cthangover.Core.Mods
                 t.FullName.Equals(className, StringComparison.OrdinalIgnoreCase));
         }
 
+        /// <summary>
+        /// Combined resolver for a .tscn script reference: input without
+        /// separators or a dot is treated as a class name; otherwise the path
+        /// is tried first and the bare file name second (as a class name).
+        /// </summary>
         public static Type Resolve(string tscnPath)
         {
             if (string.IsNullOrEmpty(tscnPath))
@@ -193,6 +207,7 @@ namespace Cthangover.Core.Mods
             return null;
         }
 
+        /// <summary>Wipes every mapping and re-registers the core assembly fallback; called on mod reload.</summary>
         public static void Clear()
         {
             _modPathToType.Clear();

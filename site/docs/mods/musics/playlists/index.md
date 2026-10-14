@@ -48,7 +48,8 @@ engine (~1s delay, then a volume ramp) and cannot be configured per playlist.
         "Aura of Decay", "Circuit Dreams II", "Crimson Echoes",
         "Crimson Horizon", "Glass Symphony", "Hex Doom Cart",
         "Iron Resonance", "Iron Resonance II", "Luminous Twilight",
-        "Rusty Frequencies", "Skull Resonance", "Venom's Embrace"
+        "Rusty Frequencies", "Skull Resonance", "Venom's Embrace",
+        "Empty Save Room"
       ]
     }
   ]
@@ -91,7 +92,7 @@ single track by id.
 ## How the engine switches playlists
 
 1. Scene loads → `PlaylistFactory.CreatePlaylist(sceneName)` picks the playlist whose `Scene` matches (fallback `"default"`) → starts playing `Ambient` tracks
-2. A scene named `Battle` switches `MusicType` to `Combat` → tracks come from that playlist's `Combat` bucket; on returning to a non-battle scene, playback resumes with `Ambient`
+2. The music type comes from the scene-route registry (`SceneRouteRegistry`): `turn_battle_base` registers the `Battle` route with `MusicType` `Combat` → tracks come from that playlist's `Combat` bucket; scenes without a route (and the return to them) play `Ambient`
 3. Scene changes → the new scene's playlist takes over, with the hard-coded fade
 4. Multi-mod note: if several mods define playlists for the same scene, the last loaded mod replaces each `MusicType` bucket entirely (last one wins)
 

@@ -1,0 +1,13 @@
+{
+  "id": "audio_base",
+  "name": "Audio Engine",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Engine audio subsystem: IAudioService implementation (Music/SFX/Ambient buses), the auto-advancing music player and the audio factories (music, sounds, playlists). Replaces the former Core/Audio autoloads — the AudioModInitializer adds nodes named AudioService and MusicPlayer to the scene tree root on the boot Scenes phase, so /root/AudioService keeps resolving.",
+  "category": "engine, library",
+  "sources": [
+    "src/**/*.cs"
+  ],
+  "depends": ["base2d>=1", "interface>=1"],
+  "ui": []
+}

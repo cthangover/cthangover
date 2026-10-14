@@ -26,9 +26,10 @@ mods/
     ├── backgrounds/
     │   └── my_alko_bar/
     │       └── bg.png                    # Hình ảnh nội thất quán rượu
-    ├── backgrounds/
-    │   └── sounds/
-    │       └── alko_bar_ambient.ogg      # Âm thanh ồn ào của quán rượu
+    ├── sounds/
+    │   └── locations/
+    │       └── alkobar/
+    │           └── bar_ambient.ogg       # Âm thanh ồn ào của quán rượu
     └── locale/
         └── ru.properties                 # Bản địa hóa tiếng Nga
 ```
@@ -145,10 +146,10 @@ end
 ### Tại sao điều này hoạt động
 
 Cảnh `town_entry` giờ có hai kịch bản:
-- `priority: 10` — mặc định (từ mod `visual_novel_core`)
+- `priority: 40` — mặc định (từ mod `visual_novel_core`)
 - `priority: 1` — của chúng ta (từ `quickstart_modder`)
 
-Engine chạy kịch bản có `priority` **thấp nhất**. `priority: 1` của chúng ta thắng — người chơi thấy tùy chọn mới.
+Engine chạy các kịch bản của cảnh theo thứ tự `priority` tăng dần — giá trị **thấp nhất** chạy **trước**. Kịch bản `priority: 1` của chúng ta bắt đầu trước kịch bản mặc định, nên người chơi thấy các tùy chọn mới trước.
 
 > Tìm hiểu thêm: [Hệ thống Ưu tiên Cảnh](site/docs/mods/scenes/).
 
@@ -181,4 +182,4 @@ Khởi động trò chơi:
 Tải xuống quickstart_modder.zip
 </a>
 
-Mod tải về bằng tiếng Anh.
+Lời thoại trong mod tải về bằng tiếng Nga.

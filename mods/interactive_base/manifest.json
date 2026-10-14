@@ -1,0 +1,11 @@
+{
+  "id": "interactive_base",
+  "name": "Interactive Base",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Interactive objects subsystem: JSON-driven scene interactives (hover/click hit areas, highlight effects) with DSL/scenario click actions. Owns InteractiveManager, the interactive definition resolver/factory and the InteractiveEditor data plane.",
+  "category": "engine, library",
+  "depends": ["base2d>=1", "interface>=1"],
+  "sources": [ "src/**/*.cs" ],
+  "ui": []
+}

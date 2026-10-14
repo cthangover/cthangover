@@ -27,11 +27,12 @@ public interface ICharacterService
     void SendNotification(string type);
 
     /// <summary>
-    ///     Grants a skill to the player by skill ID. Delegates to
-    ///     <see cref="Skills.SkillService.GrantSkill(string)"/>, which also
-    ///     places the action card named by the skill's GrantsAction field
-    ///     into the action pool. Re-granting an owned skill is a no-op, so
-    ///     scenario events replayed after a load cannot duplicate cards.
+    ///     Grants a skill to the player by skill ID. Routes through the
+    ///     skills subsystem (SkillsBridge into the skills_base engine mod),
+    ///     which also places the action card named by the skill's
+    ///     GrantsAction field into the action pool. Re-granting an owned
+    ///     skill is a no-op, so scenario events replayed after a load cannot
+    ///     duplicate cards.
     /// </summary>
     void AddSkill(string id);
 }

@@ -15,8 +15,16 @@ namespace Cthangover.Core.Characters
         Active,
     };
 
+    /// <summary>
+    /// Classification helper for <see cref="ActionCharacterType"/>: distinguishes
+    /// the three in-battle targeting categories from the panel-level
+    /// <see cref="ActionCharacterType.Passive"/> and
+    /// <see cref="ActionCharacterType.Active"/> kinds, which never appear in a
+    /// battle action menu.
+    /// </summary>
     public static class ActionCharacterTypeExtension
     {
+        /// <summary>Returns <c>true</c> for ToSelf/ToAlias/ToEnemy — the types battle targeting consumes.</summary>
         public static bool UseInBattle(this ActionCharacterType type)
         {
             return type == ActionCharacterType.ToSelf

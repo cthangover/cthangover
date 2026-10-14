@@ -6,7 +6,9 @@ namespace Cthangover.Core.Scenes.TscnBuild.SubResourceBuilders
     /// <summary>Builds <see cref="Gradient"/>. Handles <c>colors</c> (ParsedGodotValue[]→Color[]) and <c>offsets</c> (float[]) specially.</summary>
     public class GradientBuilder : ISubResourceBuilder
     {
+        /// <summary>Handles <c>[sub_resource type="Gradient"]</c>.</summary>
         public string ResourceType => "Gradient";
+        /// <summary>Builds the gradient, converting the <c>colors</c> ParsedGodotValue array and <c>offsets</c> float array explicitly.</summary>
         public Resource Build(SubResourceDef def, SubResourceBuildContext ctx)
         {
             var g = new Gradient();

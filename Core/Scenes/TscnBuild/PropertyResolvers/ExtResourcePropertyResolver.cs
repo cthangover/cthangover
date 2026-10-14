@@ -12,8 +12,10 @@ namespace Cthangover.Core.Scenes.TscnBuild.PropertyResolvers
     /// </summary>
     public class ExtResourcePropertyResolver : IPropertyResolver
     {
+        /// <summary>Claims every property whose value is an <c>ExtResource(...)</c> reference.</summary>
         public bool CanResolve(string k, object v) => v is TscnPropertyValue pv && pv.IsExtResourceRef;
 
+        /// <summary>PackedScene refs are built recursively and packed; other types go through the fallback resource resolver. Script refs on already-created nodes are ignored.</summary>
         public void Apply(Node node, string key, object value, PropertyContext ctx)
         {
             var pv = (TscnPropertyValue)value;

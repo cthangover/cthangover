@@ -26,9 +26,10 @@ mods/
     ├── backgrounds/
     │   └── my_alko_bar/
     │       └── bg.png                    # Картинка интерьера бара
-    ├── backgrounds/
-    │   └── sounds/
-    │       └── alko_bar_ambient.ogg      # Фоновый звук шума в баре
+    ├── sounds/
+    │   └── locations/
+    │       └── alkobar/
+    │           └── bar_ambient.ogg       # Фоновый звук шума в баре
     └── locale/
         └── ru.properties                 # Локализация для русского языка
 ```
@@ -145,10 +146,10 @@ end
 ### Почему это работает
 
 У сцены `town_entry` теперь два сценария:
-- `priority: 10` — стандартный (из мода `visual_novel_core`)
+- `priority: 40` — стандартный (из мода `visual_novel_core`)
 - `priority: 1` — наш (из `quickstart_modder`)
 
-Движок запускает сценарий с **наименьшим** `priority`. Наш `priority: 1` побеждает — игрок видит новую опцию.
+Движок запускает сценарии сцены по возрастанию `priority` — с **наименьшего**. Наш сценарий с `priority: 1` стартует раньше стандартного, поэтому игрок сначала видит новые опции.
 
 > Подробнее: [Scene Priority System](site/docs/mods/scenes/).
 
@@ -181,4 +182,4 @@ end
 Скачать quickstart_modder.zip
 </a>
 
-Скачиваемый мод на английском языке.
+Текст диалогов в скачиваемом моде — на русском языке.

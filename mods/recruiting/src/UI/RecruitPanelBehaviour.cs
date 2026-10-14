@@ -5,114 +5,90 @@ using Cthangover.Core.UI.CharacterPanel;
 using Cthangover.Core.UI.Theming;
 using Godot;
 
+using Cthangover.Mods.Interface.Base.Lists;
+using Cthangover.Mods.Interface.Theming;
 namespace Cthangover.Core.Relationship
 {
     /// <summary>
     /// Mod-owned panel of captured recruits. It is declared in the mod manifest
-    /// as a <c>kind:panel</c> GUI entry, so the core toolbar renders its button
-    /// and <see cref="UiHost"/> caches the instance for the whole session; the
-    /// core character panel stays unaware of recruiting.
+    /// as a `kind:panel` GUI entry, so the core toolbar renders its button
+    /// and the host caches the instance for the whole session; the core
+    /// character panel stays unaware of recruiting.
     /// <para/>
-    /// The panel is a pure view over <see cref="RecruitingData.Instance"/>: rows
-    /// are rebuilt from the roster on every show and after every squad toggle. A
-    /// recruit joins the active party through <see cref="RecruitPartyBridge"/>,
-    /// which materializes the placeholder card the core character panel and
-    /// battle systems consume. Health comes from the recruit's own property bag,
-    /// not from the placeholder card, matching the mod's ownership of its data
-    /// outside battle.
+    /// The static layout (backdrop, framed panel, header row, scroll host,
+    /// rules and status footer) lives in <c>scenes/recruit_panel.tscn</c>;
+    /// this behaviour resolves those nodes and owns the dynamic layer: roster
+    /// rows rebuilt from <see cref="RecruitingData.Instance"/> on every show
+    /// and after every squad toggle. A recruit joins the active party through
+    /// <see cref="RecruitPartyBridge"/>, which materializes the placeholder
+    /// card the core character panel and battle systems consume.
     /// </summary>
     public class RecruitPanelBehaviour : Widget
     {
+        // Scene nodes (recruit_panel.tscn)
+        private Label _title;
+        private Label _sub;
+        private Button _closeButton;
         private VBoxContainer _list;
         private Label _statusLabel;
 
+        /// <summary>Binds scene nodes and applies theme and localized captions.</summary>
         protected override void OnceConstruct()
         {
-            SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
             MouseFilter = MouseFilterEnum.Stop;
 
-            var backdrop = new ColorRect();
-            backdrop.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-            backdrop.MouseFilter = MouseFilterEnum.Ignore;
-            AddChild(backdrop);
-            UiKit.ApplyPanelBackdrop(backdrop);
+            _title = GetNode<Label>("Panel/Margin/Root/Header/Title");
+            _sub = GetNode<Label>("Panel/Margin/Root/Header/Sub");
+            _closeButton = GetNode<Button>("Panel/Margin/Root/Header/CloseButton");
+            _list = GetNode<VBoxContainer>("Panel/Margin/Root/Scroll/List");
+            _statusLabel = GetNode<Label>("Panel/Margin/Root/StatusLabel");
 
-            var panel = new Panel();
-            panel.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-            panel.OffsetLeft = 40;
-            panel.OffsetTop = 70;
-            panel.OffsetRight = -40;
-            panel.OffsetBottom = -30;
-            panel.AddThemeStyleboxOverride("panel", UiKit.Frame(
-                UiTokens.RadiusLg, UiTokens.Surface0, UiTokens.Line));
-            AddChild(panel);
+            ApplyTheme();
+            ApplyCaptions();
 
-            var margin = new MarginContainer();
-            margin.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-            margin.AddThemeConstantOverride("margin_left", 24);
-            margin.AddThemeConstantOverride("margin_right", 24);
-            margin.AddThemeConstantOverride("margin_top", 14);
-            margin.AddThemeConstantOverride("margin_bottom", 14);
-            panel.AddChild(margin);
-
-            var root = new VBoxContainer();
-            root.AddThemeConstantOverride("separation", 10);
-            margin.AddChild(root);
-
-            root.AddChild(BuildHeader());
-            root.AddChild(MakeRule());
-
-            var scroll = new ScrollContainer();
-            scroll.SizeFlagsVertical = SizeFlags.ExpandFill;
-            scroll.HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled;
-            root.AddChild(scroll);
-
-            _list = new VBoxContainer();
-            _list.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-            _list.AddThemeConstantOverride("separation", 8);
-            scroll.AddChild(_list);
-
-            root.AddChild(MakeRule());
-
-            _statusLabel = ActionCharacterUi.MakeLabel(string.Empty, 12, ActionCharacterUi.Faint);
-            root.AddChild(_statusLabel);
+            _closeButton.Pressed += Hide;
         }
 
+        /// <summary>Theme overrides for scene nodes that depend on UiKit tokens.</summary>
+        private void ApplyTheme()
+        {
+            GetNode<Panel>("Panel").AddThemeStyleboxOverride("panel", UiKit.Frame(
+                UiTokens.RadiusLg, UiTokens.Surface0, UiTokens.Line));
+
+            _title.AddThemeColorOverride("font_color", ActionCharacterUi.InkBright);
+            _sub.AddThemeColorOverride("font_color", UiTokens.Faint);
+            _statusLabel.AddThemeColorOverride("font_color", UiTokens.Faint);
+
+            var backdrop = GetNode<ColorRect>("Backdrop");
+            UiKit.ApplyPanelBackdrop(backdrop);
+
+            foreach (var ruleName in new[] { "Rule1", "Rule2" })
+            {
+                var rule = GetNode<Panel>($"Panel/Margin/Root/{ruleName}");
+                rule.AddThemeStyleboxOverride("panel", UiKit.Frame(0, UiTokens.Line, UiTokens.Line));
+            }
+
+            CthangoverTheme.ApplyIcon(_closeButton);
+        }
+
+        /// <summary>Localized captions for all static labels of the scene.</summary>
+        private void ApplyCaptions()
+        {
+            _title.Text = ActionCharacterUi.Translate("ui/recruit/title").ToUpperInvariant();
+            _sub.Text = ActionCharacterUi.Translate("ui/recruit/sub");
+            _closeButton.TooltipText = ActionCharacterUi.Translate("ui/recruit/close");
+        }
+
+        /// <summary>Rebuilds the roster rows from current data each time the panel is opened.</summary>
         protected override void ShowConstruct()
         {
             Rebuild();
         }
 
+        /// <summary>Frees the row nodes when the panel is hidden so the list does not go stale.</summary>
         protected override void HideDestruct()
         {
             ClearList();
-        }
-
-        private Control BuildHeader()
-        {
-            var row = new HBoxContainer();
-            row.AddThemeConstantOverride("separation", 18);
-            row.MouseFilter = MouseFilterEnum.Ignore;
-
-            row.AddChild(ActionCharacterUi.MakeLabel(
-                ActionCharacterUi.Translate("ui/recruit/title").ToUpperInvariant(), 22, ActionCharacterUi.InkBright));
-            row.AddChild(UiKit.Spacer());
-
-            row.AddChild(ActionCharacterUi.MakeLabel(
-                ActionCharacterUi.Translate("ui/recruit/sub"), 11, ActionCharacterUi.Faint));
-
-            var closeButton = new Button
-            {
-                Text = "✕",
-                TooltipText = ActionCharacterUi.Translate("ui/recruit/close"),
-                FocusMode = FocusModeEnum.None,
-                CustomMinimumSize = new Vector2(38, 38),
-            };
-            CthangoverTheme.ApplyIcon(closeButton);
-            closeButton.Pressed += Hide;
-            row.AddChild(closeButton);
-
-            return row;
         }
 
         private void Rebuild()
@@ -240,15 +216,6 @@ namespace Cthangover.Core.Relationship
                 return;
             foreach (var child in _list.GetChildren())
                 child.QueueFree();
-        }
-
-        private static Control MakeRule()
-        {
-            var rule = new Panel();
-            rule.CustomMinimumSize = new Vector2(0, 1);
-            rule.AddThemeStyleboxOverride("panel", UiKit.Frame(0, UiTokens.Line, UiTokens.Line));
-            rule.MouseFilter = MouseFilterEnum.Ignore;
-            return rule;
         }
     }
 }

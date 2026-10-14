@@ -39,6 +39,31 @@ Patches are applied on top of the scene that won the override battle in `TscnSce
 
 Every layer sees the result of the previous ones, so a later mod can override a value set by an earlier patch.
 
+## Cross-mod base scene (base2d + visual novel)
+
+`base2d` owns the 2D shell scene; content mods add their layers to it with a patch instead of shipping their own shell:
+
+```filestree
+mods/
+├── base2d/
+│   └── scenes/ui/base_scene.tscn           ← BaseScene / Scene / ViewBox / TopView / slots / notifications
+└── visual_novel_core/
+    └── patches/scenes/ui/base_scene.tscn   ← DialogCanvas on top of the shell
+```
+
+```ini
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://mods/base2d/scenes/ui/base_scene.tscn" id="1_target"]
+[ext_resource type="PackedScene" path="res://scenes/ui/dialog_canvas.tscn" id="2_dialog"]
+
+[node name="BaseScene" instance=ExtResource("1_target")]
+
+[node name="DialogCanvas" parent="Scene" index="2" instance=ExtResource("2_dialog")]
+```
+
+The base shell is a single flat scene, so `index="2"` inserts the dialog exactly between `ViewBox` and `TopView`, and later mods can override or delete shell nodes the same way. The shell contract content mods rely on: root `BaseScene` in group `main_event_chain`, `Scene/ViewBox`, `Scene/TopView`, slots `ModFirstPanel` / `ModBeforeUIPanel` / `ModLastPanel`, and `Lastground` inside the view box. Both the target path and the added resource paths may use the editor's `res://mods/<mod>/...` form — it is normalised to the mod-relative key at load time.
+
 ## Operations
 
 | Operation | How to write it | Editor |

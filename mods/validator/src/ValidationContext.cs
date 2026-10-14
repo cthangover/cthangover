@@ -36,15 +36,19 @@ namespace Cthangover.Validator
         /// <summary>Cooperative cancellation checked between mods and documents.</summary>
         public CancellationToken CancellationToken { get; }
 
+        /// <summary>Appends an error issue to the report (validation failure).</summary>
         public void AddError(string code, string message, string mod, string file = null, int line = 0, string suggestion = null, List<string> related = null)
             => Report.Issues.Add(Create(ValidationSeverity.Error, code, message, mod, file, line, suggestion, related));
 
+        /// <summary>Appends a warning issue (suspicious but not fatal).</summary>
         public void AddWarning(string code, string message, string mod, string file = null, int line = 0, string suggestion = null, List<string> related = null)
             => Report.Issues.Add(Create(ValidationSeverity.Warning, code, message, mod, file, line, suggestion, related));
 
+        /// <summary>Appends an informational issue (e.g. unused content).</summary>
         public void AddInfo(string code, string message, string mod, string file = null, int line = 0, string suggestion = null, List<string> related = null)
             => Report.Issues.Add(Create(ValidationSeverity.Info, code, message, mod, file, line, suggestion, related));
 
+        /// <summary>Cooperative cancellation hook for strategies to call between documents.</summary>
         public void ThrowIfCancellationRequested() => CancellationToken.ThrowIfCancellationRequested();
 
         private static ValidationIssue Create(

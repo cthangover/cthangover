@@ -11,11 +11,14 @@ namespace Cthangover.Core.Scenes.Nodes.Impls
         /// <summary>The expression whose boolean result is negated.</summary>
         public ICondition Operand { get; }
 
+        /// <summary>Creates a NOT node around the negated sub-expression.</summary>
+        /// <param name="operand">Expression whose result is inverted.</param>
         public NotNode(ICondition operand)
         {
             Operand = operand;
         }
 
+        /// <summary>Returns the inverted result of <see cref="Operand"/>.</summary>
         public override bool Evaluate(EvaluationContext ctx) =>
             !Operand.Evaluate(ctx);
     }

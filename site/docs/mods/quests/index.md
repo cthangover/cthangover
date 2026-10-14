@@ -191,17 +191,21 @@ does not modify quest state.
 
 ## Events emitted
 
-Both events are published from `QuestServiceImpl` (`Core/Actions/QuestServiceImpl.cs`)
-and reach GDScript mods through the ModEventBus string layer (payload keys are
-snake_case versions of the C# properties):
+`quest_status_changed` is published from `QuestServiceImpl.SetStatus`
+(`Core/Actions/QuestServiceImpl.cs`); `quest_tag_changed` is published from
+`QuestBase.AddTag` / `QuestBase.RemoveTag` (`Core/Quests/QuestBase.cs`) — and
+only when the tag set actually changed. Both reach GDScript mods through the
+ModEventBus string layer (payload keys are snake_case versions of the C#
+properties):
 
 | Event key | Payload | Fired when |
 |---|---|---|
 | `quest_status_changed` | `quest_id`, `old_status`, `new_status` | `QuestService.SetStatus` succeeds |
 | `quest_tag_changed` | `quest_id`, `tag`, `added` (bool) | `QuestService.AddTag` (`added=true`) or `RemoveTag` (`added=false`) |
 
-Note: tag events fire even when the target quest ID doesn't exist (the state
-mutation is skipped, the event still publishes).
+Note: a quest action with an unknown quest ID does nothing — the safe `TryGet`
+inside `QuestServiceImpl` logs the miss and skips the mutation, so no event is
+published for a quest that doesn't exist.
 
 ## Persistence pipeline
 

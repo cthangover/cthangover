@@ -8,13 +8,17 @@ and an optional layer of another, so mechanics belong to the collection file,
 not to the mod manifest.
 
 Collections are the game-construction unit the catalog is organized by: the
-player is shown a dependency graph split into mechanics instead of a flat mod
-list, and can install/enable everything a mechanic needs with one action. The
-collection file itself never stores the graph — the arrows are derived from the
-mods' own `depends`, so the graph cannot go stale when a mod author changes
-dependencies.
+player is shown a scheme split into mechanics and blocks instead of a flat mod
+list, and can install everything the game needs with one action. The
+collection file itself never stores the dependency arrows — they are derived
+from the mods' own `depends`, so the scheme cannot go stale when a mod author
+changes dependencies.
 
 ## Where collections live
+
+Collections are **mod resources, not core configuration**: any mod can ship
+them, and they load from the mod's own files exactly like scenes or locale
+files — nothing needs to be registered anywhere else.
 
 | Source | Location | Precedence |
 |---|---|---|
@@ -28,32 +32,53 @@ them, and player collections replace both. That lets a shipping mod fix an
 outdated online collection without asking the catalog owner, and lets the
 player edit any collection locally.
 
-Any mod can ship collections — just add a `collections/` directory next to
-`manifest.json`. Collections are read through `IModFileProvider`, so they work
-identically for folder mods, zip mods, and custom providers.
+Shipping collections is one step: add a `collections/` directory next to
+`manifest.json`, one JSON file per collection. Collections are read through
+`IModFileProvider`, so they work identically for folder mods, zip mods, and
+custom providers. The directory name is reserved — the entity scanner skips it
+entirely, because collection documents carry a `kind` field that is not an
+entity kind.
 
 ## Collection JSON schema
 
 ```jsonc
 {
-  "id": "card_novel",                                      // Canonical collection id (required, unique across sources)
-  "name": "Card Novel",                                    // Display name (falls back to id)
+  "id": "card_novel",                                      // Required. Canonical id, unique across all sources
+  "kind": "Game",                                          // Game | Component | Toolset — see "Collection kinds"
+  "name": "Card Novel",                                    // Display name (falls back to id; see Localization)
   "author": "ct",                                          // Author credit
-  "description": "A visual novel with card battles.",      // Shown in the details panel and as a tooltip
   "version": "1.0.0",                                      // Semver; picks the newest of same-id catalog collections
-  "mechanics": [                                           // Ordered mechanics — drives the graph layout
+  "description": "A visual novel with card battles.",      // Shown on the gallery card and in the details panel
+  "tags": ["novel", "cards"],                              // Free-form search tags
+  "provides": ["battle_system"],                           // Capability ids this collection implements
+  "requires": ["character_system"],                        // Capability ids needed from sibling blocks
+  "includes": [                                            // Child collections this one is assembled from
+    {
+      "ref": "rpg_2d>=1",                                  // Versioned collection reference (same syntax as depends)
+      "role": "systems",                                   // Slot role; two required blocks cannot claim one slot
+      "optional": false,                                   // True when the block may be excluded by the player
+      "selected": null,                                    // Player's choice for an optional block (null = on)
+      "label": "2D Foundation",                            // Per-game name override (falls back to child name)
+      "note": "Platformer core with map and inventory."    // Per-game description override
+    }
+  ],
+  "mechanics": [                                           // Ordered mechanics — drives the scheme layout
     {
       "id": "vn_core",                                     // Stable id, unique within the collection
-      "name": "Novel Core",                                // Frame title in the graph
+      "name": "Novel Core",                                // Frame title in the scheme
       "description": "Scenes, scenarios, dialogue.",       // Tooltip
-      "mods": ["visual_novel_core>=1"]                     // Versioned mod references (same syntax as manifest depends)
-    },
-    {
-      "id": "cards",
-      "name": "Card Game",
-      "mods": ["card_battle>=1"],
-      "optional": true                                     // Marked as skippable in the graph
+      "role": "story",                                     // Slot role the mechanic fills in the scheme editor
+      "mods": ["visual_novel_core>=1"],                    // Versioned mod references (same syntax as manifest depends)
+      "optional": false,                                   // Marks the mechanic as skippable
+      "selected": null,                                    // Player's choice for an optional mechanic (null = on)
+      "locale": [                                          // Per-mechanic localized strings, same shape as below
+        { "lang": "ru", "name": "Ядро новеллы", "description": "Сцены, сценарии, диалоги." }
+      ]
     }
+  ],
+  "locale": [                                              // Localized name/description of the whole collection
+    { "lang": "en", "name": "Card Novel", "description": "A visual novel with card battles." },
+    { "lang": "ru", "name": "Карточная новелла", "description": "Визуальная новелла с карточными боями." }
   ]
 }
 ```
@@ -63,30 +88,65 @@ identically for folder mods, zip mods, and custom providers.
 | Field | Required | Description |
 |---|---|---|
 | `id` | Yes | Canonical collection id. Entries without an id are ignored |
+| `kind` | No | `Game`, `Component` or `Toolset`. Missing values deserialize to `Game` so documents written before kinds existed keep working |
 | `name` | No | Display name; the id is used when absent |
 | `author` | No | Author credit |
 | `description` | No | Short description shown in the UI |
 | `version` | No | Semver. When several catalogs publish the same id, the highest version wins |
-| `mechanics` | Yes | Ordered list of mechanics; a collection without mechanics shows an empty graph |
+| `tags` | No | Free-form search tags (`"systems"`, `"cards"`, `"2d"`, ...) |
+| `provides` | No | Capability ids this collection implements. The scheme editor uses them to suggest compatible blocks; resolution itself does not enforce them |
+| `requires` | No | Capability ids needed from sibling blocks. The resolver reports a problem when no resolved block provides them |
+| `includes` | No | Child collections this one is assembled from — see below |
+| `mechanics` | No | Ordered list of mechanics; the order drives the top-to-bottom scheme layout |
 | `mechanics[].id` | No | Unique id used to group nodes; empty ids get a stable `mechanic_<index>` fallback |
 | `mechanics[].name` | No | Frame header; the id is used when absent |
 | `mechanics[].description` | No | Frame tooltip |
-| `mechanics[].mods` | Yes | Versioned mod strings (see below) |
-| `mechanics[].optional` | No | Marks the mechanic as skippable (`false` by default). Shown in the graph; the install plan still includes it |
+| `mechanics[].role` | No | Slot role (`"characters"`, `"story"`, `"battle"`, ...). The scheme editor groups the mechanic's mods under this label and role conflicts are detected against it |
+| `mechanics[].mods` | No | Versioned mod strings (see below) |
+| `mechanics[].optional` | No | Marks the mechanic as skippable (`false` by default). The install plan still includes it until the player turns it off |
+| `mechanics[].selected` | No | Player's choice for an optional mechanic. `null`/omitted means on — old documents behave as before |
+| `mechanics[].locale` | No | Localized name/description entries, same shape as the collection-level `locale` |
+| `includes[].ref` | Yes | Versioned collection reference, e.g. `"rpg_2d>=1"` |
+| `includes[].role` | No | Slot role inside the parent; two *required* includes claiming one role is a problem |
+| `includes[].optional` | No | True when the block may be excluded without breaking the parent |
+| `includes[].selected` | No | Player's choice; `null`/omitted means the block is on |
+| `includes[].label` / `note` | No | Per-game name/description overrides; null falls back to the child collection's own fields |
+| `locale` | No | Localized `name`/`description` entries — see [Localization](#localization) |
+| `source_urls` | — | Written by the game only: catalog refreshes tag each collection with the URLs that published it. Local files should not set it |
 
-`source_urls` is the only field written by the game itself: catalog refreshes
-tag each collection with the URLs that published it, so the UI can show
-provenance. Local files should not set it.
+A collection with neither `mechanics` nor `includes` shows an empty scheme.
 
-**Note:** collection `name` and `description` are not localized. Catalog mod
-entries support a `locale` array, but collection localization is not
-implemented yet — author them in the language you ship.
+### Collection kinds
+
+`kind` is metadata — resolution does not depend on it — but it drives the
+games gallery: only `Game` collections are offered as playable assemblies,
+while `Component` and `Toolset` blocks are building material picked in the
+scheme editor.
+
+| Kind | Meaning |
+|---|---|
+| `Game` | Finished composition the player can assemble and play (default) |
+| `Component` | Reusable block: a mechanic, a system layer, a content group |
+| `Toolset` | Developer toolset (editors, validators, the mod manager) |
+
+### Includes — collections made of collections
+
+`includes[]` is the recursive edge of the collection pyramid: a parent game
+declares which blocks compose it, each block can itself include others, and
+the same block may be included by several parents with different roles.
+`ref` uses the same versioned syntax as `manifest.json` dependencies and is
+looked up in the merged collection store (user > built-in > catalog).
+
+`label` and `note` are scheme-editor overlays: the player may rename a block
+inside one game without touching the shared collection document, so a
+component can be called "2D RPG" in the catalog and "Основа" in a specific
+game.
 
 ### Versioned mod strings
 
-Entries of `mechanics[].mods` use the same format as `manifest.json`
-`depends`: `modId[op][version][?]`, where `op` is one of `>=`, `<=`, `>`, `<`,
-`=`, `^` or omitted (any version). Examples:
+Entries of `mechanics[].mods` and `includes[].ref` use the same format as
+`manifest.json` `depends`: `modId[op][version][?]`, where `op` is one of
+`>=`, `<=`, `>`, `<`, `=`, `^` or omitted (any version). Examples:
 
 ```jsonc
 "mods": [
@@ -99,20 +159,89 @@ Entries of `mechanics[].mods` use the same format as `manifest.json`
 The pin is used in two places: a locally installed mod that does not satisfy it
 is shown as a **version mismatch**, and when installing from a catalog the
 newest download satisfying the pin is chosen. The optional suffix `?` is parsed
-but ignored — optionality of a whole mechanic is expressed with the
+but ignored — optionality of a whole mechanic or block is expressed with the
 `optional` flag.
 
-## How the graph is built
+## Localization
+
+Collection text is localized with two mechanisms; they can be combined.
+
+### 1. The `locale[]` array
+
+Entries carry `lang`, `name` and `description` — the same shape as catalog
+mod entries. Mechanics carry their own `locale[]` with the same fields. The
+best match for the player's language is picked as:
+
+```
+exact lang  ->  flat name/description fields  ->  "en"  ->  first entry with text  ->  id
+```
+
+so a shipped collection can present itself in several languages without
+duplicating the document.
+
+### 2. The `@key` marker
+
+Any text field that starts with `@` is a **locale key**, not literal text:
+
+```jsonc
+"name": "@collections/vn_starter_novel/name"
+```
+
+The text after `@` is resolved through `TranslationServer`, which merges the
+`locale/*.properties` files of **every loaded mod** (keys use `/` as the
+namespace separator). If no translation is registered for the key, the raw
+text after `@` is displayed — an untranslated marker degrades to a readable
+id-like string instead of an error.
+
+Mechanic names get a conventional key layout:
+
+```
+collections/<collection_id>/mechanic/<mechanic_id>/name
+collections/<collection_id>/mechanic/<mechanic_id>/description
+```
+
+Put the keys into the `locale/{lang}.properties` of any mod — the mod that
+ships the collection is the natural owner:
+
+```properties
+# en.properties
+collections/vn_starter_novel/name = Card Novel
+collections/vn_starter_novel/description = A visual novel with card battles.
+collections/vn_starter_novel/mechanic/vn_core/name = Novel Core
+collections/vn_starter_novel/mechanic/cards/name = Card Battle
+
+# ru.properties — same keys, Russian values
+collections/vn_starter_novel/name = Карточная новелла
+```
+
+Because translations are merged from all loaded mods, a separate language-pack
+mod can localize collections it does not own.
+
+### Priority
+
+```
+locale[] of the exact lang  >  "@key" / flat field (translated if the key exists, raw otherwise)  >  fallback
+```
+
+The final fallback is the collection id (names) or an empty string
+(descriptions).
+
+## How the scheme is built
 
 `ModCollectionResolver` turns a collection into a `ModCollectionGraph`:
 
-1. Every mod named by a mechanic becomes a node in that mechanic's frame; if
-   several mechanics list the same mod, the first one owns it.
-2. For each node, the mod's `depends` list (from the local registry) adds an
+1. `includes[]` are expanded first, recursively, from the merged collection
+   store. Each included block becomes a scheme **group** with the child's mods
+   flattened inside it; nested blocks collapse into the nearest ancestor, so
+   the editor always draws a two-level pyramid. The root's own mechanics
+   become leaf groups after the includes.
+2. Every mod named by a mechanic becomes a node in that group; if several
+   mechanics list the same mod, the first one owns it.
+3. For each node, the mod's `depends` list (from the local registry) adds an
    edge **dependency → dependent**, and unknown dependencies are pulled into
-   the graph as external nodes shown in the *Dependencies* frame — including
+   the scheme as external nodes shown in the *Dependencies* frame — including
    transitive dependencies, recursively.
-3. Each node gets a state from the three live sources:
+4. Each node gets a state from the live sources:
 
 | State | Node color | Meaning | Plan action |
 |---|---|---|---|
@@ -122,35 +251,127 @@ but ignored — optionality of a whole mechanic is expressed with the
 | `VersionMismatch` | amber | Installed, but the version fails the collection's pin | reported as a warning |
 | `Missing` | red | Unknown to the registry and every catalog | reported; blocks apply |
 
-The graph is resolved fresh every time the collections screen opens or a
+Inconsistencies found while expanding the pyramid are reported as **problems**
+instead of failing resolution:
+
+| Problem | Meaning |
+|---|---|
+| Missing block | an `includes[]` reference points at a collection nobody provides |
+| Cycle | the include chain references a collection already on the active stack |
+| Role conflict | two *required* includes claim the same role slot (optional blocks never conflict) |
+| Unmet requirement | a resolved collection `requires` a capability no block `provides` |
+
+The scheme is resolved fresh every time the collections screen opens or a
 catalog refresh finishes, so it always reflects the current registry, disabled
 store and catalog cache.
 
-## The Collections screen
+## The Mods & Collections hub
 
-The mod manager mod contributes a second main-menu button, **Collections**,
-next to the mod catalog. The screen has three parts:
+The mod manager contributes a single main-menu button, **Mods & Collections**
+(with a counter of problems requiring attention), which opens one screen with
+two tabs — **Mods** (the default) and **Collections**. The tab choice is
+remembered, and the two screens stay cross-linked: a mod card lists the
+collections that use it and links straight to their schemes, and scheme
+problems link back to the mod catalog search.
 
-- **Left** — every merged collection, sorted by origin (bundled, player,
-  catalog) and then by name.
-- **Center** — the dependency graph: one `GraphFrame` per mechanic, one
-  `GraphNode` per mod, arrows from dependencies to dependents. Node colors
-  follow the state table above; clicking a node shows its id, version, pin,
-  dependencies and dependents in the details panel.
-- **Right** — collection metadata, the mechanic list, and the **install plan**:
-  which mods will be downloaded, which disabled mods will be enabled, and what
-  is missing. **Apply collection** downloads the missing mods sequentially,
-  removes the listed mods from `disabled_mods.json`, and reports that changes
-  take effect after a restart (the same banner as the mod manager).
+### Collections tab — the games gallery
 
-Applying is blocked while any required mod is `Missing` from the catalog —
-enabling a mod whose dependency cannot be loaded would only make the registry
-drop it at the next boot. Version mismatches are shown as warnings but do not
-block apply.
+The first level of the Collections tab is a gallery of **games**: collections
+with `"kind": "Game"`. Every card shows the cover, author/version/origin, the
+mod count, tags and a status:
 
-Mods installed from the screen are remembered for the rest of the session
-(`sessionInstalled`), so the graph updates immediately even though the registry
-only learns about them after a restart.
+| Status | Meaning | Primary action |
+|---|---|---|
+| Ready (full progress bar) | every mod installed, enabled, pins satisfied | **Play** |
+| Missing N mods | some mods are neither installed nor downloadable | **Show problems** |
+| K problems | scheme errors (missing block, cycle, role conflict, unmet requirement) | **Show problems** |
+| Draft | a partially assembled player collection, possibly with unsaved edits | **Continue building** |
+
+Secondary action on every card is **Edit scheme**. Tiles **+ Assemble your own
+game** create a new player collection, stored in `user://collections.json`.
+
+How a player assembles a game: pick a game in the gallery → **Install** — the
+build plan downloads the missing mods and re-enables disabled ones → the game
+shows the familiar "changes take effect after a restart" banner. Mods
+installed this way are remembered for the rest of the session
+(`sessionInstalled`), so the scheme updates immediately even though the
+registry only learns about them after a restart.
+
+Applying is blocked while any required mod is `Missing` from the catalog or
+while scheme errors are present — enabling a mod whose dependency cannot be
+loaded would only make the registry drop it at the next boot. Version
+mismatches are shown as warnings but do not block apply.
+
+### Scheme editor
+
+**Edit scheme** opens the second level: a canvas with the game's contours.
+
+- **Canvas** — one draggable/resizable group per mechanic or included block,
+  with mod chips inside (state-colored dots); external dependencies render as
+  dashed chips. Groups move by their header, mods move inside, the empty
+  canvas pans with LMB. A toolbar offers **+ Mechanic** and **+ Block from
+  catalog**; a toggle shows/hides dependency links.
+- **Inspector** (right side) — tabs: *Inspector* (block metadata,
+  provides/requires, actions: add mod, replace block, turn off, remove),
+  *Check* (the problem list with "show" navigation to the offending group),
+  *Plan* (install/enable counts, missing and mismatched mods).
+- **Build bar** (bottom, always visible) — assembly name, **Install N**,
+  **Enable N**, **Problems K**, a hint message, a shortcut to the mod manager
+  and the primary **Apply collection** button (disabled while errors are
+  present).
+- **Header** — Save (writes `user://collections.json`), Reset and a raw
+  **JSON** view, plus the unsaved-edits marker.
+
+## Add collections to your mod
+
+1. Create a `collections/` directory next to your `manifest.json`.
+2. Add one JSON file per collection; the file name is free, the `id` inside
+   is what matters and must be unique across all sources.
+3. Set `"kind": "Game"` for a playable assembly, `"Component"` for a
+   reusable block, `"Toolset"` for developer tools.
+4. Declare `mechanics` (or `includes` of other collections) with versioned
+   mod references.
+5. Localize: add a `locale[]` array and/or `@key` markers, then put the keys
+   into your `locale/{lang}.properties`.
+6. Ship the mod. The store merges your collections automatically and your
+   bundled copy overrides an online catalog entry with the same id; the player
+   can override both locally.
+
+A complete example — `mods/visual_novel_core/collections/vn_starter_novel.json`,
+demonstrating `kind`, `@key` markers and `locale[]` together:
+
+```jsonc
+{
+  "id": "vn_starter_novel",
+  "kind": "Game",
+  "name": "@collections/vn_starter_novel/name",              // resolved from locale/*.properties
+  "description": "@collections/vn_starter_novel/description",
+  "author": "ct",
+  "version": "1.0.0",
+  "tags": ["novel", "cards"],
+  "locale": [
+    { "lang": "en", "name": "Card Novel", "description": "A visual novel with an optional card-battle layer." },
+    { "lang": "ru", "name": "Карточная новелла", "description": "Визуальная новелла с необязательным слоем карточных боёв." }
+  ],
+  "mechanics": [
+    {
+      "id": "vn_core",
+      "name": "@collections/vn_starter_novel/mechanic/vn_core/name",
+      "description": "@collections/vn_starter_novel/mechanic/vn_core/description",
+      "role": "story",
+      "mods": ["visual_novel_core>=1"]
+    },
+    {
+      "id": "cards",
+      "name": "@collections/vn_starter_novel/mechanic/cards/name",
+      "description": "@collections/vn_starter_novel/mechanic/cards/description",
+      "role": "battle",
+      "optional": true,
+      "mods": ["turn_battle_base>=1"]
+    }
+  ]
+}
+```
 
 ## Catalog distribution
 
@@ -163,6 +384,7 @@ A catalog may publish collections in its root envelope:
   "collections": [
     {
       "id": "card_novel",
+      "kind": "Game",
       "name": "Card Novel",
       "version": "1.0.0",
       "mechanics": [
@@ -175,8 +397,9 @@ A catalog may publish collections in its root envelope:
 
 Collections from all configured catalog URLs are merged by `id` — the highest
 `version` wins while `source_urls` accumulates every publisher — and cached
-together with the mod entries in `user://catalog_cache.json`. The `collections`
-key is optional, so catalogs written before collections existed keep working.
+together with the mod entries in `user://catalog_cache.json`. The
+`collections` key is optional, so catalogs written before collections existed
+keep working.
 
 ## Core API
 
@@ -185,24 +408,29 @@ launcher code, tools and other mods can use them without the UI:
 
 | Type | Purpose |
 |---|---|
-| `ModCollection`, `ModCollectionMechanic` | JSON DTOs |
+| `ModCollection`, `ModCollectionMechanic`, `ModCollectionInclude` | JSON DTOs; `GetLocalizedName(lang)` / `GetLocalizedDescription(lang)` implement the `locale[]` lookup |
 | `ModCollectionStore` | `LoadAll()`, `LoadUser()`, `SaveUser()`, `LoadFromProvider(provider)` |
-| `ModCollectionResolver.Resolve(collection, localMods, disabledIds, catalogEntries, sessionInstalled = null)` | Builds `ModCollectionGraph` (nodes, edges, states) |
+| `ModCollectionResolver.Resolve(collection, collections, localMods, disabledIds, catalogEntries, sessionInstalled = null, language = null, translator = null)` | Builds `ModCollectionGraph` (nodes, edges, groups, problems, states). `translator` (e.g. `CollectionText.Resolve`) resolves `@key` display text; null keeps raw keys |
+| `ModCollectionGraph` | `Mechanics`, `Groups` (two-level pyramid), `Problems`, `Nodes`, `Edges`, `InstalledCount`/`TotalCount` |
 | `ModCollectionPlan.Build(graph, catalogEntries)` | `Install` items (id, version, source URL), `Enable`, `Missing`, `Mismatches` |
 | `ModCollectionNodeState` | `Installed`, `Disabled`, `InCatalog`, `Missing`, `VersionMismatch` |
+| `ModCollectionProblem(Kind)` | `MissingCollection`, `Cycle`, `RoleConflict`, `RequirementMissing` |
 
 Example — resolve a collection and inspect its plan:
 
 ```csharp
 var collections = ModCollectionStore.LoadAll();
-var collection  = collections[0];
-var catalog     = CatalogService.CachedEntries ?? new List<CatalogExportEntry>();
+var byId = collections.ToDictionary(c => c.Id, StringComparer.OrdinalIgnoreCase);
+var collection = collections[0];
+var catalog = CatalogService.CachedEntries ?? new List<CatalogExportEntry>();
 
 var graph = ModCollectionResolver.Resolve(
     collection,
+    byId,
     ModRegistry.Instance.AllDiscoveredMods,
     DisabledModsStore.Load(),
-    catalog);
+    catalog,
+    language: "ru");
 
 var plan = ModCollectionPlan.Build(graph, catalog);
 foreach (var item in plan.Install)
@@ -215,15 +443,20 @@ Writes (downloading, enabling) stay outside the plan: the UI passes
 
 ## Real examples
 
-`mods/card_battle/collections/card_novel.json` — a story game assembled from
-five mechanics (novel core, story, turn battle, cards, interface); the arrows
-show real dependencies such as `card_battle → turn_battle_base → interface`.
-
-`mods/tools/collections/dev_tools.json` — the developer toolset, with the
-optional `validation` mechanic demonstrating the `optional` flag.
+- `mods/visual_novel_core/collections/vn_starter_novel.json` — a two-mechanic game
+  assembled around the visual novel core, demonstrating `@key` localization
+  markers and an optional card-battle mechanic.
+- `mods/card_battle/collections/card_novel.json` — a story game assembled from
+  five mechanics (novel core, story, turn battle, cards, interface) with
+  `locale[]` entries; the arrows show real dependencies such as
+  `card_battle → turn_battle_base → interface`.
+- `mods/tools/collections/dev_tools.json` — the developer toolset
+  (`"kind": "Toolset"`), with the optional `validation` mechanic demonstrating
+  the `optional` flag.
 
 ## Related
 
 - [Configs — manifest.json](../configs/) — mod identity and `depends` syntax
 - [Mod Catalog & Network Repository](../catalog/) — catalog schema, merging, checksums
+- [Locale — Localization](../locale/) — `.properties` format and key conventions
 - [Mod Load Order](../load-order/) — how `depends` affects loading

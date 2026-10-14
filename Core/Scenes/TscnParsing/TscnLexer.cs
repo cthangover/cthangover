@@ -18,11 +18,17 @@ namespace Cthangover.Core.Scenes.TscnParsing
     /// </summary>
     public class TscnToken
     {
+        /// <summary>Token category: section header, property line, or empty line.</summary>
         public TscnTokenType Type { get; set; }
+        /// <summary>Section name without brackets for <see cref="TscnTokenType.SectionHeader"/> tokens (e.g. "node").</summary>
         public string SectionName { get; set; }
+        /// <summary>Parsed key=value attributes of the section header (editor-only keys already stripped).</summary>
         public Dictionary<string, string> SectionAttrs { get; set; }
+        /// <summary>Key (left of <c>=</c>) for <see cref="TscnTokenType.Property"/> tokens.</summary>
         public string PropertyKey { get; set; }
+        /// <summary>Raw right-hand side for <see cref="TscnTokenType.Property"/> tokens; parsing is deferred to <see cref="TscnPropertyParser"/>.</summary>
         public string PropertyValue { get; set; }
+        /// <summary>1-based source line, for diagnostics.</summary>
         public int LineNumber { get; set; }
 
         /// <summary>Factory for a [section_header] token with parsed key=value attributes.</summary>

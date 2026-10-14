@@ -76,9 +76,9 @@ uniform — adjusting it from the Godot inspector updates the effect live.
 
 Besides the interface shaders listed above, the `visual_novel_core` mod ships its own shader
 family in `mods/visual_novel_core/shaders/`: a set of `2d_cubism_*.gdshader` files
-(`mask`, `mask_mul`, `mask_add`, `mask_mix` — each also in an `_inv` inverted
-variant — plus `norm_mul` / `norm_add` / `norm_mix`) used for Cubism-style
-sprite masking and normal blending. The folder also contains
+(`mask`, plus the blend modes `mask_mul` / `mask_add` / `mask_mix`, each blend mode
+also in an `_inv` inverted variant, and `norm_mul` / `norm_add` / `norm_mix`)
+used for Cubism-style sprite masking and normal blending. The folder also contains
 `SHADER_CONTRACT.md`, which documents the conventions these shaders follow.
 
 ## Minimal custom shader example

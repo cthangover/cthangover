@@ -19,17 +19,29 @@ namespace Cthangover.Core.Items
     /// </summary>
     public interface IInventory
     {
+        /// <summary>Ordered slot list — order drives UI layout; empty slots are deleted on zero stacks.</summary>
         List<IItemContainer> Items { get; set; }
+        /// <summary>Fires on every successful mutation with (itemId, signed delta).</summary>
         event Action<string, int> Change;
+        /// <summary>True when any slot holds the item.</summary>
         public bool HasItem(IItem item);
+        /// <summary>True when any slot holds the item with the given id.</summary>
         public bool HasItem(string id);
+        /// <summary>Returns the slot holding the item, or <c>null</c>.</summary>
         public IItemContainer TryGet(IItem item);
+        /// <summary>Returns the slot holding the given id, or <c>null</c>.</summary>
         public IItemContainer TryGet(string id);
+        /// <summary>Total count across slots (0 if absent).</summary>
         public int CheckCount(IItem item);
+        /// <summary>Total count across slots for the given id (0 if absent).</summary>
         public int CheckCount(string id);
+        /// <summary>Stacks onto an existing slot or creates one by resolving the item reference.</summary>
         public void Add(IItem item, int count = 1);
+        /// <summary>Stacks onto an existing slot or creates one via <c>ItemFactory</c>; unknown ids are silently ignored.</summary>
         public void Add(string id, int count = 1);
+        /// <summary>Removes items; returns <c>false</c> without changes when the slot holds fewer than <paramref name="count"/>.</summary>
         public bool Remove(IItem item, int count = 1);
+        /// <summary>Removes items by id; returns <c>false</c> without changes when the slot holds fewer than <paramref name="count"/>.</summary>
         public bool Remove(string id, int count = 1);
     }
 }

@@ -26,10 +26,13 @@ namespace Cthangover.Core.UI.Menu
 
         private struct LogLine
         {
+            /// <summary>Formatted log line, including its category prefix.</summary>
             public string Text;
+            /// <summary>Seconds since the line appeared; drives the fade-out.</summary>
             public float Age;
         }
 
+        /// <summary>Builds the label stack, seeds it with recent log lines and subscribes to <see cref="GameLogger.LogEmitted"/>.</summary>
         public override void _Ready()
         {
             MouseFilter = MouseFilterEnum.Ignore;
@@ -60,6 +63,7 @@ namespace Cthangover.Core.UI.Menu
             GameLogger.LogEmitted += OnLogEmitted;
         }
 
+        /// <summary>Unsubscribes from the logger so a freed panel cannot receive worker-thread events.</summary>
         public override void _ExitTree()
         {
             GameLogger.LogEmitted -= OnLogEmitted;
@@ -73,6 +77,7 @@ namespace Cthangover.Core.UI.Menu
             }
         }
 
+        /// <summary>Main-thread drain: pulls queued lines, ages them out and repaints the fading label stack.</summary>
         public override void _Process(double delta)
         {
             lock (_queueLock)
@@ -98,24 +103,25 @@ namespace Cthangover.Core.UI.Menu
 
             // Show the newest line + up to 4 before it; older = more transparent.
             // The newest line sits in the bottom-most label (index VisibleLines-1),
-            // so with few lines the top labels stay empty.
-            var shown = System.Math.Min(_lines.Count, VisibleLines);
-            var start = _lines.Count - shown;
+            // so with few lines the top labels stay empty. A negative line index
+            // marks exactly those top labels; it also covers the first seconds of
+            // a run, when the logger has emitted fewer than VisibleLines lines.
+            var start = _lines.Count - VisibleLines;
 
             for (var i = 0; i < VisibleLines; i++)
             {
-                var labelIndex = VisibleLines - shown + i;
-                if (i < shown)
+                var lineIndex = start + i;
+                if (lineIndex >= 0)
                 {
-                    var line = _lines[start + i];
+                    var line = _lines[lineIndex];
                     var alpha = Mathf.Clamp(1f - line.Age / FadeSeconds, 0f, 1f);
-                    _labels[labelIndex].Text = line.Text;
-                    _labels[labelIndex].Modulate = UiTokens.Alpha(UiTokens.White, alpha);
+                    _labels[i].Text = line.Text;
+                    _labels[i].Modulate = UiTokens.Alpha(UiTokens.White, alpha);
                 }
                 else
                 {
-                    _labels[labelIndex].Text = "";
-                    _labels[labelIndex].Modulate = UiTokens.Alpha(UiTokens.White, 0f);
+                    _labels[i].Text = "";
+                    _labels[i].Modulate = UiTokens.Alpha(UiTokens.White, 0f);
                 }
             }
         }

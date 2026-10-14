@@ -70,7 +70,7 @@ namespace Cthangover.MyCodeMod
 }
 ```
 
-The `IMod` interface is the mandatory entry point for any C# mod. The `Initialize` method is called when the mod loads.
+The `IModInitializer` interface is the lifecycle entry point for C# mod code — implementations are discovered via reflection. `OnModLoaded` is called for every mod that loads; `OnModResourcesReady` fires once after all mods and their resources are ready.
 
 > Use `GameLogger.Log(...)` instead of `GD.Print(...)` if you want to work with logs.
 
@@ -158,7 +158,7 @@ Now in any `.scenario` file you can write:
 action my_effect
 ```
 
-The engine finds your class via reflection and calls `Execute`.
+The engine finds your class via reflection and calls `Run`.
 
 ---
 

@@ -41,26 +41,25 @@ There is no method-based registration and no `SceneContext` parameter — the at
 
 ## Execution order
 
-`[SceneEvent]` classes are not a separate phase: `SceneManager.ComposeEvents` composes them into the **same event chain** as `.scenario` definitions. That composition runs as a `SceneEnteredEvent` bus subscriber at priority 15, while manifest subscriptions execute at priority 20 (i.e., after scenario chains). So the order on scene enter is:
+`[SceneEvent]` classes are not a separate phase: `SceneManager.ComposeEvents` composes them into the **same event chain** as `.scenario` definitions. The composition runs synchronously inside `SceneManager.SwitchScene` — it is **not** a bus subscriber — and the composed chain is enqueued right after the `scene_entered` lifecycle event is published. Engine subscribers of that event run at their own fixed priorities (background 0, ambient audio 5, music type 10, UI host 30), which are independent of scenario ordering. So the order on scene enter is:
 
-1. Scenario chain events + `[SceneEvent]` class events, interleaved and sorted by their own priority / `After` metadata (bus priority 15)
-2. Manifest subscriptions fire afterwards (bus priority 20, ordered among themselves by their `priority` field)
+1. `scene_entered` bus subscribers apply scene defaults, audio, and UI host changes
+2. The composed chain executes: scenario + `[SceneEvent]` events interleaved and sorted by their own `priority` / `After` metadata
 
-On scene exit:
-1. `on_exit` manifest subscriptions fire (by `priority`)
+On scene exit, `scene_exited` is published on the bus; there are no per-scene exit hooks beyond its subscribers.
 
-## vs Manifest subscriptions
+## vs manifest `ui` entries
 
-| Feature | `[SceneEvent]` attribute | Manifest `subscriptions` |
+| Feature | `[SceneEvent]` attribute | Manifest `ui` entry |
 |---|---|---|
 | Registration | Attribute on class (must derive from `ExecutableEvent`) | JSON entry in `manifest.json` |
-| Execution timing | Same event chain as scenario definitions (bus priority 15), before subscriptions (priority 20) | On enter/exit trigger |
-| UI injection | No | Yes (via `template` and wrappers) |
+| Purpose | Game logic running in the scene's event chain | UI panels/overlays anchored to shell slots |
+| Scene binding | `SceneName` positional parameter (required) | Optional `scene` field — when set, the element is only available in that scene |
 | Condition support | Yes (`Condition` param) | No |
-| Priority ordering | Yes | Yes |
+| Priority ordering | Yes | Yes (order inside the anchor slot) |
 | Dependencies (`After`) | Yes | No |
 
-Use `[SceneEvent]` for game-logic hooks. Use manifest `subscriptions` when you need UI injection through wrapper templates.
+Use `[SceneEvent]` for game-logic hooks. Use manifest `ui` entries when you need to anchor a panel or overlay to a shell slot.
 
 ## Manifest `conflicts_with` — declarative only
 
@@ -83,7 +82,8 @@ Every mod's `manifest.json` is deserialized into `ModManifest` (`Core/Mods/ModMa
 | `depends` | string[] | Versioned dependencies in format `modId[op][version][?]` — see below. Parsed into `ModDependency` entries via `ModDependencyListConverter`; affects topological compile order and version validation |
 | `depends_native` | string[] | Glob patterns for native shared libraries handled by `ModNativeLoader` — see below |
 | `conflicts_with` | string[] | Mutually exclusive mod IDs. Declarative only — see section above |
-| `subscriptions` | array | Scene event bindings — each entry describes which wrapper template to inject into which scene, on which trigger |
+| `ui` | array | GUI declarations. Each entry is a toolbar-toggled panel (`"kind": "panel"`) or a code-driven overlay (`"kind": "overlay"`) anchored to a named shell slot (`slot`), with an optional `scene` field scoping it to one scene |
+| `main_menu` | array | Buttons for the title screen; each entry opens a fullscreen mod scene |
 
 ### `depends` — version syntax
 

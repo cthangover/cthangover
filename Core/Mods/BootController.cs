@@ -1,33 +1,28 @@
-using System.Threading;
 using Cthangover.Core.Utils;
 using Godot;
 
 namespace Cthangover.Core.Mods
 {
     /// <summary>
-    /// Determines whether the running main scene is the pre-game launcher and
-    /// tracks whether mod initialisation has completed. When the game starts
-    /// directly into <c>scenes/menu/launcher.tscn</c>, autoloads defer the heavy
-    /// mod load so the launcher can render its boot overlay first and drive the
-    /// load itself (pure .NET work on a background thread, Godot-bound work on
-    /// the main thread). Every other entry point — integration tests, direct
-    /// scene launches for debugging — keeps the synchronous autoload path.
+    /// Determines whether the running main scene is the pre-game launcher.
+    /// When the game starts directly into <c>scenes/menu/launcher.tscn</c>,
+    /// the launcher renders its boot overlay first and drives the whole boot
+    /// pipeline itself through the Boot orchestrator (pure .NET work on a
+    /// background thread, Godot-bound work on the main thread). Every other
+    /// entry point — integration tests, direct scene launches for debugging —
+    /// keeps the synchronous autoload path.
     ///
-    /// The flags are read from arbitrary threads: <see cref="ModRegistry"/>'s
-    /// lazy entry points may be called by factories or tests while the launcher
-    /// is still compiling on a background thread. They are therefore volatile,
-    /// and <see cref="MarkModsInitialized"/> additionally releases a wait
-    /// handle so background callers can block until the launcher finishes
-    /// instead of observing a half-built registry.
+    /// This class is only about boot-mode detection: mod readiness now lives
+    /// in <see cref="ModRegistry.IsInitialized"/> and the Boot phases, and the
+    /// wait-handle mechanics were removed together with lazy initialization.
+    /// The flag is read from arbitrary threads and therefore stays volatile.
     /// </summary>
     public static class BootController
     {
         private static readonly object detectLock = new();
-        private static readonly ManualResetEventSlim modsReady = new(false);
 
         private static volatile bool _detected;
         private static volatile bool _isLauncherBoot;
-        private static volatile bool _modsInitialized;
 
         /// <summary>True when the current main scene is the pre-game launcher.</summary>
         public static bool IsLauncherBoot
@@ -38,9 +33,6 @@ namespace Cthangover.Core.Mods
                 return _isLauncherBoot;
             }
         }
-
-        /// <summary>True once mod discovery, compilation and Godot-side init have finished.</summary>
-        public static bool ModsInitialized => _modsInitialized;
 
         /// <summary>
         /// Idempotently resolves the effective main scene path and flags a
@@ -79,25 +71,6 @@ namespace Cthangover.Core.Mods
                 _isLauncherBoot = scene != null &&
                     scene.Replace('\\', '/').EndsWith("scenes/menu/launcher.tscn", System.StringComparison.OrdinalIgnoreCase);
             }
-        }
-
-        /// <summary>Marks mod initialisation as complete and wakes waiting threads.</summary>
-        public static void MarkModsInitialized()
-        {
-            _modsInitialized = true;
-            modsReady.Set();
-        }
-
-        /// <summary>
-        /// Blocks until <see cref="MarkModsInitialized"/> has been called, or
-        /// until <paramref name="timeoutMs"/> elapses. Used by background
-        /// callers that reach <see cref="ModRegistry.Initialize"/> while the
-        /// launcher owns the pipeline — the main thread must never call this,
-        /// because it is the thread that eventually performs the finalize.
-        /// </summary>
-        public static bool WaitForModsInitialized(int timeoutMs)
-        {
-            return modsReady.Wait(timeoutMs);
         }
     }
 }

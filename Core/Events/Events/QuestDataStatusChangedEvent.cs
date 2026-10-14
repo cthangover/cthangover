@@ -2,7 +2,7 @@ namespace Cthangover.Core.Events
 {
     /// <summary>
     /// Fired when a quest's numeric progression level (<c>QuestData.Status</c>)
-    /// changes. Published by <see cref="Cthangover.Core.Quests.QuestData.SetStatus"/>
+    /// changes. Published by the quests engine mod's QuestData.SetStatus
     /// at the exact point of mutation, and only when the value actually changed.
     /// Carries no quest ID because <c>QuestData</c> does not know its owner — the
     /// marker is enough to invalidate cached condition results, which re-read live

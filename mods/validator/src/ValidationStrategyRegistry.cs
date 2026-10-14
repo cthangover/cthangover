@@ -17,6 +17,7 @@ namespace Cthangover.Validator
         private static readonly object sync = new();
         private static IReadOnlyList<IValidationStrategy> cached;
 
+        /// <summary>Returns all discovered strategies sorted by phase and order; cached for the process lifetime.</summary>
         public static IReadOnlyList<IValidationStrategy> GetStrategies()
         {
             lock (sync)

@@ -1,8 +1,8 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Cthangover.Core.Actions;
+using Cthangover.Core.Bootstrap;
 using Cthangover.Core.Utils;
 
 namespace Cthangover.Core.Factories.Impls
@@ -10,7 +10,8 @@ namespace Cthangover.Core.Factories.Impls
     /// <summary>
     /// Singleton registry that discovers and indexes all IScenarioAction
     /// implementations via reflection. Actions are keyed by their Name property
-    /// (e.g. "quest.set_status"). The factory uses Lazy&lt;T&gt; for thread-safe
+    /// (e.g. "quest.set_status"). The single instance is owned by the
+    /// AppServices composition root in a Lazy&lt;T&gt; slot for thread-safe
     /// initialization via Reflections.FindAndCreate which scans all loaded
     /// assemblies. RegisterAssembly allows mods to inject custom actions at
     /// runtime — deduplication by Name ensures mods can override core actions
@@ -19,19 +20,18 @@ namespace Cthangover.Core.Factories.Impls
     /// </summary>
     public class ScenarioActionFactory
     {
-        private static readonly Lazy<ScenarioActionFactory> instance = new(() => new ScenarioActionFactory());
-
         /// <summary>
-        /// Thread-safe singleton instance, lazily initialized via
-        /// Lazy&lt;T&gt;. Construction triggers a full assembly scan
+        /// Facade over the AppServices-owned instance; kept as the public
+        /// API during migration. Laziness and thread safety come from the
+        /// owning Lazy&lt;T&gt; slot. Construction triggers a full assembly scan
         /// for all IScenarioAction implementations via
         /// Reflections.FindAndCreate and registers each by its Name.
         /// </summary>
-        public static ScenarioActionFactory Instance => instance.Value;
+        public static ScenarioActionFactory Instance => AppServices.Current.ScenarioActions.Value;
 
         private readonly Dictionary<string, IScenarioAction> actions = new();
 
-        private ScenarioActionFactory()
+        internal ScenarioActionFactory()
         {
             foreach (var action in Reflections.FindAndCreate<IScenarioAction>())
             {

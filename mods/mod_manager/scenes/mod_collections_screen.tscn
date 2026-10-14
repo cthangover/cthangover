@@ -1,7 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="src/ModCollectionsScreen.cs" id="1_screen"]
-[ext_resource type="PackedScene" path="scenes/components/collection_graph_view.tscn" id="2_graph"]
+[ext_resource type="Script" path="src/UI/CollectionSchemeCanvas.cs" id="2_canvas"]
 
 [node name="ModCollectionsScreen" type="Control"]
 layout_mode = 3
@@ -41,7 +41,7 @@ theme_override_constants/separation = 10
 
 [node name="Header" type="HBoxContainer" parent="Margin/Root"]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 8
 
 [node name="Close" type="Button" parent="Margin/Root/Header"]
 layout_mode = 2
@@ -52,11 +52,55 @@ size_flags_vertical = 4
 theme_override_font_sizes/font_size = 24
 uppercase = true
 
+[node name="GameSelect" type="OptionButton" parent="Margin/Root/Header"]
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="AddMechanic" type="Button" parent="Margin/Root/Header"]
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="NewGame" type="Button" parent="Margin/Root/Header"]
+layout_mode = 2
+size_flags_vertical = 4
+
 [node name="Spacer" type="Control" parent="Margin/Root/Header"]
 layout_mode = 2
 size_flags_horizontal = 3
+mouse_filter = 2
 
-[node name="Result" type="Label" parent="Margin/Root/Header"]
+[node name="EdgesToggle" type="CheckBox" parent="Margin/Root/Header"]
+layout_mode = 2
+size_flags_vertical = 4
+button_pressed = true
+
+[node name="Problems" type="Button" parent="Margin/Root/Header"]
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="Plan" type="Button" parent="Margin/Root/Header"]
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="ModsCount" type="Label" parent="Margin/Root/Header"]
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="Dirty" type="Label" parent="Margin/Root/Header"]
+visible = false
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="Json" type="Button" parent="Margin/Root/Header"]
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="Reset" type="Button" parent="Margin/Root/Header"]
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="Save" type="Button" parent="Margin/Root/Header"]
 layout_mode = 2
 size_flags_vertical = 4
 
@@ -64,32 +108,29 @@ size_flags_vertical = 4
 layout_mode = 2
 size_flags_vertical = 4
 
+[node name="Crumbs" type="HBoxContainer" parent="Margin/Root"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
 [node name="Body" type="HSplitContainer" parent="Margin/Root"]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="Sidebar" type="PanelContainer" parent="Margin/Root/Body"]
-custom_minimum_size = Vector2(240, 0)
-layout_mode = 2
-
-[node name="SideScroll" type="ScrollContainer" parent="Margin/Root/Body/Sidebar"]
+[node name="CanvasScroll" type="ScrollContainer" parent="Margin/Root/Body"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-horizontal_scroll_mode = 0
+horizontal_scroll_mode = 1
+vertical_scroll_mode = 1
 
-[node name="CollectionList" type="VBoxContainer" parent="Margin/Root/Body/Sidebar/SideScroll"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 4
-
-[node name="Graph" parent="Margin/Root/Body" instance=ExtResource("2_graph")]
+[node name="SchemeCanvas" type="Control" parent="Margin/Root/Body/CanvasScroll"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+script = ExtResource("2_canvas")
 
 [node name="Details" type="PanelContainer" parent="Margin/Root/Body"]
-custom_minimum_size = Vector2(360, 0)
+custom_minimum_size = Vector2(380, 0)
 layout_mode = 2
 
 [node name="DetailScroll" type="ScrollContainer" parent="Margin/Root/Body/Details"]
@@ -102,6 +143,23 @@ horizontal_scroll_mode = 0
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
+
+[node name="Tabs" type="HBoxContainer" parent="Margin/Root/Body/Details/DetailScroll/Detail"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="TabInspector" type="Button" parent="Margin/Root/Body/Details/DetailScroll/Detail/Tabs"]
+layout_mode = 2
+toggle_mode = true
+button_pressed = true
+
+[node name="TabProblems" type="Button" parent="Margin/Root/Body/Details/DetailScroll/Detail/Tabs"]
+layout_mode = 2
+toggle_mode = true
+
+[node name="TabPlan" type="Button" parent="Margin/Root/Body/Details/DetailScroll/Detail/Tabs"]
+layout_mode = 2
+toggle_mode = true
 
 [node name="DetailTitle" type="Label" parent="Margin/Root/Body/Details/DetailScroll/Detail"]
 layout_mode = 2
@@ -116,29 +174,19 @@ autowrap_mode = 3
 layout_mode = 2
 autowrap_mode = 3
 
-[node name="MechanicsCaption" type="Label" parent="Margin/Root/Body/Details/DetailScroll/Detail"]
+[node name="DetailExtra" type="VBoxContainer" parent="Margin/Root/Body/Details/DetailScroll/Detail"]
 layout_mode = 2
-
-[node name="MechanicsList" type="VBoxContainer" parent="Margin/Root/Body/Details/DetailScroll/Detail"]
-layout_mode = 2
-theme_override_constants/separation = 2
-
-[node name="NodeCaption" type="Label" parent="Margin/Root/Body/Details/DetailScroll/Detail"]
-layout_mode = 2
-
-[node name="NodeBox" type="VBoxContainer" parent="Margin/Root/Body/Details/DetailScroll/Detail"]
-layout_mode = 2
-theme_override_constants/separation = 2
-
-[node name="PlanCaption" type="Label" parent="Margin/Root/Body/Details/DetailScroll/Detail"]
-layout_mode = 2
-
-[node name="PlanBox" type="VBoxContainer" parent="Margin/Root/Body/Details/DetailScroll/Detail"]
-layout_mode = 2
-theme_override_constants/separation = 2
+theme_override_constants/separation = 6
 
 [node name="Apply" type="Button" parent="Margin/Root/Body/Details/DetailScroll/Detail"]
 layout_mode = 2
+
+[node name="BuildBar" type="PanelContainer" parent="Margin/Root"]
+layout_mode = 2
+
+[node name="BarRow" type="HBoxContainer" parent="Margin/Root/BuildBar"]
+layout_mode = 2
+theme_override_constants/separation = 12
 
 [node name="Banner" type="PanelContainer" parent="Margin/Root"]
 visible = false

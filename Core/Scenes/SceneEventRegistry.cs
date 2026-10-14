@@ -2,35 +2,100 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Cthangover.Core.Bootstrap;
 using Cthangover.Core.UI.Executable;
 using Cthangover.Core.Utils;
 
 namespace Cthangover.Core.Scenes
 {
-	public static class SceneEventRegistry
+	/// <summary>
+	/// Mod-derived registry of executable scene events: <see cref="ExecutableEvent"/>
+	/// types discovered through <see cref="SceneEventAttribute"/> plus events
+	/// registered imperatively by mod initializers after the build. The registry
+	/// instance lives in <see cref="AppServices.Current"/>; the static members
+	/// below are a facade delegating to it, so existing callers keep working
+	/// unchanged both before and after a rebuild.
+	/// </summary>
+	public class SceneEventRegistry : IGameRegistry
 	{
-		private static readonly Dictionary<string, List<SceneEventInfo>> events = new();
-		private static bool initialized;
+		private readonly Dictionary<string, List<SceneEventInfo>> events = new();
+		private bool built;
+
+		/// <summary>
+		/// Factory for scenario-backed executable events, published by the
+		/// dialog_base engine mod on load. SceneManager builds inline scenario
+		/// events through it; null until the dialog mod registers its factory.
+		/// </summary>
+		public IScenarioEventFactory ScenarioEventFactory { get; set; }
+
+		/// <summary>Shared instance the static facade delegates to.</summary>
+		private static SceneEventRegistry Owned => AppServices.Current.SceneEvents;
+
+		/// <summary>
+		/// Creates an empty registry: cheap and side-effect free per the
+		/// IGameRegistry contract. <see cref="Rebuild"/> fills the data.
+		/// </summary>
+		internal SceneEventRegistry()
+		{
+		}
+
+		/// <inheritdoc />
+		public string Id => "scene_events";
+
+		/// <summary>
+		/// Re-scans all loaded assemblies for <see cref="ExecutableEvent"/> types
+		/// decorated with <see cref="SceneEventAttribute"/>, replacing the previous
+		/// table. Forced: safe to call repeatedly. Events registered imperatively
+		/// (by mod initializers) must re-register afterwards.
+		/// </summary>
+		public void Rebuild()
+		{
+			lock (events)
+			{
+				events.Clear();
+				RegisterFromAttributes();
+				built = true;
+			}
+		}
+
+		/// <summary>
+		/// Drops all registered events; the next build re-scans the assemblies.
+		/// Called on mod reload through AppServices.ClearRegistries.
+		/// </summary>
+		public void Clear()
+		{
+			lock (events)
+			{
+				events.Clear();
+				built = false;
+			}
+		}
 
 		/// <summary>
 		/// Scans all loaded assemblies for <see cref="ExecutableEvent"/> types decorated
 		/// with <see cref="SceneEventAttribute"/> and registers them in the event table.
-		/// Uses double-checked locking for thread safety. Subsequent calls are no-ops.
+		/// Uses double-checked locking for thread safety; keeps the old Initialize
+		/// idempotence — subsequent calls are no-ops.
 		/// </summary>
-		public static void Initialize()
+		public void EnsureBuilt()
 		{
-			if (initialized)
+			if (built)
 				return;
 
 			lock (events)
 			{
-				if (initialized)
+				if (built)
 					return;
 
 				RegisterFromAttributes();
-				initialized = true;
+				built = true;
 			}
 		}
+
+		// ---- Static facade (legacy API, unchanged for callers) ------------
+
+		/// <summary>Legacy entry point; delegates to the shared instance.</summary>
+		public static void Initialize() => Owned.EnsureBuilt();
 
 		/// <summary>
 		/// Registers a specific <see cref="ExecutableEvent"/> subclass for a scene with
@@ -42,13 +107,12 @@ namespace Cthangover.Core.Scenes
 		/// <param name="after">Identifier of an event that must precede this one.</param>
 		/// <param name="condition">Condition expression string evaluated at runtime.</param>
 		public static void Register<T>(string sceneName, int priority = 0, string after = null, string condition = null) where T : class
-		{
-			Register(typeof(T), sceneName, priority, after, condition);
-		}
+			=> Owned.AddEvent(typeof(T), sceneName, priority, after, condition);
 
 		/// <summary>
 		/// Non-generic variant of <see cref="Register{T}"/> that accepts a
-		/// <see cref="Type"/> directly.
+		/// <see cref="Type"/> directly. Works before and after the build: a
+		/// registration made after Initialize simply joins the table.
 		/// </summary>
 		/// <param name="type">The <see cref="ExecutableEvent"/> type to register.</param>
 		/// <param name="sceneName">The scene identifier to associate the event with.</param>
@@ -56,6 +120,31 @@ namespace Cthangover.Core.Scenes
 		/// <param name="after">Identifier of an event that must precede this one.</param>
 		/// <param name="condition">Condition expression string evaluated at runtime.</param>
 		public static void Register(Type type, string sceneName, int priority = 0, string after = null, string condition = null)
+			=> Owned.AddEvent(type, sceneName, priority, after, condition);
+
+		/// <summary>
+		/// Returns all registered <see cref="SceneEventInfo"/> entries for the given
+		/// scene name, sorted topologically by priority and <c>After</c> dependencies.
+		/// Ensures the registry has been built first.
+		/// </summary>
+		/// <param name="sceneName">The scene identifier to retrieve events for.</param>
+		public static List<SceneEventInfo> GetEvents(string sceneName)
+			=> Owned.GetEventsSorted(sceneName);
+
+		/// <summary>
+		/// Scans a specific assembly for <see cref="SceneEventAttribute"/>-decorated
+		/// <see cref="ExecutableEvent"/> types and registers them. Thread-safe.
+		/// Useful for registering events from dynamically loaded mod assemblies
+		/// after initial startup.
+		/// </summary>
+		/// <param name="assembly">The assembly to scan for event types.</param>
+		public static void RegisterAssembly(Assembly assembly)
+			=> Owned.AddFromAssembly(assembly);
+
+		// ---- Instance implementation --------------------------------------
+
+		/// <summary>Direct instance access for core consumers migrating off the static facade.</summary>
+		public void AddEvent(Type type, string sceneName, int priority, string after, string condition)
 		{
 			lock (events)
 			{
@@ -76,15 +165,10 @@ namespace Cthangover.Core.Scenes
 			}
 		}
 
-		/// <summary>
-		/// Returns all registered <see cref="SceneEventInfo"/> entries for the given
-		/// scene name, sorted topologically by priority and <c>After</c> dependencies.
-		/// Ensures <see cref="Initialize"/> has been called first.
-		/// </summary>
-		/// <param name="sceneName">The scene identifier to retrieve events for.</param>
-		public static List<SceneEventInfo> GetEvents(string sceneName)
+		/// <summary>Direct instance access for core consumers migrating off the static facade.</summary>
+		public List<SceneEventInfo> GetEventsSorted(string sceneName)
 		{
-			Initialize();
+			EnsureBuilt();
 
 			lock (events)
 			{
@@ -92,6 +176,36 @@ namespace Cthangover.Core.Scenes
 					return new List<SceneEventInfo>();
 
 				return SortEvents(list).ToList();
+			}
+		}
+
+		/// <summary>Direct instance access for core consumers migrating off the static facade.</summary>
+	public void AddFromAssembly(Assembly assembly)
+		{
+			lock (events)
+			{
+				RegisterFromAttributes(assembly);
+			}
+		}
+
+		private void RegisterFromAttributes()
+		{
+			foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+				RegisterFromAttributes(assembly);
+		}
+
+		private void RegisterFromAttributes(Assembly assembly)
+		{
+			foreach (var type in assembly.GetTypes())
+			{
+				var attr = type.GetCustomAttribute<SceneEventAttribute>();
+				if (attr == null)
+					continue;
+
+				if (!typeof(IExecutableEvent).IsAssignableFrom(type))
+					continue;
+
+				AddEvent(type, attr.SceneName, attr.Priority, attr.After, attr.Condition);
 			}
 		}
 
@@ -134,41 +248,5 @@ namespace Cthangover.Core.Scenes
 
 			return result;
 		}
-
-        private static void RegisterFromAttributes()
-        {
-            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-                RegisterFromAttributes(assembly);
-        }
-
-        /// <summary>
-        /// Scans a specific assembly for <see cref="SceneEventAttribute"/>-decorated
-        /// <see cref="ExecutableEvent"/> types and registers them. Thread-safe.
-        /// Useful for registering events from dynamically loaded mod assemblies
-        /// after initial startup.
-        /// </summary>
-        /// <param name="assembly">The assembly to scan for event types.</param>
-        public static void RegisterAssembly(Assembly assembly)
-        {
-            lock (events)
-            {
-                RegisterFromAttributes(assembly);
-            }
-        }
-
-        private static void RegisterFromAttributes(Assembly assembly)
-        {
-            foreach (var type in assembly.GetTypes())
-            {
-                var attr = type.GetCustomAttribute<SceneEventAttribute>();
-                if (attr == null)
-                    continue;
-
-                if (!typeof(ExecutableEvent).IsAssignableFrom(type))
-                    continue;
-
-                Register(type, attr.SceneName, attr.Priority, attr.After, attr.Condition);
-            }
-        }
 	}
 }

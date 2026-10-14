@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
+using Cthangover.Core.Bootstrap;
 using Cthangover.Core.Events;
 using Cthangover.Core.Mods;
 using Cthangover.Core.Scenes;
-using Cthangover.Core.UI.Theming;
 using Cthangover.Core.Utils;
 using Godot;
 
@@ -37,6 +37,7 @@ namespace Cthangover.Core.UI
         /// <summary>Root of the currently loaded shell, or null before the first ShellReadyEvent.</summary>
         public Node ShellRoot => shellRoot;
 
+        /// <summary>Creates the persistent canvas layer and subscribes to shell and scene lifetime events.</summary>
         public override void _Ready()
         {
             Instance = this;
@@ -49,6 +50,7 @@ namespace Cthangover.Core.UI
             ModEventBus.Subscribe<SceneExitedEvent>(OnSceneExited, priority: 30);
         }
 
+        /// <summary>Clears the autoload singleton when the host is torn down.</summary>
         public override void _ExitTree()
         {
             if (Instance == this)
@@ -86,7 +88,7 @@ namespace Cthangover.Core.UI
         /// </summary>
         public void Toggle(string id)
         {
-            var entry = UiRegistry.Get(id);
+            var entry = AppServices.Current.Ui.GetById(id);
             if (entry == null)
             {
                 GameLogger.Log("UI_HOST", $"Toggle('{id}'): entry not found", LogLevel.Warning);
@@ -98,7 +100,7 @@ namespace Cthangover.Core.UI
                 return;
 
             hiddenByScene.Remove(id);
-            if (instance is Widget widget)
+            if (instance is IWidget widget)
             {
                 widget.Switch();
                 toggled[id] = widget.Visible;
@@ -153,7 +155,7 @@ namespace Cthangover.Core.UI
             }
 
             control.Name = entry.Id;
-            CthangoverTheme.Apply(control);
+            UiThemeBridge.Apply(control);
             if (IsHosted(entry))
             {
                 layer.AddChild(control);
@@ -172,8 +174,8 @@ namespace Cthangover.Core.UI
                 control.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
             }
 
-            if (control is ModWidget modWidget)
-                modWidget.EnsureConstructed();
+            if (control is IUiLazyConstruct lazyConstruct)
+                lazyConstruct.EnsureConstructed();
 
             instances[entry.Id] = control;
             SetVisible(control, false);
@@ -204,10 +206,10 @@ namespace Cthangover.Core.UI
         {
             PurgeInvalidInstances();
             shellRoot = e.Root;
-            CthangoverTheme.Apply(e.Root);
+            UiThemeBridge.Apply(e.Root);
             UiBuilder.Build(e.Root);
 
-            foreach (var entry in UiRegistry.Entries)
+            foreach (var entry in AppServices.Current.Ui.AllEntries)
             {
                 if (IsSceneBound(entry) || UiRegistry.IsPanel(entry) || !entry.ShowOnStart)
                     continue;
@@ -219,7 +221,7 @@ namespace Cthangover.Core.UI
 
         private void OnSceneEntered(SceneEnteredEvent e)
         {
-            foreach (var entry in UiRegistry.Entries)
+            foreach (var entry in AppServices.Current.Ui.AllEntries)
             {
                 if (!IsSceneBound(entry) || !string.Equals(entry.Scene, e.SceneName, StringComparison.OrdinalIgnoreCase))
                     continue;
@@ -239,7 +241,7 @@ namespace Cthangover.Core.UI
 
         private void OnSceneExited(SceneExitedEvent e)
         {
-            foreach (var entry in UiRegistry.Entries)
+            foreach (var entry in AppServices.Current.Ui.AllEntries)
             {
                 if (!IsSceneBound(entry) || !string.Equals(entry.Scene, e.SceneName, StringComparison.OrdinalIgnoreCase))
                     continue;
@@ -297,7 +299,7 @@ namespace Cthangover.Core.UI
             if (control == null || !GodotObject.IsInstanceValid(control))
                 return;
 
-            if (control is Widget widget)
+            if (control is IWidget widget)
                 widget.Visible = visible;
             else
                 control.Visible = visible;

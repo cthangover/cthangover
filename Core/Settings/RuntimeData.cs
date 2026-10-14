@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Cthangover.Core.Characters;
 using Cthangover.Core.Items;
@@ -24,10 +25,27 @@ namespace Cthangover.Core.Settings
         public CharacterData  CharacterData  { get; set; } = new();
         /// <summary>Unlocked skills and their cooldown state.</summary>
         public SkillData      SkillData      { get; set; } = new();
-        /// <summary>Player inventory of item stacks.</summary>
-        public Inventory      Inventory      { get; set; } = new();
-        /// <summary>Unlocked recipe IDs and lookup helpers.</summary>
-        public RecipeData     RecipeData     { get; set; } = new();
+        /// <summary>
+        /// Factory producing the player inventory implementation. Installed by
+        /// the items mod (<c>ItemsModInitializer</c>) at resources-ready; the
+        /// property below invokes it on first access, so the state bag can be
+        /// constructed before the mod set is final without freezing an empty
+        /// inventory. A <c>null</c> factory (items mod absent) yields a null
+        /// inventory.
+        /// </summary>
+        public static Func<IInventory> InventoryFactory { get; set; }
+
+        /// <summary>Factory producing the unlocked-recipe state; see <see cref="InventoryFactory"/>.</summary>
+        public static Func<IRecipeData> RecipeDataFactory { get; set; }
+
+        private IInventory _inventory;
+        private IRecipeData _recipeData;
+
+        /// <summary>Player inventory of item stacks; lazily produced by <see cref="InventoryFactory"/> on first access.</summary>
+        public IInventory  Inventory  { get => _inventory ??= InventoryFactory?.Invoke(); set => _inventory = value; }
+
+        /// <summary>Unlocked recipe IDs and lookup helpers; lazily produced by <see cref="RecipeDataFactory"/>.</summary>
+        public IRecipeData RecipeData { get => _recipeData ??= RecipeDataFactory?.Invoke(); set => _recipeData = value; }
         /// <summary>Lamp light radius and influence state.</summary>
         public LampData       LampData       { get; set; } = new();
         /// <summary>Persistent collection of action IDs available for assignment via the character panel.</summary>

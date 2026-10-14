@@ -12,6 +12,7 @@ namespace Cthangover.Core.Scenes.Parsing.Impls
     /// </summary>
     public class BoolLiteralParser : ILeafParser
     {
+        /// <summary>True for the bare keywords <c>true</c>/<c>false</c> not followed by a dot (quest IDs win over literals).</summary>
         public bool CanParse(TokenPeeker peeker)
         {
             if (peeker.AtEnd || peeker.Peek.Type != ConditionParser.TokenType.Ident)
@@ -25,6 +26,7 @@ namespace Cthangover.Core.Scenes.Parsing.Impls
             return next.Type != ConditionParser.TokenType.Dot;
         }
 
+        /// <summary>Consumes the keyword and wraps it into a constant <see cref="BoolLiteral"/>.</summary>
         public ICondition Parse(TokenPeeker peeker, Func<ICondition> parseSubExpr)
         {
             var token = peeker.Advance();

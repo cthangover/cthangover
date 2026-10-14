@@ -24,6 +24,8 @@ flowchart LR
 
     PropReg --> ScriptSkip["script=<br/>skip"]
     PropReg --> ExtResProp["ExtResource<br/>→ PackedScene"]
+    PropReg --> SubResProp["SubResource<br/>→ Resource"]
+    PropReg --> ThemeOverride["theme_override_*<br/>→ AddTheme*Override"]
     PropReg --> Default["default<br/>→ ToVariant"]
 ```
 
@@ -90,8 +92,8 @@ sequenceDiagram
 
 | Attribute | Required | Notes |
 |---|---|---|
-| `type` | Yes | `"Script"` or `"PackedScene"` |
-| `path` | Yes | Mod-relative path. Resolved through mod priority system across all loaded mods |
+| `type` | Yes | `"Script"` and `"PackedScene"` drive node creation and recursive instancing; other types (e.g. `"Texture2D"`) resolve through the ext-resource builder registry |
+| `path` | Yes | Mod-relative path. Resolved through mod priority system across all loaded mods. The editor's on-disk form (`res://mods/<mod>/...`) is normalised to the same mod-relative key, so editor-authored scenes work unchanged |
 | `id` | Yes | Local identifier within this scene file |
 | `uid` | No | Ignored (build-time identifier, inaccessible after build) |
 

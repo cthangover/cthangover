@@ -37,6 +37,11 @@ namespace Cthangover.Core.Localization
 
         private static readonly Dictionary<string, Translation> _translations = new();
 
+        /// <summary>
+        /// Reads the language saved in <see cref="GameData.Settings"/>, maps it
+        /// through the fixed <c>LangToLocale</c> table (unsupported values fall
+        /// back to <c>"ru"</c>), and delegates to <see cref="LoadLocale"/>.
+        /// </summary>
         public static void LoadCurrentLanguage()
         {
             var settingsLang = GameData.Instance.Settings.Language;
@@ -46,6 +51,12 @@ namespace Cthangover.Core.Localization
             LoadLocale(locale);
         }
 
+        /// <summary>
+        /// Merges the <c>.properties</c> files of every loaded mod for the given
+        /// locale into one Godot <see cref="Translation"/>, replaces any
+        /// previous translation for that locale on <c>TranslationServer</c>, and
+        /// sets it as the active locale. Safe to call again to switch languages.
+        /// </summary>
         public static void LoadLocale(string locale)
         {
             var master = new Dictionary<string, string>();

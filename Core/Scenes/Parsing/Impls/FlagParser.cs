@@ -16,6 +16,7 @@ namespace Cthangover.Core.Scenes.Parsing.Impls
     /// </summary>
     public class FlagParser : ILeafParser
     {
+        /// <summary>True for identifiers immediately followed by a comparison operator (dot-forms are claimed by earlier parsers).</summary>
         public bool CanParse(TokenPeeker peeker)
         {
             if (peeker.AtEnd || peeker.Peek.Type != ConditionParser.TokenType.Ident)
@@ -30,6 +31,7 @@ namespace Cthangover.Core.Scenes.Parsing.Impls
                 || next.Type == ConditionParser.TokenType.Lt;
         }
 
+        /// <summary>Consumes <c>key OP literal</c> (string or number literal) and builds a <see cref="FlagCondition"/>.</summary>
         public ICondition Parse(TokenPeeker peeker, Func<ICondition> parseSubExpr)
         {
             var key = peeker.Advance().Value;

@@ -10,7 +10,9 @@ namespace Cthangover.Core.Items
     /// </summary>
     public interface IItemContainer
     {
+        /// <summary>The shared item definition held by this slot.</summary>
         IItem Item  { get; set; }
+        /// <summary>Stack size of this slot; the slot is removed when it reaches zero.</summary>
         int   Count { get; set; }
     }
 

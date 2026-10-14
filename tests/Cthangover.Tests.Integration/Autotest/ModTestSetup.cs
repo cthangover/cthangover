@@ -5,6 +5,9 @@ using System.Linq;
 using Cthangover.Core.Mods;
 using Cthangover.Core.Mods.Providers;
 using Cthangover.Core.Mods.Resolvers;
+using Cthangover.Core.Scenes;
+using Cthangover.Core.UI;
+using Cthangover.Core.UI.Menu;
 using Cthangover.Core.Utils;
 using Godot;
 
@@ -19,7 +22,7 @@ namespace Cthangover.Core.Autotest
 		{
 			GameLogger.Log("TEST", "ModTestSetup: starting mod integration tests");
 
-			ModManager.Instance.Initialize();
+			// Mods are loaded by the boot pipeline (SceneManager autoload -> Boot.RunSync) before any scene _Ready.
 
 			TestFolderMod();
 
@@ -31,6 +34,8 @@ namespace Cthangover.Core.Autotest
 			{
 				Fail($"Zip test crashed: {ex.Message}");
 			}
+
+			VerifyHotReloadRecovery();
 			
 			GameLogger.Log("TEST", $"ModTestSetup: {passed} passed, {failed} failed");
 
@@ -41,6 +46,36 @@ namespace Cthangover.Core.Autotest
 
 			GameLogger.Log("TEST", $"[TEST_RESULT] name=mod passed={passed} failed={failed}");
 			GetTree().Quit(failed == 0 ? 0 : 1);
+		}
+
+		/// <summary>
+		/// Phase 2.5 hot-reload recovery contract: after the final Reload the
+		/// derived state must be rebuilt from the surviving mod set — scene routes
+		/// re-registered by mod initializers, manifest-derived UI/main-menu
+		/// entries re-collected, and the logical scene table re-scanned.
+		/// </summary>
+		private void VerifyHotReloadRecovery()
+		{
+			if (SceneRouteRegistry.TryGet("Battle", out var route) && route.ScenePath == "scenes/battle/battle.tscn")
+				Pass("hot-reload: scene route 'Battle' re-registered after Reload");
+			else
+				Fail("hot-reload: scene route 'Battle' missing after Reload");
+
+			if (MenuRegistry.AllButtons.Count > 0)
+				Pass("hot-reload: main-menu entries re-collected after Reload (" + MenuRegistry.AllButtons.Count + ")");
+			else
+				Fail("hot-reload: main-menu entries are empty after Reload");
+
+			if (UiRegistry.Entries.Count > 0)
+				Pass("hot-reload: ui entries re-collected after Reload (" + UiRegistry.Entries.Count + ")");
+			else
+				Fail("hot-reload: ui entries are empty after Reload");
+
+			var sceneManager = SceneContextNode.FindNode<SceneManager>("SceneManager");
+			if (sceneManager != null && sceneManager.HasScene("home_kitchen"))
+				Pass("hot-reload: logical scene table re-scanned after Reload");
+			else
+				Fail("hot-reload: logical scene table is missing 'home_kitchen' after Reload");
 		}
 
 		private void TestFolderMod()

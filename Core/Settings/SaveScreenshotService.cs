@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 using Cthangover.Core.Scenes;
-using Cthangover.Core.UI.View;
+using Cthangover.Core.UI;
 using Cthangover.Core.Utils;
 using Godot;
 
@@ -10,7 +10,8 @@ namespace Cthangover.Core.Settings
     /// <summary>
     /// Static utility for capturing and loading save-slot thumbnail images.
     /// On save (<see cref="CaptureAndSave"/>), it grabs the current
-    /// background texture from the <see cref="Cthangover.Core.UI.View.ViewBox"/>,
+    /// background texture from the shell's <c>ViewBox</c> (interface mod, behind
+    /// the <see cref="Cthangover.Core.UI.IBackgroundView"/> contract),
     /// scales it down to a 320×180 thumbnail, and writes a PNG next to the
     /// JSON save file. On load (<see cref="LoadScreenshot"/>), it reads the
     /// PNG back and returns a <see cref="Texture2D"/> suitable for the slot
@@ -83,13 +84,13 @@ namespace Cthangover.Core.Settings
         }
 
         /// <summary>
-        /// Retrieves the current background texture from the
-        /// <see cref="Cthangover.Core.UI.View.ViewBox"/> node.
+        /// Retrieves the current background texture from the shell's
+        /// <c>ViewBox</c> node through the kernel <see cref="IBackgroundView"/> contract.
         /// Falls back to a 64×64 solid-dark image if no valid texture exists.
         /// </summary>
         private static Image CaptureBackgroundImage()
         {
-            var viewBox = SceneContextNode.FindNode<ViewBox>("ViewBox");
+            var viewBox = SceneContextNode.FindNode<Node>("ViewBox") as IBackgroundView;
             if (viewBox?.Background?.Texture == null)
                 return CreateFallbackImage();
 

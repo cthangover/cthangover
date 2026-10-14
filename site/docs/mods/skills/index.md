@@ -20,7 +20,11 @@ Skills are card-based abilities that characters can acquire, equip, and use in b
   "Rare": "Legendary",
   // Optional: action card granted to the player when the skill is acquired
   // (active skills hand over a card this way)
-  "GrantsAction": "physics/attack"
+  "GrantsAction": "physics/attack",
+  // Optional: numeric stat bonuses while the skill is owned
+  "Effects": [
+    { "Key": "characters/skills/effects/recruit", "Value": 10, "Percent": true }
+  ]
 }
 ```
 
@@ -35,6 +39,7 @@ Skills are card-based abilities that characters can acquire, equip, and use in b
 | `Type` | string | `"Active"`, `"Passive"`, or `"ForCharacter"` |
 | `Rare` | string | `"Common"`, `"Uncommon"`, `"Rare"`, `"Epic"`, or `"Legendary"` |
 | `GrantsAction` | string | Optional action card ID pushed into the action pool when the skill is granted |
+| `Effects` | array of objects | Optional numeric bonuses granted while the skill is owned — see below |
 
 ## Skill types
 
@@ -46,6 +51,17 @@ Remains in effect continuously once acquired. Provides a persistent buff or aura
 
 ### `ForCharacter`
 Applies directly to the owning character as a stat modifier or intrinsic trait. These are character-specific upgrades that modify base stats.
+
+### `Effects` — collection bonuses
+
+Each effect is one numeric bonus: `Key` is the locale key naming the affected
+stat (e.g. `characters/skills/effects/recruit`), `Value` is the magnitude
+(negative values are penalties), and `Percent` selects the display unit
+(`+10%` vs `+10`). Effects sharing a `Key` are summed across every owned
+skill by `SkillEffectAggregator` into the skills panel's global "collection
+effect" plate — so one key must keep the same unit across all skills. The
+reference definition `visual_novel_core/characters/skills/slave_master.json`
+ships one effect: `+10%` recruitment (`"Value": 10, "Percent": true`).
 
 ## Granting action cards
 

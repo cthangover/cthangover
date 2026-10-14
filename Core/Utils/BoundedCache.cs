@@ -35,7 +35,9 @@ namespace Cthangover.Core.Utils
 
         private class Entry
         {
+            /// <summary>Cache key of the entry; kept alongside the value so eviction can remove the dictionary slot.</summary>
             public TKey Key;
+            /// <summary>Cached payload produced by the loader.</summary>
             public TValue Value;
         }
 

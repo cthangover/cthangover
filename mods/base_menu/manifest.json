@@ -1,0 +1,12 @@
+{
+  "id": "base_menu",
+  "name": "Base Menu",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Registry-driven main menu: built-in buttons, settings and save/load panels moved out of the core.",
+  "category": "ui",
+  "sources": [
+    "src/**/*.cs"
+  ],
+  "depends": ["interface>=1"]
+}

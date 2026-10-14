@@ -38,6 +38,7 @@ tooltip_text = ""remove-me""
         private const string PatchSceneText = @"[gd_scene format=3]
 
 [ext_resource type=""PackedScene"" path=""res://mods/scene_patch_test_mod/scenes/patch_target.tscn"" id=""1_target""]
+[ext_resource type=""PackedScene"" path=""res://mods/scene_patch_test_mod/scenes/badge.tscn"" id=""2_badge""]
 
 [node name=""PatchTarget"" instance=ExtResource(""1_target"")]
 metadata/_patch_delete_nodes = PackedStringArray(""OldNode"")
@@ -48,9 +49,19 @@ text = ""Patched""
 [node name=""AddedLabel"" type=""Label"" parent="".""]
 text = ""Added""
 
+[node name=""Badge"" parent=""."" instance=ExtResource(""2_badge"")]
+
 [node name=""Panel"" parent="".""]
 metadata/_patch_add_groups = PackedStringArray(""patched_group"")
 metadata/_patch_remove = ""tooltip_text""
+";
+
+        private const string BadgeSceneText = @"[gd_scene format=3]
+
+[node name=""Badge"" type=""ColorRect""]
+
+[node name=""BadgeLabel"" type=""Label"" parent="".""]
+text = ""badge""
 ";
 
         private int _passed;
@@ -60,12 +71,10 @@ metadata/_patch_remove = ""tooltip_text""
         {
             GameLogger.Log("TEST", "ScenePatchTestSetup: starting scene patch integration test");
 
-            if (!ModManager.Instance.IsInitialized)
-                ModManager.Instance.Initialize();
-
             TestResolverPatching();
             TestHasPatches();
             TestApplierOnSyntheticScene();
+            TestRealShellIsPatched();
 
             GameLogger.Log("TEST", $"ScenePatchTestSetup: {_passed} passed, {_failed} failed");
             GameLogger.Log("TEST", $"[TEST_RESULT] name=scene_patch passed={_passed} failed={_failed}");
@@ -101,6 +110,10 @@ metadata/_patch_remove = ""tooltip_text""
                 var panel = root.GetNodeOrNull<Panel>("Panel");
                 Assert(panel != null && panel.IsInGroup("patched_group"), "resolver: group operation applied");
                 Assert(panel != null && string.IsNullOrEmpty(panel.TooltipText), "resolver: removed property stays default");
+
+                var badge = root.GetNodeOrNull<ColorRect>("Badge");
+                Assert(badge != null, "resolver: editor-style mods/<mod> ext_resource instance built");
+                Assert(badge != null && badge.GetNodeOrNull<Label>("BadgeLabel") != null, "resolver: ext_resource instance child built");
             }
             finally
             {
@@ -121,6 +134,26 @@ metadata/_patch_remove = ""tooltip_text""
         private void TestHasPatches()
         {
             Assert(!TscnScenes.HasPatches("scenes/does_not_exist.tscn"), "resolver: HasPatches false for unknown scene");
+        }
+
+        private void TestRealShellIsPatched()
+        {
+            var shellPath = GodotSceneService.GetScenePath(GodotSceneType.BaseScene);
+            Assert(TscnScenes.HasPatches(shellPath), "shell: base scene has patch layers");
+
+            var shell = TscnScenes.LoadAndBuild(shellPath);
+            Assert(shell != null, "shell: base scene builds");
+            if (shell == null)
+                return;
+
+            Assert(shell.GetNodeOrNull("Scene/ViewBox") != null, "shell: Scene/ViewBox present");
+            Assert(shell.GetNodeOrNull("Scene/TopView") != null, "shell: Scene/TopView present");
+            Assert(shell.GetNodeOrNull("Scene/DialogCanvas") != null, "shell: novel patch added DialogCanvas");
+            Assert(shell.GetNodeOrNull("Scene/ModBeforeUIPanel") != null, "shell: slot ModBeforeUIPanel present");
+            Assert(shell.GetNodeOrNull("Scene/ModLastPanel") != null, "shell: slot ModLastPanel present");
+            Assert(shell.GetNodeOrNull("Scene/NotificationPanel") != null, "shell: NotificationPanel present");
+
+            shell.Free();
         }
 
         private void TestApplierOnSyntheticScene()
@@ -168,6 +201,7 @@ metadata/_patch_remove = ""tooltip_text""
                 "}\n");
 
             File.WriteAllText(modDirectory + "/scenes/patch_target.tscn", TargetSceneText);
+            File.WriteAllText(modDirectory + "/scenes/badge.tscn", BadgeSceneText);
             File.WriteAllText(modDirectory + "/patches/scenes/patch_target.tscn", PatchSceneText);
         }
 

@@ -85,7 +85,7 @@ namespace Cthangover.Core.Scenes
             }
 
             evalCtx.Flags = flags;
-            evalCtx.QuestFactory = QuestFactory.Instance;
+            evalCtx.QuestFactory = QuestServiceRegistry.Provider;
             return ast.Evaluate(evalCtx);
         }
     }

@@ -84,6 +84,7 @@ namespace Cthangover.Core.Mods.Resolvers
     /// </summary>
     public static class WrapperTemplates
     {
+        /// <summary>Collects every .wrappertmpl template from all mods, keyed by template name.</summary>
         public static List<WrapperDefinition> Collect()
             => ModManager.Instance.GetResolver<WrapperTemplateResolver>()?.Collect();
     }

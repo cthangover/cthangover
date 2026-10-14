@@ -14,6 +14,7 @@ namespace Cthangover.Validator
         public int Order => 200;
         public ValidationFeature Feature => ValidationFeature.Json;
 
+        /// <summary>Reports every recorded reference whose target id has no declaration in the merged fact graph (REF_NOT_FOUND).</summary>
         public void Validate(ValidationContext context)
         {
             foreach (var reference in context.Graph.References)

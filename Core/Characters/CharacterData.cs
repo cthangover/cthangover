@@ -1,8 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
-using Cthangover.Core.Factories.Impls;
 using Cthangover.Core.Settings;
-using Cthangover.Core.UI.Messages;
+using Cthangover.Core.UI;
 using Godot;
 
 namespace Cthangover.Core.Characters
@@ -12,13 +11,13 @@ namespace Cthangover.Core.Characters
     /// progression data. BattleSet tracks which characters are in the active
     /// party for combat. Characters dictionary maps character ID strings to
     /// CharacterInfoData where CharacterInfoData carries the runtime-copied
-    /// version of the template Character (via CharacterFactory). The initial
+    /// version of the template Character (via CharacterTemplateRegistry). The initial
     /// party roster is populated by mods through IModInitializer implementations
     /// — each mod adds its default starter characters during mod loading.
     /// AddCharacterToParty both registers the character and adds to BattleSet,
     /// while SendAddNotification produces the UI message via MessagesHelper,
     /// using TranslationServer for localized character names — names come from
-    /// CharacterFactory templates, not hardcoded strings.
+    /// character templates, not hardcoded strings.
     /// </summary>
 	public class CharacterData
 	{
@@ -39,7 +38,7 @@ namespace Cthangover.Core.Characters
 		public IDictionary<string, CharacterInfoData> Characters { get; set; } = new Dictionary<string, CharacterInfoData>();
 		
 		/// <summary>
-		/// Looks up the character template from <see cref="CharacterFactory"/>
+		/// Looks up the character template from <see cref="CharacterTemplateRegistry"/>
 		/// by ID and creates a runtime <see cref="CharacterInfoData"/> from it.
 		/// Delegates to the two-parameter overload with the resolved template.
 		/// </summary>
@@ -47,7 +46,7 @@ namespace Cthangover.Core.Characters
 		/// <returns>A new <see cref="CharacterInfoData"/> instance with stats and level from the template.</returns>
 		public CharacterInfoData Create(string characterType)
 		{
-			var card = CharacterFactory.Instance.Get(characterType);
+			var card = CharacterTemplateRegistry.Get(characterType);
 			return Create(characterType, card);
 		}
 		
@@ -103,16 +102,17 @@ namespace Cthangover.Core.Characters
 		/// <summary>
 		/// Displays a localized "character joined" UI notification without
 		/// modifying the party roster. Looks up the character name from
-		/// <see cref="CharacterFactory"/> (falls back to the raw ID if the
+		/// <see cref="CharacterTemplateRegistry"/> (falls back to the raw ID if the
 		/// template is missing), prepends the localized "ui/add_to_party"
-		/// prefix, and dispatches via <see cref="MessagesHelper"/>.
+		/// prefix, and dispatches through the kernel NotificationBridge (the
+		/// floating-message implementation lives in the interface engine mod).
 		/// </summary>
 		/// <param name="characterType">Character ID string for the notification.</param>
 		public void SendAddNotification(string characterType)
 		{
-			var card = CharacterFactory.Instance.Get(characterType);
+			var card = CharacterTemplateRegistry.Get(characterType);
 			var name = card?.Name ?? characterType;
-			MessagesHelper.AddMessage(TranslationServer.Translate("ui/add_to_party") + " - " + TranslationServer.Translate(name));
+			NotificationBridge.Show(TranslationServer.Translate("ui/add_to_party") + " - " + TranslationServer.Translate(name));
 		}
 		
 	}

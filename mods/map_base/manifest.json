@@ -1,0 +1,13 @@
+{
+  "id": "map_base",
+  "name": "World Map Engine",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Engine world map subsystem: the full-screen map overlay (MapWidget), polygon zones layer, markers, the zone list + runtime override singleton, the scenario-facing map service facade with the open/close/show/hide scenario actions, and the shared zone style and enterability rules. Replaces the former Core/UI/Tool Map* implementations and Core/Actions/MapZoneServiceImpl. The save-format DTO MapZoneStateData stays in the core because RuntimeSerializer owns the __core__ slot layout; the mod plugs into it through MapStateBridge.",
+  "category": "engine, library",
+  "sources": [
+    "src/**/*.cs"
+  ],
+  "depends": ["interface>=1"],
+  "ui": []
+}

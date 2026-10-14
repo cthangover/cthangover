@@ -1,5 +1,4 @@
 using Cthangover.Core.Factories;
-using Cthangover.Core.Skills;
 
 namespace Engine.Tests.Factories
 {
@@ -35,13 +34,6 @@ namespace Engine.Tests.Factories
         {
             Assert.True(EntityKindRegistry.TryResolve("registry_test_alpha", out var type));
             Assert.Equal(typeof(RegistryTestAlpha), type);
-        }
-
-        [Fact]
-        public void TryResolve_CoreDto_ReturnsDtoType()
-        {
-            Assert.True(EntityKindRegistry.TryResolve("skill", out var type));
-            Assert.Equal(typeof(SkillInfo), type);
         }
 
         [Fact]

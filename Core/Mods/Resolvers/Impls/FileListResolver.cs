@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using Cthangover.Core.Bootstrap;
 using Cthangover.Core.Utils;
 
 namespace Cthangover.Core.Mods.Resolvers
@@ -92,7 +93,7 @@ namespace Cthangover.Core.Mods.Resolvers
                     if (result.ContainsKey(key))
                     {
                         GameLogger.Log("MODS", $"conflict: '{key}' in mod '{modId}' overrides previous entry", LogLevel.Warning);
-                        ModConflictRegistry.Record("file", key, modId, result[key].ModId, false);
+                        AppServices.Current.Conflicts.RecordConflict("file", key, modId, result[key].ModId, false);
                     }
                     result[key] = new FileEntry(modId, entry);
                     GameLogger.Log("MODS", $"    + file '{key}' <- {entry} (mod={modId})", LogLevel.Debug);
@@ -111,6 +112,7 @@ namespace Cthangover.Core.Mods.Resolvers
     /// </summary>
     public static class Files
     {
+        /// <summary>Collects one directory group's files from all mods, keyed by group-relative path (last mod wins).</summary>
         public static Dictionary<string, FileEntry> Collect(string group)
             => ModManager.Instance.GetResolver<FileListResolver>()?.Collect(group);
     }

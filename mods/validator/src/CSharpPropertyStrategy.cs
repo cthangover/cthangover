@@ -44,6 +44,7 @@ namespace Cthangover.Validator
         public int Order => 200;
         public ValidationFeature Feature => ValidationFeature.CSharp;
 
+        /// <summary>Scans mod C# sources for DataBlob key usages and checks the keys against the persisted blobs, reporting unknown or mistyped keys.</summary>
         public void Validate(ValidationContext context)
         {
             var usages = new List<CodePropertyUsage>();

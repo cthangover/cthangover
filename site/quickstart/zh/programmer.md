@@ -70,7 +70,7 @@ namespace Cthangover.MyCodeMod
 }
 ```
 
-`IMod` 接口是任何 C# 模组的必需入口点。`Initialize` 方法在模组加载时调用。
+`IModInitializer` 接口是模组 C# 代码的生命周期入口点，实现通过反射自动发现。`OnModLoaded` 在每个模组加载时调用；`OnModResourcesReady` 在所有模组及其资源就绪后调用一次。
 
 > 如果要处理日志，请使用 `GameLogger.Log(...)` 替代 `GD.Print(...)`。
 
@@ -158,7 +158,7 @@ public class MyEffectAction : IScenarioAction
 action my_effect
 ```
 
-引擎通过反射找到你的类并调用 `Execute`。
+引擎通过反射找到你的类并调用 `Run`。
 
 ---
 

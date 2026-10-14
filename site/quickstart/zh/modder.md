@@ -26,9 +26,10 @@ mods/
     ├── backgrounds/
     │   └── my_alko_bar/
     │       └── bg.png                    # 酒馆内部图片
-    ├── backgrounds/
-    │   └── sounds/
-    │       └── alko_bar_ambient.ogg      # 酒馆环境噪音
+    ├── sounds/
+    │   └── locations/
+    │       └── alkobar/
+    │           └── bar_ambient.ogg       # 酒馆环境噪音
     └── locale/
         └── ru.properties                 # 俄语本地化
 ```
@@ -145,10 +146,10 @@ end
 ### 为什么有效
 
 `town_entry` 场景现在有两个场景：
-- `priority: 10` — 默认（来自 `visual_novel_core` 模组）
+- `priority: 40` — 默认（来自 `visual_novel_core` 模组）
 - `priority: 1` — 我们的（来自 `quickstart_modder`）
 
-引擎运行 **最低** `priority` 的场景。我们的 `priority: 1` 胜出 — 玩家看到新选项。
+引擎按 `priority` 升序运行场景的各个剧情 — **最低**值**最先**运行。我们 `priority: 1` 的剧情先于默认剧情启动，因此玩家首先看到新选项。
 
 > 了解更多：[场景优先级系统](site/docs/mods/scenes/)。
 
@@ -181,4 +182,4 @@ end
 下载 quickstart_modder.zip
 </a>
 
-可下载的模组为英文版本。
+可下载的模组的对话文本为俄语。

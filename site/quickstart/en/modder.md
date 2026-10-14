@@ -26,9 +26,10 @@ mods/
     ├── backgrounds/
     │   └── my_alko_bar/
     │       └── bg.png                    # Bar interior image
-    ├── backgrounds/
-    │   └── sounds/
-    │       └── alko_bar_ambient.ogg      # Background bar noise sound
+    ├── sounds/
+    │   └── locations/
+    │       └── alkobar/
+    │           └── bar_ambient.ogg       # Background bar noise sound
     └── locale/
         └── ru.properties                 # Localization for Russian
 ```
@@ -145,10 +146,10 @@ end
 ### Why this works
 
 The `town_entry` scene now has two scenarios:
-- `priority: 10` — default (from the `visual_novel_core` mod)
+- `priority: 40` — default (from the `visual_novel_core` mod)
 - `priority: 1` — ours (from `quickstart_modder`)
 
-The engine runs the scenario with the **lowest** `priority`. Our `priority: 1` wins — the player sees the new option.
+The engine runs a scene's scenarios in ascending `priority` order — the **lowest** value runs **first**. Our `priority: 1` scenario starts before the default one, so the player sees the new options first.
 
 > Learn more: [Scene Priority System](site/docs/mods/scenes/).
 
@@ -181,4 +182,4 @@ Start the game:
 Download quickstart_modder.zip
 </a>
 
-The downloadable mod is in English.
+The downloadable mod's dialogue text is in Russian.

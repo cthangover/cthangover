@@ -42,6 +42,9 @@ namespace Cthangover.Core.Scenes
 		private Dictionary<string, IEventObject> eventObjects = new();
 		private HashSet<string> notFoundCache = new();
 
+		/// <summary>Claims the singleton (duplicates log an error and stay inert), enables always-on processing,
+		/// and subscribes cache clearing to <see cref="SceneExitedEvent"/>. The interactive subsystem
+		/// lifecycle lives in the interactive_base engine mod (InteractiveModInitializer).</summary>
 		public override void _Ready()
 		{
 			if (Instance != null && GodotObject.IsInstanceValid(Instance))
@@ -56,11 +59,9 @@ namespace Cthangover.Core.Scenes
 			ProcessMode = ProcessModeEnum.Always;
 
 			ModEventBus.Subscribe<SceneExitedEvent>(_ => ClearData());
-
-			InteractiveManager.Initialize();
-			GameLogger.Log("SCENE_CTX", "_Ready: InteractiveManager initialized");
 		}
 
+		/// <summary>Releases the singleton reference when the node leaves the tree.</summary>
 		public override void _ExitTree()
 		{
 			if (Instance == this)
@@ -69,14 +70,14 @@ namespace Cthangover.Core.Scenes
 
 		/// <summary>
 		/// Destroys all tracked interactive event objects via <see cref="IEventObject.Destruct"/>,
-		/// clears the node-lookup cache and the not-found cache, and shuts down the
-		/// <see cref="InteractiveManager"/>. Called automatically when the active
+		/// and clears the node-lookup cache and the not-found cache. The interactive subsystem's
+		/// own scene-exit teardown is wired by the interactive_base engine mod
+		/// (InteractiveModInitializer). Called automatically when the active
 		/// Godot scene changes.
 		/// </summary>
 		public void ClearData()
 		{
 			GameLogger.Log("SCENE_CTX", $"ClearData: data={data.Count}, notFoundCache={notFoundCache.Count}, eventObjects={eventObjects.Count}");
-			InteractiveManager.Shutdown();
 			data.Clear();
 			if (Lists.IsNotEmpty(eventObjects))
 			{

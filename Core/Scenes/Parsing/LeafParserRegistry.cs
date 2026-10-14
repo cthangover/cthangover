@@ -10,8 +10,12 @@ namespace Cthangover.Core.Scenes.Parsing
     ///
     /// Parsers are tried in registration order — the first whose
     /// <see cref="ILeafParser.CanParse"/> returns true wins. Mods register
-    /// custom leaf parsers via <see cref="Register"/>. Core parsers
-    /// (booleans, flags, quests, groups) are registered at static init.
+    /// custom leaf parsers via <see cref="Register"/> (or
+    /// <see cref="RegisterFirst"/> to take priority). Core parsers
+    /// (booleans, flags, groups) are registered at static init; the quest
+    /// parser registers itself from the quests engine mod at
+    /// <c>IModInitializer.OnModLoaded</c> — the parser set is fully
+    /// extensible and the core hardcodes no gameplay parsers.
     /// </summary>
     public static class LeafParserRegistry
     {
@@ -20,7 +24,6 @@ namespace Cthangover.Core.Scenes.Parsing
         static LeafParserRegistry()
         {
             Register(new BoolLiteralParser());
-            Register(new QuestParser());
             Register(new FlagParser());
             Register(new GroupParser());
         }

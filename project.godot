@@ -32,8 +32,6 @@ EventController="*res://Core/UI/Event/SceneEventController.cs"
 GodotSceneService="*res://Core/Scenes/GodotSceneService.cs"
 SceneManager="*res://Core/Scenes/SceneManager.cs"
 SceneContextNode="*res://Core/Scenes/SceneContextNode.cs"
-AudioService="*res://Core/Audio/AudioService.cs"
-MusicPlayer="*res://Core/Audio/MusicPlayerBehaviour.cs"
 ModEventBus="*res://Core/Events/ModEventBus.cs"
 UiHost="*res://Core/UI/UiHost.cs"
 

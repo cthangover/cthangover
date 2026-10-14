@@ -8,8 +8,10 @@ namespace Cthangover.Core.Scenes.TscnBuild.SubResourceBuilders
     /// </summary>
     public class CurveBuilder : ISubResourceBuilder
     {
+        /// <summary>Handles <c>[sub_resource type="Curve"]</c>.</summary>
         public string ResourceType => "Curve";
 
+        /// <summary>Creates a <see cref="Curve"/> and applies all parsed properties generically.</summary>
         public Resource Build(SubResourceDef def, SubResourceBuildContext ctx)
         {
             var c = new Curve();

@@ -26,9 +26,10 @@ mods/
     ├── backgrounds/
     │   └── my_alko_bar/
     │       └── bg.png                    # 酒場の内装画像
-    ├── backgrounds/
-    │   └── sounds/
-    │       └── alko_bar_ambient.ogg      # 酒場の環境音
+    ├── sounds/
+    │   └── locations/
+    │       └── alkobar/
+    │           └── bar_ambient.ogg       # 酒場の環境音
     └── locale/
         └── ru.properties                 # ロシア語ローカライゼーション
 ```
@@ -145,10 +146,10 @@ end
 ### なぜこれが機能するのか
 
 `town_entry` シーンには2つのシナリオがあります：
-- `priority: 10` — デフォルト（`visual_novel_core` Modから）
+- `priority: 40` — デフォルト（`visual_novel_core` Modから）
 - `priority: 1` — 私たちのもの（`quickstart_modder` から）
 
-エンジンは**最も低い** `priority` のシナリオを実行します。私たちの `priority: 1` が勝ち — プレイヤーは新しいオプションを見ます。
+エンジンはシーンのシナリオを `priority` の昇順で実行します — **最も低い**値が**最初**に実行されます。私たちの `priority: 1` のシナリオはデフォルトより先に始まるため、プレイヤーはまず新しいオプションを見ます。
 
 > 詳細：[シーン優先度システム](site/docs/mods/scenes/)。
 
@@ -181,4 +182,4 @@ end
 quickstart_modder.zip をダウンロード
 </a>
 
-ダウンロード可能なModは英語です。
+ダウンロード可能なModのセリフはロシア語です。

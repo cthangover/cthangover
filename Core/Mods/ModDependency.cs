@@ -22,15 +22,28 @@ namespace Cthangover.Core.Mods
             @"^([a-zA-Z_][a-zA-Z0-9_]*)(>=|<=|>|<|=|\^)?([a-zA-Z0-9][a-zA-Z0-9-]*(?:\.[a-zA-Z0-9-]+)*)?(\?)?$",
             RegexOptions.Compiled);
 
+        /// <summary>Dependency mod id (the part before any operator).</summary>
         public string ModId { get; init; }
+
+        /// <summary>Version operator: <c>">="</c>, <c>"&lt;="</c>, <c>"&gt;"</c>, <c>"&lt;"</c>, <c>"="</c>, <c>"^"</c>, or empty for "any version".</summary>
         public string Operator { get; init; }
+
+        /// <summary>Raw version string as written in the manifest (e.g. <c>"1.0"</c>), or null when unconstrained.</summary>
         public string VersionRaw { get; init; }
+
+        /// <summary>Version split on <c>.</c>; null when no version was given.</summary>
         public string[] VersionSegments { get; }
+
+        /// <summary>True for a <c>modId[op][version]?</c> dependency — missing mod is tolerated, a present one must still satisfy the pin.</summary>
         public bool IsOptional { get; init; }
 
+        /// <summary>True when the string parsed into a well-formed dependency.</summary>
         public bool IsValid { get; }
+
+        /// <summary>Parse failure reason; meaningful only when <see cref="IsValid"/> is false.</summary>
         public string Error { get; }
 
+        /// <summary>Creates the invalid default instance (see <see cref="Error"/>).</summary>
         public ModDependency()
         {
             ModId = string.Empty;
@@ -60,6 +73,12 @@ namespace Cthangover.Core.Mods
             Error = error;
         }
 
+        /// <summary>
+        /// Parses a manifest dependency string of the form
+        /// <c>modId[op][version][?]</c>. Returns an invalid dependency (with
+        /// <see cref="Error"/> set) for null, empty or malformed input instead
+        /// of throwing, so one bad line cannot break manifest loading.
+        /// </summary>
         public static ModDependency Parse(string raw)
         {
             if (string.IsNullOrWhiteSpace(raw))
@@ -91,6 +110,12 @@ namespace Cthangover.Core.Mods
             return new ModDependency(modId, op, versionRaw, segments, isOptional, true, null);
         }
 
+        /// <summary>
+        /// Checks the given installed version against this dependency's pin.
+        /// Comparison is per-segment with zero-padding; <c>=</c> compares every
+        /// segment (padded with "0") and <c>^</c> compares only the pinned
+        /// prefix. An empty operator accepts any version.
+        /// </summary>
         public bool IsSatisfiedBy(string actualVersion)
         {
             if (!IsValid)
@@ -156,6 +181,7 @@ namespace Cthangover.Core.Mods
             return true;
         }
 
+        /// <summary>Restores the canonical <c>modId[op][version][?]</c> string; empty when invalid.</summary>
         public override string ToString()
         {
             if (!IsValid)

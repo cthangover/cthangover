@@ -235,7 +235,8 @@ can live anywhere in the mod:
     "Name": "characters/action/fireball/name",
     // Locale key for the tooltip text
     "Description": "characters/action/fireball/description",
-    // Targeting category: "ToSelf", "ToAlias" (allies), or "ToEnemy"
+    // Targeting category: "ToSelf", "ToAlias" (allies), or "ToEnemy";
+    // "Passive" and "Active" are non-targeting kinds (see below)
     "Type": "ToEnemy",
     // Icon sprite path, resolved in the characters texture group
     "Image": "characters/actions/fireball",
@@ -255,9 +256,23 @@ can live anywhere in the mod:
 | `Id` | Unique action ID, used as the factory lookup key |
 | `Name` | Locale key for the display name in the battle action menu |
 | `Description` | Locale key for the tooltip |
-| `Type` | Targeting category — `ToSelf` (caster), `ToAlias` (allies), `ToEnemy` (opponents) |
+| `Type` | `ActionCharacterType` — `ToSelf` (caster), `ToAlias` (allies), `ToEnemy` (opponents), plus the non-targeting `Passive` and `Active` kinds (see below) |
 | `Image` | Icon sprite resolved via `TextureUtils.LoadFromModGroup("characters", ...)` |
 | `Values` | List of `"Key=Value"` strings populating the `Properties` bag |
+
+Besides the three in-battle targeting categories, `ActionCharacterType` declares
+two kinds handled by the character panel instead of battle executors:
+
+- **`Passive`** — never appears in an action menu. C# code checks flags via
+  `CharacterPassiveExtension.HasPassiveEffect(character, key)`, which is true when
+  any equipped passive sets that key to `true` in its `Values` (e.g.
+  `"IgnoreArmor=true"`; key names are mod-chosen — there is no registry).
+- **`Active`** — a one-shot ability used from the character panel outside battle.
+  Cooldown state lives in the action's own `Properties` bag: `ActiveCooldown`
+  (seconds, declared in your `Values`) and `LastUsed` (timestamp recorded by
+  `MarkUsed`). The helpers `IsReadyToUse(action, now)` and
+  `GetRemainingCooldown(action, now)` in `ActionCharacterActiveExtension`
+  implement the cooldown check.
 
 There are no reserved parameter keys at the definition level — core executors
 read whatever keys they care about (the stock physics actions use
@@ -315,8 +330,10 @@ returns; the executor hub matches executors to actions by `ActionId`.
   `Point` to a minimum of 1 (`Health > 0 ? Health : 1`, same for `Point`);
   `Defence` and `Attack` are taken as-is, including 0.
 - **Copies on read** — `CharacterFactory.Get(id)` returns a deep copy per call
-  (`Character.Copy()`): `Attributes` are cloned and `StatusEffectQueue` is
-  re-owned by the new instance, so battle mutations never leak into templates.
+  (`Character.Copy()`): `Attributes` are cloned, so battle mutations never leak
+  into templates. The clone carries no battle-only state — status effect queues
+  are not fields of `Character`; battle code obtains them through
+  `StatusEffectService.Of(character)` (see [Status Effects](../status_effects/)).
 - **Unknown action IDs** are dropped silently when resolving the `Actions` list.
 
 ## Runtime members worth knowing
@@ -325,7 +342,7 @@ returns; the executor hub matches executors to actions by `ActionId`.
 |---|---|
 | `Character.Frame` | Small portrait `Texture2D` for list views (party roster, battle HUD). Present on the model but **not populated from JSON** by the factory |
 | `Character.Exp` | Current experience points, loaded from the template and carried into party data on recruitment |
-| `Character.StatusEffectQueue` | Queue of active status effects owned by the character; `Copy()` re-binds the clone to its new owner |
+| `StatusEffectService.Of(character)` | Active status-effect queue for a combatant. Lives in `mods/turn_battle_base` as a `ConditionalWeakTable` side table — not on `Character` — and dies with its owner; see [Status Effects](../status_effects/) |
 | `Character.Copy()` | Deep clone used everywhere the engine hands out characters (see above) |
 | `CharacterData.Create(characterType)` | Builds runtime `CharacterInfoData` from the factory template. For an **unknown ID** it does not throw — it returns a fallback entry with default attributes at level 0 |
 

@@ -1,243 +1,190 @@
+/* ============================================================
+   cthangover — главная страница: сборка данных из data/mods.json
+   (каталог модов, статистика, DSL-сэмпл) + перевод интерфейса.
+   ============================================================ */
 (function () {
   "use strict";
 
-  var SUPPORTED_LANGS = ["ru", "en", "zh", "ja", "ko", "vi", "es"];
-  var DEFAULT_LANG = "en";
-  var LS_KEY = "cthangover_lang";
-  var SECTION_BY_ROUTE = {
-    "/docs/": "docs",
-    "/quickstart/": "quickstart"
-  };
-
-  var currentLang = getInitialLang();
-
-  function getInitialLang() {
-    var stored = localStorage.getItem(LS_KEY);
-    if (stored && SUPPORTED_LANGS.indexOf(stored) !== -1) return stored;
-    return DEFAULT_LANG;
-  }
-
-  function getI18n(lang) {
-    return I18N[lang] || I18N[DEFAULT_LANG];
-  }
-
-  function applyI18n() {
-    var strings = getI18n(currentLang);
-
-    document.documentElement.lang = currentLang;
-
-    if (
-      strings.hero_title &&
-      !document.body.classList.contains("docs-mode") &&
-      !document.body.classList.contains("quickstart-mode")
-    ) {
-      document.title = strings.hero_title;
-    }
-
-    var elements = document.querySelectorAll("[data-i18n]");
-    for (var i = 0; i < elements.length; i++) {
-      var el = elements[i];
-      var key = el.getAttribute("data-i18n");
-      if (strings[key]) {
-        el.textContent = strings[key];
+  /* --- совместимость со старыми адресами: /docs/... и /quickstart/... --- */
+  (function legacyRedirect(){
+    var p = location.pathname;
+    var mDocs = p.match(/^\/docs\/(.*)$/i);
+    var mQs = p.match(/^\/quickstart(?:\/(.*))?$/i);
+    try {
+      if (mDocs) {
+        location.replace("/docs.html#/docs/" + mDocs[1]);
+        return;
       }
-    }
-
-    updateLangButtons();
-    buildSystemsAccordion(strings);
-    updateActiveNav();
-  }
-
-  function updateLangButtons() {
-    var btns = document.querySelectorAll(".lang-btn");
-    for (var i = 0; i < btns.length; i++) {
-      var btn = btns[i];
-      var lang = btn.getAttribute("data-lang");
-      if (lang === currentLang) {
-        btn.classList.add("active");
-      } else {
-        btn.classList.remove("active");
+      if (mQs) {
+        location.replace("/quickstart.html" + (mQs[1] ? "#/quickstart/" + mQs[1] : ""));
       }
-    }
+    } catch (e) {}
+  })();
+
+  function esc(s) {
+    var d = document.createElement("div");
+    d.appendChild(document.createTextNode(String(s)));
+    return d.innerHTML;
   }
 
-  function buildSystemsAccordion(strings) {
-    var container = document.getElementById("systemsAccordion");
-    if (!container) return;
+  /* ---------- данные ---------- */
+  var DATA = null;
 
+  function t(k){ var d = I18N[lang] || I18N.en; return d[k] || I18N.en[k] || k; }
+
+  var LAYERS = [
+    { k: "arch_l1t", d: "arch_l1d", rn: "I" },
+    { k: "arch_l2t", d: "arch_l2d", rn: "II" },
+    { k: "arch_l3t", d: "arch_l3d", rn: "III" },
+    { k: "arch_l4t", d: "arch_l4d", rn: "IV", hot: true }
+  ];
+
+  var TILES = [
+    ["f1t","f1d"],["f2t","f2d"],["f3t","f3d"],["f4t","f4d"],
+    ["f5t","f5d"],["f6t","f6d"],["f7t","f7d"],["f8t","f8d"]
+  ];
+  var RN2 = ["i","ii","iii","iv","v","vi","vii","viii"];
+
+  var CAT_KEYS = { engine:"cat_engine", gameplay:"cat_gameplay", story:"cat_story",
+                   library:"cat_library", ui:"cat_ui", tools:"cat_tools" };
+  var BATTLE_DESC = { turn_battle_base:"turn_d", card_battle:"card_d", ff_battle:"ff_d" };
+  var BATTLE_TITLE = { turn_battle_base:"turn_t", card_battle:"card_t", ff_battle:"ff_t" };
+  var BATTLE_ENGINE = "turn_battle_base";
+
+  /* ---------- рендер ---------- */
+  function renderLayers() {
+    var el = document.getElementById("layers");
+    if (!el) return;
     var html = "";
-    for (var i = 1; ; i++) {
-      var num = i < 10 ? "0" + i : "" + i;
-      var titleKey = "sys_" + num + "_title";
-      var descKey = "sys_" + num + "_desc";
-      var title = strings[titleKey];
-      if (!title) break;
-      var desc = strings[descKey] || "";
-
-      html += '<details class="sys-details">';
-      html += '<summary class="sys-summary">' + esc(title) + "</summary>";
-      html += '<div class="sys-body">' + esc(desc) + "</div>";
-      html += "</details>";
+    for (var i = 0; i < LAYERS.length; i++) {
+      var L = LAYERS[i];
+      if (i > 0) html += '<div class="larrow">→</div>';
+      html += '<div class="layer' + (L.hot ? " hot" : "") + '"><span class="rn">' + L.rn +
+              '</span><h3>' + esc(t(L.k)) + '</h3><p>' + esc(t(L.d)) + '</p></div>';
     }
-    container.innerHTML = html;
+    el.innerHTML = html;
   }
 
-  function esc(str) {
-    var div = document.createElement("div");
-    div.appendChild(document.createTextNode(str));
-    return div.innerHTML;
+  function renderTiles() {
+    var el = document.getElementById("tiles");
+    if (!el) return;
+    var html = "";
+    for (var i = 0; i < TILES.length; i++) {
+      html += '<div class="tile"><span class="no">' + RN2[i] + '</span><h3>' +
+              esc(t(TILES[i][0])) + '</h3><p>' + esc(t(TILES[i][1])) + '</p></div>';
+    }
+    el.innerHTML = html;
   }
 
-  function switchLanguage(lang) {
-    if (lang === currentLang) return;
-    if (SUPPORTED_LANGS.indexOf(lang) === -1) return;
-    currentLang = lang;
-    localStorage.setItem(LS_KEY, lang);
-    applyI18n();
-    document.dispatchEvent(new CustomEvent("langchange", { detail: lang }));
+  function renderBattle() {
+    var el = document.getElementById("battleGrid");
+    if (!el) return;
+    var battles = (DATA && DATA.battle) || [
+      { id: "turn_battle_base", version: "2.0.0", deps: [] },
+      { id: "card_battle", version: "1.0.0", deps: [] },
+      { id: "ff_battle", version: "1.0.0", deps: [] }
+    ];
+    var html = "";
+    for (var i = 0; i < battles.length; i++) {
+      var b = battles[i];
+      var titleKey = BATTLE_TITLE[b.id] || null;
+      var descKey = BATTLE_DESC[b.id] || null;
+      var deps = (b.deps || []).join(" · ");
+      html += '<div class="bcard' + (b.id === BATTLE_ENGINE ? " engine" : "") + '">' +
+              '<span class="id">' + (titleKey ? esc(t(titleKey)) : esc(b.id)) + '</span>' +
+              '<span class="v">v' + esc(b.version) + '</span>' +
+              '<p>' + (descKey ? esc(t(descKey)) : esc(b.desc || "")) + '</p>' +
+              (deps ? '<div class="base">depends: ' + esc(deps) + '</div>' : '') +
+              '</div>';
+    }
+    el.innerHTML = html;
   }
 
-  function updateActiveNav() {
-    var sections = document.querySelectorAll("section[id]");
-    var links = document.querySelectorAll(".nav-links a");
-    if (sections.length === 0 || links.length === 0) return;
+  function colorScenario(text) {
+    var lines = text.split("\n");
+    var out = "";
+    for (var i = 0; i < lines.length; i++) {
+      var raw = lines[i];
+      var L = esc(raw);
+      if (/^\s*(#|\/\/)/.test(raw)) L = '<span class="cm">' + L + '</span>';
+      else if (/^\s*(scene|priority|condition):/.test(raw)) L = L.replace(/^(\s*\w+:)/, '<span class="kw">$1</span>');
+      else if (/^\s*:/.test(raw)) L = '<span class="lb">' + L + '</span>';
+      else if (raw.indexOf('"') !== -1) L = L.replace(/&quot;([^&]*)&quot;/g, '<span class="st">&quot;$1&quot;</span>');
+      out += L + "\n";
+    }
+    return out;
+  }
 
-    var scrollPos = window.scrollY + 100;
-    var currentId = "";
+  function renderDsl() {
+    var code = document.getElementById("dslCode");
+    if (!code) return;
+    if (DATA && DATA.dslSample) {
+      document.getElementById("dslFile").textContent = DATA.dslSample.file;
+      code.innerHTML = colorScenario(DATA.dslSample.text);
+    } else {
+      code.innerHTML = '<span class="cm"># data/mods.json not loaded — run build-mods-catalog.py</span>';
+    }
+  }
 
-    for (var i = 0; i < sections.length; i++) {
-      var s = sections[i];
-      if (s.offsetTop <= scrollPos) {
-        currentId = s.getAttribute("id");
+  function renderMods() {
+    var el = document.getElementById("modGrid");
+    if (!el) return;
+    if (!DATA || !DATA.mods) return;
+    var html = "";
+    for (var i = 0; i < DATA.mods.length; i++) {
+      var m = DATA.mods[i];
+      var chips = "";
+      for (var c = 0; c < m.cat.length; c++) {
+        var key = CAT_KEYS[m.cat[c]];
+        chips += '<span class="chip">' + esc(key ? t(key) : m.cat[c]) + '</span>';
       }
+      if (m.test) chips += '<span class="chip test">test</span>';
+      var deps = (m.deps || []).join(" · ");
+      html += '<div class="mod"><div class="row1"><span class="id">' + esc(m.id) +
+              '</span><span class="v">v' + esc(m.version) + '</span><span class="chips">' + chips +
+              '</span></div><p>' + esc(m.desc) + '</p>' +
+              (deps ? '<div class="deps">← ' + esc(deps) + '</div>' : '') +
+              '</div>';
     }
-
-    for (var i = 0; i < links.length; i++) {
-      var link = links[i];
-      var href = link.getAttribute("href");
-      var isActive =
-        link.hash === "#" + currentId || SECTION_BY_ROUTE[href] === currentId;
-      if (isActive) {
-        link.style.color = "var(--accent)";
-      } else {
-        link.style.color = "";
-      }
-    }
+    el.innerHTML = html;
+    var cap = document.querySelector('#mods_title, [data-i18n="mods_title"]');
   }
 
-  function initLightbox() {
-    var lightbox = document.getElementById("lightbox");
-    if (!lightbox) return;
-
-    var img = lightbox.querySelector(".lightbox-img");
-    var items = document.querySelectorAll(".screenshot-item img");
-    var currentIndex = -1;
-
-    function show(index) {
-      if (index < 0 || index >= items.length) return;
-      currentIndex = index;
-      img.src = items[index].src;
-      img.alt = items[index].alt;
-      lightbox.classList.add("open");
-      lightbox.setAttribute("aria-hidden", "false");
-      document.body.style.overflow = "hidden";
-    }
-
-    function close() {
-      lightbox.classList.remove("open");
-      lightbox.setAttribute("aria-hidden", "true");
-      document.body.style.overflow = "";
-    }
-
-    function showNext() {
-      if (currentIndex < items.length - 1) show(currentIndex + 1);
-    }
-
-    function showPrev() {
-      if (currentIndex > 0) show(currentIndex - 1);
-    }
-
-    for (var i = 0; i < items.length; i++) {
-      items[i].parentElement.addEventListener("click", function (idx) {
-        return function () { show(idx); };
-      }(i));
-    }
-
-    lightbox.querySelector(".lightbox-overlay").addEventListener("click", close);
-    lightbox.querySelector(".lightbox-close").addEventListener("click", close);
-    lightbox.querySelector(".lightbox-next").addEventListener("click", showNext);
-    lightbox.querySelector(".lightbox-prev").addEventListener("click", showPrev);
-
-    document.addEventListener("keydown", function (e) {
-      if (!lightbox.classList.contains("open")) return;
-      if (e.key === "Escape") close();
-      if (e.key === "ArrowRight") showNext();
-      if (e.key === "ArrowLeft") showPrev();
-    });
+  function renderStats() {
+    if (!DATA || !DATA.stats) return;
+    var s = DATA.stats;
+    var set = function (id, v) { var e = document.getElementById(id); if (e) e.textContent = v; };
+    set("statDsl", s.dslCommands);
+    set("statMods", s.mods);
+    set("statLoc", Math.round((s.coreLoc + s.modLoc) / 1000) + "K");
+    set("statBattle", (DATA.battle && DATA.battle.length) || 3);
+    var mt = document.querySelector('[data-i18n="mods_title"]');
+    if (mt) mt.textContent = t("mods_title");
   }
 
-  function initVideoFacade() {
-    var facades = document.querySelectorAll(".video-facade");
-    for (var i = 0; i < facades.length; i++) {
-      facades[i].addEventListener("click", function () {
-        var id = this.getAttribute("data-video-id");
-        var img = this.querySelector("img");
-        var iframe = document.createElement("iframe");
-        iframe.src = "https://www.youtube-nocookie.com/embed/" + id + "?autoplay=1";
-        iframe.title = img ? img.alt : "";
-        iframe.setAttribute(
-          "allow",
-          "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-        );
-        iframe.setAttribute("referrerpolicy", "strict-origin-when-cross-origin");
-        iframe.setAttribute("allowfullscreen", "");
-        this.parentNode.replaceChild(iframe, this);
-      });
-    }
+  function renderDynamic() {
+    renderLayers();
+    renderTiles();
+    renderBattle();
+    renderDsl();
+    renderMods();
+    renderStats();
   }
 
-  function isRouteHref(href) {
-    if (!href || href.charAt(0) !== "/") return false;
-    if (href.indexOf("#") !== -1) return false;
-    return !/\.(png|jpe?g|gif|svg|webp|ico|mp4|webm|mp3|ogg|wav|css|js|json|xml|zip|txt|md)(\?.*)?$/i.test(href);
-  }
-
-  function initRouteLinks() {
-    document.addEventListener("click", function (e) {
-      if (e.defaultPrevented || e.button !== 0) return;
-      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-      var a = e.target.closest ? e.target.closest("a") : null;
-      if (!a) return;
-      if (a.target && a.target !== "_self") return;
-      if (a.hasAttribute("download")) return;
-      var href = a.getAttribute("href");
-      if (!isRouteHref(href)) return;
-      e.preventDefault();
-      history.pushState(null, "", href);
-      window.dispatchEvent(new PopStateEvent("popstate"));
-    });
-  }
-
+  /* ---------- init ---------- */
   document.addEventListener("DOMContentLoaded", function () {
-    var langBtns = document.querySelectorAll(".lang-btn");
-    for (var i = 0; i < langBtns.length; i++) {
-      langBtns[i].addEventListener("click", function (e) {
-        var lang = e.currentTarget.getAttribute("data-lang");
-        switchLanguage(lang);
+    initHeaderChrome("home");
+    renderDynamic();
+    document.addEventListener("langchange", renderDynamic);
+
+    fetch("/data/mods.json")
+      .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+      .then(function (data) {
+        DATA = data;
+        renderDynamic();
+      })
+      .catch(function () {
+        /* file:// или нет data/mods.json — остаётся статический fallback */
       });
-    }
-
-    var scrollTimer;
-    window.addEventListener("scroll", function () {
-      if (scrollTimer) clearTimeout(scrollTimer);
-      scrollTimer = setTimeout(updateActiveNav, 50);
-    });
-
-    initLightbox();
-    initVideoFacade();
-    initRouteLinks();
-
-    applyI18n();
-    updateActiveNav();
   });
 })();

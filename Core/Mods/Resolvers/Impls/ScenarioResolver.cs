@@ -146,7 +146,7 @@ namespace Cthangover.Core.Mods.Resolvers
                 if (text == null)
                     continue;
 
-                var (metadata, _) = Scenarios.ScenarioParser.ParseMetadata(text);
+                var (metadata, _) = Scenarios.ScenarioMetadata.ParseMetadata(text);
                 if (!metadata.TryGetValue("scene", out var sceneName) || string.IsNullOrEmpty(sceneName))
                     continue;
 
@@ -180,7 +180,7 @@ namespace Cthangover.Core.Mods.Resolvers
                 if (text == null)
                     continue;
 
-                var (metadata, _) = Scenarios.ScenarioParser.ParseMetadata(text);
+                var (metadata, _) = Scenarios.ScenarioMetadata.ParseMetadata(text);
                 if (!metadata.TryGetValue("scene", out var sceneName) || string.IsNullOrEmpty(sceneName))
                     continue;
 
@@ -218,12 +218,15 @@ namespace Cthangover.Core.Mods.Resolvers
     /// </summary>
     public static class ScenarioDefs
     {
+        /// <summary>Collects scenario definitions from every mod, grouped by target scene name.</summary>
         public static Dictionary<string, List<ScenarioDefinition>> CollectDefinitions()
             => ModManager.Instance.GetResolver<ScenarioResolver>()?.CollectDefinitions();
 
+        /// <summary>Returns the scenario script text with includes expanded, or null when unknown.</summary>
         public static string Resolve(string id)
             => ModManager.Instance.GetResolver<ScenarioResolver>()?.Resolve(id);
 
+        /// <summary>Resolves through an explicit provider instead of the mod's own one.</summary>
         public static string Resolve(string id, IModFileProvider provider)
             => ModManager.Instance.GetResolver<ScenarioResolver>()?.Resolve(id, provider);
     }

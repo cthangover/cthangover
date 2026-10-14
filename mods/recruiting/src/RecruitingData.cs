@@ -10,7 +10,8 @@ namespace Cthangover.Core.Relationship
     /// living in the core <c>RuntimeData</c>, so the core knows nothing about
     /// recruiting. Persistence is handled by the mod's <c>RecruitingSaveable</c>
     /// (<c>IModSaveable</c>), and a new game clears the roster through the
-    /// <c>NewGameStartedEvent</c> subscription in <c>RecruitingInitializer</c>.
+    /// <c>RecruitingReset</c> <c>IResettable</c> that <c>RecruitingInitializer</c>
+    /// registers with AppServices.
     /// <para/>
     /// Provides ID-based lookup, duplicate-safe addition (auto-generates a unique
     /// <c>Guid</c> if the requested ID collides, and rejects a second recruit of

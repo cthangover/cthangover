@@ -26,8 +26,13 @@ namespace Cthangover.Core.Mods
     {
         private const string UserFilePath = "user://collections.json";
 
-        /// <summary>Conventional mod-relative directory scanned for bundled collections.</summary>
-        private const string ProviderDirectory = "collections";
+        /// <summary>
+        /// Conventional mod-relative directory scanned for bundled collections.
+        /// The directory is reserved: the entity scanner skips it entirely
+        /// because collection documents also carry a <c>kind</c> field that is
+        /// not an entity kind.
+        /// </summary>
+        public const string ProviderDirectory = "collections";
 
         private static string _resolvedPath;
 

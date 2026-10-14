@@ -2,11 +2,12 @@ namespace Cthangover.Core.Actions.Atomic
 {
     /// <summary>
     /// Grants a skill to the player by skill ID. Delegates to
-    /// <see cref="ICharacterService.AddSkill"/>, which routes through
-    /// <see cref="Skills.SkillService"/>: the skill is added to the owned set
-    /// and any action card named by its GrantsAction field lands in the action
-    /// pool, ready to be assigned to a character. Already owned skills are
-    /// ignored, making the action safe to replay after loading a save.
+    /// <see cref="ICharacterService.AddSkill"/>, which routes through the
+    /// skills subsystem (SkillsBridge into the skills_base engine mod): the
+    /// skill is added to the owned set and any action card named by its
+    /// GrantsAction field lands in the action pool, ready to be assigned to a
+    /// character. Already owned skills are ignored, making the action safe to
+    /// replay after loading a save.
     /// </summary>
     public class CharacterAddSkillAction : IScenarioAction
     {

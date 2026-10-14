@@ -112,6 +112,7 @@ namespace Cthangover.Core.Mods
         [JsonPropertyName("variant_conflict")]
         public bool? VariantConflict { get; set; }
 
+        /// <summary>Display name for the language: matching locale entry, then "en", then the first entry, then the flat <see cref="Name"/> (or id).</summary>
         public string GetLocalizedName(string language)
         {
             var locale = ResolveLocale(language);
@@ -120,6 +121,7 @@ namespace Cthangover.Core.Mods
             return Name ?? Id;
         }
 
+        /// <summary>Description for the language: matching locale entry, then "en", then the first entry, then the flat <see cref="Description"/>.</summary>
         public string GetLocalizedDescription(string language)
         {
             var locale = ResolveLocale(language);

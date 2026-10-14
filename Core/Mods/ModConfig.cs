@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Cthangover.Core.Bootstrap;
 using Cthangover.Core.Utils;
 using Godot;
 
@@ -17,19 +18,35 @@ namespace Cthangover.Core.Mods
     /// size overrides. The extension sets are pre-converted to
     /// <c>HashSet</c> on first access so that repeated lookups during
     /// file scanning are O(1) rather than O(n) list scans.
+    /// <para/>
+    /// The single instance is owned by the <see cref="AppServices"/>
+    /// composition root; the static facade stays as the public API during
+    /// migration, with laziness preserved by the owning <c>Lazy</c> slot.
     /// </summary>
     public class ModConfig
     {
-        private static readonly Lazy<ModConfig> instance = new(() =>
+        /// <summary>
+        /// Facade over the AppServices-owned instance; kept as the public API
+        /// during migration. Thread safety and laziness come from the owning
+        /// <c>Lazy</c> slot; the instance is loaded from
+        /// config/mod_config.json on first access at runtime.
+        /// </summary>
+        public static ModConfig Instance => AppServices.Current.ModConfigService.Value;
+
+        /// <summary>
+        /// Creates the instance for the composition root: a fresh config
+        /// with defaults, populated from config/mod_config.json when running
+        /// inside the Godot engine. Outside the runtime (unit tests) Load
+        /// returns early, so the instance carries pure defaults.
+        /// </summary>
+        internal static ModConfig CreateInstance()
         {
             var config = new ModConfig();
             config.Load();
             return config;
-        });
-        /// <summary>Thread-safe singleton, loaded from config/mod_config.json on first access.</summary>
-        public static ModConfig Instance => instance.Value;
+        }
 
-        /// <summary>File extensions treated as audio by <c>AudioFactory</c> (.ogg, .wav).</summary>
+        /// <summary>File extensions treated as audio by the audio factories (.ogg, .wav).</summary>
         [JsonPropertyName("audio_extensions")]
         public List<string> AudioExtensions { get; set; } = new() { ".ogg", ".wav" };
         
@@ -61,6 +78,24 @@ namespace Cthangover.Core.Mods
         /// <summary>Per-factory cache configuration (root path, size overrides).</summary>
         [JsonPropertyName("cache")]
         public CacheConfig Cache { get; set; } = new();
+
+        /// <summary>
+        /// Master gate of the mod unit-test mode (plan-mod-testing.md §3.1/§5.2).
+        /// When false (the default) <see cref="Cthangover.Core.Mods.Testing.ModTestEngine"/>
+        /// is never activated by config alone: no test compilation, no
+        /// <c>__tests</c> assemblies in memory. The CLI flag
+        /// <c>--run-tests</c> overrides this setting for a single run.
+        /// </summary>
+        [JsonPropertyName("run_mod_tests")]
+        public bool RunModTests { get; set; } = false;
+
+        /// <summary>
+        /// Mod ids temporarily excluded from the mod unit-test run — lets an
+        /// author disable a foreign broken mod from the shared run without
+        /// editing that mod. Applies only in test mode.
+        /// </summary>
+        [JsonPropertyName("mod_test_exclude")]
+        public List<string> ModTestExclude { get; set; } = new();
 
         /// <summary>
         /// File path patterns to exclude when computing the mod's install
@@ -108,6 +143,11 @@ namespace Cthangover.Core.Mods
             return shaderExtensionSet;
         }
 
+        /// <summary>
+        /// Parameterless constructor used by the JSON deserializer
+        /// (<c>[JsonConstructor]</c>) when reading mod_config.json; all
+        /// fields are populated through property setters.
+        /// </summary>
         [JsonConstructor]
         public ModConfig()
         {
@@ -140,6 +180,8 @@ namespace Cthangover.Core.Mods
                 Cache = parsed.Cache ?? new CacheConfig();
                 CatalogIgnorePatterns = parsed.CatalogIgnorePatterns ?? new List<string> { ".*" };
                 CatalogUrls = parsed.CatalogUrls ?? new List<string>();
+                RunModTests = parsed.RunModTests;
+                ModTestExclude = parsed.ModTestExclude ?? new List<string>();
 
                 GameLogger.Log("CONFIG", $"Loaded mod_config.json: {TextureExtensions.Count} texture ext, {ShaderExtensions.Count} shader ext, {TextureGroups.Count} texture groups");
             }

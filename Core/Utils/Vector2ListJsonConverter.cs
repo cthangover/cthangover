@@ -13,6 +13,10 @@ namespace Cthangover.Core.Utils
     /// </summary>
     public class Vector2ListJsonConverter : JsonConverter<List<Vector2>>
     {
+        /// <summary>
+        /// Reads an array of <c>[x, y]</c> pairs into a list of <see cref="Vector2"/>,
+        /// validating every element; malformed JSON raises <see cref="JsonException"/>.
+        /// </summary>
         public override List<Vector2> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             if (reader.TokenType != JsonTokenType.StartArray)
@@ -43,6 +47,7 @@ namespace Cthangover.Core.Utils
             return list;
         }
 
+        /// <summary>Writes the list as an array of <c>[x, y]</c> pairs.</summary>
         public override void Write(Utf8JsonWriter writer, List<Vector2> value, JsonSerializerOptions options)
         {
             writer.WriteStartArray();

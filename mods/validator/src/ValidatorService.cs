@@ -1,4 +1,5 @@
 using System;
+using Cthangover.Mods.Dialog.Scenarios;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;

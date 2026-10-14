@@ -10,6 +10,7 @@ namespace Cthangover.Core.Factories
     /// </summary>
     public interface IFileSerializer<T> where T : class
     {
+        /// <summary>Parses <paramref name="content"/> into <typeparamref name="T"/>; <paramref name="resourcePath"/> anchors relative asset references.</summary>
         T Read(string content, string resourcePath = null);
     }
 

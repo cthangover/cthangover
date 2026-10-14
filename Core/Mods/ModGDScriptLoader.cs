@@ -10,8 +10,30 @@ using Godot;
 
 namespace Cthangover.Core.Mods;
 
+/// <summary>
+/// Loads and registers every <c>.gd</c> file declared by a mod's
+/// <c>gd_sources</c> manifest patterns. Each file is compiled through Godot's
+/// GDScript runtime (<c>GDScript.Reload</c>), instantiated once, and inspected
+/// for known method patterns: <c>on_mod_event_*</c> handlers subscribe to the
+/// string event bus, registered <see cref="IGDScriptHook"/>s get a chance to
+/// claim subsystem-specific contracts (battle executors, winground listeners),
+/// and the built-in patterns register scenario actions
+/// (<c>get_name</c>+<c>run</c>), custom conditions
+/// (<c>get_condition_name</c>+<c>evaluate</c>, inserted at the front of the
+/// leaf-parser list), item actions (<c>get_item_action_id</c>+<c>use</c>) and
+/// mod initializers (<c>on_mod_loaded</c>/<c>on_mod_resources_ready</c>).
+/// One script can implement several patterns at once.
+/// </summary>
 public static class ModGDScriptLoader
 {
+	/// <summary>
+	/// Walks every mod's <c>gd_sources</c> patterns, compiles each matching
+	/// <c>.gd</c> file, and auto-registers it into the subsystems whose method
+	/// patterns it implements. Pattern matching is always recursive: the part of
+	/// a pattern before the last <c>/</c> selects the root directory and the
+	/// suffix only filters file names.
+	/// </summary>
+	/// <param name="mods">The finalized mod set (id → info) to process.</param>
 	public static void LoadGDScripts(IDictionary<string, IModInfo> mods)
 	{
 		foreach (var kvp in mods)
@@ -79,7 +101,7 @@ public static class ModGDScriptLoader
 						var itemActionId = obj.Call("get_item_action_id").AsString();
 						if (!string.IsNullOrEmpty(itemActionId))
 						{
-							ItemActionFactory.Instance.Register(new GDItemAction(itemActionId, obj));
+							ItemActionBridge.Register(new GDItemAction(itemActionId, obj));
 							GameLogger.Log("GDS_MOD",
 								$"Registered GDScript item action '{itemActionId}' from mod '{modInfo.Id}'");
 						}

@@ -1,7 +1,5 @@
 using Cthangover.Core.Actions;
 using Cthangover.Core.Factories.Impls;
-using Cthangover.Core.UI.Dialog;
-using Cthangover.Core.UI.Dialog.Action.Impls;
 
 namespace Engine.Tests.Actions
 {
@@ -31,16 +29,16 @@ namespace Engine.Tests.Actions
         [Fact]
         public void Factory_Get_ReturnsActionByName()
         {
-            var action = ScenarioActionFactory.Instance.Get("quest.set_status");
+            var action = ScenarioActionFactory.Instance.Get("scene.instantiate");
 
             Assert.NotNull(action);
-            Assert.Equal("quest.set_status", action.Name);
+            Assert.Equal("scene.instantiate", action.Name);
         }
 
         [Fact]
         public void Factory_Get_ReturnsCorrectType()
         {
-            var action = ScenarioActionFactory.Instance.Get("quest.set_status");
+            var action = ScenarioActionFactory.Instance.Get("scene.instantiate");
             Assert.IsAssignableFrom<IScenarioAction>(action);
         }
 
@@ -51,19 +49,10 @@ namespace Engine.Tests.Actions
             Assert.Null(result);
         }
 
-        [Fact]
-        public void Factory_DiscoversQuestActions()
-        {
-            var all = ScenarioActionFactory.Instance.GetAll();
-            var questActions = all.Where(a =>
-                a.Name.StartsWith("quest."));
-
-            Assert.Contains(questActions, a => a.Name == "quest.set_status");
-            Assert.Contains(questActions, a => a.Name == "quest.set_data_status");
-            Assert.Contains(questActions, a => a.Name == "quest.add_tag");
-            Assert.Contains(questActions, a => a.Name == "quest.remove_tag");
-            Assert.Contains(questActions, a => a.Name == "quest.send_notification");
-        }
+        // quest.* actions (set_status, set_data_status, add_tag, remove_tag,
+        // send_notification) live in the quests_base engine mod and are
+        // discovered at mod load; they are covered by the integration
+        // coverage_quests test, not by core-only unit tests.
 
         [Fact]
         public void Factory_DiscoversSceneActions()
@@ -88,24 +77,5 @@ namespace Engine.Tests.Actions
             Assert.Contains(charActions, a => a.Name == "character.add_skill");
         }
 
-        [Fact]
-        public void ActionScenario_DoRun_ReturnsEarlyOnUnknownName()
-        {
-            var runtime = new DialogRuntime();
-            var command = new ActionScenario { ActionName = "does.not.exist" };
-            var exception = Record.Exception(() => command.DoRun(runtime));
-
-            Assert.Null(exception);
-        }
-
-        [Fact]
-        public void ActionScenario_DoRun_ReturnsEarlyOnEmptyName()
-        {
-            var runtime = new DialogRuntime();
-            var command = new ActionScenario { ActionName = null };
-            var exception = Record.Exception(() => command.DoRun(runtime));
-
-            Assert.Null(exception);
-        }
     }
 }

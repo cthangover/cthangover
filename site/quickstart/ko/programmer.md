@@ -70,7 +70,7 @@ namespace Cthangover.MyCodeMod
 }
 ```
 
-`IMod` 인터페이스는 모든 C# 모드의 필수 진입점입니다. `Initialize` 메서드는 모드가 로드될 때 호출됩니다.
+`IModInitializer` 인터페이스는 C# 모드 코드의 라이프사이클 진입점이며, 구현은 리플렉션을 통해 자동으로 발견됩니다. `OnModLoaded`는 각 모드가 로드될 때 호출되고, `OnModResourcesReady`는 모든 모드와 리소스가 준비된 후 한 번 호출됩니다.
 
 > 로그 작업을 하려면 `GD.Print(...)` 대신 `GameLogger.Log(...)`를 사용하세요.
 
@@ -158,7 +158,7 @@ public class MyEffectAction : IScenarioAction
 action my_effect
 ```
 
-엔진이 리플렉션을 통해 클래스를 찾아 `Execute`를 호출합니다.
+엔진이 리플렉션을 통해 클래스를 찾아 `Run`을 호출합니다.
 
 ---
 

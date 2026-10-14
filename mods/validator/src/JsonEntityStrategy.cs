@@ -32,6 +32,7 @@ namespace Cthangover.Validator
         public int Order => 100;
         public ValidationFeature Feature => ValidationFeature.Json;
 
+        /// <summary>Walks every mod's JSON entities, scene definitions, interactives and texture assets, recording declarations and references into the fact graph.</summary>
         public void Validate(ValidationContext context)
         {
             foreach (var mod in context.Mods)
@@ -74,6 +75,11 @@ namespace Cthangover.Validator
             {
                 context.ThrowIfCancellationRequested();
                 if (!file.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                // The reserved collections/ folder holds scheme documents whose
+                // "kind" (game/component/toolset) is not an entity discriminator.
+                if (file.StartsWith(ModCollectionStore.ProviderDirectory + "/", StringComparison.OrdinalIgnoreCase))
                     continue;
 
                 var document = ReadDocument(context, mod, file);

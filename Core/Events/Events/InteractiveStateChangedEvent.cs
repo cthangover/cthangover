@@ -2,8 +2,7 @@ namespace Cthangover.Core.Events
 {
     /// <summary>
     /// Marker fired when an interactive scene object is removed, published by
-    /// <see cref="Cthangover.Core.Interactive.InteractiveManager.Remove"/> and
-    /// <see cref="Cthangover.Core.Interactive.InteractiveManager.ClearAll"/>.
+    /// the interactive_base engine mod (InteractiveManager.Remove / ClearAll).
     /// Deliberately NOT published on <c>Add</c> — adding is idempotent, and
     /// publishing it would make "ensure"-scenarios with <c>interactive_add</c>
     /// retrigger themselves. Consumers use it to invalidate cached condition

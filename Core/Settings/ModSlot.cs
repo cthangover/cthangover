@@ -13,7 +13,10 @@ namespace Cthangover.Core.Settings
     /// </summary>
     public class ModSlot
     {
+        /// <summary>Structured metadata the core validates before calling <c>OnLoad</c>.</summary>
         public ModMetadata Metadata { get; set; } = new();
+
+        /// <summary>Named data blocks owned by the mod; each blob carries its own schema version.</summary>
         public Dictionary<string, DataBlob> Data { get; set; } = new();
     }
 }

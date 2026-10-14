@@ -13,6 +13,10 @@ namespace Cthangover.Core.Utils
     /// </summary>
     public class Vector2JsonConverter : JsonConverter<Vector2>
     {
+        /// <summary>
+        /// Reads a two-element <c>[x, y]</c> array into a <see cref="Vector2"/>.
+        /// Malformed JSON raises <see cref="JsonException"/> naming the offending token.
+        /// </summary>
         public override Vector2 Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             if (reader.TokenType != JsonTokenType.StartArray)
@@ -30,6 +34,7 @@ namespace Cthangover.Core.Utils
             return new Vector2(x, y);
         }
 
+        /// <summary>Writes the vector as a compact <c>[x, y]</c> array.</summary>
         public override void Write(Utf8JsonWriter writer, Vector2 value, JsonSerializerOptions options)
         {
             writer.WriteStartArray();

@@ -35,11 +35,11 @@ Grants the skill `slave_master` to the player. If the skill defines a `GrantsAct
 ### Battle initiation
 
 ```scenario
-action battle.set_core core=CardBattle
+action battle.set_core core=card_battle
 action battle.init scene=town_entry enemies=wolf_2,werewolf_girl_1 quest_id=MeetingMurakamiQuest new_tag=boss_battle
 ```
 
-`battle.set_core` selects the combat ruleset (e.g. `CardBattle`, `FFBattle`) before `battle.init` starts the encounter.
+`battle.set_core` selects the combat ruleset before `battle.init` starts the encounter. Core IDs are **case-sensitive** and unknown IDs throw; the shipped cores register as `card_battle` and `ff_battle`. Both actions are declared by the `turn_battle_base` mod.
 
 | Parameter | Description |
 |---|---|
@@ -48,13 +48,13 @@ action battle.init scene=town_entry enemies=wolf_2,werewolf_girl_1 quest_id=Meet
 | `quest_id` | Quest to update on battle outcome |
 | `new_tag` | Tag to set on the quest when the battle starts |
 
-### Cooking workbench
+### UI panels
 
 ```scenario
-action ui.toggle_panel name=CookingPanel
+action ui.toggle_panel name=cooking_workbench
 ```
 
-Toggles a named UI panel. The action name alone is enough — no extra parameters required.
+`name=` is required. The panel is first looked up as a `Control` node in the scene tree by node name; if nothing matches, the name is treated as a mod UI entry id from the manifest `ui` list and toggled through the UI registry — this is how the cooking mod's workbench overlay opens. A mod can also wrap the call into its own action: the cooking mod registers `toggle_cooking_workbench` for exactly that.
 
 ## Available action namespaces
 
@@ -71,7 +71,7 @@ Toggles a named UI panel. The action name alone is enough — no extra parameter
 | Action | Parameters | Description |
 |---|---|---|
 | `battle.init` | `scene`, `enemies`, `quest_id`, `new_tag` | Start a battle |
-| `battle.set_core` | `core=CardBattle` | Select combat ruleset |
+| `battle.set_core` | `core=card_battle` | Select combat ruleset by its case-sensitive core ID |
 
 ### `quest.*`
 
@@ -96,13 +96,24 @@ Toggles a named UI panel. The action name alone is enough — no extra parameter
 
 | Action | Parameters | Description |
 |---|---|---|
-| `ui.toggle_panel` | `name=PanelName` | Toggle visibility of a Control node by name |
+| `ui.toggle_panel` | `name=PanelName` | Toggle a `Control` node by scene name, or a manifest `ui` entry by id |
 
 ### `lighting.*`
 
 | Action | Parameters | Description |
 |---|---|---|
 | `lighting.clear_map` | *(none)* | Reset lighting depth/albedo maps |
+
+### `map.*`
+
+World-map zone control. Every action takes the required `zone_id=ZoneId` parameter; a missing value is logged and the action does nothing. Overrides are stored by the map service and persisted in the save.
+
+| Action | Parameters | Description |
+|---|---|---|
+| `map.open_zone` | `zone_id=Z` | Open a zone for travel (counterpart to `"locked": true` in the map JSON) |
+| `map.close_zone` | `zone_id=Z` | Close a zone — the marker stays but travel is blocked |
+| `map.show_zone` | `zone_id=Z` | Reveal a hidden zone on the map |
+| `map.hide_zone` | `zone_id=Z` | Remove a zone from the map entirely |
 
 ## Adding a custom action
 
@@ -154,7 +165,7 @@ func get_name():
 
 func run(ctx):
     var questId = ctx.GetParam("quest_id")
-    ctx.Quests.SetStatus(questId, "Active")
+    ctx.Quests.SetStatus(questId, "Progress")
     ctx.Quests.SendNotification(questId)
     ctx.Log("EVENT", "Quest " + questId + " activated via GDScript")
 ```

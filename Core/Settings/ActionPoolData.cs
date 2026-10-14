@@ -11,6 +11,7 @@ namespace Cthangover.Core.Settings
     /// </summary>
     public class ActionPoolData
     {
+        /// <summary>Action ids owned by the player and available for assignment to character slots.</summary>
         public List<string> ActionIds { get; set; } = new();
     }
 }

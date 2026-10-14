@@ -8,7 +8,7 @@ namespace Cthangover.Core.Mods
     /// to it. This is the main-menu counterpart of <see cref="UiEntry"/>: same
     /// manifest-driven philosophy, but a different surface. Main menu GUI lives
     /// in the native <c>main_menu.tscn</c> (which mods cannot patch), is built by
-    /// <c>MainMenuRegistry</c> + <c>MainMenuBuilder</c> and is never hosted by
+    /// <c>MenuRegistry</c> + <c>MenuBuilder</c> and is never hosted by
     /// <c>UiHost</c>.
     /// <para/>
     /// The target scene is a mod-relative <c>.tscn</c> resolved through

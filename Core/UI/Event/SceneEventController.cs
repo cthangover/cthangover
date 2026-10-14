@@ -9,13 +9,18 @@ namespace Cthangover.Core.UI.Event
 {
     /// <summary>
     /// Central event bus for the UI subsystem. Maintains priority-sorted subscriber
-    /// lists for Update, TimerTick, DialogStart, and DialogEnd events. When
+    /// lists for Update, TimerTick, and DialogStart events (dialog-end
+    /// notifications are published on the ModEventBus as DialogEndedEvent). When
     /// subscribers are added or removed, the list is re-sorted by Priority
     /// (ascending — lower value = earlier execution). Runs at ProcessPriority.MaxValue
     /// to execute before other nodes. Timer ticks fire at 1-second intervals from
-    /// an accumulator to avoid drift. Each tick subscriber is wrapped in try/catch
-    /// to prevent one faulty handler from breaking all others. IsActive lets the
-    /// bus be paused mid-scene without unregistering all listeners.
+    /// an accumulator to avoid drift — from the first processed frames of the app,
+    /// never paused during the launcher boot. Each tick subscriber is wrapped in
+    /// try/catch to prevent one faulty handler from breaking all others. IsActive
+    /// lets the bus be paused mid-scene without unregistering all listeners.
+    /// <para/>
+    /// Tick subscribers: see the boot-window contract on <see cref="IOnTimeEvent"/>
+    /// before touching game state in <see cref="IOnTimeEvent.OnTimerTick"/>.
     /// </summary>
     public partial class SceneEventController : Node
     {
@@ -23,7 +28,6 @@ namespace Cthangover.Core.UI.Event
         private string guid;
         
         private List<IOnUpdateEvent>      OnUpdateEventList      = new();
-        private List<IOnDialogEndEvent>   OnDialogEndEventList   = new();
         private List<IOnTimeEvent>        OnTimerTickEventList   = new();
 
         /// <summary>
@@ -51,6 +55,7 @@ namespace Cthangover.Core.UI.Event
         private double timerAccum;
         private const double TickInterval = 1.0;
         
+        /// <summary>Runs last among process callbacks (max priority) so listeners observe fully updated state, and keeps ticking while the game is paused.</summary>
         public override void _Ready()
         {
             guid = Guid.NewGuid().ToString();
@@ -58,12 +63,14 @@ namespace Cthangover.Core.UI.Event
             ProcessMode = ProcessModeEnum.Always;
         }
 
+        /// <summary>Drops all listener registrations and marks the controller destroyed when it leaves the tree.</summary>
         public override void _ExitTree()
         {
             ClearData();
             IsDestroyed = true;
         }
 
+        /// <summary>Accumulates time into one-second timer ticks and, when active, dispatches every registered per-frame update listener.</summary>
         public override void _Process(double delta)
         {
             timerAccum += delta;
@@ -109,41 +116,25 @@ namespace Cthangover.Core.UI.Event
 			}
 		}
 
-        /// <summary>
-        /// Fires <see cref="IOnDialogEndEvent.OnDialogEnd"/> on all registered
-        /// subscribers. Called by <see cref="DialogBox"/> when a dialog queue finishes.
-        /// </summary>
-        /// <param name="dialog">The dialog queue that ended.</param>
-        /// <param name="runtime">The dialog runtime state at end.</param>
-        /// <param name="executableEvent">The event that triggered this dialog.</param>
-        public void EndDialog(DialogQueue dialog, DialogRuntime runtime, ExecutableEvent executableEvent)
-        {
-            for (int i = OnDialogEndEventList.Count - 1; i > -1; i--)
-            {
-                var eventSubscriber = OnDialogEndEventList[i];
-                if (eventSubscriber == null)
-                {
-                    OnDialogEndEventList.RemoveAt(i);
-                    continue;
-                }
-                eventSubscriber.OnDialogEnd(dialog, runtime, executableEvent);
-            }
-        }
-
         #region Add
         /// <summary>Registers an <see cref="IOnUpdateEvent"/> subscriber for per-frame updates.</summary>
         public void AddUpdateEventListener(IOnUpdateEvent listener) => AddListener(listener, OnUpdateEventList);
-        /// <summary>Registers a dialog-end subscriber notified when a dialog queue finishes.</summary>
-        public void AddDialogEndEventListener(IOnDialogEndEvent listener) => AddListener(listener, OnDialogEndEventList);
-        /// <summary>Registers a timer-tick subscriber for ~1 second interval callbacks.</summary>
+        /// <summary>
+        /// Registers a timer-tick subscriber for ~1 second interval callbacks.
+        /// Ticks start with the first processed frame and keep firing while the
+        /// launcher boot compiles mods (this node is <c>ProcessMode.Always</c>) —
+        /// a subscriber touching <c>GameData.Instance.Runtime</c>, the mod
+        /// registry or factories inside <see cref="IOnTimeEvent.OnTimerTick"/>
+        /// must guard with <c>Boot.ModsReady</c>; see the boot-window contract
+        /// on <see cref="IOnTimeEvent"/> and the time mod's TimeTickController for the reference
+        /// implementation.
+        /// </summary>
         public void AddTimerTickEventListener(IOnTimeEvent listener) => AddListener(listener, OnTimerTickEventList);
         #endregion
 
         #region Remove
         /// <summary>Unregisters a per-frame update subscriber.</summary>
         public void RemoveUpdateEventListener(IOnUpdateEvent listener) => RemoveListener(listener, OnUpdateEventList);
-        /// <summary>Unregisters a dialog-end subscriber.</summary>
-        public void RemoveDialogEndEventListener(IOnDialogEndEvent listener) => RemoveListener(listener, OnDialogEndEventList);
         /// <summary>Unregisters a timer-tick subscriber.</summary>
         public void RemoveTimerTickEventListener(IOnTimeEvent listener) => RemoveListener(listener, OnTimerTickEventList);
         #endregion
@@ -171,7 +162,6 @@ namespace Cthangover.Core.UI.Event
         public void ClearData()
         {
             OnUpdateEventList.Clear();
-            OnDialogEndEventList.Clear();
             OnTimerTickEventList.Clear();
         }
     }

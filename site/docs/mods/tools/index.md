@@ -63,11 +63,11 @@ Optional companion interface. Implement it alongside `IToolProvider` to add a pe
 | `LocaleKey` | `string` | Translation key for the button's tooltip or accessible label |
 | `IsVisible()` | `bool` | Return `false` to hide the button dynamically (e.g. dev-only buttons in release builds) |
 
-> ⚠ **WARNING:** `IconPath` and `LocaleKey` are declared interface members but
-> are currently **not consumed** by the `ToolBox` UI — dynamic toolbar buttons
-> are created as iconless `TextureButton` instances and only `ToolId` is read.
-> The members are kept as declared surface for future use; do not rely on them
-> having a visual effect today.
+`IconPath` and `LocaleKey` **are** consumed by `ToolBox.AddToolButtons`: the locale key is
+translated into the button's tooltip/label, and the icon is loaded via `ResourceLoader`
+when the path exists (a button without a usable icon falls back to its text label).
+`ToolId` wires the press to `ToolFactory.Get(toolId)` and opens the tool through
+`ToolWindow.ShowWindow(tool.CreateWindow())`.
 
 ## `ToolWindow` base class
 
@@ -117,23 +117,23 @@ Singleton registry (`ToolBoxButtonFactory.Instance`) for `IToolBoxButton` implem
 
 ## HUD integration — `ToolBox`
 
-The `ToolBox` control (`Core/UI/Tool/ToolBox.cs`) is the main toolbar/HUD container. It manages 5 built-in widgets:
+The `ToolBox` control (`Core/UI/Tool/ToolBox.cs`) is the main toolbar/HUD container. It is
+manifest-driven and knows no concrete panels itself: `UiBuilder` hands it one
+`UiEntry` per mod-declared toolbar panel (from `UiRegistry.PanelEntries`, pre-sorted by
+button index, mod load order, then id), and `ApplyPanelButtons(entries)` builds a styled
+button per entry — icon via `UIIconFactory`, label from the entry's `button.locale` key —
+whose press calls `UiRegistry.ToggleEntry(id)` to show/hide the panel.
 
-- `MapWidget`
-- `BagWidget` (inventory)
-- `CharactersWidget` (character panel)
-- `SkillWidget` (skills panel)
-- `JournalWidget` (quest journal)
-
-During `_Ready()`:
-
-1. Built-in widget references are discovered via recursive tree search (`FindWidget<T>`).
-2. Static buttons (Map, Bag, Characters, Skills, Settings, Journal) are wired.
-3. `AddToolButtons(container)` dynamically creates `TextureButton` instances from `ToolBoxButtonFactory.GetVisible()` — each button opens its tool via `ToolWindow.ShowWindow(tool.CreateWindow())`, so the window gets the full chrome (title bar, resize zones) and is centered, rather than being shown raw from `CreateWindow()` alone.
+Tool windows ride the same bar: during `_Ready()`, `AddToolButtons(container)` appends one
+button per `ToolBoxButtonFactory.GetVisible()` definition — label from `LocaleKey`, icon
+from `IconPath` when the resource exists — and opens its tool via
+`ToolWindow.ShowWindow(tool.CreateWindow())`, so the window gets the full chrome
+(title bar, resize zones) and is centered rather than being shown raw from
+`CreateWindow()` alone.
 
 ## Built-in tools
 
-The `tools` mod provides five development tools:
+The `tools` mod provides six development tools:
 
 | Tool ID | Description | Locale Key |
 |---|---|---|
@@ -141,13 +141,15 @@ The `tools` mod provides five development tools:
 | `scene_builder` | Interactive Godot scene inspector — wrapper template picker, live viewport with node hierarchy tree, C# code editor with compile-and-run | `tools/scene_builder/title` |
 | `light_editor` | Edits static lights on backgrounds — light list (max 10), per-light radius/influence/color editors, draggable handles, shader preview, JSON export/import | `tools/light_editor/title` |
 | `interactive_editor` | Creates/edits interactive object definitions — BG preview with draggable collider handles (rect, circle, polygon), JSON output, load/save to mod directories | `tools/interactive_editor/title` |
+| `map_editor` | Visual world-map zone editor — canvas with draggable regions/markers/labels per scene, locked/hidden flags, per-zone title keys and images, load/save of the zone JSON (see [Map & Zones](../map/)) | `tools/map_editor/title` |
 | `catalog_export` | Exports a catalog entry (`catalog.json`) for a mod — download URL, category, tags, changelog, status, min game version, icon URL | `mods/catalog_title` |
 
-Each tool has a provider class (`ScenarioEditorToolProvider`, `SceneBuilderToolProvider`, `LightEditorToolProvider`, `InteractiveEditorToolProvider`, `CatalogExportToolProvider`) implementing `IToolProvider`, and a dedicated window class extending `ToolWindow`.
+Each tool has a provider class (`ScenarioEditorToolProvider`, `SceneBuilderToolProvider`, `LightEditorToolProvider`, `InteractiveEditorToolProvider`, `MapEditorToolProvider`, `CatalogExportToolProvider`) implementing `IToolProvider`, and a dedicated window class extending `ToolWindow`.
 
-Two tools also provide `IToolBoxButton` implementations for quick access from the HUD toolbar:
+Three tools also provide `IToolBoxButton` implementations for quick access from the HUD toolbar:
 - `LightEditorToolBoxButton` — always visible
 - `InteractiveEditorToolBoxButton` — always visible
+- `MapEditorToolBoxButton` — always visible (map authoring is part of the normal dev workflow)
 
 ## Pages
 

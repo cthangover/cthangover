@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="42c1651f-14c8-48a0-82b5-544c9ddca50c" name="iisaev@KYCTUKPC 2026-10-14 02:51:42" runUser="KYCTUKPC\iisaev" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-10-14T02:51:42.3761986+03:00" queuing="2026-10-14T02:51:42.3761989+03:00" start="2026-10-14T02:51:32.5152828+03:00" finish="2026-10-14T02:51:42.3804445+03:00" />
+  <TestSettings name="default" id="dd505d1e-fac2-4007-8339-995683ffa20d">
+    <Deployment runDeploymentRoot="iisaev_KYCTUKPC_2026-10-14_02_51_42" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="ce9a91ca-db99-4750-ab41-14cfe124144f" testId="cc8380bd-5755-9469-85ff-72afe4d80dfa" testName="Engine.Tests.Mods.ToolsModCompileTests.Compile_RealMods_InDependencyOrder_Succeeds" computerName="KYCTUKPC" duration="00:00:09.2560616" startTime="2026-10-14T02:51:42.2788216+03:00" endTime="2026-10-14T02:51:42.2788378+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ce9a91ca-db99-4750-ab41-14cfe124144f" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="Engine.Tests.Mods.ToolsModCompileTests.Compile_RealMods_InDependencyOrder_Succeeds" storage="c:\projects\godotcthangover\tests\cthangover.tests\bin\debug\net8.0\cthangover.tests.dll" id="cc8380bd-5755-9469-85ff-72afe4d80dfa">
+      <Execution id="ce9a91ca-db99-4750-ab41-14cfe124144f" />
+      <TestMethod codeBase="C:\projects\godotcthangover\tests\CThangover.Tests\bin\Debug\net8.0\CThangover.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Engine.Tests.Mods.ToolsModCompileTests" name="Compile_RealMods_InDependencyOrder_Succeeds" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="cc8380bd-5755-9469-85ff-72afe4d80dfa" executionId="ce9a91ca-db99-4750-ab41-14cfe124144f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Список результатов" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="Все загруженные результаты" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="1" executed="1" passed="1" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.5.6+bf9b858c26 (64-bit .NET 8.0.27)&#xD;
+[xUnit.net 00:00:00.07]   Discovering: CThangover.Tests&#xD;
+[xUnit.net 00:00:00.15]   Discovered:  CThangover.Tests&#xD;
+[xUnit.net 00:00:00.16]   Starting:    CThangover.Tests&#xD;
+[xUnit.net 00:00:09.45]   Finished:    CThangover.Tests&#xD;
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

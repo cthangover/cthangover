@@ -20,22 +20,21 @@ Every mod needs a manifest and optionally a properties file. These define the mo
   "sources": ["src/*.cs", "src/**/*.cs"],
   // Glob patterns for GDScript files (.gd)
   "gd_sources": ["scripts/*.gd"],
-  // List of mod IDs that must be loaded before this mod
+  // Catalog category slug or comma-separated combination (e.g. "library, gameplay")
+  "category": "library",
+  // Glob patterns for native shared libraries (.dll / .so / .dylib)
+  "depends_native": ["bin/*.dll"],
+  // List of mod IDs that must be loaded before this mod (versioned strings allowed)
   "depends": ["visual_novel_core", "interface"],
-  // Scene lifecycle subscriptions
-  "subscriptions": [
-    {
-      // Scene name to hook into
-      "scene": "home_kitchen",
-      // UI template (usually "default")
-      "template": "default",
-      // C# code fragment name (injected into wrapper template)
-      "code": "my_init_handler",
-      // Trigger moment: "on_enter" or "on_exit"
-      "trigger": "on_enter",
-      // Execution order (lower = runs first)
-      "priority": 10
-    }
+  // Mutually exclusive mod IDs — informational metadata, never enforced (see load-order)
+  "conflicts_with": [],
+  // Declarative GUI entries anchored to shell slots (panel / overlay)
+  "ui": [
+    { "id": "my_panel", "kind": "panel", "slot": "ModBeforeUIPanel", "scene_path": "ui/my_panel.tscn" }
+  ],
+  // Title-screen buttons opening fullscreen mod scenes
+  "main_menu": [
+    { "id": "my_screen", "scene_path": "menu/my_screen.tscn", "button": { "locale": "mymod/menu_button" } }
   ]
 }
 ```
@@ -51,8 +50,12 @@ Every mod needs a manifest and optionally a properties file. These define the mo
 | `description` | No | Short description |
 | `sources` | No | Glob patterns for C# files to compile via Roslyn |
 | `gd_sources` | No | Glob patterns for `.gd` GDScript files to compile via Godot's engine |
-| `depends` | No | List of mod IDs that must be loaded before this mod |
-| `subscriptions` | No | Scene lifecycle hooks (see below) |
+| `depends` | No | List of mod IDs that must be loaded before this mod (versioned strings allowed — see [Load Order](../load-order/)) |
+| `category` | No | Catalog category slug or comma-separated combination (e.g. `"library, gameplay"`). See the [catalog](../catalog/) page for the full list |
+| `depends_native` | No | Glob patterns for native shared libraries (`.dll` / `.so` / `.dylib`). Copied to the mod cache and wired into P/Invoke resolution by `ModNativeLoader` |
+| `conflicts_with` | No | Mutually exclusive mod IDs. **Informational only** — parsed and copied into catalog exports, never enforced at runtime (see the [load order](../load-order/) warning) |
+| `ui` | No | Declarative GUI entries anchored to named shell slots — toolbar-toggled `panel`s and code-driven `overlay`s, collected by `UiRegistry` |
+| `main_menu` | No | Title-screen buttons; each opens a fullscreen mod `.tscn`, collected by `MenuRegistry` (section `mods`) |
 
 ### Sources — glob patterns
 
@@ -73,38 +76,14 @@ GDScript files are compiled by Godot's GDScript engine (no Roslyn needed). A sin
 
 The kernel resolves dependencies in topological order. Circular dependencies cause a load error. `visual_novel_core` is always loaded first.
 
-### Subscriptions — scene lifecycle hooks
+### Scene lifecycle hooks
 
-Subscriptions let mods run C# code when a scene loads or unloads:
+There is no `subscriptions` manifest field anymore — it was removed from the schema. To run mod code when a scene loads or unloads:
 
-```jsonc
-"subscriptions": [
-  {
-    "scene": "home_kitchen",        // Scene to hook into
-    "template": "default",          // UI template
-    "code": "cooking_panel_init",   // C# code fragment name (injected into wrapper template)
-    "trigger": "on_enter",          // Run when entering the scene
-    "priority": 10                  // Lower runs first
-  },
-  {
-    "scene": "home_kitchen",
-    "template": "default",
-    "code": "dinner_tools_hide",
-    "trigger": "on_exit",           // Run when leaving the scene
-    "priority": 10
-  }
-]
-```
+- declare scene events in a `.scenario` file — see [Scenes](../scenes/) and [Scenarios](../scenes/scenarios/);
+- or annotate a C# class with the `[SceneEvent]` attribute — see [Scene Event Metadata](../metadata/).
 
-| Field | Description |
-|---|---|
-| `scene` | Scene name to hook into |
-| `template` | UI template name (`"default"` for standard layout) |
-| `code` | C# code fragment name — injected into the wrapper template via `{{USER_CODE}}` and compiled at runtime |
-| `trigger` | `"on_enter"` or `"on_exit"` |
-| `priority` | Execution order (lower = runs first). Multiple mods can subscribe to the same scene |
-
-The `code` field points to a C# source file (without `.cs` extension) at `subscriptions/{code}.cs`. Its content is injected into the wrapper template via `{{USER_CODE}}` and the combined source is compiled at runtime into a `SceneBuilderScript.Run(Node)` method. The code fragment receives the scene root node as its parameter:
+To attach mod **UI** to a scene or the shell, use the `ui` array (see the field table above and [UI Wrappers](../wrappers/)):
 
 ## Real example — Cooking mod
 
@@ -116,18 +95,18 @@ From `mods/cooking/manifest.json`:
   "author": "ct",
   "description": "Cooking mechanic - full autonomous mod",
   "sources": ["src/*.cs"],
-  "subscriptions": [
-    // Priority 10 — initialize cooking panel on enter
-    { "scene": "home_kitchen", "template": "default", "code": "cooking_panel_init", "trigger": "on_enter", "priority": 10 },
-    // Priority 20 — show tools (runs after panel init)
-    { "scene": "home_kitchen", "template": "default", "code": "dinner_tools_show", "trigger": "on_enter", "priority": 20 },
-    // Hide tools when leaving the kitchen
-    { "scene": "home_kitchen", "template": "default", "code": "dinner_tools_hide", "trigger": "on_exit", "priority": 10 }
+  "ui": [
+    // Workbench overlay for the kitchen — toggled by its own code / ui.toggle_panel
+    { "id": "cooking_workbench", "kind": "overlay", "scene": "home_kitchen", "slot": "ModLastPanel",
+      "scene_path": "scenes/cooking_panel.tscn", "once": true, "show_on_start": false, "priority": 10 },
+    // Ration statistics — shown automatically on entering the kitchen
+    { "id": "ration_stats", "kind": "overlay", "scene": "home_kitchen", "slot": "Lastground",
+      "scene_path": "scenes/ration_statistics_panel.tscn", "once": false, "show_on_start": true, "priority": 20 }
   ]
 }
 ```
 
-Three handlers run on the `home_kitchen` scene: `cooking_panel_init` (priority 10) runs before `dinner_tools_show` (priority 20). `dinner_tools_hide` runs when leaving the kitchen.
+Two overlays are anchored to the `home_kitchen` scene: the cooking workbench lives for the whole session (`once`) and shows itself when its code toggles it; the ration statistics panel is created on scene entry (`once: false`) and shown immediately (`show_on_start: true`).
 
 ## Real example — Multiple dependencies
 
@@ -153,4 +132,4 @@ From `mods/test_interactives/manifest.json`:
 }
 ```
 
-Save as `mods/my_first_mod/manifest.json`. The mod is now loaded by the kernel. Even without `sources` or `subscriptions`, the mod's scenarios, items, and other data files are discovered automatically from their conventional locations.
+Save as `mods/my_first_mod/manifest.json`. The mod is now loaded by the kernel. Even without `sources` or `ui`, the mod's scenarios, items, and other data files are discovered automatically from their conventional locations.

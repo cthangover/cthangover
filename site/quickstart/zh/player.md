@@ -19,7 +19,7 @@ mods/
 └── quickstart_player/
     ├── manifest.json
     └── patches/
-        └── characters.json
+        └── character.json
 ```
 
 ---
@@ -38,13 +38,13 @@ mods/
 }
 ```
 
-最小的清单只需要 `name`，但最好也填写 `id`。内核会自动发现该文件夹并将其作为模组加载。
+manifest.json 文件本身是必需的 — 缺少它的模组会被跳过 — 但没有任何单个字段是严格必需的：如果省略 `id`，文件夹名将作为模组 ID 使用。不过仍建议填写 `id` 和 `name`。内核会自动发现该文件夹并将其作为模组加载。
 
 ---
 
 ## 步骤 3：角色补丁
 
-创建 `mods/quickstart_player/patches/characters.json`：
+创建 `mods/quickstart_player/patches/character.json`：
 
 ```jsonc
 {
@@ -54,7 +54,7 @@ mods/
 
       "Health": 5000, // 新属性值 — 覆盖原始值
       "Attack": 1200,
-      "Points": 2,
+      "Point": 2,
 
       "Actions$add": ["physics/stun"] // $add 向数组追加元素
     }
@@ -65,7 +65,7 @@ mods/
 ### 工作原理
 
 - **`"Id": "Marao"`** — 补丁目标：标识符为 `Marao` 的角色（在 `visual_novel_core` 模组中定义）。
-- **`"Health": 5000`**、**`"Attack": 1200`**、**`"Points": 2`** — 覆盖角色字段。新值替换旧值。
+- **`"Health": 5000`**、**`"Attack": 1200`**、**`"Point": 2`** — 覆盖角色字段。新值替换旧值。
 - **`"Actions$add": ["physics/stun"]`** — 后缀 `$add` 表示"追加到数组"。动作 `physics/stun` 被添加到列表中。默认的 `physics/attack` 和 `physics/defence` 保持不变。
 
 > 了解更多关于补丁：[Patches](site/docs/mods/patches/) 和 [数组操作](site/docs/mods/patches/arrays-and-identity)。
@@ -76,7 +76,7 @@ mods/
 
 启动游戏。进入任意战斗 — Marao 现在拥有：
 
-- **5000 HP** 替代 10
+- **5000 HP** 替代 16
 - **1200 ATK** 替代 5
 - **2 行动点** 替代 1
 - 第三个动作 **"眩晕"** 与"攻击"和"防御"并列
@@ -101,4 +101,4 @@ mods/
 下载 quickstart_player.zip
 </a>
 
-可下载的模组为英文版本。
+可下载的模组为英文版本。安装时，请将模组解压到游戏的 `mods/` 文件夹 — 或使用游戏内置的模组管理器；下载的模组会安装到 `user://mods/`，并优先于相同 ID 的内置模组。

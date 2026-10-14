@@ -64,7 +64,11 @@ def collect_quickstart():
 
 
 def main():
-    urls = [(f"{SITE_URL}/", lastmod("index.html"))]
+    urls = [
+        (f"{SITE_URL}/", lastmod("index.html")),
+        (f"{SITE_URL}/docs.html", lastmod("docs.html")),
+        (f"{SITE_URL}/quickstart.html", lastmod("quickstart.html")),
+    ]
     urls += collect_docs()
     urls += collect_quickstart()
 

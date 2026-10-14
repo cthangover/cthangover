@@ -1,6 +1,7 @@
 using Cthangover.Core.UI.Theming;
 using Godot;
 
+using Cthangover.Mods.Interface.Theming;
 namespace Mods.ModManager
 {
     /// <summary>

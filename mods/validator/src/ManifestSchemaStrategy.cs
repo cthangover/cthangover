@@ -18,6 +18,7 @@ namespace Cthangover.Validator
         public int Order => 100;
         public ValidationFeature Feature => ValidationFeature.Json;
 
+        /// <summary>Checks the required manifest.json fields: non-empty string id and string version.</summary>
         public void Validate(ValidationContext context)
         {
             foreach (var mod in context.Mods)

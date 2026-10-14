@@ -5,6 +5,12 @@
   },
   "integration": [
     {
+      "name": "live2d_avatar",
+      "scene": "res://tests/CThangover.Tests.Integration/Scenes/live2d_avatar_test.tscn",
+      "windowed": true,
+      "timeoutSeconds": 120
+    },
+    {
       "name": "mod",
       "scene": "res://tests/Cthangover.Tests.Integration/Scenes/mod_test.tscn",
       "timeoutSeconds": 180
@@ -60,33 +66,96 @@
       "timeoutSeconds": 120
     },
     {
+      "name": "coverage_subsystems",
+      "scene": "res://tests/Cthangover.Tests.Integration/Scenes/subsystems_coverage_test.tscn",
+      "timeoutSeconds": 120
+    },
+    {
+      "name": "coverage_characters",
+      "scene": "res://tests/Cthangover.Tests.Integration/Scenes/characters_coverage_test.tscn",
+      "timeoutSeconds": 120
+    },
+    {
+      "name": "coverage_quests",
+      "scene": "res://tests/Cthangover.Tests.Integration/Scenes/quests_coverage_test.tscn",
+      "timeoutSeconds": 120
+    },
+    {
+      "name": "coverage_items",
+      "scene": "res://tests/Cthangover.Tests.Integration/Scenes/items_coverage_test.tscn",
+      "timeoutSeconds": 120
+    },
+    {
+      "name": "coverage_dialog",
+      "scene": "res://tests/CThangover.Tests.Integration/Scenes/dialog_coverage_test.tscn",
+      "timeoutSeconds": 120
+    },
+    {
+      "name": "coverage_interactive",
+      "scene": "res://tests/Cthangover.Tests.Integration/Scenes/interactive_coverage_test.tscn",
+      "timeoutSeconds": 120
+    },
+    {
+      "name": "coverage_time",
+      "scene": "res://tests/CThangover.Tests.Integration/Scenes/time_coverage_test.tscn",
+      "timeoutSeconds": 120
+    },
+    {
+      "name": "coverage_map",
+      "scene": "res://tests/CThangover.Tests.Integration/Scenes/map_coverage_test.tscn",
+      "timeoutSeconds": 120
+    },
+    {
+      "name": "coverage_effects",
+      "scene": "res://tests/CThangover.Tests.Integration/Scenes/effects_coverage_test.tscn",
+      "timeoutSeconds": 120
+    },
+    {
+      "name": "coverage_skills",
+      "scene": "res://tests/CThangover.Tests.Integration/Scenes/skills_coverage_test.tscn",
+      "timeoutSeconds": 120
+    },
+    {
       "name": "battle",
       "scene": "res://tests/Cthangover.Tests.Integration/Scenes/battle_test_scene.tscn",
-      "args": ["--core=card_battle"],
+      "args": [
+        "--core=card_battle"
+      ],
       "timeoutSeconds": 180
     },
     {
       "name": "battle_ff",
       "scene": "res://tests/Cthangover.Tests.Integration/Scenes/battle_test_scene.tscn",
-      "args": ["--core=ff_battle"],
+      "args": [
+        "--core=ff_battle"
+      ],
       "timeoutSeconds": 180
     },
     {
       "name": "menu",
       "scene": "res://tests/Cthangover.Tests.Integration/Scenes/main_menu_test_scene.tscn",
-      "args": ["--test=menu", "--timeout=180"],
+      "args": [
+        "--test=menu",
+        "--timeout=180"
+      ],
       "timeoutSeconds": 240
     },
     {
       "name": "mod_manager",
       "scene": "res://tests/Cthangover.Tests.Integration/Scenes/main_menu_test_scene.tscn",
-      "args": ["--test=mod_manager", "--timeout=60"],
+      "args": [
+        "--test=mod_manager",
+        "--timeout=60"
+      ],
       "timeoutSeconds": 120
     },
     {
       "name": "mod_collections",
       "scene": "res://tests/Cthangover.Tests.Integration/Scenes/main_menu_test_scene.tscn",
-      "args": ["--test=mod_collections", "--timeout=60"],
+      "args": [
+        "--test=mod_collections",
+        "--timeout=60"
+      ],
       "timeoutSeconds": 120
     }
   ]

@@ -1,5 +1,4 @@
 #if TOOLS
-using Cthangover.Core.Mods;
 using Cthangover.Core.Mods.Resolvers;
 using Cthangover.Core.Scenes;
 using Cthangover.Core.Settings;
@@ -13,10 +12,10 @@ namespace Cthangover.Core.Autotest
     /// The node is placed as the first sibling before the instantiated
     /// <c>battle.tscn</c>, so Godot runs its <c>_Ready</c> before the battle
     /// scene reads the pending encounter and the battle core registry. Mods are
-    /// initialized synchronously first — otherwise CharacterFactory and the battle
-    /// core registry stay empty and the battle scene logs "No battle core
-    /// available". No starter-party initializer runs in this direct scene launch,
-    /// so the party consists of exactly the characters added here.
+    /// guaranteed to be loaded before any scene _Ready by the boot pipeline
+    /// (SceneManager autoload runs Boot.RunSync). No starter-party initializer
+    /// runs in this direct scene launch, so the party consists of exactly the
+    /// characters added here.
     /// <para/>
     /// The encounter lives in the turn-battle mod assembly, so the bridge prepares
     /// it through reflection: build BattleData with a caller-supplied background,
@@ -40,8 +39,7 @@ namespace Cthangover.Core.Autotest
 
         public override void _Ready()
         {
-            if (!ModManager.Instance.IsInitialized)
-                ModManager.Instance.Initialize();
+            // Mods are loaded by the boot pipeline (SceneManager autoload -> Boot.RunSync) before any scene _Ready.
 
             GameData.Instance.Settings.BattleSpeed = MaxBattleSpeed;
 

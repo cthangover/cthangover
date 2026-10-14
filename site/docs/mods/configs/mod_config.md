@@ -13,8 +13,8 @@ config/
 
 ```jsonc
 {
-  // Cache compiled assemblies to disk after first compilation
-  "use_assembly_cache": false,
+  // Cache compiled assemblies to disk after first compilation (code default: true)
+  "use_assembly_cache": true,
   // File/directory patterns excluded from catalog export checksum
   "catalog_ignore_patterns": [".*","bin","obj"],
   // Catalog JSON URLs (multiple are merged)
@@ -55,7 +55,7 @@ config/
 
 | Field | Type | Description |
 |---|---|---|
-| `use_assembly_cache` | bool | Cache compiled mod assemblies to disk. Saves compilation time on restart |
+| `use_assembly_cache` | bool | Cache compiled mod assemblies to disk (`true` by default in code). Set to `false` to delete cached DLLs and recompile on every launch — useful during mod development |
 | `catalog_ignore_patterns` | string[] | File/directory patterns excluded when computing `install_sha256` for catalog export. Default: `[".*"]` excludes all dot-prefixed entries (`.godot/`, `.import/`, `.gitignore`, etc.) |
 | `catalog_urls` | string[] | URLs of catalog JSON files to fetch for the online mod browser. Multiple URLs are merged — metadata from highest version wins, `downloads` arrays are combined |
 | `texture_extensions` | string[] | File extensions treated as textures |
@@ -66,16 +66,18 @@ config/
 
 ### `texture_groups`
 
-Each entry in `texture_groups` corresponds to a mod subdirectory where textures are discovered:
+Each entry in `texture_groups` corresponds to a mod subdirectory where textures are discovered. The code default is `["ui", "backgrounds", "avatars", "icons", "items", "characters", "effects", "skills"]`; the shipped `config/mod_config.json` replaces `characters` with `cards`:
 
 | Group | Mod directory | Purpose |
 |---|---|---|
 | `ui` | `ui/` | UI textures, themes |
 | `backgrounds` | `backgrounds/` | Scene backgrounds |
 | `avatars` | `avatars/` | Character portraits |
+| `characters` | `characters/` | Character sprites (code default only) |
 | `icons` | `icons/` | UI icons |
 | `items` | `items/` | Item sprites |
-| `cards` | `cards/` | Battle action card images |
+| `cards` | `cards/` | Battle action card images (shipped config) |
+| `effects` | `effects/` | Effect textures |
 | `skills` | `skills/` | Skill card artwork |
 
 ### `cache` section
@@ -87,7 +89,7 @@ Each entry in `texture_groups` corresponds to a mod subdirectory where textures 
 
 ### `max_sizes` entries
 
-Each factory type has a maximum cache capacity. When exceeded, the least recently used entry is evicted.
+Each factory type has a maximum cache capacity. When exceeded, the least recently used entry is evicted. The code default for `max_sizes` is an **empty dictionary** — the values below ship in `config/mod_config.json` and override the fallback capacities each factory passes to `CacheConfig.GetCacheSize`.
 
 | Factory | Default | Caches |
 |---|---|---|

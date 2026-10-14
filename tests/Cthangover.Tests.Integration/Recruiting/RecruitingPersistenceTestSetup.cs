@@ -1,8 +1,9 @@
 #if TOOLS
+using System;
+using System.Linq;
 using Cthangover.Core.Events;
 using Cthangover.Core.Mods;
 using Cthangover.Core.Settings;
-using Cthangover.Core.Skills;
 using Cthangover.Core.Utils;
 using Godot;
 
@@ -16,8 +17,8 @@ namespace Cthangover.Core.Autotest
     /// <para/>
     /// The test exercises the full flow:
     /// <list type="number">
-    /// <item>"New Game" clears the roster through the NewGameStartedEvent
-    /// subscription in the mod initializer.</item>
+    /// <item>"New Game" clears the roster through the IResettable the mod
+    /// initializer registers in AppServices.</item>
     /// <item>A second recruit of an already captured enemy template is rejected,
     /// and recruits added afterwards are written into the mod's own save slot.</item>
     /// <item>Adding a recruit to the squad materializes the placeholder core
@@ -44,8 +45,7 @@ namespace Cthangover.Core.Autotest
 
         public override void _Ready()
         {
-            if (!ModManager.Instance.IsInitialized)
-                ModManager.Instance.Initialize();
+            // Mods are loaded by the boot pipeline (SceneManager autoload -> Boot.RunSync) before any scene _Ready.
 
             // The initializer's new-game subscription and behaviour scan are
             // normally installed by SceneManager.Initialize; call it explicitly so
@@ -99,7 +99,7 @@ namespace Cthangover.Core.Autotest
             PublishDefeated();
             AssertEqual(0, RecruitingBridge.Count(), "condition gate blocks recruitment without slave_master");
 
-            SkillService.GrantSkill("slave_master");
+            GrantSkillViaMod("slave_master");
             for (var i = 0; i < FlowAttempts; i++)
                 PublishDefeated();
 
@@ -175,6 +175,27 @@ namespace Cthangover.Core.Autotest
             GameLogger.Log("RECRUIT_TEST", $"RecruitingPersistenceTestSetup: {_passed} passed, {_failed} failed");
             GameLogger.Log("RECRUIT_TEST", $"[TEST_RESULT] name=recruiting passed={_passed} failed={_failed}");
             GetTree().Quit(_failed == 0 ? 0 : 1);
+        }
+
+        /// <summary>
+        /// Grants a skill through the skills_base engine mod's SkillService via
+        /// reflection: the service lives in a hot-loaded mod assembly that the
+        /// core test code cannot reference at compile time (the same
+        /// reflection-only rule every core-side setup follows).
+        /// </summary>
+        private void GrantSkillViaMod(string skillId)
+        {
+            var serviceType = AppDomain.CurrentDomain.GetAssemblies()
+                .Where(a => !a.IsDynamic)
+                .Select(a => a.GetType("Cthangover.Mods.Skills.SkillService"))
+                .FirstOrDefault(t => t != null);
+            AssertTrue(serviceType != null, "skills_base mod assembly is loaded");
+            if (serviceType == null)
+                return;
+
+            var grant = serviceType.GetMethod("GrantSkill", new[] { typeof(string) });
+            var granted = (bool)grant.Invoke(null, new object[] { skillId });
+            AssertTrue(granted, $"GrantSkill('{skillId}') reports a fresh grant");
         }
     }
 }

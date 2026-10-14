@@ -1,0 +1,12 @@
+{
+  "id": "items_base",
+  "name": "Items Base",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Item definitions and factories, inventory and recipe state, inventory UI and their save state",
+  "category": "gameplay",
+  "sources": [
+    "src/**/*.cs"
+  ],
+  "depends": ["base2d>=1", "interface>=1"]
+}

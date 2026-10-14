@@ -19,7 +19,7 @@ mods/
 └── quickstart_player/
     ├── manifest.json
     └── patches/
-        └── characters.json
+        └── character.json
 ```
 
 ---
@@ -38,13 +38,13 @@ Every mod needs a manifest. Create `mods/quickstart_player/manifest.json`:
 }
 ```
 
-A minimal manifest only needs `name`, but it's better to fill in `id` as well. The kernel auto-discovers the folder and loads it as a mod.
+The manifest file itself is required — a mod without one is skipped — but no single field is mandatory: if `id` is omitted, the folder name is used as the mod id. Filling in `id` and `name` is still recommended. The kernel auto-discovers the folder and loads it as a mod.
 
 ---
 
 ## Step 3: Character patch
 
-Create `mods/quickstart_player/patches/characters.json`:
+Create `mods/quickstart_player/patches/character.json`:
 
 ```jsonc
 {
@@ -54,7 +54,7 @@ Create `mods/quickstart_player/patches/characters.json`:
 
       "Health": 5000, // New property values — overwrite the originals
       "Attack": 1200,
-      "Points": 2,
+      "Point": 2,
 
       "Actions$add": ["physics/stun"] // $add appends elements to an array
     }
@@ -65,7 +65,7 @@ Create `mods/quickstart_player/patches/characters.json`:
 ### How it works
 
 - **`"Id": "Marao"`** — the patch target: character with identifier `Marao` (defined in the `visual_novel_core` mod).
-- **`"Health": 5000`**, **`"Attack": 1200`**, **`"Points": 2`** — overwrite the character's fields. New values replace old ones.
+- **`"Health": 5000`**, **`"Attack": 1200`**, **`"Point": 2`** — overwrite the character's fields. New values replace old ones.
 - **`"Actions$add": ["physics/stun"]`** — the `$add` suffix means "append to the array". The action `physics/stun` is added to the list. The default `physics/attack` and `physics/defence` remain.
 
 > Learn more about patches: [Patches](site/docs/mods/patches/) and [Array Operations](site/docs/mods/patches/arrays-and-identity).
@@ -76,7 +76,7 @@ Create `mods/quickstart_player/patches/characters.json`:
 
 Start the game. Enter any battle — Marao now has:
 
-- **5000 HP** instead of 10
+- **5000 HP** instead of 16
 - **1200 ATK** instead of 5
 - **2 AP** instead of 1
 - A third action **"Stun"** alongside "Attack" and "Defence"
@@ -101,4 +101,4 @@ Start the game. Enter any battle — Marao now has:
 Download quickstart_player.zip
 </a>
 
-The downloadable mod is in English.
+The downloadable mod is in English. To install it, unzip the mod into the game's `mods/` folder — or use the in-game mod manager, which installs downloaded mods into `user://mods/`; mods there override built-in mods with the same id.

@@ -11,8 +11,13 @@ namespace Cthangover.Core.Localization
     /// </summary>
     public class GodotTranslationProvider : ILocalizationProvider
     {
+        /// <summary>Shared singleton instance.</summary>
         public static readonly GodotTranslationProvider Instance = new();
 
+        /// <summary>
+        /// Translates through <c>TranslationServer</c>; returns <c>null</c> when
+        /// Godot echoes the key back, which is its signal for "not registered".
+        /// </summary>
         public string Get(string key)
         {
             var result = TranslationServer.Translate(key);

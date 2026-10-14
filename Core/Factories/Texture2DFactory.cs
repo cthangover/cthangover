@@ -21,8 +21,10 @@ namespace Cthangover.Core.Factories
         protected Texture2DFactory(string factoryKey, int fallbackCacheSize)
             : base(factoryKey, fallbackCacheSize) { }
 
+        /// <summary>Texture extensions from mod config (typically .png and .jpg), tried in order.</summary>
         protected override List<string> Extensions => ModConfig.Instance.TextureExtensions;
-        
+
+        /// <summary>Decodes PNG/JPEG bytes into an <c>ImageTexture</c>; unsupported formats are logged and return null.</summary>
         protected override Texture2D ConvertFromBytes(string id, byte[] data, string extension)
         {
             var image = new Image();

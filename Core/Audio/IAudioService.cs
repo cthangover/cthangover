@@ -11,11 +11,12 @@ namespace Cthangover.Core.Audio
     {
         /// <summary>
         /// Loads a music track by asset <paramref name="id"/> through
-        /// <c>MusicFactory</c> and assigns it to the dedicated Music
+        /// the audio engine mod's music factory and assigns it to the dedicated
+        /// Music
         /// <c>AudioStreamPlayer</c>. The <paramref name="musicType"/>
         /// tag is informational — it does not change playback routing;
         /// the caller is responsible for using the correct type so that
-        /// auto-advance logic in <c>MusicPlayerBehaviour</c> picks the
+        /// auto-advance logic in the audio engine mod's music player picks the
         /// right playlist bucket on track end.
         /// </summary>
         void PlayMusic(string id, MusicType musicType);

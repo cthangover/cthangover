@@ -1,7 +1,6 @@
 #if TOOLS
 using System.Collections.Generic;
 using System.Linq;
-using Cthangover.Core.Mods;
 using Cthangover.Core.Utils;
 using Godot;
 
@@ -35,8 +34,7 @@ namespace Cthangover.Core.Autotest
 
         public override void _Ready()
         {
-            if (!ModManager.Instance.IsInitialized)
-                ModManager.Instance.Initialize();
+            // Mods are loaded by the boot pipeline (SceneManager autoload -> Boot.RunSync) before any scene _Ready.
 
             var coreIds = TurnBattleBridge.CoreIds();
             GameLogger.Log("BATTLE_COVERAGE", $"registered cores: {coreIds.Count}");

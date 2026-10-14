@@ -70,7 +70,7 @@ namespace Cthangover.MyCodeMod
 }
 ```
 
-Интерфейс `IMod` — обязательная точка входа для любого C#-мода. Метод `Initialize` вызывается при загрузке.
+Интерфейс `IModInitializer` — точка входа жизненного цикла C#-кода мода; реализации обнаруживаются через reflection. `OnModLoaded` вызывается при загрузке каждого мода, `OnModResourcesReady` — один раз после загрузки всех модов и их ресурсов.
 
 > Используйте `GameLogger.Log(...)` вместо `GD.Print(...)`, если хотите работать с логами.
 
@@ -158,7 +158,7 @@ public class MyEffectAction : IScenarioAction
 action my_effect
 ```
 
-Движок найдёт ваш класс через reflection и вызовет `Execute`.
+Движок найдёт ваш класс через reflection и вызовет `Run`.
 
 ---
 

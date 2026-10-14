@@ -28,9 +28,9 @@ namespace Cthangover.Core.Settings
         public long GameTime { get; set; }
         /// <summary>Number of recruited characters in the party.</summary>
         public int CharacterCount { get; set; }
-        /// <summary>Normalised lamp power, used by the UI for a fill bar
-        /// (calculated externally from the <c>"Lamp"</c> blob in the
-        /// <c>"__core__"</c> slot of <see cref="SavePackage.ModData"/>).</summary>
+        /// <summary>Known placeholder: <see cref="SaveService.GetSaveSlots"/>
+        /// currently always writes <c>0f</c> — no real lamp percentage is
+        /// computed yet, so the UI must not rely on this value.</summary>
         public float LampPercent { get; set; }
     }
 }

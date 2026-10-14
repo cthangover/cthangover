@@ -1,0 +1,22 @@
+{
+  "id": "characters_base",
+  "name": "Characters Engine",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Engine characters subsystem: the character and action-card factories (entity kinds 'character' and 'action'), the avatar factory and the character panel UI. Replaces the former Core/Characters factories and Core/UI/CharacterPanel — the CharactersModInitializer publishes kernel contracts (ICharacterTemplateProvider, IActionTemplateProvider, IAvatarProvider) so core code resolves templates without referencing this assembly.",
+  "category": "engine, library",
+  "sources": [
+    "src/**/*.cs"
+  ],
+  "depends": ["base2d>=1", "interface>=1"],
+  "ui": [
+    {
+      "id": "characters",
+      "kind": "panel",
+      "slot": "ModBeforeUIPanel",
+      "scene_path": "scenes/ui/character_panel.tscn",
+      "button": { "icon": "cards", "locale": "ui/character_panel/title", "index": 30 },
+      "priority": 10
+    }
+  ]
+}

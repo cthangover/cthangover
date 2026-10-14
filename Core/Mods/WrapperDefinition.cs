@@ -3,11 +3,12 @@ namespace Cthangover.Core.Mods
     /// <summary>
     /// Loaded wrapper template — a named UI tree definition stored as raw
     /// text content. Collected from <c>.wrappertmpl</c> files across mods
-    /// by <c>ModManager.CollectWrapperTemplates</c> and later
-    /// instantiated by the scene subscription system when a matching
-    /// trigger fires. The content is kept as a raw string because it is
-    /// parsed at instantiation time with the game's custom template
-    /// format, not JSON.
+    /// by <c>ModManager.CollectWrapperTemplates</c> and exposed to
+    /// consumers through <c>WrapperTemplates.Collect()</c>. The engine
+    /// currently only collects these templates — nothing instantiates
+    /// them automatically. The content is kept as a raw string because
+    /// it is meant to be parsed at instantiation time with the game's
+    /// custom template format, not JSON.
     /// </summary>
     public class WrapperDefinition
     {

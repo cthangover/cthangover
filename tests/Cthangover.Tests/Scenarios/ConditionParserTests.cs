@@ -3,6 +3,14 @@ using Cthangover.Core.Scenes.Nodes.Impls;
 
 namespace Engine.Tests.Scenarios
 {
+    /// <summary>
+    /// Unit coverage for the core condition grammar: flag comparisons, boolean
+    /// literals, and/or/not structure, precedence, and error cases. Quest
+    /// grammar (Quest.hasTag / Quest.Status / Quest.IsActive) is provided by the
+    /// quests_base mod's QuestParser leaf parser and covered by the integration
+    /// coverage_quests test - the core kernel must not auto-register it (see
+    /// Parse_QuestGrammar_NotRegisteredInCore_Throws at the bottom).
+    /// </summary>
     public class ConditionParserTests
     {
         [Fact]
@@ -92,139 +100,38 @@ namespace Engine.Tests.Scenarios
         }
 
         [Fact]
-        public void Parse_HasTag_ReturnsQuestMethodCondition()
-        {
-            var node = ConditionParser.Parse("Quest.hasTag(\"started\")");
-            var qm = Assert.IsType<QuestMethodCondition>(node);
-            Assert.Equal("Quest", qm.QuestId);
-            Assert.Equal("hasTag", qm.Method);
-            Assert.Equal("started", qm.Tag);
-        }
-
-        [Fact]
-        public void Parse_NotHasTag_ReturnsQuestMethodCondition()
-        {
-            var node = ConditionParser.Parse("Quest.notHasTag(\"finished\")");
-            var qm = Assert.IsType<QuestMethodCondition>(node);
-            Assert.Equal("Quest", qm.QuestId);
-            Assert.Equal("notHasTag", qm.Method);
-            Assert.Equal("finished", qm.Tag);
-        }
-
-        [Fact]
-        public void Parse_StatusEqual_ReturnsQuestPropCondition()
-        {
-            var node = ConditionParser.Parse("Quest.Status == 1");
-            var qp = Assert.IsType<QuestPropCondition>(node);
-            Assert.Equal("Quest", qp.QuestId);
-            Assert.Equal("Status", qp.Property);
-            Assert.Equal("==", qp.Op);
-            Assert.Equal(1, qp.Value);
-        }
-
-        [Fact]
-        public void Parse_StatusNotEqual_ReturnsQuestPropCondition()
-        {
-            var node = ConditionParser.Parse("Quest.Status != 2");
-            var qp = Assert.IsType<QuestPropCondition>(node);
-            Assert.Equal("Quest", qp.QuestId);
-            Assert.Equal("Status", qp.Property);
-            Assert.Equal("!=", qp.Op);
-            Assert.Equal(2, qp.Value);
-        }
-
-        [Fact]
-        public void Parse_StatusGreaterOrEqual_ReturnsQuestPropCondition()
-        {
-            var node = ConditionParser.Parse("Quest.Status >= 1");
-            var qp = Assert.IsType<QuestPropCondition>(node);
-            Assert.Equal(">=", qp.Op);
-            Assert.Equal(1, qp.Value);
-        }
-
-        [Fact]
-        public void Parse_StatusLessOrEqual_ReturnsQuestPropCondition()
-        {
-            var node = ConditionParser.Parse("Quest.Status <= 2");
-            var qp = Assert.IsType<QuestPropCondition>(node);
-            Assert.Equal("<=", qp.Op);
-            Assert.Equal(2, qp.Value);
-        }
-
-        [Fact]
-        public void Parse_StatusGreater_ReturnsQuestPropCondition()
-        {
-            var node = ConditionParser.Parse("Quest.Status > 0");
-            var qp = Assert.IsType<QuestPropCondition>(node);
-            Assert.Equal(">", qp.Op);
-            Assert.Equal(0, qp.Value);
-        }
-
-        [Fact]
-        public void Parse_StatusLess_ReturnsQuestPropCondition()
-        {
-            var node = ConditionParser.Parse("Quest.Status < 2");
-            var qp = Assert.IsType<QuestPropCondition>(node);
-            Assert.Equal("<", qp.Op);
-            Assert.Equal(2, qp.Value);
-        }
-
-        [Fact]
-        public void Parse_DataStatusAllOperators_ReturnsQuestPropCondition()
-        {
-            var ops = new[] { "==", "!=", ">=", "<=", ">", "<" };
-            foreach (var op in ops)
-            {
-                var node = ConditionParser.Parse($"Quest.DataStatus {op} 5");
-                var qp = Assert.IsType<QuestPropCondition>(node);
-                Assert.Equal("DataStatus", qp.Property);
-                Assert.Equal(op, qp.Op);
-                Assert.Equal(5, qp.Value);
-            }
-        }
-
-        [Fact]
-        public void Parse_IsActive_ReturnsQuestBoolPropCondition()
-        {
-            var node = ConditionParser.Parse("Quest.IsActive");
-            var qbp = Assert.IsType<QuestBoolPropCondition>(node);
-            Assert.Equal("Quest", qbp.QuestId);
-            Assert.Equal("IsActive", qbp.Property);
-        }
-
-        [Fact]
         public void Parse_SimpleAnd_ReturnsAndNode()
         {
-            var node = ConditionParser.Parse("Quest.hasTag(\"a\") && Quest.hasTag(\"b\")");
+            var node = ConditionParser.Parse("a == \"1\" && b == \"2\"");
             var bin = Assert.IsType<AndNode>(node);
-            Assert.IsType<QuestMethodCondition>(bin.Left);
-            Assert.IsType<QuestMethodCondition>(bin.Right);
+            Assert.IsType<FlagCondition>(bin.Left);
+            Assert.IsType<FlagCondition>(bin.Right);
         }
 
         [Fact]
         public void Parse_SimpleOr_ReturnsOrNode()
         {
-            var node = ConditionParser.Parse("Quest.hasTag(\"a\") || Quest.hasTag(\"b\")");
+            var node = ConditionParser.Parse("a == \"1\" || b == \"2\"");
             var bin = Assert.IsType<OrNode>(node);
-            Assert.IsType<QuestMethodCondition>(bin.Left);
-            Assert.IsType<QuestMethodCondition>(bin.Right);
+            Assert.IsType<FlagCondition>(bin.Left);
+            Assert.IsType<FlagCondition>(bin.Right);
         }
 
         [Fact]
         public void Parse_Not_ReturnsNotNode()
         {
-            var node = ConditionParser.Parse("!Quest.hasTag(\"x\")");
+            var node = ConditionParser.Parse("!a == \"1\"");
             var un = Assert.IsType<NotNode>(node);
-            Assert.IsType<QuestMethodCondition>(un.Operand);
+            Assert.IsType<FlagCondition>(un.Operand);
         }
 
         [Fact]
         public void Parse_DoubleNot_ReturnsUnaryOfUnary()
         {
-            var node = ConditionParser.Parse("!!Quest.hasTag(\"x\")");
+            var node = ConditionParser.Parse("!!a == \"1\"");
             var un = Assert.IsType<NotNode>(node);
             var inner = Assert.IsType<NotNode>(un.Operand);
-            Assert.IsType<QuestMethodCondition>(inner.Operand);
+            Assert.IsType<FlagCondition>(inner.Operand);
         }
 
         [Fact]
@@ -284,48 +191,19 @@ namespace Engine.Tests.Scenarios
         [Fact]
         public void Parse_CompoundAndAnd_ThreeTerms()
         {
-            var node = ConditionParser.Parse("a.hasTag(\"1\") && b.hasTag(\"2\") && c.hasTag(\"3\")");
+            var node = ConditionParser.Parse("a == \"1\" && b == \"2\" && c == \"3\"");
             var bin = Assert.IsType<AndNode>(node);
             var left = Assert.IsType<AndNode>(bin.Left);
-            Assert.IsType<QuestMethodCondition>(bin.Right);
+            Assert.IsType<FlagCondition>(bin.Right);
         }
 
         [Fact]
         public void Parse_CompoundOrOr_ThreeTerms()
         {
-            var node = ConditionParser.Parse("a.hasTag(\"1\") || b.hasTag(\"2\") || c.hasTag(\"3\")");
+            var node = ConditionParser.Parse("a == \"1\" || b == \"2\" || c == \"3\"");
             var bin = Assert.IsType<OrNode>(node);
             var left = Assert.IsType<OrNode>(bin.Left);
-            Assert.IsType<QuestMethodCondition>(bin.Right);
-        }
-
-        [Fact]
-        public void Parse_IsActiveAndHasTag_ReturnsCorrectTree()
-        {
-            var node = ConditionParser.Parse("Quest.IsActive && Quest.hasTag(\"go_home\")");
-            var bin = Assert.IsType<AndNode>(node);
-            Assert.IsType<QuestBoolPropCondition>(bin.Left);
-            Assert.IsType<QuestMethodCondition>(bin.Right);
-        }
-
-        [Fact]
-        public void Parse_HasTagAndNotHasTag_ReturnsCorrectTree()
-        {
-            var node = ConditionParser.Parse("Quest.hasTag(\"wolf_battle\") && Quest.notHasTag(\"boss_battle\")");
-            var bin = Assert.IsType<AndNode>(node);
-            var left = Assert.IsType<QuestMethodCondition>(bin.Left);
-            Assert.Equal("hasTag", left.Method);
-            var right = Assert.IsType<QuestMethodCondition>(bin.Right);
-            Assert.Equal("notHasTag", right.Method);
-        }
-
-        [Fact]
-        public void Parse_FlagAndStatusMixed_ReturnsCorrectTree()
-        {
-            var node = ConditionParser.Parse("flag == \"1\" && Quest.Status >= 1");
-            var bin = Assert.IsType<AndNode>(node);
-            Assert.IsType<FlagCondition>(bin.Left);
-            Assert.IsType<QuestPropCondition>(bin.Right);
+            Assert.IsType<FlagCondition>(bin.Right);
         }
 
         [Fact]
@@ -344,46 +222,6 @@ namespace Engine.Tests.Scenarios
             var node = ConditionParser.Parse("!(a == \"1\" && b == \"2\")");
             var un = Assert.IsType<NotNode>(node);
             var bin = Assert.IsType<AndNode>(un.Operand);
-        }
-
-        [Fact]
-        public void Parse_IsActiveWithoutParens_Works()
-        {
-            var node = ConditionParser.Parse("Quest.IsActive");
-            var qbp = Assert.IsType<QuestBoolPropCondition>(node);
-            Assert.Equal("Quest", qbp.QuestId);
-            Assert.Equal("IsActive", qbp.Property);
-        }
-
-        [Fact]
-        public void Parse_IsActiveOrHasTag_Works()
-        {
-            var node = ConditionParser.Parse("Quest.IsActive || Quest.hasTag(\"ready\")");
-            var bin = Assert.IsType<OrNode>(node);
-            Assert.IsType<QuestBoolPropCondition>(bin.Left);
-            Assert.IsType<QuestMethodCondition>(bin.Right);
-        }
-
-        [Fact]
-        public void Parse_NotIsActive_Works()
-        {
-            var node = ConditionParser.Parse("!Quest.IsActive");
-            var un = Assert.IsType<NotNode>(node);
-            Assert.IsType<QuestBoolPropCondition>(un.Operand);
-        }
-
-        [Fact]
-        public void Parse_UnknownQuestProperty_ThrowsFormatException()
-        {
-            var ex = Assert.Throws<FormatException>(() => ConditionParser.Parse("Quest.UnknownProp == 1"));
-            Assert.Contains("unknown quest property/method", ex.Message);
-        }
-
-        [Fact]
-        public void Parse_UnknownQuestMethod_ThrowsFormatException()
-        {
-            var ex = Assert.Throws<FormatException>(() => ConditionParser.Parse("Quest.someMethod(\"x\")"));
-            Assert.Contains("unknown quest property/method", ex.Message);
         }
 
         [Fact]
@@ -423,12 +261,6 @@ namespace Engine.Tests.Scenarios
         }
 
         [Fact]
-        public void Parse_HasTagMissingCloseParen_ThrowsFormatException()
-        {
-            Assert.Throws<FormatException>(() => ConditionParser.Parse("Quest.hasTag(\"x\""));
-        }
-
-        [Fact]
         public void Parse_FlagWithoutOperator_ThrowsFormatException()
         {
             Assert.Throws<FormatException>(() => ConditionParser.Parse("flag \"value\""));
@@ -441,28 +273,16 @@ namespace Engine.Tests.Scenarios
         }
 
         [Fact]
-        public void Parse_StatusWithoutValue_ThrowsFormatException()
-        {
-            Assert.Throws<FormatException>(() => ConditionParser.Parse("Quest.Status =="));
-        }
-
-        [Fact]
-        public void Parse_DataStatusWithoutValue_ThrowsFormatException()
-        {
-            Assert.Throws<FormatException>(() => ConditionParser.Parse("Quest.DataStatus >="));
-        }
-
-        [Fact]
         public void Parse_ExplosiveCondition_AllOperators()
         {
             var node = ConditionParser.Parse(
-                "Quest.hasTag(\"a\") && (Quest.Status >= 1 || Quest.IsActive) && flag != \"skip\"");
+                "a == \"1\" && (b >= 2 || c != \"3\") && d != \"skip\"");
             var bin = Assert.IsType<AndNode>(node);
             var left = Assert.IsType<AndNode>(bin.Left);
-            Assert.IsType<QuestMethodCondition>(left.Left);
+            Assert.IsType<FlagCondition>(left.Left);
             var parens = Assert.IsType<OrNode>(left.Right);
-            Assert.IsType<QuestPropCondition>(parens.Left);
-            Assert.IsType<QuestBoolPropCondition>(parens.Right);
+            Assert.IsType<FlagCondition>(parens.Left);
+            Assert.IsType<FlagCondition>(parens.Right);
             Assert.IsType<FlagCondition>(bin.Right);
         }
 
@@ -527,17 +347,15 @@ namespace Engine.Tests.Scenarios
         }
 
         [Fact]
-        public void Parse_TrueAsQuestId_StillWorks()
+        public void Parse_QuestGrammar_NotRegisteredInCore_Throws()
         {
-            var node = ConditionParser.Parse("true.IsActive");
-            Assert.IsType<QuestBoolPropCondition>(node);
-        }
-
-        [Fact]
-        public void Parse_FalseAsQuestId_StillWorks()
-        {
-            var node = ConditionParser.Parse("false.hasTag(\"test\")");
-            Assert.IsType<QuestMethodCondition>(node);
+            // QuestParser is a quests_base leaf parser registered by the mod at
+            // load time. The core kernel must not auto-register it, so quest
+            // grammar fails to parse in a core-only test run. The actual quest
+            // grammar is exercised by the integration coverage_quests test.
+            Assert.Throws<FormatException>(() => ConditionParser.Parse("Quest.Status == 1"));
+            Assert.Throws<FormatException>(() => ConditionParser.Parse("Quest.hasTag(\"x\")"));
+            Assert.Throws<FormatException>(() => ConditionParser.Parse("Quest.IsActive"));
         }
     }
 }

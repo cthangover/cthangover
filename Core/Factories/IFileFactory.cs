@@ -10,6 +10,7 @@ namespace Cthangover.Core.Factories
     /// </summary>
     public interface IFileFactory<out T> where T : class, IIdentifiable
     {
+        /// <summary>Returns the entity registered under <paramref name="id"/>, or <c>null</c> when unknown.</summary>
         T Get(string id);
     }
 }

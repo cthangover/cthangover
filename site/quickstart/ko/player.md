@@ -19,7 +19,7 @@ mods/
 └── quickstart_player/
     ├── manifest.json
     └── patches/
-        └── characters.json
+        └── character.json
 ```
 
 ---
@@ -38,13 +38,13 @@ mods/
 }
 ```
 
-최소 매니페스트는 `name`만 필요하지만, `id`도 채워 넣는 것이 좋습니다. 커널이 폴더를 자동으로 감지하여 모드로 로드합니다.
+manifest.json 파일 자체는 필수이며(없으면 모드가 건너뛰어짐), 개별 필드는 엄격하게 필수가 아닙니다. `id`를 생략하면 폴더 이름이 모드 ID로 사용됩니다. 그래도 `id`와 `name`을 채워 넣는 것이 좋습니다. 커널이 폴더를 자동으로 감지하여 모드로 로드합니다.
 
 ---
 
 ## 3단계: 캐릭터 패치
 
-`mods/quickstart_player/patches/characters.json` 생성:
+`mods/quickstart_player/patches/character.json` 생성:
 
 ```jsonc
 {
@@ -54,7 +54,7 @@ mods/
 
       "Health": 5000, // 새 속성 값 — 원본을 덮어씀
       "Attack": 1200,
-      "Points": 2,
+      "Point": 2,
 
       "Actions$add": ["physics/stun"] // $add는 배열에 요소를 추가
     }
@@ -65,7 +65,7 @@ mods/
 ### 작동 원리
 
 - **`"Id": "Marao"`** — 패치 대상: 식별자 `Marao`를 가진 캐릭터 (`visual_novel_core` 모드에서 정의).
-- **`"Health": 5000`**, **`"Attack": 1200`**, **`"Points": 2`** — 캐릭터 필드를 덮어씁니다. 새 값이 이전 값을 대체합니다.
+- **`"Health": 5000`**, **`"Attack": 1200`**, **`"Point": 2`** — 캐릭터 필드를 덮어씁니다. 새 값이 이전 값을 대체합니다.
 - **`"Actions$add": ["physics/stun"]`** — 접미사 `$add`는 "배열에 추가"를 의미합니다. 액션 `physics/stun`이 목록에 추가됩니다. 기본 `physics/attack`과 `physics/defence`는 그대로 유지됩니다.
 
 > 패치에 대해 더 알아보기: [Patches](site/docs/mods/patches/) 및 [배열 연산](site/docs/mods/patches/arrays-and-identity).
@@ -76,7 +76,7 @@ mods/
 
 게임을 시작합니다. 아무 전투에 입장하면 — Marao가 이제:
 
-- **5000 HP** (10 대신)
+- **5000 HP** (16 대신)
 - **1200 ATK** (5 대신)
 - **2 AP** (1 대신)
 - 세 번째 액션 **"기절"** 이 "공격" 및 "방어"와 함께 표시
@@ -101,4 +101,4 @@ mods/
 quickstart_player.zip 다운로드
 </a>
 
-다운로드 가능한 모드는 영어로 되어 있습니다.
+다운로드 가능한 모드는 영어로 되어 있습니다. 설치하려면 모드를 게임의 `mods/` 폴더에 압축 해제하거나, 게임 내 모드 관리자를 사용하세요. 다운로드한 모드는 `user://mods/`에 설치되며, 같은 ID의 내장 모드보다 우선합니다.

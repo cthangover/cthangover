@@ -32,7 +32,7 @@ layout_mode = 2
 theme_override_constants/separation = 16
 
 [node name="Cover" type="Control" parent="Scroll/Content/Hero/HeroMargin/HeroRow"]
-custom_minimum_size = Vector2(180, 180)
+custom_minimum_size = Vector2(270, 180)
 layout_mode = 2
 clip_contents = true
 mouse_filter = 2

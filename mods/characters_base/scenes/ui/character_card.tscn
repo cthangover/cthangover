@@ -1,0 +1,77 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://mods/characters_base/src/UI/CharacterPanel/CharacterCardBehaviour.cs" id="1_script"]
+[ext_resource type="PackedScene" path="res://mods/characters_base/scenes/ui/action_slot.tscn" id="2_slot"]
+
+[node name="CharacterCard" type="PanelContainer"]
+custom_minimum_size = Vector2(520, 0)
+layout_mode = 3
+mouse_filter = 0
+script = ExtResource("1_script")
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 14
+
+[node name="Root" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 10
+
+[node name="Header" type="HBoxContainer" parent="Margin/Root"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 12
+
+[node name="PortraitPanel" type="PanelContainer" parent="Margin/Root/Header"]
+custom_minimum_size = Vector2(58, 58)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Portrait" type="TextureRect" parent="Margin/Root/Header/PortraitPanel"]
+layout_mode = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Info" type="VBoxContainer" parent="Margin/Root/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="NameLabel" type="Label" parent="Margin/Root/Header/Info"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_font_sizes/font_size = 19
+clip_text = true
+
+[node name="SubLabel" type="Label" parent="Margin/Root/Header/Info"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_font_sizes/font_size = 10
+clip_text = true
+
+[node name="StatsRow" type="HFlowContainer" parent="Margin/Root/Header/Info"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/h_separation = 5
+theme_override_constants/v_separation = 3
+
+[node name="SlotsBox" type="VBoxContainer" parent="Margin/Root"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="Slot0" parent="Margin/Root/SlotsBox" instance=ExtResource("2_slot")]
+layout_mode = 2
+
+[node name="Slot1" parent="Margin/Root/SlotsBox" instance=ExtResource("2_slot")]
+layout_mode = 2
+
+[node name="Slot2" parent="Margin/Root/SlotsBox" instance=ExtResource("2_slot")]
+layout_mode = 2

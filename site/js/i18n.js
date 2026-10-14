@@ -1,680 +1,471 @@
-const I18N = {
-  ru: {
-    lang_name: "Русский",
-    nav_about: "О проекте",
-    nav_features: "Возможности",
-    nav_arch: "Архитектура",
-    nav_screenshots: "Скриншоты",
-    nav_videos: "Видео",
-    nav_story: "Сюжет",
-    nav_systems: "Системы",
-    nav_quickstart: "Быстрый старт",
-    nav_docs: "Документация",
-    nav_docs_back: "← На сайт",
-    nav_repo: "Репозиторий",
-
-    hero_title: "cthangover",
-    hero_tagline: "Мод-ориентированная платформа для визуальных новелл с элементами RPG",
-    hero_btn_repo: "Исходный код в репозитории",
-
-    about_title: "О проекте",
-    about_p1: "cthangover — это визуальная новелла с элементами RPG, построенная на уникальной мод-ориентированной архитектуре. Проект написан на Godot 4.6 (C# / .NET 8) и распространяется под лицензией MIT.",
-    about_p2: "В Godot-проекте практически нет ресурсов. Лёгкое C#-ядро собирает готовую игру в рантайме из модов, расположенных в папке mods/. Моды содержат сцены, сценарии, ресурсы, а также C#-код в исходном виде — он компилируется «на лету» через Roslyn. Убирая или дополняя моды, можно удалять или добавлять сцены, механики и целые игровые подсистемы.",
-    about_p3: "Это открывает дорогу в бесконечный моддинг и разработку собственных проектов на базе ядра. Для доработки модов не требуется даже наличие Godot или SDK — достаточно текстового редактора и базовых знаний JSON.",
-
-    features_title: "Ключевые возможности",
-    features_subtitle: "Что уже работает в базовой поставке",
-
-    feat_time_title: "Шейдерное время суток",
-    feat_time_desc: "Один задник — вместо сотен вариаций. Автоматический расчёт фаз дня и ночи прямо на GPU, без лишних ресурсов.",
-
-    feat_light_title: "2D-освещение",
-    feat_light_desc: "Динамические источники света, карты глубины и перетаскиваемая лампа игрока оживляют каждую сцену.",
-
-    feat_dsl_title: "DSL-сценарии",
-    feat_dsl_desc: "Собственный предметно-ориентированный язык для написания сценариев. Простой синтаксис, 26 команд, расширяется модами.",
-
-    feat_rpg_title: "RPG-системы",
-    feat_rpg_desc: "Персонажи с уровнями, опытом, квестами, инвентарём, крафтом, скиллами и коллекционными картами редкости.",
-
-    feat_battle_title: "Пошаговый бой",
-    feat_battle_desc: "Два равноправных режима боя — пошаговый и в стиле Final Fantasy. Переключаются на лету через моды.",
-
-    feat_mod_title: "Система модов",
-    feat_mod_desc: "Игра собрана из прозрачных «кирпичиков». Каждый мод можно рассмотреть, вынуть и увидеть, как меняется игра.",
-
-    arch_title: "Мод-ориентированная архитектура",
-    arch_kernel: "Ядро (C#)",
-    arch_kernel_desc: "Лёгкое ядро без ресурсов. Загружает и активирует моды, компилирует C#-код (Roslyn), разрешает конфликты.",
-    arch_mods: "Моды (mods/)",
-    arch_mods_desc: "Сцены, сценарии (.scenario), текстуры, звуки, шейдеры, JSON-данные, исходный C#-код. Всё, из чего состоит игра.",
-    arch_game: "Игра",
-    arch_game_desc: "Собирается в рантайме из активных модов. Убрал мод пошагового боя, добавил FF — теперь боёвка в стиле Final Fantasy. Поменял местами — снова пошаговая. Добавил мод на еду — нужно готовить, есть и кормить партнёров. Убрал — никакой возни с выживанием.",
-    arch_footer: "Для доработки модов не нужен Godot или SDK. Текстовый редактор, JSON и немного C# (опционально) — этого достаточно, чтобы изменить или создать игровую механику.",
-
-    screenshots_title: "Скриншоты",
-    screenshot_n: "Скриншот",
-
-    videos_title: "Видео",
-    video_lighting_title: "Освещение и время суток",
-
-    story_title: "Сюжет",
-    story_p1: "Cthangover (Cthulhu + Hangover) — это история о том, как великий Аль-Азиф, известный как «Книга Мертвых», встретил своего единственного и непобедимого врага — хронического алкоголика.",
-    story_p2: "Главный герой, пропащий субъект из параллельной реальности, случайно прочёл пару строк на незнакомом языке, после чего небосвод пошёл трещинами, а в прогалы хлынули щупальца, когти и неописуемые формы из миров за гранью сна. Человечество погрузилось в хаос, но виновник апокалипсиса безучастно ковыряет в носу, принимая рёв космических ужасов за галлюцинации.",
-    story_p3: "Смертоносное проклятие Некрономикона, ломающее психику сильнейших магов, разбивается о «непробиваемую» тупость и химическую зависимость пьяницы. Сама Книга, запертая в этой абсурдной связке, впервые в своём существовании оказывается в тупике: она бессмертна, но обречена делить вечность с существом, которому на неё плевать.",
-    story_p4: "Чёрный юмор, грязные словечки, абсурдные ситуации и необычный сюжет.",
-
-    systems_title: "Ключевые подсистемы",
-    systems_subtitle: "Каждая подсистема — это набор C#-классов, Godot-сцен и JSON-данных, задокументированных и расширяемых через моды.",
-
-    sys_01_title: "Roslyn-компиляция модов",
-    sys_01_desc: "C# код из mods/ компилируется на лету в рантайме через Microsoft.CodeAnalysis с SHA-256 кэшированием.",
-    sys_02_title: "JSON-патчи",
-    sys_02_desc: "Моды изменяют данные друг друга: wildcard, $add/$remove/$set, identity-key merging.",
-    sys_03_title: "Шина событий",
-    sys_03_desc: "Двухуровневый pub-sub: типизированный C# + строковый GDScript с авто-мостом через [EventKey].",
-    sys_04_title: "DSL сценариев",
-    sys_04_desc: "Собственный язык .scenario, расширяемый парсер, 35+ командных стратегий — можно легко добавлять свои команды.",
-    sys_05_title: "C# ↔ GDScript",
-    sys_05_desc: "GDActionContext открывает весь C# API для GDScript-модов: сцены, квесты, события.",
-    sys_06_title: "JSON → C# фабрики",
-    sys_06_desc: "24 типобезопасные фабрики загружают JSON-сущности из всех модов и кэшируют результат.",
-    sys_07_title: "Сохранения модов",
-    sys_07_desc: "Каждый мод сохраняет и загружает своё состояние через IModSaveable — без конфликтов.",
-    sys_08_title: "Граф зависимостей",
-    sys_08_desc: "Топологическая сортировка загрузки: depends + ручной порядок + обнаружение конфликтов.",
-
-    cta_title: "Присоединяйся",
-    cta_p1: "Проект с открытым исходным кодом под лицензией MIT.",
-    cta_p2: "Нужна конструктивная критика, свежий взгляд и обратная связь. Если тебе интересны визуальные новеллы, моддинг, Godot или просто необычная архитектура — загляни в репозиторий.",
-    cta_btn_repo: "Перейти в репозиторий",
-    cta_btn_license: "Лицензия MIT",
-
-    footer_text: "© 2026 Исаев Илья",
-    footer_opensource: "Open Source / MIT License",
-
-    screenshot_placeholder: "Изображение"
-  },
-
-  en: {
-    lang_name: "English",
-    nav_about: "About",
-    nav_features: "Features",
-    nav_arch: "Architecture",
-    nav_screenshots: "Screenshots",
-    nav_videos: "Videos",
-    nav_story: "Story",
-    nav_systems: "Systems",
-    nav_quickstart: "Quick Start",
-    nav_docs: "Documentation",
-    nav_docs_back: "← Back to site",
-    nav_repo: "Repository",
-
-    hero_title: "cthangover",
-    hero_tagline: "A mod-oriented platform for visual novels with RPG elements",
-    hero_btn_repo: "Source in the repository",
-
-    about_title: "About the Project",
-    about_p1: "cthangover is a visual novel with RPG elements, built on a unique mod-oriented architecture. Written in Godot 4.6 (C# / .NET 8) and distributed under the MIT license.",
-    about_p2: "The Godot project contains almost no resources. A lightweight C# kernel assembles a complete game at runtime from mods located in the mods/ folder. Mods contain scenes, scenarios, resources, and C# source code — compiled on-the-fly via Roslyn. By removing or adding mods, you can remove or add scenes, mechanics, and entire game subsystems.",
-    about_p3: "This opens the door to limitless modding and development of your own projects on top of the kernel. To modify mods, you don't even need Godot or an SDK — a text editor and basic JSON knowledge are enough.",
-
-    features_title: "Key Features",
-    features_subtitle: "What's already working out of the box",
-
-    feat_time_title: "Shader-based Time of Day",
-    feat_time_desc: "One background instead of hundreds of variations. Automatic GPU-based calculation of day/night phases without extra assets.",
-
-    feat_light_title: "2D Lighting",
-    feat_light_desc: "Dynamic light sources, depth maps, and a draggable player lamp bring every scene to life.",
-
-    feat_dsl_title: "Scenario DSL",
-    feat_dsl_desc: "A custom domain-specific language for writing scenarios. Simple syntax, 26 commands, extensible via mods.",
-
-    feat_rpg_title: "RPG Systems",
-    feat_rpg_desc: "Characters with levels, XP, quests, inventory, crafting, skills, and collectible rarity cards.",
-
-    feat_battle_title: "Turn-Based Battle",
-    feat_battle_desc: "Two equal battle modes — turn-based and Final Fantasy style. Switch on the fly via mods.",
-
-    feat_mod_title: "Mod System",
-    feat_mod_desc: "The game is assembled from transparent bricks. Each mod can be inspected, removed, and you'll see how the game changes.",
-
-    arch_title: "Mod-Oriented Architecture",
-    arch_kernel: "Kernel (C#)",
-    arch_kernel_desc: "A lightweight core with no resources. Loads and activates mods, compiles C# code (Roslyn), resolves conflicts.",
-    arch_mods: "Mods (mods/)",
-    arch_mods_desc: "Scenes, scenarios (.scenario), textures, sounds, shaders, JSON data, C# source code. Everything the game is made of.",
-    arch_game: "Game",
-    arch_game_desc: "Assembled at runtime from active mods. Removed the turn-based battle mod, added FF — now you have Final Fantasy style combat. Swapped them back — turn-based again. Added a food mod — now you cook, eat, and feed your companions. Removed it — no survival fuss.",
-    arch_footer: "You don't need Godot or an SDK to modify mods. A text editor, JSON, and a bit of C# (optional) — that's enough to change or create a game mechanic.",
-
-    screenshots_title: "Screenshots",
-    screenshot_n: "Screenshot",
-
-    videos_title: "Videos",
-    video_lighting_title: "Lighting & Time of Day",
-
-    story_title: "Story",
-    story_p1: "Cthangover (Cthulhu + Hangover) is the story of how the great Al-Azif, also known as the Book of the Dead, met its one and only invincible enemy — a chronic alcoholic.",
-    story_p2: "The protagonist, a lost soul from a parallel reality, accidentally read a couple of lines in an unknown language, after which the firmament cracked open and tentacles, claws, and indescribable forms from worlds beyond sleep poured through. Humanity plunged into chaos, but the culprit of the apocalypse is idly picking his nose, mistaking the roar of cosmic horrors for hallucinations.",
-    story_p3: "The deadly curse of the Necronomicon, which breaks the minds of the mightiest mages, shatters against the impenetrable stupidity and chemical dependency of a drunkard. The Book itself, trapped in this absurd bond, finds itself at a dead end for the first time in its existence: it is immortal, but doomed to share eternity with a being who couldn't care less.",
-    story_p4: "Black humor, foul language, absurd situations, and an unusual plot.",
-
-    systems_title: "Core Subsystems",
-    systems_subtitle: "Each subsystem is a set of C# classes, Godot scenes, and JSON data — documented and extensible via mods.",
-
-    sys_01_title: "Roslyn Mod Compilation",
-    sys_01_desc: "C# source from mods/ compiled at runtime via Microsoft.CodeAnalysis with SHA-256 caching.",
-    sys_02_title: "JSON Patches",
-    sys_02_desc: "Mods patch each other's data: wildcards, $add/$remove/$set, identity-key merging.",
-    sys_03_title: "Event Bus",
-    sys_03_desc: "Dual-layer pub-sub: typed C# + string-based GDScript with auto-bridging via [EventKey].",
-    sys_04_title: "Scenario DSL",
-    sys_04_desc: "Custom .scenario language, extensible parser, 35+ command strategies — add your own commands easily.",
-    sys_05_title: "C# ↔ GDScript",
-    sys_05_desc: "GDActionContext exposes the full C# API to GDScript mods: scenes, quests, events.",
-    sys_06_title: "JSON → C# Factories",
-    sys_06_desc: "24 type-safe factories load JSON entities from all mods and cache results.",
-    sys_07_title: "Per-Mod Saves",
-    sys_07_desc: "Each mod saves and loads its own state via IModSaveable — zero conflicts.",
-    sys_08_title: "Dependency Graph",
-    sys_08_desc: "Topological mod ordering: depends declarations + manual order + conflict detection.",
-
-    cta_title: "Get Involved",
-    cta_p1: "Open source project under the MIT license.",
-    cta_p2: "Constructive criticism, fresh perspectives, and feedback are needed. If you're interested in visual novels, modding, Godot, or just unusual architecture — check out the repository.",
-    cta_btn_repo: "Go to repository",
-    cta_btn_license: "MIT License",
-
-    footer_text: "© 2026 Isaev Ilya",
-    footer_opensource: "Open Source / MIT License",
-
-    screenshot_placeholder: "Image"
-  },
-
-  zh: {
-    lang_name: "中文",
-    nav_about: "关于项目",
-    nav_features: "功能特点",
-    nav_arch: "架构",
-    nav_screenshots: "截图",
-    nav_videos: "视频",
-    nav_story: "剧情",
-    nav_systems: "系统",
-    nav_quickstart: "快速开始",
-    nav_docs: "文档",
-    nav_docs_back: "← 返回网站",
-    nav_repo: "代码仓库",
-
-    hero_title: "cthangover",
-    hero_tagline: "面向模组的视觉小说与RPG平台",
-    hero_btn_repo: "仓库中的源代码",
-
-    about_title: "关于项目",
-    about_p1: "cthangover 是一款带有RPG元素的视觉小说，基于独特的模组导向架构构建。项目使用 Godot 4.6（C# / .NET 8）开发，并以 MIT 许可证发布。",
-    about_p2: "Godot 项目中几乎没有资源。轻量级的 C# 内核在运行时从 mods/ 文件夹中的模组组装完整游戏。模组包含场景、剧本、资源以及 C# 源代码——通过 Roslyn 即时编译。移除或添加模组，即可删除或添加场景、机制和整个游戏子系统。",
-    about_p3: "这为无限模组开发和在内核之上构建自己的项目打开了大门。修改模组甚至不需要 Godot 或 SDK——文本编辑器和基础 JSON 知识就足够了。",
-
-    features_title: "关键功能",
-    features_subtitle: "开箱即用的功能",
-
-    feat_time_title: "基于着色器的昼夜系统",
-    feat_time_desc: "一个背景取代数百个变体。直接在 GPU 上自动计算昼夜阶段，无需额外资源。",
-
-    feat_light_title: "2D照明",
-    feat_light_desc: "动态光源、深度图和可拖动的玩家灯，让每个场景栩栩如生。",
-
-    feat_dsl_title: "剧本DSL",
-    feat_dsl_desc: "用于编写剧本的自定义领域特定语言。简洁的语法，26条命令，可通过模组扩展。",
-
-    feat_rpg_title: "RPG系统",
-    feat_rpg_desc: "具有等级、经验值、任务、背包、合成、技能和可收集稀有卡牌的角色。",
-
-    feat_battle_title: "回合制战斗",
-    feat_battle_desc: "两种平等战斗模式——回合制和最终幻想式。通过模组随时切换。",
-
-    feat_mod_title: "模组系统",
-    feat_mod_desc: "游戏由透明的「积木」组装而成。每个模组都可以检视、移除，观察游戏如何变化。",
-
-    arch_title: "模组导向架构",
-    arch_kernel: "内核 (C#)",
-    arch_kernel_desc: "无资源的轻量级核心。加载并激活模组，编译 C# 代码（Roslyn），解决冲突。",
-    arch_mods: "模组 (mods/)",
-    arch_mods_desc: "场景、剧本 (.scenario)、纹理、音效、着色器、JSON 数据、C# 源代码。构成游戏的一切。",
-    arch_game: "游戏",
-    arch_game_desc: "在运行时由活动模组组装。移除回合制战斗模组，添加 FF——现在你有了最终幻想式战斗。换回来——又回到回合制。添加食物模组——现在你需要烹饪、进食并喂养伙伴。移除——无需为生存操心。",
-    arch_footer: "修改模组不需要 Godot 或 SDK。文本编辑器、JSON 和一点 C#（可选）——足以改变或创建游戏机制。",
-
-    screenshots_title: "截图",
-    screenshot_n: "截图",
-
-    videos_title: "视频",
-    video_lighting_title: "光照与时间系统",
-
-    story_title: "剧情",
-    story_p1: "Cthangover（克苏鲁 + 宿醉）讲述了伟大的阿尔-阿吉夫（亦称「死者之书」）遇到它唯一不可战胜的敌人——一个慢性酒精中毒者的故事。",
-    story_p2: "主角，一个来自平行现实的堕落灵魂，偶然读了几句陌生语言的文字，随后苍穹开裂，触手、利爪和来自梦境外世界的难以名状之物倾泻而入。人类陷入混乱，但末日的罪魁祸首却在漫不经心地挖鼻孔，将宇宙恐怖的咆哮当作幻觉。",
-    story_p3: "死灵之书的致命诅咒能击溃最强法师的心智，却在一名醉鬼无坚不摧的愚蠢和化学依赖面前碎成粉末。这本书本身被困在这荒谬的联结中，在其存在中首次陷入僵局：它永生不死，却注定要与一个对它毫不在意的生物共享永恒。",
-    story_p4: "黑色幽默，粗俗言辞，荒诞情境和非凡的剧情。",
-
-    systems_title: "核心子系统",
-    systems_subtitle: "每个子系统都是一组 C# 类、Godot 场景和 JSON 数据——已文档化并可通过模组扩展。",
-
-    sys_01_title: "Roslyn 模组编译",
-    sys_01_desc: "C# 源代码通过 Microsoft.CodeAnalysis 在运行时编译，带 SHA-256 缓存。",
-    sys_02_title: "JSON 补丁",
-    sys_02_desc: "模组相互修补数据：通配符、$add/$remove/$set、identity-key 合并。",
-    sys_03_title: "事件总线",
-    sys_03_desc: "双层发布-订阅：类型化 C# + 基于字符串的 GDScript，通过 [EventKey] 自动桥接。",
-    sys_04_title: "剧本 DSL",
-    sys_04_desc: "自定义 .scenario 语言、可扩展解析器、35+ 命令策略——轻松添加自己的命令。",
-    sys_05_title: "C# ↔ GDScript",
-    sys_05_desc: "GDActionContext 向 GDScript 模组暴露完整 C# API：场景、任务、事件。",
-    sys_06_title: "JSON → C# 工厂",
-    sys_06_desc: "24 个类型安全的工厂从所有模组加载 JSON 实体并缓存结果。",
-    sys_07_title: "模组存档",
-    sys_07_desc: "每个模组通过 IModSaveable 独立保存和加载状态——零冲突。",
-    sys_08_title: "依赖图",
-    sys_08_desc: "拓扑模组排序：depends 声明 + 手动顺序 + 冲突检测。",
-
-    cta_title: "加入我们",
-    cta_p1: "MIT 许可证下的开源项目。",
-    cta_p2: "需要建设性的批评、新鲜视角和反馈。如果你对视觉小说、模组开发、Godot 或独特的架构感兴趣——来看看代码仓库。",
-    cta_btn_repo: "前往仓库",
-    cta_btn_license: "MIT 许可证",
-
-    footer_text: "© 2026 Isaev Ilya",
-    footer_opensource: "开源 / MIT 许可证",
-
-    screenshot_placeholder: "图片"
-  },
-
-  ja: {
-    lang_name: "日本語",
-    nav_about: "概要",
-    nav_features: "機能",
-    nav_arch: "アーキテクチャ",
-    nav_screenshots: "スクリーンショット",
-    nav_videos: "動画",
-    nav_story: "ストーリー",
-    nav_systems: "システム",
-    nav_quickstart: "クイックスタート",
-    nav_docs: "ドキュメント",
-    nav_docs_back: "← サイトに戻る",
-    nav_repo: "リポジトリ",
-
-    hero_title: "cthangover",
-    hero_tagline: "RPG要素を持つモッド指向ビジュアルノベルプラットフォーム",
-    hero_btn_repo: "リポジトリのソースコード",
-
-    about_title: "プロジェクトについて",
-    about_p1: "cthangover は、独自のモッド指向アーキテクチャ上に構築された RPG 要素を持つビジュアルノベルです。Godot 4.6（C# / .NET 8）で開発され、MIT ライセンスで公開されています。",
-    about_p2: "Godot プロジェクトにはリソースがほとんどありません。軽量な C# カーネルが、mods/ フォルダ内のモッドから実行時に完全なゲームを組み立てます。モッドにはシーン、シナリオ、リソース、C# ソースコードが含まれ、Roslyn でオンザフライコンパイルされます。モッドを削除または追加することで、シーン、メカニクス、ゲームサブシステム全体を削除または追加できます。",
-    about_p3: "これにより、無限のモッド開発とカーネル上での独自プロジェクト構築への道が開かれます。モッドの変更に Godot や SDK さえ必要ありません——テキストエディタと基本的な JSON 知識だけで十分です。",
-
-    features_title: "主な機能",
-    features_subtitle: "すぐに使える機能",
-
-    feat_time_title: "シェーダーベースの時間帯",
-    feat_time_desc: "数百のバリエーションの代わりに1つの背景。GPU上で昼夜のフェーズを自動計算し、追加リソース不要。",
-
-    feat_light_title: "2D ライティング",
-    feat_light_desc: "動的光源、深度マップ、ドラッグ可能なプレイヤーランプが各シーンに命を吹き込みます。",
-
-    feat_dsl_title: "シナリオ DSL",
-    feat_dsl_desc: "シナリオ作成のためのカスタムドメイン特化言語。シンプルな構文、26のコマンド、モッドで拡張可能。",
-
-    feat_rpg_title: "RPG システム",
-    feat_rpg_desc: "レベル、経験値、クエスト、インベントリ、クラフト、スキル、収集可能なレアリティカードを持つキャラクター。",
-
-    feat_battle_title: "ターン制バトル",
-    feat_battle_desc: "2つの同等のバトルモード——ターン制とファイナルファンタジー式。モッドでオンザフライ切り替え。",
-
-    feat_mod_title: "モッドシステム",
-    feat_mod_desc: "ゲームは透明な「レンガ」から組み立てられます。各モッドを検査、削除して、ゲームがどのように変化するかを確認できます。",
-
-    arch_title: "モッド指向アーキテクチャ",
-    arch_kernel: "カーネル (C#)",
-    arch_kernel_desc: "リソースのない軽量コア。モッドを読み込み・有効化し、C# コードをコンパイル（Roslyn）、競合を解決。",
-    arch_mods: "モッド (mods/)",
-    arch_mods_desc: "シーン、シナリオ (.scenario)、テクスチャ、サウンド、シェーダー、JSON データ、C# ソースコード。ゲームを構成するすべて。",
-    arch_game: "ゲーム",
-    arch_game_desc: "アクティブなモッドから実行時に組み立てられます。ターン制バトルモッドを削除し、FF を追加——これでファイナルファンタジー式戦闘に。元に戻すと——再びターン制に。食べ物モッドを追加——料理し、食べ、仲間に食事を与える必要があります。削除——サバイバルの心配なし。",
-    arch_footer: "モッドの変更に Godot や SDK は不要です。テキストエディタ、JSON、少しの C#（任意）——これだけでゲームメカニクスを変更または作成できます。",
-
-    screenshots_title: "スクリーンショット",
-    screenshot_n: "スクリーンショット",
-
-    videos_title: "動画",
-    video_lighting_title: "ライティングと時間帯",
-
-    story_title: "ストーリー",
-    story_p1: "Cthangover（クトゥルフ + 二日酔い）は、偉大なるアル・アジフ、別名「死者の書」が、唯一無敵の敵——慢性アルコール中毒者——に出会った物語です。",
-    story_p2: "平行現実から来たダメ人間の主人公は、見知らぬ言語の数行を偶然読み、その後天空に亀裂が走り、触手、鉤爪、そして夢の彼方の世界からの名状しがたきものたちが流れ込みます。人類は混乱に陥りますが、黙示録の元凶は鼻をほじりながら、宇宙的恐怖の咆哮を幻覚だと思い込んでいます。",
-    story_p3: "最強の魔道士の精神さえ砕くネクロノミコンの致命的な呪いは、酔っ払いの「貫通不能な」愚かさと化学的依存の前に粉々になります。この不条理な絆に閉じ込められた書物自体は、その存在の中で初めて行き詰まります：それは不死だが、自分に全く関心のない存在と永遠を共にする運命にあります。",
-    story_p4: "ブラックユーモア、汚い言葉、不条理な状況、そして非凡なプロット。",
-
-    systems_title: "主要サブシステム",
-    systems_subtitle: "各サブシステムは C# クラス、Godot シーン、JSON データのセット——文書化され、モッドで拡張可能。",
-
-    sys_01_title: "Roslyn モッドコンパイル",
-    sys_01_desc: "C# ソースコードを Microsoft.CodeAnalysis でランタイムコンパイル、SHA-256 キャッシュ付き。",
-    sys_02_title: "JSON パッチ",
-    sys_02_desc: "モッド同士のデータ修正：ワイルドカード、$add/$remove/$set、identity-key マージ。",
-    sys_03_title: "イベントバス",
-    sys_03_desc: "二層 pub-sub：型付き C# + 文字列ベース GDScript、[EventKey] で自動ブリッジング。",
-    sys_04_title: "シナリオ DSL",
-    sys_04_desc: "独自の .scenario 言語、拡張可能なパーサー、35以上のコマンド戦略——独自コマンドを簡単に追加可能。",
-    sys_05_title: "C# ↔ GDScript",
-    sys_05_desc: "GDActionContext が全 C# API を GDScript モッドに公開：シーン、クエスト、イベント。",
-    sys_06_title: "JSON → C# ファクトリー",
-    sys_06_desc: "24の型安全ファクトリーが全モッドから JSON エンティティを読み込みキャッシュ。",
-    sys_07_title: "モッドセーブ",
-    sys_07_desc: "各モッドが IModSaveable で独自の状態を保存・読み込み——競合ゼロ。",
-    sys_08_title: "依存グラフ",
-    sys_08_desc: "トポロジカルモッド順序：depends 宣言 + 手動順序 + 競合検出。",
-
-    cta_title: "参加しよう",
-    cta_p1: "MIT ライセンスのオープンソースプロジェクト。",
-    cta_p2: "建設的な批評、新鮮な視点、フィードバックが必要です。ビジュアルノベル、モッド開発、Godot、またはユニークなアーキテクチャに興味があれば——リポジトリをご覧ください。",
-    cta_btn_repo: "リポジトリへ",
-    cta_btn_license: "MIT ライセンス",
-
-    footer_text: "© 2026 Isaev Ilya",
-    footer_opensource: "オープンソース / MIT ライセンス",
-
-    screenshot_placeholder: "画像"
-  },
-
-  ko: {
-    lang_name: "한국어",
-    nav_about: "소개",
-    nav_features: "기능",
-    nav_arch: "아키텍처",
-    nav_screenshots: "스크린샷",
-    nav_videos: "비디오",
-    nav_story: "스토리",
-    nav_systems: "시스템",
-    nav_quickstart: "빠른 시작",
-    nav_docs: "문서",
-    nav_docs_back: "← 사이트로",
-    nav_repo: "저장소",
-
-    hero_title: "cthangover",
-    hero_tagline: "RPG 요소가 있는 모드 지향 비주얼 노벨 플랫폼",
-    hero_btn_repo: "저장소 소스 코드",
-
-    about_title: "프로젝트 소개",
-    about_p1: "cthangover는 독특한 모드 지향 아키텍처 위에 구축된 RPG 요소가 있는 비주얼 노벨입니다. Godot 4.6 (C# / .NET 8)으로 작성되었으며 MIT 라이선스로 배포됩니다.",
-    about_p2: "Godot 프로젝트에는 리소스가 거의 없습니다. 경량 C# 커널이 mods/ 폴더의 모드에서 런타임에 완전한 게임을 조립합니다. 모드에는 장면, 시나리오, 리소스 및 C# 소스 코드가 포함되어 있으며 Roslyn을 통해 실시간 컴파일됩니다. 모드를 제거하거나 추가하면 장면, 메커니즘 및 전체 게임 하위 시스템을 제거하거나 추가할 수 있습니다.",
-    about_p3: "이것은 무한한 모드 개발과 커널 위에 자신의 프로젝트를 구축할 수 있는 길을 열어줍니다. 모드를 수정하는 데 Godot나 SDK조차 필요하지 않습니다 — 텍스트 편집기와 기본 JSON 지식만으로 충분합니다.",
-
-    features_title: "주요 기능",
-    features_subtitle: "기본으로 작동하는 기능",
-
-    feat_time_title: "셰이더 기반 시간대",
-    feat_time_desc: "수백 가지 변형 대신 하나의 배경. GPU에서 주야간 단계를 자동 계산, 추가 리소스 불필요.",
-
-    feat_light_title: "2D 조명",
-    feat_light_desc: "동적 광원, 깊이 맵, 드래그 가능한 플레이어 램프가 모든 장면에 생명을 불어넣습니다.",
-
-    feat_dsl_title: "시나리오 DSL",
-    feat_dsl_desc: "시나리오 작성을 위한 사용자 정의 도메인 특화 언어. 간단한 구문, 26개 명령, 모드로 확장 가능.",
-
-    feat_rpg_title: "RPG 시스템",
-    feat_rpg_desc: "레벨, 경험치, 퀘스트, 인벤토리, 제작, 스킬, 수집 가능한 희귀도 카드를 가진 캐릭터.",
-
-    feat_battle_title: "턴제 배틀",
-    feat_battle_desc: "두 가지 동등한 전투 모드 — 턴제와 파이널 판타지식. 모드로 실시간 전환.",
-
-    feat_mod_title: "모드 시스템",
-    feat_mod_desc: "게임은 투명한 '벽돌'로 조립됩니다. 각 모드를 검사하고 제거하여 게임이 어떻게 변하는지 볼 수 있습니다.",
-
-    arch_title: "모드 지향 아키텍처",
-    arch_kernel: "커널 (C#)",
-    arch_kernel_desc: "리소스 없는 경량 코어. 모드를 로드 및 활성화하고 C# 코드를 컴파일(Roslyn)하며 충돌을 해결합니다.",
-    arch_mods: "모드 (mods/)",
-    arch_mods_desc: "장면, 시나리오 (.scenario), 텍스처, 사운드, 셰이더, JSON 데이터, C# 소스 코드. 게임을 구성하는 모든 것.",
-    arch_game: "게임",
-    arch_game_desc: "활성 모드에서 런타임에 조립됩니다. 턴제 배틀 모드를 제거하고 FF를 추가 — 이제 파이널 판타지식 전투. 다시 바꾸면 — 턴제로. 음식 모드 추가 — 요리하고, 먹고, 동료에게 먹이를 줘야 합니다. 제거 — 생존 걱정 없음.",
-    arch_footer: "모드 수정에 Godot나 SDK가 필요하지 않습니다. 텍스트 편집기, JSON, 약간의 C#(선택 사항) — 이것으로 게임 메커니즘을 변경하거나 만들 수 있습니다.",
-
-    screenshots_title: "스크린샷",
-    screenshot_n: "스크린샷",
-
-    videos_title: "비디오",
-    video_lighting_title: "조명과 시간",
-
-    story_title: "스토리",
-    story_p1: "Cthangover(크툴루 + 숙취)는 위대한 알-아지프, 일명 '죽은 자의 책'이 유일무이한 무적의 적 — 만성 알코올 중독자 — 를 만난 이야기입니다.",
-    story_p2: "평행 현실에서 온 망가진 주인공은 낯선 언어로 된 몇 줄을 우연히 읽고, 그 후 하늘에 균열이 가고 촉수, 발톱, 꿈 너머 세계의 형언할 수 없는 것들이 쏟아져 들어옵니다. 인류는 혼돈에 빠지지만, 종말의 원흉은 코를 파며 우주적 공포의 포효를 환각으로 착각합니다.",
-    story_p3: "최강 마법사의 정신조차 부수는 네크로노미콘의 치명적인 저주는 술주정뱅이의 '뚫을 수 없는' 어리석음과 화학적 의존 앞에 산산이 부서집니다. 이 부조리한 결속에 갇힌 책 자체는 그 존재에서 처음으로 막다른 골목에 다다릅니다: 불멸이지만, 자신에게 전혀 관심 없는 존재와 영원을 함께할 운명입니다.",
-    story_p4: "블랙 유머, 거친 언어, 부조리한 상황, 그리고 독특한 플롯.",
-
-    systems_title: "핵심 서브시스템",
-    systems_subtitle: "각 서브시스템은 C# 클래스, Godot 장면, JSON 데이터의 집합 — 문서화되어 있고 모드로 확장 가능.",
-
-    sys_01_title: "Roslyn 모드 컴파일",
-    sys_01_desc: "C# 소스 코드를 Microsoft.CodeAnalysis로 런타임 컴파일, SHA-256 캐싱.",
-    sys_02_title: "JSON 패치",
-    sys_02_desc: "모드 간 데이터 패치: 와일드카드, $add/$remove/$set, identity-key 병합.",
-    sys_03_title: "이벤트 버스",
-    sys_03_desc: "이중 계층 pub-sub: 타입 C# + 문자열 기반 GDScript, [EventKey]로 자동 브리징.",
-    sys_04_title: "시나리오 DSL",
-    sys_04_desc: "커스텀 .scenario 언어, 확장 가능한 파서, 35개 이상의 명령 전략——쉽게 자신만의 명령 추가 가능.",
-    sys_05_title: "C# ↔ GDScript",
-    sys_05_desc: "GDActionContext가 전체 C# API를 GDScript 모드에 공개: 장면, 퀘스트, 이벤트.",
-    sys_06_title: "JSON → C# 팩토리",
-    sys_06_desc: "24개의 타입 안전 팩토리가 모든 모드에서 JSON 엔티티를 로드하고 캐시.",
-    sys_07_title: "모드 저장",
-    sys_07_desc: "각 모드가 IModSaveable을 통해 자체 상태를 저장/로드——충돌 없음.",
-    sys_08_title: "의존성 그래프",
-    sys_08_desc: "위상 정렬 모드 순서: depends 선언 + 수동 순서 + 충돌 감지.",
-
-    cta_title: "참여하기",
-    cta_p1: "MIT 라이선스의 오픈소스 프로젝트.",
-    cta_p2: "건설적인 비판, 신선한 시각, 피드백이 필요합니다. 비주얼 노벨, 모드 개발, Godot 또는 독특한 아키텍처에 관심이 있다면 — 저장소를 확인하세요.",
-    cta_btn_repo: "저장소로 이동",
-    cta_btn_license: "MIT 라이선스",
-
-    footer_text: "© 2026 Isaev Ilya",
-    footer_opensource: "오픈소스 / MIT 라이선스",
-
-    screenshot_placeholder: "이미지"
-  },
-
-  vi: {
-    lang_name: "Tiếng Việt",
-    nav_about: "Giới thiệu",
-    nav_features: "Tính năng",
-    nav_arch: "Kiến trúc",
-    nav_screenshots: "Ảnh chụp",
-    nav_videos: "Video",
-    nav_story: "Cốt truyện",
-    nav_systems: "Hệ thống",
-    nav_quickstart: "Bắt đầu nhanh",
-    nav_docs: "Tài liệu",
-    nav_docs_back: "← Về trang",
-    nav_repo: "Kho lưu trữ",
-
-    hero_title: "cthangover",
-    hero_tagline: "Nền tảng visual novel hướng mod với yếu tố RPG",
-    hero_btn_repo: "Mã nguồn trong kho lưu trữ",
-
-    about_title: "Về dự án",
-    about_p1: "cthangover là một visual novel có yếu tố RPG, được xây dựng trên kiến trúc hướng mod độc đáo. Viết bằng Godot 4.6 (C# / .NET 8) và phân phối theo giấy phép MIT.",
-    about_p2: "Dự án Godot hầu như không chứa tài nguyên. Một nhân C# nhẹ lắp ráp trò chơi hoàn chỉnh trong thời gian chạy từ các mod trong thư mục mods/. Mod chứa cảnh, kịch bản, tài nguyên và mã nguồn C# — được biên dịch ngay lập tức qua Roslyn. Bằng cách xóa hoặc thêm mod, bạn có thể xóa hoặc thêm cảnh, cơ chế và toàn bộ hệ thống con của trò chơi.",
-    about_p3: "Điều này mở ra con đường phát triển mod vô hạn và xây dựng dự án riêng trên nền nhân. Để sửa đổi mod, bạn thậm chí không cần Godot hoặc SDK — chỉ cần trình soạn thảo văn bản và kiến thức JSON cơ bản.",
-
-    features_title: "Tính năng chính",
-    features_subtitle: "Những gì đã hoạt động ngay từ đầu",
-
-    feat_time_title: "Thời gian trong ngày bằng Shader",
-    feat_time_desc: "Một hình nền thay cho hàng trăm biến thể. Tự động tính toán pha ngày/đêm trên GPU, không cần thêm tài nguyên.",
-
-    feat_light_title: "Ánh sáng 2D",
-    feat_light_desc: "Nguồn sáng động, bản đồ độ sâu và đèn kéo thả của người chơi thổi hồn vào mỗi cảnh.",
-
-    feat_dsl_title: "DSL Kịch bản",
-    feat_dsl_desc: "Ngôn ngữ chuyên biệt tùy chỉnh để viết kịch bản. Cú pháp đơn giản, 26 lệnh, mở rộng qua mod.",
-
-    feat_rpg_title: "Hệ thống RPG",
-    feat_rpg_desc: "Nhân vật với cấp độ, kinh nghiệm, nhiệm vụ, túi đồ, chế tạo, kỹ năng và thẻ độ hiếm sưu tập.",
-
-    feat_battle_title: "Chiến đấu theo lượt",
-    feat_battle_desc: "Hai chế độ chiến đấu ngang hàng — theo lượt và phong cách Final Fantasy. Chuyển đổi linh hoạt qua mod.",
-
-    feat_mod_title: "Hệ thống Mod",
-    feat_mod_desc: "Trò chơi được lắp ráp từ những 'viên gạch' trong suốt. Mỗi mod có thể được kiểm tra, gỡ bỏ để thấy trò chơi thay đổi ra sao.",
-
-    arch_title: "Kiến trúc hướng Mod",
-    arch_kernel: "Nhân (C#)",
-    arch_kernel_desc: "Lõi nhẹ không tài nguyên. Tải và kích hoạt mod, biên dịch mã C# (Roslyn), giải quyết xung đột.",
-    arch_mods: "Mod (mods/)",
-    arch_mods_desc: "Cảnh, kịch bản (.scenario), họa tiết, âm thanh, shader, dữ liệu JSON, mã nguồn C#. Mọi thứ tạo nên trò chơi.",
-    arch_game: "Trò chơi",
-    arch_game_desc: "Được lắp ráp trong thời gian chạy từ các mod đang hoạt động. Gỡ mod chiến đấu theo lượt, thêm FF — giờ bạn có chiến đấu kiểu Final Fantasy. Đổi lại — quay về theo lượt. Thêm mod thức ăn — giờ bạn nấu, ăn và cho đồng đội ăn. Gỡ đi — không lo sinh tồn.",
-    arch_footer: "Bạn không cần Godot hay SDK để sửa mod. Trình soạn thảo văn bản, JSON và một chút C# (tùy chọn) — đủ để thay đổi hoặc tạo cơ chế trò chơi.",
-
-    screenshots_title: "Ảnh chụp màn hình",
-    screenshot_n: "Ảnh chụp",
-
-    videos_title: "Video",
-    video_lighting_title: "Ánh sáng & Thời gian",
-
-    story_title: "Cốt truyện",
-    story_p1: "Cthangover (Cthulhu + Nôn nao) là câu chuyện về cách Al-Azif vĩ đại, còn được gọi là 'Cuốn sách của Người chết', gặp kẻ thù bất khả chiến bại duy nhất của mình — một kẻ nghiện rượu mãn tính.",
-    story_p2: "Nhân vật chính, một kẻ bất hảo từ thực tại song song, vô tình đọc vài dòng bằng ngôn ngữ lạ, sau đó bầu trời nứt toác và xúc tu, móng vuốt cùng những hình thù không thể miêu tả từ các thế giới bên kia giấc mơ tràn vào. Nhân loại chìm trong hỗn loạn, nhưng thủ phạm của ngày tận thế thì thản nhiên ngoáy mũi, nhầm tiếng gầm của kinh hoàng vũ trụ với ảo giác.",
-    story_p3: "Lời nguyền chết chóc của Necronomicon, thứ bẻ gãy tâm trí của những pháp sư mạnh nhất, tan vỡ trước sự ngu ngốc 'không thể xuyên thủng' và sự lệ thuộc hóa chất của một gã say. Chính Cuốn sách, bị mắc kẹt trong mối ràng buộc phi lý này, lần đầu tiên trong sự tồn tại của mình rơi vào ngõ cụt: nó bất tử, nhưng phải chia sẻ vĩnh hằng với một sinh vật chẳng thèm quan tâm đến nó.",
-    story_p4: "Hài hước đen, ngôn từ thô tục, tình huống phi lý và cốt truyện độc đáo.",
-
-    systems_title: "Hệ thống con Cốt lõi",
-    systems_subtitle: "Mỗi hệ thống con là một tập hợp các lớp C#, cảnh Godot và dữ liệu JSON — được ghi chép và mở rộng qua mod.",
-
-    sys_01_title: "Biên dịch Mod Roslyn",
-    sys_01_desc: "Mã nguồn C# được biên dịch thời gian chạy qua Microsoft.CodeAnalysis với bộ nhớ đệm SHA-256.",
-    sys_02_title: "JSON Patch",
-    sys_02_desc: "Mod vá dữ liệu của nhau: wildcard, $add/$remove/$set, identity-key merge.",
-    sys_03_title: "Bus Sự kiện",
-    sys_03_desc: "Pub-sub hai lớp: C# có kiểu + GDScript dựa trên chuỗi với cầu nối tự động qua [EventKey].",
-    sys_04_title: "DSL Kịch bản",
-    sys_04_desc: "Ngôn ngữ .scenario tùy chỉnh, trình phân tích cú pháp mở rộng, 35+ chiến lược lệnh — dễ dàng thêm lệnh của riêng bạn.",
-    sys_05_title: "C# ↔ GDScript",
-    sys_05_desc: "GDActionContext mở toàn bộ API C# cho mod GDScript: cảnh, nhiệm vụ, sự kiện.",
-    sys_06_title: "Factory JSON → C#",
-    sys_06_desc: "24 factory an toàn kiểu tải thực thể JSON từ tất cả mod và lưu vào bộ nhớ đệm.",
-    sys_07_title: "Lưu Mod",
-    sys_07_desc: "Mỗi mod lưu và tải trạng thái riêng qua IModSaveable — không xung đột.",
-    sys_08_title: "Đồ thị Phụ thuộc",
-    sys_08_desc: "Sắp xếp topo thứ tự mod: khai báo depends + thứ tự thủ công + phát hiện xung đột.",
-
-    cta_title: "Tham gia",
-    cta_p1: "Dự án mã nguồn mở theo giấy phép MIT.",
-    cta_p2: "Cần phê bình mang tính xây dựng, góc nhìn mới và phản hồi. Nếu bạn quan tâm đến visual novel, modding, Godot hoặc kiến trúc độc đáo — hãy ghé kho lưu trữ.",
-    cta_btn_repo: "Đến kho lưu trữ",
-    cta_btn_license: "Giấy phép MIT",
-
-    footer_text: "© 2026 Isaev Ilya",
-    footer_opensource: "Mã nguồn mở / Giấy phép MIT",
-
-    screenshot_placeholder: "Hình ảnh"
-  },
-
-  es: {
-    lang_name: "Español",
-    nav_about: "Acerca de",
-    nav_features: "Características",
-    nav_arch: "Arquitectura",
-    nav_screenshots: "Capturas",
-    nav_videos: "Videos",
-    nav_story: "Historia",
-    nav_systems: "Sistemas",
-    nav_quickstart: "Inicio rápido",
-    nav_docs: "Documentación",
-    nav_docs_back: "← Volver al sitio",
-    nav_repo: "Repositorio",
-
-    hero_title: "cthangover",
-    hero_tagline: "Plataforma de novelas visuales orientada a mods con elementos RPG",
-    hero_btn_repo: "Código fuente en el repositorio",
-
-    about_title: "Acerca del Proyecto",
-    about_p1: "cthangover es una novela visual con elementos RPG, construida sobre una arquitectura única orientada a mods. Escrito en Godot 4.6 (C# / .NET 8) y distribuido bajo la licencia MIT.",
-    about_p2: "El proyecto Godot casi no contiene recursos. Un núcleo C# ligero ensambla un juego completo en tiempo de ejecución desde los mods ubicados en la carpeta mods/. Los mods contienen escenas, guiones, recursos y código fuente C# — compilado al vuelo mediante Roslyn. Al eliminar o agregar mods, puedes eliminar o agregar escenas, mecánicas y subsistemas completos del juego.",
-    about_p3: "Esto abre la puerta al modding ilimitado y al desarrollo de tus propios proyectos sobre el núcleo. Para modificar mods ni siquiera necesitas Godot o un SDK — un editor de texto y conocimientos básicos de JSON son suficientes.",
-
-    features_title: "Características Clave",
-    features_subtitle: "Lo que ya funciona desde el inicio",
-
-    feat_time_title: "Hora del día por Shader",
-    feat_time_desc: "Un solo fondo en lugar de cientos de variaciones. Cálculo automático de fases día/noche directamente en la GPU, sin recursos adicionales.",
-
-    feat_light_title: "Iluminación 2D",
-    feat_light_desc: "Fuentes de luz dinámicas, mapas de profundidad y una lámpara arrastrable del jugador dan vida a cada escena.",
-
-    feat_dsl_title: "DSL de Guiones",
-    feat_dsl_desc: "Un lenguaje de dominio específico personalizado para escribir guiones. Sintaxis simple, 26 comandos, extensible mediante mods.",
-
-    feat_rpg_title: "Sistemas RPG",
-    feat_rpg_desc: "Personajes con niveles, experiencia, misiones, inventario, fabricación, habilidades y cartas de rareza coleccionables.",
-
-    feat_battle_title: "Batalla por Turnos",
-    feat_battle_desc: "Dos modos de batalla equivalentes — por turnos y estilo Final Fantasy. Se cambian al vuelo mediante mods.",
-
-    feat_mod_title: "Sistema de Mods",
-    feat_mod_desc: "El juego se ensambla a partir de 'ladrillos' transparentes. Cada mod puede inspeccionarse, retirarse y observar cómo cambia el juego.",
-
-    arch_title: "Arquitectura Orientada a Mods",
-    arch_kernel: "Núcleo (C#)",
-    arch_kernel_desc: "Un núcleo ligero sin recursos. Carga y activa mods, compila código C# (Roslyn), resuelve conflictos.",
-    arch_mods: "Mods (mods/)",
-    arch_mods_desc: "Escenas, guiones (.scenario), texturas, sonidos, shaders, datos JSON, código fuente C#. Todo lo que compone el juego.",
-    arch_game: "Juego",
-    arch_game_desc: "Ensamblado en tiempo de ejecución desde los mods activos. Quitas el mod de batalla por turnos, agregas FF — ahora tienes combate estilo Final Fantasy. Los cambias de nuevo — vuelta a los turnos. Agregas un mod de comida — ahora cocinas, comes y alimentas a tus compañeros. Lo quitas — sin preocupaciones de supervivencia.",
-    arch_footer: "No necesitas Godot ni un SDK para modificar mods. Un editor de texto, JSON y un poco de C# (opcional) — es suficiente para cambiar o crear una mecánica de juego.",
-
-    screenshots_title: "Capturas de Pantalla",
-    screenshot_n: "Captura",
-
-    videos_title: "Videos",
-    video_lighting_title: "Iluminación y Hora del Día",
-
-    story_title: "Historia",
-    story_p1: "Cthangover (Cthulhu + Resaca) es la historia de cómo el gran Al-Azif, también conocido como el 'Libro de los Muertos', conoció a su único e invencible enemigo — un alcohólico crónico.",
-    story_p2: "El protagonista, un sujeto perdido de una realidad paralela, leyó accidentalmente un par de líneas en un idioma desconocido, tras lo cual el firmamento se quebró y tentáculos, garras y formas indescriptibles de mundos más allá del sueño brotaron. La humanidad cayó en el caos, pero el culpable del apocalipsis sigue hurgándose la nariz, confundiendo el rugido de los horrores cósmicos con alucinaciones.",
-    story_p3: "La maldición mortal del Necronomicón, que quiebra la mente de los magos más poderosos, se estrella contra la estupidez 'impenetrable' y la dependencia química de un borracho. El propio Libro, atrapado en este vínculo absurdo, se encuentra por primera vez en su existencia en un callejón sin salida: es inmortal, pero condenado a compartir la eternidad con un ser al que no le importa en absoluto.",
-    story_p4: "Humor negro, lenguaje soez, situaciones absurdas y una trama inusual.",
-
-    systems_title: "Subsistemas Clave",
-    systems_subtitle: "Cada subsistema es un conjunto de clases C#, escenas Godot y datos JSON — documentados y extensibles mediante mods.",
-
-    sys_01_title: "Compilación Roslyn de Mods",
-    sys_01_desc: "Código C# compilado en tiempo de ejecución mediante Microsoft.CodeAnalysis con caché SHA-256.",
-    sys_02_title: "Parches JSON",
-    sys_02_desc: "Los mods modifican los datos de otros mods: wildcards, $add/$remove/$set, identity-key merging.",
-    sys_03_title: "Bus de Eventos",
-    sys_03_desc: "Pub-sub de doble capa: C# tipado + GDScript basado en cadenas con puenteo automático vía [EventKey].",
-    sys_04_title: "DSL de Escenarios",
-    sys_04_desc: "Lenguaje .scenario personalizado, parser extensible, 35+ estrategias de comando — añade tus propios comandos fácilmente.",
-    sys_05_title: "C# ↔ GDScript",
-    sys_05_desc: "GDActionContext expone la API completa de C# a mods GDScript: escenas, misiones, eventos.",
-    sys_06_title: "Fábricas JSON → C#",
-    sys_06_desc: "24 fábricas con seguridad de tipos cargan entidades JSON de todos los mods y las cachean.",
-    sys_07_title: "Guardado por Mod",
-    sys_07_desc: "Cada mod guarda y carga su propio estado mediante IModSaveable — sin conflictos.",
-    sys_08_title: "Grafo de Dependencias",
-    sys_08_desc: "Ordenamiento topológico de mods: declaraciones depends + orden manual + detección de conflictos.",
-
-    cta_title: "Participa",
-    cta_p1: "Proyecto de código abierto bajo la licencia MIT.",
-    cta_p2: "Se necesita crítica constructiva, perspectivas frescas y retroalimentación. Si te interesan las novelas visuales, el modding, Godot o simplemente una arquitectura inusual — visita el repositorio.",
-    cta_btn_repo: "Ir al repositorio",
-    cta_btn_license: "Licencia MIT",
-
-    footer_text: "© 2026 Isaev Ilya",
-    footer_opensource: "Código Abierto / Licencia MIT",
-
-    screenshot_placeholder: "Imagen"
-  }
+/* ============================================================
+   cthangover — i18n: UI-словарь (7 языков) + рантайм перевода.
+   Строки ключей — данные для index/docs/quickstart страниц.
+   Выбор языка: localStorage("cthangover_lang"), фолбэк en.
+   ============================================================ */
+
+var LANGS = [["ru","Русский"],["en","English"],["es","Español"],["zh","中文"],["ja","日本語"],["ko","한국어"],["vi","Tiếng Việt"]];
+var I18N = {
+ru:{qs_overview:"Обзор",nav_home:"Главная",nav_docs:"Документация",nav_quickstart:"Быстрый старт",nav_repo:"Репозиторий",
+kicker:"мод-ориентированный движок · Godot 4.6 · C# / .NET 8 · MIT",
+hero_h1a:"Визуальная новелла, которую",hero_h1b:"собирают моды",
+hero_tag:"Ядро Core/ не содержит ни одной игровой сцены. При запуске оно загружает моды из mods/, компилирует их C#-код через Roslyn и собирает игру — от боёвки до диалогов. Каждая механика — обычная папка, которую можно открыть, изменить и убрать.",
+cta_start:"Начать за 5 минут",cta_docs:"Документация",
+st_dsl_l:"команд DSL",st_mods_l:"модов в репозитории",st_loc_l:"строк C# ядра и модов",st_battle_l:"боевых системы",
+arch_cap:"Сборочная линия",arch_title:"Игра собирается слоями",
+arch_l1t:"Ядро · Core/",arch_l1d:"Сценарии DSL, реестр модов, сохранения, события, ресурсы, UI, аудио. Контента нет — только сервисы.",
+arch_l2t:"Платформа · base2d",arch_l2d:"Сцена-оболочка 2D: окно вида, тулбар, слоты панелей, уведомления.",
+arch_l3t:"Игровое ядро · visual_novel_core",arch_l3d:"Диалоги, персонажи, предметы, квесты и карта зон поверх платформы.",
+arch_l4t:"Ваш мод",arch_l4d:"Линия сюжета, механика или новые правила боя — обычная папка в mods/.",
+feat_cap:"Возможности",feat_title:"Что уже в ядре",
+f1t:"Roslyn в рантайме",f1d:"C#-исходники модов компилируются при загрузке; кэш по хэшу содержимого.",
+f2t:"tscn-патчи сцен",f2d:"Мод достраивает чужую сцену: узлы, свойства, связи между нодами.",
+f3t:"JSON-патчи данных",f3d:"$set · $add · $remove, wildcard-пути, слияние массивов по ключу.",
+f4t:"DSL сценариев",f4d:"29 команд, условия в шапке сцены, метки и выборы с ключами локализации.",
+f5t:"Шина событий",f5d:"20 типизированных событий C#, мост в GDScript через [EventKey].",
+f6t:"Сохранения по слотам",f6d:"У каждого мода свой слот IModSaveable: версии, миграции, скриншоты.",
+f7t:"Карта и время суток",f7d:"Зоны карты и четыре фазы суток — управляются прямо из сценария.",
+f8t:"Mod Manager в игре",f8d:"Каталог, фильтры, установка, обновление и удаление модов без выхода из игры.",
+battle_cap:"Правила боя",battle_title:"Боёвка — тоже подключаемый модуль",
+battle_desc:"Движок turn_battle_base задаёт контракты правил; card_battle и ff_battle реализуют их независимо. Нужен свой режим — ещё один мод поверх того же движка.",
+turn_t:"turn_battle_base",turn_d:"Контракты ruleset'ов, реестр, исполнители действий, статус-эффекты, экраны победы/поражения, отчёты опыта и лута.",
+card_t:"card_battle",card_d:"Бой картами поверх общего движка.",
+ff_t:"ff_battle",ff_d:"Классический пошаговый бой в стиле Final Fantasy.",
+dsl_cap:"DSL · .scenario",dsl_title:"Сценарий — текстовый файл",
+dsl_p1:"Сцена описывается текстом: шапка с указанием сцены-владельца, приоритетом и условием запуска, дальше — команды с метками и переходами. Реплики несут ключи локализации, поэтому перевод подключается файлами .properties.",
+dsl_p2:"Никакого редактора: scenario-файлы правятся в том же редакторе, что и код. Синтаксис расширяется — новые команды это новые стратегии в моде.",
+mods_cap:"Каталог",mods_title:"17 модов уже в репозитории",
+mods_note:"Названия и описания — как в manifest.json (english). Тестовые моды помечены.",
+cat_engine:"движок",cat_gameplay:"геймплей",cat_story:"сюжет",cat_library:"библиотека",cat_ui:"интерфейс",cat_test:"тест",cat_tools:"инструменты",
+story_cap:"Сюжет",story_title:"История живёт в модах контента",
+story_p1:"Первая линия — Murakami: город после вторжения, встреча с волком у запертого дома и спасение незнакомки. Квесты, реплики и локации линии — обычные файлы мода.",
+story_p2:"Новая история — это новый мод: свои сцены на DSL, персонажи в JSON, локализации в .properties. Ядро не знает ни про одну из них — и в этом смысл.",
+shots_cap:"Кадры",shots_title:"Скриншоты",
+cta_title:"Открытый код — открытый конвейер",
+cta_p:"Проект распространяется по MIT. Репозиторий на собственном Gitea: ядро, моды, документация и сайт собираются из одного дерева исходников.",
+cta_repo:"Открыть репозиторий",cta_license:"Лицензия MIT",
+qs_title:"Быстрые старты",qs_sub:"Три трека — каждый ведёт к работающему результату. Материалы треков — обычные Markdown-файлы; перевод подключается по мере готовности, иначе честно показывается английский.",
+qs_l1k:"Трек 1",qs_l1t:"Игрок",qs_l1d:"Усильте персонажа Марao JSON-патчем — без единой строчки кода.",qs_m1:"JSON-патч · 5 минут",
+qs_l2k:"Трек 2",qs_l2t:"Моддер",qs_l2d:"Своя сцена: диалоги, выборы и переходы на DSL.",qs_m2:"JSON + DSL · 15 минут",
+qs_l3k:"Трек 3",qs_l3t:"Программист",qs_l3d:"C#-мод: кастомное действие, настройки в меню, подписки на события.",qs_m3:"C# + Godot API · 20 минут",
+qs_lang:"Язык материала",fallback_note:"материал показан на английском",
+search_ph:"Поиск по разделам…",toc:"На этой странице",prev:"Назад",next:"Далее",
+built_from:"собрано из",not_translated:"раздел доступен на английском",fallback_en:"fallback: en",
+on_git:"править в Gitea",license:"Лицензия MIT",
+built_by:"собрано из",md_files:"Markdown-файлов",
+not_found:"Раздел ещё не написан",docs_here:"Документация — на английском: дерево слева, перевод подключается по мере готовности."},
+
+en:{qs_overview:"Overview",nav_home:"Home",nav_docs:"Documentation",nav_quickstart:"Quick Starts",nav_repo:"Repository",
+kicker:"mod-oriented engine · Godot 4.6 · C# / .NET 8 · MIT",
+hero_h1a:"A visual novel",hero_h1b:"assembled from mods",
+hero_tag:"The Core/ kernel ships no game scene at all. At boot it loads mods from mods/, compiles their C# through Roslyn and assembles the game — from the battle rules to the dialogues. Every mechanic is a plain folder you can open, edit and remove.",
+cta_start:"Start in 5 minutes",cta_docs:"Documentation",
+st_dsl_l:"DSL commands",st_mods_l:"mods in the repository",st_loc_l:"lines of C#, kernel and mods",st_battle_l:"battle rulesets",
+arch_cap:"Assembly line",arch_title:"The game is built in layers",
+arch_l1t:"Kernel · Core/",arch_l1d:"Scenario DSL, mod registry, saves, events, resources, UI hosting, audio. No content — services only.",
+arch_l2t:"Platform · base2d",arch_l2d:"The 2D shell scene: view box, toolbar, panel slots, notifications.",
+arch_l3t:"Game core · visual_novel_core",arch_l3d:"Dialogues, characters, items, quests and the map zones on top of the platform.",
+arch_l4t:"Your mod",arch_l4d:"A story line, a mechanic or new battle rules — a plain folder in mods/.",
+feat_cap:"Features",feat_title:"Already in the kernel",
+f1t:"Roslyn at runtime",f1d:"Mod C# sources compile on load; the cache is keyed by content hash.",
+f2t:"tscn scene patches",f2d:"A mod extends someone else's scene: nodes, properties, connections.",
+f3t:"JSON data patches",f3d:"$set · $add · $remove, wildcard paths, key-based array merging.",
+f4t:"Scenario DSL",f4d:"29 commands, conditions in the scene header, labels and localized choices.",
+f5t:"Event bus",f5d:"20 typed C# events, GDScript bridge via [EventKey].",
+f6t:"Slot-based saves",f6d:"Every mod gets its own IModSaveable slot: versions, migrations, screenshots.",
+f7t:"Map and time of day",f7d:"Map zones and four day phases — driven right from a scenario.",
+f8t:"In-game Mod Manager",f8d:"Catalog, filters, install, update and remove mods without leaving the game.",
+battle_cap:"Battle rules",battle_title:"Combat is a pluggable module too",
+battle_desc:"turn_battle_base defines the ruleset contracts; card_battle and ff_battle implement them independently. Your own mode is one more mod on the same engine.",
+turn_t:"turn_battle_base",turn_d:"Ruleset contracts, core registry, action executors, status effects, victory/defeat screens, EXP and loot reports.",
+card_t:"card_battle",card_d:"Card battle on top of the shared engine.",
+ff_t:"ff_battle",ff_d:"Classic turn-based combat in the Final Fantasy style.",
+dsl_cap:"DSL · .scenario",dsl_title:"A scenario is a text file",
+dsl_p1:"A scene is plain text: a header naming the owner scene, priority and launch condition, then commands with labels and jumps. Lines carry localization keys, so translations arrive as .properties files.",
+dsl_p2:"No editor required: scenario files are edited in the same editor as the code. The syntax is extensible — a new command is a new strategy class in a mod.",
+mods_cap:"Catalog",mods_title:"17 mods already in the repository",
+mods_note:"Names and descriptions exactly as in manifest.json (english). Test mods are tagged.",
+cat_engine:"engine",cat_gameplay:"gameplay",cat_story:"story",cat_library:"library",cat_ui:"interface",cat_test:"test",cat_tools:"tools",
+story_cap:"Story",story_title:"The story lives in content mods",
+story_p1:"The first line is Murakami: a city after the invasion, a wolf at a locked door and a stranger to rescue. The line's quests, lines and locations are plain mod files.",
+story_p2:"A new story is a new mod: its DSL scenes, JSON characters, .properties localizations. The kernel knows nothing about any of them — that is the point.",
+shots_cap:"Frames",shots_title:"Screenshots",
+cta_title:"Open code, open pipeline",
+cta_p:"The project is MIT-licensed. The repository lives on a self-hosted Gitea: kernel, mods, documentation and this site are built from one source tree.",
+cta_repo:"Open repository",cta_license:"MIT License",
+qs_title:"Quick starts",qs_sub:"Three tracks — each ends with a working result. Track materials are plain Markdown files; translations arrive when ready, otherwise English is shown honestly.",
+qs_l1k:"Track 1",qs_l1t:"Player",qs_l1d:"Buff the character Marao with a JSON patch — zero code.",qs_m1:"JSON patch · 5 minutes",
+qs_l2k:"Track 2",qs_l2t:"Modder",qs_l2d:"Your own scene: dialogue, choices and jumps in DSL.",qs_m2:"JSON + DSL · 15 minutes",
+qs_l3k:"Track 3",qs_l3t:"Programmer",qs_l3d:"A C# mod: custom action, menu settings, event subscriptions.",qs_m3:"C# + Godot API · 20 minutes",
+qs_lang:"Material language",fallback_note:"material shown in English",
+search_ph:"Search sections…",toc:"On this page",prev:"Previous",next:"Next",
+built_from:"built from",not_translated:"section available in English",fallback_en:"fallback: en",
+on_git:"edit on Gitea",license:"MIT License",
+built_by:"assembled from",md_files:"Markdown files",
+not_found:"Section not written yet",docs_here:"Documentation is English-first: tree on the left, translations arrive as they land."},
+
+es:{qs_overview:"Resumen",nav_home:"Inicio",nav_docs:"Documentación",nav_quickstart:"Inicios rápidos",nav_repo:"Repositorio",
+kicker:"motor orientado a mods · Godot 4.6 · C# / .NET 8 · MIT",
+hero_h1a:"Una novela visual",hero_h1b:"ensamblada con mods",
+hero_tag:"El núcleo Core/ no incluye ni una escena de juego. Al arrancar carga los mods de mods/, compila su C# con Roslyn y ensambla el juego — del combate a los diálogos. Cada mecánica es una carpeta que puedes abrir, editar y quitar.",
+cta_start:"Empieza en 5 minutos",cta_docs:"Documentación",
+st_dsl_l:"comandos DSL",st_mods_l:"mods en el repositorio",st_loc_l:"líneas de C# núcleo y mods",st_battle_l:"sistemas de combate",
+arch_cap:"Línea de montaje",arch_title:"El juego se construye por capas",
+arch_l1t:"Núcleo · Core/",arch_l1d:"DSL de escenas, registro de mods, guardados, eventos, recursos, UI y audio. Sin contenido: solo servicios.",
+arch_l2t:"Plataforma · base2d",arch_l2d:"Escena-base 2D: ventana de vista, barra, huecos de paneles, notificaciones.",
+arch_l3t:"Núcleo de juego · visual_novel_core",arch_l3d:"Diálogos, personajes, objetos, misiones y zonas de mapa sobre la plataforma.",
+arch_l4t:"Tu mod",arch_l4d:"Una línea argumental, una mecánica o reglas de combate nuevas: una carpeta más en mods/.",
+feat_cap:"Características",feat_title:"Ya en el núcleo",
+f1t:"Roslyn en runtime",f1d:"El C# de los mods se compila al cargar; caché por hash del contenido.",
+f2t:"Parches tscn",f2d:"Un mod amplía la escena de otro: nodos, propiedades, conexiones.",
+f3t:"Parches JSON",f3d:"$set · $add · $remove, rutas wildcard, fusión de arrays por clave.",
+f4t:"DSL de escenas",f4d:"29 comandos, condiciones en la cabecera, etiquetas y opciones localizadas.",
+f5t:"Bus de eventos",f5d:"20 eventos tipados de C#, puente a GDScript vía [EventKey].",
+f6t:"Guardados por slots",f6d:"Cada mod tiene su slot IModSaveable: versiones, migraciones, capturas.",
+f7t:"Mapa y hora del día",f7d:"Zonas de mapa y cuatro fases del día, controladas desde el guion.",
+f8t:"Mod Manager en el juego",f8d:"Catálogo, filtros, instalar, actualizar y borrar mods sin salir del juego.",
+battle_cap:"Reglas de combate",battle_title:"El combate también es un módulo enchufable",
+battle_desc:"turn_battle_base define los contratos; card_battle y ff_battle los implementan por separado. Tu propio modo es un mod más sobre el mismo motor.",
+turn_t:"turn_battle_base",turn_d:"Contratos de rulesets, registro, ejecutores de acciones, estados, pantallas de victoria/derrota, informes de EXP y botín.",
+card_t:"card_battle",card_d:"Combate por cartas sobre el motor compartido.",
+ff_t:"ff_battle",ff_d:"Combate por turnos clásico al estilo Final Fantasy.",
+dsl_cap:"DSL · .scenario",dsl_title:"Un guion es un archivo de texto",
+dsl_p1:"Una escena es texto plano: cabecera con escena propietaria, prioridad y condición de arranque; después, comandos con etiquetas y saltos. Las líneas llevan claves de localización: las traducciones llegan como .properties.",
+dsl_p2:"Sin editor: los .scenario se editan con el mismo editor que el código. La sintaxis es extensible: un comando nuevo es una estrategia nueva en un mod.",
+mods_cap:"Catálogo",mods_title:"17 mods ya en el repositorio",
+mods_note:"Nombres y descripciones tal cual en manifest.json (inglés). Los mods de prueba van etiquetados.",
+cat_engine:"motor",cat_gameplay:"jugabilidad",cat_story:"historia",cat_library:"librería",cat_ui:"interfaz",cat_test:"prueba",cat_tools:"herramientas",
+story_cap:"Historia",story_title:"La historia vive en los mods de contenido",
+story_p1:"La primera línea es Murakami: la ciudad tras la invasión, un lobo en una puerta cerrada y una desconocida que rescatar. Misiones, réplicas y localizaciones: archivos normales del mod.",
+story_p2:"Una historia nueva es un mod nuevo: sus escenas DSL, personajes JSON, localizaciones .properties. El núcleo no sabe nada de ellas: ese es el punto.",
+shots_cap:"Fotogramas",shots_title:"Capturas",
+cta_title:"Código abierto, pipeline abierto",
+cta_p:"El proyecto se distribuye bajo MIT. El repositorio vive en un Gitea propio: núcleo, mods, documentación y este sitio se construyen de un mismo árbol de fuentes.",
+cta_repo:"Abrir repositorio",cta_license:"Licencia MIT",
+qs_title:"Inicios rápidos",qs_sub:"Tres caminos — cada uno termina con un resultado funcional. Los materiales son archivos Markdown; la traducción llega cuando esté lista, si no se muestra el inglés con honestidad.",
+qs_l1k:"Camino 1",qs_l1t:"Jugador",qs_l1d:"Mejora al personaje Marao con un parche JSON — sin código.",qs_m1:"Parche JSON · 5 minutos",
+qs_l2k:"Camino 2",qs_l2t:"Modder",qs_l2d:"Tu propia escena: diálogo, decisiones y saltos en DSL.",qs_m2:"JSON + DSL · 15 minutos",
+qs_l3k:"Camino 3",qs_l3t:"Programador",qs_l3d:"Un mod C#: acción propia, ajustes en el menú, suscripciones a eventos.",qs_m3:"C# + Godot API · 20 minutos",
+qs_lang:"Idioma del material",fallback_note:"material mostrado en inglés",
+search_ph:"Buscar secciones…",toc:"En esta página",prev:"Anterior",next:"Siguiente",
+built_from:"generado desde",not_translated:"sección disponible en inglés",fallback_en:"respaldo: en",
+on_git:"editar en Gitea",license:"Licencia MIT",
+built_by:"generado a partir de",md_files:"archivos Markdown",
+not_found:"Sección aún sin escribir",docs_here:"La documentación está en inglés: árbol a la izquierda; las traducciones llegan según estén listas."},
+
+zh:{qs_overview:"总览",nav_home:"首页",nav_docs:"文档",nav_quickstart:"快速上手",nav_repo:"代码仓库",
+kicker:"面向 Mod 的引擎 · Godot 4.6 · C# / .NET 8 · MIT",
+hero_h1a:"一款",hero_h1b:"由模组拼成的视觉小说",
+hero_tag:"Core/ 内核不包含任何游戏场景。启动时它从 mods/ 加载模组，用 Roslyn 编译其中的 C# 代码，再组装出整款游戏——从战斗规则到对话。每个机制都是一个普通文件夹：可打开、可修改、可移除。",
+cta_start:"5 分钟上手",cta_docs:"文档",
+st_dsl_l:"条 DSL 指令",st_mods_l:"个仓库内模组",st_loc_l:"行 C#（内核+模组）",st_battle_l:"套战斗规则",
+arch_cap:"装配线",arch_title:"游戏分层组装",
+arch_l1t:"内核 · Core/",arch_l1d:"场景 DSL、模组注册表、存档、事件、资源、UI、音频。没有内容——只有服务。",
+arch_l2t:"平台 · base2d",arch_l2d:"2D 壳场景：视图框、工具栏、面板槽位、通知。",
+arch_l3t:"游戏内核 · visual_novel_core",arch_l3d:"在平台之上提供对话、角色、物品、任务与地图区域。",
+arch_l4t:"你的模组",arch_l4d:"一条剧情线、一个机制或新的战斗规则——mods/ 里多一个文件夹而已。",
+feat_cap:"特性",feat_title:"内核已具备",
+f1t:"运行时 Roslyn",f1d:"模组的 C# 源码在加载时编译，按内容哈希缓存。",
+f2t:"tscn 场景补丁",f2d:"模组可以扩建别人的场景：节点、属性、连接。",
+f3t:"JSON 数据补丁",f3d:"$set · $add · $remove、通配符路径、按键合并数组。",
+f4t:"场景 DSL",f4d:"29 条指令、场景头条件、标签与带本地化键的选项。",
+f5t:"事件总线",f5d:"20 个 C# 类型化事件，经 [EventKey] 桥接 GDScript。",
+f6t:"分槽存档",f6d:"每个模组有自己的 IModSaveable 槽位：版本、迁移、截图。",
+f7t:"地图与昼夜",f7d:"地图区域与四个时段——直接由剧本驱动。",
+f8t:"游戏内 Mod Manager",f8d:"目录、筛选、安装、更新与删除模组，无需退出游戏。",
+battle_cap:"战斗规则",battle_title:"战斗也是可插拔模块",
+battle_desc:"turn_battle_base 定义规则契约；card_battle 与 ff_battle 各自独立实现。想要自己的模式？在同一引擎上再写一个模组。",
+turn_t:"turn_battle_base",turn_d:"规则契约、核心注册表、行动执行器、状态效果、胜负画面、经验与掉落报告。",
+card_t:"card_battle",card_d:"构建于共用引擎之上的卡牌战斗。",
+ff_t:"ff_battle",ff_d:"经典最终幻想风回合制战斗。",
+dsl_cap:"DSL · .scenario",dsl_title:"剧本就是文本文件",
+dsl_p1:"一个场景就是纯文本：头部声明所属场景、优先级与触发条件，随后是指令、标签与跳转。台词带本地化键，翻译以 .properties 文件接入。",
+dsl_p2:"不需要编辑器：.scenario 与代码用同一个编辑器修改。语法可扩展——新指令就是模组里一个新的策略类。",
+mods_cap:"目录",mods_title:"仓库中已有 17 个模组",
+mods_note:"名称与描述与 manifest.json 一致（英文）。测试模组已标注。",
+cat_engine:"引擎",cat_gameplay:"玩法",cat_story:"剧情",cat_library:"库",cat_ui:"界面",cat_test:"测试",cat_tools:"工具",
+story_cap:"剧情",story_title:"故事活在内容模组里",
+story_p1:"第一条线是 Murakami：入侵后的城市、紧锁门前狼的踪迹、等待救援的陌生少女。这条线的任务、台词与地点都是模组的普通文件。",
+story_p2:"新故事就是新模组：自己的 DSL 场景、JSON 角色、.properties 本地化。内核对它们一无所知——这正是意义所在。",
+shots_cap:"画面",shots_title:"截图",
+cta_title:"开放代码，开放流水线",
+cta_p:"项目以 MIT 许可发布。仓库托管在自建 Gitea 上：内核、模组、文档与本网站出自同一棵源码树。",
+cta_repo:"打开仓库",cta_license:"MIT 许可证",
+qs_title:"快速上手",qs_sub:"三条路线——每条都以可运行的成果收尾。路线材料是普通 Markdown 文件；翻译就绪后接入，否则如实显示英文。",
+qs_l1k:"路线 1",qs_l1t:"玩家",qs_l1d:"用 JSON 补丁强化角色 Marao——无需任何代码。",qs_m1:"JSON 补丁 · 5 分钟",
+qs_l2k:"路线 2",qs_l2t:"模组制作者",qs_l2d:"自己的场景：用 DSL 写对话、选项与跳转。",qs_m2:"JSON + DSL · 15 分钟",
+qs_l3k:"路线 3",qs_l3t:"程序员",qs_l3d:"C# 模组：自定义动作、菜单设置、事件订阅。",qs_m3:"C# + Godot API · 20 分钟",
+qs_lang:"材料语言",fallback_note:"材料以英文显示",
+search_ph:"搜索章节…",toc:"本页目录",prev:"上一页",next:"下一页",
+built_from:"构建自",not_translated:"该章节仅提供英文",fallback_en:"回退：en",
+on_git:"在 Gitea 中编辑",license:"MIT 许可证",
+built_by:"由",md_files:"个 Markdown 文件构建",
+not_found:"章节尚未编写",docs_here:"文档以英文为主：左侧为目录树；翻译就绪后接入。"},
+
+ja:{qs_overview:"概要",nav_home:"ホーム",nav_docs:"ドキュメント",nav_quickstart:"クイックスタート",nav_repo:"リポジトリ",
+kicker:"Mod指向エンジン · Godot 4.6 · C# / .NET 8 · MIT",
+hero_h1a:"Modが組み上げる",hero_h1b:"ビジュアルノベル",
+hero_tag:"Core/ のカーネルにはゲームシーンが一切ありません。起動時に mods/ からModを読み込み、Roslyn で C# をコンパイルし、戦闘ルールから会話までゲームを組み上げます。すべての仕組みは普通のフォルダ——開いて、書き換えて、外せます。",
+cta_start:"5分で開始",cta_docs:"ドキュメント",
+st_dsl_l:"個のDSLコマンド",st_mods_l:"個のModを同梱",st_loc_l:"行のC#（本体+Mod）",st_battle_l:"種類の戦闘ルール",
+arch_cap:"組み立てライン",arch_title:"ゲームはレイヤーで組み上がる",
+arch_l1t:"カーネル · Core/",arch_l1d:"シナリオDSL・Modレジストリ・セーブ・イベント・リソース・UI・オーディオ。コンテントなし、サービスだけ。",
+arch_l2t:"プラットフォーム · base2d",arch_l2d:"2Dの殻シーン：ビュー枠、ツールバー、パネルスロット、通知。",
+arch_l3t:"ゲームコア · visual_novel_core",arch_l3d:"プラットフォームの上に会話・キャラクター・アイテム・クエスト・マップゾーン。",
+arch_l4t:"あなたのMod",arch_l4d:"新しい物語線・メカニクス・戦闘ルールは、mods/ の普通のフォルダ。",
+feat_cap:"機能",feat_title:"カーネルに既にあるもの",
+f1t:"ランタイム Roslyn",f1d:"ModのC#ソースをロード時にコンパイル。内容ハッシュでキャッシュ。",
+f2t:"tscnシーンパッチ",f2d:"他のModのシーンを拡張：ノード・プロパティ・接続。",
+f3t:"JSONパッチ",f3d:"$set · $add · $remove、ワイルドカード、キーによる配列マージ。",
+f4t:"シナリオDSL",f4d:"29コマンド、ヘッダ条件、ラベル、ローカライズキー付き選択肢。",
+f5t:"イベントバス",f5d:"20の型付きC#イベント。[EventKey] でGDScriptへブリッジ。",
+f6t:"スロット式セーブ",f6d:"Modごとに IModSaveable スロット：バージョン・マイグレーション・スクリーンショット。",
+f7t:"マップと時刻",f7d:"マップゾーンと4つの時間帯をシナリオから直接制御。",
+f8t:"ゲーム内 Mod Manager",f8d:"カタログ・フィルタ・インストール・更新・削除をゲームから出ずに。",
+battle_cap:"戦闘ルール",battle_title:"戦闘も着脱式モジュール",
+battle_desc:"turn_battle_base がルールセット契約を定め、card_battle と ff_battle が独立に実装します。独自モードは同じエンジン上のもう一つのMod。",
+turn_t:"turn_battle_base",turn_d:"ルールセット契約、レジストリ、アクション実行器、ステータス効果、勝敗画面、EXPと戦利品レポート。",
+card_t:"card_battle",card_d:"共通エンジン上のカードバトル。",
+ff_t:"ff_battle",ff_d:"FINAL FANTASY風のクラシックなターン制戦闘。",
+dsl_cap:"DSL · .scenario",dsl_title:"シナリオはテキストファイル",
+dsl_p1:"シーンはプレーンテキスト。ヘッダに所有シーン・優先度・開始条件を書き、続いてコマンドとラベル・ジャンプ。セリフはローカライズキーを持ち、翻訳は .properties で届きます。",
+dsl_p2:"エディタは不要：.scenario はコードと同じエディタで編集します。構文は拡張可能——新しいコマンドはMod内の新しいストラテジークラス。",
+mods_cap:"カタログ",mods_title:"リポジトリには既に17のMod",
+mods_note:"名称・説明は manifest.json のまま（英語）。テスト用Modにはタグ付き。",
+cat_engine:"エンジン",cat_gameplay:"ゲームプレイ",cat_story:"ストーリー",cat_library:"ライブラリ",cat_ui:"インターフェース",cat_test:"テスト",cat_tools:"ツール",
+story_cap:"ストーリー",story_title:"物語はコンテントModの中に",
+story_p1:"最初の線は Murakami：侵攻後の街、鍵のかかった扉の狼、救い出す少女。クエストもセリフもロケーションも、すべてModの普通のファイルです。",
+story_p2:"新しい物語は新しいMod：独自のDSLシーン、JSONキャラクター、.properties ローカライズ。カーネルは何も知りません——それが肝心。",
+shots_cap:"スクリーンショット",shots_title:"画面",
+cta_title:"オープンなコード、オープンなパイプライン",
+cta_p:"プロジェクトはMITライセンス。リポジトリはセルフホストのGiteaにあり、カーネル・Mod・ドキュメント・このサイトも同じソースツリーから組み立てられます。",
+cta_repo:"リポジトリを開く",cta_license:"MITライセンス",
+qs_title:"クイックスタート",qs_sub:"3つのコース——どれも動く結果で終わります。教材は普通のMarkdownファイル。翻訳は準備でき次第追加され、未整備なら英語を正直に表示します。",
+qs_l1k:"コース 1",qs_l1t:"プレイヤー",qs_l1d:"JSONパッチでマラオを強化——コードは一行も不要。",qs_m1:"JSONパッチ · 5分",
+qs_l2k:"コース 2",qs_l2t:"Modder",qs_l2d:"自分のシーンをDSLで：会話、選択肢、ジャンプ。",qs_m2:"JSON + DSL · 15分",
+qs_l3k:"コース 3",qs_l3t:"プログラマー",qs_l3d:"C# Mod：カスタムアクション、メニュー設定、イベント購読。",qs_m3:"C# + Godot API · 20分",
+qs_lang:"教材の言語",fallback_note:"教材は英語で表示",
+search_ph:"セクションを検索…",toc:"このページの目次",prev:"前へ",next:"次へ",
+built_from:"生成元",not_translated:"このセクションは英語のみ",fallback_en:"フォールバック: en",
+on_git:"Giteaで編集",license:"MITライセンス",
+built_by:"組み立て元",md_files:"個のMarkdownファイル",
+not_found:"セクションは未作成",docs_here:"ドキュメントは英語主体：左がツリー。翻訳は準備でき次第追加。"},
+
+ko:{qs_overview:"개요",nav_home:"홈",nav_docs:"문서",nav_quickstart:"빠른 시작",nav_repo:"저장소",
+kicker:"모드 지향 엔진 · Godot 4.6 · C# / .NET 8 · MIT",
+hero_h1a:"모드가 조립하는",hero_h1b:"비주얼 노벨",
+hero_tag:"Core/ 커널에는 게임 장면이 하나도 없습니다. 부팅 때 mods/ 에서 모드를 읽고 Roslyn으로 C#을 컴파일해 전투 규칙부터 대화까지 게임을 조립합니다. 모든 메커니즘은 평범한 폴더—열고, 고치고, 뗄 수 있습니다.",
+cta_start:"5분 만에 시작",cta_docs:"문서",
+st_dsl_l:"개의 DSL 명령",st_mods_l:"개의 모드 동봉",st_loc_l:"만 줄의 C#(커널+모드)",st_battle_l:"가지 전투 규칙",
+arch_cap:"조립 라인",arch_title:"게임은 층층이 조립됩니다",
+arch_l1t:"커널 · Core/",arch_l1d:"시나리오 DSL, 모드 레지스트리, 저장, 이벤트, 리소스, UI, 오디오. 콘텐츠 없이 서비스만.",
+arch_l2t:"플랫폼 · base2d",arch_l2d:"2D 껍데기 장면: 뷰 박스, 툴바, 패널 슬롯, 알림.",
+arch_l3t:"게임 코어 · visual_novel_core",arch_l3d:"플랫폼 위에 대화·캐릭터·아이템·퀘스트·맵 구역.",
+arch_l4t:"당신의 모드",arch_l4d:"새 이야기 선, 메커니즘, 전투 규칙—mods/ 의 평범한 폴더 하나.",
+feat_cap:"기능",feat_title:"커널에 이미 있는 것",
+f1t:"런타임 Roslyn",f1d:"모드의 C# 소스를 적재 시 컴파일, 내용 해시로 캐시.",
+f2t:"tscn 장면 패치",f2d:"모드가 남의 장면을 확장: 노드, 속성, 연결.",
+f3t:"JSON 데이터 패치",f3d:"$set · $add · $remove, 와일드카드, 키 기준 배열 병합.",
+f4t:"시나리오 DSL",f4d:"29개 명령, 헤더 조건, 라벨, 현지화 키가 붙은 선택지.",
+f5t:"이벤트 버스",f5d:"20개의 형식화된 C# 이벤트, [EventKey]로 GDScript 브리지.",
+f6t:"슬롯별 저장",f6d:"모드마다 IModSaveable 슬롯: 버전, 마이그레이션, 스크린샷.",
+f7t:"맵과 시간대",f7d:"맵 구역과 네 시간대를 시나리오에서 곧장 제어.",
+f8t:"게임 내 Mod Manager",f8d:"카탈로그, 필터, 설치·갱신·삭제를 게임을 나가지 않고.",
+battle_cap:"전투 규칙",battle_title:"전투도 탈부착 모듈",
+battle_desc:"turn_battle_base 가 규칙 계약을 정의하고, card_battle 와 ff_battle 이 각자 구현합니다. 자신만의 모드도 같은 엔진 위의 모드 하나.",
+turn_t:"turn_battle_base",turn_d:"룰셋 계약, 코어 레지스트리, 행동 실행기, 상태 효과, 승패 화면, EXP·전리품 보고.",
+card_t:"card_battle",card_d:"공용 엔진 위의 카드 배틀.",
+ff_t:"ff_battle",ff_d:"파이널판타지풍 클래식 턴제 전투.",
+dsl_cap:"DSL · .scenario",dsl_title:"시나리오는 텍스트 파일",
+dsl_p1:"장면은 평문입니다. 헤더에 소유 장면·우선순위·발동 조건을 적고, 명령과 라벨·점프가 이어집니다. 대사는 현지화 키를 가지며 번역은 .properties 로 붙습니다.",
+dsl_p2:"에디터 불필요: .scenario 는 코드와 같은 에디터에서 고칩니다. 문법은 확장 가능—새 명령은 모드 안의 새 전략 클래스.",
+mods_cap:"카탈로그",mods_title:"저장소에 이미 17개의 모드",
+mods_note:"이름과 설명은 manifest.json 그대로(영어). 테스트 모드는 태그 표시.",
+cat_engine:"엔진",cat_gameplay:"게임플레이",cat_story:"스토리",cat_library:"라이브러리",cat_ui:"인터페이스",cat_test:"테스트",cat_tools:"도구",
+story_cap:"스토리",story_title:"이야기는 콘텐츠 모드 안에",
+story_p1:"첫 선은 Murakami: 침공 뒤의 도시, 잠긴 문 앞의 늑대, 구해야 할 소녀. 퀘스트·대사·장소 모두 모드의 평범한 파일입니다.",
+story_p2:"새 이야기는 새 모드: 자체 DSL 장면, JSON 캐릭터, .properties 현지화. 커널은 그 어떤 것도 모릅니다—그게 핵심.",
+shots_cap:"장면",shots_title:"스크린샷",
+cta_title:"열린 코드, 열린 파이프라인",
+cta_p:"프로젝트는 MIT 라이선스. 저장소는 자체 Gitea에서: 커널·모드·문서·이 사이트까지 하나의 소스 트리에서 빌드됩니다.",
+cta_repo:"저장소 열기",cta_license:"MIT 라이선스",
+qs_title:"빠른 시작",qs_sub:"세 갈래 트랙—각각 작동하는 결과로 끝납니다. 교재는 평범한 Markdown 파일. 번역은 준비되는 대로 붙고, 그 전엔 영어를 정직하게 보여줍니다.",
+qs_l1k:"트랙 1",qs_l1t:"플레이어",qs_l1d:"JSON 패치로 Marao 강화—코드 한 줄 없이.",qs_m1:"JSON 패치 · 5분",
+qs_l2k:"트랙 2",qs_l2t:"모더",qs_l2d:"DSL로 자기 장면: 대화, 선택지, 점프.",qs_m2:"JSON + DSL · 15분",
+qs_l3k:"트랙 3",qs_l3t:"프로그래머",qs_l3d:"C# 모드: 커스텀 액션, 메뉴 설정, 이벤트 구독.",qs_m3:"C# + Godot API · 20분",
+qs_lang:"교재 언어",fallback_note:"교재는 영어로 표시",
+search_ph:"섹션 검색…",toc:"이 페이지 목차",prev:"이전",next:"다음",
+built_from:"생성 원본",not_translated:"이 섹션은 영어만 제공",fallback_en:"폴백: en",
+on_git:"Gitea에서 편집",license:"MIT 라이선스",
+built_by:"조립원",md_files:"개의 Markdown 파일",
+not_found:"아직 작성되지 않은 섹션",docs_here:"문서는 영어 우선: 왼쪽이 트리. 번역은 준비되는 대로."},
+
+vi:{qs_overview:"Tổng quan",nav_home:"Trang chính",nav_docs:"Tài liệu",nav_quickstart:"Bắt đầu nhanh",nav_repo:"Kho mã",
+kicker:"engine hướng mod · Godot 4.6 · C# / .NET 8 · MIT",
+hero_h1a:"Tiểu thuyết tương tác",hero_h1b:"do mod lắp ráp",
+hero_tag:"Nhân Core/ không chứa bất kỳ cảnh trò chơi nào. Khi khởi động, nó tải mod từ mods/, biên dịch C# bằng Roslyn và lắp ráp trò chơi—từ luật chiến đấu tới hội thoại. Mỗi cơ chế là một thư mục thường: mở ra, sửa, tháo ra.",
+cta_start:"Bắt đầu trong 5 phút",cta_docs:"Tài liệu",
+st_dsl_l:"lệnh DSL",st_mods_l:"mod trong kho",st_loc_l:"dòng C# (nhân + mod)",st_battle_l:"bộ luật chiến đấu",
+arch_cap:"Dây chuyền lắp ráp",arch_title:"Trò chơi được lắp theo tầng",
+arch_l1t:"Nhân · Core/",arch_l1d:"DSL kịch bản, registry mod, lưu game, sự kiện, tài nguyên, UI, âm thanh. Không có nội dung—chỉ có dịch vụ.",
+arch_l2t:"Nền tảng · base2d",arch_l2d:"Cảnh vỏ 2D: khung nhìn, thanh công cụ, khe panel, thông báo.",
+arch_l3t:"Nhân trò chơi · visual_novel_core",arch_l3d:"Hội thoại, nhân vật, vật phẩm, nhiệm vụ và vùng bản đồ trên nền tảng.",
+arch_l4t:"Mod của bạn",arch_l4d:"Một tuyến truyện, một cơ chế hay luật chiến đấu mới—một thư mục trong mods/.",
+feat_cap:"Tính năng",feat_title:"Đã có trong nhân",
+f1t:"Roslyn lúc chạy",f1d:"Mã C# của mod được biên dịch khi tải; cache theo hash nội dung.",
+f2t:"Vá cảnh tscn",f2d:"Mod mở rộng cảnh của mod khác: node, thuộc tính, kết nối.",
+f3t:"Vá dữ liệu JSON",f3d:"$set · $add · $remove, đường dẫn wildcard, gộp mảng theo khóa.",
+f4t:"DSL kịch bản",f4d:"29 lệnh, điều kiện trong phần đầu, nhãn, lựa chọn có khóa bản địa hóa.",
+f5t:"Bus sự kiện",f5d:"20 sự kiện C# có kiểu, cầu sang GDScript qua [EventKey].",
+f6t:"Lưu game theo slot",f6d:"Mỗi mod một slot IModSaveable: phiên bản, di trú, ảnh chụp.",
+f7t:"Bản đồ và thời gian",f7d:"Vùng bản đồ và bốn pha ngày—điều khiển thẳng từ kịch bản.",
+f8t:"Mod Manager trong game",f8d:"Danh mục, bộ lọc, cài, cập nhật và gỡ mod mà không thoát game.",
+battle_cap:"Luật chiến đấu",battle_title:"Chiến đấu cũng là mô-đun cắm rời",
+battle_desc:"turn_battle_base định nghĩa hợp đồng ruleset; card_battle và ff_battle triển khai độc lập. Chế độ của bạn chỉ là một mod nữa trên cùng engine.",
+turn_t:"turn_battle_base",turn_d:"Hợp đồng ruleset, registry, bộ thực thi hành động, hiệu ứng trạng thái, màn thắng/thua, báo EXP và chiến lợi phẩm.",
+card_t:"card_battle",card_d:"Đấu bài trên nền engine chung.",
+ff_t:"ff_battle",ff_d:"Chiến đấu theo lượt cổ điển phong cách Final Fantasy.",
+dsl_cap:"DSL · .scenario",dsl_title:"Kịch bản là tệp văn bản",
+dsl_p1:"Một cảnh là văn bản thuần: phần đầu ghi cảnh sở hữu, ưu tiên, điều kiện khởi phát; tiếp theo là lệnh với nhãn và bước nhảy. Lời thoại mang khóa bản địa hóa, bản dịch đến bằng .properties.",
+dsl_p2:"Không cần trình soạn thảo: .scenario sửa bằng chính trình soạn thảo mã nguồn. Cú pháp mở rộng được—một lệnh mới là một lớp chiến lược trong mod.",
+mods_cap:"Danh mục",mods_title:"Kho đã có 17 mod",
+mods_note:"Tên và mô tả nguyên như manifest.json (tiếng Anh). Mod kiểm thử được gắn thẻ.",
+cat_engine:"engine",cat_gameplay:"lối chơi",cat_story:"cốt truyện",cat_library:"thư viện",cat_ui:"giao diện",cat_test:"kiểm thử",cat_tools:"công cụ",
+story_cap:"Cốt truyện",story_title:"Câu chuyện sống trong mod nội dung",
+story_p1:"Tuyến đầu tiên là Murakami: thành phố sau xâm lược, con sóng trước cánh cửa khóa, cô gái cần cứu. Nhiệm vụ, lời thoại, địa điểm—tất cả là tệp thường của mod.",
+story_p2:"Câu chuyện mới là mod mới: cảnh DSL riêng, nhân vật JSON, bản địa hóa .properties. Nhân không biết gì về chúng—đó chính là ý nghĩa.",
+shots_cap:"Khung hình",shots_title:"Ảnh chụp",
+cta_title:"Mã mở, pipeline mở",
+cta_p:"Dự án phát hành theo MIT. Kho mã nằm trên Gitea tự quản: nhân, mod, tài liệu và chính trang web được dựng từ một cây mã nguồn.",
+cta_repo:"Mở kho mã",cta_license:"Giấy phép MIT",
+qs_title:"Bắt đầu nhanh",qs_sub:"Ba lộ trình—mỗi lộ trình kết thúc bằng một kết quả chạy được. Tài liệu là tệp Markdown thường; bản dịch có lúc nào thêm lúc đó, chưa có thì hiện tiếng Anh một cách trung thực.",
+qs_l1k:"Lộ trình 1",qs_l1t:"Người chơi",qs_l1d:"Cường hóa nhân vật Marao bằng vá JSON—không cần dòng mã nào.",qs_m1:"Vá JSON · 5 phút",
+qs_l2k:"Lộ trình 2",qs_l2t:"Modder",qs_l2d:"Cảnh của riêng bạn: hội thoại, lựa chọn, bước nhảy bằng DSL.",qs_m2:"JSON + DSL · 15 phút",
+qs_l3k:"Lộ trình 3",qs_l3t:"Lập trình viên",qs_l3d:"Mod C#: hành động tùy chỉnh, cài đặt menu, đăng ký sự kiện.",qs_m3:"C# + Godot API · 20 phút",
+qs_lang:"Ngôn ngữ tài liệu",fallback_note:"tài liệu hiển thị tiếng Anh",
+search_ph:"Tìm mục…",toc:"Trong trang này",prev:"Trước",next:"Tiếp",
+built_from:"dựng từ",not_translated:"mục này chỉ có tiếng Anh",fallback_en:"dự phòng: en",
+on_git:"sửa trên Gitea",license:"Giấy phép MIT",
+built_by:"lắp ráp từ",md_files:"tệp Markdown",
+not_found:"Mục chưa được viết",docs_here:"Tài liệu ưu tiên tiếng Anh: cây bên trái; bản dịch có lúc nào thêm lúc đó."}
 };
+
+/* ---------- shared runtime ---------- */
+var LS_KEY = "cthangover_lang";
+var DEFAULT_LANG = "en";
+
+function getInitialLang(){
+  var urlLang = null;
+  try { urlLang = (location.search.match(/[?&]lang=([a-z]{2})/i) || [])[1] || null; } catch(e) {}
+  if (urlLang && I18N[urlLang]) {
+    try { localStorage.setItem(LS_KEY, urlLang); } catch(e) {}
+    return urlLang;
+  }
+  var stored = null;
+  try { stored = localStorage.getItem(LS_KEY); } catch(e) {}
+  if (stored && I18N[stored]) return stored;
+  var nav = ((typeof navigator !== "undefined" && navigator.language) || "").toLowerCase();
+  for (var i=0;i<LANGS.length;i++){
+    if (nav.indexOf(LANGS[i][0]) === 0) return LANGS[i][0];
+  }
+  return DEFAULT_LANG;
+}
+
+var lang = getInitialLang();
+
+function t(k){ var d = I18N[lang] || I18N.en; return d[k] || I18N.en[k] || k; }
+
+function applyI18n(){
+  document.documentElement.lang = lang;
+  var els = document.querySelectorAll("[data-i18n]");
+  for (var i=0;i<els.length;i++){ els[i].textContent = t(els[i].getAttribute("data-i18n")); }
+  var phs = document.querySelectorAll("[data-i18n-ph]");
+  for (var p=0;p<phs.length;p++){ phs[p].placeholder = t(phs[p].getAttribute("data-i18n-ph")); }
+  try { localStorage.setItem(LS_KEY, lang); } catch(e) {}
+  var cur = null;
+  for (var q=0;q<LANGS.length;q++) if (LANGS[q][0]===lang) cur = LANGS[q];
+  var sl = document.getElementById("langCurName");
+  if (sl) sl.textContent = cur ? cur[1] : lang;
+  var mb = document.querySelectorAll("#langMenu button");
+  for (var m=0;m<mb.length;m++){ mb[m].className = mb[m].getAttribute("data-l")===lang ? "sel" : ""; }
+}
+
+function setLang(l){
+  if (!I18N[l]) l = "en";
+  lang = l;
+  applyI18n();
+  try { document.dispatchEvent(new CustomEvent("langchange", { detail: lang })); } catch(e) {}
+  if (typeof renderDynamic === "function") renderDynamic();
+}
+
+function buildLangMenu(menuEl){
+  var mh = "";
+  for (var i=0;i<LANGS.length;i++){
+    mh += '<button data-l="'+LANGS[i][0]+'"><span>'+LANGS[i][1]+'</span><span class="code">'+LANGS[i][0].toUpperCase()+'</span></button>';
+  }
+  menuEl.innerHTML = mh;
+  var mb = menuEl.querySelectorAll("button");
+  for (var j=0;j<mb.length;j++){
+    (function(b){
+      b.addEventListener("click", function(e){
+        e.stopPropagation();
+        setLang(b.getAttribute("data-l"));
+        menuEl.classList.remove("open");
+      });
+    })(mb[j]);
+  }
+}
+
+function initHeader(activePage){
+  var menu = document.getElementById("langMenu");
+  buildLangMenu(menu);
+  document.getElementById("langBtn").addEventListener("click", function(e){
+    e.stopPropagation(); menu.classList.toggle("open");
+  });
+  document.addEventListener("click", function(){ menu.classList.remove("open"); });
+  var links = document.querySelectorAll("nav.main a");
+  for (var i=0;i<links.length;i++){
+    links[i].classList.toggle("on", links[i].getAttribute("data-nav")===activePage);
+  }
+  applyI18n();
+}
+
+/* strip quickstart html-blocks, convert meta spans to an emphasised line */
+function qsPreprocess(md){
+  var lines = md.split("\n"), out = [], inCards = false, inMeta = false, metaBuf = [];
+  for (var i=0;i<lines.length;i++){
+    var L = lines[i];
+    if (/<div class="quickstart-cards">/.test(L)) { inCards = true; continue; }
+    if (inCards) { if (/<\/div>/.test(L)) inCards = false; continue; }
+    if (/<div class="qs-meta">/.test(L)) { inMeta = true; metaBuf = []; continue; }
+    if (inMeta) {
+      var m = L.match(/<span>([^<]*)<\/span>/);
+      if (m) { metaBuf.push(m[1]); continue; }
+      if (/<\/div>/.test(L)) { inMeta = false; out.push("*" + metaBuf.join(" · ") + "*"); continue; }
+    }
+    out.push(L);
+  }
+  return out.join("\n");
+}
+
+/* ---------- инициализация шапки (общая для трёх страниц) ---------- */
+function initHeaderChrome(activePage){
+  var menu = document.getElementById("langMenu");
+  if (menu){
+    buildLangMenu(menu);
+    var btn = document.getElementById("langBtn");
+    if (btn) btn.addEventListener("click", function(e){ e.stopPropagation(); menu.classList.toggle("open"); });
+    document.addEventListener("click", function(){ menu.classList.remove("open"); });
+  }
+  var toggle = document.getElementById("navToggle");
+  var mnav = document.getElementById("mobileNav");
+  if (toggle && mnav){
+    toggle.addEventListener("click", function(){ mnav.classList.toggle("open"); });
+  }
+  var links = document.querySelectorAll("nav.main a, .mobile-nav a");
+  for (var i=0;i<links.length;i++){
+    links[i].classList.toggle("on", links[i].getAttribute("data-nav")===activePage);
+  }
+  applyI18n();
+  document.dispatchEvent(new CustomEvent("langchange", { detail: lang }));
+}

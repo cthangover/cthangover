@@ -70,7 +70,7 @@ namespace Cthangover.MyCodeMod
 }
 ```
 
-`IMod` インターフェースはすべてのC# Modに必須のエントリポイントです。`Initialize` メソッドはModのロード時に呼び出されます。
+`IModInitializer` インターフェースはC# Modコードのライフサイクル エントリポイントで、実装はリフレクションで検出されます。`OnModLoaded` は各Modのロード時に呼び出され、`OnModResourcesReady` は全Modとそのリソースの準備ができた後に一度呼び出されます。
 
 > ログを扱う場合は、`GD.Print(...)` の代わりに `GameLogger.Log(...)` を使用してください。
 
@@ -158,7 +158,7 @@ public class MyEffectAction : IScenarioAction
 action my_effect
 ```
 
-エンジンはリフレクションでクラスを見つけ、`Execute` を呼び出します。
+エンジンはリフレクションでクラスを見つけ、`Run` を呼び出します。
 
 ---
 

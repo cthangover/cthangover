@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Cthangover.Core.Actions;
+using Cthangover.Core.Audio;
+using Cthangover.Core.Bootstrap;
 using Cthangover.Core.Events;
 using Cthangover.Core.Factories.Impls;
 using Cthangover.Core.Mods;
@@ -10,10 +13,6 @@ using Cthangover.Core.UI;
 using Cthangover.Core.UI.Dialog;
 using Cthangover.Core.UI.Event;
 using Cthangover.Core.UI.Executable;
-using Cthangover.Core.UI.Lights;
-using Cthangover.Core.UI.Menu;
-using Cthangover.Core.UI.Tool;
-using Cthangover.Core.UI.View;
 using Cthangover.Core.Utils;
 using Godot;
 
@@ -33,9 +32,9 @@ namespace Cthangover.Core.Scenes
         private string currentSceneName;
         private bool isInitialized;
 
-        private ExecutableMainEventChain eventChain;
+        private IExecutableEventChain eventChain;
         private SceneEventController eventController;
-        private DialogBox dialogBox;
+        private IDialogBox dialogBox;
 
         /// <summary>
         /// Gets the name of the currently active scene as tracked by this manager.
@@ -82,7 +81,7 @@ namespace Cthangover.Core.Scenes
 
         private void UpdateSaveIcon()
         {
-            var toolBox = SceneContextNode.FindNode<ToolBox>("TopView");
+            var toolBox = SceneContextNode.FindNode<Node>("TopView") as ISaveIconHost;
             toolBox?.UpdateSaveIconVisibility();
         }
 
@@ -140,16 +139,21 @@ namespace Cthangover.Core.Scenes
         /// </summary>
         public static string TestScenarioText { get; set; }
 
+        /// <summary>Runs the synchronous boot pipeline on non-launcher entries; launcher boots invoke the same phases through <see cref="Boot"/>.</summary>
         public override void _Ready()
         {
             if (!BootController.IsLauncherBoot)
-                Initialize();
+                Boot.RunSync(this);
         }
 
         /// <summary>
-        /// Initializes the <see cref="ModManager"/>, <see cref="SceneEventRegistry"/>,
-        /// and collects scene definitions from all loaded mods. Safe to call
-        /// multiple times; subsequent calls are no-ops.
+        /// Implements the "Scenes" boot phase: initializes the <see cref="ModManager"/>,
+        /// <see cref="SceneEventRegistry"/>, collects scene definitions from all loaded
+        /// mods, fills the UI and main menu registries, notifies mod initializers and
+        /// loads mod settings. The only normal caller is <see cref="Boot"/> (both
+        /// pipeline branches invoke it from the same phase); the method is idempotent
+        /// (<c>isInitialized</c>), so calls from outside <see cref="Boot"/> once boot
+        /// has finished are no-ops.
         /// </summary>
         public void Initialize()
         {
@@ -157,27 +161,16 @@ namespace Cthangover.Core.Scenes
                 return;
 
             ModManager.Instance.Initialize();
-            SceneEventRegistry.Initialize();
-            allScenes = SceneDefinitions.Collect();
-            UiRegistry.Initialize();
-            MainMenuRegistry.Initialize();
+            AppServices.Current.SceneEvents.EnsureBuilt();
+            allScenes = AppServices.Current.SceneDefs.CollectAll();
+            AppServices.Current.Ui.EnsureBuilt();
+            AppServices.Current.Menus.EnsureBuilt();
             ModInitializerRegistry.NotifyResourcesReady();
             ModSettingsRegistry.LoadAll();
             isInitialized = true;
 
             ModEventBus.Subscribe<SceneEnteredEvent>(e => ApplySceneDefaults(), priority: 0);
             ModEventBus.Subscribe<SceneEnteredEvent>(e => PlaySceneAmbient(), priority: 5);
-            ModEventBus.Subscribe<SceneEnteredEvent>(e =>
-            {
-                var tree = ((Node)ModEventBus.Instance)?.GetTree();
-                if (tree == null) return;
-                foreach (var musicPlayer in tree.GetNodesInGroup("music_player"))
-                {
-                    if (musicPlayer is Audio.MusicPlayerBehaviour cast)
-                        cast.UpdateMusicType(e.SceneName);
-                }
-            }, priority: 10);
-
             ModEventBus.Subscribe<DialogEndedEvent>(_ =>
             {
                 if (IsTestPlayActive)
@@ -188,6 +181,23 @@ namespace Cthangover.Core.Scenes
             });
 
             GameLogger.Log("SCENE", $"SceneManager initialized with {allScenes?.Count ?? 0} scene(s)");
+        }
+
+        /// <summary>
+        /// Re-collects the logical scene table from the (re)loaded mod set
+        /// without re-running the one-shot boot subscriptions. Called by
+        /// <see cref="Mods.ModManager.Reload"/>; a no-op when the scene context
+        /// is not available (pure test environments).
+        /// </summary>
+        public static void RescanScenes()
+        {
+            SceneContextNode.FindNode<SceneManager>("SceneManager")?.RescanSceneTable();
+        }
+
+        private void RescanSceneTable()
+        {
+            allScenes = AppServices.Current.SceneDefs.CollectAll();
+            GameLogger.Log("SCENE", $"SceneManager rescanned: {allScenes?.Count ?? 0} scene(s)");
         }
 
         /// <summary>
@@ -209,13 +219,7 @@ namespace Cthangover.Core.Scenes
 			if (!isInitialized)
 				Initialize();
             
-            var lightController = SceneContextNode.FindNode<UiLightController>("Lights");
-            if (lightController != null)
-            {
-                lightController.ClearStaticLights();
-                lightController.SetupDepthMap(null);
-                lightController.SetupAlbedoMap(null);
-            }
+            LightingBridge.ClearSceneLights();
             
             if (string.IsNullOrEmpty(sceneName))
             {
@@ -237,7 +241,7 @@ namespace Cthangover.Core.Scenes
                 }
             }
 
-            if (SceneRouteRegistry.TryGet(sceneName, out var route))
+            if (AppServices.Current.SceneRoutes.TryGetRoute(sceneName, out var route))
             {
                 var routeService = GetNode<GodotSceneService>("/root/GodotSceneService");
                 routeService?.SwitchRoute(route);
@@ -289,7 +293,7 @@ namespace Cthangover.Core.Scenes
 
                 FilterCompletedScenarios(composedEvents);
 
-                var pendingEvents = new List<ExecutableEvent>();
+                var pendingEvents = new List<IExecutableEvent>();
                 foreach (var eventInfo in composedEvents)
                 {
                     try
@@ -339,9 +343,18 @@ namespace Cthangover.Core.Scenes
         {
             if (IsTestPlayActive && !string.IsNullOrEmpty(TestScenarioText))
             {
-                var evt = new ScenarioEvent { ScenarioText = TestScenarioText, IsOneRun = true };
+                var factory = AppServices.Current.SceneEvents.ScenarioEventFactory;
+                if (factory == null)
+                {
+                    GameLogger.Log("SCENE", "ComposeEvents: no ScenarioEventFactory registered (dialog_base mod not loaded)", LogLevel.Error);
+                }
+                else
+                {
+                    var evt = factory.CreateFromText(TestScenarioText);
+                    evt.IsOneRun = true;
+                    eventChain?.AddEvent(evt);
+                }
                 TestScenarioText = null;
-                eventChain?.AddEvent(evt);
                 return new List<SceneEventInfo>();
             }
 
@@ -349,7 +362,7 @@ namespace Cthangover.Core.Scenes
             var seenIds = new HashSet<string>();
 
             // 1. Collect C# events from registry
-            var registered = SceneEventRegistry.GetEvents(sceneName);
+            var registered = AppServices.Current.SceneEvents.GetEventsSorted(sceneName);
             foreach (var evt in registered)
             {
                 if (seenIds.Add(evt.Id))
@@ -466,7 +479,7 @@ namespace Cthangover.Core.Scenes
                 Initialize();
             if (IsGodotScene(sceneName))
                 return true;
-            if (SceneRouteRegistry.TryGet(sceneName, out _))
+            if (AppServices.Current.SceneRoutes.TryGetRoute(sceneName, out _))
                 return true;
             return allScenes != null && allScenes.ContainsKey(sceneName);
         }
@@ -514,12 +527,10 @@ namespace Cthangover.Core.Scenes
 
 			var depthTex = BackgroundFactory.Instance.Get(backgroundId + "_depth");
 			var albedoTex = BackgroundFactory.Instance.Get(backgroundId + "_albedo");
-			var controller = UiLightController.Instance;
-			controller?.SetupDepthMap(depthTex);
-			controller?.SetupAlbedoMap(albedoTex);
+			LightingBridge.SetupBackgroundMaps(depthTex, albedoTex);
         }
 
-        private ViewBox GetViewBox()
+        private IBackgroundView GetViewBox()
         {
             var sceneRoot = GetTree()?.CurrentScene;
             if (sceneRoot == null)
@@ -529,7 +540,7 @@ namespace Cthangover.Core.Scenes
             if (scene == null)
                 return null;
 
-            return scene.GetNodeOrNull<ViewBox>("ViewBox");
+            return scene.GetNodeOrNull<Node>("ViewBox") as IBackgroundView;
         }
 
         private void TryLoadDefaultScenario()
@@ -552,8 +563,14 @@ namespace Cthangover.Core.Scenes
                 return;
             }
 
-            var evt = new ScenarioEvent { ScenarioText = text };
-            eventChain?.AddEvent(evt);
+            var factory = AppServices.Current.SceneEvents.ScenarioEventFactory;
+            if (factory == null)
+            {
+                GameLogger.Log("SCENE", "SwitchScene: no ScenarioEventFactory registered (dialog_base mod not loaded)", LogLevel.Error);
+                return;
+            }
+
+            eventChain?.AddEvent(factory.CreateFromText(text));
 
             GameLogger.Log("SCENE", $"SwitchScene: loaded defaultScenario '{path}' for '{currentSceneName}'");
         }
@@ -568,16 +585,16 @@ namespace Cthangover.Core.Scenes
             var ambientId = def.DefaultAmbient;
             if (string.IsNullOrEmpty(ambientId))
             {
-                var audioService = GetNodeOrNull<Audio.AudioService>("/root/AudioService");
+                var audioService = GetNodeOrNull<Node>("/root/AudioService") as IAudioService;
                 audioService?.StopAmbient();
                 return;
             }
 
-            var audio = GetNodeOrNull<Audio.AudioService>("/root/AudioService");
+            var audio = GetNodeOrNull<Node>("/root/AudioService") as IAudioService;
             audio?.PlayAmbient(ambientId);
         }
 
-        private ExecutableEvent CreateEventInstance(SceneEventInfo info)
+        private IExecutableEvent CreateEventInstance(SceneEventInfo info)
         {
             if (!string.IsNullOrEmpty(info.ClassName))
             {
@@ -595,15 +612,15 @@ namespace Cthangover.Core.Scenes
                     return null;
                 }
 
-                if (!typeof(ExecutableEvent).IsAssignableFrom(type))
+                if (!typeof(IExecutableEvent).IsAssignableFrom(type))
                 {
-                    GameLogger.Log("SCENE", $"CreateEventInstance: '{info.ClassName}' is not an ExecutableEvent");
+                    GameLogger.Log("SCENE", $"CreateEventInstance: '{info.ClassName}' is not an IExecutableEvent");
                     return null;
                 }
 
-                var instance = (ExecutableEvent)Activator.CreateInstance(type);
-                if (instance is ScenarioEvent se && !string.IsNullOrEmpty(info.Condition))
-                    se.Condition = info.Condition;
+                var instance = (IExecutableEvent)Activator.CreateInstance(type);
+                if (instance is IConditionedEvent ce && !string.IsNullOrEmpty(info.Condition))
+                    ce.Condition = info.Condition;
                 return instance;
             }
 
@@ -616,14 +633,14 @@ namespace Cthangover.Core.Scenes
                     return null;
                 }
 
-                return new ScenarioEvent
+                var factory = AppServices.Current.SceneEvents.ScenarioEventFactory;
+                if (factory == null)
                 {
-                    ScenarioText = scenarioText,
-                    ScenarioId = info.Id,
-                    Condition = info.Condition,
-                    LightUseTime = info.LightUseTime,
-                    IsOneRun = info.IsOneRun,
-                };
+                    GameLogger.Log("SCENE", $"CreateEventInstance: no ScenarioEventFactory registered (dialog_base mod not loaded), event '{info.Id}'", LogLevel.Error);
+                    return null;
+                }
+
+                return factory.CreateFromDefinition(scenarioText, info.Id, info.Condition, info.LightUseTime, info.IsOneRun);
             }
             
             GameLogger.Log("SCENE", $"CreateEventInstance: no ClassName or ScenarioPath for '{info.Id}'");
@@ -679,14 +696,14 @@ namespace Cthangover.Core.Scenes
             if (eventController == null || !IsInstanceValid(eventController))
                 eventController = GetNodeOrNull<SceneEventController>("/root/EventController");
 
-            if (eventChain == null || !IsInstanceValid(eventChain))
-                eventChain = GetTree()?.GetFirstNodeInGroup("main_event_chain") as ExecutableMainEventChain;
+            if (eventChain == null || eventChain is not GodotObject chainNode || !IsInstanceValid(chainNode))
+                eventChain = GetTree()?.GetFirstNodeInGroup("main_event_chain") as IExecutableEventChain;
 
-            if (dialogBox == null || !IsInstanceValid(dialogBox))
+            if (dialogBox == null || dialogBox is not GodotObject dialogNode || !IsInstanceValid(dialogNode))
             {
                 var root = GetTree()?.Root;
                 if (root != null)
-                    dialogBox = SceneContextNode.FindNode<DialogBox>("DialogBox");
+                    dialogBox = SceneContextNode.FindNode<Node>("DialogBox") as IDialogBox;
             }
         }
     }

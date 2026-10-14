@@ -1,3 +1,4 @@
+using Cthangover.Core.Bootstrap;
 using Cthangover.Core.UI;
 using Godot;
 
@@ -49,9 +50,9 @@ public class TogglePanelAction : IScenarioAction
             return;
         }
 
-        if (UiRegistry.Get(name) != null)
+        if (AppServices.Current.Ui.GetById(name) != null)
         {
-            UiRegistry.Toggle(name);
+            AppServices.Current.Ui.ToggleEntry(name);
             ctx.Log("WIDGET", $"TogglePanelAction: toggled hosted panel '{name}'");
             return;
         }

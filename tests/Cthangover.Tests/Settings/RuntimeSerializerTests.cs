@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Cthangover.Core.Actions;
 using Cthangover.Core.Settings;
 using Cthangover.Core.UI.Tool;
 
@@ -10,7 +11,6 @@ namespace Engine.Tests.Settings
         private static RuntimeData CreateRuntime()
         {
             var runtime = new RuntimeData();
-            runtime.Inventory.Items = new List<Cthangover.Core.Items.IItemContainer>();
             return runtime;
         }
 
@@ -24,15 +24,15 @@ namespace Engine.Tests.Settings
             Assert.NotNull(slot.Data);
             Assert.True(slot.Data.ContainsKey("Time"));
             Assert.True(slot.Data.ContainsKey("Lamp"));
-            Assert.True(slot.Data.ContainsKey("Characters"));
-            Assert.True(slot.Data.ContainsKey("Quests"));
-            Assert.True(slot.Data.ContainsKey("BattleSet"));
-            Assert.True(slot.Data.ContainsKey("Inventory"));
-            Assert.True(slot.Data.ContainsKey("Recipes"));
             Assert.True(slot.Data.ContainsKey("ActionPool"));
             Assert.True(slot.Data.ContainsKey("Skills"));
             Assert.True(slot.Data.ContainsKey("CompletedScenarios"));
             Assert.True(slot.Data.ContainsKey("MapZones"));
+
+            // Roster persistence belongs to the characters_base engine mod's
+            // IModSaveable slot (task-11), not the core slot.
+            Assert.False(slot.Data.ContainsKey("Characters"));
+            Assert.False(slot.Data.ContainsKey("BattleSet"));
         }
 
         [Fact]
@@ -206,32 +206,28 @@ namespace Engine.Tests.Settings
         [Fact]
         public void MapZonesBlob_ThenRestoreCoreState_Roundtrip()
         {
-            try
-            {
-                MapZoneService.Instance.LoadZones(new[]
-                {
-                    new MapZone { ID = "locked_zone", Locked = true },
-                    new MapZone { ID = "hidden_zone", Hidden = true },
-                });
-                MapZoneService.Instance.Open("locked_zone");
-                MapZoneService.Instance.Hide("hidden_zone");
+            // Zone overrides live in the map_base engine mod now, so the
+            // kernel round-trip is exercised through MapStateBridge with a
+            // stand-in backend (registration is first-wins for the assembly).
+            var live = new MapZoneStateData();
+            MapStateBridge.Register(
+                () => live,
+                value => live = value,
+                () => live = new MapZoneStateData());
 
-                var slot = RuntimeSerializer.BuildCoreSlot(CreateRuntime(), "1.0.0", "test", new HashSet<string>());
+            live.Open["locked_zone"] = true;
+            live.Visible["hidden_zone"] = false;
 
-                MapZoneService.Instance.ResetOverrides();
-                Assert.False(MapZoneService.Instance.IsOpen("locked_zone"));
+            var slot = RuntimeSerializer.BuildCoreSlot(CreateRuntime(), "1.0.0", "test", new HashSet<string>());
 
-                var restored = CreateRuntime();
-                RuntimeSerializer.RestoreCoreState(slot, restored);
+            live = new MapZoneStateData();
+            Assert.Empty(live.Open);
 
-                Assert.True(MapZoneService.Instance.IsOpen("locked_zone"));
-                Assert.False(MapZoneService.Instance.IsVisible("hidden_zone"));
-            }
-            finally
-            {
-                MapZoneService.Instance.ResetOverrides();
-                MapZoneService.Instance.LoadZones(new List<MapZone>());
-            }
+            var restored = CreateRuntime();
+            RuntimeSerializer.RestoreCoreState(slot, restored);
+
+            Assert.True(live.Open.TryGetValue("locked_zone", out var open) && open);
+            Assert.True(live.Visible.TryGetValue("hidden_zone", out var visible) && !visible);
         }
 
         [Fact]

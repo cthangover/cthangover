@@ -72,6 +72,14 @@ namespace Mods.ModManager
         /// </summary>
         public bool IsConflict => Catalog?.VariantConflict == true;
 
+        /// <summary>
+        /// How many <see cref="ModCollectionKind.Game"/> collections reference
+        /// this mod (directly or through includes). Computed by the manager
+        /// screen via <see cref="ModCollectionGallery.FindGamesUsingMod"/> on
+        /// every grid refresh; zero means the mod belongs to no playable game.
+        /// </summary>
+        public int CollectionsCount { get; set; }
+
         /// <summary>Catalog URLs that published this variant, or null for local-only mods.</summary>
         public IReadOnlyList<string> SourceUrls => Catalog?.SourceUrls;
 

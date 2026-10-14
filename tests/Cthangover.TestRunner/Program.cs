@@ -165,7 +165,12 @@ namespace Cthangover.TestRunner
         /// </summary>
         private static TestResult RunIntegration(string root, string godot, IntegrationTestDefinition test)
         {
-            var args = new List<string> { "--headless", "--path", root, test.Scene };
+            var args = new List<string>();
+            if (!test.Windowed)
+                args.Add("--headless");
+            args.Add("--path");
+            args.Add(root);
+            args.Add(test.Scene);
             if (test.Args != null)
                 args.AddRange(test.Args);
 

@@ -19,7 +19,7 @@ mods/
 └── quickstart_player/
     ├── manifest.json
     └── patches/
-        └── characters.json
+        └── character.json
 ```
 
 ---
@@ -38,13 +38,13 @@ Todo mod necesita un manifiesto. Crea `mods/quickstart_player/manifest.json`:
 }
 ```
 
-Un manifiesto mínimo solo necesita `name`, pero es mejor completar también `id`. El kernel detecta automáticamente la carpeta y la carga como mod.
+El propio archivo de manifiesto es obligatorio — un mod sin él se ignora —, pero ningún campo es estrictamente obligatorio: si se omite `id`, el nombre de la carpeta se usa como id del mod. Aun así, se recomienda rellenar `id` y `name`. El kernel detecta automáticamente la carpeta y la carga como mod.
 
 ---
 
 ## Paso 3: Parche de personaje
 
-Crea `mods/quickstart_player/patches/characters.json`:
+Crea `mods/quickstart_player/patches/character.json`:
 
 ```jsonc
 {
@@ -54,7 +54,7 @@ Crea `mods/quickstart_player/patches/characters.json`:
 
       "Health": 5000, // Nuevos valores — sobrescriben los originales
       "Attack": 1200,
-      "Points": 2,
+      "Point": 2,
 
       "Actions$add": ["physics/stun"] // $add añade elementos a un array
     }
@@ -65,7 +65,7 @@ Crea `mods/quickstart_player/patches/characters.json`:
 ### Cómo funciona
 
 - **`"Id": "Marao"`** — el objetivo del parche: personaje con identificador `Marao` (definido en el mod `visual_novel_core`).
-- **`"Health": 5000`**, **`"Attack": 1200`**, **`"Points": 2`** — sobrescriben los campos del personaje. Los nuevos valores reemplazan a los antiguos.
+- **`"Health": 5000`**, **`"Attack": 1200`**, **`"Point": 2`** — sobrescriben los campos del personaje. Los nuevos valores reemplazan a los antiguos.
 - **`"Actions$add": ["physics/stun"]`** — el sufijo `$add` significa "añadir al array". La acción `physics/stun` se agrega a la lista. Las acciones por defecto `physics/attack` y `physics/defence` permanecen.
 
 > Más sobre parches: [Patches](site/docs/mods/patches/) y [Operaciones con Arrays](site/docs/mods/patches/arrays-and-identity).
@@ -76,7 +76,7 @@ Crea `mods/quickstart_player/patches/characters.json`:
 
 Inicia el juego. Entra en cualquier batalla — Marao ahora tiene:
 
-- **5000 HP** en lugar de 10
+- **5000 HP** en lugar de 16
 - **1200 ATK** en lugar de 5
 - **2 PA** en lugar de 1
 - Una tercera acción **"Aturdir"** junto a "Atacar" y "Defender"
@@ -101,4 +101,4 @@ Inicia el juego. Entra en cualquier batalla — Marao ahora tiene:
 Descargar quickstart_player.zip
 </a>
 
-El mod descargable está en inglés.
+El mod descargable está en inglés. Para instalarlo, descomprime el mod en la carpeta `mods/` del juego — o usa el gestor de mods del juego, que instala los mods descargados en `user://mods/`; los mods de ahí tienen prioridad sobre los mods integrados con el mismo id.

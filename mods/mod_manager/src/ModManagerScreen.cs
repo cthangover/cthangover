@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Generic;
 using Cthangover.Core.Mods;
 using Cthangover.Core.UI;
 using Cthangover.Core.UI.Theming;
 using Cthangover.Core.Utils;
 using Godot;
 
+using Cthangover.Mods.Interface.Base.Lists;
 namespace Mods.ModManager
 {
     /// <summary>
@@ -34,6 +36,42 @@ namespace Mods.ModManager
         private string _installingId;
         private bool _restartRequired;
         private string _statusMessage;
+
+        /// <summary>
+        /// Merged collection store keyed by id (as produced by
+        /// <see cref="ModCollectionStore.LoadAll"/>), refreshed together with
+        /// the model; feeds the "in N collections" badge on every tile.
+        /// </summary>
+        private Dictionary<string, ModCollection> _collectionIndex;
+
+        /// <summary>
+        /// When true the screen runs as a tab of the mods hub: its own header
+        /// close button and title are hidden and closing is handled by the
+        /// hosting <see cref="ModHubScreen"/>. Must be set before construction;
+        /// filters, search, install and delete behaviour are unchanged.
+        /// </summary>
+        public bool Embedded { get; set; }
+
+        /// <summary>Raised when a tile or the detail page asks to jump to the collections tab.</summary>
+        public event Action CollectionsLinkRequested;
+
+        /// <summary>
+        /// Applies an external search query — collection cross-links jump to
+        /// this tab with a mod id taken from a scheme problem. Updates the
+        /// search box and refreshes the grid without touching other filters.
+        /// </summary>
+        public void SetSearch(string text)
+        {
+            var query = text ?? string.Empty;
+            _filter.Search = query;
+            if (GodotObject.IsInstanceValid(_search)
+                && !string.Equals(_search.Text, query, StringComparison.Ordinal))
+            {
+                _search.Text = query;
+            }
+
+            RefreshView();
+        }
 
         protected override void Construct()
         {
@@ -74,6 +112,13 @@ namespace Mods.ModManager
 
             close.Text = TranslationServer.Translate("mod_manager/back");
             title.Text = TranslationServer.Translate("mod_manager/title");
+            if (Embedded)
+            {
+                // The hub header owns closing and the title; this row keeps
+                // only the search/sort/refresh controls.
+                close.Visible = false;
+                title.Visible = false;
+            }
             _search.PlaceholderText = TranslationServer.Translate("mod_manager/search_placeholder");
             _refreshButton.Text = TranslationServer.Translate("mod_manager/refresh");
             _resultLabel.AddThemeColorOverride("font_color", UiTokens.Muted);
@@ -107,11 +152,13 @@ namespace Mods.ModManager
             _grid.ActionPressed += OnActionPressed;
             _grid.EnabledToggled += OnEnabledToggled;
             _grid.VersionChanged += OnVersionChanged;
+            _grid.CollectionsLinkRequested += OnCollectionsLinkRequested;
             _detail.BackRequested += OnDetailBackRequested;
             _detail.ActionPressed += OnActionPressed;
             _detail.DeleteRequested += OnDeleteRequested;
             _detail.EnabledToggled += OnEnabledToggled;
             _detail.VersionChanged += OnVersionChanged;
+            _detail.CollectionsLinkRequested += OnCollectionsLinkRequested;
             ModDownloader.OnProgress += OnInstallProgress;
             CatalogService.OnRefreshed += OnCatalogRefreshed;
         }
@@ -124,19 +171,45 @@ namespace Mods.ModManager
             _grid.ActionPressed -= OnActionPressed;
             _grid.EnabledToggled -= OnEnabledToggled;
             _grid.VersionChanged -= OnVersionChanged;
+            _grid.CollectionsLinkRequested -= OnCollectionsLinkRequested;
             _detail.BackRequested -= OnDetailBackRequested;
             _detail.ActionPressed -= OnActionPressed;
             _detail.DeleteRequested -= OnDeleteRequested;
             _detail.EnabledToggled -= OnEnabledToggled;
             _detail.VersionChanged -= OnVersionChanged;
+            _detail.CollectionsLinkRequested -= OnCollectionsLinkRequested;
             ModDownloader.OnProgress -= OnInstallProgress;
             CatalogService.OnRefreshed -= OnCatalogRefreshed;
         }
 
         private void RefreshAll()
         {
+            _collectionIndex = BuildCollectionIndex();
             _model.Reload();
             RefreshView();
+        }
+
+        /// <summary>Rebuilds the merged collection index from the live store.</summary>
+        private static Dictionary<string, ModCollection> BuildCollectionIndex()
+        {
+            var index = new Dictionary<string, ModCollection>(StringComparer.OrdinalIgnoreCase);
+            foreach (var collection in ModCollectionStore.LoadAll())
+            {
+                if (!string.IsNullOrEmpty(collection?.Id))
+                    index[collection.Id] = collection;
+            }
+
+            return index;
+        }
+
+        /// <summary>Counts playable games referencing the mod; zero when the store is unavailable.</summary>
+        private int CountGamesUsing(string modId)
+        {
+            if (_collectionIndex == null || _collectionIndex.Count == 0 || string.IsNullOrEmpty(modId))
+                return 0;
+
+            return ModCollectionGallery.FindGamesUsingMod(_collectionIndex, modId)
+                .TryGetValue(modId, out var games) ? games.Count : 0;
         }
 
         /// <summary>
@@ -148,6 +221,8 @@ namespace Mods.ModManager
         private void RefreshView()
         {
             var items = _filter.Apply(_model.Items);
+            foreach (var item in items)
+                item.CollectionsCount = CountGamesUsing(item.Id);
             _grid.SetItems(items, _filter.GroupByCategory);
             _filterPanel.RefreshCounts(_model.CountCategories(_filter), _model.CountStatuses(_filter));
             _resultLabel.Text = string.Format(TranslationServer.Translate("mod_manager/results"), items.Count);
@@ -268,6 +343,11 @@ namespace Mods.ModManager
         private void OnFilterChanged()
         {
             RefreshView();
+        }
+
+        private void OnCollectionsLinkRequested()
+        {
+            CollectionsLinkRequested?.Invoke();
         }
 
         private void OnFilterResetRequested()

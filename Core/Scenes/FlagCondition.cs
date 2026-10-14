@@ -36,6 +36,7 @@ namespace Cthangover.Core.Scenes
             Value = value;
         }
 
+        /// <summary>Reads the live flag value and compares it; a missing flag counts as "not equal".</summary>
         public override bool Evaluate(EvaluationContext ctx)
         {
             if (!ctx.Flags.TryGetValue(Key, out var current))

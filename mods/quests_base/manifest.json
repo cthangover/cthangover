@@ -1,0 +1,22 @@
+{
+  "id": "quests_base",
+  "name": "Quests Engine",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Engine quests subsystem: the quest factory and runtime state (QuestFactory, QuestBase/QuestData), the IQuestService implementation, quest scenario actions, quest scene conditions with the QuestParser leaf parser and the quest journal UI. Replaces the former Core/Quests state, Core/Actions quest services and actions, Core/Scenes quest conditions and Core/UI/Quests - QuestsModInitializer publishes the kernel contract (IQuestService via QuestServiceRegistry), registers the quest leaf parser and the new-game resettable; QuestsSaveable persists quest state through the generic mod save slot.",
+  "category": "engine, library",
+  "sources": [
+    "src/**/*.cs"
+  ],
+  "depends": ["characters_base>=1", "interface>=1"],
+  "ui": [
+    {
+      "id": "journal",
+      "kind": "panel",
+      "slot": "ModBeforeUIPanel",
+      "scene_path": "scenes/ui/quest_journal.tscn",
+      "button": { "icon": "journal", "locale": "ui/journal/title", "index": 60 },
+      "priority": 10
+    }
+  ]
+}

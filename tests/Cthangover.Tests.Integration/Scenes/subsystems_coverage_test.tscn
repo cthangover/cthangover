@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://tests/Cthangover.Tests.Integration/Autotest/SubsystemsCoverageTestSetup.cs" id="1_setup"]
+
+[node name="SubsystemsCoverageTest" type="Node"]
+script = ExtResource("1_setup")

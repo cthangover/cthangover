@@ -4,6 +4,14 @@ using Cthangover.Core.Utils;
 
 namespace Cthangover.Core.Settings
 {
+    /// <summary>
+    /// User-adjusted settings (audio, display, language, battle speed, launcher
+    /// flag) persisted as indented JSON at <c>user://settings.json</c> — a
+    /// separate, per-device file that only supplies overrides on top of the
+    /// defaults read from <see cref="GameConfig"/>. Constructing the instance
+    /// applies the config defaults; <see cref="Load"/> then layers the saved
+    /// user values on top.
+    /// </summary>
     public class SettingsData
     {
         private const string ConfigPath = "user://settings.json";
@@ -74,13 +82,7 @@ namespace Cthangover.Core.Settings
             Scale           = cfg.Display.Scale;
         }
 
-        /// <summary>
-        /// Reads <c>user://settings.json</c> via Godot's <c>ConfigFile</c> API.
-        /// Each value is read with a fallback default (the current property
-        /// value), so missing keys leave the in-memory defaults intact.
-        /// If the config file does not exist (<c>Error.Ok</c> is not returned),
-        /// the method returns silently without changing anything.
-        /// </summary>
+        /// <summary>Resolves the settings file path for the current environment.</summary>
         private static string ResolvePath()
         {
             if (GameEnvironment.IsRuntime)
@@ -88,6 +90,11 @@ namespace Cthangover.Core.Settings
             return "settings.json";
         }
 
+        /// <summary>
+        /// Reads <c>user://settings.json</c> and copies every saved value over
+        /// the in-memory defaults (including <see cref="LauncherShown"/>).
+        /// Missing file or malformed JSON is silently ignored, keeping defaults.
+        /// </summary>
         public void Load()
         {
             var path = ResolvePath();
@@ -109,9 +116,9 @@ namespace Cthangover.Core.Settings
         }
 
         /// <summary>
-        /// Writes all current property values to <c>user://settings.cfg</c>
-        /// via Godot's <c>ConfigFile</c> API. The file is atomically
-        /// replaced (truncated and rewritten) on each call.
+        /// Serialises all current property values as indented JSON to
+        /// <c>user://settings.json</c>, truncating and rewriting the file on
+        /// each call. <see cref="LauncherShown"/> is persisted with the rest.
         /// </summary>
         public void Save()
         {

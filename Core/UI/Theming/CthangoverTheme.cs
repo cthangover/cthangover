@@ -17,10 +17,15 @@ namespace Cthangover.Core.UI.Theming
     /// </summary>
     public static class CthangoverTheme
     {
+        /// <summary>Name of the gold primary button variation registered by <see cref="Build"/>.</summary>
         public const string PrimaryVariation = "CthangoverPrimary";
+        /// <summary>Name of the destructive red-accent button variation registered by <see cref="Build"/>.</summary>
         public const string DangerVariation = "CthangoverDanger";
+        /// <summary>Name of the compact icon-button variation registered by <see cref="Build"/>.</summary>
         public const string IconVariation = "CthangoverIcon";
+        /// <summary>Name of the tab-shaped button variation registered by <see cref="Build"/>.</summary>
         public const string TabVariation = "CthangoverTab";
+        /// <summary>Name of the ribbon-tab button variation registered by <see cref="Build"/>.</summary>
         public const string RibbonVariation = "CthangoverRibbon";
 
         private static Theme instance;
@@ -42,30 +47,35 @@ namespace Cthangover.Core.UI.Theming
             }
         }
 
+        /// <summary>Opts a button into the primary gold variation.</summary>
         public static void ApplyPrimary(Button button)
         {
             if (button != null)
                 button.ThemeTypeVariation = PrimaryVariation;
         }
 
+        /// <summary>Opts a button into the danger variation.</summary>
         public static void ApplyDanger(Button button)
         {
             if (button != null)
                 button.ThemeTypeVariation = DangerVariation;
         }
 
+        /// <summary>Opts a button into the compact icon-button variation (close ✕ buttons and glyph buttons).</summary>
         public static void ApplyIcon(Button button)
         {
             if (button != null)
                 button.ThemeTypeVariation = IconVariation;
         }
 
+        /// <summary>Opts a button into the tab variation.</summary>
         public static void ApplyTab(Button button)
         {
             if (button != null)
                 button.ThemeTypeVariation = TabVariation;
         }
 
+        /// <summary>Opts a button into the ribbon-tab variation.</summary>
         public static void ApplyRibbon(Button button)
         {
             if (button != null)

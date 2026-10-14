@@ -1,6 +1,6 @@
 # DSL Command Reference
 
-Complete reference to the Scenario DSL commands: 29 keywords registered in the command strategy registry, plus `select`/`option`, which are handled specially by the parser (32 commands total, grouped by category).
+Complete reference to the Scenario DSL commands: 29 keywords registered in the command strategy registry, plus `select`/`option`, which are handled specially by the parser (31 commands total, grouped by category).
 
 ---
 
@@ -95,7 +95,7 @@ Sets a solid color background (overrides image).
 background_color "#1a1a2e"
 ```
 
-Useful for transitions, flashbacks, or UI overlays.
+Accepts an HTML hex color (`#1a1a2e`) or a named color (`black`, `white`, `red`, `green`, `blue`, `yellow`, `gray`/`grey`). Anything else falls back to black. Useful for transitions, flashbacks, or UI overlays.
 
 ### `background_show_hide`
 Animates the background layer in or out with a fade.
@@ -194,6 +194,8 @@ Displays a large centered title, often used for chapter/section headers.
 title "Chapter 1 — The Hangover"
 ```
 
+The text can be a literal or a `key=` locale reference; lines without resolvable text are silently skipped.
+
 ---
 
 ## Audio
@@ -245,10 +247,10 @@ light_set [{"x":0.43,"y":0.58,"radius":500,"influence":1,"color":"#ffff00"}]
 
 | Field | Description |
 |---|---|
-| `x`, `y` | Normalized position (0.0–1.0, UV coordinates) |
+| `x`, `y` | Normalized position (0.0–1.0, relative to the viewport) |
 | `radius` | Light radius in pixels |
-| `influence` | Intensity multiplier (0.0–2.0) |
-| `color` | Hex color with optional alpha (`#ffff00`, `#ffffff80`) |
+| `influence` | Intensity multiplier (0.0–1.0) |
+| `color` | Hex color (`#ffff00`) |
 
 Multiple lights in one array:
 
@@ -258,6 +260,8 @@ light_set [
   {"x":0.29,"y":0.16,"radius":600,"influence":1,"color":"#ffff00"}
 ]
 ```
+
+At most 10 static lights are applied (plus the player's lamp); extra array entries are ignored.
 
 Call with no arguments to reset all lights:
 
@@ -402,11 +406,13 @@ set door_locked false
 The syntax is **space-separated**: first token is the name, second token is the value. Do not write `set name = value` with spaced equals — the parser stores the literal `"="` as the value. A `name=value` token (no spaces around `=`) is treated as a named argument, which is a different mechanism and not how `set` reads its operands.
 
 ### `empty`
-A no-op command. Useful as a placeholder during development.
+A no-op command — it queues a placeholder action that does nothing and is skipped instantly.
 
 ```scenario
 empty
 ```
+
+Labels (`:label`) are implemented as named `empty` markers, so a bare `empty` line is also a convenient placeholder slot during development.
 
 ---
 

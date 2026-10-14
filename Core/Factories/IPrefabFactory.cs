@@ -8,8 +8,10 @@ namespace Cthangover.Core.Factories
     /// </summary>
     public interface IPrefabFactory<out T>
     {
+        /// <summary>Mod asset group this factory scans; ids are relative to it.</summary>
         string GroupName { get; }
 
+        /// <summary>Returns the cached asset for <paramref name="id"/>, or <c>null</c> when missing.</summary>
         T Get(string id);
     }
 }

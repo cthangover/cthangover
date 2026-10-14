@@ -90,6 +90,8 @@ Categories are plain strings passed to `GameLogger.Log(category, ...)` — **no 
 | `BATTLE` | Battle engine events |
 | `BATTLE_UI` | Battle interface events |
 | `CATALOG` | Remote mod catalog refresh/cache |
+| `CATALOG_EXPORT` | Catalog export dialog |
+| `CACHE` | Mod cache (shader extraction) |
 | `COND` | Condition evaluation |
 | `CONFIG` | Configuration loading |
 | `CONVERTER` | Scenario converter |
@@ -98,30 +100,36 @@ Categories are plain strings passed to `GameLogger.Log(category, ...)` — **no 
 | `EVENT_BUS` | Mod event bus subscriptions |
 | `FACTORY` | Factory loading |
 | `GAME` | Game lifecycle |
+| `ICON_CACHE` | Catalog icon downloads/cache |
 | `GDS_MOD` | GDScript mod loading |
 | `INTERACTIVE` | Interactive objects/layers |
 | `LANG` | Localization loading |
+| `MOD_COLLECTIONS` | Collection store/resolver/plan |
+| `MOD_HUB` | Mods & Collections hub screens |
+| `MOD_MANAGER` | Mod manager screen actions |
 | `MODS` | General mod loading |
 | `MODS_ASSEMBLY` | Mod assembly loading |
 | `MODS_COMPILE` | Roslyn C# compilation |
 | `MODS_EXPORT` | Mod export |
 | `MODS_INIT` | Mod initialization |
 | `MODS_NATIVE` | Native library handling in mods |
+| `MODS_DISCOVERY` | Scanner/loader registry init |
 | `MODS_REGISTRY` | Mod registry operations |
 | `MODS_SAVE` | Mod save dispatch |
 | `MODS_SETTINGS` | Mod settings persistence |
+| `MODS_ZIP` | Zip provider file access |
 | `QUEST` | Quest system |
 | `SAVE` | Save/load operations |
 | `SCENE` | Scene transitions |
 | `SCENE_CTX` | Scene context nodes |
-| `SCENE_REGISTRY` | Scene subscription registry |
 | `SHADER` | Shader operations |
 | `TEST` | Test runner (SceneSwitcher) |
 | `TSCN` | `.tscn` scene resolution/parsing |
 | `TSCN_TEST` | `.tscn` test driver |
+| `UNINSTALLER` | Mod uninstall/cleanup |
 | `UI` | UI events |
 
-> **Warning**: the `enabled_categories` whitelist filter is currently **commented out** inside `GameLogger.Log` — category filtering is inert, and all categories are logged regardless of this setting.
+> **Warning**: the `enabled_categories` whitelist filter is currently **commented out** inside `GameLogger.Log` — category filtering is inert, and all categories are logged regardless of this setting. Note also that the `config/game_config.json` shipped with the game still lists legacy `LOG_`-prefixed strings (e.g. `"LOG_MODS"`); since categories are plain unprefixed strings, those entries never match a real category.
 
 ### Log output files
 

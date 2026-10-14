@@ -1,10 +1,12 @@
-﻿using System;
+using System;
 using System.Threading;
-using System.Threading.Tasks;
+using Cthangover.Core.Bootstrap;
 using Cthangover.Core.Localization;
 using Cthangover.Core.Mods;
+using Cthangover.Core.Mods.Testing;
 using Cthangover.Core.Scenes;
 using Cthangover.Core.Settings;
+using Cthangover.Core.Utils;
 using Cthangover.Core.UI.Base;
 using Cthangover.Core.UI.Theming;
 using Godot;
@@ -50,6 +52,7 @@ namespace Cthangover.Core.UI.Menu
 
         private static readonly int[] ScaleOptions = { 1, 2, 3, 4 };
 
+        /// <summary>Applies the theme, then branches into boot overlay, skip-to-main-menu or the interactive launcher depending on boot state.</summary>
         public override void _Ready()
         {
             CthangoverTheme.Apply(this);
@@ -115,6 +118,17 @@ namespace Cthangover.Core.UI.Menu
             hint.AddThemeColorOverride("font_color", UiTokens.Body);
             _bootOverlay.AddChild(hint);
 
+            // Boot progress bar: polls the thread-safe BootProgress snapshot in
+            // _Process instead of subscribing to worker-thread events, so no
+            // Godot API is ever touched off the main thread.
+            var progress = new BootProgressBar();
+            progress.SetAnchorsPreset(LayoutPreset.TopWide);
+            progress.OffsetLeft = UiTokens.Space8;
+            progress.OffsetRight = -UiTokens.Space8;
+            progress.OffsetTop = UiTokens.Space9 + 48;
+            progress.OffsetBottom = progress.OffsetTop + 10;
+            _bootOverlay.AddChild(progress);
+
             var log = new BootLogPanel();
             log.SetAnchorsPreset(LayoutPreset.FullRect);
             _bootOverlay.AddChild(log);
@@ -130,38 +144,46 @@ namespace Cthangover.Core.UI.Menu
         }
 
         /// <summary>
-        /// Drives the launcher boot sequence:
-        /// 1. resolve Godot-bound paths on the main thread,
-        /// 2. run mod discovery + compilation on a background thread (pure .NET),
-        /// 3. run the Godot-bound finalize (registration, GDScript, ordering) on the
-        ///    main thread, load the locale and finish either with the settings UI or
-        ///    a direct skip to the main menu.
+        /// Thin UI wrapper over <see cref="Boot.RunLauncherAsync"/>: the unified
+        /// boot pipeline yields a frame so the boot overlay renders first, then
+        /// resolves the Godot-bound paths, runs mod discovery + compilation on a
+        /// background thread and finishes the Godot-bound phases (finalize,
+        /// runtime, locale, scene registries) on the main thread. After the
+        /// pipeline completes, reloads the mod-provided background sprites, hides
+        /// the boot overlay and finishes either with the settings UI or a direct
+        /// skip to the main menu.
         /// </summary>
         private async void RunBootAsync()
         {
-            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-
-            var modManager = ModManager.Instance;
-            modManager.PreparePaths();
-
             try
             {
-                await Task.Run(() => modManager.DiscoverAndCompile(_bootCts.Token), _bootCts.Token);
+                await Boot.RunLauncherAsync(this, _bootCts.Token);
             }
             catch (OperationCanceledException)
             {
                 return;
             }
+            catch (Exception ex)
+            {
+                // A failed boot must never soft-lock the launcher behind the
+                // boot overlay: log loudly, drop the overlay and keep going so
+                // the window stays responsive; readiness guards in ModRegistry
+                // keep every too-early mod consumer loud until a re-run.
+                GameLogger.Log("BOOT", $"Launcher boot FAILED: {ex.Message}", LogLevel.Error);
+            }
 
             if (!GodotObject.IsInstanceValid(this))
                 return;
 
-            modManager.FinalizeGodotInit();
-            modManager.ClearCaches();
-            LocaleLoader.LoadCurrentLanguage();
-
-            var sceneManager = GetNodeOrNull<SceneManager>("/root/SceneManager");
-            sceneManager?.Initialize();
+            // Mod unit-test gate (plan-mod-testing.md §3.1/§5.1): after a fully
+            // completed boot the engine — and only on an explicit request —
+            // compiles and runs mod tests instead of entering the main menu,
+            // then quits with the standard exit code contract.
+            if (Boot.IsReady && ModTestEngine.IsTestMode())
+            {
+                await RunModTestsAndQuitAsync();
+                return;
+            }
 
             GetNodeOrNull<ModSpriteLoader>("Background/SpriteLoader")?.Reload();
 
@@ -175,6 +197,33 @@ namespace Cthangover.Core.UI.Menu
 
             BuildUI();
             LoadSettingsToUI();
+        }
+
+        /// <summary>
+        /// Test-mode terminus of the boot pipeline: runs the mod test engine
+        /// for all eligible mods (or the <c>--mod=</c> filtered one), prints
+        /// the report through the standard channels and quits the process with
+        /// exit code 0/1 — the same contract every integration driver uses.
+        /// </summary>
+        private async System.Threading.Tasks.Task RunModTestsAndQuitAsync()
+        {
+            GameLogger.Log("MODTEST", "Test mode active (--run-tests / run_mod_tests): running mod tests");
+            bool success;
+            try
+            {
+                success = await ModTestEngine.RunAllAsync(ModTestEngine.RequestedModFilter(), _bootCts.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                success = false;
+            }
+            catch (Exception ex)
+            {
+                GameLogger.Log("MODTEST", $"Mod test run failed: {ex.Message}", LogLevel.Error);
+                success = false;
+            }
+            GameLogger.Log("MODTEST", $"Mod test run finished, success={success}, quitting");
+            GetTree().Quit(success ? 0 : 1);
         }
 
         private void SkipToMainMenu()
@@ -197,24 +246,24 @@ namespace Cthangover.Core.UI.Menu
         }
 
         /// <summary>
-        /// Enters the title screen, preferring the runtime pipeline when the scene is patched
-        /// so scene patches declared by mods apply to the native main menu as well. Unpatched
-        /// scenes keep the engine loader.
+        /// Enters the title screen. The menu scene is provided by the
+        /// <c>base_menu</c> mod and resolved through the runtime tscn pipeline
+        /// (which also applies scene patches). The scene exists only inside the
+        /// base_menu mod; if even that cannot be built, the engine loader runs
+        /// anyway so a broken mod set degrades to a loud log instead of a crash.
         /// </summary>
         private void OpenMainMenu()
         {
-            const string path = "res://scenes/menu/main_menu.tscn";
-            if (TscnScenes.HasPatches(path))
+            const string path = "scenes/menu/main_menu.tscn";
+            var node = TscnScenes.LoadAndBuild(path);
+            if (node != null)
             {
-                var node = TscnScenes.LoadAndBuild(path);
-                if (node != null)
-                {
-                    GetTree().ChangeSceneToNode(node);
-                    return;
-                }
+                GetTree().ChangeSceneToNode(node);
+                return;
             }
 
-            GetTree().ChangeSceneToFile(path);
+            GameLogger.Log("LAUNCHER", $"main menu scene '{path}' could not be built by any mod — falling back to the native loader", LogLevel.Warning);
+            GetTree().ChangeSceneToFile("res://" + path);
         }
 
         private void BuildUI()

@@ -1,9 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
-using Cthangover.Core.Factories.Impls;
-using Cthangover.Core.Items;
-using Cthangover.Core.Quests;
 using Cthangover.Core.Utils;
 
 namespace Cthangover.Core.Settings
@@ -26,18 +23,27 @@ namespace Cthangover.Core.Settings
         /// </summary>
         public class CoreSlotPreview
         {
+            /// <summary>Scene the player was in when the save was written.</summary>
             public string CurrentSceneName { get; set; }
+
+            /// <summary>In-game clock tick at save moment.</summary>
             public long GameTime { get; set; }
+
+            /// <summary>Number of recruited characters at save moment.</summary>
             public int CharacterCount { get; set; }
         }
 
         /// <summary>
         /// Builds the <c>"__core__"</c> <see cref="ModSlot"/> with
         /// named <see cref="DataBlob"/> blocks for each subsystem
-        /// (Time, Lamp, Characters, Quests, BattleSet,
-        /// Inventory, Recipes, ActionPool, Skills, CompletedScenarios) and
+        /// (Time, Lamp, ActionPool, Skills, CompletedScenarios, MapZones) and
         /// slot-level preview metadata in
-        /// <see cref="ModMetadata.CustomData"/>.
+        /// <see cref="ModMetadata.CustomData"/>. Subsystem-owned state is not
+        /// part of the core slot: quest state persists through the quests
+        /// engine mod's own <c>IModSaveable</c> slot, inventory and recipe
+        /// state through the items engine mod's slot, and the character
+        /// roster (<c>Characters</c>/<c>BattleSet</c>) through the
+        /// characters engine mod's slot (<c>CharactersSaveable</c>).
         /// </summary>
         public static ModSlot BuildCoreSlot(
             RuntimeData runtime,
@@ -63,16 +69,10 @@ namespace Cthangover.Core.Settings
             lampBlob.SetFloat("Influence", runtime.LampData.Influence);
             slot.Data["Lamp"] = lampBlob;
 
-            slot.Data["Characters"] = new DataBlob(1, runtime.CharacterData.Characters.Values.ToList());
-            slot.Data["Quests"]     = new DataBlob(1, QuestFactory.Instance.GetAll());
-            slot.Data["BattleSet"]  = new DataBlob(1, runtime.CharacterData.BattleSet.ToList());
-            slot.Data["Inventory"]  = new DataBlob(1, runtime.Inventory.Items.Select(o =>
-                new CItem { ID = o.Item.ID, Count = o.Count }).ToList());
-            slot.Data["Recipes"]    = new DataBlob(1, runtime.RecipeData.Data.ToList());
             slot.Data["ActionPool"] = new DataBlob(1, runtime.ActionPool.ActionIds.ToList());
             slot.Data["Skills"]     = new DataBlob(1, runtime.SkillData.Skills.ToList());
             slot.Data["CompletedScenarios"] = new DataBlob(1, completedScenarioIds.ToList());
-            slot.Data["MapZones"]   = new DataBlob(1, Cthangover.Core.UI.Tool.MapZoneService.Instance.ExportState());
+            slot.Data["MapZones"]   = new DataBlob(1, Cthangover.Core.Actions.MapStateBridge.ExportState());
 
             var preview = new CoreSlotPreview
             {
@@ -111,35 +111,6 @@ namespace Cthangover.Core.Settings
                 runtime.LampData.Influence = lampBlob.GetFloat("Influence", 0.5f);
             }
 
-            if (coreSlot.Data.TryGetValue("Characters", out var charBlob))
-            {
-                var chars = charBlob.ReadJson<List<CharacterInfoData>>();
-                runtime.CharacterData.Characters = new Dictionary<string, CharacterInfoData>();
-                if (chars != null)
-                    foreach (var c in chars)
-                        runtime.CharacterData.Characters[c.CharacterType] = c;
-            }
-
-            if (coreSlot.Data.TryGetValue("Quests", out var questBlob))
-                QuestFactory.Instance.SetAll(questBlob.ReadJson<List<QuestBase>>());
-
-            if (coreSlot.Data.TryGetValue("BattleSet", out var bsBlob))
-                runtime.CharacterData.BattleSet = bsBlob.ReadJson<List<string>>()?.ToHashSet()
-                    ?? new HashSet<string>();
-
-            if (coreSlot.Data.TryGetValue("Inventory", out var invBlob))
-            {
-                var items = invBlob.ReadJson<List<CItem>>();
-                runtime.Inventory.Items = items?.Select(o =>
-                    (IItemContainer)new ItemContainer
-                        { Item = ItemFactory.Instance.Get(o.ID), Count = o.Count }).ToList()
-                    ?? new List<IItemContainer>();
-            }
-
-            if (coreSlot.Data.TryGetValue("Recipes", out var recipeBlob))
-                runtime.RecipeData.Data = recipeBlob.ReadJson<List<string>>()?.ToHashSet()
-                    ?? new HashSet<string>();
-
             if (coreSlot.Data.TryGetValue("ActionPool", out var apBlob))
                 runtime.ActionPool.ActionIds = apBlob.ReadJson<List<string>>() ?? new List<string>();
 
@@ -160,7 +131,7 @@ namespace Cthangover.Core.Settings
             }
 
             if (coreSlot.Data.TryGetValue("MapZones", out var mapBlob))
-                Cthangover.Core.UI.Tool.MapZoneService.Instance.ImportState(
+                Cthangover.Core.Actions.MapStateBridge.ImportState(
                     mapBlob.ReadJson<Cthangover.Core.UI.Tool.MapZoneStateData>());
         }
 

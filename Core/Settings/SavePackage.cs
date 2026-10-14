@@ -16,6 +16,7 @@ namespace Cthangover.Core.Settings
     /// </summary>
     public class SavePackage
     {
+        /// <summary>Reserved <see cref="ModData"/> key holding the core game state; mods must not write it.</summary>
         public const string CoreSlotKey = "__core__";
 
         /// <summary>User-facing save name (e.g. "slot_1").</summary>

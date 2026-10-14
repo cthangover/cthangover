@@ -36,6 +36,10 @@ namespace Cthangover.Core.Autotest
         private string _originalText;
         private Window _window;
 
+        /// <summary>
+        /// Arms the 25-second watchdog and starts the async check sequence when
+        /// the test scene loads.
+        /// </summary>
         public override void _Ready()
         {
             var watchdog = GetTree().CreateTimer(25d);

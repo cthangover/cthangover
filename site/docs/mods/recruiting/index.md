@@ -59,8 +59,8 @@ The roster is a session singleton — there is exactly one per playthrough:
 | `Add(id, characterID)` | Create a new recruit (uses the given `id`, falling back to a fresh Guid if taken; initialises Health=10 via `Recruit.PROP_HEALTH`; fires `OnConfigure`). **Only one recruit per enemy template is allowed** - a duplicate request returns the existing entry and creates nothing. Returns the `Recruit` instance |
 | `Remove(id)` | Remove a recruit from the roster; also detaches it from the party and deletes its placeholder card |
 
-A new game clears `Data` through the `NewGameStartedEvent` subscription in
-`RecruitingInitializer`; loading a save replaces it via `RecruitingSaveable`.
+A new game clears `Data` through the `IResettable` the `RecruitingInitializer`
+registers in `AppServices`; loading a save replaces it via `RecruitingSaveable`.
 
 ## Party integration
 
@@ -112,7 +112,7 @@ and removal events — not just recruits from its own mod.
 The mod ships two rules that used to live in content mods:
 
 - `EnslaveCondition` (`IRecruitCondition`, `Id = "enslave"`) — the recruitment gate requires the player to own the `slave_master` skill (checked through `RuntimeData.SkillData`).
-- `NutritionBehaviour` (`IRecruitBehaviour`, `Id = "nutrition"`) — seeds `FullnessTime` when a recruit joins and drains `PROP_HEALTH` once the 24 in-game-hour fullness window is exceeded.
+- `NutritionBehaviour` (`IRecruitBehaviour`, `Id = "nutrition"`) — seeds `FullnessTime` when a recruit joins and drains `PROP_HEALTH` by 1 per tick once the fullness window has elapsed. The window is a hard-coded `24 * 4 * 60` ticks; at one tick per in-game minute that is 96 in-game hours (4 in-game days), although the source comment calls it "24 hours" — treat the tick constant as authoritative.
 
 Because they live inside `recruiting`, disabling the mod disables the gate and the hunger loop together, without touching the content mods.
 

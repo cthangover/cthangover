@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Cthangover.Core.Characters;
 using Cthangover.Core.Mods;
 using Cthangover.Core.Mods.Patches;
 using Engine.Tests.Mods.Mocks;
@@ -91,7 +90,7 @@ namespace Engine.Tests.Mods
             var merger = new JsonPatchMerger();
             var mergedJson = merger.Merge(maraoJson, "Marao", patches);
 
-            var result = JsonSerializer.Deserialize<CharacterInfo>(mergedJson, ReadOptions);
+            var result = JsonSerializer.Deserialize<CharacterPatchSample>(mergedJson, ReadOptions);
 
             Assert.Equal(5000, result.Health);
             Assert.Equal(1200, result.Attack);
@@ -116,7 +115,7 @@ namespace Engine.Tests.Mods
             var merger = new JsonPatchMerger();
             var mergedJson = merger.Merge(maraoJson, "Marao", null);
 
-            var result = JsonSerializer.Deserialize<CharacterInfo>(mergedJson, ReadOptions);
+            var result = JsonSerializer.Deserialize<CharacterPatchSample>(mergedJson, ReadOptions);
 
             Assert.Equal(16, result.Health);
             Assert.Equal(5, result.Attack);
@@ -149,7 +148,7 @@ namespace Engine.Tests.Mods
             var merger = new JsonPatchMerger();
             var mergedJson = merger.Merge(maraoJson, "Marao", patches);
 
-            var result = JsonSerializer.Deserialize<CharacterInfo>(mergedJson, ReadOptions);
+            var result = JsonSerializer.Deserialize<CharacterPatchSample>(mergedJson, ReadOptions);
 
             Assert.Contains("physics/attack", result.Actions);
             Assert.Contains("physics/defence", result.Actions);
@@ -181,7 +180,7 @@ namespace Engine.Tests.Mods
             var merger = new JsonPatchMerger();
             var mergedJson = merger.Merge(maraoJson, "Marao", patches);
 
-            var result = JsonSerializer.Deserialize<CharacterInfo>(mergedJson, ReadOptions);
+            var result = JsonSerializer.Deserialize<CharacterPatchSample>(mergedJson, ReadOptions);
 
             Assert.Contains("physics/attack", result.Actions);
             Assert.Contains("physics/stun", result.Actions);

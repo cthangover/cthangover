@@ -1,5 +1,10 @@
-﻿namespace Cthangover.Core.Scenes;
+namespace Cthangover.Core.Scenes;
 
+/// <summary>
+/// A node of the quest-condition expression tree parsed from DSL
+/// condition strings (comparison, logical, and grouping nodes).
+/// Implementations evaluate themselves against the runtime context.
+/// </summary>
 public interface ICondition
 {
     /// <summary>

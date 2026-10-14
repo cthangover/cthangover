@@ -12,7 +12,7 @@ namespace Cthangover.Core.Actions
     /// instantiated objects and needs cleanup notification. Find uses
     /// SceneContextNode.FindNode for typed recursive lookup across the scene tree.
     /// </summary>
-    internal class SceneNodeServiceImpl : ISceneNodeService
+    public class SceneNodeServiceImpl : ISceneNodeService
     {
         /// <summary>
         /// Loads a PackedScene by resource path via GD.Load, instantiates

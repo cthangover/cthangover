@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Globalization;
 
 namespace Cthangover.Core.Utils.Types;
@@ -25,7 +25,7 @@ public class FloatParse : IParse<float?>
         {
             return float.Parse(value, format);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return null;
         }

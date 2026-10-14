@@ -26,9 +26,10 @@ mods/
     ├── backgrounds/
     │   └── my_alko_bar/
     │       └── bg.png                    # Imagen del interior del bar
-    ├── backgrounds/
-    │   └── sounds/
-    │       └── alko_bar_ambient.ogg      # Sonido ambiente de ruido de bar
+    ├── sounds/
+    │   └── locations/
+    │       └── alkobar/
+    │           └── bar_ambient.ogg       # Sonido ambiente de ruido de bar
     └── locale/
         └── ru.properties                 # Localización para ruso
 ```
@@ -145,10 +146,10 @@ end
 ### Por qué funciona
 
 La escena `town_entry` ahora tiene dos escenarios:
-- `priority: 10` — por defecto (del mod `visual_novel_core`)
+- `priority: 40` — por defecto (del mod `visual_novel_core`)
 - `priority: 1` — el nuestro (de `quickstart_modder`)
 
-El motor ejecuta el escenario con la **menor** `priority`. Nuestra `priority: 1` gana — el jugador ve la nueva opción.
+El motor ejecuta los escenarios de una escena en orden ascendente de `priority` — el valor **menor** va **primero**. Nuestro escenario con `priority: 1` empieza antes que el predeterminado, así el jugador ve las nuevas opciones primero.
 
 > Más información: [Sistema de Prioridad de Escenas](site/docs/mods/scenes/).
 
@@ -181,4 +182,4 @@ Inicia el juego:
 Descargar quickstart_modder.zip
 </a>
 
-El mod descargable está en inglés.
+El texto de los diálogos del mod descargable está en ruso.

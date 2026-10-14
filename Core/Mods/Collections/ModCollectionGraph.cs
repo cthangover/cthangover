@@ -19,6 +19,22 @@ namespace Cthangover.Core.Mods
         /// <summary>Mechanics in declaration order; ids normalized to non-empty values by the resolver.</summary>
         public List<ModCollectionMechanic> Mechanics { get; set; } = new();
 
+        /// <summary>
+        /// Scheme contours in rendering order: root includes first, then the
+        /// root's own mechanics. Each group carries its display name,
+        /// description and the mods flattened from its subtree, so the editor
+        /// can draw the game as a two-level pyramid without walking include
+        /// chains itself.
+        /// </summary>
+        public List<ModCollectionGroup> Groups { get; set; } = new();
+
+        /// <summary>
+        /// Resolution inconsistencies (missing blocks, cycles, role conflicts,
+        /// unmet requirements). Empty for a consistent assembly; the editor
+        /// blocks applying while errors are present.
+        /// </summary>
+        public List<ModCollectionProblem> Problems { get; set; } = new();
+
         /// <summary>All mod vertices: mechanic members first, then external dependencies in discovery order.</summary>
         public List<ModCollectionNode> Nodes { get; set; } = new();
 

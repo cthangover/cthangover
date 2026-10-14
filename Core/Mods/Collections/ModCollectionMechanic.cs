@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json.Serialization;
 
 namespace Cthangover.Core.Mods
@@ -30,6 +31,15 @@ namespace Cthangover.Core.Mods
         public string Description { get; set; }
 
         /// <summary>
+        /// Slot role of the mechanic ("characters", "story", "battle", ...).
+        /// The scheme editor groups the mechanic's mods under this label and the
+        /// resolver uses it to detect two required blocks claiming one slot
+        /// together with <see cref="ModCollectionInclude.Role"/>.
+        /// </summary>
+        [JsonPropertyName("role")]
+        public string Role { get; set; }
+
+        /// <summary>
         /// Versioned mod references of this mechanic, same syntax as
         /// <c>manifest.json</c> <c>depends</c> (e.g. <c>"interface&gt;=1"</c>).
         /// </summary>
@@ -43,5 +53,102 @@ namespace Cthangover.Core.Mods
         /// </summary>
         [JsonPropertyName("optional")]
         public bool Optional { get; set; }
+
+        /// <summary>
+        /// Player's choice for an optional mechanic. <c>null</c> (omitted) means
+        /// the default: the mechanic is on until the player turns it off.
+        /// </summary>
+        [JsonPropertyName("selected")]
+        public bool? Selected { get; set; }
+
+        /// <summary>True when the mechanic participates in resolution (not an off optional).</summary>
+        [JsonIgnore]
+        public bool IsSelected => !(Optional && Selected == false);
+
+        /// <summary>
+        /// Localized name/description entries, same shape as catalog mod
+        /// entries; the scheme editor shows the match for the player's language
+        /// and falls back to <see cref="Name"/> and <see cref="Description"/>.
+        /// </summary>
+        [JsonPropertyName("locale")]
+        public List<CatalogLocaleEntry> Locale { get; set; }
+
+        /// <summary>
+        /// Name for the given language: requested locale entry -> flat name ->
+        /// English locale entry -> first entry -> id. A flat '@key' value is
+        /// returned verbatim; the caller (UI or
+        /// <see cref="ModCollectionResolver"/>) resolves it through
+        /// <see cref="CollectionText.Resolve"/>, keeping this method free of
+        /// Godot calls.
+        /// </summary>
+        public string GetLocalizedName(string language)
+        {
+            var localized = Match(language, true, englishFallback: false);
+            if (localized != null)
+                return localized;
+
+            if (!string.IsNullOrEmpty(Name))
+                return Name;
+
+            localized = Match(language, true, englishFallback: true);
+            if (localized != null)
+                return localized;
+
+            var first = Locale?.FirstOrDefault(l => !string.IsNullOrEmpty(l.Name));
+            return first?.Name ?? Id;
+        }
+
+        /// <summary>
+        /// Description for the given language: requested locale entry -> flat
+        /// description -> English locale entry -> first entry. A flat '@key'
+        /// value is returned verbatim for the caller's translator to resolve.
+        /// </summary>
+        public string GetLocalizedDescription(string language)
+        {
+            var localized = Match(language, false, englishFallback: false);
+            if (localized != null)
+                return localized;
+
+            if (!string.IsNullOrEmpty(Description))
+                return Description;
+
+            localized = Match(language, false, englishFallback: true);
+            if (localized != null)
+                return localized;
+
+            var first = Locale?.FirstOrDefault(l => !string.IsNullOrEmpty(l.Description));
+            return first?.Description ?? string.Empty;
+        }
+
+        /// <summary>
+        /// Scans <see cref="Locale"/> for the requested language; with
+        /// <paramref name="englishFallback"/> the 'en' entry is consulted as a
+        /// second pass, so callers can slot the flat fields between the two.
+        /// </summary>
+        private string Match(string language, bool wantName, bool englishFallback)
+        {
+            if (Locale == null || Locale.Count == 0 || string.IsNullOrEmpty(language))
+                return null;
+
+            foreach (var entry in Locale)
+            {
+                if (string.Equals(entry.Lang, language, System.StringComparison.OrdinalIgnoreCase) && HasText(entry, wantName))
+                    return wantName ? entry.Name : entry.Description;
+            }
+
+            if (!englishFallback)
+                return null;
+
+            foreach (var entry in Locale)
+            {
+                if (string.Equals(entry.Lang, "en", System.StringComparison.OrdinalIgnoreCase) && HasText(entry, wantName))
+                    return wantName ? entry.Name : entry.Description;
+            }
+
+            return null;
+        }
+
+        private static bool HasText(CatalogLocaleEntry entry, bool wantName)
+            => wantName ? !string.IsNullOrEmpty(entry.Name) : !string.IsNullOrEmpty(entry.Description);
     }
 }

@@ -28,7 +28,7 @@ From `mods/visual_novel_core/scenes/`:
 
 ```jsonc
 {
-  "name": "home_kitchen",                                 // Scene ID — used with switch_scene and subscriptions
+  "name": "home_kitchen",                                 // Scene ID — used with switch_scene and ui[] entries
   "defaultBackground": "home/kitchen",                    // Background image path (relative to backgrounds/)
   "defaultAmbient": "",                                   // No ambient music for this scene
   "defaultScenario": "scenarios/home/home_kitchen_default.scenario"  // Entry-point scenario
@@ -73,38 +73,19 @@ end
 
 When the player enters a scene, the engine:
 
-1. Loads `defaultBackground` as the background image
-2. Starts `defaultAmbient` playlist (if set)
-3. Loads and executes `defaultScenario`
-4. Fires `on_enter` subscriptions from all mods (by `priority` order)
-5. When leaving, fires `on_exit` subscriptions
+1. Collects the scene's events — `.scenario` files targeting the scene plus `[SceneEvent]` C# classes (see [Scene Event Metadata](../metadata/)) — and sorts them by `priority` with `after:` dependencies resolved
+2. Publishes the `scene_entered` lifecycle event on the [Event Bus](../events/); engine subscribers apply `defaultBackground` (subscriber priority 0), start `defaultAmbient` (5), and update the music type (10)
+3. Evaluates every event's `condition:` and enqueues the passing scenarios into the scene's event chain, where they run one after another in enqueue order
+4. If no events are registered at all, falls back to the scene's `defaultScenario`
+5. When leaving, publishes `scene_exited`
 
-## Mod subscriptions to scenes
+## Hooking into scenes from mods
 
-Mods hook into scene lifecycle via their `manifest.json`:
+There is no manifest subscription list; mods extend a scene in one of three ways:
 
-```jsonc
-{
-  "subscriptions": [
-    {
-      "scene": "home_kitchen",      // Target scene ID to hook into
-      "template": "default",        // Wrapper template name (from wrappers/ directory)
-      "code": "cooking_panel_init", // C# code fragment name (from subscriptions/{name}.cs)
-      "trigger": "on_enter",        // Lifecycle event: on_enter or on_exit
-      "priority": 10                // Execution order (lower = earlier); multiple mods sorted by priority
-    },
-    {
-      "scene": "home_kitchen",
-      "template": "default",
-      "code": "dinner_tools_hide",
-      "trigger": "on_exit",
-      "priority": 10
-    }
-  ]
-}
-```
-
-Multiple mods can subscribe to the same scene — they run in priority order. This is how the Cooking mod adds a "Cook" option to the kitchen scene without modifying `visual_novel_core`.
+- **A `.scenario` file targeting the scene** — the most common hook. The Cooking mod adds a "Cook" option to the kitchen with a `home_kitchen` scenario at a lower `priority` than the core's default one.
+- **A `[SceneEvent]` C# class** — declarative code hook compiled into the mod assembly; runs in the same event chain as scenarios (see [Scene Event Metadata](../metadata/)).
+- **A manifest `ui` entry bound to the scene** — panels and overlays declared in `manifest.json` accept a `"scene": "home_kitchen"` field; the element is then only available in that scene and is hidden when the player leaves it.
 
 ## Scenario priority system
 
@@ -124,4 +105,4 @@ This allows mods to extend scenes non-destructively by writing additional scenar
 2. Create the background image(s) in `backgrounds/{name}/`
 3. Write the default scenario in `scenarios/{path}.scenario`
 4. Add `switch_scene {name}` commands to an existing scene to create a navigation path
-5. Register `on_enter`/`on_exit` subscriptions in your manifest if needed
+5. Register a `[SceneEvent]` class, add extra `.scenario` files targeting the scene, or declare a `ui` entry with `"scene": "{name}"` in your manifest if needed

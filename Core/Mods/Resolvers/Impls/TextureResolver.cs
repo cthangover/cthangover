@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using Cthangover.Core.Bootstrap;
 using Cthangover.Core.Utils;
 using Godot;
 
@@ -75,7 +76,7 @@ namespace Cthangover.Core.Mods.Resolvers
                         if (result.ContainsKey(textureName))
                         {
                             GameLogger.Log("MODS", $"texture conflict: '{textureName}' from mod '{kvp.Value.ModId}' overrides previous", LogLevel.Warning);
-                            ModConflictRegistry.Record("texture", textureName, kvp.Value.ModId, result[textureName].ModId, false);
+                            AppServices.Current.Conflicts.RecordConflict("texture", textureName, kvp.Value.ModId, result[textureName].ModId, false);
                         }
                         result[textureName] = kvp.Value;
                     }
@@ -209,12 +210,15 @@ namespace Cthangover.Core.Mods.Resolvers
     /// </summary>
     public static class Textures
     {
+        /// <summary>Collects texture file entries from every configured texture group, keyed by basename.</summary>
         public static Dictionary<string, FileEntry> Collect()
             => ModManager.Instance.GetResolver<TextureResolver>()?.Collect();
 
+        /// <summary>Decodes and caches the named texture; null on miss or decode failure.</summary>
         public static Texture2D Resolve(string name)
             => ModManager.Instance.GetResolver<TextureResolver>()?.Resolve(name);
 
+        /// <summary>Returns the already-decoded texture instance, or null when not cached.</summary>
         public static Texture2D TryGetCached(string name)
             => ModManager.Instance.GetResolver<TextureResolver>()?.TryGetCached(name);
     }

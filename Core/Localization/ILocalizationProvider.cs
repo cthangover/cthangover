@@ -10,6 +10,7 @@ namespace Cthangover.Core.Localization
     /// </summary>
     public interface ILocalizationProvider
     {
+        /// <summary>Returns the translation for <paramref name="key"/>, or <c>null</c> when the key is not registered.</summary>
         string Get(string key);
     }
 }

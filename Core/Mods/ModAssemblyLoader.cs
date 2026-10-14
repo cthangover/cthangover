@@ -4,9 +4,11 @@ using System.IO;
 using System.Reflection;
 using System.Threading;
 using Cthangover.Core.Factories.Impls;
+using Cthangover.Core.Items;
 using Cthangover.Core.Mods.Discovery;
 using Cthangover.Core.Scenes.TscnBuild;
 using Cthangover.Core.Scenes.TscnParsing;
+using Cthangover.Core.Bootstrap;
 using Cthangover.Core.Utils;
 
 namespace Cthangover.Core.Mods
@@ -53,12 +55,38 @@ namespace Cthangover.Core.Mods
         {
             try
             {
-                return Assembly.Load(raw);
+                var assembly = Assembly.Load(raw);
+                RegisterScriptPaths(assembly);
+                return assembly;
             }
             catch (Exception ex)
             {
                 GameLogger.Log("MODS_ASSEMBLY", $"ModAssemblyLoader.LoadFromBytes: loading raw data fail: {ex.Message}\n{ex.StackTrace}");
                 return null;
+            }
+        }
+
+        /// <summary>
+        /// Feeds the assembly to GodotSharp's script path database so classes
+        /// carrying <see cref="Godot.ScriptPathAttribute"/> get their lifecycle
+        /// callbacks (<c>_EnterTree</c>, <c>_Ready</c>, <c>_Process</c>, ...)
+        /// dispatched by the engine. Godot only scans the project assembly on
+        /// its own; runtime-loaded mod assemblies must be registered here.
+        /// The call is a no-op for assemblies without the
+        /// <see cref="Godot.AssemblyHasScriptsAttribute"/> marker.
+        /// </summary>
+        private static void RegisterScriptPaths(Assembly assembly)
+        {
+            if (assembly == null)
+                return;
+
+            try
+            {
+                Godot.Bridge.ScriptManagerBridge.LookupScriptsInAssembly(assembly);
+            }
+            catch (Exception ex)
+            {
+                GameLogger.Log("MODS_ASSEMBLY", $"ModAssemblyLoader.RegisterScriptPaths: '{assembly.GetName().Name}' failed: {ex.Message}", LogLevel.Warning);
             }
         }
 
@@ -70,9 +98,9 @@ namespace Cthangover.Core.Mods
         public static void RegisterAssembly(Assembly assembly, string modId)
         {
             ScenarioActionFactory.Instance.RegisterAssembly(assembly);
-            ScenarioCommandStrategyFactory.RegisterAssembly(assembly);
-            Scenes.SceneEventRegistry.RegisterAssembly(assembly);
-            ItemActionFactory.RegisterAssembly(assembly);
+            Cthangover.Core.Scenarios.ScenarioCommandBridge.RegisterAssembly(assembly);
+            AppServices.Current.SceneEvents.AddFromAssembly(assembly);
+            ItemActionBridge.RegisterAssembly(assembly);
             UI.Tool.ToolFactory.Instance.RegisterAssembly(assembly);
             UI.Tool.ToolBoxButtonFactory.Instance.RegisterAssembly(assembly);
             ModInitializerRegistry.RegisterAssembly(assembly, modId);

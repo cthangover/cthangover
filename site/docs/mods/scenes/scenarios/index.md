@@ -33,7 +33,7 @@ end
 | `condition` | expression | *(none)* | Quest-condition expression. Scenario only runs if true. See `dsl/conditions/` |
 | `save_allowed` | bool | `false` | Whether the player can save the game from this scene |
 | `is_one_run` | bool | `false` | If true, the scenario runs only once per playthrough. After execution, it's skipped forever |
-| `light_use_time` | bool | `false` | If true, the lighting system uses the in-game time-of-day for light colors/angles |
+| `light_use_time` | bool | *(unset)* | If `true`, the lighting system uses the in-game time-of-day for light colors/angles; `false` forces static light colors. When the field is omitted the scene's default behavior is kept (it is parsed as a nullable bool) |
 
 ## Real examples
 

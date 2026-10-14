@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Cthangover.Core.Quests;
+using Cthangover.Core.Actions;
 
 namespace Cthangover.Core.Scenes
 {
@@ -13,11 +13,10 @@ namespace Cthangover.Core.Scenes
     /// <see cref="ScenarioCondition.SetFlag"/>, allowing <see cref="FlagCondition"/>
     /// to resolve flag values without static access.
     ///
-    /// <c>QuestFactory</c> is a reference to the singleton <see cref="QuestFactory"/>
-    /// instance, injected so that quest-based leaf nodes
-    /// (<see cref="QuestMethodCondition"/>, <see cref="QuestPropCondition"/>,
-    /// <see cref="QuestBoolPropCondition"/>) can resolve quests without a
-    /// hard reference to the singleton.
+    /// <c>QuestFactory</c> is a reference to the quest service published by
+    /// the quests engine mod through <see cref="Cthangover.Core.Quests.QuestServiceRegistry"/>,
+    /// injected so that quest-based leaf nodes shipped with the mod can
+    /// resolve quests without a hard reference to the mod assembly.
     ///
     /// The context is deliberately a plain POCO — not a Godot object — so that
     /// it can be instantiated in unit tests without the Godot runtime.
@@ -27,7 +26,7 @@ namespace Cthangover.Core.Scenes
         /// <summary>Reference to the static flag dictionary from <see cref="ScenarioCondition"/>.</summary>
         public Dictionary<string, string> Flags;
 
-        /// <summary>Reference to the singleton <see cref="QuestFactory"/> for quest resolution.</summary>
-        public QuestFactory QuestFactory;
+        /// <summary>Quest service of the quests engine mod (core contract <see cref="IQuestService"/>) for quest resolution.</summary>
+        public IQuestService QuestFactory;
     }
 }

@@ -52,14 +52,15 @@ music/
         "Luminous Twilight",
         "Rusty Frequencies",
         "Skull Resonance",
-        "Venom's Embrace"
+        "Venom's Embrace",
+        "Empty Save Room"
       ]
     }
   ]
 }
 ```
 
-8 ambient tracks for exploration, 12 combat tracks for battles — 20 total.
+8 ambient tracks for exploration, 13 combat tracks for battles — 21 total.
 
 ## Playlist JSON schema
 
@@ -137,8 +138,10 @@ not via `defaultAmbient`.
   if none match, it falls back to `Scene: "default"`
 - When several mods define the same `MusicType` for a matched scene, the last
   loaded mod **replaces** that entire category's track list (last one wins)
-- The music type is chosen per scene: a scene named `Battle` switches playback
-  to `Combat` tracks, everything else plays `Ambient` tracks
+- The music type is chosen per scene through the scene-route registry
+  (`SceneRouteRegistry`): a mod registers a logical scene name together with a
+  `MusicType` — `turn_battle_base` registers `Battle` → `Combat` — and any
+  scene without a registered route plays `Ambient` tracks
 
 ## `MusicPlayerBehaviour` public API
 

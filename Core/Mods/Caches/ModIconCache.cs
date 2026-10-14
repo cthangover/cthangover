@@ -35,6 +35,7 @@ namespace Cthangover.Core.Mods.Caches
 
         private const string IconsSubDir = "icons";
 
+        /// <summary>Globalised mod-cache root (<see cref="ModConfig.Cache"/>.<c>Root</c>), with an OS-profile fallback outside the runtime.</summary>
         public static string GetCacheRoot()
         {
             if (!GameEnvironment.IsRuntime)
@@ -45,11 +46,13 @@ namespace Cthangover.Core.Mods.Caches
             return ProjectSettings.GlobalizePath(ModConfig.Instance.Cache.Root);
         }
 
+        /// <summary>Icons subdirectory under the cache root.</summary>
         public static string GetIconsDir()
         {
             return Path.Combine(GetCacheRoot(), IconsSubDir);
         }
 
+        /// <summary>Disk path of the cached PNG preview for one mod id.</summary>
         public static string GetIconPath(string modId)
         {
             return Path.Combine(GetIconsDir(), $"{modId}.png");

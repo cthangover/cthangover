@@ -15,6 +15,11 @@ namespace Cthangover.Core.Mods
         /// <summary>Full path within the mod (e.g. "avatars/marao/smile.png").</summary>
         public readonly string FullPath;
 
+        /// <summary>
+        /// Creates one immutable directory-listing entry.
+        /// </summary>
+        /// <param name="modId">Owning mod id, used for logging and routing.</param>
+        /// <param name="fullPath">Mod-relative path with forward slashes.</param>
         public FileEntry(string modId, string fullPath)
         {
             ModId = modId;

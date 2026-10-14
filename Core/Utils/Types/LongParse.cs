@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace Cthangover.Core.Utils.Types;
 
@@ -17,7 +17,7 @@ public class LongParse : IParse<long?>
         {
             return long.Parse(value);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return null;
         }

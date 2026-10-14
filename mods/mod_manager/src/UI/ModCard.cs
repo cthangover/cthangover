@@ -29,11 +29,16 @@ namespace Mods.ModManager
         private OptionButton _versions;
         private Button _action;
         private CheckButton _enabled;
+        private HBoxContainer _metaRow;
+        private Button _collectionsLink;
         private bool _updatingEnabled;
         private bool _initialized;
 
         /// <summary>Raised when the card body (not a control) is clicked.</summary>
         public event Action<ModCardData> Clicked;
+
+        /// <summary>Raised when the "in N collections" cross-link badge is pressed.</summary>
+        public event Action CollectionsLinkRequested;
 
         /// <summary>Raised when the contextual action button is pressed.</summary>
         public event Action<ModCardData> ActionPressed;
@@ -63,6 +68,7 @@ namespace Mods.ModManager
             _versions = GetNode<OptionButton>("VBox/Body/Box/MetaRow/VersionHost/Versions");
             _action = GetNode<Button>("VBox/Body/Box/ActionRow/ActionHost/Action");
             _enabled = GetNode<CheckButton>("VBox/Body/Box/ActionRow/EnabledHost/Enabled");
+            _metaRow = GetNode<HBoxContainer>("VBox/Body/Box/MetaRow");
 
             _author.AddThemeColorOverride("font_color", UiTokens.Muted);
             _source.AddThemeColorOverride("font_color", UiTokens.Muted);
@@ -73,6 +79,7 @@ namespace Mods.ModManager
             _enabled.Toggled += OnEnabledPressed;
             GuiInput += OnGuiInput;
 
+            BuildCollectionsLink();
             PopulateVersions();
             RefreshState();
             LoadPreview();
@@ -87,6 +94,7 @@ namespace Mods.ModManager
             _title.Text = _data.Title ?? _data.Id;
             _author.Text = _data.Author ?? string.Empty;
             UpdateSourceLabel();
+            UpdateCollectionsLink();
 
             if (_data.IsConflict)
             {
@@ -152,6 +160,39 @@ namespace Mods.ModManager
             }
 
             _versions.Selected = selectedIndex;
+        }
+
+        /// <summary>
+        /// Builds the flat "in N collections" cross-link shown between the
+        /// status label and the version combo. The link is part of the hub
+        /// mockup: pressing it jumps to the collections tab. Hidden entirely
+        /// for mods that no playable game references.
+        /// </summary>
+        private void BuildCollectionsLink()
+        {
+            _collectionsLink = new Button
+            {
+                FocusMode = FocusModeEnum.None,
+                Visible = false,
+            };
+            _collectionsLink.AddThemeFontSizeOverride("font_size", UiTokens.FontTiny);
+            _collectionsLink.AddThemeColorOverride("font_color", UiTokens.TypeTarget);
+            _collectionsLink.AddThemeColorOverride("font_hover_color", UiTokens.TypeTarget);
+            _collectionsLink.AddThemeColorOverride("font_pressed_color", UiTokens.TypeTarget);
+            _collectionsLink.AddThemeColorOverride("font_focus_color", UiTokens.TypeTarget);
+            foreach (var state in new[] { "normal", "hover", "pressed", "disabled", "focus" })
+                _collectionsLink.AddThemeStyleboxOverride(state, new StyleBoxEmpty());
+            _collectionsLink.Pressed += () => CollectionsLinkRequested?.Invoke();
+            _metaRow.AddChild(_collectionsLink);
+            _metaRow.MoveChild(_collectionsLink, 1);
+        }
+
+        private void UpdateCollectionsLink()
+        {
+            var text = ModCollectionLinks.BadgeText(_data.CollectionsCount);
+            _collectionsLink.Visible = text.Length > 0;
+            _collectionsLink.Text = text;
+            _collectionsLink.TooltipText = text;
         }
 
         private void UpdateActionButton()

@@ -29,6 +29,7 @@ namespace Cthangover.Core.Scenes
     /// </summary>
     public class TscnSceneResolver : ModAssetResolver
     {
+        /// <inheritdoc />
         public override string Id => "tscn_scenes";
 
         private Dictionary<string, FileEntry> _sceneIndex;
@@ -117,7 +118,7 @@ namespace Cthangover.Core.Scenes
             if (_builtCache.TryGetValue(cacheKey, out var cached))
             {
                 GameLogger.Log("TSCN", $"TscnSceneResolver.LoadAndBuild: HIT cached '{cacheKey}'", LogLevel.Debug);
-                return (Node)cached.Duplicate();
+                return DuplicateBuilt(cached);
             }
 
             GameLogger.Log("TSCN", $"TscnSceneResolver.LoadAndBuild: loading '{cacheKey}' from mod '{modId}'...");
@@ -149,7 +150,7 @@ namespace Cthangover.Core.Scenes
                 {
                     _builtCache[cacheKey] = root;
                     GameLogger.Log("TSCN", $"TscnSceneResolver.LoadAndBuild: OK '{cacheKey}' → root='{root.Name}' ({root.GetType().Name})");
-                    return (Node)root.Duplicate();
+                    return DuplicateBuilt(root);
                 }
 
                 return null;
@@ -158,6 +159,13 @@ namespace Cthangover.Core.Scenes
             {
                 _buildingPaths.Remove(cacheKey);
             }
+        }
+
+        private Node DuplicateBuilt(Node root)
+        {
+            // Nodes carry registered Godot scripts now, so a Duplicate keeps the
+            // script instance and its lifecycle callbacks working.
+            return root.Duplicate();
         }
 
         private ParsedScene LoadAndParse(string scenePath, string resolvedModId)
@@ -340,13 +348,25 @@ namespace Cthangover.Core.Scenes
             return resource;
         }
 
+        /// <summary>
+        /// Canonicalises a resource path: forward slashes, no <c>res://</c> scheme, no leading
+        /// slash and no <c>mods/&lt;mod&gt;/</c> prefix. The last form is what the Godot editor
+        /// writes when a file of one mod references a file of another mod, so stripping it lets
+        /// editor-authored <c>ext_resource</c> paths and patch additions resolve unchanged.
+        /// </summary>
         private static string NormalizeResourcePath(string path)
         {
             if (string.IsNullOrEmpty(path)) return path;
             var n = path.Replace('\\', '/');
             if (n.StartsWith("res://", StringComparison.OrdinalIgnoreCase))
                 n = n.Substring(6);
-            return n.TrimStart('/');
+            n = n.TrimStart('/');
+
+            var segments = n.Split('/');
+            if (segments.Length >= 3 && segments[0].Equals("mods", StringComparison.OrdinalIgnoreCase))
+                n = string.Join("/", segments, 2, segments.Length - 2);
+
+            return n;
         }
 
         /// <summary>
@@ -416,6 +436,7 @@ namespace Cthangover.Core.Scenes
             _builtCache.Remove(scenePath);
         }
 
+        /// <inheritdoc />
         public override void ClearCache()
         {
             _sceneIndex = null;
@@ -432,6 +453,12 @@ namespace Cthangover.Core.Scenes
     /// </summary>
     public static class TscnScenes
     {
+        /// <summary>
+        /// Loads and builds a scene by mod-relative path. No mod id parameter:
+        /// the resolver locates the owning mod by walking loaded mods in
+        /// load-order priority (native <c>res://</c> scenes fall back to the
+        /// engine loader, unless patched). Returns null when nothing resolves.
+        /// </summary>
         public static Node LoadAndBuild(string scenePath)
             => ModManager.Instance.GetResolver<TscnSceneResolver>()?.LoadAndBuild(scenePath);
 

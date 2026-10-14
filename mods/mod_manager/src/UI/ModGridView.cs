@@ -6,6 +6,7 @@ using Cthangover.Core.UI.Theming;
 using Cthangover.Core.Utils;
 using Godot;
 
+using Cthangover.Mods.Interface.Theming;
 namespace Mods.ModManager
 {
     /// <summary>
@@ -35,6 +36,9 @@ namespace Mods.ModManager
 
         /// <summary>Raised after a card's version selection changes.</summary>
         public event Action<ModCardData> VersionChanged;
+
+        /// <summary>Raised when any card's "in N collections" cross-link is pressed.</summary>
+        public event Action CollectionsLinkRequested;
 
         /// <summary>Rebuilds the grid from scratch; called on every filter change.</summary>
         public void SetItems(IReadOnlyList<ModCardData> items, bool groupByCategory)
@@ -107,6 +111,7 @@ namespace Mods.ModManager
                 card.ActionPressed += OnCardActionPressed;
                 card.EnabledToggled += OnCardEnabledToggled;
                 card.VersionChanged += OnCardVersionChanged;
+                card.CollectionsLinkRequested += () => CollectionsLinkRequested?.Invoke();
                 card.Init(data);
             }
         }

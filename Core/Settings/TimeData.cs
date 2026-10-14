@@ -17,7 +17,7 @@ namespace Cthangover.Core.Settings
     public class TimeData
     {
         /// <summary>Total elapsed in-game minutes. Incremented by
-        /// <see cref="TimeTickController.OnTimerTick"/> each timer cycle.</summary>
+        /// <c>TimeTickController.OnTimerTick</c> (time_base mod) each timer cycle.</summary>
         public long Tick;
 
         /// <summary>Year component extracted from <see cref="Tick"/>.</summary>
@@ -31,6 +31,7 @@ namespace Cthangover.Core.Settings
         /// <summary>Minute component (0–59).</summary>
         public int Minutes { get; private set; }
 
+        /// <summary>Creates the clock seeded with an absolute minute value.</summary>
         /// <param name="time">Initial minute value to seed the clock.</param>
         public TimeData(long time)
         {
@@ -96,7 +97,7 @@ namespace Cthangover.Core.Settings
 
         /// <summary>
         /// Advances the clock by exactly one minute. Called by
-        /// <see cref="TimeTickController.OnTimerTick"/> on each
+        /// <c>TimeTickController.OnTimerTick</c> (time_base mod) on each
         /// scene-event timer pulse.
         /// </summary>
         public void AddTick()

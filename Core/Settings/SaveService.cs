@@ -75,6 +75,7 @@ namespace Cthangover.Core.Settings
             }
         }
 
+        /// <summary>Saves directory: globalised <c>user://saves</c> at runtime, relative fallback otherwise.</summary>
         public static string Path => GameEnvironment.IsRuntime ? ProjectSettings.GlobalizePath(SaveDir) : "saves";
         
         /// <summary>
@@ -147,13 +148,14 @@ namespace Cthangover.Core.Settings
             if (tree == null)
                 return result;
 
-            var eventChain = tree.GetFirstNodeInGroup("main_event_chain") as ExecutableMainEventChain;
-            if (eventChain == null)
+            var chainNode = tree.GetFirstNodeInGroup("main_event_chain");
+            var eventChain = chainNode as IExecutableEventChain;
+            if (chainNode == null || eventChain == null)
                 return result;
 
-            foreach (var child in eventChain.GetChildren())
+            foreach (var child in chainNode.GetChildren())
             {
-                if (child is ExecutableEvent evt && evt.IsOneRun && !evt.IsFirstRun)
+                if (child is IExecutableEvent evt && evt.IsOneRun && !evt.IsFirstRun)
                     result.Add(evt.ID);
             }
             return result;

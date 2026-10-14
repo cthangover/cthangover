@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Cthangover.Core.Bootstrap;
 using Cthangover.Core.Mods;
 using Cthangover.Core.Utils;
 using Godot;
@@ -12,62 +13,127 @@ namespace Cthangover.Core.UI
     /// <see cref="UiBuilder"/> reads <see cref="PanelEntries"/> to build the toolbar
     /// once per shell, and <see cref="UiHost"/> resolves entries by id at runtime.
     /// <para/>
-    /// Validation is mandatory and runs once per <see cref="Initialize"/>: every
-    /// problem is logged with its mod id, the offending entry is skipped, and the
-    /// remaining mods still load. <see cref="Clear"/> is called on mod reload so a
+    /// Validation is mandatory and runs once per build: every problem is logged
+    /// with its mod id, the offending entry is skipped, and the remaining mods
+    /// still load. <see cref="IGameRegistry.Clear"/> is called on mod reload so a
     /// hot-reloaded mod set is reflected without restarting the game.
+    /// <para/>
+    /// The registry instance lives in <see cref="AppServices.Current"/>; the
+    /// static members below are a facade delegating to it, so existing callers
+    /// keep working unchanged.
     /// </summary>
-    public static class UiRegistry
+    public class UiRegistry : IGameRegistry
     {
-        private static readonly List<UiEntry> entries = new();
-        private static readonly List<UiEntry> panels = new();
-        private static readonly Dictionary<string, UiEntry> byId = new(StringComparer.OrdinalIgnoreCase);
-        private static bool initialized;
+        private readonly List<UiEntry> entries = new();
+        private readonly List<UiEntry> panels = new();
+        private readonly Dictionary<string, UiEntry> byId = new(StringComparer.OrdinalIgnoreCase);
+        private bool built;
+
+        /// <summary>Shared instance the static facade delegates to.</summary>
+        private static UiRegistry Owned => AppServices.Current.Ui;
+
+        /// <summary>
+        /// Creates an empty registry: cheap and side-effect free per the
+        /// IGameRegistry contract. <see cref="Rebuild"/> fills the data.
+        /// </summary>
+        internal UiRegistry()
+        {
+        }
+
+        /// <inheritdoc />
+        public string Id => "ui";
+
+        /// <summary>
+        /// Drops all collected entries, then re-collects and re-validates the
+        /// <c>ui</c> arrays of all loaded mods. Forced: safe to call repeatedly.
+        /// </summary>
+        public void Rebuild()
+        {
+            Reset();
+            built = true;
+            Collect();
+        }
+
+        /// <summary>
+        /// Drops all collected entries so the next build re-reads the manifests.
+        /// Called on mod reload through AppServices.ClearRegistries.
+        /// </summary>
+        void IGameRegistry.Clear()
+        {
+            Reset();
+        }
+
+        /// <summary>
+        /// Collects and validates the <c>ui</c> arrays of all loaded mods unless
+        /// already built. Keeps the old Initialize idempotence: later calls are
+        /// no-ops until the registry is cleared.
+        /// </summary>
+        public void EnsureBuilt()
+        {
+            if (!built)
+                Rebuild();
+        }
+
+        /// <summary>Direct instance access for core consumers migrating off the static facade.</summary>
+        public IReadOnlyList<UiEntry> AllEntries => entries;
+
+        /// <summary>Direct instance access for core consumers migrating off the static facade.</summary>
+        public IReadOnlyList<UiEntry> AllPanels => panels;
+
+        // ---- Static facade (legacy API, unchanged for callers) ------------
 
         /// <summary>All valid UI entries in mod load order (then priority, then id).</summary>
-        public static IReadOnlyList<UiEntry> Entries => entries;
+        public static IReadOnlyList<UiEntry> Entries => Owned.entries;
 
         /// <summary>Panel-kind entries, pre-sorted for toolbar construction.</summary>
-        public static IReadOnlyList<UiEntry> PanelEntries => panels;
+        public static IReadOnlyList<UiEntry> PanelEntries => Owned.panels;
 
         /// <summary>
         /// Collects and validates the <c>ui</c> arrays of all loaded mods. Safe to
         /// call multiple times; later calls are no-ops until <see cref="Clear"/>.
         /// </summary>
-        public static void Initialize()
-        {
-            if (initialized)
-                return;
-
-            initialized = true;
-            Collect();
-        }
+        public static void Initialize() => Owned.EnsureBuilt();
 
         /// <summary>
         /// Drops all collected entries so the next <see cref="Initialize"/> re-reads
         /// the manifests. Called by <see cref="ModManager"/> on reload/clear.
         /// </summary>
-        public static void Clear()
+        public static void Clear() => Owned.Reset();
+
+        /// <summary>Returns the entry with the given id, or null when unknown.</summary>
+        public static UiEntry Get(string id) => Owned.GetById(id);
+
+        /// <summary>
+        /// Shows or hides the GUI element with the given id through <see cref="UiHost"/>.
+        /// Panels are toggled this way; overlays may be toggled by their own actions.
+        /// </summary>
+        public static void Toggle(string id) => Owned.ToggleEntry(id);
+
+        /// <summary>True when the entry represents a button-toggled panel.</summary>
+        public static bool IsPanel(UiEntry entry)
+            => entry != null && entry.Kind == UiEntry.KindPanel;
+
+        // ---- Instance implementation --------------------------------------
+
+        /// <summary>Direct instance access for core consumers migrating off the static facade.</summary>
+        public void Reset()
         {
             entries.Clear();
             panels.Clear();
             byId.Clear();
-            initialized = false;
+            built = false;
         }
 
-        /// <summary>Returns the entry with the given id, or null when unknown.</summary>
-        public static UiEntry Get(string id)
+        /// <summary>Direct instance access for core consumers migrating off the static facade.</summary>
+        public UiEntry GetById(string id)
         {
             if (string.IsNullOrEmpty(id))
                 return null;
             return byId.TryGetValue(id, out var entry) ? entry : null;
         }
 
-        /// <summary>
-        /// Shows or hides the GUI element with the given id through <see cref="UiHost"/>.
-        /// Panels are toggled this way; overlays may be toggled by their own actions.
-        /// </summary>
-        public static void Toggle(string id)
+        /// <summary>Direct instance access for core consumers migrating off the static facade.</summary>
+        public void ToggleEntry(string id)
         {
             var host = UiHost.Instance;
             if (host == null)
@@ -78,11 +144,7 @@ namespace Cthangover.Core.UI
             host.Toggle(id);
         }
 
-        /// <summary>True when the entry represents a button-toggled panel.</summary>
-        public static bool IsPanel(UiEntry entry)
-            => entry != null && entry.Kind == UiEntry.KindPanel;
-
-        private static void Collect()
+        private void Collect()
         {
             var manager = ModManager.Instance;
             if (manager?.Mods == null)
@@ -130,13 +192,13 @@ namespace Cthangover.Core.UI
             return string.Compare(a.Id, b.Id, StringComparison.OrdinalIgnoreCase);
         }
 
-        private static void AddEntry(UiEntry entry)
+        private void AddEntry(UiEntry entry)
         {
             entries.Add(entry);
             byId[entry.Id] = entry;
         }
 
-        private static void BuildPanelIndex()
+        private void BuildPanelIndex()
         {
             panels.Clear();
             foreach (var entry in entries)
@@ -162,7 +224,7 @@ namespace Cthangover.Core.UI
             return string.Compare(a.Id, b.Id, StringComparison.OrdinalIgnoreCase);
         }
 
-        private static bool Validate(UiEntry entry, ModInfo modInfo)
+        private bool Validate(UiEntry entry, ModInfo modInfo)
         {
             var label = $"{modInfo.Id}/{entry.Id ?? "?"}";
 

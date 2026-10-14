@@ -26,9 +26,10 @@ mods/
     ├── backgrounds/
     │   └── my_alko_bar/
     │       └── bg.png                    # 선술집 내부 이미지
-    ├── backgrounds/
-    │   └── sounds/
-    │       └── alko_bar_ambient.ogg      # 선술집 배경 소음
+    ├── sounds/
+    │   └── locations/
+    │       └── alkobar/
+    │           └── bar_ambient.ogg       # 선술집 배경 소음
     └── locale/
         └── ru.properties                 # 러시아어 로컬라이제이션
 ```
@@ -145,10 +146,10 @@ end
 ### 왜 이것이 작동하는가
 
 `town_entry` 씬에는 이제 두 개의 시나리오가 있습니다:
-- `priority: 10` — 기본값 (`visual_novel_core` 모드에서)
+- `priority: 40` — 기본값 (`visual_novel_core` 모드에서)
 - `priority: 1` — 우리 것 (`quickstart_modder`에서)
 
-엔진은 **가장 낮은** `priority`의 시나리오를 실행합니다. 우리의 `priority: 1`이 승리 — 플레이어가 새 옵션을 봅니다.
+엔진은 씬의 시나리오를 `priority` 오름차순으로 실행합니다 — **가장 낮은** 값이 **먼저** 실행됩니다. 우리의 `priority: 1` 시나리오가 기본 시나리오보다 먼저 시작되므로 플레이어가 새 옵션을 먼저 봅니다.
 
 > 더 알아보기: [씬 우선순위 시스템](site/docs/mods/scenes/).
 
@@ -181,4 +182,4 @@ end
 quickstart_modder.zip 다운로드
 </a>
 
-다운로드 가능한 모드는 영어로 되어 있습니다.
+다운로드 가능한 모드의 대사는 러시아어로 되어 있습니다.

@@ -13,6 +13,7 @@ namespace Cthangover.Core.Scenes
     /// </summary>
     public static class ConditionParser
     {
+        /// <summary>Lexical tokens of the condition grammar: literals, punctuation, logical operators, and comparison operators.</summary>
         public enum TokenType
         {
             Ident, Number, String, Dot, LParen, RParen, Comma,
@@ -21,9 +22,12 @@ namespace Cthangover.Core.Scenes
             EOF
         }
 
+        /// <summary>A single lexical token with its <see cref="TokenType"/> and source text.</summary>
         public class Token
         {
+            /// <summary>Token category produced by the tokenizer.</summary>
             public TokenType Type;
+            /// <summary>Raw source text of the token (operators keep their spelling, e.g. "&amp;&amp;").</summary>
             public string Value;
         }
 
@@ -38,6 +42,7 @@ namespace Cthangover.Core.Scenes
                 this.input = input;
             }
 
+            /// <summary>Runs the tokenizer over the whole input and returns the token list ending with an EOF token.</summary>
             public List<Token> Tokenize()
             {
                 tokens.Clear();

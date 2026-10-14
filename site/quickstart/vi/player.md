@@ -19,7 +19,7 @@ mods/
 └── quickstart_player/
     ├── manifest.json
     └── patches/
-        └── characters.json
+        └── character.json
 ```
 
 ---
@@ -38,13 +38,13 @@ Mỗi mod cần một tệp kê khai. Tạo `mods/quickstart_player/manifest.jso
 }
 ```
 
-Tệp kê khai tối thiểu chỉ cần `name`, nhưng nên điền cả `id`. Kernel sẽ tự động phát hiện thư mục và tải nó như một mod.
+Bản thân tệp manifest.json là bắt buộc — mod thiếu nó sẽ bị bỏ qua — nhưng không trường nào là bắt buộc tuyệt đối: nếu bỏ qua `id`, tên thư mục sẽ được dùng làm id của mod. Vẫn nên điền cả `id` và `name`. Kernel sẽ tự động phát hiện thư mục và tải nó như một mod.
 
 ---
 
 ## Bước 3: Vá nhân vật
 
-Tạo `mods/quickstart_player/patches/characters.json`:
+Tạo `mods/quickstart_player/patches/character.json`:
 
 ```jsonc
 {
@@ -54,7 +54,7 @@ Tạo `mods/quickstart_player/patches/characters.json`:
 
       "Health": 5000, // Giá trị thuộc tính mới — ghi đè giá trị gốc
       "Attack": 1200,
-      "Points": 2,
+      "Point": 2,
 
       "Actions$add": ["physics/stun"] // $add thêm phần tử vào mảng
     }
@@ -65,7 +65,7 @@ Tạo `mods/quickstart_player/patches/characters.json`:
 ### Cách hoạt động
 
 - **`"Id": "Marao"`** — mục tiêu vá: nhân vật có định danh `Marao` (được định nghĩa trong mod `visual_novel_core`).
-- **`"Health": 5000`**, **`"Attack": 1200`**, **`"Points": 2`** — ghi đè các trường của nhân vật. Giá trị mới thay thế giá trị cũ.
+- **`"Health": 5000`**, **`"Attack": 1200`**, **`"Point": 2`** — ghi đè các trường của nhân vật. Giá trị mới thay thế giá trị cũ.
 - **`"Actions$add": ["physics/stun"]`** — hậu tố `$add` nghĩa là "thêm vào mảng". Hành động `physics/stun` được thêm vào danh sách. Các hành động mặc định `physics/attack` và `physics/defence` vẫn được giữ lại.
 
 > Tìm hiểu thêm về vá: [Patches](site/docs/mods/patches/) và [Thao tác Mảng](site/docs/mods/patches/arrays-and-identity).
@@ -76,7 +76,7 @@ Tạo `mods/quickstart_player/patches/characters.json`:
 
 Khởi động trò chơi. Vào bất kỳ trận đấu nào — Marao giờ có:
 
-- **5000 HP** thay vì 10
+- **5000 HP** thay vì 16
 - **1200 ATK** thay vì 5
 - **2 AP** thay vì 1
 - Hành động thứ ba **"Choáng"** bên cạnh "Tấn công" và "Phòng thủ"
@@ -101,4 +101,4 @@ Khởi động trò chơi. Vào bất kỳ trận đấu nào — Marao giờ c�
 Tải xuống quickstart_player.zip
 </a>
 
-Mod tải về bằng tiếng Anh.
+Mod tải về bằng tiếng Anh. Để cài đặt, hãy giải nén mod vào thư mục `mods/` của trò chơi — hoặc dùng trình quản lý mod trong game; các mod tải về sẽ được cài vào `user://mods/` và được ưu tiên hơn mod tích hợp sẵn cùng id.

@@ -32,7 +32,7 @@ locally-installed mods.
           "description": "Live2D Cubism C# рантайм: загрузка моделей, отрисовка, физика, анимации, эффекты"
         }
       ],
-      "category": "library",                               // Category slug or comma-separated combination (e.g. "library, gameplay"): story, characters, gameplay, visual, audio, ui, locale, library, engine, overhaul, tools, other
+      "category": "library",                               // Category slug or comma-separated combination (e.g. "library, gameplay"): story, characters, gameplay, visual, audio, ui, locale, library, engine, overhaul, tools, editor, debug, other
       "tags": ["live2d", "ui", "graphics", "2d"],          // Search/filter tags
       "icon_url": "https://git.cthangover.ru/cthangover/mod_live2d/raw/branch/master/mod.png", // Full URL to preview icon (PNG or JPEG)
       "depends": ["visual_novel_core>=1"],                              // Versioned dependency strings
@@ -75,7 +75,7 @@ locally-installed mods.
 | `version` | string | Semver version of the latest release (e.g. "1.0.0") |
 | `description` | string | Fallback short description (used when no `locale` entry matches the player's language) |
 | `locale` | object[] | Localized name/description entries for different languages (see below) |
-| `category` | string | Category slug or comma-separated combination of slugs (e.g. `"library, gameplay"`): `story`, `characters`, `gameplay`, `visual`, `audio`, `ui`, `locale`, `library`, `engine`, `overhaul`, `tools`, `other` |
+| `category` | string | Category slug or comma-separated combination of slugs (e.g. `"library, gameplay"`): `story`, `characters`, `gameplay`, `visual`, `audio`, `ui`, `locale`, `library`, `engine`, `overhaul`, `tools`, `editor`, `debug`, `other` |
 | `tags` | string[] | Search/filter tags |
 | `icon_url` | string | Full URL to preview icon (PNG or JPEG) |
 | `depends` | string[] | Versioned dependency strings (e.g. `"visual_novel_core>=1"`) |
@@ -90,6 +90,8 @@ locally-installed mods.
 | `status` | string | `stable`, `beta`, `deprecated`, or `archived` |
 | `min_game_version` | string | Minimum compatible game version (semver) |
 | `max_game_version` | string | Maximum game version, or null |
+| `source_urls` | string[] | *Written by the game, not by catalog authors*: filled in during merge with every catalog URL that published the entry, and persisted in `user://catalog_cache.json` |
+| `variant_conflict` | bool | *Written by the game*: set when two catalogs publish the same id/version/title with different content hashes — the entries are kept separate instead of merged so the UI can warn about a likely modified build |
 
 ### `locale[]` sub-fields
 

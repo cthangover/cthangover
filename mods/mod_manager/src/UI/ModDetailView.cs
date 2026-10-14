@@ -55,6 +55,9 @@ namespace Mods.ModManager
         /// <summary>Raised after a different catalog version is selected.</summary>
         public event Action<ModCardData> VersionChanged;
 
+        /// <summary>Raised when the "in N collections" cross-link is pressed.</summary>
+        public event Action CollectionsLinkRequested;
+
         /// <summary>Displays the given mod; call again with refreshed data after actions.</summary>
         public void Open(ModCardData data)
         {
@@ -237,6 +240,22 @@ namespace Mods.ModManager
                 hint.AddThemeFontSizeOverride("font_size", UiTokens.FontBodySmall);
                 hint.AddThemeColorOverride("font_color", UiTokens.Muted);
                 _actionsRow.AddChild(hint);
+            }
+
+            var collectionsText = ModCollectionLinks.BadgeText(_data.CollectionsCount);
+            if (collectionsText.Length > 0)
+            {
+                var link = new Button
+                {
+                    Text = collectionsText,
+                    TooltipText = collectionsText,
+                    FocusMode = FocusModeEnum.None,
+                };
+                link.AddThemeFontSizeOverride("font_size", UiTokens.FontBodySmall);
+                link.AddThemeColorOverride("font_color", UiTokens.TypeTarget);
+                link.AddThemeColorOverride("font_hover_color", UiTokens.TypeTarget);
+                link.Pressed += () => CollectionsLinkRequested?.Invoke();
+                _actionsRow.AddChild(link);
             }
         }
 

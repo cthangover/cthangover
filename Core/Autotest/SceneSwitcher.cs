@@ -1,4 +1,5 @@
 #if TOOLS
+using Cthangover.Core.Bootstrap;
 using Cthangover.Core.Scenes;
 using Cthangover.Core.Settings;
 using Cthangover.Core.Utils;
@@ -16,7 +17,8 @@ namespace Cthangover.Core.Autotest
 	/// </summary>
 	public partial class SceneSwitcher : Node
 	{
-		[Export] public float TimeoutSeconds { get; set; } = 60f;
+		/// <summary>Hard limit, in seconds, for the auto-driven run; when exceeded the switcher aborts with a non-zero exit code so CI does not hang.</summary>
+	[Export] public float TimeoutSeconds { get; set; } = 60f;
 
 		private string _targetScene;
 		private string _choices;
@@ -26,6 +28,10 @@ namespace Cthangover.Core.Autotest
 		private float _elapsed;
 		private bool _driverAttached;
 
+		/// <summary>
+		/// Parses the <c>--scene</c>/<c>--choices</c>/<c>--timeout</c> command-line
+		/// switches and kicks off the launch sequence.
+		/// </summary>
 		public override void _Ready()
 		{
 			foreach (var arg in OS.GetCmdlineArgs())
@@ -193,7 +199,7 @@ namespace Cthangover.Core.Autotest
 					if (string.IsNullOrEmpty(id))
 						continue;
 
-					var entry = UI.UiRegistry.Get(id);
+					var entry = AppServices.Current.Ui.GetById(id);
 					if (entry == null)
 					{
 						GameLogger.Log("TEST", $"SceneSwitcher: ui entry '{id}' not found", LogLevel.Error);
@@ -201,7 +207,7 @@ namespace Cthangover.Core.Autotest
 					}
 
 					GameLogger.Log("TEST", $"SceneSwitcher: toggling ui '{id}' ({entry.ScenePath})");
-					UI.UiRegistry.Toggle(id);
+					AppServices.Current.Ui.ToggleEntry(id);
 				}
 
 				GetTree().CreateTimer(0.5f).Timeout += DumpUiState;
@@ -288,6 +294,10 @@ namespace Cthangover.Core.Autotest
 			};
 		}
 
+		/// <summary>
+		/// Counts elapsed wall time and quits the process once the configured
+		/// timeout is reached, so a hung scene cannot block the test run forever.
+		/// </summary>
 		public override void _Process(double delta)
 		{
 			_elapsed += (float)delta;

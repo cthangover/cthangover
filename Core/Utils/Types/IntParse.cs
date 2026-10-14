@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace Cthangover.Core.Utils.Types;
 
@@ -18,7 +18,7 @@ public class IntParse : IParse<int?>
         {
             return int.Parse(value);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return null;
         }

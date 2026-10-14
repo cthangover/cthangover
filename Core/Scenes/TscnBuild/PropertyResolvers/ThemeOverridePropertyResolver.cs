@@ -23,6 +23,7 @@ namespace Cthangover.Core.Scenes.TscnBuild.PropertyResolvers
     {
         private const string Prefix = "theme_override_";
 
+        /// <summary>Claims plain-valued <c>theme_override_*/</c> keys; reference-valued overrides are left to the resource resolvers.</summary>
         public bool CanResolve(string key, object value)
         {
             return !string.IsNullOrEmpty(key)
@@ -31,6 +32,7 @@ namespace Cthangover.Core.Scenes.TscnBuild.PropertyResolvers
                 && value is not TscnPropertyValue;
         }
 
+        /// <summary>Routes the override to the matching AddTheme*Override by category (constants, font_sizes, colors, fonts, icons, styles).</summary>
         public void Apply(Node node, string key, object value, PropertyContext ctx)
         {
             if (node is not Control control)

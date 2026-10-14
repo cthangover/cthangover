@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using Cthangover.Core.Bootstrap;
 using Cthangover.Core.Factories;
 using Cthangover.Core.Mods.Patches;
 using Cthangover.Core.Utils;
@@ -127,7 +128,7 @@ namespace Cthangover.Core.Mods.Resolvers
                         GameLogger.Log("MODS",
                             $"'{item.ID}' ({kind}) from mod '{file.ModId}' overrides previous definition",
                             LogLevel.Warning);
-                        ModConflictRegistry.Record(kind, item.ID, file.ModId, null, false);
+                        AppServices.Current.Conflicts.RecordConflict(kind, item.ID, file.ModId, null, false);
                     }
 
                     result[item.ID] = item;
@@ -196,7 +197,14 @@ namespace Cthangover.Core.Mods.Resolvers
             {
                 if (entry.EndsWith("/"))
                 {
-                    CollectJsonPaths(provider, entry.TrimEnd('/'), result);
+                    var child = entry.TrimEnd('/');
+                    if (string.IsNullOrEmpty(directory)
+                        && string.Equals(child, ModCollectionStore.ProviderDirectory, StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    CollectJsonPaths(provider, child, result);
                     continue;
                 }
 
@@ -251,6 +259,7 @@ namespace Cthangover.Core.Mods.Resolvers
     /// </summary>
     public static class Entities
     {
+        /// <summary>Collects every entity of the DTO's kind from all loaded mods (later mods override by id).</summary>
         public static Dictionary<string, T> Collect<T>() where T : class, IIdentifiable
             => ModManager.Instance.GetResolver<EntityResolver>()?.Collect<T>() ?? new Dictionary<string, T>();
     }

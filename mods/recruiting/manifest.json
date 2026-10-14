@@ -3,12 +3,12 @@
   "name": "Recruiting",
   "version": "1.1.0",
   "author": "ct",
-  "description": "Recruitment roster, conditions, behaviours and their save state",
+  "description": "Recruitment of defeated characters: the roster panel, join conditions (e.g. enslaving a defeated enemy), per-recruit behaviours such as nutrition, the party bridge, tick updates and save state.",
   "category": "gameplay",
   "sources": [
     "src/**/*.cs"
   ],
-  "depends": [],
+  "depends": ["base2d>=1", "characters_base>=1", "interface>=1"],
   "ui": [
     {
       "id": "recruits",

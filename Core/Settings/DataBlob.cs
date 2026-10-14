@@ -31,6 +31,11 @@ namespace Cthangover.Core.Settings
 
         private byte[] _payload = Array.Empty<byte>();
 
+        /// <summary>
+        /// Raw byte payload. Assigning <c>null</c> is coerced to an empty
+        /// array. Unlike <see cref="GetBytes"/>, reading this property does
+        /// <b>not</b> flush pending key-value entries into the bytes first.
+        /// </summary>
         public byte[] Payload
         {
             get => _payload;
@@ -41,24 +46,29 @@ namespace Cthangover.Core.Settings
         // Private field, not persisted by System.Text.Json serialisation.
         private Dictionary<string, object> _dict;
 
+        /// <summary>Empty blob with the default schema version 1.</summary>
         public DataBlob() { }
 
+        /// <summary>Empty blob with an explicit schema version.</summary>
         public DataBlob(int version)
         {
             Version = version;
         }
 
+        /// <summary>Creates a blob of the given version with <paramref name="data"/> serialized as the JSON payload.</summary>
         public DataBlob(int version, object data)
         {
             Version = version;
             WriteJson(data);
         }
 
+        /// <summary>Creates a raw binary blob (version stays at the default 1).</summary>
         public DataBlob(byte[] data)
         {
             _payload = data ?? Array.Empty<byte>();
         }
 
+        /// <summary>Reads an integer key, falling back to <paramref name="defaultValue"/> when missing or unparseable.</summary>
         public int GetInt(string key, int defaultValue = 0)
         {
             EnsureDictLoaded();
@@ -72,6 +82,7 @@ namespace Cthangover.Core.Settings
             return defaultValue;
         }
 
+        /// <summary>Reads a float key, falling back to <paramref name="defaultValue"/> when missing or unparseable.</summary>
         public float GetFloat(string key, float defaultValue = 0f)
         {
             EnsureDictLoaded();
@@ -85,6 +96,7 @@ namespace Cthangover.Core.Settings
             return defaultValue;
         }
 
+        /// <summary>Reads a string key, falling back to <paramref name="defaultValue"/> when missing.</summary>
         public string GetString(string key, string defaultValue = "")
         {
             EnsureDictLoaded();
@@ -97,6 +109,7 @@ namespace Cthangover.Core.Settings
             return defaultValue;
         }
 
+        /// <summary>Reads a bool key, falling back to <paramref name="defaultValue"/> when missing or unparseable.</summary>
         public bool GetBool(string key, bool defaultValue = false)
         {
             EnsureDictLoaded();
@@ -110,24 +123,28 @@ namespace Cthangover.Core.Settings
             return defaultValue;
         }
 
+        /// <summary>Writes an integer key (lazily flushed to the payload on <see cref="GetBytes"/>).</summary>
         public void SetInt(string key, int value)
         {
             EnsureDictLoaded();
             _dict[key] = value;
         }
 
+        /// <summary>Writes a float key (lazily flushed to the payload on <see cref="GetBytes"/>).</summary>
         public void SetFloat(string key, float value)
         {
             EnsureDictLoaded();
             _dict[key] = value;
         }
 
+        /// <summary>Writes a string key; null is stored as an empty string (lazily flushed on <see cref="GetBytes"/>).</summary>
         public void SetString(string key, string value)
         {
             EnsureDictLoaded();
             _dict[key] = value ?? "";
         }
 
+        /// <summary>Writes a bool key (lazily flushed to the payload on <see cref="GetBytes"/>).</summary>
         public void SetBool(string key, bool value)
         {
             EnsureDictLoaded();
@@ -181,6 +198,7 @@ namespace Cthangover.Core.Settings
             return _payload;
         }
 
+        /// <summary>Replaces the payload with raw bytes and discards any pending key-value dictionary.</summary>
         public void SetBytes(byte[] data)
         {
             _payload = data ?? Array.Empty<byte>();

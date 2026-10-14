@@ -23,9 +23,12 @@ namespace Cthangover.Core.Events
     /// </summary>
     public partial class ModEventBus : Node
     {
+        /// <summary>Live autoload instance; null outside the Godot runtime (the typed layer still works there, the GDScript bridge does not).</summary>
         public static ModEventBus Instance { get; private set; }
 
+        /// <summary>Registers the autoload singleton on tree entry.</summary>
         public override void _EnterTree() => Instance = this;
+        /// <summary>Clears the autoload singleton reference on tree exit.</summary>
         public override void _ExitTree()
         {
             if (Instance == this)
@@ -226,6 +229,7 @@ namespace Cthangover.Core.Events
             GameLogger.Log("EVENT_BUS", $"Cleared all subscriptions for mod '{modId}'");
         }
 
+        /// <summary>Wipes every subscription on both the typed and string layers. Test/setup helper — not part of the normal unload path.</summary>
         public void ClearAll()
         {
             lock (_lock)
@@ -308,15 +312,21 @@ namespace Cthangover.Core.Events
 
         private sealed class TypedSubscription
         {
+            /// <summary>Type-erased handler; the generic wrapper casts back to the event type.</summary>
             public Action<ModEvent> Handler;
+            /// <summary>Owning mod id for <see cref="ClearForMod"/>; null for engine subscriptions.</summary>
             public string ModId;
+            /// <summary>Delivery order for [LifecycleEvent] event types (lower = earlier).</summary>
             public int Priority;
         }
 
         private sealed class CallableSubscription
         {
+            /// <summary>GDScript callable invoked with the bridged Dictionary payload.</summary>
             public Callable Handler;
+            /// <summary>Owning mod id for <see cref="ClearForMod"/>; null for engine subscriptions.</summary>
             public string ModId;
+            /// <summary>Reserved for parity with the typed layer (the string layer delivers in subscription order).</summary>
             public int Priority;
         }
     }

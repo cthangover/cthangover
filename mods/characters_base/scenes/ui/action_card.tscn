@@ -1,0 +1,84 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://mods/characters_base/src/UI/CharacterPanel/ActionCardBehaviour.cs" id="1_script"]
+
+[node name="ActionCard" type="Control"]
+custom_minimum_size = Vector2(0, 86)
+layout_mode = 3
+mouse_filter = 0
+script = ExtResource("1_script")
+
+[node name="Frame" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Accent" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_right = 4.0
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Icon" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 8.0
+offset_top = -26.0
+offset_right = 60.0
+offset_bottom = 26.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Body" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 68.0
+offset_top = 6.0
+offset_right = -8.0
+offset_bottom = -6.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="NameRow" type="HBoxContainer" parent="Body"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="NameLabel" type="Label" parent="Body/NameRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+clip_text = true
+text_overrun_behavior = 3
+
+[node name="IdLabel" type="Label" parent="Body/NameRow"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_font_sizes/font_size = 9
+vertical_alignment = 1
+
+[node name="BadgesRow" type="HBoxContainer" parent="Body"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 5
+
+[node name="PropsRow" type="HFlowContainer" parent="Body"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/h_separation = 5
+theme_override_constants/v_separation = 3

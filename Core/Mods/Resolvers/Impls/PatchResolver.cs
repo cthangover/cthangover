@@ -142,6 +142,7 @@ namespace Cthangover.Core.Mods.Resolvers
     /// </summary>
     public static class Patches
     {
+        /// <summary>Collects the patches for one entity kind, grouped by target entity id.</summary>
         public static Dictionary<string, List<PropertyPatch>> Collect(string entityType)
             => ModManager.Instance.GetResolver<PatchResolver>()?.Collect(entityType);
     }

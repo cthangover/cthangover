@@ -1,5 +1,4 @@
 using Cthangover.Core.Settings;
-using Cthangover.Core.Skills;
 
 namespace Cthangover.Core.Actions
 {
@@ -9,7 +8,7 @@ namespace Cthangover.Core.Actions
     /// without parsing. Malformed or missing IDs are handled inside CharacterData
     /// (null-character fallback for unknown IDs).
     /// </summary>
-    internal class CharacterServiceImpl : ICharacterService
+    public class CharacterServiceImpl : ICharacterService
     {
         /// <summary>
         /// Passes the type string directly to CharacterData.AddCharacterToParty.
@@ -38,14 +37,15 @@ namespace Cthangover.Core.Actions
         }
 
         /// <summary>
-        /// Passes the skill ID to <see cref="SkillService.GrantSkill(string)"/>,
-        /// which owns both halves of an acquisition: the skill entry and the
-        /// action card it may grant. Unknown skill IDs are rejected there with
-        /// a warning, so a typo in a scenario cannot corrupt the runtime state.
+        /// Passes the skill ID to the skills subsystem through
+        /// <see cref="SkillsBridge"/>. The grant implementation owns both
+        /// halves of an acquisition — the skill entry and the action card it
+        /// may grant — and rejects unknown skill IDs with a warning, so a
+        /// typo in a scenario cannot corrupt the runtime state.
         /// </summary>
         public void AddSkill(string id)
         {
-            SkillService.GrantSkill(id);
+            SkillsBridge.Grant(id);
         }
     }
 }

@@ -1,5 +1,4 @@
 #if TOOLS
-using Cthangover.Core.Mods;
 using Cthangover.Core.Mods.Resolvers;
 using Cthangover.Core.Scenes;
 using Cthangover.Core.Settings;
@@ -20,8 +19,7 @@ namespace Cthangover.Core.Autotest
     {
         public override void _Ready()
         {
-            if (!ModManager.Instance.IsInitialized)
-                ModManager.Instance.Initialize();
+            // Mods are loaded by the boot pipeline (SceneManager autoload -> Boot.RunSync) before any scene _Ready.
 
             var runtime = GameData.Instance.Runtime;
             runtime.CharacterData.AddCharacterToParty("Marao");

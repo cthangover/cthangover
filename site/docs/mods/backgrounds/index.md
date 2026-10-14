@@ -18,13 +18,21 @@ From `mods/murakami/backgrounds/town/meetingmurakami/`:
 ```filestree
 meetingmurakami/
 ├── 00002-1920617752.png       # wolf tracks at the door
-├── 00002-1920617752_depth.png # depth map for lighting
+├── 00002-1920617752_depth.png
 ├── 00014-1724512349.png       # Murakami at her door
-├── 00079-2783395178.png       # inside the house
-├── 00078-2783395178.png       # inside, different angle
-├── 00136-3647329618.png       # dark room
+├── 00014-1724512349_depth.png
+├── 00024-3950100873.png
+├── 00024-3950100873_depth.png
 ├── 00031-3535505844.png       # werewolf reveal
-└── 00031-3535505844_depth.png
+├── 00031-3535505844_depth.png
+├── 00055-1920617752.png
+├── 00055-1920617752_depth.png
+├── 00078-2783395178.png       # inside, different angle
+├── 00078-2783395178_depth.png
+├── 00079-2783395178.png       # inside the house
+├── 00079-2783395178_depth.png
+├── 00136-3647329618.png       # dark room
+└── 00136-3647329618_depth.png
 ```
 
 Each background has a matching `_depth.png` — a grayscale image where brightness encodes the Z-depth of each pixel. The `light_set` command uses it to cast dynamic shadows.

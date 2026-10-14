@@ -1,0 +1,66 @@
+[gd_scene load_steps=5 format=3 uid="uid://bs8k1n2m3p4q5"]
+
+[ext_resource type="Script" path="res://mods/dialog_base/src/UI/Executable/ExecutableMainEventChain.cs" id="1_chain"]
+[ext_resource type="PackedScene" path="res://scenes/ui/view_box.tscn" id="2_viewbox"]
+[ext_resource type="PackedScene" path="res://scenes/ui/top_view.tscn" id="3_topview"]
+[ext_resource type="Script" path="res://mods/interface/src/Messages/NotificationPanel.cs" id="4_notification"]
+
+[node name="BaseScene" type="Control" groups=["main_event_chain"]]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_chain")
+
+[node name="Scene" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ModFirstPanel" type="Control" parent="Scene"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="ViewBox" parent="Scene" instance=ExtResource("2_viewbox")]
+layout_mode = 1
+
+[node name="TopView" parent="Scene" instance=ExtResource("3_topview")]
+layout_mode = 1
+
+[node name="ModBeforeUIPanel" type="Control" parent="Scene"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="NotificationPanel" type="Control" parent="Scene"]
+layout_mode = 1
+anchors_preset = 0
+offset_left = 20.0
+offset_top = 46.0
+offset_right = 400.0
+offset_bottom = 230.0
+mouse_filter = 2
+script = ExtResource("4_notification")
+
+[node name="ModLastPanel" type="Control" parent="Scene"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2

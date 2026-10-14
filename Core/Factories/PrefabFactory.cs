@@ -31,10 +31,13 @@ namespace Cthangover.Core.Factories
             _cache = new BoundedCache<string, T>(size, this);
         }
 
+        /// <summary>Mod asset group this factory scans (e.g. <c>"music"</c>, <c>"backgrounds"</c>); ids are relative to it.</summary>
         public abstract string GroupName { get; }
 
+        /// <summary>Converts raw mod file bytes into the Godot resource this factory produces.</summary>
         protected abstract T ConvertFromBytes(string id, byte[] data, string extension);
 
+        /// <summary>File extensions tried in order during the mod scan; the first matching asset wins.</summary>
         protected abstract List<string> Extensions { get; }
 
         T ICacheLoader<string, T>.Load(string id)
@@ -52,6 +55,12 @@ namespace Cthangover.Core.Factories
             return null;
         }
 
+        /// <summary>
+        /// Returns the cached asset for <paramref name="id"/>, loading it through
+        /// the LRU-bounded cache on first access. Missing assets are logged —
+        /// except the optional <c>_albedo</c>/<c>_depth</c> companion lookups,
+        /// which may legitimately not exist.
+        /// </summary>
         public virtual T Get(string id)
         {
             if (string.IsNullOrEmpty(id))
@@ -64,6 +73,7 @@ namespace Cthangover.Core.Factories
             return result;
         }
 
+        /// <summary>Scans the group's collected files for <paramref name="id"/> plus the given extension and reads the matching mod file's bytes.</summary>
         protected virtual T LoadFromMods(string id, string extension)
         {
             var files = Files.Collect(GroupName);

@@ -166,12 +166,15 @@ namespace Cthangover.Core.Mods.Resolvers
     /// </summary>
     public static class Shaders
     {
+        /// <summary>Collects the .gdshader file entries of all mods, keyed by logical name.</summary>
         public static Dictionary<string, FileEntry> Collect()
             => ModManager.Instance.GetResolver<ShaderResolver>()?.Collect();
 
+        /// <summary>Loads (and caches) the named shader, extracting zip mods to the cache as needed.</summary>
         public static Shader Resolve(string name)
             => ModManager.Instance.GetResolver<ShaderResolver>()?.Resolve(name);
 
+        /// <summary>Returns the already-resolved shader instance, or null when not cached.</summary>
         public static Shader TryGetCached(string name)
             => ModManager.Instance.GetResolver<ShaderResolver>()?.TryGetCached(name);
     }

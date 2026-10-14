@@ -11,14 +11,20 @@ namespace Cthangover.Core.Autotest
     /// </summary>
     public partial class TscnTestEntryPoint : Node, ITscnSceneEntryPoint
     {
+        /// <summary>Set when <see cref="OnSceneBuilt"/> fires; reset via <see cref="Reset"/> between tests.</summary>
         public static bool WasCalled { get; set; }
 
+        /// <summary>
+        /// Marks the entry point as invoked and logs the built scene root so the
+        /// test log shows which scene reached the callback.
+        /// </summary>
         public void OnSceneBuilt(Node sceneRoot)
         {
             WasCalled = true;
             GameLogger.Log("TSCN_TEST", $"TscnTestEntryPoint.OnSceneBuilt: root='{sceneRoot?.Name}'");
         }
 
+        /// <summary>Clears the invocation flag before a new test run.</summary>
         public static void Reset()
         {
             WasCalled = false;

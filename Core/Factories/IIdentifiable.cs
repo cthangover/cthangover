@@ -11,6 +11,7 @@ namespace Cthangover.Core.Factories
     /// </summary>
     public interface IIdentifiable
     {
+        /// <summary>Unique string key used for factory lookups and cross-entity references.</summary>
         string ID { get; }
     }
 

@@ -9,6 +9,7 @@ namespace Cthangover.Core.Factories.Impls
     /// </summary>
     public static class Avatars
     {
+        /// <summary>Story-book avatar variants (<c>book_1</c>..<c>book_4</c>).</summary>
         public static class Book
         {
             public const string Variant1 = "book_1";
@@ -17,6 +18,7 @@ namespace Cthangover.Core.Factories.Impls
             public const string Variant4 = "book_4";
         }
 
+        /// <summary>Marao's expression ids referenced by dialogue <c>first=</c> parameters. Note: <c>sad</c> exists only as a file and is not catalogued here.</summary>
         public static class Marao
         {
             public const string Angry = "marao/angry";
@@ -26,6 +28,7 @@ namespace Cthangover.Core.Factories.Impls
             public const string Smile = "marao/smile";
         }
 
+        /// <summary>Murakami's expression ids referenced by dialogue <c>second=</c> parameters; <c>normal_3</c> is catalogued but has no file on disk.</summary>
         public static class Murakami
         {
             public const string Fear1 = "murakami/fear_1";

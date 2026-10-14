@@ -1,0 +1,65 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="f968d40d-ffff-470b-8b4a-53164ba79f5a" name="iisaev@KYCTUKPC 2026-10-14 01:01:27" runUser="KYCTUKPC\iisaev" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-10-14T01:01:27.4980539+03:00" queuing="2026-10-14T01:01:27.4980544+03:00" start="2026-10-14T01:01:25.4445467+03:00" finish="2026-10-14T01:01:27.5021734+03:00" />
+  <TestSettings name="default" id="dc53a9a1-e66e-40b1-b5ae-a0569f38a5ad">
+    <Deployment runDeploymentRoot="iisaev_KYCTUKPC_2026-10-14_01_01_27" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="bf84d214-2de4-402f-8746-f81a5f766353" testId="8327dd5c-7463-67df-b3cb-4c916e1fad6b" testName="Engine.Tests.Mods.ToolsModCompileTests.Compile_RealToolsMod_Succeeds" computerName="KYCTUKPC" duration="00:00:01.4492300" startTime="2026-10-14T01:01:27.4194285+03:00" endTime="2026-10-14T01:01:27.4194411+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="bf84d214-2de4-402f-8746-f81a5f766353">
+      <Output>
+        <ErrorInfo>
+          <Message>Mod 'tools_compile_test' failed with 6 error(s):
+  SourceFile(C:\projects\godotcthangover\mods\tools\src\Services\ScenarioFileService.cs[31..35)): Тип или имя пространства имен "Mods" не существует в пространстве имен "Cthangover" (возможно, отсутствует ссылка на сборку).
+  SourceFile(C:\projects\godotcthangover\mods\tools\src\Services\ScenarioSyntaxService.cs[51..55)): Тип или имя пространства имен "Mods" не существует в пространстве имен "Cthangover" (возможно, отсутствует ссылка на сборку).
+  SourceFile(C:\projects\godotcthangover\mods\tools\src\Services\ScenarioSyntaxService.cs[1692..1722)): Имя "ScenarioCommandStrategyFactory" не существует в текущем контексте.
+  SourceFile(C:\projects\godotcthangover\mods\tools\src\Services\ScenarioFileService.cs[10330..10360)): Имя "ScenarioCommandStrategyFactory" не существует в текущем контексте.
+  SourceFile(C:\projects\godotcthangover\mods\tools\src\Services\ScenarioFileService.cs[10565..10588)): Имя "PositionalReferenceKind" не существует в текущем контексте.
+  SourceFile(C:\projects\godotcthangover\mods\tools\src\Services\ScenarioFileService.cs[10733..10756)): Имя "PositionalReferenceKind" не существует в текущем контексте.</Message>
+          <StackTrace>   at Engine.Tests.Mods.ToolsModCompileTests.Compile_RealToolsMod_Succeeds() in C:\projects\godotcthangover\tests\CThangover.Tests\Mods\ToolsModCompileTests.cs:line 32&#xD;
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="Engine.Tests.Mods.ToolsModCompileTests.Compile_RealToolsMod_Succeeds" storage="c:\projects\godotcthangover\tests\cthangover.tests\bin\debug\net8.0\cthangover.tests.dll" id="8327dd5c-7463-67df-b3cb-4c916e1fad6b">
+      <Execution id="bf84d214-2de4-402f-8746-f81a5f766353" />
+      <TestMethod codeBase="C:\projects\godotcthangover\tests\CThangover.Tests\bin\Debug\net8.0\CThangover.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Engine.Tests.Mods.ToolsModCompileTests" name="Compile_RealToolsMod_Succeeds" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="8327dd5c-7463-67df-b3cb-4c916e1fad6b" executionId="bf84d214-2de4-402f-8746-f81a5f766353" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Список результатов" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="Все загруженные результаты" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="1" executed="1" passed="0" failed="1" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.5.6+bf9b858c26 (64-bit .NET 8.0.27)&#xD;
+[xUnit.net 00:00:00.06]   Discovering: CThangover.Tests&#xD;
+[xUnit.net 00:00:00.15]   Discovered:  CThangover.Tests&#xD;
+[xUnit.net 00:00:00.15]   Starting:    CThangover.Tests&#xD;
+[xUnit.net 00:00:01.64]       Mod 'tools_compile_test' failed with 6 error(s):
+  SourceFile(C:\projects\godotcthangover\mods\tools\src\Services\ScenarioFileService.cs[31..35)): Тип или имя пространства имен "Mods" не существует в пространстве имен "Cthangover" (возможно, отсутствует ссылка на сборку).
+  SourceFile(C:\projects\godotcthangover\mods\tools\src\Services\ScenarioSyntaxService.cs[51..55)): Тип или имя пространства имен "Mods" не существует в пространстве имен "Cthangover" (возможно, отсутствует ссылка на сборку).
+  SourceFile(C:\projects\godotcthangover\mods\tools\src\Services\ScenarioSyntaxService.cs[1692..1722)): Имя "ScenarioCommandStrategyFactory" не существует в текущем контексте.
+  SourceFile(C:\projects\godotcthangover\mods\tools\src\Services\ScenarioFileService.cs[10330..10360)): Имя "ScenarioCommandStrategyFactory" не существует в текущем контексте.
+  SourceFile(C:\projects\godotcthangover\mods\tools\src\Services\ScenarioFileService.cs[10565..10588)): Имя "PositionalReferenceKind" не существует в текущем контексте.
+  SourceFile(C:\projects\godotcthangover\mods\tools\src\Services\ScenarioFileService.cs[10733..10756)): Имя "PositionalReferenceKind" не существует в текущем контексте.&#xD;
+[xUnit.net 00:00:01.65]       Stack Trace:&#xD;
+[xUnit.net 00:00:01.65]         C:\projects\godotcthangover\tests\CThangover.Tests\Mods\ToolsModCompileTests.cs(32,0): at Engine.Tests.Mods.ToolsModCompileTests.Compile_RealToolsMod_Succeeds()&#xD;
+[xUnit.net 00:00:01.65]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)&#xD;
+[xUnit.net 00:00:01.65]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)&#xD;
+[xUnit.net 00:00:01.65]   Finished:    CThangover.Tests&#xD;
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="KYCTUKPC" outcome="Error" timestamp="2026-10-14T01:01:27.4177504+03:00">
+        <Text>[xUnit.net 00:00:01.64]     Engine.Tests.Mods.ToolsModCompileTests.Compile_RealToolsMod_Succeeds [FAIL]</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>

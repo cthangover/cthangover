@@ -1,0 +1,370 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="src/SettingsMenu.cs" id="SettingsMenuScript"]
+
+[node name="SettingsMenu" type="Control" unique_id=894644832]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+script = ExtResource("SettingsMenuScript")
+
+[node name="Bg" type="ColorRect" parent="." unique_id=21945756]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 1)
+
+[node name="Panel" type="Panel" parent="." unique_id=1554260654]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.1
+anchor_top = 0.1
+anchor_right = 0.9
+anchor_bottom = 0.9
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="Panel" unique_id=1929120286]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_bottom = 20
+
+[node name="VBox" type="VBoxContainer" parent="Panel/Margin" unique_id=150548585]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Title" type="Label" parent="Panel/Margin/VBox" unique_id=86160906]
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "Settings"
+horizontal_alignment = 1
+
+[node name="Tabs" type="TabContainer" parent="Panel/Margin/VBox" unique_id=1524671125]
+layout_mode = 2
+size_flags_vertical = 3
+tab_alignment = 1
+current_tab = 0
+
+[node name="GeneralMargin" type="MarginContainer" parent="Panel/Margin/VBox/Tabs"]
+layout_mode = 2
+metadata/_tab_index = 0
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 12
+
+[node name="General" type="VBoxContainer" parent="Panel/Margin/VBox/Tabs/GeneralMargin" unique_id=2028800899]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Spacer" type="Control" parent="Panel/Margin/VBox/Tabs/GeneralMargin/General" unique_id=1203872148]
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+
+[node name="LangBox" type="HBoxContainer" parent="Panel/Margin/VBox/Tabs/GeneralMargin/General" unique_id=684741721]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="LangLabel" type="Label" parent="Panel/Margin/VBox/Tabs/GeneralMargin/General/LangBox" unique_id=1707108944]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Language"
+
+[node name="LangSelect" type="OptionButton" parent="Panel/Margin/VBox/Tabs/GeneralMargin/General/LangBox" unique_id=2037857401]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="AudioMargin" type="MarginContainer" parent="Panel/Margin/VBox/Tabs"]
+layout_mode = 2
+visible = false
+metadata/_tab_index = 1
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 12
+
+[node name="Audio" type="VBoxContainer" parent="Panel/Margin/VBox/Tabs/AudioMargin" unique_id=564523157]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="SoundsBox" type="VBoxContainer" parent="Panel/Margin/VBox/Tabs/AudioMargin/Audio" unique_id=508426867]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="ToggleRow" type="HBoxContainer" parent="Panel/Margin/VBox/Tabs/AudioMargin/Audio/SoundsBox" unique_id=274422939]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="SoundsLabel" type="Label" parent="Panel/Margin/VBox/Tabs/AudioMargin/Audio/SoundsBox/ToggleRow" unique_id=1483011032]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Sounds"
+
+[node name="SoundsToggle" type="CheckButton" parent="Panel/Margin/VBox/Tabs/AudioMargin/Audio/SoundsBox/ToggleRow" unique_id=126270437]
+layout_mode = 2
+
+[node name="VolumeRow" type="HBoxContainer" parent="Panel/Margin/VBox/Tabs/AudioMargin/Audio/SoundsBox" unique_id=585263148]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="SoundsVolumeLabel" type="Label" parent="Panel/Margin/VBox/Tabs/AudioMargin/Audio/SoundsBox/VolumeRow" unique_id=1327120426]
+layout_mode = 2
+text = "Volume"
+
+[node name="SoundsVolume" type="HSlider" parent="Panel/Margin/VBox/Tabs/AudioMargin/Audio/SoundsBox/VolumeRow" unique_id=2061615116]
+layout_mode = 2
+size_flags_horizontal = 3
+value = 100.0
+
+[node name="SoundsVolumeValue" type="Label" parent="Panel/Margin/VBox/Tabs/AudioMargin/Audio/SoundsBox/VolumeRow" unique_id=1079108664]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+text = "100%"
+horizontal_alignment = 2
+
+[node name="Sep" type="HSeparator" parent="Panel/Margin/VBox/Tabs/AudioMargin/Audio" unique_id=988886928]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+
+[node name="MusicBox" type="VBoxContainer" parent="Panel/Margin/VBox/Tabs/AudioMargin/Audio" unique_id=1316259016]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="ToggleRow2" type="HBoxContainer" parent="Panel/Margin/VBox/Tabs/AudioMargin/Audio/MusicBox" unique_id=553618696]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="MusicLabel" type="Label" parent="Panel/Margin/VBox/Tabs/AudioMargin/Audio/MusicBox/ToggleRow2" unique_id=1559600377]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Music"
+
+[node name="MusicToggle" type="CheckButton" parent="Panel/Margin/VBox/Tabs/AudioMargin/Audio/MusicBox/ToggleRow2" unique_id=901979875]
+layout_mode = 2
+
+[node name="VolumeRow2" type="HBoxContainer" parent="Panel/Margin/VBox/Tabs/AudioMargin/Audio/MusicBox" unique_id=1411284591]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="MusicVolumeLabel" type="Label" parent="Panel/Margin/VBox/Tabs/AudioMargin/Audio/MusicBox/VolumeRow2" unique_id=1952498749]
+layout_mode = 2
+text = "Volume"
+
+[node name="MusicVolume" type="HSlider" parent="Panel/Margin/VBox/Tabs/AudioMargin/Audio/MusicBox/VolumeRow2" unique_id=504218348]
+layout_mode = 2
+size_flags_horizontal = 3
+value = 5.0
+
+[node name="MusicVolumeValue" type="Label" parent="Panel/Margin/VBox/Tabs/AudioMargin/Audio/MusicBox/VolumeRow2" unique_id=1866810087]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+text = "5%"
+horizontal_alignment = 2
+
+[node name="Sep2" type="HSeparator" parent="Panel/Margin/VBox/Tabs/AudioMargin/Audio" unique_id=1486966851]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+
+[node name="AmbientBox" type="VBoxContainer" parent="Panel/Margin/VBox/Tabs/AudioMargin/Audio" unique_id=127969403]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="ToggleRow3" type="HBoxContainer" parent="Panel/Margin/VBox/Tabs/AudioMargin/Audio/AmbientBox" unique_id=338401886]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="AmbientLabel" type="Label" parent="Panel/Margin/VBox/Tabs/AudioMargin/Audio/AmbientBox/ToggleRow3" unique_id=872436692]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Ambient"
+
+[node name="AmbientToggle" type="CheckButton" parent="Panel/Margin/VBox/Tabs/AudioMargin/Audio/AmbientBox/ToggleRow3" unique_id=1160929014]
+layout_mode = 2
+
+[node name="VolumeRow3" type="HBoxContainer" parent="Panel/Margin/VBox/Tabs/AudioMargin/Audio/AmbientBox" unique_id=1139865718]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="AmbientVolumeLabel" type="Label" parent="Panel/Margin/VBox/Tabs/AudioMargin/Audio/AmbientBox/VolumeRow3" unique_id=1610793395]
+layout_mode = 2
+text = "Volume"
+
+[node name="AmbientVolume" type="HSlider" parent="Panel/Margin/VBox/Tabs/AudioMargin/Audio/AmbientBox/VolumeRow3" unique_id=1343104331]
+layout_mode = 2
+size_flags_horizontal = 3
+value = 5.0
+
+[node name="AmbientVolumeValue" type="Label" parent="Panel/Margin/VBox/Tabs/AudioMargin/Audio/AmbientBox/VolumeRow3" unique_id=1909728919]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+text = "5%"
+horizontal_alignment = 2
+
+[node name="DisplayMargin" type="MarginContainer" parent="Panel/Margin/VBox/Tabs"]
+layout_mode = 2
+visible = false
+metadata/_tab_index = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 12
+
+[node name="Display" type="VBoxContainer" parent="Panel/Margin/VBox/Tabs/DisplayMargin" unique_id=1371435162]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Spacer2" type="Control" parent="Panel/Margin/VBox/Tabs/DisplayMargin/Display" unique_id=270871165]
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+
+[node name="ModeBox" type="HBoxContainer" parent="Panel/Margin/VBox/Tabs/DisplayMargin/Display" unique_id=455596205]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="ModeLabel" type="Label" parent="Panel/Margin/VBox/Tabs/DisplayMargin/Display/ModeBox" unique_id=1346202262]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Window Mode"
+
+[node name="ModeSelect" type="OptionButton" parent="Panel/Margin/VBox/Tabs/DisplayMargin/Display/ModeBox" unique_id=631713497]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ResBox" type="HBoxContainer" parent="Panel/Margin/VBox/Tabs/DisplayMargin/Display" unique_id=603217917]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="ResLabel" type="Label" parent="Panel/Margin/VBox/Tabs/DisplayMargin/Display/ResBox" unique_id=1714673968]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Resolution"
+
+[node name="ResSelect" type="OptionButton" parent="Panel/Margin/VBox/Tabs/DisplayMargin/Display/ResBox" unique_id=651322592]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="MonitorBox" type="HBoxContainer" parent="Panel/Margin/VBox/Tabs/DisplayMargin/Display" unique_id=284981749]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="MonitorLabel" type="Label" parent="Panel/Margin/VBox/Tabs/DisplayMargin/Display/MonitorBox" unique_id=1905911340]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Monitor"
+
+[node name="MonitorSelect" type="OptionButton" parent="Panel/Margin/VBox/Tabs/DisplayMargin/Display/MonitorBox" unique_id=1334336966]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ScaleBox" type="HBoxContainer" parent="Panel/Margin/VBox/Tabs/DisplayMargin/Display" unique_id=930383631]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="ScaleLabel" type="Label" parent="Panel/Margin/VBox/Tabs/DisplayMargin/Display/ScaleBox" unique_id=1924008447]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Scale"
+
+[node name="ScaleSelect" type="OptionButton" parent="Panel/Margin/VBox/Tabs/DisplayMargin/Display/ScaleBox" unique_id=2096132155]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="VSyncRow" type="HBoxContainer" parent="Panel/Margin/VBox/Tabs/DisplayMargin/Display" unique_id=348516587]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="VSyncLabel" type="Label" parent="Panel/Margin/VBox/Tabs/DisplayMargin/Display/VSyncRow" unique_id=1204827790]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "VSync"
+
+[node name="VSyncToggle" type="CheckButton" parent="Panel/Margin/VBox/Tabs/DisplayMargin/Display/VSyncRow" unique_id=1909935663]
+layout_mode = 2
+
+[node name="ModSettingsMargin" type="MarginContainer" parent="Panel/Margin/VBox/Tabs"]
+layout_mode = 2
+visible = false
+metadata/_tab_index = 3
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 12
+
+[node name="ModSettings" type="HBoxContainer" parent="Panel/Margin/VBox/Tabs/ModSettingsMargin" unique_id=2038671463]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 12
+
+[node name="LeftPanel" type="VBoxContainer" parent="Panel/Margin/VBox/Tabs/ModSettingsMargin/ModSettings" unique_id=1856089080]
+custom_minimum_size = Vector2(240, 0)
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="ModsTitle" type="Label" parent="Panel/Margin/VBox/Tabs/ModSettingsMargin/ModSettings/LeftPanel" unique_id=1639725410]
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+text = "Mods"
+horizontal_alignment = 1
+
+[node name="ModScroll" type="ScrollContainer" parent="Panel/Margin/VBox/Tabs/ModSettingsMargin/ModSettings/LeftPanel" unique_id=1412822434]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="ModList" type="VBoxContainer" parent="Panel/Margin/VBox/Tabs/ModSettingsMargin/ModSettings/LeftPanel/ModScroll" unique_id=543902025]
+layout_mode = 2
+
+[node name="Sep" type="VBoxContainer" parent="Panel/Margin/VBox/Tabs/ModSettingsMargin/ModSettings" unique_id=950619413]
+custom_minimum_size = Vector2(10, 0)
+layout_mode = 2
+
+[node name="RightPanel" type="VBoxContainer" parent="Panel/Margin/VBox/Tabs/ModSettingsMargin/ModSettings" unique_id=272738827]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="TopBar" type="HBoxContainer" parent="Panel/Margin/VBox/Tabs/ModSettingsMargin/ModSettings/RightPanel" unique_id=678746437]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="SelectedModName" type="Label" parent="Panel/Margin/VBox/Tabs/ModSettingsMargin/ModSettings/RightPanel/TopBar" unique_id=393931159]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 16
+
+[node name="ResetBtn" type="Button" parent="Panel/Margin/VBox/Tabs/ModSettingsMargin/ModSettings/RightPanel/TopBar" unique_id=531057889]
+layout_mode = 2
+text = "Reset"
+
+[node name="SettingsScroll" type="ScrollContainer" parent="Panel/Margin/VBox/Tabs/ModSettingsMargin/ModSettings/RightPanel" unique_id=674333894]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="SettingsContainer" type="VBoxContainer" parent="Panel/Margin/VBox/Tabs/ModSettingsMargin/ModSettings/RightPanel/SettingsScroll" unique_id=1664189823]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Placeholder" type="Label" parent="Panel/Margin/VBox/Tabs/ModSettingsMargin/ModSettings/RightPanel/SettingsScroll/SettingsContainer" unique_id=1501445323]
+layout_mode = 2
+text = "No mod settings available"
+horizontal_alignment = 1
+
+[node name="BackBtn" type="Button" parent="Panel/Margin/VBox" unique_id=249196016]
+layout_mode = 2
+size_flags_horizontal = 8
+text = "Back"

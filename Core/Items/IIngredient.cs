@@ -12,7 +12,9 @@ namespace Cthangover.Core.Items
     /// ingredient as a mutable inventory entry.
     /// </summary>
     public interface IIngredient {
+        /// <summary>The resolved item this formula entry references.</summary>
         IItem Item  { get; set; }
+        /// <summary>How many copies the recipe consumes or produces.</summary>
         int   Count { get; set; }
     }
 }

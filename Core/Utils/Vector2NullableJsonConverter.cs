@@ -15,6 +15,10 @@ namespace Cthangover.Core.Utils
     /// </summary>
     public class Vector2NullableJsonConverter : JsonConverter<Vector2?>
     {
+        /// <summary>
+        /// Returns <c>null</c> for JSON <c>null</c>, otherwise reads a two-element
+        /// <c>[x, y]</c> array into a <see cref="Vector2"/>.
+        /// </summary>
         public override Vector2? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             if (reader.TokenType == JsonTokenType.Null)
@@ -35,6 +39,10 @@ namespace Cthangover.Core.Utils
             return new Vector2(x, y);
         }
 
+        /// <summary>
+        /// Writes JSON <c>null</c> for an empty value, otherwise a compact <c>[x, y]</c> array,
+        /// so "coordinate not set" round-trips distinctly from <c>(0, 0)</c>.
+        /// </summary>
         public override void Write(Utf8JsonWriter writer, Vector2? value, JsonSerializerOptions options)
         {
             if (value == null)

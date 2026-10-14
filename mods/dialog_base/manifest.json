@@ -1,0 +1,13 @@
+{
+  "id": "dialog_base",
+  "name": "Dialog Engine",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Engine dialog subsystem: DialogBox/DialogCanvas/AnswerBox UI, the dialog queue runtime with the full DSL action set, the .scenario parser with command strategies, the executable event chains and the /root/DialogRunner for interactive dialogs. Replaces the former Core/UI/Dialog, Core/UI/Executable and Core/Scenarios implementations — SceneManager and SaveService keep driving chains and events through the core contracts (IDialogBox, IExecutableEvent, IExecutableEventChain, IScenarioEventFactory).",
+  "category": "engine, library",
+  "sources": [
+    "src/**/*.cs"
+  ],
+  "depends": ["base2d>=1", "interactive_base>=1", "effects_base>=1", "time_base>=1", "map_base>=1", "interface>=1"],
+  "ui": []
+}

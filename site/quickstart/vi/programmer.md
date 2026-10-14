@@ -70,7 +70,7 @@ namespace Cthangover.MyCodeMod
 }
 ```
 
-Giao diện `IMod` là điểm vào bắt buộc cho mọi mod C#. Phương thức `Initialize` được gọi khi mod tải.
+Giao diện `IModInitializer` là điểm vào vòng đời của mã C# trong mod; các cài đặt được phát hiện qua reflection. `OnModLoaded` được gọi khi mỗi mod tải; `OnModResourcesReady` được gọi một lần sau khi tất cả mod và tài nguyên đã sẵn sàng.
 
 > Sử dụng `GameLogger.Log(...)` thay vì `GD.Print(...)` nếu bạn muốn làm việc với nhật ký.
 
@@ -158,7 +158,7 @@ Giờ trong bất kỳ tệp `.scenario` nào bạn có thể viết：
 action my_effect
 ```
 
-Engine tìm lớp của bạn qua reflection và gọi `Execute`.
+Engine tìm lớp của bạn qua reflection và gọi `Run`.
 
 ---
 

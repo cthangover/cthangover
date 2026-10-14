@@ -1,11 +1,9 @@
 #if TOOLS
-using Cthangover.Core.Characters;
+using System.Linq;
 using Cthangover.Core.Factories;
 using Cthangover.Core.Items;
 using Cthangover.Core.Mods;
 using Cthangover.Core.Mods.Resolvers;
-using Cthangover.Core.Quests;
-using Cthangover.Core.Skills;
 using Cthangover.Core.Utils;
 using Godot;
 
@@ -34,7 +32,7 @@ namespace Cthangover.Core.Autotest
         {
             GameLogger.Log("ENTITY_TEST", "EntityPipelineTestSetup: starting entity pipeline tests");
 
-            ModManager.Instance.Initialize();
+            // Mods are loaded by the boot pipeline (SceneManager autoload -> Boot.RunSync) before any scene _Ready.
             ModInitializerRegistry.NotifyResourcesReady();
 
             TestCharacterKind();
@@ -51,49 +49,82 @@ namespace Cthangover.Core.Autotest
 
         private void TestCharacterKind()
         {
-            var characters = Entities.Collect<CharacterInfo>();
+            // The character DTO lives in the characters engine mod, so the
+            // kind-to-DTO routing itself is part of the assertion: the kind
+            // must resolve to a Roslyn-compiled mod assembly type and still
+            // collect exactly the character files.
+            var characters = CollectByKind("character");
 
-            AssertTrue(characters.ContainsKey("Marao"), "player character resolves through the 'character' kind");
-            AssertTrue(characters.ContainsKey("wolf_1"), "enemy resolves through the same 'character' kind");
-            AssertTrue(!characters.ContainsKey("slave_master"), "skill is not collected as a character");
-            AssertTrue(!characters.ContainsKey("physics/attack"), "action is not collected as a character");
+            AssertTrue(characters != null && characters.Contains("Marao"), "player character resolves through the 'character' kind");
+            AssertTrue(characters != null && characters.Contains("wolf_1"), "enemy resolves through the same 'character' kind");
+            AssertTrue(characters != null && !characters.Contains("slave_master"), "skill is not collected as a character");
+            AssertTrue(characters != null && !characters.Contains("physics/attack"), "action is not collected as a character");
         }
 
         private void TestActionKind()
         {
-            var actions = Entities.Collect<ActionCharacterInfo>();
+            var actions = CollectByKind("action");
 
-            AssertTrue(actions.ContainsKey("physics/attack"), "action resolves through the 'action' kind");
-            AssertTrue(!actions.ContainsKey("Marao"), "character is not collected as an action");
-            AssertTrue(!actions.ContainsKey("slave_master"), "skill is not collected as an action");
+            AssertTrue(actions != null && actions.Contains("physics/attack"), "action resolves through the 'action' kind");
+            AssertTrue(actions != null && !actions.Contains("Marao"), "character is not collected as an action");
+            AssertTrue(actions != null && !actions.Contains("slave_master"), "skill is not collected as an action");
+        }
+
+        /// <summary>
+        /// Collects every entity of the kind's DTO through reflection: the DTO
+        /// type may come from a Roslyn-compiled mod assembly that this
+        /// compile-time-referenced test code cannot name directly.
+        /// </summary>
+        private System.Collections.IDictionary CollectByKind(string kind)
+        {
+            if (!EntityKindRegistry.TryResolve(kind, out var dtoType))
+            {
+                AssertTrue(false, $"kind '{kind}' resolves to a DTO type");
+                return null;
+            }
+
+            var resolver = ModManager.Instance.GetResolver<EntityResolver>();
+            var collect = typeof(EntityResolver).GetMethods()
+                .First(m => m.Name == nameof(Entities.Collect) && m.IsGenericMethodDefinition && m.GetParameters().Length == 0)
+                .MakeGenericMethod(dtoType);
+            return (System.Collections.IDictionary)collect.Invoke(resolver, null);
         }
 
         private void TestSkillKind()
         {
-            var skills = Entities.Collect<SkillInfo>();
+            // The skill DTO lives in the skills_base engine mod, so the kind
+            // routing is asserted through the same reflection path as the
+            // character/item/recipe kinds above.
+            var skills = CollectByKind("skill");
 
-            AssertTrue(skills.ContainsKey("slave_master"), "skill resolves through the 'skill' kind");
-            AssertTrue(!skills.ContainsKey("Marao"), "character is not collected as a skill");
-            AssertTrue(!skills.ContainsKey("wolf_1"), "enemy is not collected as a skill");
+            AssertTrue(skills != null && skills.Contains("slave_master"), "skill resolves through the 'skill' kind");
+            AssertTrue(skills == null || !skills.Contains("Marao"), "character is not collected as a skill");
+            AssertTrue(skills == null || !skills.Contains("wolf_1"), "enemy is not collected as a skill");
         }
 
         private void TestItemAndRecipeKinds()
         {
-            var items = Entities.Collect<ItemInfo>();
-            var recipes = Entities.Collect<RecipeInfo>();
+            // The item/recipe DTOs live in the items engine mod, so the kind
+            // routing is asserted through the same reflection path as the
+            // character kind above.
+            var items = CollectByKind("item");
+            var recipes = CollectByKind("recipe");
 
-            AssertTrue(items.ContainsKey("food/ration"), "item resolves through the 'item' kind");
-            AssertTrue(items.ContainsKey("recipe/wolf_meat_to_ration"), "recipe item is an item");
-            AssertTrue(recipes.ContainsKey("recipe/wolf_meat_to_ration"), "recipe resolves through the 'recipe' kind");
-            AssertTrue(!items.ContainsKey("AwakeningQuest"), "quest is not collected as an item");
+            AssertTrue(items != null && items.Contains("food/ration"), "item resolves through the 'item' kind");
+            AssertTrue(items != null && items.Contains("recipe/wolf_meat_to_ration"), "recipe item is an item");
+            AssertTrue(recipes != null && recipes.Contains("recipe/wolf_meat_to_ration"), "recipe resolves through the 'recipe' kind");
+            AssertTrue(items != null && !items.Contains("AwakeningQuest"), "quest is not collected as an item");
         }
 
         private void TestQuestKind()
         {
-            var quests = Entities.Collect<QuestDefinition>();
+            // The quest DTO lives in the quests engine mod, so the kind
+            // routing is asserted through the same reflection path as the
+            // character kind above.
+            var quests = CollectByKind("quest");
 
-            AssertTrue(quests.ContainsKey("AwakeningQuest"), "quest resolves through the 'quest' kind");
-            AssertTrue(quests.ContainsKey("MeetingMurakamiQuest"), "quest from another mod is collected too");
+            AssertTrue(quests != null && quests.Contains("AwakeningQuest"), "quest resolves through the 'quest' kind");
+            AssertTrue(quests != null && quests.Contains("MeetingMurakamiQuest"), "quest from another mod is collected too");
         }
 
         private void TestModAssemblyKind()

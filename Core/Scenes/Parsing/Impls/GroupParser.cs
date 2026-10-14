@@ -11,11 +11,13 @@ namespace Cthangover.Core.Scenes.Parsing.Impls
     /// </summary>
     public class GroupParser : ILeafParser
     {
+        /// <summary>True at any opening parenthesis — unambiguous, so this parser is registered last.</summary>
         public bool CanParse(TokenPeeker peeker)
         {
             return !peeker.AtEnd && peeker.Peek.Type == ConditionParser.TokenType.LParen;
         }
 
+        /// <summary>Parses the parenthesised sub-expression recursively and returns its subtree unchanged.</summary>
         public ICondition Parse(TokenPeeker peeker, Func<ICondition> parseSubExpr)
         {
             peeker.Advance();

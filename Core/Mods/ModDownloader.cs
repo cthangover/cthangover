@@ -9,23 +9,48 @@ using Godot;
 
 namespace Cthangover.Core.Mods
 {
+    /// <summary>
+    /// Stages of a <see cref="ModDownloader.InstallAsync"/> run, reported
+    /// through <see cref="ModDownloader.OnProgress"/> so the UI can render a
+    /// progress bar with a human-readable message per stage.
+    /// </summary>
     public enum InstallStep
     {
+        /// <summary>Fetching the .zip from a catalog mirror.</summary>
         Downloading,
+        /// <summary>Comparing the downloaded archive against <c>archive_sha256</c>.</summary>
         VerifyingArchive,
+        /// <summary>Extracting the archive into a staging directory.</summary>
         Extracting,
+        /// <summary>Recomputing the install hash of the extracted mod.</summary>
         VerifyingInstall,
+        /// <summary>Mod installed; a restart is required to load it.</summary>
         Complete,
+        /// <summary>Install aborted — see the reported message for the reason.</summary>
         Failed,
     }
 
+    /// <summary>Snapshot of the downloader state at one moment of an install.</summary>
     public class InstallProgress
     {
+        /// <summary>Current pipeline stage.</summary>
         public InstallStep Step { get; set; }
+        /// <summary>Completion fraction 0–1; 0 for stages without a measurable fraction.</summary>
         public float Progress { get; set; }
+        /// <summary>Human-readable status line for the UI (e.g. "Downloading... 42%").</summary>
         public string Message { get; set; }
     }
 
+    /// <summary>
+    /// Downloads and installs mods from the online catalog into the user mods
+    /// root (<c>user://mods/</c>). One <see cref="InstallAsync"/> run picks the
+    /// catalog entry (by id and, when given, the source catalog that published
+    /// it), streams the zip from the first reachable mirror, verifies
+    /// <c>archive_sha256</c>, extracts through a staging directory (flattening
+    /// a single wrapper folder), verifies <c>install_sha256</c>, and swaps the
+    /// result into place. The new mod set only loads after a restart — like
+    /// every other mod-set change.
+    /// </summary>
     public static class ModDownloader
     {
         private static readonly System.Net.Http.HttpClient _httpClient = new()
@@ -36,9 +61,23 @@ namespace Cthangover.Core.Mods
 
         private static readonly HashSet<string> _installingMods = new();
 
+        /// <summary>Fired on every progress report; carries the stage, fraction and message.</summary>
         public static event Action<InstallProgress> OnProgress;
+        /// <summary>Fired once when an install finishes; <c>true</c> on success, <c>false</c> on any failure.</summary>
         public static event Action<string, bool> OnCompleted;
 
+        /// <summary>
+        /// Installs a mod from the catalog into the user mods root. Selects the
+        /// entry (optionally from a specific source catalog), picks the download
+        /// matching <paramref name="version"/> (or the newest), verifies the
+        /// archive hash, extracts through a staging directory, and swaps it into
+        /// place. Returns <c>false</c> and reports the reason via
+        /// <see cref="OnCompleted"/>(false) on any failure; concurrent installs
+        /// of the same mod are rejected.
+        /// </summary>
+        /// <param name="modId">Canonical mod id to install.</param>
+        /// <param name="version">Specific version to install, or null for the newest download.</param>
+        /// <param name="sourceUrl">Catalog URL that published the entry (disambiguates variant conflicts), or null.</param>
 		public static async Task<bool> InstallAsync(string modId, string version = null, string sourceUrl = null)
 		{
 			if (string.IsNullOrEmpty(modId))

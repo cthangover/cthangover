@@ -25,8 +25,10 @@ namespace Cthangover.Core.Mods
         /// </summary>
         private static readonly object _fileLock = new();
 
+        /// <summary>Resolved storage path: globalised <c>user://mod_load_order.json</c> at runtime, relative fallback otherwise.</summary>
         public static string Path => GameEnvironment.IsRuntime ? ProjectSettings.GlobalizePath(FilePath) : "mod_load_order.json";
         
+        /// <summary>Reads the saved manual order; returns an empty list when the file is absent or broken.</summary>
         public static List<string> Load()
         {
             var path = Path;
@@ -48,6 +50,7 @@ namespace Cthangover.Core.Mods
             }
         }
 
+        /// <summary>Persists the manual order as a compact JSON array of mod ids.</summary>
         public static void Save(List<string> orderedIds)
         {
             var path = Path;

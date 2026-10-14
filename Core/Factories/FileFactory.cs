@@ -14,16 +14,19 @@ namespace Cthangover.Core.Factories
 	/// never use.
 	/// <para/>
 	/// The collected dictionary is published only after the mod registry is
-	/// finalized. A lookup made during the launcher boot window (the inventory
-	/// autoload resolving starter items, for example) collects from a still
-	/// empty registry; caching that empty result would outlive
-	/// <c>ModManager.ClearCaches</c>, which flushes resolvers but not factory
-	/// fields, and every later lookup would report the entity as missing.
+	/// finalized. A dirty cache is impossible: the registry refuses
+	/// mod-data access until <c>Boot.IsReady</c>, so a lookup can never
+	/// collect from a half-built mod set and cache an empty result.
 	/// </summary>
 	public abstract class FileFactory<T> : IFileFactory<T> where T : class, IIdentifiable
 	{
 		private Dictionary<string, T> cache;
 
+		/// <summary>
+		/// Returns the entity registered under <paramref name="id"/>, collecting
+		/// the kind-routed dictionary from the entity resolver on first use.
+		/// Unknown or empty ids return <c>null</c>.
+		/// </summary>
 		public T Get(string id)
 		{
 			if (string.IsNullOrEmpty(id))

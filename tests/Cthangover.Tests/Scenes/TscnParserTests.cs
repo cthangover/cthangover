@@ -327,7 +327,7 @@ bg_color = Color(0.1, 0.2, 0.3, 1)
             var source = @"
 [gd_scene format=3]
 
-[ext_resource type=""Script"" path=""res://Core/UI/Dialog/DialogCanvas.cs"" id=""1_canvas""]
+[ext_resource type=""Script"" path=""res://mods/dialog_base/src/UI/Dialog/DialogCanvas.cs"" id=""1_canvas""]
 [ext_resource type=""PackedScene"" path=""res://scenes/ui/dialog_box.tscn"" id=""2_dialogbox""]
 
 [node name=""DialogCanvas"" type=""Control""]
@@ -428,7 +428,7 @@ NodePathRef = NodePath(""Some/Path"")
             var source = @"
 [gd_scene format=3]
 
-[ext_resource type=""Script"" path=""res://Core/UI/Dialog/DialogBox.cs"" id=""1_dialog""]
+[ext_resource type=""Script"" path=""res://mods/dialog_base/src/UI/Dialog/DialogBox.cs"" id=""1_dialog""]
 [ext_resource type=""PackedScene"" path=""res://scenes/ui/answer_box.tscn"" id=""2_answerbox""]
 
 [node name=""DialogBox"" type=""Control"" node_paths=PackedStringArray(""textField"", ""titleField"", ""titleBody"", ""firstAvatar"", ""secondAvatar"")]

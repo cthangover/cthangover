@@ -15,6 +15,7 @@ namespace Cthangover.Core.Mods
     /// </summary>
     public class ModDependencyListConverter : JsonConverter<List<ModDependency>>
     {
+        /// <summary>Reads a JSON array of dependency strings, parsing each via <see cref="ModDependency.Parse"/>.</summary>
         public override List<ModDependency> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             if (reader.TokenType != JsonTokenType.StartArray)
@@ -37,6 +38,7 @@ namespace Cthangover.Core.Mods
             return result;
         }
 
+        /// <summary>Writes each dependency back as its canonical string form.</summary>
         public override void Write(Utf8JsonWriter writer, List<ModDependency> value, JsonSerializerOptions options)
         {
             writer.WriteStartArray();

@@ -1,5 +1,5 @@
 using System;
-using Cthangover.Core.Audio;
+using Cthangover.Core.Bootstrap;
 using Cthangover.Core.Events;
 using Cthangover.Core.Mods.Resolvers;
 using Cthangover.Core.Utils;
@@ -34,6 +34,7 @@ namespace Cthangover.Core.Scenes
 		/// </summary>
 		public static bool IsTransitioning { get; private set; }
 
+		/// <summary>Enables always-on processing (transitions must run while the game is paused) and caches the <see cref="SceneManager"/> autoload.</summary>
 		public override void _Ready()
 		{
 			base._Ready();
@@ -53,17 +54,16 @@ namespace Cthangover.Core.Scenes
 		{
 			GameLogger.Log("SCENE", $"load scene '{nextScene}'...");
 
-			var route = SceneRouteRegistry.FindByPath(nextScene);
+			var route = AppServices.Current.SceneRoutes.FindByScenePath(nextScene);
 			if (route != null && !string.IsNullOrEmpty(route.MusicScene))
 			{
-				foreach (var musicPlayer in GetTree().GetNodesInGroup("music_player"))
+				GameLogger.Log("AUDIO", $"GodotSceneService publishing route activation for '{route.LogicalName}'");
+				ModEventBus.Publish(new SceneRouteActivatingEvent
 				{
-					if (musicPlayer is MusicPlayerBehaviour cast)
-					{
-						GameLogger.Log("AUDIO", $"GodotSceneService notifying MusicPlayer about route '{route.LogicalName}'");
-						cast.UpdateMusicType(route.MusicScene);
-					}
-				}
+					LogicalName = route.LogicalName,
+					ScenePath = nextScene,
+					MusicScene = route.MusicScene,
+				});
 			}
 
 			BeginSceneTransition(nextScene);
@@ -108,7 +108,7 @@ namespace Cthangover.Core.Scenes
 
 		private static bool ShouldFade(string scenePath)
 		{
-			var route = SceneRouteRegistry.FindByPath(scenePath);
+			var route = AppServices.Current.SceneRoutes.FindByScenePath(scenePath);
 			return route != null && route.Fade;
 		}
 
@@ -281,10 +281,11 @@ namespace Cthangover.Core.Scenes
 
 		/// <summary>
 		/// Resolves a <see cref="GodotSceneType"/> to its .tscn file path via
-		/// <see cref="GetScenePath"/>, runs exit subscriptions for the currently loaded
-		/// Godot scene through <see cref="SceneSubscriptionRegistry.RunExitSubscriptions"/>,
-		/// then delegates to <see cref="LoadScene"/>. If no file path is resolved,
-		/// falls back to <see cref="SceneManager.SwitchScene"/> for scenario-based routing.
+		/// <see cref="GetScenePath"/>, publishes <see cref="SceneExitedEvent"/> for the
+		/// currently loaded Godot scene and remembers its logical name for the matching
+		/// <see cref="SceneEnteredEvent"/>, then delegates to <see cref="LoadScene"/>.
+		/// If no file path is resolved, falls back to
+		/// <see cref="SceneManager.SwitchScene"/> for scenario-based routing.
 		/// </summary>
 		/// <param name="sceneType">The type of Godot scene to switch to.</param>
 		public void SwitchScene(GodotSceneType sceneType)
@@ -360,7 +361,7 @@ namespace Cthangover.Core.Scenes
 		public static string GetScenePath(GodotSceneType type)
 		{
 			if (type == GodotSceneType.MainMenu)
-				return "res://scenes/menu/main_menu.tscn";
+				return "scenes/menu/main_menu.tscn";
 			if (type == GodotSceneType.BaseScene)
 				return "scenes/ui/base_scene.tscn";
 			return null;

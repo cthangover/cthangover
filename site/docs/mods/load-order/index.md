@@ -92,15 +92,16 @@ Mods can declare mutual incompatibility:
 
 ### Layer 2: Manual order — user preference
 
-In the **Mods** menu (accessed from the main menu), each mod row has **▲▼** buttons.
-Moving a mod up increases its priority (its files override mods below it);
-moving a mod down decreases priority.
+The manual order is a saved per-device preference in `user://mod_load_order.json` — it does **not**
+transfer between devices or affect other players. Within the same dependency level, mods earlier
+in the saved list load earlier, so a later-loaded mod still overrides them under the "last wins"
+rule below.
 
-The manual order is saved per device in `user://mod_load_order.json` — it does **not**
-transfer between devices or affect other players.
-
-Move buttons are **disabled** when the move would violate a dependency:
-you cannot move a mod above its own dependency, or below a mod that depends on it.
+The ordering machinery exists in the kernel (`ModLoadOrderStore` with `MoveUp`/`MoveDown`/`Remove`
+helpers, `ModRegistry.InvalidateOrder` to recompute the cached order), but the current
+**Mods & Collections** screen does not expose reorder buttons — the row order it displays is the
+computed order. A mod whose dependency is missing is dropped from the registry entirely rather
+than reordered, so the saved list can never place a dependent above its dependency.
 
 ### Layer 3: Alphabetical — deterministic fallback
 
@@ -124,8 +125,9 @@ The game uses **"last wins"** — the mod later in the load order overrides earl
 | **Property arrays** | Arrays in `ExtraProperties` (e.g. `Skills: ["a"]`) are **concatenated** across patches, not overwritten |
 
 When a resource is overridden, a `Warning` is logged so you can inspect the conflict.
-The **Mods** menu also shows a **Conflicts** section for the selected mod, listing
-which resources it overrides and which mods override its resources.
+Overrides are also recorded in `ModConflictRegistry` (resource type, winning and overridden
+mod id, whether arrays were concatenated); the registry is queryable from code and tests,
+but the current Mods & Collections screen does not render a conflicts list.
 
 ## Version validation
 
@@ -138,15 +140,16 @@ On load, the game validates all dependency versions:
 
 ## UI overview
 
-The **Mods** menu shows:
+The **Mods** tab of the Mods & Collections screen shows one card per discovered mod:
 
-- **Order number** — position in the load order (leftmost column)
-- **Mod name, version, thumbnail**
-- **Enable/disable toggle** — disable cascades to dependents
-- **▲▼ buttons** — move mod up/down in load order
-- **State** — button is greyed out when movement is blocked by dependency constraints
-- **Status** — shows all reasons a mod is disabled (version mismatch, missing dependency)
-- **Conflicts** — list of resources overridden by or overridden in this mod
+- **Mod name, author, version, category and description**
+- **Enable/disable toggle** — disable cascades to dependents; enabling re-enables the dependencies it needs
+- **Status** — installed / update available / not installed / modified locally when a catalog entry exists
+- **Delete** — offered only for mods whose files live in a writable mods root (`user://mods`);
+  takes effect after a restart, like every other mod-set change
+
+Mods are displayed in the computed load order (dependencies first). There is currently
+no UI to reorder mods manually — see Layer 2 above.
 
 ## Storage
 

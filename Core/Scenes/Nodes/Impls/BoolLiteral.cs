@@ -14,8 +14,11 @@ namespace Cthangover.Core.Scenes.Nodes.Impls
         /// <summary>The constant boolean value: <c>true</c> or <c>false</c>.</summary>
         public bool Value;
 
+        /// <summary>Creates a constant node from the parsed keyword.</summary>
+        /// <param name="value">Constant result of the condition.</param>
         public BoolLiteral(bool value) => Value = value;
 
+        /// <summary>Returns the constant regardless of context.</summary>
         public override bool Evaluate(EvaluationContext ctx) => Value;
     }
 }
