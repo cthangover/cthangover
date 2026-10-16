@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Cthangover.Core.Settings;
 using Cthangover.Core.UI;
+using Cthangover.Core.Utils;
 using Godot;
 
 namespace Cthangover.Core.Characters
@@ -38,24 +39,15 @@ namespace Cthangover.Core.Characters
 		public IDictionary<string, CharacterInfoData> Characters { get; set; } = new Dictionary<string, CharacterInfoData>();
 		
 		/// <summary>
-		/// Looks up the character template from <see cref="CharacterTemplateRegistry"/>
-		/// by ID and creates a runtime <see cref="CharacterInfoData"/> from it.
-		/// Delegates to the two-parameter overload with the resolved template.
-		/// </summary>
-		/// <param name="characterType">Character ID string (e.g. "Marao").</param>
-		/// <returns>A new <see cref="CharacterInfoData"/> instance with stats and level from the template.</returns>
-		public CharacterInfoData Create(string characterType)
-		{
-			var card = CharacterTemplateRegistry.Get(characterType);
-			return Create(characterType, card);
-		}
-		
-		/// <summary>
 		/// Creates a runtime <see cref="CharacterInfoData"/> from a
-		/// character template. If the template is <c>null</c> (unknown
-		/// character ID), returns a minimal fallback with default
-		/// attributes at level 0 — this prevents null-reference errors in
-		/// scenario scripts that reference non-existent character IDs.
+		/// character template. If the template is <c>null</c> — which happens
+		/// before the characters mod publishes its provider (tests, tools,
+		/// very early boot) — returns a minimal fallback with default
+		/// attributes so pure-data code paths never see a null card.
+		/// Gameplay entry points must not rely on this branch:
+		/// <see cref="AddCharacterToParty"/> refuses unknown IDs before
+		/// reaching here, so a typo in scenario content can no longer put a
+		/// Level-0 placeholder card into the persistent roster.
 		/// </summary>
 		/// <param name="characterType">Character ID string.</param>
 		/// <param name="card">Character template from factory, may be null.</param>
@@ -86,17 +78,41 @@ namespace Cthangover.Core.Characters
 		
 		/// <summary>
 		/// Adds a character to the party roster and active battle set.
-		/// Calls <see cref="Create(string)"/> to build the runtime data
-		/// from the factory template, inserts it into
-		/// <see cref="Characters"/>, and adds the ID to
-		/// <see cref="BattleSet"/>. Unknown character IDs create a minimal
-		/// fallback entry rather than throwing.
+		/// Resolves the template through <see cref="CharacterTemplateRegistry"/>,
+		/// builds the runtime card via <see cref="Create(string, Character)"/>,
+		/// inserts it into <see cref="Characters"/>, and adds the ID to
+		/// <see cref="BattleSet"/>.
+		/// <para/>
+		/// Unknown character IDs are refused instead of silently creating a
+		/// zero-stat placeholder: such a card would persist through saves and
+		/// surface much later as a broken party member that is hard to trace
+		/// back to the scenario command or mod data that named it. The refusal
+		/// is loud (error log naming the ID) and conservative (neither roster
+		/// nor battle set changes), which keeps the BattleSet ⊆ Characters
+		/// invariant intact — the battle scene reads
+		/// <c>Characters[characterType]</c> directly for every BattleSet entry.
+		/// Content callers (scenario actions, mod initializers) treat a false
+		/// return as "the ID or its declaring mod is wrong"; use
+		/// <see cref="CharacterTemplateRegistry.GetRequired"/> where a missing
+		/// template is an invariant breach instead of a content typo.
 		/// </summary>
 		/// <param name="characterType">Character ID string to recruit.</param>
-		public void AddCharacterToParty(string characterType)
+		/// <returns>True when the character was added; false when the ID has no declared template (party unchanged).</returns>
+		public bool AddCharacterToParty(string characterType)
 		{
-			Characters[characterType] = Create(characterType);
+			var card = CharacterTemplateRegistry.Get(characterType);
+			if (card == null)
+			{
+				GameLogger.Log("GAME",
+					$"AddCharacterToParty: unknown character id '{characterType}' — party unchanged. " +
+					"Declare the character (Id field in characters JSON) in a loaded mod or fix the reference.",
+					LogLevel.Error);
+				return false;
+			}
+
+			Characters[characterType] = Create(characterType, card);
 			BattleSet.Add(characterType);
+			return true;
 		}
 
 		/// <summary>

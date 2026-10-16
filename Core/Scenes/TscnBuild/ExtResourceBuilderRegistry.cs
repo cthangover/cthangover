@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using Cthangover.Core.Bootstrap;
 using Cthangover.Core.Utils;
@@ -86,6 +87,10 @@ namespace Cthangover.Core.Scenes.TscnBuild
         public static IExtResourceBuilder Get(string type)
             => Owned.GetBuilder(type);
 
+        /// <summary>Unload pass: drops builders contributed by the given assembly. Delegates to the shared instance.</summary>
+        public static void UnregisterAssembly(Assembly assembly)
+            => Owned.RemoveFromAssembly(assembly);
+
         // ---- Instance implementation --------------------------------------
 
         private void AddFromAssembly(Assembly assembly)
@@ -94,6 +99,19 @@ namespace Cthangover.Core.Scenes.TscnBuild
             foreach (var b in Reflections.FindAndCreate<IExtResourceBuilder>(assembly))
                 if (!_builders.ContainsKey(b.ResourceType))
                     _builders[b.ResourceType] = b;
+        }
+
+        /// <summary>
+        /// Removes builders whose concrete type comes from the given assembly —
+        /// the unload pass of the assembly consumer pipeline. Built-in builders
+        /// survive; a slot left empty falls back to a full rebuild on next use.
+        /// </summary>
+        public void RemoveFromAssembly(Assembly assembly)
+        {
+            if (_builders == null)
+                return;
+            foreach (var key in _builders.Where(kvp => kvp.Value.GetType().Assembly == assembly).Select(kvp => kvp.Key).ToList())
+                _builders.Remove(key);
         }
 
         private IExtResourceBuilder GetBuilder(string type)

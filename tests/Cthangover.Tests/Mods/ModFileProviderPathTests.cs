@@ -69,6 +69,36 @@ namespace Engine.Tests.Mods
             Assert.Equal(MainContent, zip.ReadFileText(path));
         }
 
+        [Theory]
+        [InlineData("Dir/main.txt")]
+        [InlineData("dir/Main.txt")]
+        [InlineData("DIR/MAIN.TXT")]
+        public void FolderAndZip_WrongCase_IsMissOnEveryOs(string path)
+        {
+            using var folder = CreateFolderProvider();
+            using var zip = CreateZipProvider();
+
+            Assert.False(folder.FileExists(path));
+            Assert.False(zip.FileExists(path));
+            Assert.Null(folder.ReadFileText(path));
+            Assert.Null(zip.ReadFileText(path));
+            Assert.Null(folder.ReadFileBinary(path));
+            Assert.Null(zip.ReadFileBinary(path));
+            Assert.Null(folder.OpenStream(path));
+            Assert.Null(zip.OpenStream(path));
+            Assert.Null(folder.GetFileSystemPath(path));
+        }
+
+        [Fact]
+        public void FolderAndZip_ListFiles_WrongCaseDirectory_IsEmpty()
+        {
+            using var folder = CreateFolderProvider();
+            using var zip = CreateZipProvider();
+
+            Assert.Empty(folder.ListFiles("Dir"));
+            Assert.Empty(zip.ListFiles("Dir"));
+        }
+
         [Fact]
         public void FolderAndZip_EscapeAttempt_StaysInsideMod()
         {

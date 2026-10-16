@@ -1,0 +1,10 @@
+{
+  "id": "inventory_test",
+  "name": "Inventory Test",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Integration test mod: drives the inventory GUI end-to-end (open panel, seed items via public API, verify grid, click a cell, search filter, close) and reports [TEST_RESULT]. Activated by --itest=inventory user arg.",
+  "category": "other",
+  "depends": ["visual_novel_core>=1", "items_base>=1"],
+  "sources": ["src/*.cs"]
+}

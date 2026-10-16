@@ -39,6 +39,11 @@ namespace Cthangover.Core.Relationship
         /// card is created from the character template (attributes, portrait and
         /// default action slots); the card is then immediately synchronized with
         /// the recruit's own health. Repeated calls are idempotent.
+        /// <para/>
+        /// The template is resolved by <c>CharacterData.AddCharacterToParty</c>,
+        /// which refuses unknown IDs; a refusal aborts the join so the battle
+        /// set never references a card that the roster does not have (the battle
+        /// scene indexes the roster directly for every battle-set entry).
         /// </summary>
         public static void AddToSquad(Recruit recruit)
         {
@@ -46,8 +51,14 @@ namespace Cthangover.Core.Relationship
             if (characterData == null || recruit == null)
                 return;
 
-            if (!characterData.Characters.ContainsKey(recruit.CharacterID))
-                characterData.AddCharacterToParty(recruit.CharacterID);
+            if (!characterData.Characters.ContainsKey(recruit.CharacterID)
+                && !characterData.AddCharacterToParty(recruit.CharacterID))
+            {
+                GameLogger.Log("RECRUIT",
+                    $"AddToSquad: no template for recruit '{recruit.CharacterID}' — join aborted",
+                    LogLevel.Error);
+                return;
+            }
 
             characterData.BattleSet.Add(recruit.CharacterID);
             SyncToCard(recruit);

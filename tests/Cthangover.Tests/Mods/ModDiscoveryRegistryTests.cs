@@ -3,6 +3,17 @@ using Cthangover.Core.Mods.Discovery;
 
 namespace Engine.Tests.Mods
 {
+    /// <summary>
+    /// Resets the process-wide discovery registry through reflection, so it
+    /// must not overlap with test classes that boot the mod registry in
+    /// parallel (they would see emptied scanner/loader lists).
+    /// </summary>
+    [CollectionDefinition("mod-discovery-registry", DisableParallelization = true)]
+    public class ModDiscoveryRegistryCollectionDefinition
+    {
+    }
+
+    [Collection("mod-discovery-registry")]
     public class ModDiscoveryRegistryTests : IDisposable
     {
         public ModDiscoveryRegistryTests()

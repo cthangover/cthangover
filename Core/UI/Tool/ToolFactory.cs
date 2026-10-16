@@ -77,6 +77,17 @@ namespace Cthangover.Core.UI.Tool
         }
 
         /// <summary>
+        /// Removes tools whose concrete type comes from the given assembly —
+        /// the unload pass of the assembly consumer pipeline. Core tools
+        /// survive; a mod reinstall re-registers through the normal fan-out.
+        /// </summary>
+        public void UnregisterAssembly(Assembly assembly)
+        {
+            foreach (var id in _tools.Where(kvp => kvp.Value.GetType().Assembly == assembly).Select(kvp => kvp.Key).ToList())
+                _tools.Remove(id);
+        }
+
+        /// <summary>
         /// Looks up a tool by its <see cref="IToolProvider.Id"/>. Returns <c>null</c> if not found.
         /// </summary>
         public IToolProvider Get(string id)

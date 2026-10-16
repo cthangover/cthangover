@@ -25,6 +25,9 @@ namespace Cthangover.Validator
     /// <item>references collected by <see cref="ICommandReferenceMetadata"/> are added to the
     /// shared graph (backgrounds, scenes, music, sounds, effects, avatars) and checked by
     /// <see cref="ReferenceStrategy"/>; scenario actions are checked against the action registry.</item>
+    /// <item>content references inside action arguments (<see cref="ActionArgumentReferences"/>:
+    /// character ids, skills, quest ids, battle enemy lists) are added to the same graph, so a
+    /// typo is reported against the declaring mods with file and line.</item>
     /// </list>
     /// </summary>
     public class ScenarioCommandValidationStrategy : IValidationStrategy
@@ -186,6 +189,9 @@ namespace Cthangover.Validator
                     else
                         AddReference(context, mod, file, lineNumber, referenceMetadata.Positional0Kind, positional[0]);
                 }
+
+                if (command == "action" && positional.Count > 0)
+                    AddActionArgumentReferences(context, mod, file, lineNumber, positional[0], named);
             }
 
             FinalizeSelect(context, mod, file, ref pendingSelectLine, ref pendingSelectHasOptions);
@@ -383,6 +389,52 @@ namespace Cthangover.Validator
                 return;
 
             context.Graph.AddReference(ValidationKind.Avatar, value, mod.Id, file, line);
+        }
+
+        /// <summary>
+        /// Collects content references hidden in the named arguments of an
+        /// <c>action</c> command. The scenario DSL treats action arguments as
+        /// opaque dialog variables, so without this pass a typo like
+        /// <c>action character.add_to_party type=Murakamiy</c> would only surface
+        /// at runtime as a factory error log. Values from
+        /// <see cref="ActionArgumentReferences"/> become graph references and are
+        /// reconciled by <see cref="ReferenceStrategy"/>, which reports the
+        /// offending scenario file and line. Comma-separated values (e.g.
+        /// battle.init enemies=) produce one reference per entry; values with the
+        /// ${name} marker are computed at play time and cannot be resolved
+        /// statically, so they are skipped instead of misreported.
+        /// </summary>
+        private static void AddActionArgumentReferences(
+            ValidationContext context,
+            IModInfo mod,
+            string file,
+            int line,
+            string actionName,
+            Dictionary<string, string> named)
+        {
+            if (!ActionArgumentReferences.TryGetKinds(actionName, out var kinds))
+                return;
+
+            foreach (var pair in kinds)
+            {
+                if (!named.TryGetValue(pair.Key, out var value) || string.IsNullOrWhiteSpace(value))
+                    continue;
+
+                if (value.Contains("$" + "{"))
+                    continue;
+
+                foreach (var part in value.Split(','))
+                {
+                    var target = part.Trim();
+                    if (target.Length == 0)
+                        continue;
+
+                    if (pair.Value == ValidationKind.Scene && SceneManager.IsNativeSceneName(target))
+                        continue;
+
+                    context.Graph.AddReference(pair.Value, target, mod.Id, file, line);
+                }
+            }
         }
 
         private static void AddReference(ValidationContext context, IModInfo mod, string file, int line, PositionalReferenceKind kind, string target)

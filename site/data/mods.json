@@ -1,20 +1,24 @@
 {
- "generated": "2026-10-07",
+ "generated": "2026-10-14",
  "stats": {
-  "mods": 17,
-  "dslCommands": 29,
-  "coreFiles": 606,
-  "coreLoc": 58511,
-  "modFiles": 274,
-  "modLoc": 37007
+  "mods": 31,
+  "dslCommands": 0,
+  "coreFiles": 412,
+  "coreLoc": 36600,
+  "modFiles": 543,
+  "modLoc": 66607
  },
  "battle": [
   {
    "id": "turn_battle_base",
    "version": "2.0.0",
    "deps": [
+    "characters_base",
     "visual_novel_core",
-    "interface"
+    "interface",
+    "items_base",
+    "quests_base",
+    "time_base"
    ]
   },
   {
@@ -38,6 +42,21 @@
  ],
  "mods": [
   {
+   "id": "audio_base",
+   "name": "Audio Engine",
+   "version": "1.0.0",
+   "desc": "Engine audio subsystem: IAudioService implementation (Music/SFX/Ambient buses), the auto-advancing music player and the audio factories (music, sounds, playlists). Replaces the former Core/Audio autoloads — the AudioModInitializer adds nodes named AudioService and MusicPlayer to the scene tree root on the boot Scenes phase, so /root/AudioService keeps resolving.",
+   "cat": [
+    "engine",
+    "library"
+   ],
+   "deps": [
+    "base2d",
+    "interface"
+   ],
+   "test": false
+  },
+  {
    "id": "base2d",
    "name": "2D Platform",
    "version": "1.0.0",
@@ -46,14 +65,30 @@
     "engine",
     "library"
    ],
-   "deps": [],
+   "deps": [
+    "time_base",
+    "interface"
+   ],
+   "test": false
+  },
+  {
+   "id": "base_menu",
+   "name": "Base Menu",
+   "version": "1.0.0",
+   "desc": "Registry-driven main menu: built-in buttons, settings and save/load panels moved out of the core.",
+   "cat": [
+    "ui"
+   ],
+   "deps": [
+    "interface"
+   ],
    "test": false
   },
   {
    "id": "card_battle",
    "name": "CardBattle",
    "version": "1.0.0",
-   "desc": "Card battle mechanics",
+   "desc": "Card battle implementation on top of turn_battle_base: an action-card hand with attack/defence values, character cards, battle HUD, log and banners, end-turn flow and its own battle sounds.",
    "cat": [
     "gameplay"
    ],
@@ -65,24 +100,72 @@
    "test": false
   },
   {
+   "id": "characters_base",
+   "name": "Characters Engine",
+   "version": "1.0.0",
+   "desc": "Engine characters subsystem: the character and action-card factories (entity kinds 'character' and 'action'), the avatar factory and the character panel UI. Replaces the former Core/Characters factories and Core/UI/CharacterPanel — the CharactersModInitializer publishes kernel contracts (ICharacterTemplateProvider, IActionTemplateProvider, IAvatarProvider) so core code resolves templates without referencing this assembly.",
+   "cat": [
+    "engine",
+    "library"
+   ],
+   "deps": [
+    "base2d",
+    "interface"
+   ],
+   "test": false
+  },
+  {
    "id": "cooking",
    "name": "Cooking",
    "version": "1.0.0",
-   "desc": "Cooking mechanic - full autonomous mod",
+   "desc": "Autonomous cooking mechanic: the kitchen workbench overlay in home_kitchen with recipe-based cooking (e.g. wolf meat into rations), a ration statistics panel and the home_kitchen_cooking scenario.",
    "cat": [
     "gameplay"
    ],
    "deps": [
     "visual_novel_core",
+    "interface",
+    "items_base",
+    "time_base"
+   ],
+   "test": false
+  },
+  {
+   "id": "dialog_base",
+   "name": "Dialog Engine",
+   "version": "1.0.0",
+   "desc": "Engine dialog subsystem: DialogBox/DialogCanvas/AnswerBox UI, the dialog queue runtime with the full DSL action set, the .scenario parser with command strategies, the executable event chains and the /root/DialogRunner for interactive dialogs. Replaces the former Core/UI/Dialog, Core/UI/Executable and Core/Scenarios implementations — SceneManager and SaveService keep driving chains and events through the core contracts (IDialogBox, IExecutableEvent, IExecutableEventChain, IScenarioEventFactory).",
+   "cat": [
+    "engine",
+    "library"
+   ],
+   "deps": [
+    "base2d",
+    "interactive_base",
+    "effects_base",
+    "time_base",
+    "map_base",
     "interface"
    ],
+   "test": false
+  },
+  {
+   "id": "effects_base",
+   "name": "Effects Engine",
+   "version": "1.0.0",
+   "desc": "Engine effects subsystem: PackedScene visual effect factory (folder mods only) and the frame/animated effect controllers. Replaces the former Core/UI/Animation implementations and Core/Factories/Impls/EffectFactory.",
+   "cat": [
+    "engine",
+    "library"
+   ],
+   "deps": [],
    "test": false
   },
   {
    "id": "ff_battle",
    "name": "FFBattle",
    "version": "1.0.0",
-   "desc": "Final Fantasy style battle system",
+   "desc": "Final Fantasy style battle system on top of turn_battle_base: menu-driven commands (attack/defence/item/stun), enemy and party panels, per-action animations and executors, battle HUD and log.",
    "cat": [
     "gameplay"
    ],
@@ -107,15 +190,56 @@
    "test": true
   },
   {
+   "id": "interactive_base",
+   "name": "Interactive Base",
+   "version": "1.0.0",
+   "desc": "Interactive objects subsystem: JSON-driven scene interactives (hover/click hit areas, highlight effects) with DSL/scenario click actions. Owns InteractiveManager, the interactive definition resolver/factory and the InteractiveEditor data plane.",
+   "cat": [
+    "engine",
+    "library"
+   ],
+   "deps": [
+    "base2d",
+    "interface"
+   ],
+   "test": false
+  },
+  {
    "id": "interface",
    "name": "Interface",
    "version": "1.0.0",
-   "desc": "Game interface",
+   "desc": "Engine UI subsystem: widget toolkit (Widget/ModWidget/lists), ViewBox background viewport, ToolBox toolbar, GameMenu/SaveIcon, notification panels, UiKit design system, DeviceInput. Kernel keeps only contracts (IWidget, IDialogBox, IToolbarHost, ISaveIconHost, IBackgroundView, IUiLazyConstruct, MenuRegistry, ToolFactory, NotificationBuffer, SceneEventController, CthangoverTheme/UiTokens boot styling) and drives this mod through those seams.",
    "cat": [
     "ui"
    ],
+   "deps": [],
+   "test": false
+  },
+  {
+   "id": "inventory_test",
+   "name": "Inventory Test",
+   "version": "1.0.0",
+   "desc": "Integration test mod: drives the inventory GUI end-to-end (open panel, seed items via public API, verify grid, click a cell, search filter, close) and reports [TEST_RESULT]. Activated by --itest=inventory user arg.",
+   "cat": [
+    "other"
+   ],
    "deps": [
-    "visual_novel_core"
+    "visual_novel_core",
+    "items_base"
+   ],
+   "test": false
+  },
+  {
+   "id": "items_base",
+   "name": "Items Base",
+   "version": "1.0.0",
+   "desc": "Item definitions and factories, inventory and recipe state, inventory UI and their save state",
+   "cat": [
+    "gameplay"
+   ],
+   "deps": [
+    "base2d",
+    "interface"
    ],
    "test": false
   },
@@ -129,24 +253,40 @@
     "visual"
    ],
    "deps": [
-    "visual_novel_core"
+    "visual_novel_core",
+    "interface"
    ],
    "test": false
   },
   {
    "id": "live2d_test",
-   "name": "Live2D Cubism",
+   "name": "Live2D Test",
    "version": "1.0.0",
-   "desc": "Live2D Cubism C# runtime: model loading, rendering, physics, animation, effects",
+   "desc": "Test and demo mod for the live2d runtime: the sample Ren model (expressions, motions) shown by the home_outside overlay scene plus an avatar test driver. Requires live2d>=1.",
    "cat": [
     "visual",
     "other"
    ],
    "deps": [
     "visual_novel_core",
-    "live2d"
+    "live2d",
+    "interface"
    ],
    "test": true
+  },
+  {
+   "id": "map_base",
+   "name": "World Map Engine",
+   "version": "1.0.0",
+   "desc": "Engine world map subsystem: the full-screen map overlay (MapWidget), polygon zones layer, markers, the zone list + runtime override singleton, the scenario-facing map service facade with the open/close/show/hide scenario actions, and the shared zone style and enterability rules. Replaces the former Core/UI/Tool Map* implementations and Core/Actions/MapZoneServiceImpl. The save-format DTO MapZoneStateData stays in the core because RuntimeSerializer owns the __core__ slot layout; the mod plugs into it through MapStateBridge.",
+   "cat": [
+    "engine",
+    "library"
+   ],
+   "deps": [
+    "interface"
+   ],
+   "test": false
   },
   {
    "id": "mod_manager",
@@ -158,7 +298,8 @@
     "ui"
    ],
    "deps": [
-    "visual_novel_core"
+    "visual_novel_core",
+    "interface"
    ],
    "test": false
   },
@@ -166,7 +307,7 @@
    "id": "murakami",
    "name": "Murakami",
    "version": "1.0.0",
-   "desc": "Murakami line",
+   "desc": "Story line about Murakami: a wild wolf prowling the town, the meeting scenario chain (start, wolf battle, werewolf boss, escort home), the Murakami character with her avatar set and the meeting quest.",
    "cat": [
     "story",
     "characters"
@@ -178,15 +319,61 @@
    "test": false
   },
   {
+   "id": "quests_base",
+   "name": "Quests Engine",
+   "version": "1.0.0",
+   "desc": "Engine quests subsystem: the quest factory and runtime state (QuestFactory, QuestBase/QuestData), the IQuestService implementation, quest scenario actions, quest scene conditions with the QuestParser leaf parser and the quest journal UI. Replaces the former Core/Quests state, Core/Actions quest services and actions, Core/Scenes quest conditions and Core/UI/Quests - QuestsModInitializer publishes the kernel contract (IQuestService via QuestServiceRegistry), registers the quest leaf parser and the new-game resettable; QuestsSaveable persists quest state through the generic mod save slot.",
+   "cat": [
+    "engine",
+    "library"
+   ],
+   "deps": [
+    "characters_base",
+    "interface"
+   ],
+   "test": false
+  },
+  {
    "id": "recruiting",
    "name": "Recruiting",
    "version": "1.1.0",
-   "desc": "Recruitment roster, conditions, behaviours and their save state",
+   "desc": "Recruitment of defeated characters: the roster panel, join conditions (e.g. enslaving a defeated enemy), per-recruit behaviours such as nutrition, the party bridge, tick updates and save state.",
    "cat": [
     "gameplay"
    ],
    "deps": [
-    "base2d"
+    "base2d",
+    "characters_base",
+    "interface"
+   ],
+   "test": false
+  },
+  {
+   "id": "skills_base",
+   "name": "Skills Engine",
+   "version": "1.0.0",
+   "desc": "Engine skills subsystem: card-based skill definitions, the grant service (skill + granted action pairing), the skills panel UI and the collection effect plate. Replaces the former Core/Skills implementations and Core/Factories/Impls/SkillFactory.",
+   "cat": [
+    "engine",
+    "library"
+   ],
+   "deps": [
+    "interface"
+   ],
+   "test": false
+  },
+  {
+   "id": "starter_party",
+   "name": "Starter Party",
+   "version": "1.0.0",
+   "desc": "Seeds the default starter party (Marao) and the slave_master skill after mod resources are ready, and restores it on NewGameStartedEvent. Split out of visual_novel_core so the base content mod stays pure content (scenes/dialogs/quests/data) with no C# gameplay logic.",
+   "cat": [
+    "engine",
+    "library"
+   ],
+   "deps": [
+    "visual_novel_core",
+    "skills_base"
    ],
    "test": false
   },
@@ -218,16 +405,49 @@
    "test": true
   },
   {
+   "id": "test_runner",
+   "name": "Test Runner",
+   "version": "1.0.0",
+   "desc": "Test harness mod: ports the integration DialogAutoDriver into an engine mod. Activated by --choices=/--timeout= user args; auto-plays the active dialog, prints [TEST_RESULT] and quits. Depends on visual_novel_core and dialog_base.",
+   "cat": [
+    "other"
+   ],
+   "deps": [
+    "visual_novel_core",
+    "dialog_base"
+   ],
+   "test": true
+  },
+  {
+   "id": "time_base",
+   "name": "Time Engine",
+   "version": "1.0.0",
+   "desc": "Engine time subsystem: the in-game clock tick controller bridging SceneEventController timer pulses to RuntimeData.Time, the clock HUD widget, the 2D lighting stack (UiLightController, LampBehaviour, LightDef) installed into the kernel through LightingBridge, and the lighting.clear_map scenario action. Replaces the former Core/Settings/TimeTickController, Core/UI/Lights, Core/UI/Tool/TimeController and Core/Actions/LightingServiceImpl.",
+   "cat": [
+    "engine",
+    "library"
+   ],
+   "deps": [
+    "interface"
+   ],
+   "test": false
+  },
+  {
    "id": "tools",
    "name": "Tools",
    "version": "1.0.0",
-   "desc": "Development tools",
+   "desc": "Developer toolbox of ToolBox windows: scenario graph editor, map editor with zones, scene builder with inspector, interactive and light editors, and the mod catalog export window.",
    "cat": [
     "tools",
     "editor"
    ],
    "deps": [
-    "visual_novel_core"
+    "visual_novel_core",
+    "dialog_base",
+    "interactive_base",
+    "time_base",
+    "map_base",
+    "interface"
    ],
    "test": false
   },
@@ -241,8 +461,12 @@
     "gameplay"
    ],
    "deps": [
+    "characters_base",
     "visual_novel_core",
-    "interface"
+    "interface",
+    "items_base",
+    "quests_base",
+    "time_base"
    ],
    "test": false
   },
@@ -250,11 +474,14 @@
    "id": "validator",
    "name": "Validator",
    "version": "0.1.0",
-   "desc": "Static validation of mod entities and properties",
+   "desc": "Static validation of mods without running the game: manifest schema, entity strategies (characters, items, quests, skills, recipes, actions), cross references, depends, scenario commands and scene patches, with an optional text report.",
    "cat": [
     "debug"
    ],
-   "deps": [],
+   "deps": [
+    "dialog_base",
+    "interactive_base"
+   ],
    "test": false
   },
   {
@@ -267,7 +494,12 @@
     "story"
    ],
    "deps": [
-    "base2d"
+    "base2d",
+    "dialog_base",
+    "interactive_base",
+    "skills_base",
+    "map_base",
+    "interface"
    ],
    "test": false
   }

@@ -23,18 +23,20 @@ namespace Cthangover.Core.Quests
     /// decoupled from any directory layout — new mods register quests simply
     /// by shipping a JSON file whose envelope declares the quest kind.
     /// <para/>
-    /// The single instance is owned by the <see cref="AppServices"/>
-    /// composition root; the static facade stays as the public API during
-    /// migration, with laziness preserved by the owning <c>Lazy</c> slot.
+    /// The single instance is process-wide and deliberately not owned by
+    /// <see cref="AppServices"/>: quest state is identity-sensitive across the
+    /// whole process (save/restore, scenario conditions), and a swappable owner
+    /// would break parallel test runs. The new-game reset is wired through the
+    /// AppServices resettable adapter registered by QuestsModInitializer
+    /// (see <see cref="ResetAll"/>).
     /// </summary>
     public class QuestFactory
     {
 
         /// <summary>
-        /// Facade over the AppServices-owned instance; kept as the public API
-        /// during migration. The owning <c>Lazy</c> slot still constructs the
-        /// factory on first access, avoiding order‑dependent initialisation
-        /// races with other subsystems.
+        /// Owns the process-wide instance; laziness defers construction to the
+        /// first access, avoiding order-dependent initialisation races with
+        /// other subsystems.
         /// </summary>
         private static Lazy<QuestFactory> instance = new(() => new QuestFactory());
 

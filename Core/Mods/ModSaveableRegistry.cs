@@ -53,6 +53,18 @@ namespace Cthangover.Core.Mods
         }
 
         /// <summary>
+        /// Removes every saveable registered for <paramref name="modId"/> from
+        /// the given assembly — the unload pass of the assembly consumer
+        /// pipeline. Matching by both mod id and declaring assembly keeps the
+        /// removal exact even when a mod ships multiple assemblies or another
+        /// mod overrode the same saveable contract.
+        /// </summary>
+        public static void UnregisterAssembly(Assembly assembly, string modId)
+        {
+            _saveables.RemoveAll(e => e.ModId == modId && e.Instance.GetType().Assembly == assembly);
+        }
+
+        /// <summary>
         /// Collects save data from all registered mods. For each one,
         /// creates a <see cref="ModSlot"/> with
         /// <c>Metadata.ModId</c>, <c>Metadata.ModName</c>, and

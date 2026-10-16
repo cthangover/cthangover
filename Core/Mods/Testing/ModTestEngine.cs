@@ -32,6 +32,9 @@ namespace Cthangover.Core.Mods.Testing
     {
         private static readonly ModTestLedger ledger = new();
 
+        /// <summary>Roslyn errors of the last failed test compilation per mod, carried into the report's &lt;compile&gt; entry.</summary>
+        private static readonly Dictionary<string, string> lastCompileErrors = new(StringComparer.OrdinalIgnoreCase);
+
         /// <summary>Results accumulated by the last (or current) run; kept for Report Viewer / diagnostics.</summary>
         public static ModTestLedger Ledger => ledger;
 
@@ -82,6 +85,9 @@ namespace Cthangover.Core.Mods.Testing
                 return null;
 
             var sources = new List<(string FilePath, string Source)>();
+            // Absolute on-disk path per source (same rule as production
+            // mods): debuggers map breakpoints and stacks show the real file.
+            var treePaths = new List<string>();
             foreach (var pattern in patterns)
             {
                 var prefix = pattern;
@@ -109,6 +115,7 @@ namespace Cthangover.Core.Mods.Testing
                             ? $"{mod.Id}/{file}"
                             : $"{mod.Id}/tests/{file}";
                         sources.Add((reportPath, mod.FileProvider.ReadFileText(file)));
+                        treePaths.Add(Compilation.ModReferenceProvider.ResolveSourcePath(mod.Id, file));
                     }
                 }
             }
@@ -122,15 +129,21 @@ namespace Cthangover.Core.Mods.Testing
             var testRoot = Path.Combine(Path.GetDirectoryName(productionRoot) ?? productionRoot, "test_assemblies");
             Directory.CreateDirectory(testRoot);
             var coreSignature = typeof(ModTestEngine).Assembly.ManifestModule.ModuleVersionId.ToString("N");
-            var hash = ModHasher.ComputeHash(sources, "tests;core=" + coreSignature);
+            // The production assemblies the tests link against are part of the
+            // key: a changed mod API must recompile the tests (a compile error
+            // with file:line) instead of reusing a stale DLL that fails at run
+            // time with MissingMethodException.
+            var hash = ModHasher.ComputeHash(sources, "tests;pdb=named;paths=abs;core=" + coreSignature + ";prod=" + ProductionSignature(mod));
             var cachedPath = Path.Combine(testRoot, $"{mod.Id}__tests_{hash}.dll");
 
-            if (File.Exists(cachedPath))
-                return ModAssemblyLoader.LoadFromBytes(File.ReadAllBytes(cachedPath));
+            // Missing PDB = pre-§9.2 cache entry: recompile once to gain symbols.
+            if (File.Exists(cachedPath) && File.Exists(Path.ChangeExtension(cachedPath, ".pdb")))
+                return ModAssemblyLoader.LoadTestAssembly(cachedPath, mod.Id);
 
+            // Encoding is mandatory for PDB emission (see ModCompiler.Compile).
             var syntaxTrees = sources
-                .Select(s => Microsoft.CodeAnalysis.CSharp.CSharpSyntaxTree.ParseText(
-                    s.Source, path: s.FilePath, cancellationToken: cancellationToken))
+                .Select((s, i) => Microsoft.CodeAnalysis.CSharp.CSharpSyntaxTree.ParseText(
+                    s.Source, path: treePaths[i], encoding: System.Text.Encoding.UTF8, cancellationToken: cancellationToken))
                 .ToList();
 
             var references = new List<Microsoft.CodeAnalysis.MetadataReference>();
@@ -156,24 +169,66 @@ namespace Cthangover.Core.Mods.Testing
                     .WithOptimizationLevel(Microsoft.CodeAnalysis.OptimizationLevel.Debug));
 
             using var ms = new MemoryStream();
-            var result = compilation.Emit(ms);
+            // Portable PDB next to the test DLL: file-backed load + adjacent
+            // symbols give the debugger line-level breakpoints inside mod test
+            // code (plan-mod-testing.md §9.2).
+            using var pdb = new MemoryStream();
+            // Name the cache-file PDB in the debug directory (see ModCompiler.Compile).
+            var result = compilation.Emit(ms, pdb, options: new Microsoft.CodeAnalysis.Emit.EmitOptions(
+                debugInformationFormat: Microsoft.CodeAnalysis.Emit.DebugInformationFormat.PortablePdb,
+                pdbFilePath: Path.ChangeExtension(cachedPath, ".pdb")));
             if (!result.Success)
             {
                 var errors = result.Diagnostics
                     .Where(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error)
                     .Take(20)
-                    .Select(d => $"{d.Location}: {d.GetMessage()}")
+                    .Select(ModCompiler.FormatDiagnostic)
                     .ToList();
                 GameLogger.CompilationErrors.Add($"Test assembly '{mod.Id}__tests' failed with {errors.Count} error(s):\n  " + string.Join("\n  ", errors));
                 GameLogger.Log("MODTEST", $"ModTestEngine: test compilation of '{mod.Id}' FAILED with {errors.Count} error(s)", LogLevel.Error);
                 foreach (var e in errors)
                     GameLogger.Log("MODTEST", $"  {e}", LogLevel.Warning);
+                lastCompileErrors[mod.Id] = string.Join("\n", errors);
                 return null;
             }
 
             File.WriteAllBytes(cachedPath, ms.ToArray());
+            var cachedPdbPath = Path.ChangeExtension(cachedPath, ".pdb");
+            pdb.Seek(0, SeekOrigin.Begin);
+            File.WriteAllBytes(cachedPdbPath, pdb.ToArray());
             GameLogger.Log("MODTEST", $"ModTestEngine: compiled test assembly '{mod.Id}__tests' ({sources.Count} files) -> {cachedPath}");
-            return ModAssemblyLoader.LoadFromBytes(ms.ToArray());
+            return ModAssemblyLoader.LoadTestAssembly(cachedPath, mod.Id);
+        }
+
+        /// <summary>
+        /// Identity of the production assemblies a mod's tests compile
+        /// against: module version ids of the mod's own assembly and of its
+        /// transitive dependencies, as currently loaded. A recompiled mod gets
+        /// a new MVID, so its tests recompile too; a cache hit keeps the MVID.
+        /// Mods without code contribute nothing.
+        /// </summary>
+        private static string ProductionSignature(ModInfo mod)
+        {
+            var ids = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
+            var pending = new Stack<string>();
+            pending.Push(mod.Id);
+            while (pending.Count > 0)
+            {
+                var id = pending.Pop();
+                if (!ids.Add(id))
+                    continue;
+                if (ModManager.Instance.GetMod(id) is ModInfo info && info.Manifest?.DependencyIds != null)
+                    foreach (var dep in info.Manifest.DependencyIds)
+                        pending.Push(dep);
+            }
+
+            var loaded = AppDomain.CurrentDomain.GetAssemblies()
+                .Where(a => !a.IsDynamic)
+                .GroupBy(a => a.GetName().Name, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(g => g.Key, g => g.Last(), StringComparer.OrdinalIgnoreCase);
+            return string.Join(";", ids
+                .Where(loaded.ContainsKey)
+                .Select(id => id + "=" + loaded[id].ManifestModule.ModuleVersionId.ToString("N")));
         }
 
         /// <summary>
@@ -204,31 +259,55 @@ namespace Cthangover.Core.Mods.Testing
 
             if (eligible.Count == 0)
             {
-                GameLogger.Log("MODTEST", $"ModTestEngine: no mods with test_sources matched (filter={modFilter ?? "none"})");
+                // An explicit --mod= that matches nothing is a mistake (typo,
+                // mod disabled, test_sources missing), not a green run.
+                if (modFilter != null)
+                {
+                    GameLogger.Log("MODTEST", $"ModTestEngine: --mod={modFilter} matched no enabled mod with test_sources (excluded: {(excluded.Count == 0 ? "none" : string.Join(", ", excluded))})", LogLevel.Error);
+                    GameLogger.Log("MODTEST", $"[TEST_RESULT] name=mod_units passed=0 failed=1");
+                    return false;
+                }
+                GameLogger.Log("MODTEST", "ModTestEngine: no mods with test_sources found");
                 return true;
             }
 
             GameLogger.Log("MODTEST", $"ModTestEngine: running mod tests, mode=author, mods: {string.Join(", ", eligible.Select(m => m.Id))}");
 
-            var summaries = new List<ModTestSuiteSummary>();
-            foreach (var mod in eligible)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                Assembly testAssembly = null;
-                try
-                {
-                    testAssembly = CompileTestAssembly(mod, cancellationToken);
-                }
-                catch (Exception ex)
-                {
-                    GameLogger.Log("MODTEST", $"compile of '{mod.Id}__tests' threw: {ex.Message}", LogLevel.Error);
-                }
+            await ModTestRunner.CaptureRootBaselineAsync();
 
-                var summary = await ModTestRunner.RunSuiteAsync(mod.Id, testAssembly, ledger, cancellationToken);
-                summaries.Add(summary);
+            var summaries = new List<ModTestSuiteSummary>();
+            var aborted = false;
+            try
+            {
+                foreach (var mod in eligible)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    Assembly testAssembly = null;
+                    lastCompileErrors.Remove(mod.Id);
+                    try
+                    {
+                        testAssembly = CompileTestAssembly(mod, cancellationToken);
+                    }
+                    catch (Exception ex)
+                    {
+                        GameLogger.Log("MODTEST", $"compile of '{mod.Id}__tests' threw: {ex.Message}", LogLevel.Error);
+                    }
+
+                    lastCompileErrors.TryGetValue(mod.Id, out var compileErrors);
+                    var summary = await ModTestRunner.RunSuiteAsync(mod.Id, testAssembly, ledger, cancellationToken, compileErrors);
+                    summaries.Add(summary);
+                }
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                // Keep what already ran: a partial report is the debugging
+                // material for why the run was aborted.
+                aborted = true;
+                GameLogger.Log("MODTEST", $"ModTestEngine: run aborted after {summaries.Count}/{eligible.Count} suite(s); writing partial report", LogLevel.Error);
             }
 
-            return ModTestReportWriter.Write(summaries, "author");
+            var success = ModTestReportWriter.Write(summaries, "author");
+            return success && !aborted;
         }
     }
 }

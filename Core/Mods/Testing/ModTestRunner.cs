@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Cthangover.Core.Bootstrap;
@@ -24,6 +25,29 @@ namespace Cthangover.Core.Mods.Testing
     public static class ModTestRunner
     {
         /// <summary>
+        /// Children of <c>/root</c> that existed before the first test (core
+        /// autoloads, mod-added services, the launcher scene), by instance id.
+        /// Recovery frees only nodes outside this set and reports a baseline
+        /// node a test destroyed. Null until <see cref="CaptureRootBaselineAsync"/> ran.
+        /// </summary>
+        private static Dictionary<ulong, string> rootBaseline;
+
+        /// <summary>
+        /// Records the <c>/root</c> children as the recovery baseline. Waits
+        /// one frame first so nodes the boot added through
+        /// <c>call_deferred("add_child")</c> are already in the tree. Must run
+        /// once before the first suite.
+        /// </summary>
+        public static async Task CaptureRootBaselineAsync()
+        {
+            if (Engine.GetMainLoop() is not SceneTree tree || tree.Root == null)
+                return;
+            await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
+            rootBaseline = tree.Root.GetChildren().ToDictionary(n => n.GetInstanceId(), n => n.Name.ToString());
+            GameLogger.Log("MODTEST", $"recovery baseline: /root children = {string.Join(", ", rootBaseline.Values)}", LogLevel.Debug);
+        }
+
+        /// <summary>
         /// Runs one mod's tests in-process. Returns the suite summary; also
         /// records every entry into <paramref name="ledger"/>.
         /// </summary>
@@ -31,7 +55,8 @@ namespace Cthangover.Core.Mods.Testing
             string modId,
             Assembly testAssembly,
             ModTestLedger ledger,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken,
+            string compileErrors = null)
         {
             var summary = new ModTestSuiteSummary { ModId = modId };
             var mod = ModManager.Instance.GetMod(modId);
@@ -49,7 +74,9 @@ namespace Cthangover.Core.Mods.Testing
                     ModId = modId,
                     TestName = "<compile>",
                     Status = ModTestStatus.Error,
-                    Message = "test assembly could not be compiled/loaded",
+                    Message = string.IsNullOrEmpty(compileErrors)
+                        ? "test assembly could not be compiled/loaded"
+                        : "test assembly failed to compile:\n" + compileErrors,
                 });
                 ledger.AddSuite(summary);
                 return summary;
@@ -99,7 +126,6 @@ namespace Cthangover.Core.Mods.Testing
                         Message = contamination,
                     };
                     summary.Tests.Add(err);
-                    summary.Errors++;
                     ledger.Add(err);
                 }
             }
@@ -108,6 +134,8 @@ namespace Cthangover.Core.Mods.Testing
             summary.Passed = summary.Tests.Count(t => t.Status == ModTestStatus.Passed);
             summary.Failed = summary.Tests.Count(t => t.Status == ModTestStatus.Failed || t.Status == ModTestStatus.Timeout);
             summary.Skipped = summary.Tests.Count(t => t.Status == ModTestStatus.Skipped);
+            // Recovery contamination and aborted tests are both Error entries.
+            summary.Errors = summary.Tests.Count(t => t.Status == ModTestStatus.Error);
             summary.Status = summary.Errors > 0 ? ModTestStatus.Error
                 : summary.Failed > 0 ? ModTestStatus.Failed
                 : summary.Passed == 0 && summary.Skipped > 0 ? ModTestStatus.Skipped
@@ -137,16 +165,18 @@ namespace Cthangover.Core.Mods.Testing
             try
             {
                 var ctx = new ModTestContext(modId, logBuffer, sandboxDir, sandboxRoot, cts.Token);
-                var parameters = test.Method.GetParameters();
-                object result = parameters.Length == 0
-                    ? test.Method.Invoke(null, null)
-                    : test.Method.Invoke(null, new object[] { ctx });
+                var result = Invoke(test.Method, ctx);
 
                 if (result is Task task)
                 {
                     var completed = await Task.WhenAny(task, Task.Delay(Timeout.Infinite, cts.Token));
                     if (completed != task)
+                    {
+                        // The linked token fires for both the per-test timeout
+                        // and an aborted run; only the former is a TIMEOUT.
+                        cancellationToken.ThrowIfCancellationRequested();
                         throw new TimeoutException($"test exceeded {test.TimeoutSeconds}s timeout");
+                    }
                     await task; // surface aggregate exceptions
                     if (task.IsFaulted)
                         throw task.Exception?.GetBaseException() ?? new Exception("task faulted");
@@ -170,6 +200,11 @@ namespace Cthangover.Core.Mods.Testing
                 entry.Status = ModTestStatus.Timeout;
                 entry.Message = $"test exceeded {test.TimeoutSeconds}s timeout";
             }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                entry.Status = ModTestStatus.Error;
+                entry.Message = "test run aborted (external cancellation) while this test was running";
+            }
             catch (Exception ex)
             {
                 var baseEx = ex is AggregateException agg ? agg.GetBaseException() : ex;
@@ -188,6 +223,27 @@ namespace Cthangover.Core.Mods.Testing
             }
 
             return entry;
+        }
+
+        /// <summary>
+        /// Calls the static test method and rethrows what the test itself
+        /// threw: reflection wraps a synchronous throw in
+        /// <see cref="TargetInvocationException"/>, which would replace the
+        /// assertion message and the test's stack with reflection frames.
+        /// </summary>
+        public static object Invoke(MethodInfo method, ModTestContext ctx)
+        {
+            try
+            {
+                return method.GetParameters().Length == 0
+                    ? method.Invoke(null, null)
+                    : method.Invoke(null, new object[] { ctx });
+            }
+            catch (TargetInvocationException ex) when (ex.InnerException != null)
+            {
+                ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
+                throw; // unreachable
+            }
         }
 
         /// <summary>
@@ -226,24 +282,47 @@ namespace Cthangover.Core.Mods.Testing
             }
         }
 
+        /// <summary>
+        /// Frees the <c>/root</c> children a test added — everything outside
+        /// the baseline. Without a baseline nothing is freed: guessing by name
+        /// would destroy core autoloads and the launcher scene.
+        /// </summary>
         private static void FreeStrayRootNodes()
         {
-            var root = Engine.GetMainLoop() as SceneTree;
-            var known = new HashSet<string>(StringComparer.Ordinal) { "SceneManager", "GameData", "SceneEventController" };
-            if (root?.Root == null)
+            var tree = Engine.GetMainLoop() as SceneTree;
+            if (tree?.Root == null || rootBaseline == null)
                 return;
-            foreach (var child in root.Root.GetChildren().ToList())
+            foreach (var child in tree.Root.GetChildren().ToList())
             {
-                if (child is Node node && !known.Contains(node.Name))
-                    node.QueueFree();
+                if (!rootBaseline.ContainsKey(child.GetInstanceId()))
+                {
+                    GameLogger.Log("MODTEST", $"recovery: freeing stray root node '{child.Name}'", LogLevel.Debug);
+                    child.QueueFree();
+                }
             }
         }
 
-        /// <summary>Self-check of the recovery invariants (plan §6.4): TimeScale, key registries non-empty.</summary>
+        /// <summary>Self-check of the recovery invariants (plan §6.4): TimeScale, baseline root nodes alive, key registries non-empty.</summary>
         private static string SelfCheck()
         {
             if (Math.Abs(Engine.TimeScale - 1.0) > 1e-9)
                 return "Engine.TimeScale is not 1 after recovery";
+
+            if (rootBaseline != null)
+            {
+                var lost = rootBaseline
+                    .Where(kv => GodotObject.InstanceFromId(kv.Key) is not Node node
+                        || !GodotObject.IsInstanceValid(node)
+                        || node.IsQueuedForDeletion())
+                    .ToList();
+                if (lost.Count > 0)
+                {
+                    // Reported once, against the test that caused it.
+                    foreach (var kv in lost)
+                        rootBaseline.Remove(kv.Key);
+                    return $"test freed baseline root node(s): {string.Join(", ", lost.Select(kv => kv.Value))}";
+                }
+            }
 
             var services = AppServices.Current;
             if (services.Ui == null || services.Menus == null || services.SceneRoutes == null)

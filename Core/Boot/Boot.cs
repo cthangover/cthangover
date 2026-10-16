@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Cthangover.Core.Localization;
@@ -49,7 +50,7 @@ namespace Cthangover.Core.Bootstrap
     /// <list type="bullet">
     /// <item><see cref="RunLauncherAsync"/> — the pre-game launcher renders a boot
     /// overlay while discovery and Roslyn compilation run on a background thread;</item>
-    /// <item><see cref="RunSync"/> — direct scene launches, SceneSwitcher and
+    /// <item><see cref="RunSync"/> — direct scene launches and
     /// integration tests, executed from the SceneManager autoload _Ready so the
     /// whole pipeline completes before any main-scene node runs.</item>
     /// </list>
@@ -89,7 +90,7 @@ namespace Cthangover.Core.Bootstrap
 
         /// <summary>
         /// Synchronous boot for everything that is not the pre-game launcher:
-        /// SceneSwitcher, integration test scenes, direct scene runs and editor
+        /// Integration test scenes, direct scene runs and editor
         /// "play current scene". Called from the SceneManager autoload _Ready,
         /// which is guaranteed to run after GameData exists and before the main
         /// scene's nodes.
@@ -232,11 +233,42 @@ namespace Cthangover.Core.Bootstrap
                 }
 
                 Mode = mode;
+                WaitForDebuggerIfRequested();
                 // Fresh service set for this boot: registries empty, the
                 // reset list restored to the core defaults, factory slots unused.
                 AppServices.SetCurrent(new AppServices());
                 return true;
             }
+        }
+
+        /// <summary>
+        /// Debug entry helper (plan-mod-testing.md §9.2): with the
+        /// <c>--wait-for-debugger</c> command-line flag, offers the OS
+        /// debugger selection (Windows JIT dialog) before any boot phase runs,
+        /// so the developer can attach before mod compilation — the phase
+        /// where runtime-compiled mod code usually needs inspection. A no-op
+        /// when a debugger is already attached or the flag is absent; the game
+        /// continues normally when the user cancels the dialog.
+        /// </summary>
+        private static void WaitForDebuggerIfRequested()
+        {
+            if (!GameEnvironment.IsRuntime)
+                return;
+
+            var requested = OS.GetCmdlineArgs().Any(a => a == "--wait-for-debugger")
+                || OS.GetCmdlineUserArgs().Any(a => a == "--wait-for-debugger");
+            if (!requested)
+                return;
+
+            if (System.Diagnostics.Debugger.IsAttached)
+            {
+                GameLogger.Log("BOOT", "--wait-for-debugger: debugger already attached, continuing");
+                return;
+            }
+
+            GameLogger.Log("BOOT", "--wait-for-debugger: launching debugger selection (cancel = continue without debugger)");
+            var launched = System.Diagnostics.Debugger.Launch();
+            GameLogger.Log("BOOT", $"--wait-for-debugger: Debugger.Launch -> {launched}");
         }
     }
 }

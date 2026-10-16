@@ -26,6 +26,13 @@ namespace Cthangover.TestRunner
                 var details = BuildDetails(result);
                 var line = $"  {result.Name,-14} {status,-8} {checks,-10} {result.Duration.TotalSeconds,6:F1}s  {details}";
                 WriteStatus(line, result.Passed);
+                if (!result.Passed)
+                {
+                    foreach (var diagnostic in result.Diagnostics)
+                        Console.WriteLine($"      | {diagnostic}");
+                    if (!string.IsNullOrEmpty(result.LogFile))
+                        Console.WriteLine($"      лог: {result.LogFile}");
+                }
             }
 
             Console.WriteLine();
@@ -80,7 +87,9 @@ namespace Cthangover.TestRunner
                     durationSeconds = Math.Round(r.Duration.TotalSeconds, 2),
                     core = r.Core,
                     coverage = r.Coverage,
-                    note = r.Note
+                    note = r.Note,
+                    logFile = r.LogFile,
+                    diagnostics = r.Diagnostics
                 })
             };
 

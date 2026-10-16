@@ -142,7 +142,8 @@ namespace Cthangover.TestRunner
                     TimedOut = run.TimedOut,
                     Passed = !run.TimedOut && run.ExitCode == 0,
                     PassedChecks = counters?.Passed ?? 0,
-                    FailedChecks = counters?.Failed ?? 0
+                    FailedChecks = counters?.Failed ?? 0,
+                    LogFile = TestLogs.Save(root, "unit", run),
                 };
                 if (counters?.Failed > 0)
                     result.Passed = false;
@@ -150,6 +151,12 @@ namespace Cthangover.TestRunner
                     result.Note = "trx counters unavailable";
                 else if (counters.Value.Skipped > 0)
                     result.Note = $"skipped={counters.Value.Skipped}";
+                if (!result.Passed)
+                    result.Diagnostics = run.Output
+                        .Where(l => l.Contains("[FAIL]", StringComparison.Ordinal) || l.TrimStart().StartsWith("Failed ", StringComparison.Ordinal))
+                        .Select(l => l.Trim())
+                        .Take(12)
+                        .ToList();
                 return result;
             }
             finally
@@ -165,6 +172,23 @@ namespace Cthangover.TestRunner
         /// </summary>
         private static TestResult RunIntegration(string root, string godot, IntegrationTestDefinition test)
         {
+            // A wrong path (typically wrong case: fine on Windows, broken on
+            // Linux/CI and in exported packs) fails here with a precise
+            // message instead of a Godot run that ends in "no result marker".
+            var sceneProblem = ScenePathValidator.Check(root, test.Scene);
+            if (sceneProblem != null)
+            {
+                return new TestResult
+                {
+                    Name = test.Name,
+                    Kind = "integration",
+                    Passed = false,
+                    ExitCode = -1,
+                    FailedChecks = 1,
+                    Note = sceneProblem,
+                };
+            }
+
             var args = new List<string>();
             if (!test.Windowed)
                 args.Add("--headless");
@@ -190,33 +214,40 @@ namespace Cthangover.TestRunner
                 Duration = run.Duration,
                 Core = parsed.Core,
                 Coverage = parsed.Coverage,
-                Note = run.TimedOut ? "timeout" : (!parsed.HasResult ? "no result marker" : null)
+                Note = run.TimedOut ? "timeout" : (!parsed.HasResult ? "no result marker" : null),
+                LogFile = TestLogs.Save(root, test.Name, run),
+                Diagnostics = passed ? new List<string>() : TestLogs.Highlights(run.Output),
             };
         }
 
         /// <summary>
-        /// Smoke run through <c>SceneSwitcher</c> for arbitrary scenes and
-        /// logical scene names. Unlike self-checking suites this has no
-        /// <c>[TEST_RESULT]</c>; success means the auto-driver finished the
-        /// dialog without hitting the SceneSwitcher timeout.
+        /// Smoke run of an arbitrary scene through the native
+        /// <c>--scene=</c> launch (kernel navigation) plus the
+        /// <c>test_runner</c> engine mod, which auto-plays the dialog and
+        /// prints the authoritative <c>[TEST_RESULT]</c>. A <c>.tscn</c>
+        /// target is passed positionally (Godot loads it natively); a
+        /// logical scene name goes through user args after <c>--</c>. The
+        /// driver's flags are always user args — the mod reads
+        /// <c>OS.GetCmdlineUserArgs()</c>, so they never spuriously activate
+        /// it during regular integration entries.
         /// </summary>
         private static TestResult RunSwitcher(string root, string godot, RunnerOptions options)
         {
-            var args = new List<string>
-            {
-                "--headless", "--path", root,
-                "res://scenes/test/scene_switcher.tscn",
-                $"--scene={options.Switcher}",
-                $"--timeout={options.TimeoutSeconds}"
-            };
+            var isTscn = options.Switcher.EndsWith(".tscn", StringComparison.OrdinalIgnoreCase);
+            var args = new List<string> { "--headless", "--path", root };
+            if (isTscn)
+                args.Add(options.Switcher);
+            args.Add("--");
+            if (!isTscn)
+                args.Add($"--scene={options.Switcher}");
+            args.Add($"--timeout={options.TimeoutSeconds}");
             if (!string.IsNullOrEmpty(options.Choices))
                 args.Add($"--choices={options.Choices}");
 
             Console.WriteLine($"SceneSwitcher: {options.Switcher}...");
             var run = ProcessRunner.Run(godot, args, root, options.TimeoutSeconds + 60);
-            var ended = run.Output.Any(line => line.Contains("DialogAutoDriver: dialog ended, quitting"));
-            var timedOut = run.Output.Any(line => line.Contains("SceneSwitcher: timeout"));
-            var passed = !run.TimedOut && run.ExitCode == 0 && ended && !timedOut;
+            var parsed = ResultParser.Parse(run.Output);
+            var passed = !run.TimedOut && run.ExitCode == 0 && parsed.HasResult && parsed.Failed == 0;
 
             return new TestResult
             {
@@ -225,14 +256,16 @@ namespace Cthangover.TestRunner
                 Passed = passed,
                 TimedOut = run.TimedOut,
                 ExitCode = run.ExitCode,
-                PassedChecks = passed ? 1 : 0,
-                FailedChecks = passed ? 0 : 1,
+                PassedChecks = parsed.HasResult ? parsed.Passed : (passed ? 1 : 0),
+                FailedChecks = parsed.HasResult ? parsed.Failed : (passed ? 0 : 1),
                 Duration = run.Duration,
+                LogFile = TestLogs.Save(root, "switcher", run),
+                Diagnostics = passed ? new List<string>() : TestLogs.Highlights(run.Output),
                 Note = passed
                     ? $"scene={options.Switcher}"
-                    : timedOut
-                        ? $"timeout: scene={options.Switcher}"
-                        : $"no dialog end: scene={options.Switcher}"
+                    : parsed.HasResult && parsed.Failed > 0
+                        ? $"driver timeout/fail: scene={options.Switcher}"
+                        : $"no result: scene={options.Switcher}"
             };
         }
     }

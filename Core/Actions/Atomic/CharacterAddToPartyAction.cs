@@ -4,7 +4,8 @@ namespace Cthangover.Core.Actions.Atomic
     /// Recruits a character to the player's party by character ID string.
     /// The "type" variable should match a character ID (e.g. "Marao", "Murakami").
     /// Delegates to CharacterData.AddCharacterToParty which handles the actual
-    /// roster mutation and fallback for unknown IDs.
+    /// roster mutation and refuses unknown IDs with an error log — a typo here
+    /// never reaches the persistent roster.
     /// </summary>
     public class CharacterAddToPartyAction : IScenarioAction
     {
@@ -12,8 +13,8 @@ namespace Cthangover.Core.Actions.Atomic
         /// Registered as "character.add_to_party" — adds a character to
         /// the player's party roster. The "type" dialog variable is a
         /// character ID string. Delegates to CharacterData.AddCharacterToParty
-        /// which handles persistence. Unknown IDs create a minimal
-        /// CharacterInfoData with default attributes.
+        /// which handles persistence; unknown IDs are refused with an error
+        /// log instead of creating a placeholder party member.
         /// </summary>
         public string Name => "character.add_to_party";
 

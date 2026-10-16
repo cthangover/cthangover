@@ -65,7 +65,7 @@ namespace Cthangover.Mods.Dialog.Action.Impls
 
             SceneContextNode.LastBackgroundID = SpriteID;
 
-            var viewBox = SceneContextNode.FindNode<ViewBox>("ViewBox");
+            var viewBox = Scene.Find<ViewBox>("ViewBox");
             viewBox?.KillTransitionTween();
             viewBox?.SetBackgroundTexture(Texture);
 

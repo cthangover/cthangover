@@ -74,6 +74,16 @@ namespace Cthangover.Core.UI.Tool
         }
 
         /// <summary>
+        /// Removes buttons whose concrete type comes from the given assembly —
+        /// the unload pass of the assembly consumer pipeline.
+        /// </summary>
+        public void UnregisterAssembly(Assembly assembly)
+        {
+            _buttons.RemoveAll(b => b.GetType().Assembly == assembly);
+            _buttonTypes.RemoveWhere(t => t.Assembly == assembly);
+        }
+
+        /// <summary>
         /// Returns all registered buttons that currently pass <see cref="IToolBoxButton.IsVisible"/>.
         /// Used by <see cref="ToolBox.AddToolButtons"/> to dynamically populate the toolbar HUD.
         /// </summary>

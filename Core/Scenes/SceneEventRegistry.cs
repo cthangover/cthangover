@@ -141,6 +141,10 @@ namespace Cthangover.Core.Scenes
 		public static void RegisterAssembly(Assembly assembly)
 			=> Owned.AddFromAssembly(assembly);
 
+		/// <summary>Unload pass: drops events contributed by the given assembly. Delegates to the shared instance.</summary>
+		public static void UnregisterAssembly(Assembly assembly, string modId)
+			=> Owned.RemoveFromAssembly(assembly, modId);
+
 		// ---- Instance implementation --------------------------------------
 
 		/// <summary>Direct instance access for core consumers migrating off the static facade.</summary>
@@ -188,6 +192,51 @@ namespace Cthangover.Core.Scenes
 			}
 		}
 
+		/// <summary>
+		/// Removes events whose implementation class comes from the given
+		/// assembly — the unload pass of the assembly consumer pipeline. The
+		/// event table stores type names, so the reverse pass resolves each
+		/// entry back to its type and drops the ones the unloading assembly
+		/// contributed; scenario-file events are never touched here.
+		/// </summary>
+		public void RemoveFromAssembly(Assembly assembly, string modId)
+		{
+			var assemblyName = assembly.GetName().Name;
+			lock (events)
+			{
+				foreach (var key in events.Keys.ToList())
+				{
+					events[key].RemoveAll(info =>
+					{
+						if (string.IsNullOrEmpty(info.ClassName))
+							return false;
+						var type = Type.GetType(info.ClassName, false) ?? FindType(info.ClassName);
+						return type != null && type.Assembly.GetName().Name == assemblyName;
+					});
+					if (events[key].Count == 0)
+						events.Remove(key);
+				}
+			}
+		}
+
+		private static Type FindType(string fullName)
+		{
+			foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+			{
+				try
+				{
+					var type = assembly.GetType(fullName, false);
+					if (type != null)
+						return type;
+				}
+				catch
+				{
+					// unload window: assembly partially collected, skip
+				}
+			}
+			return null;
+		}
+
 		private void RegisterFromAttributes()
 		{
 			foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
@@ -196,7 +245,24 @@ namespace Cthangover.Core.Scenes
 
 		private void RegisterFromAttributes(Assembly assembly)
 		{
-			foreach (var type in assembly.GetTypes())
+			Type[] types;
+			try
+			{
+				types = assembly.GetTypes();
+			}
+			catch (ReflectionTypeLoadException ex)
+			{
+				// A collectible mod assembly can be mid-unload while a rebuild
+				// scans the AppDomain; skip it the same way Reflections does.
+				types = ex.Types.Where(t => t != null).ToArray();
+			}
+			catch (Exception ex)
+			{
+				GameLogger.Log("SCENE", $"SceneEventRegistry: cannot enumerate types of '{assembly.GetName().Name}': {ex.Message}", LogLevel.Warning);
+				return;
+			}
+
+			foreach (var type in types)
 			{
 				var attr = type.GetCustomAttribute<SceneEventAttribute>();
 				if (attr == null)

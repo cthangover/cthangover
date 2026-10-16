@@ -20,5 +20,9 @@ namespace Cthangover.TestRunner
         public string Core { get; set; }
         public string Coverage { get; set; }
         public string Note { get; set; }
+        /// <summary>Full process output of this test (<c>tests/artifacts/logs/&lt;name&gt;.log</c>), null when not saved.</summary>
+        public string LogFile { get; set; }
+        /// <summary>Error lines (or the output tail) shown under a failed test in the summary.</summary>
+        public List<string> Diagnostics { get; set; } = new();
     }
 }

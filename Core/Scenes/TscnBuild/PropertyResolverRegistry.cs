@@ -84,6 +84,10 @@ namespace Cthangover.Core.Scenes.TscnBuild
         public static IPropertyResolver Find(string key, object value)
             => Owned.FindResolver(key, value);
 
+        /// <summary>Unload pass: drops resolvers contributed by the given assembly. Delegates to the shared instance.</summary>
+        public static void UnregisterAssembly(Assembly assembly)
+            => Owned.RemoveFromAssembly(assembly);
+
         // ---- Instance implementation --------------------------------------
 
         private void AddFromAssembly(Assembly assembly)
@@ -92,6 +96,18 @@ namespace Cthangover.Core.Scenes.TscnBuild
             foreach (var r in Reflections.FindAndCreate<IPropertyResolver>(assembly))
                 _resolvers.Add(r);
             BumpDefaultToEnd();
+        }
+
+        /// <summary>
+        /// Removes resolvers whose concrete type comes from the given assembly —
+        /// the unload pass of the assembly consumer pipeline. Core resolvers
+        /// survive and the catch-all DefaultPropertyResolver stays last.
+        /// </summary>
+        public void RemoveFromAssembly(Assembly assembly)
+        {
+            if (_resolvers == null)
+                return;
+            _resolvers.RemoveAll(r => r.GetType().Assembly == assembly);
         }
 
         private void BumpDefaultToEnd()

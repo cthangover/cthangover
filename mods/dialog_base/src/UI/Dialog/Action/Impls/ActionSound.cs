@@ -1,5 +1,4 @@
 using Cthangover.Core.Audio;
-using Cthangover.Core.Scenes;
 using Godot;
 using Cthangover.Core.UI;
 using Cthangover.Mods.Interface.Base.Lists;
@@ -30,7 +29,7 @@ namespace Cthangover.Mods.Dialog.Action.Impls
             if (string.IsNullOrEmpty(Sound))
                 return;
 
-            var audioService = SceneContextNode.FindNode<Node>("AudioService") as IAudioService;
+            var audioService = Scene.Find<Node>("AudioService") as IAudioService;
             audioService?.PlaySound(Sound, SoundType.UI);
         }
     }

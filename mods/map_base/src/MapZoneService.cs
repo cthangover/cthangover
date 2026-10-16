@@ -32,13 +32,16 @@ namespace Cthangover.Mods.Map
     /// <see cref="Scenes.ConditionStateMonitor"/> invalidates cached scenario
     /// conditions, because zone state can gate scenario headers.
     /// <para/>
-    /// The single instance is owned by the <see cref="AppServices"/>
-    /// composition root; the static facade stays as the public API during
-    /// migration, with laziness preserved by the owning <c>Lazy</c> slot.
+    /// The single instance is process-wide and deliberately not owned by
+    /// <see cref="AppServices"/>: zone overrides are identity-sensitive across
+    /// the whole process (map widget, saves, scenario conditions). New-game
+    /// reset goes through the AppServices resettable adapter ("map_zones",
+    /// see <see cref="ResetOverrides"/>); unit tests inject zones via
+    /// <see cref="LoadZones"/> while <c>GameEnvironment.IsRuntime</c> is false.
     /// </summary>
     public sealed class MapZoneService
     {
-        /// <summary>Facade over the AppServices-owned instance; kept as the public API during migration. Lazily created and alive for the whole session.</summary>
+        /// <summary>Owns the process-wide instance; lazily created and alive for the whole session.</summary>
         private static readonly Lazy<MapZoneService> instance = new(() => new MapZoneService());
 
     /// <summary>Process-wide singleton. Deliberately NOT owned by AppServices:

@@ -1,4 +1,3 @@
-using Cthangover.Core.Scenes;
 using Cthangover.Mods.Dialog.Action;
 using Cthangover.Mods.Time;
 using Cthangover.Core.UI;
@@ -26,7 +25,7 @@ namespace Cthangover.Mods.Dialog.Action.Impls
         /// <summary>Switches the scene's <see cref="UiLightController"/> between time-of-day lighting and static lights.</summary>
         public override void DoRun(DialogRuntime runtime)
         {
-            var controller = SceneContextNode.FindNode<UiLightController>("Lights");
+            var controller = Scene.Find<UiLightController>("Lights");
             if (controller != null)
                 controller.IsUseLight = UseTime;
         }

@@ -13,7 +13,7 @@ namespace Cthangover.Core.Autotest
     /// UI live in the mod assembly, the core keeps the SkillData transition
     /// DTO and reaches granting through SkillsBridge, so every check here
     /// proves the core-to-mod wiring at engine runtime.
-    /// The machine-readable line is parsed by <c>tests/CThangover.TestRunner</c>.
+    /// The machine-readable line is parsed by <c>tests/Cthangover.TestRunner</c>.
     /// </summary>
     public partial class SkillsCoverageTestSetup : Node
     {

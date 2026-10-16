@@ -31,6 +31,15 @@ namespace Cthangover.Core.Factories.Impls
 
         private readonly Dictionary<string, IScenarioAction> actions = new();
 
+        /// <summary>
+        /// Guards <see cref="actions"/>. The factory is a shared singleton reached from
+        /// parallel test collections and from GDScript registration paths; without the
+        /// lock a GetAll snapshot racing a Register resize throws
+        /// "Destination array is not long enough" — observed as a rare flake in
+        /// ScenarioActionFactoryTests.
+        /// </summary>
+        private readonly object actionsLock = new();
+
         internal ScenarioActionFactory()
         {
             foreach (var action in Reflections.FindAndCreate<IScenarioAction>())
@@ -38,7 +47,10 @@ namespace Cthangover.Core.Factories.Impls
                 Register(action);
             }
 
-            GameLogger.Log("FACTORY", $"loaded '{actions.Count}' scenario actions");
+            lock (actionsLock)
+            {
+                GameLogger.Log("FACTORY", $"loaded '{actions.Count}' scenario actions");
+            }
         }
 
         /// <summary>
@@ -51,11 +63,40 @@ namespace Cthangover.Core.Factories.Impls
         /// </summary>
         public IScenarioAction Get(string name)
         {
-            if (actions.TryGetValue(name, out var action))
-                return action;
+            lock (actionsLock)
+            {
+                if (actions.TryGetValue(name, out var action))
+                    return action;
+            }
 
             GameLogger.Log("FACTORY", $"ScenarioAction '{name}' not found", LogLevel.Error);
             return null;
+        }
+
+        /// <summary>
+        /// Looks up a registered action by its Name and fails fast when it is
+        /// missing. This is the fail-fast twin of <see cref="Get"/>: scenario
+        /// content playback must stay resilient (a typo in a mod's scenario
+        /// degrades to an error log and a skipped command), but engine-critical
+        /// code — tools, boot wiring, validators, tests — resolves actions by
+        /// names that are contractually known or already validated, and there a
+        /// null return would only postpone the failure to a harder-to-trace
+        /// spot. The same Get/GetRequired split exists in
+        /// <c>CharacterTemplateRegistry</c>; <c>BattleCoreRegistry</c> throws
+        /// unconditionally for the same reason.
+        /// </summary>
+        /// <exception cref="KeyNotFoundException">No action with the given Name is registered.</exception>
+        public IScenarioAction GetRequired(string name)
+        {
+            lock (actionsLock)
+            {
+                if (actions.TryGetValue(name, out var action))
+                    return action;
+
+                throw new KeyNotFoundException(
+                    $"Scenario action '{name}' is not registered ({actions.Count} actions loaded). " +
+                    "Check the action Name spelling or make sure the mod that defines it is loaded.");
+            }
         }
 
         /// <summary>
@@ -67,10 +108,14 @@ namespace Cthangover.Core.Factories.Impls
         /// </summary>
         public void Register(IScenarioAction action)
         {
-            if (actions.ContainsKey(action.Name))
-                return;
-            
-            actions.Add(action.Name, action);
+            lock (actionsLock)
+            {
+                if (actions.ContainsKey(action.Name))
+                    return;
+
+                actions.Add(action.Name, action);
+            }
+
             GameLogger.Log("FACTORY", $"registered scenario action '{action.Name}'");
         }
 
@@ -91,11 +136,29 @@ namespace Cthangover.Core.Factories.Impls
         }
 
         /// <summary>
+        /// Removes actions whose concrete type comes from the given assembly —
+        /// the unload pass of the assembly consumer pipeline. Core actions
+        /// survive; a mod reinstall re-registers through the normal fan-out.
+        /// </summary>
+        public void UnregisterAssembly(Assembly assembly)
+        {
+            lock (actionsLock)
+            {
+                foreach (var name in actions.Where(kvp => kvp.Value.GetType().Assembly == assembly).Select(kvp => kvp.Key).ToList())
+                    actions.Remove(name);
+            }
+        }
+
+        /// <summary>
         /// Returns a snapshot list of all registered actions. Used for
         /// debugging and introspection (listing available commands).
         /// Not intended for hot-path lookups — use Get() by name for
         /// that.
         /// </summary>
-        public List<IScenarioAction> GetAll() => actions.Values.ToList();
+        public List<IScenarioAction> GetAll()
+        {
+            lock (actionsLock)
+                return actions.Values.ToList();
+        }
     }
 }

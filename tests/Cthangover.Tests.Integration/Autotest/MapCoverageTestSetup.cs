@@ -14,7 +14,7 @@ namespace Cthangover.Core.Autotest
     /// (MapZoneStateData), the MapZoneChangedEvent contract and reaches the
     /// state through MapStateBridge, so every check here proves the
     /// core-to-mod wiring at engine runtime.
-    /// The machine-readable line is parsed by <c>tests/CThangover.TestRunner</c>.
+    /// The machine-readable line is parsed by <c>tests/Cthangover.TestRunner</c>.
     /// </summary>
     public partial class MapCoverageTestSetup : Node
     {

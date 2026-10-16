@@ -27,9 +27,29 @@ namespace Engine.Tests.Live2D
         public static string SdkResources =>
             Path.Combine(RepoRoot, "sdk", "CubismSdkForNative-5-r.5", "Samples", "Resources");
 
-        /// <summary>Absolute path of the native CubismCore library shipped with the mod.</summary>
-        public static string NativeCorePath =>
-            Path.Combine(RepoRoot, "mods", "live2d", "native", "Live2DCubismCore.dll");
+        /// <summary>
+        /// Absolute path of the native CubismCore library for the current OS:
+        /// the one shipped with the mod when present, otherwise the SDK build
+        /// (the mod ships only the Windows DLL; Linux/macOS take the SDK's).
+        /// </summary>
+        public static string NativeCorePath
+        {
+            get
+            {
+                string fileName, sdkDir;
+                if (OperatingSystem.IsWindows())
+                    (fileName, sdkDir) = ("Live2DCubismCore.dll", Path.Combine("windows", "x86_64"));
+                else if (OperatingSystem.IsMacOS())
+                    (fileName, sdkDir) = ("libLive2DCubismCore.dylib", "macos");
+                else
+                    (fileName, sdkDir) = ("libLive2DCubismCore.so", Path.Combine("linux", "x86_64"));
+
+                var shipped = Path.Combine(RepoRoot, "mods", "live2d", "native", fileName);
+                if (File.Exists(shipped))
+                    return shipped;
+                return Path.Combine(RepoRoot, "sdk", "CubismSdkForNative-5-r.5", "Core", "dll", sdkDir, fileName);
+            }
+        }
 
         [ModuleInitializer]
         internal static void Init()

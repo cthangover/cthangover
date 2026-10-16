@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using Cthangover.Core.Bootstrap;
 using Cthangover.Core.Utils;
@@ -100,7 +101,27 @@ namespace Cthangover.Core.Scenes.TscnParsing
         public static ISectionParser Get(string sectionType)
             => Owned.GetParser(sectionType);
 
+        /// <summary>Unload pass: drops parser types contributed by the given assembly. Delegates to the shared instance.</summary>
+        public static void UnregisterAssembly(Assembly assembly)
+            => Owned.RemoveFromAssembly(assembly);
+
         // ---- Instance implementation --------------------------------------
+
+        /// <summary>
+        /// Removes section parser types contributed by the given assembly —
+        /// the unload pass of the assembly consumer pipeline. Core parsers
+        /// remain: they are re-discovered by the next full build anyway.
+        /// </summary>
+        public void RemoveFromAssembly(Assembly assembly)
+        {
+            lock (Sync)
+            {
+                if (_parsers == null)
+                    return;
+                foreach (var key in _parsers.Where(kvp => kvp.Value.Assembly == assembly).Select(kvp => kvp.Key).ToList())
+                    _parsers.Remove(key);
+            }
+        }
 
         /// <summary>Full re-scan; caller must hold <see cref="Sync"/>.</summary>
         private void RescanLocked()

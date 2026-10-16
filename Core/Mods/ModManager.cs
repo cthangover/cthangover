@@ -139,11 +139,32 @@ namespace Cthangover.Core.Mods
         }
 
         /// <summary>Discovers <see cref="IModAssetResolver"/> implementations in a mod assembly and registers them.</summary>
-        /// <summary>Discovers <see cref="IModAssetResolver"/> implementations in a mod assembly and registers them.</summary>
         public void RegisterResolversFromAssembly(Assembly assembly)
         {
             foreach (var resolver in Reflections.FindAndCreate<IModAssetResolver>(assembly))
                 RegisterResolver(resolver);
+        }
+
+        /// <summary>
+        /// Removes resolvers whose concrete type comes from the given assembly —
+        /// the unload pass of the assembly consumer pipeline. Also flushes the
+        /// resolver caches so no cached asset keeps references into unloading
+        /// mod types.
+        /// </summary>
+        public void UnregisterResolversFromAssembly(Assembly assembly)
+        {
+            foreach (var id in resolvers.Where(kvp => kvp.Value.GetType().Assembly == assembly).Select(kvp => kvp.Key).ToList())
+            {
+                try
+                {
+                    resolvers[id].ClearCache();
+                }
+                catch (Exception ex)
+                {
+                    GameLogger.Log("MODS", $"UnregisterResolversFromAssembly: ClearCache for '{id}' failed: {ex.Message}", LogLevel.Warning);
+                }
+                resolvers.Remove(id);
+            }
         }
 
         public T GetResolver<T>() where T : class, IModAssetResolver

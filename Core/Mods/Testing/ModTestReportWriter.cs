@@ -76,19 +76,20 @@ namespace Cthangover.Core.Mods.Testing
                 GameLogger.Log("MODTEST", $"=== {suite.ModId}: {suite.Passed}/{suite.Tests.Count} passed, {suite.Failed} failed, {suite.Skipped} skipped, {suite.Errors} errors ({suite.DurationMs / 1000.0:0.0#} s) ===");
             }
 
-            var totalTests = suites.Sum(s => s.Passed + s.Failed + s.Skipped + s.Errors);
-            var totalPassed = suites.Sum(s => s.Passed);
-            var greenMods = suites.Count(s => s.Status == ModTestStatus.Passed);
+            var totals = ComputeTotals(suites);
+            var totalTests = totals.Passed + totals.Failed + totals.Skipped;
+            var totalPassed = totals.Passed;
+            var greenMods = suites.Count(s => s.Status == ModTestStatus.Passed || s.Status == ModTestStatus.Skipped);
             GameLogger.Log("MODTEST", "=== ИТОГИ MOD TESTS ===");
             foreach (var s in suites)
                 GameLogger.Log("MODTEST", $"  {s.ModId,-20} {StatusTag(s.Status),-7} {s.Passed}/{s.Passed + s.Failed + s.Skipped + s.Errors,-4} {s.DurationMs / 1000.0:0.0#}s");
-            GameLogger.Log("MODTEST", $"Модов: {greenMods}/{suites.Count} зелёных; тестов: {totalPassed}/{totalTests} прошедших");
+            GameLogger.Log("MODTEST", $"Модов: {greenMods}/{suites.Count} зелёных; тестов: {totalPassed}/{totalTests} прошедших, {totals.Failed} упавших, {totals.Skipped} пропущенных");
             GameLogger.Log("MODTEST", $"Отчёт: {root}last-report.json");
 
             // Unified CI contract lines
             foreach (var s in suites)
-                GameLogger.Log("MODTEST", $"[TEST_RESULT] name=mod_units:{s.ModId} passed={s.Passed} failed={s.Failed + s.Errors}");
-            GameLogger.Log("MODTEST", $"[TEST_RESULT] name=mod_units passed={totalPassed} failed={totalTests - totalPassed}");
+                GameLogger.Log("MODTEST", $"[TEST_RESULT] name=mod_units:{s.ModId} passed={s.Passed} failed={s.Failed + s.Errors} skipped={s.Skipped}");
+            GameLogger.Log("MODTEST", $"[TEST_RESULT] name=mod_units passed={totals.Passed} failed={totals.Failed} skipped={totals.Skipped}");
 
             // JSON report
             var report = new ReportFile
@@ -133,7 +134,23 @@ namespace Cthangover.Core.Mods.Testing
                 lines = lines.Skip(lines.Count - HistoryMaxLines).ToList();
             File.WriteAllLines(historyPath, lines);
 
-            return totalPassed == totalTests && greenMods == suites.Count;
+            return totals.Success;
+        }
+
+        /// <summary>Aggregate counts of a run; <see cref="Failed"/> includes errors and timeouts, skips never fail a run.</summary>
+        public readonly record struct ModTestTotals(int Passed, int Failed, int Skipped, bool Success);
+
+        /// <summary>
+        /// Aggregates suite summaries for the CI contract line and the exit
+        /// code: a run succeeds when no test failed, timed out or errored.
+        /// Skipped tests are reported separately and never count as failures.
+        /// </summary>
+        public static ModTestTotals ComputeTotals(IReadOnlyList<ModTestSuiteSummary> suites)
+        {
+            var passed = suites.Sum(s => s.Passed);
+            var failed = suites.Sum(s => s.Failed + s.Errors);
+            var skipped = suites.Sum(s => s.Skipped);
+            return new ModTestTotals(passed, failed, skipped, failed == 0);
         }
 
         /// <summary>Copies per-mod JSON reports into the CI artifact directory (runner collects them); best-effort.</summary>

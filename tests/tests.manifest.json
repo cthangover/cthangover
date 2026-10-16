@@ -6,9 +6,18 @@
   "integration": [
     {
       "name": "live2d_avatar",
-      "scene": "res://tests/CThangover.Tests.Integration/Scenes/live2d_avatar_test.tscn",
+      "scene": "res://tests/Cthangover.Tests.Integration/Scenes/live2d_avatar_test.tscn",
       "windowed": true,
       "timeoutSeconds": 120
+    },
+    {
+      "name": "mod_units",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--run-tests"
+      ],
+      "timeoutSeconds": 300
     },
     {
       "name": "mod",
@@ -87,7 +96,7 @@
     },
     {
       "name": "coverage_dialog",
-      "scene": "res://tests/CThangover.Tests.Integration/Scenes/dialog_coverage_test.tscn",
+      "scene": "res://tests/Cthangover.Tests.Integration/Scenes/dialog_coverage_test.tscn",
       "timeoutSeconds": 120
     },
     {
@@ -97,22 +106,22 @@
     },
     {
       "name": "coverage_time",
-      "scene": "res://tests/CThangover.Tests.Integration/Scenes/time_coverage_test.tscn",
+      "scene": "res://tests/Cthangover.Tests.Integration/Scenes/time_coverage_test.tscn",
       "timeoutSeconds": 120
     },
     {
       "name": "coverage_map",
-      "scene": "res://tests/CThangover.Tests.Integration/Scenes/map_coverage_test.tscn",
+      "scene": "res://tests/Cthangover.Tests.Integration/Scenes/map_coverage_test.tscn",
       "timeoutSeconds": 120
     },
     {
       "name": "coverage_effects",
-      "scene": "res://tests/CThangover.Tests.Integration/Scenes/effects_coverage_test.tscn",
+      "scene": "res://tests/Cthangover.Tests.Integration/Scenes/effects_coverage_test.tscn",
       "timeoutSeconds": 120
     },
     {
       "name": "coverage_skills",
-      "scene": "res://tests/CThangover.Tests.Integration/Scenes/skills_coverage_test.tscn",
+      "scene": "res://tests/Cthangover.Tests.Integration/Scenes/skills_coverage_test.tscn",
       "timeoutSeconds": 120
     },
     {

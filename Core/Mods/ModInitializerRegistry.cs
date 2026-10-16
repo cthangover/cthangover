@@ -103,6 +103,39 @@ namespace Cthangover.Core.Mods
         }
 
         /// <summary>
+        /// Unload pass for one mod: initializers implementing
+        /// <see cref="IModUnloadAware"/> contributed by the mod's assembly get
+        /// <c>OnModUnloading</c> (mod code tears down while its types are still
+        /// alive), then every other unload-aware initializer is informed so
+        /// cross-mod references can be dropped. Initializers contributed by
+        /// the dying mod are removed afterwards. Failures are logged and
+        /// isolated, mirroring the load path.
+        /// </summary>
+        public static void NotifyModUnloading(string modId)
+        {
+            foreach (var init in _initializers.ToArray())
+            {
+                if (init is not IModUnloadAware unloadAware)
+                    continue;
+
+                var fromUnloadingMod = init.GetType().Assembly.GetName().Name == modId;
+                try
+                {
+                    if (fromUnloadingMod)
+                        unloadAware.OnModUnloading();
+                    else
+                        unloadAware.OnModUnloaded(modId);
+                }
+                catch (Exception ex)
+                {
+                    GameLogger.Log("MODS_INIT", $"Unload notification failed for initializer '{init.GetType().FullName}' (mod '{modId}'): {ex.Message}", LogLevel.Error);
+                }
+            }
+
+            _initializers.RemoveAll(init => init.GetType().Assembly.GetName().Name == modId);
+        }
+
+        /// <summary>
         /// Notifies every registered <c>IModInitializer</c> that all
         /// mods and their JSON resources are fully loaded. Call this
         /// once, after <c>ModRegistry.Initialize()</c> has completed

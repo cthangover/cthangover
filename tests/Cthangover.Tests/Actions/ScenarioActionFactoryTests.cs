@@ -49,6 +49,22 @@ namespace Engine.Tests.Actions
             Assert.Null(result);
         }
 
+        [Fact]
+        public void Factory_GetRequired_ReturnsActionByName()
+        {
+            var action = ScenarioActionFactory.Instance.GetRequired("scene.instantiate");
+
+            Assert.NotNull(action);
+            Assert.Equal("scene.instantiate", action.Name);
+        }
+
+        [Fact]
+        public void Factory_GetRequired_ThrowsOnUnknownName()
+        {
+            Assert.Throws<System.Collections.Generic.KeyNotFoundException>(
+                () => ScenarioActionFactory.Instance.GetRequired("nonexistent.action"));
+        }
+
         // quest.* actions (set_status, set_data_status, add_tag, remove_tag,
         // send_notification) live in the quests_base engine mod and are
         // discovered at mod load; they are covered by the integration

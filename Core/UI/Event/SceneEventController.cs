@@ -91,7 +91,22 @@ namespace Cthangover.Core.UI.Event
                     OnUpdateEventList.RemoveAt(i);
                     continue;
                 }
-                eventSubscriber.OnUpdate();
+                // Same contract as TickTimer: one faulty (e.g. disposed across a
+                // scene switch) handler must not break the remaining subscribers,
+                // so each update is isolated.
+                try
+                {
+                    eventSubscriber.OnUpdate();
+                }
+                catch (ObjectDisposedException ex)
+                {
+                    OnUpdateEventList.RemoveAt(i);
+                    GameLogger.Log("EVENT", $"Update subscriber {eventSubscriber.GetType().Name} was disposed, unregistered: {ex.Message}", LogLevel.Error);
+                }
+                catch (Exception ex)
+                {
+                    GameLogger.Log("EVENT", $"Update subscriber {eventSubscriber.GetType().Name} threw: {ex.Message}", LogLevel.Error);
+                }
             }
         }
 

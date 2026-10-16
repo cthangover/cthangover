@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 
@@ -20,6 +22,11 @@ namespace Cthangover.Core.Mods.Providers
     ///
     /// <see cref="Dispose"/> is a no-op because directories don't need
     /// cleanup.
+    ///
+    /// Lookups follow <see cref="ModPathCase"/>: a path must match the
+    /// on-disk spelling exactly on every OS, so a wrong-case reference fails
+    /// on the author's Windows machine the same way it fails on Linux and in
+    /// zip mods. Verified spellings are cached to keep repeated lookups cheap.
     /// </summary>
     public class FolderModFileProvider : IModFileProvider
     {
@@ -28,6 +35,8 @@ namespace Cthangover.Core.Mods.Providers
 
         /// <inheritdoc />
         public string RootPath { get; }
+
+        private readonly ConcurrentDictionary<string, byte> verifiedFiles = new(StringComparer.Ordinal);
 
         /// <summary>
         /// Creates a provider rooted at the given directory.
@@ -52,12 +61,11 @@ namespace Cthangover.Core.Mods.Providers
 
         /// <summary>
         /// Checks whether a file exists at the given mod-relative path
-        /// by combining it with <see cref="RootPath"/> and testing
-        /// <see cref="File.Exists(string)"/>.
+        /// with exactly this spelling (see <see cref="ModPathCase"/>).
         /// </summary>
         public bool FileExists(string path)
         {
-            return File.Exists(Path.Combine(RootPath, ModPath.Normalize(path)));
+            return ResolveFile(path) != null;
         }
 
         /// <summary>
@@ -70,9 +78,18 @@ namespace Cthangover.Core.Mods.Providers
         /// string for the mod root.</param>
         public IEnumerable<string> ListFiles(string directory = "")
         {
-            var dir = Path.Combine(RootPath, ModPath.Normalize(directory));
-            if (!Directory.Exists(dir))
+            var relativeDir = ModPath.Normalize(directory);
+            var actualDir = ModPathCase.FindOnDisk(RootPath, relativeDir, directory: true);
+            if (actualDir == null)
                 yield break;
+
+            if (!string.Equals(actualDir, relativeDir, StringComparison.Ordinal))
+            {
+                ModPathCase.ReportMismatch(Mod, relativeDir, actualDir);
+                yield break;
+            }
+
+            var dir = Path.Combine(RootPath, relativeDir);
 
             foreach (var entry in Directory.EnumerateFileSystemEntries(dir, "*", SearchOption.TopDirectoryOnly))
             {
@@ -90,8 +107,8 @@ namespace Cthangover.Core.Mods.Providers
         /// </summary>
         public string ReadFileText(string path)
         {
-            var fullPath = Path.Combine(RootPath, ModPath.Normalize(path));
-            return File.Exists(fullPath) ? File.ReadAllText(fullPath) : null;
+            var fullPath = ResolveFile(path);
+            return fullPath != null ? File.ReadAllText(fullPath) : null;
         }
 
         /// <summary>
@@ -100,8 +117,8 @@ namespace Cthangover.Core.Mods.Providers
         /// </summary>
         public byte[] ReadFileBinary(string path)
         {
-            var fullPath = Path.Combine(RootPath, ModPath.Normalize(path));
-            return File.Exists(fullPath) ? File.ReadAllBytes(fullPath) : null;
+            var fullPath = ResolveFile(path);
+            return fullPath != null ? File.ReadAllBytes(fullPath) : null;
         }
 
         /// <summary>
@@ -111,10 +128,8 @@ namespace Cthangover.Core.Mods.Providers
         /// </summary>
         public Stream OpenStream(string path)
         {
-            var fullPath = Path.Combine(RootPath, ModPath.Normalize(path));
-            if (!File.Exists(fullPath))
-                return null;
-            return File.OpenRead(fullPath);
+            var fullPath = ResolveFile(path);
+            return fullPath != null ? File.OpenRead(fullPath) : null;
         }
 
         /// <summary>
@@ -126,8 +141,8 @@ namespace Cthangover.Core.Mods.Providers
         /// </summary>
         public string GetFileSystemPath(string path)
         {
-            var fullPath = Path.GetFullPath(Path.Combine(RootPath, ModPath.Normalize(path)));
-            return File.Exists(fullPath) ? fullPath : null;
+            var fullPath = ResolveFile(path);
+            return fullPath != null ? Path.GetFullPath(fullPath) : null;
         }
 
         /// <summary>
@@ -140,6 +155,32 @@ namespace Cthangover.Core.Mods.Providers
         public string ResolveIncludePath(string includePath, string currentPath)
         {
             return ModPath.ResolveRelative(includePath, currentPath);
+        }
+
+        /// <summary>
+        /// Returns the full path of an existing file whose spelling matches
+        /// <paramref name="path"/> exactly, or <c>null</c>. A case-only
+        /// mismatch is reported once and treated as a miss.
+        /// </summary>
+        private string ResolveFile(string path)
+        {
+            var relative = ModPath.Normalize(path);
+            var fullPath = Path.Combine(RootPath, relative);
+            if (verifiedFiles.ContainsKey(relative))
+                return File.Exists(fullPath) ? fullPath : null;
+
+            var actual = ModPathCase.FindOnDisk(RootPath, relative, directory: false);
+            if (actual == null)
+                return null;
+
+            if (!string.Equals(actual, relative, StringComparison.Ordinal))
+            {
+                ModPathCase.ReportMismatch(Mod, relative, actual);
+                return null;
+            }
+
+            verifiedFiles.TryAdd(relative, 0);
+            return fullPath;
         }
     }
 }

@@ -1,35 +1,35 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text.Json;
-using System.Threading;
-using Cthangover.Core.Bootstrap;
-using Cthangover.Core.Events;
-using Cthangover.Core.Mods.Discovery;
-using Godot;
-using Cthangover.Core.Utils;
-
 namespace Cthangover.Core.Mods
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Threading;
+    using Cthangover.Core.Events;
+    using Cthangover.Core.Mods.Pipeline;
+    using Cthangover.Core.Utils;
+
     /// <summary>
-    /// Mod discovery and index. Scans <c>user://mods/</c> (falling back to
-    /// <c>res://mods/</c>) on first <c>Initialize</c>, creates the
-    /// appropriate <c>IModFileProvider</c> per entry (folder vs zip), reads
-    /// <c>manifest.json</c> from each, and stores the result.
+    /// Mod discovery and index — the singleton facade of the mod subsystem.
+    /// Owns the mod dictionaries (<c>mods</c>, <c>AllDiscoveredMods</c>) and
+    /// the <c>initialized</c> flag, and delegates the actual work to the
+    /// collaborators in <c>Cthangover.Core.Mods.Pipeline</c>: boot-phase
+    /// orchestration (<see cref="ModBootPipeline"/>), per-root discovery and
+    /// deduplication (<see cref="ModDiscoveryService"/>), disabled/dependency
+    /// filtering (<see cref="ModSetFilter"/>) and load-order computation
+    /// (<see cref="ModLoadOrderService"/>); static root helpers live in
+    /// <see cref="ModRoots"/>.
     ///
     /// <b>Deduplication:</b> when two mods share the same
     /// <see cref="ModManifest.Id"/> (or fall back to the same filesystem
-    /// name), the one with the higher <see cref="ModManifest.Version"/>
-    /// is kept and the lower one is skipped with a warning. Mods without
+    /// name), the one from the higher-priority root wins, and on equal
+    /// priority the higher <see cref="ModManifest.Version"/>; the loser is
+    /// skipped with a warning and its file provider is disposed. Mods without
     /// a version are treated as <c>"0.0.0.0"</c>.
     ///
-    /// After discovery, delegates to <c>ModAssemblyLoader</c> for
-    /// precompiled DLLs and then to <c>ModCompiler</c> for source-based
+    /// After discovery, the pipeline delegates to <c>ModAssemblyLoader</c>
+    /// for precompiled DLLs and then to <c>ModCompiler</c> for source-based
     /// mods — the ordering matters because source mods may depend on APIs
-    /// defined in precompiled DLLs. <c>Reload</c> clears state and
-    /// re-runs discovery; <c>ModManager</c> hooks this to also flush its
-    /// own caches.
+    /// defined in precompiled DLLs. <c>Reload</c> clears state and re-runs
+    /// discovery; <c>ModManager</c> hooks this to also flush its own caches.
     /// </summary>
     public class ModRegistry : IModRegistry
     {
@@ -40,47 +40,31 @@ namespace Cthangover.Core.Mods
         private readonly Dictionary<string, IModInfo> mods = new();
         private readonly Dictionary<string, IModInfo> allDiscoveredMods = new();
         private readonly Dictionary<string, int> _existingPriorities = new();
-        private List<string> orderedModIds;
+
+        /// <summary>
+        /// True once discovery has run at least once. Published by the
+        /// pipeline with a volatile write only after every game registry has
+        /// been filled (<c>ModBootPipeline.FinalizeGodotInit</c>), so external
+        /// readers can trust it as a readiness signal. Field name is load-
+        /// bearing: test setups reset this flag via reflection.
+        /// </summary>
         private bool initialized;
-        private bool pathsPrepared;
 
-        /// <summary>
-        /// Serialises the discovery/compile/finalize pipeline. The synchronous
-        /// <see cref="Initialize"/> holds it for the whole pipeline so a second
-        /// caller blocks and then observes <see cref="initialized"/> instead of
-        /// running a competing load; the launcher-boot path takes it per phase.
-        /// <see cref="pipelineRunning"/> lets a re-entrant call from inside the
-        /// pipeline (e.g. <see cref="GetOrderedModIds"/> during finalize) return
-        /// without recursing.
-        /// </summary>
-        private readonly object pipelineLock = new();
-        private bool pipelineRunning;
-
-        /// <summary>
-        /// Roots resolved on the main thread during <see cref="PreparePaths"/>.
-        /// Discovery itself is pure file I/O, but scanners resolve their roots via
-        /// <c>ProjectSettings.GlobalizePath</c>, which is Godot-API and must stay
-        /// on the main thread — so roots are captured here once, then consumed by
-        /// <see cref="DiscoverAndCompile"/> on the background thread.
-        /// </summary>
-        private readonly List<(IModScanner Scanner, string Url, int Priority)> resolvedRoots = new();
-
-        /// <summary>Precompiled DLL assemblies collected during <see cref="DiscoverAndCompile"/> and registered by <see cref="FinalizeGodotInit"/>.</summary>
-        private List<(string ModId, Assembly Assembly)> _precompiledAssemblies = new();
-
-        /// <summary>C# source assemblies compiled during <see cref="DiscoverAndCompile"/> and registered by <see cref="FinalizeGodotInit"/>.</summary>
-        private List<(string ModId, Assembly Assembly, List<(string FilePath, string Source)> Sources)> _compiledAssemblies = new();
+        private readonly ModBootPipeline pipeline;
+        private readonly ModLoadOrderService loadOrder;
 
         private ModRegistry()
         {
             Mods = mods;
+            pipeline = new ModBootPipeline(this, mods, allDiscoveredMods, _existingPriorities);
+            loadOrder = new ModLoadOrderService(this, pipeline, mods, allDiscoveredMods);
         }
 
         /// <summary>Primary mods root (the first accessible scanner root, lowest priority number).</summary>
-        public static string ModsPath => ResolveModsRoots().FirstOrDefault().Path;
+        public static string ModsPath => ModRoots.ModsPath;
 
         /// <summary>All currently accessible mods roots with their dedup priorities; used by the uninstaller's writable-root check.</summary>
-        public static List<(string Path, int Priority)> AllModsRoots => ResolveModsRoots();
+        public static List<(string Path, int Priority)> AllModsRoots => ModRoots.AllModsRoots;
 
         /// <summary>True once discovery has run at least once.</summary>
         public bool IsInitialized => Volatile.Read(ref initialized);
@@ -96,224 +80,63 @@ namespace Cthangover.Core.Mods
         public IReadOnlyDictionary<string, IModInfo> AllDiscoveredMods => allDiscoveredMods;
 
         /// <summary>
+        /// Volatile access to <c>initialized</c> for the boot pipeline: the
+        /// flag stays owned by the registry (external readers observe it via
+        /// <see cref="IsInitialized"/>), while the pipeline performs the
+        /// early-out read in <c>Initialize</c> and the readiness publish in
+        /// <c>FinalizeGodotInit</c> at exactly the original points.
+        /// </summary>
+        internal bool InitializedFlag
+        {
+            get => Volatile.Read(ref initialized);
+            set => Volatile.Write(ref initialized, value);
+        }
+
+        /// <summary>
         /// Idempotent bootstrap: scans the mods directory, creates
         /// providers, reads manifests, resolves duplicate IDs by
         /// version, loads precompiled DLLs, then compiles source-based
-        /// mods. Returns immediately on subsequent calls.
-        ///
-        /// Synchronous entry point for <see cref="Boot.RunSync"/>, tests and
-        /// tooling. During a launcher boot the pipeline belongs to Boot alone:
-        /// it drives <see cref="PreparePaths"/>, <see cref="DiscoverAndCompile"/>
-        /// (on a background thread) and <see cref="FinalizeGodotInit"/> in order,
-        /// so the heavy compile phase never blocks the main thread's rendering.
-        /// Any other caller reaching here before <see cref="Boot.ModsReady"/> is
-        /// refused with an error in the log — lazy self-initialization outside
-        /// these paths is deliberately forbidden.
+        /// mods. Returns immediately on subsequent calls. During a launcher
+        /// boot the pipeline belongs to Boot alone and other callers are
+        /// refused — see <see cref="ModBootPipeline.IsLauncherBootWindow"/>
+        /// for the exact policy.
         /// </summary>
-        public void Initialize()
-        {
-            if (Volatile.Read(ref initialized))
-                return;
-
-            // The launcher boot owns the pipeline: Boot.RunLauncherAsync drives the
-            // phases in order. Any other caller reaching this point during that window
-            // is a boot-order bug: refuse loudly instead of silently self-booting on
-            // the main thread or blocking background callers on a wait handle.
-            // Re-entrant calls from the pipeline itself (GetOrderedModIds during
-            // FinalizeGodotInit) are exempt — pipelineRunning marks them. The window
-            // ends at ModsReady: Boot itself consumes mod data (EnsureRuntime, starter
-            // inventory seeding) from that phase on, so data becomes consumable there.
-            if (BootController.IsLauncherBoot && !Boot.ModsReady && !pipelineRunning)
-            {
-                GameLogger.Log("MODS_REGISTRY",
-                    "Initialize refused: launcher boot owns the mod pipeline " +
-                    $"(Boot.Phase={Boot.Phase}). Consume mod data only after Boot.ModsReady, " +
-                    "or add a readiness guard like the audio mod's music player does.",
-                    LogLevel.Error);
-                return;
-            }
-
-            lock (pipelineLock)
-            {
-                if (initialized || pipelineRunning)
-                    return;
-
-                pipelineRunning = true;
-                try
-                {
-                    PreparePaths();
-                    DiscoverAndCompile();
-                    FinalizeGodotInit();
-                }
-                finally
-                {
-                    pipelineRunning = false;
-                }
-            }
-        }
+        public void Initialize() => pipeline.Initialize();
 
         /// <summary>
-        /// Resolves everything that requires Godot API on the main thread and is
-        /// needed by the background compile phase:
-        /// <list type="bullet">
-        /// <item>mod discovery registry (scanner/loader reflection discovery)</item>
-        /// <item>scanner roots via <c>ProjectSettings.GlobalizePath</c></item>
-        /// <item>compiler/native-loader cache roots and Mono build output dir</item>
-        /// </list>
-        /// Idempotent; safe to call before <see cref="DiscoverAndCompile"/>.
+        /// Resolves everything that requires Godot API on the main thread
+        /// (scanner roots, cache dirs, config) so the background phase never
+        /// touches Godot. Idempotent. See <see cref="ModBootPipeline.PreparePaths"/>.
         /// </summary>
-        public void PreparePaths()
-        {
-            lock (pipelineLock)
-            {
-                if (pathsPrepared)
-                    return;
-                pathsPrepared = true;
-
-                ModDiscoveryRegistry.Initialize();
-                ModCompiler.WarmUpPaths();
-                _ = ModNativeLoader.CacheRoot;
-                _ = ModConfig.Instance;
-                DisabledModsStore.WarmUp();
-                ModCollectionStore.WarmUp();
-                CollectionLayoutStore.WarmUp();
-
-                resolvedRoots.Clear();
-                foreach (var scanner in ModDiscoveryRegistry.Scanners)
-                {
-                    foreach (var root in scanner.GetRoots())
-                        resolvedRoots.Add((scanner, root.Url, root.Priority));
-                }
-            }
-        }
+        public void PreparePaths() => pipeline.PreparePaths();
 
         /// <summary>
-        /// Godot-free phase: scans the pre-resolved roots, reads manifests,
-        /// hashes mods, filters/validates them, loads native libraries,
-        /// loads precompiled DLLs and compiles C# source mods — all pure .NET
-        /// (System.IO, Roslyn, Assembly.Load) with no Godot API. Runs on a
-        /// background thread during launcher boot. Collected assemblies are
-        /// stored internally and registered later by <see cref="FinalizeGodotInit"/>.
+        /// Godot-free phase: scans the pre-resolved roots and compiles mods —
+        /// pure .NET, safe on a background thread. See
+        /// <see cref="ModBootPipeline.DiscoverAndCompile"/>.
         /// </summary>
         public void DiscoverAndCompile(CancellationToken cancellationToken = default)
-        {
-            lock (pipelineLock)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                // The mods dictionary is being rebuilt — any previously cached load
-                // order (possibly computed from an empty registry during the boot
-                // window) is now stale and must be recomputed.
-                orderedModIds = null;
-
-                var anyRootFound = false;
-
-                foreach (var (scanner, url, priority) in resolvedRoots)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-
-                    if (!scanner.IsCanProvide(url))
-                    {
-                        GameLogger.Log("MODS_REGISTRY",
-                            $"Scanner '{scanner.Name}' skipped root '{url}': not available",
-                            LogLevel.Debug);
-                        continue;
-                    }
-
-                    anyRootFound = true;
-                    GameLogger.Log("MODS_REGISTRY",
-                        $"Scanning root '{url}' with '{scanner.Name}' priority={priority}");
-                    DiscoverMods(scanner, url, priority, cancellationToken);
-                }
-
-                if (!anyRootFound)
-                {
-                    GameLogger.Log("MODS_REGISTRY", "No mods roots found, skipping mod loading", LogLevel.Error);
-                    GameLogger.Log("MODS_REGISTRY", $"ModRegistry.Initialize: END (no mods root), {mods.Count} mod(s)");
-                    return;
-                }
-
-                foreach (var kvp in mods)
-                    allDiscoveredMods[kvp.Key] = kvp.Value;
-
-                FilterDisabledMods();
-                ValidateDependencies();
-
-                ModNativeLoader.LoadNativeDlls(mods.Values, cancellationToken);
-                _precompiledAssemblies = ModAssemblyLoader.LoadPrecompiledDlls(mods.Values, cancellationToken);
-                _compiledAssemblies = ModCompiler.CompileAll(mods, cancellationToken);
-            }
-        }
+            => pipeline.DiscoverAndCompile(cancellationToken);
 
         /// <summary>
-        /// Godot-bound phase, must run on the main thread after
-        /// <see cref="DiscoverAndCompile"/>: registers compiled/precompiled
-        /// assemblies into the game's registries (reflection fan-out that may
-        /// instantiate Godot types), loads GDScript mods, and computes the mod
-        /// load order. Completes the pipeline started by <see cref="Initialize"/>.
+        /// Godot-bound phase: registers compiled assemblies, loads GDScript
+        /// mods, computes the load order and publishes readiness. See
+        /// <see cref="ModBootPipeline.FinalizeGodotInit"/>.
         /// </summary>
-        public void FinalizeGodotInit()
-        {
-            lock (pipelineLock)
-            {
-                if (initialized)
-                    return;
-
-                // Mark the pipeline as running for the duration of the finalize:
-                // GetOrderedModIds below re-enters Initialize, and the
-                // launcher-boot refusal guard must exempt the pipeline's own
-                // re-entrant calls (pipelineRunning marks them).
-                pipelineRunning = true;
-                try
-                {
-                    foreach (var (modId, assembly) in _precompiledAssemblies)
-                        ModAssemblyLoader.RegisterAssembly(assembly, modId);
-
-                    foreach (var (modId, assembly, sourceFiles) in _compiledAssemblies)
-                    {
-                        ModAssemblyLoader.RegisterAssembly(assembly, modId);
-                        ScriptTypeRegistry.RegisterAssembly(assembly, modId, sourceFiles);
-                    }
-
-                    ModGDScriptLoader.LoadGDScripts(mods);
-
-                    // Discard any order computed during the launcher boot window:
-                    // a main-thread caller can reach GetOrderedModIds while the
-                    // background compile is still filling the registry, and that
-                    // partial order must not survive into the finalized mod set.
-                    orderedModIds = null;
-                    var orderedIds = GetOrderedModIds();
-                    var orderedList = new List<(string ModId, int Priority)>();
-                    for (var i = 0; i < orderedIds.Count; i++)
-                        orderedList.Add((orderedIds[i], i));
-                    ScriptTypeRegistry.SetModOrder(orderedList);
-
-                    // Publish readiness only after every registry is populated:
-                    // a concurrent reader must never observe IsInitialized while
-                    // scripts/GDScripts are still missing. The volatile write is
-                    // ordered, so readiness becomes visible to other threads only
-                    // once every registry above is fully filled.
-                    Volatile.Write(ref initialized, true);
-
-                    GameLogger.Log("MODS_REGISTRY", $"ModRegistry.Initialize: loaded {mods.Count} mod(s)");
-                    foreach (var kvp in mods)
-                        GameLogger.Log("MODS_REGISTRY", $"  [{kvp.Key}] '{kvp.Value.Name}' v{kvp.Value.Version ?? "?"} provider={kvp.Value.FileProvider.GetType().Name}", LogLevel.Debug);
-                }
-                finally
-                {
-                    pipelineRunning = false;
-                }
-            }
-        }
+        public void FinalizeGodotInit() => pipeline.FinalizeGodotInit();
 
         /// <summary>
         /// Discards all loaded mods and re-runs discovery. The caller
         /// (typically <c>ModManager.Reload</c>) is responsible for
-        /// additionally flushing asset caches.
+        /// additionally flushing asset caches. Holds the pipeline lock so a
+        /// reload is mutually exclusive with the boot phases; the reset order
+        /// mirrors the original initialization inverse — event bus
+        /// subscriptions first (while mod ids are still known), then the
+        /// registry state, then the static registries.
         /// </summary>
         public void Reload()
         {
-            lock (pipelineLock)
+            lock (pipeline.PipelineLock)
             {
                 foreach (var kvp in mods)
                     ModEventBus.Instance?.ClearForMod(kvp.Key);
@@ -322,24 +145,34 @@ namespace Cthangover.Core.Mods
                 mods.Clear();
                 allDiscoveredMods.Clear();
                 _existingPriorities.Clear();
-                orderedModIds = null;
-                _precompiledAssemblies = new List<(string ModId, Assembly Assembly)>();
-                _compiledAssemblies = new List<(string ModId, Assembly Assembly, List<(string FilePath, string Source)> Sources)>();
+                InvalidateOrder();
+                pipeline.ResetStagedAssemblies();
                 ScriptTypeRegistry.Clear();
                 ModNativeLoader.FreeAll();
-                Initialize();
+
+                // Collectible unload: reverse fan-out through the consumer
+                // registry and release each mod's AssemblyLoadContext. A mod
+                // whose references survive logs a diagnostic and degrades to
+                // the pre-collectible behaviour (assemblies stay until exit);
+                // re-initialization still rebuilds a consistent mod set.
+                foreach (var loadedId in ModAssemblyLoader.LoadedModIds)
+                {
+                    var diagnostic = ModAssemblyLoader.UnloadMod(loadedId);
+                    if (diagnostic != null)
+                        GameLogger.Log("MODS_REGISTRY", $"Reload: mod '{loadedId}' not fully unloaded: {diagnostic}", LogLevel.Warning);
+                }
+
+                using (ModAssemblyLoader.BeginBatch())
+                    Initialize();
             }
         }
 
         /// <summary>
         /// Invalidates the cached ordered mod list so the next call to
-        /// <c>GetOrderedModIds</c> recomputes it. Called by the UI after
+        /// <see cref="GetOrderedModIds"/> recomputes it. Called by the UI after
         /// the user changes the manual load order.
         /// </summary>
-        public void InvalidateOrder()
-        {
-            orderedModIds = null;
-        }
+        public void InvalidateOrder() => loadOrder.InvalidateOrder();
 
         /// <summary>
         /// Looks up a mod by ID. Triggers <c>Initialize</c> if not
@@ -352,403 +185,12 @@ namespace Cthangover.Core.Mods
             return mod;
         }
 
-		/// <summary>
-		/// Returns mod IDs ordered by <c>depends</c> (topological sort),
-		/// then by user-defined manual order, with alphabetical fallback
-		/// for determinism. Dependencies always precede their dependents —
-		/// manual ordering only applies between unrelated mods.
-		/// When <paramref name="filterDisabled"/> is <c>true</c> (default),
-		/// the result is cached and persisted, but only once the registry
-		/// has been finalized: during the launcher boot window a main-thread
-		/// caller would otherwise freeze an order computed from the
-		/// half-built mod set for the rest of the session — and overwrite
-		/// the saved manual order with an empty list. When
-		/// <paramref name="filterDisabled"/> is <c>false</c>, the order is
-		/// computed from <see cref="AllDiscoveredMods"/> every call (no
-		/// caching) and is NOT persisted to <see cref="ModLoadOrderStore"/>
-		/// — this variant is intended for the mod configuration UI.
-		/// </summary>
-		public IReadOnlyList<string> GetOrderedModIds(bool filterDisabled = true)
-		{
-			Initialize();
-
-			// Initialize above already refused and logged when the launcher boot
-			// owns the pipeline. Computing here would return a misleading empty
-			// order built from a half-built registry, so refuse as well. The
-			// pipeline's own re-entrant call from FinalizeGodotInit is exempt —
-			// pipelineRunning marks it, exactly as in Initialize. Ends at
-			// ModsReady: the starter-inventory seeding legitimately reads the
-			// (now final) mod set during that phase.
-			if (BootController.IsLauncherBoot && !Boot.ModsReady && !pipelineRunning)
-				return new List<string>();
-
-			if (filterDisabled && orderedModIds != null)
-				return orderedModIds;
-
-			var source = filterDisabled ? mods : allDiscoveredMods;
-
-			var dependsMap = new Dictionary<string, IReadOnlyList<string>>();
-			foreach (var kvp in source)
-			{
-				var manifest = ((ModInfo)kvp.Value).Manifest;
-				dependsMap[kvp.Key] = manifest?.DependencyIds ?? new List<string>();
-			}
-
-			var manualOrder = ModLoadOrderStore.Sync(source.Keys.ToList());
-			var result = ModLoadOrder.Compute(dependsMap, manualOrder);
-
-			if (filterDisabled && IsInitialized)
-			{
-				orderedModIds = result;
-				ModLoadOrderStore.Save(orderedModIds);
-			}
-
-			GameLogger.Log("MODS_REGISTRY", $"GetOrderedModIds(filterDisabled={filterDisabled}): {result.Count} mod(s) ordered");
-			for (int i = 0; i < result.Count; i++)
-				GameLogger.Log("MODS_REGISTRY", $"  [{i}] {result[i]}", LogLevel.Debug);
-
-			return result;
-		}
-
-        private static List<(string Path, int Priority)> ResolveModsRoots()
-        {
-            var roots = new List<(string Path, int Priority)>();
-            ModDiscoveryRegistry.Initialize();
-
-            foreach (var scanner in ModDiscoveryRegistry.Scanners)
-            {
-                foreach (var root in scanner.GetRoots())
-                {
-                    if (scanner.IsCanProvide(root.Url))
-                        roots.Add((root.Url, root.Priority));
-                }
-            }
-
-            return roots;
-        }
-
         /// <summary>
-        /// Holds a discovered mod candidate before deduplication.
+        /// Returns mod IDs ordered by <c>depends</c>, then by the user's
+        /// manual order; semantics, caching and boot-window guards are
+        /// documented on <see cref="ModLoadOrderService.GetOrderedModIds"/>.
         /// </summary>
-        private struct ModCandidate
-        {
-            public string Id;
-            public ModInfo Info;
-            public string FilesystemEntryName;
-            public IModFileProvider Provider;
-            public ModManifest Manifest;
-            public int RootPriority;
-        }
-
-        private void DiscoverMods(IModScanner scanner, string modsRoot, int rootPriority, CancellationToken cancellationToken)
-        {
-            var candidates = new List<ModCandidate>();
-
-            try
-            {
-                foreach (var entry in scanner.Discover(modsRoot))
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-
-                    if (entry.EntryName == ".gdignore" || entry.EntryName == ".gitkeep")
-                        continue;
-
-                    var loader = ModDiscoveryRegistry.FindLoader(entry.Url);
-                    if (loader == null)
-                        continue;
-
-                    var candidate = TryLoadModFromLoader(loader, entry.Url, entry.EntryName);
-                    if (candidate.HasValue)
-                    {
-                        var c = candidate.Value;
-                        c.RootPriority = rootPriority;
-                        candidates.Add(c);
-                    }
-                }
-            }
-            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                GameLogger.Log("MODS_REGISTRY", $"Failed to scan directory '{modsRoot}': {ex.Message}", LogLevel.Error);
-            }
-
-            RegisterCandidates(candidates);
-        }
-
-        /// <summary>
-        /// Translates a localization key only on the Godot main thread. The
-        /// discovery/validation phase may run on a background thread during boot
-        /// (before any locale is loaded anyway), so <c>TranslationServer.Translate</c>
-        /// must not be called there — the raw key is returned instead.
-        /// </summary>
-        private static string Tr(string key)
-        {
-            if (!GameEnvironment.IsMainThread)
-                return key;
-            return TranslationServer.Translate(key);
-        }
-
-        private void FilterDisabledMods()
-        {
-            var disabled = DisabledModsStore.Load();
-            if (disabled.Count == 0)
-                return;
-
-            var toRemove = new HashSet<string>();
-            foreach (var id in mods.Keys)
-            {
-                if (disabled.Contains(id))
-                {
-                    toRemove.Add(id);
-                    var info = (ModInfo)mods[id];
-                    info.LoadFailureReasons.Add(string.Format(Tr("mods/disabled_reason"), id));
-                }
-            }
-
-            bool changed;
-            do
-            {
-                changed = false;
-                foreach (var kvp in mods)
-                {
-                    if (toRemove.Contains(kvp.Key))
-                        continue;
-
-                    var manifest = ((ModInfo)kvp.Value).Manifest;
-                    var depIds = manifest?.DependencyIds;
-                    if (depIds == null || depIds.Count == 0)
-                        continue;
-
-                    foreach (var depId in depIds)
-                    {
-                        if (toRemove.Contains(depId))
-                        {
-                            toRemove.Add(kvp.Key);
-                            var info = (ModInfo)kvp.Value;
-                            info.LoadFailureReasons.Add(string.Format(Tr("mods/dep_disabled_reason"), depId));
-                            GameLogger.Log("MODS_REGISTRY",
-                                $"Mod '{kvp.Key}' disabled because dependency '{depId}' is disabled",
-                                LogLevel.Warning);
-                            changed = true;
-                            break;
-                        }
-                    }
-                }
-            } while (changed);
-
-            foreach (var id in toRemove)
-            {
-                mods.Remove(id);
-                GameLogger.Log("MODS_REGISTRY", $"Mod '{id}' filtered out (disabled)", LogLevel.Message);
-            }
-        }
-
-        private void ValidateDependencies()
-        {
-            var toRemove = new HashSet<string>();
-
-            foreach (var kvp in mods)
-            {
-                var modId = kvp.Key;
-                var manifest = ((ModInfo)kvp.Value).Manifest;
-                if (manifest?.Depends == null)
-                    continue;
-
-                foreach (var dep in manifest.Depends)
-                {
-                    if (!dep.IsValid)
-                    {
-                        toRemove.Add(modId);
-                        var info = (ModInfo)kvp.Value;
-                        info.LoadFailureReasons.Add(string.Format(Tr("mods/invalid_dep_format"), dep.Error));
-                        GameLogger.Log("MODS_REGISTRY",
-                            $"Mod '{modId}' has invalid dependency: {dep.Error}",
-                            LogLevel.Error);
-                        break;
-                    }
-
-                    if (!mods.ContainsKey(dep.ModId))
-                    {
-                        if (dep.IsOptional)
-                            continue;
-
-                        toRemove.Add(modId);
-                        var info = (ModInfo)kvp.Value;
-                        info.LoadFailureReasons.Add(string.Format(Tr("mods/required_mod_not_loaded"), dep.ModId));
-                        GameLogger.Log("MODS_REGISTRY",
-                            $"Mod '{modId}' requires '{dep.ModId}' but it is not loaded",
-                            LogLevel.Error);
-                        break;
-                    }
-
-                    if (!dep.IsSatisfiedBy(mods[dep.ModId].Version ?? "0.0.0.0"))
-                    {
-                        toRemove.Add(modId);
-                        var info = (ModInfo)kvp.Value;
-                        var actualVersion = mods[dep.ModId].Version ?? "0.0.0.0";
-                        info.LoadFailureReasons.Add(
-                            string.Format(Tr("mods/version_mismatch"),
-                                $"{dep.ModId}{dep.Operator}{dep.VersionRaw}", actualVersion));
-                        GameLogger.Log("MODS_REGISTRY",
-                            $"Mod '{modId}' requires {dep.ModId}{dep.Operator}{dep.VersionRaw} but loaded version is {actualVersion}",
-                            LogLevel.Error);
-                        break;
-                    }
-                }
-            }
-
-            if (toRemove.Count == 0)
-                return;
-
-            foreach (var id in toRemove)
-            {
-                mods.Remove(id);
-                GameLogger.Log("MODS_REGISTRY", $"Mod '{id}' filtered out (dependency validation failed)", LogLevel.Message);
-            }
-        }
-
-        private void RegisterCandidates(List<ModCandidate> candidates)
-        {
-            foreach (var candidate in candidates)
-            {
-                if (mods.TryGetValue(candidate.Id, out var existing))
-                {
-                    var existingInfo = (ModInfo)existing;
-
-                    if (candidate.RootPriority < _existingPriorities.GetValueOrDefault(candidate.Id, int.MaxValue))
-                    {
-                        GameLogger.Log("MODS_REGISTRY",
-                            $"Mod '{candidate.Id}' ({candidate.FilesystemEntryName}) v{candidate.Info.Version} " +
-                            $"replaces v{existingInfo.Version} from '{existingInfo.Id}' (higher-priority source)",
-                            LogLevel.Warning);
-
-                        existingInfo.FileProvider.Dispose();
-                        mods[candidate.Id] = candidate.Info;
-                        _existingPriorities[candidate.Id] = candidate.RootPriority;
-                    }
-                    else if (candidate.RootPriority == _existingPriorities.GetValueOrDefault(candidate.Id, int.MaxValue))
-                    {
-                        var cmp = VersionHelper.Compare(
-                            candidate.Info.Version ?? "0.0.0.0",
-                            existingInfo.Version ?? "0.0.0.0");
-
-                        if (cmp > 0)
-                        {
-                            GameLogger.Log("MODS_REGISTRY",
-                                $"Mod '{candidate.Id}' ({candidate.FilesystemEntryName}) v{candidate.Info.Version} " +
-                                $"replaces older v{existingInfo.Version} from '{existingInfo.Id}'",
-                                LogLevel.Warning);
-
-                            existingInfo.FileProvider.Dispose();
-                            mods[candidate.Id] = candidate.Info;
-                        }
-                        else
-                        {
-                            var reason = cmp == 0
-                                ? $"same version {candidate.Info.Version}"
-                                : $"older version {candidate.Info.Version} (already have {existingInfo.Version})";
-
-                            GameLogger.Log("MODS_REGISTRY",
-                                $"Skipping mod '{candidate.Id}' ({candidate.FilesystemEntryName}): {reason}",
-                                LogLevel.Warning);
-
-                            candidate.Provider.Dispose();
-                        }
-                    }
-                    else
-                    {
-                        GameLogger.Log("MODS_REGISTRY",
-                            $"Skipping mod '{candidate.Id}' ({candidate.FilesystemEntryName}): lower-priority source",
-                            LogLevel.Warning);
-
-                        candidate.Provider.Dispose();
-                    }
-                }
-                else
-                {
-                    mods[candidate.Id] = candidate.Info;
-                    _existingPriorities[candidate.Id] = candidate.RootPriority;
-                }
-            }
-        }
-
-        private static ModCandidate? TryLoadModFromLoader(IModLoader loader, string url, string entryName)
-        {
-            try
-            {
-                var fileProvider = loader.CreateProvider(url, entryName);
-                var manifest = ReadManifest(fileProvider);
-
-                if (manifest == null)
-                {
-                    GameLogger.Log("MODS_REGISTRY", $"Skipping '{entryName}': no manifest found", LogLevel.Error);
-                    fileProvider.Dispose();
-                    return null;
-                }
-
-                var id = !string.IsNullOrEmpty(manifest.Id) ? manifest.Id : loader.GetFallbackModId(url, entryName);
-
-                var info = new ModInfo
-                {
-                    Id = id,
-                    Name = manifest.Name,
-                    Author = manifest.Author,
-                    Description = manifest.Description,
-                    FileProvider = fileProvider,
-                    Manifest = manifest,
-                };
-
-                try
-                {
-                    info.InstallSha256 = ModHasher.ComputeInstallSha256(fileProvider,
-                        ModConfig.Instance.CatalogIgnorePatterns);
-                }
-                catch (Exception ex)
-                {
-                    GameLogger.Log("MODS_REGISTRY",
-                        $"Failed to compute install SHA256 for mod '{id}': {ex.Message}",
-                        LogLevel.Warning);
-                }
-
-                return new ModCandidate
-                {
-                    Id = id,
-                    Info = info,
-                    FilesystemEntryName = entryName,
-                    Provider = fileProvider,
-                    Manifest = manifest,
-                };
-            }
-            catch (Exception ex)
-            {
-                GameLogger.Log("MODS_REGISTRY",
-                    $"Failed to load mod '{entryName}' via {loader.Name}: {ex.Message}",
-                    LogLevel.Error);
-                return null;
-            }
-        }
-
-        private static ModManifest ReadManifest(IModFileProvider provider)
-        {
-            if (!provider.FileExists("manifest.json"))
-                return null;
-            
-            var json = provider.ReadFileText("manifest.json");
-            if (string.IsNullOrEmpty(json))
-                return null;
-            
-            try
-            {
-                return JsonSerializer.Deserialize<ModManifest>(json, JsonOptionsProvider.ReadOptions);
-            }
-            catch (JsonException ex)
-            {
-                GameLogger.Log("MODS_REGISTRY", $"Failed to parse manifest.json: {ex.Message}", LogLevel.Error);
-            }
-            return null;
-        }
+        public IReadOnlyList<string> GetOrderedModIds(bool filterDisabled = true)
+            => loadOrder.GetOrderedModIds(filterDisabled);
     }
 }

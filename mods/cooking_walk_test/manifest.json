@@ -1,0 +1,10 @@
+{
+    "id": "cooking_walk_test",
+    "name": "Cooking Walk Test",
+    "version": "1.0.0",
+    "author": "ct",
+    "description": "Integration test mod: walks the real UI with button clicks (location menus, cooking workbench) through the full home loop: enter house, unlock wolf-meat recipe via item use, cook a ration, verify it in inventory, and walk bedroom/workroom round-trips. Activated only by --itest=cooking_walk.",
+    "category": "other",
+    "depends": ["visual_novel_core>=1", "items_base>=1", "cooking>=1", "interface>=1", "dialog_base>=1"],
+    "sources": ["src/*.cs"]
+}

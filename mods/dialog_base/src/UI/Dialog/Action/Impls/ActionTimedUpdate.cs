@@ -1,4 +1,3 @@
-using Cthangover.Core.Scenes;
 using Cthangover.Core.UI.Event;
 using Godot;
 using Cthangover.Core.UI;
@@ -45,7 +44,7 @@ namespace Cthangover.Mods.Dialog.Action.Impls
         public override void DoConstruct()
         {
             base.DoConstruct();
-            var controller = SceneContextNode.FindNode<SceneEventController>("EventController");
+            var controller = Scene.Find<SceneEventController>("EventController");
             controller?.AddUpdateEventListener(this);
         }
 
@@ -64,7 +63,7 @@ namespace Cthangover.Mods.Dialog.Action.Impls
             base.DoDestruct();
             isRunning = false;
             runtime = null;
-            var controller = SceneContextNode.FindNode<SceneEventController>("EventController");
+            var controller = Scene.Find<SceneEventController>("EventController");
             controller?.RemoveUpdateEventListener(this);
             OnFinishCallback?.Invoke();
         }

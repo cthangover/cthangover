@@ -23,7 +23,7 @@ run/main_scene="res://scenes/menu/launcher.tscn"
 config/use_custom_user_dir=true
 config/features=PackedStringArray("4.6", "C#", "Forward Plus", "Mobile")
 boot_splash/bg_color=Color(0.19599697, 0.15303564, 0.19599697, 1)
-config/icon="C:\\projects\\godotcthangover\\mods\\interface\\ui\\icon.png"
+config/icon="res://mods/interface/ui/icon.png"
 
 [autoload]
 
@@ -37,7 +37,7 @@ UiHost="*res://Core/UI/UiHost.cs"
 
 [csharp]
 
-project_assembly_name="cthangover"
+project_assembly_name="Cthangover"
 
 [display]
 
@@ -48,11 +48,7 @@ window/vsync/vsync_mode=0
 
 [dotnet]
 
-project/assembly_name="cthangover"
-
-[editor_plugins]
-
-enabled=PackedStringArray("res://addons/scene_manager/plugin.cfg")
+project/assembly_name="Cthangover"
 
 [input]
 

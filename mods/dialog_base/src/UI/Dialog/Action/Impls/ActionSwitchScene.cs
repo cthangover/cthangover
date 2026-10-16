@@ -13,10 +13,15 @@ namespace Cthangover.Mods.Dialog.Action.Impls
 {
     /// <summary>
     /// Deferred scene switch: calls SceneManager.SwitchScene via CallDeferred
-    /// to avoid mid-queue scene tree mutations. Marks the owning ExecutableEvent
-    /// as OneRun so the same trigger doesn't re-fire after the scene reloads.
-    /// NoWait ensures the dialog ends immediately — there's no return from a
-    /// scene switch.
+    /// to avoid mid-queue scene tree mutations. NoWait ensures the dialog ends
+    /// immediately — there's no return from a scene switch.
+    /// <para/>
+    /// Does NOT force the owning scenario into OneRun: re-runs are the scenario
+    /// author's decision (is_one_run metadata) plus per-event conditions.
+    /// Navigation menus (select + switch_scene) must survive into the next
+    /// visit, and forcing OneRun recorded them in CompletedScenarioIds — after
+    /// which FilterCompletedScenarios silently dropped the whole location menu
+    /// on re-entry.
     /// </summary>
     public class ActionSwitchScene : ActionCommand
     {
@@ -39,13 +44,15 @@ namespace Cthangover.Mods.Dialog.Action.Impls
                 return;
             }
 
-            var locker = runtime.DialogBox?.Locker;
-            if (locker != null)
-                locker.IsOneRun = true;
+            // No forced IsOneRun here: location navigation scenarios are meant to
+            // re-run on every visit. Forcing it made DialogRuntime record the
+            // scenario as completed, and the next visit to the same scene started
+            // without its menu. One-time story scenes declare is_one_run: true
+            // (or a condition:) in their metadata instead.
 
             GameLogger.Log("DIALOG", $"ActionSwitchScene: deferring switch to '{SceneName}'");
 
-            var sceneManager = SceneContextNode.FindNode<SceneManager>("SceneManager");
+            var sceneManager = Scene.Find<SceneManager>("SceneManager");
             if (sceneManager != null)
             {
                 Callable.From(() => sceneManager.SwitchScene(SceneName)).CallDeferred();

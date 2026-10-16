@@ -181,7 +181,22 @@ namespace Cthangover.Core.UI.Menu
             // then quits with the standard exit code contract.
             if (Boot.IsReady && ModTestEngine.IsTestMode())
             {
+                var requestedWhileTesting = SceneLaunchArgs.RequestedSceneName();
+                if (requestedWhileTesting != null)
+                    GameLogger.Log("SCENE", $"--scene='{requestedWhileTesting}' ignored: --run-tests takes priority", LogLevel.Warning);
                 await RunModTestsAndQuitAsync();
+                return;
+            }
+
+            // Direct scene navigation (--scene=<logical>): a first-class launch
+            // mode after a fully completed boot. Skips the launcher UI and the
+            // main menu, drops the player into the requested mod-defined scene
+            // through the same base-scene + deferred SwitchScene sequence every
+            // logical navigation uses. An unknown name logs an error and falls
+            // through to the normal launcher flow instead of crashing.
+            if (Boot.IsReady && SceneLaunchArgs.RequestedSceneName() is { } sceneTarget)
+            {
+                await LaunchRequestedSceneAsync(sceneTarget);
                 return;
             }
 
@@ -200,6 +215,59 @@ namespace Cthangover.Core.UI.Menu
         }
 
         /// <summary>
+        /// Feature terminus of <c>--scene=&lt;logical&gt;</c>: validates the name
+        /// against <see cref="SceneManager.HasScene"/>, then replays the canonical
+        /// logical-scene entry sequence in the core — instantiate the mod-provided
+        /// base scene shell (the ViewBox/event host the game expects to live in),
+        /// and issue <see cref="SceneManager.SwitchScene"/> on the next frames once
+        /// the autoloads have settled. Because only the shell is swapped, all scene
+        /// routing (routes, native Godot scenes, scenario scenes) works unchanged.
+        /// On an unknown name the error is logged and the launcher falls back to
+        /// its normal flow (menu/UI) — a typo must never crash the game.
+        /// </summary>
+        private async System.Threading.Tasks.Task LaunchRequestedSceneAsync(string sceneName)
+        {
+            var sceneManager = GetNodeOrNull<SceneManager>("/root/SceneManager");
+            if (sceneManager == null)
+            {
+                GameLogger.Log("SCENE", "--scene: SceneManager autoload not found, continuing normal launch", LogLevel.Error);
+                return;
+            }
+
+            if (!sceneManager.HasScene(sceneName))
+            {
+                GameLogger.Log("SCENE", $"--scene: logical scene '{sceneName}' not found, continuing normal launch", LogLevel.Error);
+                return;
+            }
+
+            GameLogger.Log("SCENE", $"--scene: launching logical scene '{sceneName}'");
+
+            var baseScenePath = GodotSceneService.GetScenePath(GodotSceneType.BaseScene);
+            var baseScene = TscnScenes.LoadAndBuild(baseScenePath);
+            if (baseScene == null)
+            {
+                GameLogger.Log("SCENE", $"--scene: failed to build base scene '{baseScenePath}', continuing normal launch", LogLevel.Error);
+                return;
+            }
+
+            GetTree().Root.AddChild(baseScene);
+
+            // Let the shell enter the tree (its _Ready wires the event chain and
+            // ViewBox) before the scene pipeline starts publishing events into it.
+            await ToSignal(GetTree().CreateTimer(0.2), SceneTreeTimer.SignalName.Timeout);
+
+            if (!GodotObject.IsInstanceValid(this))
+                return;
+
+            sceneManager.SwitchScene(sceneName);
+
+            // The launcher scene is no longer the front: free its UI so the
+            // base scene shell is the only thing on screen.
+            GetTree().CurrentScene = baseScene;
+            QueueFree();
+        }
+
+        /// <summary>
         /// Test-mode terminus of the boot pipeline: runs the mod test engine
         /// for all eligible mods (or the <c>--mod=</c> filtered one), prints
         /// the report through the standard channels and quits the process with
@@ -208,6 +276,10 @@ namespace Cthangover.Core.UI.Menu
         private async System.Threading.Tasks.Task RunModTestsAndQuitAsync()
         {
             GameLogger.Log("MODTEST", "Test mode active (--run-tests / run_mod_tests): running mod tests");
+            // Taken up front: the quit must happen even if this node is gone
+            // by the end of the run, otherwise the process hangs until an
+            // external timeout kills it.
+            var tree = GetTree();
             bool success;
             try
             {
@@ -223,7 +295,7 @@ namespace Cthangover.Core.UI.Menu
                 success = false;
             }
             GameLogger.Log("MODTEST", $"Mod test run finished, success={success}, quitting");
-            GetTree().Quit(success ? 0 : 1);
+            tree.Quit(success ? 0 : 1);
         }
 
         private void SkipToMainMenu()

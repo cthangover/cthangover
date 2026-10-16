@@ -51,5 +51,24 @@ namespace Cthangover.Core.Scenarios
                 PendingAssemblies.Clear();
             }
         }
+
+        /// <summary>
+        /// Reverse pass for collectible assembly unload: drops the assembly
+        /// from the pending buffer and forwards the unload to the bound sink
+        /// (the dialog mod removes the strategies that came from it). The
+        /// sink is invoked with null-tolerant semantics: a missing sink simply
+        /// leaves the assembly out of the buffer.
+        /// </summary>
+        public static void UnregisterAssembly(Assembly assembly)
+        {
+            if (assembly == null)
+                return;
+
+            lock (Gate)
+            {
+                PendingAssemblies.RemoveAll(a => a == assembly);
+                _assemblySink?.Invoke(assembly);
+            }
+        }
     }
 }

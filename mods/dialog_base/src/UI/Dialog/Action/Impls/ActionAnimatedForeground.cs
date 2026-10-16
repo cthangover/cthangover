@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Cthangover.Core.Scenes;
 using Cthangover.Mods.Effects.Animation;
 using Cthangover.Mods.Dialog.Action;
 using Cthangover.Core.UI.Event;
@@ -83,7 +82,7 @@ namespace Cthangover.Mods.Dialog.Action.Impls
 
             if (isAnimating)
             {
-                var viewBox = SceneContextNode.FindNode<ViewBox>("ViewBox");
+                var viewBox = Scene.Find<ViewBox>("ViewBox");
                 viewBox?.SetForegroundTexture(frames[0]);
             }
         }
@@ -93,7 +92,7 @@ namespace Cthangover.Mods.Dialog.Action.Impls
             if (!isAnimating || frames == null || frames.Count == 0)
                 return;
 
-            var viewBox = SceneContextNode.FindNode<ViewBox>("ViewBox");
+            var viewBox = Scene.Find<ViewBox>("ViewBox");
             if (viewBox == null)
                 return;
 

@@ -12,10 +12,10 @@ namespace Cthangover.Core.Actions
     {
         /// <summary>
         /// Passes the type string directly to CharacterData.AddCharacterToParty.
-        /// The character ID is looked up via CharacterFactory; if no template
-        /// exists for this ID, a minimal CharacterInfoData is created with
-        /// default attributes. The character is added to the runtime party and
-        /// persists through the save system.
+        /// The character ID is resolved through CharacterFactory; an unknown ID
+        /// is refused (error log, party unchanged) so a typo in scenario content
+        /// cannot add a broken party member. A valid character is added to the
+        /// runtime party and persists through the save system.
         /// </summary>
         public void AddToParty(string type)
         {

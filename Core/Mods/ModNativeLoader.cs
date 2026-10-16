@@ -106,7 +106,7 @@ namespace Cthangover.Core.Mods
                     try
                     {
                         var fileName = Path.GetFileName(filePath);
-                        var libraryName = Path.GetFileNameWithoutExtension(fileName);
+                        var libraryName = NormalizeLibraryName(fileName);
                         var cachedPath = Path.Combine(CacheRoot, $"{mod.Id}_native_{fileName}");
 
                         File.WriteAllBytes(cachedPath, bytes);
@@ -179,6 +179,7 @@ namespace Cthangover.Core.Mods
 
         private static IntPtr OnResolvingUnmanagedDllAssembly(string libraryName, Assembly assembly, DllImportSearchPath? searchPath)
         {
+            libraryName = NormalizeLibraryName(libraryName);
             if (_loadedHandles.TryGetValue(libraryName, out var cachedHandle))
                 return cachedHandle;
 
@@ -198,6 +199,7 @@ namespace Cthangover.Core.Mods
 
         private static IntPtr OnResolvingUnmanagedDll(Assembly assembly, string libraryName)
         {
+            libraryName = NormalizeLibraryName(libraryName);
             if (_loadedHandles.TryGetValue(libraryName, out var cachedHandle))
                 return cachedHandle;
 
@@ -216,6 +218,30 @@ namespace Cthangover.Core.Mods
                 $"ModNativeLoader: failed to load '{libraryName}' from '{cachedPath}'",
                 LogLevel.Error);
             return IntPtr.Zero;
+        }
+
+        /// <summary>
+        /// Platform-neutral key for a native library: no extension and no
+        /// Unix <c>lib</c> prefix. <c>[DllImport("Live2DCubismCore")]</c> must
+        /// find <c>Live2DCubismCore.dll</c> on Windows as well as
+        /// <c>libLive2DCubismCore.so</c> / <c>.dylib</c> on Linux and macOS.
+        /// </summary>
+        public static string NormalizeLibraryName(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+                return name;
+            var fileName = Path.GetFileName(name);
+            foreach (var ext in new[] { ".dll", ".so", ".dylib" })
+            {
+                if (fileName.EndsWith(ext, StringComparison.OrdinalIgnoreCase))
+                {
+                    fileName = fileName.Substring(0, fileName.Length - ext.Length);
+                    break;
+                }
+            }
+            if (fileName.StartsWith("lib", StringComparison.Ordinal) && fileName.Length > 3)
+                fileName = fileName.Substring(3);
+            return fileName;
         }
 
         private static List<(string FilePath, byte[] Bytes)> CollectNativeFiles(

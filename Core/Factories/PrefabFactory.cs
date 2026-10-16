@@ -4,6 +4,7 @@ using System.IO;
 using Cthangover.Core.Mods;
 using Cthangover.Core.Mods.Resolvers;
 using Cthangover.Core.Utils;
+using Godot;
 
 namespace Cthangover.Core.Factories
 {
@@ -20,6 +21,16 @@ namespace Cthangover.Core.Factories
     /// Falls back silently for <c>_albedo</c> / <c>_depth</c> suffix lookups
     /// (normal-map companion textures that may legitimately not exist for every
     /// sprite), avoiding log noise for optional secondary textures.
+    ///
+    /// Cached payloads are Godot resources (<c>Texture2D</c>, <c>AudioStream</c>,
+    /// <c>PackedScene</c>) whose native/GPU memory outlives a plain .NET
+    /// reference, so the LRU cache is wired to a disposal hook
+    /// (<see cref="ReleaseResource"/>): when an entry leaves the cache and no
+    /// engine object (sprite, audio player, ...) holds a native reference any
+    /// more, the resource is disposed immediately instead of waiting for the
+    /// .NET GC finalizer. Without the hook, VRAM and audio memory of evicted
+    /// assets stay allocated until the next collection — which manifests as a
+    /// leak during long sessions with frequent location changes.
     /// </summary>
     public abstract class PrefabFactory<T> : IPrefabFactory<T>, ICacheLoader<string, T> where T : class
     {
@@ -28,7 +39,7 @@ namespace Cthangover.Core.Factories
         protected PrefabFactory(string factoryKey, int fallbackCacheSize)
         {
             var size = ModConfig.Instance.Cache.GetCacheSize(factoryKey, fallbackCacheSize);
-            _cache = new BoundedCache<string, T>(size, this);
+            _cache = new BoundedCache<string, T>(size, this, ReleaseResource);
         }
 
         /// <summary>Mod asset group this factory scans (e.g. <c>"music"</c>, <c>"backgrounds"</c>); ids are relative to it.</summary>
@@ -71,6 +82,31 @@ namespace Cthangover.Core.Factories
                 GameLogger.Log("FACTORY", $"resource from factory '{GetType().Name}' with id '{id}' - can't get in group '{GroupName}'!", LogLevel.Error);
             
             return result;
+        }
+
+        /// <summary>
+        /// BoundedCache eviction hook: releases the native/GPU memory of an
+        /// evicted payload. Godot resources are ref-counted natively and the
+        /// cache's managed wrapper owns exactly one of those references, so
+        /// the resource is disposed only when that reference is the last one
+        /// (<c>GetReferenceCount() == 1</c>) — a texture still assigned to a
+        /// sprite or a stream still played by an audio player keeps its native
+        /// owner and is left intact, its wrapper is finalised by the GC later.
+        /// Direct external disposal of a cached value (mod code calling
+        /// Dispose itself) is tolerated via <see cref="GodotObject.IsInstanceValid"/>.
+        /// Consequence for callers: values must be handed to engine objects
+        /// (node properties, players) rather than stored as bare C# fields for
+        /// the whole session, otherwise an LRU eviction may dispose a wrapper
+        /// that is still referenced from managed code only.
+        /// </summary>
+        private void ReleaseResource(T resource)
+        {
+            if (resource is RefCounted refCounted &&
+                GodotObject.IsInstanceValid(refCounted) &&
+                refCounted.GetReferenceCount() == 1)
+            {
+                refCounted.Dispose();
+            }
         }
 
         /// <summary>Scans the group's collected files for <paramref name="id"/> plus the given extension and reads the matching mod file's bytes.</summary>

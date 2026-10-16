@@ -57,6 +57,17 @@ namespace Cthangover.Core.Mods
         }
 
         /// <summary>
+        /// Removes every settings entry registered for <paramref name="modId"/>
+        /// from the given assembly — the unload pass of the assembly consumer
+        /// pipeline. Persisted settings on disk are intentionally kept: a
+        /// reinstalled mod picks its values back up.
+        /// </summary>
+        public static void UnregisterAssembly(Assembly assembly, string modId)
+        {
+            _entries.RemoveAll(e => e.ModId == modId && e.Instance.GetType().Assembly == assembly);
+        }
+
+        /// <summary>
         /// Returns the mod IDs of all registered mods that implement
         /// <see cref="IModSettings"/>, sorted by their display title.
         /// </summary>

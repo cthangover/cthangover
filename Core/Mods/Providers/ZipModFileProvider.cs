@@ -8,7 +8,7 @@ namespace Cthangover.Core.Mods.Providers
 {
     /// <summary>
     /// Mod file provider backed by a <c>.zip</c> archive. On construction
-    /// the entire zip entry table is flattened into a case-insensitive
+    /// the entire zip entry table is flattened into an exact-case
     /// dictionary — this trades startup memory for O(1) lookups on every
     /// subsequent file access call, which dominates because factories
     /// repeatedly check file existence during cache-population scans.
@@ -25,11 +25,16 @@ namespace Cthangover.Core.Mods.Providers
     /// callers that need filesystem paths (e.g. <c>EffectFactory</c>,
     /// shader loading) must extract files to the cache or skip zip mods
     /// entirely.
+    ///
+    /// Lookups follow <see cref="ModPathCase"/>: the spelling must match the
+    /// archive entry exactly, like folder mods on Linux; a case-only
+    /// mismatch is reported with the correct path and treated as a miss.
     /// </summary>
     public class ZipModFileProvider : IModFileProvider
     {
         private readonly ZipArchive archive;
         private readonly Dictionary<string, ZipArchiveEntry> entryLookup;
+        private readonly Dictionary<string, string> spellingLookup;
 
         /// <inheritdoc />
         public string Mod { get; }
@@ -39,7 +44,7 @@ namespace Cthangover.Core.Mods.Providers
         
         /// <summary>
         /// Opens the zip archive at <paramref name="zipPath"/> and builds
-        /// an O(1) case-insensitive lookup dictionary from every entry's
+        /// an O(1) exact-case lookup dictionary from every entry's
         /// full path. The zip remains open until <see cref="Dispose"/> is
         /// called — callers must dispose the provider to release the
         /// native file handle.
@@ -53,12 +58,16 @@ namespace Cthangover.Core.Mods.Providers
             this.RootPath = zipPath;
             this.Mod = modName;
             archive = ZipFile.OpenRead(zipPath);
-            entryLookup = new Dictionary<string, ZipArchiveEntry>(StringComparer.OrdinalIgnoreCase);
+            entryLookup = new Dictionary<string, ZipArchiveEntry>(StringComparer.Ordinal);
+            spellingLookup = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             foreach (var e in archive.Entries)
             {
                 var name = ModPath.Normalize(e.FullName);
                 if (name.Length > 0)
+                {
                     entryLookup[name] = e;
+                    spellingLookup[name] = name;
+                }
             }
             GameLogger.Log("MODS_ZIP", $"Opened zip '{Path.GetFileName(zipPath)}': {entryLookup.Count} entries total");
             foreach (var e in archive.Entries)
@@ -77,13 +86,11 @@ namespace Cthangover.Core.Mods.Providers
 
         /// <summary>
         /// Checks whether the given path exists as a zip entry using the
-        /// case-insensitive lookup dictionary built during construction.
+        /// exact-case lookup dictionary built during construction.
         /// </summary>
         public bool FileExists(string path)
         {
-            var normalized = ModPath.Normalize(path);
-            var result = entryLookup.ContainsKey(normalized);
-            return result;
+            return TryGetEntry(ModPath.Normalize(path), out _);
         }
 
         /// <summary>
@@ -108,7 +115,7 @@ namespace Cthangover.Core.Mods.Providers
                 var rawName = entry.FullName.Replace('\\', '/');
                 var isDir = rawName.EndsWith("/");
                 var fullName = ModPath.Normalize(rawName);
-                if (string.IsNullOrEmpty(prefix) || fullName.StartsWith(prefix))
+                if (string.IsNullOrEmpty(prefix) || fullName.StartsWith(prefix, StringComparison.Ordinal))
                 {
                     var suffix = string.IsNullOrEmpty(prefix)
                         ? fullName
@@ -149,7 +156,7 @@ namespace Cthangover.Core.Mods.Providers
         public string ReadFileText(string path)
         {
             var normalized = ModPath.Normalize(path);
-            if (!entryLookup.TryGetValue(normalized, out var entry))
+            if (!TryGetEntry(normalized, out var entry))
                 return null;
             GameLogger.Log("MODS_ZIP", $"ReadFileText('{path}') norm='{normalized}' => found ({entry.Length} bytes)");
             using var reader = new StreamReader(entry.Open());
@@ -163,7 +170,7 @@ namespace Cthangover.Core.Mods.Providers
         public byte[] ReadFileBinary(string path)
         {
             var normalized = ModPath.Normalize(path);
-            if (!entryLookup.TryGetValue(normalized, out var entry))
+            if (!TryGetEntry(normalized, out var entry))
                 return null;
 
             GameLogger.Log("MODS_ZIP", $"ReadFileBinary('{path}') norm='{normalized}' => found ({entry.Length} bytes)");
@@ -182,7 +189,7 @@ namespace Cthangover.Core.Mods.Providers
         public Stream OpenStream(string path)
         {
             var normalized = ModPath.Normalize(path);
-            if (!entryLookup.TryGetValue(normalized, out var entry))
+            if (!TryGetEntry(normalized, out var entry))
                 return null;
             
             GameLogger.Log("MODS_ZIP", $"OpenStream('{path}') norm='{normalized}' => found");
@@ -212,6 +219,21 @@ namespace Cthangover.Core.Mods.Providers
             var result = ModPath.ResolveRelative(includePath, currentPath);
             GameLogger.Log("MODS_ZIP", $"ResolveIncludePath(include='{includePath}', current='{currentPath}') => '{result}'");
             return result;
+        }
+
+        /// <summary>
+        /// Exact-case entry lookup; a case-only mismatch is reported through
+        /// <see cref="ModPathCase.ReportMismatch"/> and treated as a miss.
+        /// </summary>
+        private bool TryGetEntry(string normalized, out ZipArchiveEntry entry)
+        {
+            if (entryLookup.TryGetValue(normalized, out entry))
+                return true;
+
+            if (spellingLookup.TryGetValue(normalized, out var actual))
+                ModPathCase.ReportMismatch(Mod, normalized, actual);
+
+            return false;
         }
     }
 }

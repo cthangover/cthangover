@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Godot;
+using Cthangover.Core.Actions;
 using Cthangover.Core.UI;
 using Cthangover.Mods.Interface.Base.Lists;
 using Cthangover.Core.UI.Dialog;
@@ -43,6 +44,16 @@ namespace Cthangover.Mods.Dialog.Action
         public float StartTime { get; private set; }
         /// <summary>Action IDs whose <see cref="Destruct"/> will be triggered when this action destructs. Used for cross-action cleanup dependencies.</summary>
         public ISet<string> DelayedDestruct { get; } = new HashSet<string>();
+
+        /// <summary>
+        /// Scene node lookup seam for subclasses. Replaces direct
+        /// SceneContextNode.FindNode calls so action behavior can be exercised
+        /// against a fake lookup in unit tests instead of the global scene-tree
+        /// singleton. Defaults to the runtime implementation
+        /// (<see cref="SceneNodeServiceImpl"/>) and is instantiated per action
+        /// instance — the same no-container style as ScenarioActionContext.
+        /// </summary>
+        protected ISceneNodeService Scene { get; set; } = new SceneNodeServiceImpl();
 
         /// <summary>Generates a unique ID so every action is addressable by GoTo/If even without an explicit <see cref="SetID"/> call.</summary>
         public ActionCommand()

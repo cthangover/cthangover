@@ -1,4 +1,3 @@
-using Cthangover.Core.Scenes;
 using Cthangover.Mods.Time;
 using Cthangover.Core.UI;
 using Cthangover.Mods.Interface.Base.Lists;
@@ -28,7 +27,7 @@ namespace Cthangover.Mods.Dialog.Action.Impls
 		/// <summary>Clears static lights when <see cref="LightsJson"/> is empty, otherwise parses and applies the light definitions to the scene's <see cref="UiLightController"/>.</summary>
 		public override void DoRun(DialogRuntime runtime)
 		{
-			var controller = SceneContextNode.FindNode<UiLightController>("Lights");
+			var controller = Scene.Find<UiLightController>("Lights");
 			if (controller == null)
 				return;
 

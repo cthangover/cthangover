@@ -71,7 +71,16 @@ namespace Cthangover.Core.Mods
             ModSettingsRegistry.DeleteModSettings(modId);
             ModCompiler.InvalidateCache(modId);
 
-            GameLogger.Log("UNINSTALLER", $"Uninstalled mod '{modId}' from '{rootPath}'; restart required");
+            // Best-effort collectible unload: if no scene/UI objects hold the
+            // mod's types (the mod-manager UI is a pre-game context), the
+            // assemblies are released right here; otherwise the restart note
+            // below stays the honest statement.
+            var unloadDiagnostic = ModAssemblyLoader.UnloadMod(modId);
+            var unloadNote = unloadDiagnostic == null
+                ? "assemblies released"
+                : $"restart required ({unloadDiagnostic})";
+
+            GameLogger.Log("UNINSTALLER", $"Uninstalled mod '{modId}' from '{rootPath}'; {unloadNote}");
             return true;
         }
 

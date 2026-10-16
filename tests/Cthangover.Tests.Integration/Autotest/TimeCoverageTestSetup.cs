@@ -14,7 +14,7 @@ namespace Cthangover.Core.Autotest
     /// mod assembly, the core keeps the TimeData transition DTO and reaches the
     /// lighting through LightingBridge, so every check here proves the
     /// core-to-mod wiring at engine runtime.
-    /// The machine-readable line is parsed by <c>tests/CThangover.TestRunner</c>.
+    /// The machine-readable line is parsed by <c>tests/Cthangover.TestRunner</c>.
     /// </summary>
     public partial class TimeCoverageTestSetup : Node
     {

@@ -1,5 +1,4 @@
 using Cthangover.Core.Factories.Impls;
-using Cthangover.Core.Scenes;
 using Cthangover.Mods.Interface.View;
 using Godot;
 using Cthangover.Core.UI;
@@ -42,7 +41,7 @@ namespace Cthangover.Mods.Dialog.Action.Impls
         /// <summary>Applies the preloaded texture to the ViewBox foreground, then nulls it so a reused action cannot re-apply stale data.</summary>
         public override void DoRun(DialogRuntime runtime)
         {
-            var viewBox = SceneContextNode.FindNode<ViewBox>("ViewBox");
+            var viewBox = Scene.Find<ViewBox>("ViewBox");
             viewBox?.SetForegroundTexture(Texture);
             Texture = null;
         }
