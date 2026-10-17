@@ -8,7 +8,11 @@
       "name": "live2d_avatar",
       "scene": "res://tests/Cthangover.Tests.Integration/Scenes/live2d_avatar_test.tscn",
       "windowed": true,
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "args": [
+        "--",
+        "--itest=live2d_avatar"
+      ]
     },
     {
       "name": "mod_units",
@@ -18,6 +22,188 @@
         "--run-tests"
       ],
       "timeoutSeconds": 300
+    },
+    {
+      "name": "resource_atlas",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--resource-atlas",
+        "--atlas-out=res://tests/artifacts/resource_atlas",
+        "--with-test-suites"
+      ],
+      "timeoutSeconds": 240
+    },
+    {
+      "name": "locale_atlas",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--locale-atlas",
+        "--locale-out=res://tests/artifacts/locale_atlas",
+        "--with-test-suites"
+      ],
+      "timeoutSeconds": 240
+    },
+    {
+      "name": "game_card_novel",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--game=card_novel",
+        "--new",
+        "--timeout=60"
+      ],
+      "timeoutSeconds": 180
+    },
+    {
+      "name": "game_vn_starter_novel",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--game=vn_starter_novel",
+        "--new",
+        "--timeout=60"
+      ],
+      "timeoutSeconds": 180
+    },
+    {
+      "name": "resource_atlas_card_novel",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--game=card_novel",
+        "--with-mods=resource_atlas",
+        "--resource-atlas",
+        "--atlas-out=res://tests/artifacts/resource_atlas/card_novel"
+      ],
+      "timeoutSeconds": 240
+    },
+    {
+      "name": "resource_atlas_vn_starter_novel",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--game=vn_starter_novel",
+        "--with-mods=resource_atlas",
+        "--resource-atlas",
+        "--atlas-out=res://tests/artifacts/resource_atlas/vn_starter_novel"
+      ],
+      "timeoutSeconds": 240
+    },
+    {
+      "name": "menu_flow",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--frontend",
+        "--itest=menu_flow"
+      ],
+      "timeoutSeconds": 180
+    },
+    {
+      "name": "new_game_cthangover",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--frontend",
+        "--itest=new_game"
+      ],
+      "timeoutSeconds": 300
+    },
+    {
+      "name": "game_cthangover",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--game=cthangover",
+        "--new",
+        "--timeout=60"
+      ],
+      "timeoutSeconds": 180
+    },
+    {
+      "name": "resource_atlas_cthangover",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--game=cthangover",
+        "--resource-atlas",
+        "--atlas-out=res://tests/artifacts/resource_atlas/cthangover"
+      ],
+      "timeoutSeconds": 240
+    },
+    {
+      "name": "resource_atlas_frontend",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--frontend",
+        "--with-mods=resource_atlas",
+        "--resource-atlas",
+        "--atlas-out=res://tests/artifacts/resource_atlas/frontend"
+      ],
+      "timeoutSeconds": 240
+    },
+    {
+      "name": "save_dormancy",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--game=card_novel",
+        "--new",
+        "--itest=save_dormancy"
+      ],
+      "timeoutSeconds": 180
+    },
+    {
+      "name": "interactives",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--scene=interactives_test",
+        "--itest=interactives"
+      ],
+      "timeoutSeconds": 120
+    },
+    {
+      "name": "gdscript",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--itest=gdscript"
+      ],
+      "timeoutSeconds": 120
+    },
+    {
+      "name": "property_patches",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--with-mods=test_defaults_and_patches",
+        "--itest=property_patches"
+      ],
+      "timeoutSeconds": 120
+    },
+    {
+      "name": "inventory",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--scene=home_kitchen",
+        "--itest=inventory"
+      ],
+      "timeoutSeconds": 120
+    },
+    {
+      "name": "cooking_walk",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--scene=home_outside",
+        "--itest=cooking_walk"
+      ],
+      "timeoutSeconds": 180
     },
     {
       "name": "mod",
@@ -63,6 +249,29 @@
       "name": "scene_builder",
       "scene": "res://scenes/test/scene_builder_autotest.tscn",
       "timeoutSeconds": 120
+    },
+    {
+      "name": "tools_windows",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "windowed": true,
+      "args": [
+        "--",
+        "--scene=home_kitchen",
+        "--itest=tools_windows"
+      ],
+      "timeoutSeconds": 180
+    },
+    {
+      "name": "tools_hub",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "windowed": true,
+      "args": [
+        "--",
+        "--game=novel_editor",
+        "--new",
+        "--itest=tools_windows"
+      ],
+      "timeoutSeconds": 180
     },
     {
       "name": "map_editor",

@@ -1,0 +1,8 @@
+scene: home_kitchen
+priority: 8
+condition: true
+is_one_run: true
+---
+action gds.greet name=Always
+text "Fallback scene always runs."
+end

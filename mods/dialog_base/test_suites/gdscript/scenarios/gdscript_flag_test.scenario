@@ -1,0 +1,9 @@
+scene: home_kitchen
+priority: 7
+condition: gds.flag_equals("victory")
+is_one_run: true
+---
+set custom_flag victory
+action gds.inventory_demo item_id=health_potion
+text "GDScript condition with args and inventory action executed."
+end

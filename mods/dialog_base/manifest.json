@@ -9,5 +9,9 @@
     "src/**/*.cs"
   ],
   "depends": ["base2d>=1", "interactive_base>=1", "effects_base>=1", "time_base>=1", "map_base>=1", "interface>=1"],
-  "ui": []
+  "ui": [],
+  "test_suites": [
+    {"id": "autoplay", "activate": ["--choices=", "--timeout="]},
+    {"id": "gdscript", "activate": ["--itest=gdscript"]}
+  ]
 }

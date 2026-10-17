@@ -8,5 +8,8 @@
   "sources": [
     "src/**/*.cs"
   ],
-  "depends": ["base2d>=1", "interface>=1"]
+  "depends": ["base2d>=1", "interface>=1"],
+  "test_suites": [
+    {"id": "inventory", "activate": ["--itest=inventory"]}
+  ]
 }

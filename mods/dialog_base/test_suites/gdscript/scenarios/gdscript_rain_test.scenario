@@ -1,0 +1,9 @@
+scene: home_kitchen
+priority: 6
+condition: gds.is_rain
+is_one_run: true
+---
+set weather rain
+action gds.greet name=RainVisitor
+text "It's raining! GDScript condition gds.is_rain passed."
+end

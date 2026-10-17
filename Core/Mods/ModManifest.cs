@@ -87,6 +87,26 @@ namespace Cthangover.Core.Mods
         public List<string> TestSources { get; set; }
 
         /// <summary>
+        /// Integration test suites hosted by this mod (GUI drivers, demo
+        /// content, test-only depends). Each suite lives in its own folder
+        /// (<c>test_suites/&lt;id&gt;/</c> with a regular <c>manifest.json</c>) and
+        /// is mounted as the virtual mod <c>&lt;host&gt;__&lt;id&gt;</c> only when one of
+        /// its <c>activate</c> user-arg prefixes is on the command line (or
+        /// <c>--with-test-suites</c>); a normal launch and <c>--all-mods</c> never
+        /// see it. See <see cref="ModTestSuites"/>.
+        /// </summary>
+        [JsonPropertyName("test_suites")]
+        public List<ModTestSuite> TestSuites { get; set; }
+
+        /// <summary>
+        /// Test fixture: never part of <c>--all-mods</c> (or a game); loaded
+        /// only when named explicitly in <c>--with-mods=</c>, so its patches and
+        /// demo data cannot leak into unrelated tests.
+        /// </summary>
+        [JsonPropertyName("fixture")]
+        public bool Fixture { get; set; }
+
+        /// <summary>
         /// Glob-style paths to native shared libraries (e.g. "bin/*.dll",
         /// "native/*.so", "lib/*.dylib"). <c>ModNativeLoader</c> collects
         /// platform-appropriate files, copies them to a cache directory,
