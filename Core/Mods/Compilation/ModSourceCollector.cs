@@ -45,6 +45,11 @@ namespace Cthangover.Core.Mods.Compilation
                     prefix = pattern.Substring(0, sepIndex);
                     suffix = pattern.Substring(sepIndex + 1);
                 }
+                // The walk below is always recursive, so "src/**/*.cs" means "src";
+                // a literal "**" directory never exists and would trigger the
+                // whole-mod fallback (pulling tests/ into the production assembly).
+                while (prefix == "**" || prefix.EndsWith("/**", StringComparison.Ordinal))
+                    prefix = prefix.Length > 2 ? prefix.Substring(0, prefix.Length - 3) : string.Empty;
 
                 CollectSourceFilesRecursive(modInfo.FileProvider, prefix, file =>
                 {
