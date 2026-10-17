@@ -202,7 +202,7 @@ namespace Cthangover.BaseMenu
 
         private const string ModsHubId = "mods_hub";
 
-        /// <summary>Installs/enables the missing mods; new mods need a reboot, which entering the game does anyway.</summary>
+        /// <summary>Installs/enables the missing mods; entering the game afterwards reloads the mod set to pick them up.</summary>
         private async void Install(ModCollection collection, Button button)
         {
             button.Disabled = true;
@@ -217,7 +217,7 @@ namespace Cthangover.BaseMenu
                 return;
 
             if (ok)
-                GameFlow.RestartRequired = true;
+                GameFlow.ReloadRequired = true;
             GameFlow.Confirm(this,
                 TranslationServer.Translate("menu/play/install"),
                 TranslationServer.Translate(ok ? "menu/play/install_done" : "menu/play/install_failed"),

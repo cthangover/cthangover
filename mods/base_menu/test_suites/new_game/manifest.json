@@ -1,0 +1,7 @@
+{
+  "name": "New Game Flow Test",
+  "description": "End-to-end play like a player in one process: front-end menu → Play → the cthangover card → New game → in-process mod-set switch → the prologue in prolog_alley with Marao's dialog → in-game hot reload of starter_party (session restored) → menu → card_novel → menu → cthangover again; every released mod context must be collected. Activated only by --itest=new_game (with --frontend).",
+  "sources": [
+    "src/*.cs"
+  ]
+}
