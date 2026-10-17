@@ -106,7 +106,6 @@ namespace Cthangover.Core.Mods
                 return result;
 
             var sorted = ModCompileOrder.TopologicalSort(modsWithCode);
-            var knownModIds = sorted.Select(modInfo => modInfo.Id).ToList();
 
             foreach (var modInfo in sorted)
             {
@@ -129,7 +128,8 @@ namespace Cthangover.Core.Mods
                     if (!string.IsNullOrEmpty(dependencySignature))
                         GameLogger.Log("MODS_COMPILE", $"  dependencies: {dependencySignature}", LogLevel.Debug);
 
-                    var assembly = Compile(modInfo.Id, sourceFiles, dependencySignature, cancellationToken, knownModIds);
+                    var visibleModIds = DependencyClosure(modInfo, mods);
+                    var assembly = Compile(modInfo.Id, sourceFiles, dependencySignature, cancellationToken, visibleModIds);
                     if (assembly != null)
                     {
                         result.Add((modInfo.Id, assembly, sourceFiles));
@@ -148,6 +148,33 @@ namespace Cthangover.Core.Mods
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Mods whose assemblies <paramref name="modInfo"/> may reference: the
+        /// transitive closure of its manifest <c>depends</c>. Every other mod
+        /// stays invisible to the compiler, so a type used without a matching
+        /// dependency fails with a compile error (file:line) instead of
+        /// compiling by accident of load order.
+        /// </summary>
+        public static List<string> DependencyClosure(ModInfo modInfo, IDictionary<string, IModInfo> mods)
+        {
+            var visible = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var pending = new Stack<string>(modInfo?.Manifest?.DependencyIds ?? new List<string>());
+            while (pending.Count > 0)
+            {
+                var id = pending.Pop();
+                if (!visible.Add(id))
+                    continue;
+
+                if (mods != null && mods.TryGetValue(id, out var dependency) && dependency is ModInfo dependencyInfo)
+                {
+                    foreach (var next in dependencyInfo.Manifest?.DependencyIds ?? new List<string>())
+                        pending.Push(next);
+                }
+            }
+
+            return visible.ToList();
         }
 
         /// <summary>

@@ -163,6 +163,15 @@ namespace Cthangover.Core.Mods.Compilation
             {
                 foreach (var modDir in Directory.GetDirectories(modsRoot))
                 {
+                    // Precompiled libraries follow the same visibility rule as
+                    // runtime-compiled mods: only the mod itself and its
+                    // dependency closure may reference them.
+                    var ownerId = Path.GetFileName(modDir);
+                    if (knownModIds != null
+                        && !string.Equals(ownerId, currentModId, StringComparison.OrdinalIgnoreCase)
+                        && !knownModIds.Contains(ownerId, StringComparer.OrdinalIgnoreCase))
+                        continue;
+
                     var precompiledDir = Path.Combine(modDir, "dll");
                     if (!Directory.Exists(precompiledDir) || !searchedDirs.Add(precompiledDir))
                         continue;

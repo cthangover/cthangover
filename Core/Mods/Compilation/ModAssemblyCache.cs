@@ -100,7 +100,10 @@ namespace Cthangover.Core.Mods.Compilation
             var coreSignature = typeof(ModRegistry).Assembly.ManifestModule.ModuleVersionId.ToString("N");
             // "pdb=named": the DLL's debug directory names its cache-file PDB
             // (<id>_<hash>.pdb); entries naming "<id>.pdb" never bind symbols.
-            var hash = ModHasher.ComputeHash(sourceList, (dependencySignature ?? string.Empty) + ";core=" + coreSignature + ";codegen=" + codegenMarker + ";pdb=named");
+            // "refs=depends": mods compile against their dependency closure only
+            // (ModCompiler.DependencyClosure); entries built against every mod
+            // could hide an undeclared dependency and must not be reused.
+            var hash = ModHasher.ComputeHash(sourceList, (dependencySignature ?? string.Empty) + ";core=" + coreSignature + ";codegen=" + codegenMarker + ";pdb=named;refs=depends");
             return Path.Combine(CacheRoot, $"{modId}_{hash}.dll");
         }
 
