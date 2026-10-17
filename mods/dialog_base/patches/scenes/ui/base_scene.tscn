@@ -1,0 +1,7 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://mods/base2d/scenes/ui/base_scene.tscn" id="1_target"]
+[ext_resource type="Script" path="res://mods/dialog_base/src/UI/Executable/ExecutableMainEventChain.cs" id="2_chain"]
+
+[node name="BaseScene" instance=ExtResource("1_target")]
+script = ExtResource("2_chain")
