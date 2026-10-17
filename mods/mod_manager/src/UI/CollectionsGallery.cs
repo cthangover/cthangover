@@ -271,6 +271,8 @@ namespace Mods.ModManager
             var foot = UiKit.Row(UiTokens.Space2);
             foot.AddChild(BuildPrimaryButton(summary));
             foot.AddChild(BuildEditButton(summary));
+            if (CollectionDeletion.CanDelete(summary.Collection))
+                foot.AddChild(BuildDeleteButton(summary));
             foot.AddChild(UiKit.Spacer());
             foot.AddChild(UiKit.Label(
                 string.Format(TranslationServer.Translate("mod_manager/collection_result"), summary.InstalledCount, summary.TotalMods),
@@ -408,6 +410,18 @@ namespace Mods.ModManager
             var button = UiKit.Button(TranslationServer.Translate("mod_manager/gallery_edit_scheme"));
             button.Disabled = _installingId != null;
             button.Pressed += () => EditSchemeRequested?.Invoke(summary.Collection.Id);
+            return button;
+        }
+
+        private Button BuildDeleteButton(ModCollectionGameSummary summary)
+        {
+            var button = UiKit.Button(TranslationServer.Translate("mod_manager/collection_delete"), ButtonKind.Danger);
+            button.Disabled = _installingId != null;
+            button.Pressed += () => CollectionDeletion.Confirm(this, summary.Collection, () =>
+            {
+                StatusMessage?.Invoke(TranslationServer.Translate("mod_manager/collection_delete_done"));
+                Refresh();
+            });
             return button;
         }
 

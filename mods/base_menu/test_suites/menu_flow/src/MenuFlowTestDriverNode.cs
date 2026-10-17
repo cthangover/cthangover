@@ -17,13 +17,15 @@ namespace Mods.MenuFlowTest
     /// Front-end walk-through, one step per tick so deferred UI work settles:
     /// only the menu mods are loaded; the menu offers Play (no New game
     /// without a game); Play opens a card per game; the save browser lists a
-    /// game's save; the composition of a game is computed without loading
-    /// it; Continue sees the last session. Prints <c>[TEST_RESULT] name=menu_flow</c>.
+    /// game's save; a player's own game can be deleted from the collection
+    /// editor (a built-in one cannot) while its mods stay; the composition of
+    /// a game is computed without loading it; Continue sees the last session. Prints <c>[TEST_RESULT] name=menu_flow</c>.
     /// </summary>
     public partial class MenuFlowTestDriverNode : Node
     {
         private const string GameId = "card_novel";
         private const string Slot = "slot_942";
+        private const string DeletableId = "menu_flow_deletable";
         private const float TimeoutSeconds = 90f;
 
         private readonly List<string> failures = new();
@@ -32,6 +34,7 @@ namespace Mods.MenuFlowTest
         private double elapsed;
         private double stepAt;
         private bool done;
+        private Node hub;
 
         public override void _Process(double delta)
         {
@@ -108,20 +111,45 @@ namespace Mods.MenuFlowTest
 
                 case 3:
                 {
-                    var hub = Menu.FindChildren("*", "", true, false).FirstOrDefault(n => n.HasMethod("OpenCollectionEditor"));
+                    hub = Menu.FindChildren("*", "", true, false).FirstOrDefault(n => n.HasMethod("OpenCollectionEditor"));
                     Check("Configure opens the mod manager", hub != null);
                     var duplicateText = TranslationServer.Translate("mod_manager/collection_duplicate").ToString();
                     Check("editor opened with Duplicate", hub != null && Buttons(hub).Any(b => b.Text == duplicateText && b.IsVisibleInTree()));
-                    hub?.QueueFree();
+                    Check("a built-in game offers no Delete", DeleteButton() == null);
+
+                    var user = ModCollectionStore.LoadUser();
+                    user.Add(new ModCollection { Id = DeletableId, Name = "Deletable", Kind = ModCollectionKind.Game });
+                    ModCollectionStore.SaveUser(user);
+                    hub?.Call("OpenCollectionEditor", DeletableId);
                     break;
                 }
 
                 case 4:
+                {
+                    var delete = DeleteButton();
+                    Check("a player's own game offers Delete", delete != null);
+                    delete?.EmitSignal(BaseButton.SignalName.Pressed);
+                    break;
+                }
+
+                case 5:
+                {
+                    var dialog = hub?.FindChildren("*", "ConfirmationDialog", true, false).OfType<ConfirmationDialog>().FirstOrDefault(d => d.Visible);
+                    var expected = string.Format(TranslationServer.Translate("mod_manager/collection_delete_confirm"), "Deletable", 0);
+                    Check("Delete warns that the mods stay", dialog?.DialogText == expected);
+                    dialog?.EmitSignal(AcceptDialog.SignalName.Confirmed);
+                    Check("the collection is deleted", ModCollectionStore.LoadAll().All(c => c.Id != DeletableId));
+                    Check("its mods stay in the system", ModRegistry.Instance.AllDiscoveredMods.ContainsKey("card_battle"));
+                    hub?.QueueFree();
+                    break;
+                }
+
+                case 6:
                     WriteFakeSave();
                     Menu.GetNode<SaveLoadMenu>("SaveLoadPanel").OpenForGame(GameId);
                     break;
 
-                case 5:
+                case 7:
                 {
                     var browser = Menu.GetNode<SaveLoadMenu>("SaveLoadPanel");
                     var slots = browser.FindChildren("*", "", true, false).OfType<SaveSlotItem>().ToList();
@@ -147,6 +175,12 @@ namespace Mods.MenuFlowTest
             step++;
         }
 
+        private Button DeleteButton()
+        {
+            var text = TranslationServer.Translate("mod_manager/collection_delete").ToString();
+            return Buttons(hub).FirstOrDefault(b => b.Text == text && b.IsVisibleInTree());
+        }
+
         private static IEnumerable<Button> Buttons(Node root)
             => root == null ? Enumerable.Empty<Button>() : root.FindChildren("*", "Button", true, false).OfType<Button>();
 
@@ -170,6 +204,7 @@ namespace Mods.MenuFlowTest
             var save = Path.Combine(ProjectSettings.GlobalizePath(SaveService.GameDirectory(GameId)), Slot + ".json");
             if (File.Exists(save))
                 File.Delete(save);
+            ModCollectionStore.RemoveUser(DeletableId);
             var last = ProjectSettings.GlobalizePath("user://last_session.json");
             if (File.Exists(last))
                 File.Delete(last);
