@@ -71,7 +71,7 @@ namespace Cthangover.BaseMenu
 				sceneLabel.Visible = true;
 				if (statsLabel != null) statsLabel.Visible = true;
 
-				var tex = SaveScreenshotService.LoadScreenshot(model.FileName);
+				var tex = SaveScreenshotService.LoadScreenshotFromPath(model.ScreenshotPath);
 				if (tex != null)
 					screenshotRect.Texture = tex;
 

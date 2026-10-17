@@ -112,6 +112,28 @@ namespace Cthangover.Core.Mods
         }
 
         /// <summary>
+        /// Runs a <see cref="SettingType.Action"/> setting of the mod and
+        /// returns the message to show (already translated by the mod or a
+        /// locale key), or null when the mod has no such action.
+        /// </summary>
+        public static string RunAction(string modId, string key)
+        {
+            var entry = _entries.Find(e => e.ModId == modId && e.Instance is IModSettingsActions);
+            if (entry == null)
+                return null;
+
+            try
+            {
+                return ((IModSettingsActions)entry.Instance).RunAction(key);
+            }
+            catch (Exception ex)
+            {
+                GameLogger.Log("MODS_SETTINGS", $"Action '{key}' failed for mod '{modId}': {ex.Message}", LogLevel.Error);
+                return ex.Message;
+            }
+        }
+
+        /// <summary>
         /// Reads the mod's current values into a <see cref="DataBlob"/>.
         /// Returns an empty blob on failure.
         /// </summary>

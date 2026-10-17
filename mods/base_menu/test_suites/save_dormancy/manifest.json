@@ -1,0 +1,8 @@
+{
+  "name": "Save Dormancy Test",
+  "description": "Integration test mod: inside a game collection it saves, injects data of a mod the game runs without, loads, re-saves and purges — verifying per-game save folders, dormant slots carried forward, the joined-game hook and the purge action. Activated only by --itest=save_dormancy.",
+  "sources": [
+    "src/*.cs"
+  ],
+  "depends": []
+}

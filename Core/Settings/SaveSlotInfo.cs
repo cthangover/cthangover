@@ -32,5 +32,14 @@ namespace Cthangover.Core.Settings
         /// currently always writes <c>0f</c> — no real lamp percentage is
         /// computed yet, so the UI must not rely on this value.</summary>
         public float LampPercent { get; set; }
+
+        /// <summary>Game that wrote the save (null for saves made without a game).</summary>
+        public string GameId { get; set; }
+
+        /// <summary>Game display name at save time.</summary>
+        public string GameName { get; set; }
+
+        /// <summary>Composition snapshot of the save, for the load-time comparison.</summary>
+        public System.Collections.Generic.List<SaveGameMod> Mods { get; set; }
     }
 }

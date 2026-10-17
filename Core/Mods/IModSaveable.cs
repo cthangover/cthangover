@@ -63,6 +63,17 @@ namespace Cthangover.Core.Mods
         /// The default throws <see cref="NotSupportedException"/> so
         /// that a mod must override at least one of the two methods.
         /// </summary>
+        /// <summary>
+        /// Called after a save is loaded that has no data for this mod — the
+        /// mechanic was added to the game after the save was written (or its
+        /// data was dormant/rejected). State is already at new-game defaults;
+        /// override to grant what a running game needs (starter recipes,
+        /// unlocked panels). Default: nothing.
+        /// </summary>
+        void OnJoinedExistingGame()
+        {
+        }
+
         void OnLoadVoid(Cthangover.Core.Settings.ModSlot slot)
         {
             throw new NotSupportedException(

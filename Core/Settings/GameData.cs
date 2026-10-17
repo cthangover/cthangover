@@ -147,6 +147,7 @@ namespace Cthangover.Core.Settings
         public void StartNewGame()
         {
             ResetRuntime();
+            SaveService.ClearDormant();
             AppServices.Current.ResetForNewGame();
             Events.ModEventBus.Publish(new Events.NewGameStartedEvent());
         }
