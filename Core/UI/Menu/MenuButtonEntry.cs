@@ -49,6 +49,12 @@ namespace Cthangover.Core.UI.Menu
         public int Index { get; set; } = 10;
 
         /// <summary>
+        /// Optional visibility predicate evaluated each time the menu is built
+        /// (e.g. "Continue" only when a last session exists); null = always.
+        /// </summary>
+        public System.Func<bool> Visible { get; set; }
+
+        /// <summary>
         /// Mod-relative scene path opened on press. Optional when
         /// <see cref="Handler"/> is set; at least one of the two is required.
         /// </summary>

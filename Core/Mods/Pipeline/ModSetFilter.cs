@@ -159,6 +159,99 @@ namespace Cthangover.Core.Mods.Pipeline
         }
 
         /// <summary>
+        /// Keeps only the mods of the game chosen with <c>--game=&lt;id&gt;</c>:
+        /// its collection's resolved graph, every front-end collection and the
+        /// <c>--with-mods</c> extras (see <see cref="Games.GameModSet"/>). The set is
+        /// recomputed from the current collection on every boot, so the player's
+        /// edits apply on the next launch. Without <c>--game</c> (or with
+        /// <c>--all-mods</c>) nothing is filtered; an unknown game id logs an
+        /// error and also loads every mod, so a stale shortcut still starts.
+        /// </summary>
+        public static void FilterToActiveGame(IDictionary<string, IModInfo> mods)
+        {
+            Games.ActiveGame.Clear();
+            var args = Games.GameLaunchArgs.Current;
+            if (args.Mode == Games.GameLaunchMode.AllMods)
+            {
+                RemoveFixtures(mods, args.WithMods);
+                return;
+            }
+
+            // Mounted test suites ride along like --with-mods (with their depends).
+            var extras = new List<string>(args.WithMods);
+            extras.AddRange(ModTestSuites.ActiveIds);
+
+            var discovered = new Dictionary<string, IModInfo>(mods, System.StringComparer.OrdinalIgnoreCase);
+            var collections = new Dictionary<string, ModCollection>(System.StringComparer.OrdinalIgnoreCase);
+            foreach (var collection in ModCollectionStore.LoadAll(discovered.Values))
+                collections[collection.Id] = collection;
+
+            if (args.Mode == Games.GameLaunchMode.Frontend)
+            {
+                var frontend = Games.GameModSet.ComputeFrontend(collections, discovered, DisabledModsStore.Load(), extras);
+                if (frontend == null)
+                {
+                    GameLogger.Log("MODS_REGISTRY", "No front-end collection installed; loading every mod", LogLevel.Error);
+                    return;
+                }
+
+                RemoveOutside(mods, frontend.ModIds, "front-end");
+                Games.ActiveGame.ActivateFrontend(frontend);
+                return;
+            }
+
+            var set = Games.GameModSet.Compute(args.GameId, collections, discovered, DisabledModsStore.Load(), extras);
+            if (set == null)
+            {
+                GameLogger.Log("MODS_REGISTRY", $"Game '{args.GameId}' is not a known game collection; loading every mod", LogLevel.Error);
+                return;
+            }
+
+            foreach (var missing in set.MissingMods)
+                GameLogger.Log("MODS_REGISTRY", $"Game '{args.GameId}' needs mod '{missing}', which is not installed", LogLevel.Error);
+            foreach (var problem in set.Problems)
+                GameLogger.Log("MODS_REGISTRY", $"Game '{args.GameId}': {problem.Title}", LogLevel.Warning);
+
+            RemoveOutside(mods, set.ModIds, args.GameId);
+            Games.ActiveGame.Activate(set);
+        }
+
+        /// <summary>
+        /// <c>--all-mods</c> leaves out test fixtures (<see cref="ModManifest.Fixture"/>)
+        /// unless they are named in <c>--with-mods</c>: their data would leak into
+        /// every unrelated dev launch and test.
+        /// </summary>
+        public static void RemoveFixtures(IDictionary<string, IModInfo> mods, IReadOnlyCollection<string> withMods)
+        {
+            var wanted = new HashSet<string>(withMods ?? new List<string>(), System.StringComparer.OrdinalIgnoreCase);
+            foreach (var id in new List<string>(mods.Keys))
+            {
+                if (mods[id] is not ModInfo { Manifest.Fixture: true } info || wanted.Contains(id))
+                    continue;
+                info.LoadFailureReasons.Add($"test fixture: loaded only with --with-mods={id}");
+                mods.Remove(id);
+                GameLogger.Log("MODS_REGISTRY", $"Fixture '{id}' left out (name it in --with-mods to load it)");
+            }
+        }
+
+        private static void RemoveOutside(IDictionary<string, IModInfo> mods, ICollection<string> keep, string owner)
+        {
+            var excluded = new List<string>();
+            foreach (var id in new List<string>(mods.Keys))
+            {
+                if (keep.Contains(id))
+                    continue;
+
+                ((ModInfo)mods[id]).LoadFailureReasons.Add(string.Format(Tr("mods/not_in_game_reason"), owner));
+                mods.Remove(id);
+                excluded.Add(id);
+            }
+
+            GameLogger.Log("MODS_REGISTRY",
+                $"Mod set '{owner}': {mods.Count} mod(s) loaded, {excluded.Count} left out ({string.Join(", ", excluded)})");
+        }
+
+        /// <summary>
         /// Translates a localization key only on the Godot main thread. The
         /// discovery/validation phase may run on a background thread during boot
         /// (before any locale is loaded anyway), so <c>TranslationServer.Translate</c>

@@ -8,7 +8,7 @@
   "sources": [
     "src/**/*.cs"
   ],
-  "depends": ["visual_novel_core>=1", "interface>=1"],
+  "depends": ["interface>=1"],
   "main_menu": [
     {
       "id": "mods_hub",

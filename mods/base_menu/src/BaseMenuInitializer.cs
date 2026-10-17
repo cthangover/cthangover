@@ -1,4 +1,5 @@
 using System;
+using Cthangover.Core.Games;
 using Cthangover.Core.Mods;
 using Cthangover.Core.Scenes;
 using Cthangover.Core.Settings;
@@ -40,12 +41,35 @@ namespace Cthangover.BaseMenu
 
             MenuRegistry.RegisterMenuButton(new MenuButtonEntry
             {
+                Id = "continue",
+                ModId = ModId,
+                Section = "game",
+                Locale = "menu/continue",
+                Variation = "primary",
+                Index = 5,
+                Visible = GameFlow.HasContinue,
+                Handler = BaseMenuActions.Continue,
+            });
+            MenuRegistry.RegisterMenuButton(new MenuButtonEntry
+            {
+                Id = "play",
+                ModId = ModId,
+                Section = "game",
+                Locale = "menu/play",
+                Variation = "primary",
+                Index = 10,
+                Handler = BaseMenuActions.Play,
+            });
+            // A new game of the running game; from the front-end games start
+            // from the picker instead.
+            MenuRegistry.RegisterMenuButton(new MenuButtonEntry
+            {
                 Id = "new_game",
                 ModId = ModId,
                 Section = "game",
                 Locale = "menu/newgame",
-                Variation = "primary",
-                Index = 10,
+                Index = 15,
+                Visible = () => !ActiveGame.IsFrontendOnly,
                 Handler = BaseMenuActions.NewGame,
             });
             MenuRegistry.RegisterMenuButton(new MenuButtonEntry
@@ -87,20 +111,21 @@ namespace Cthangover.BaseMenu
     internal static class BaseMenuActions
     {
         /// <summary>
-        /// Starts a new game: resets <see cref="GameData"/>, sets
-        /// <see cref="SceneManager.PendingSceneName"/> to "start_scene" and loads
-        /// the shell via <see cref="GodotSceneService"/>.
+        /// Starts a new game at the active game's entry scene (<c>start_scene</c>
+        /// when no game collection is active) through <see cref="GameSession"/>.
         /// </summary>
         public static void NewGame(Control host)
         {
-            GameData.Instance?.StartNewGame();
-            var sceneManager = host.GetNode<SceneManager>("/root/SceneManager");
-            if (sceneManager != null)
-            {
-                sceneManager.PendingSceneName = "start_scene";
-                var sceneService = host.GetNode<GodotSceneService>("/root/GodotSceneService");
-                sceneService?.LoadShell();
-            }
+            GameSession.StartNew(host);
+        }
+
+        /// <summary>Loads the last save of the last played game (restarting into it when needed).</summary>
+        public static void Continue(Control host) => GameFlow.Continue(host);
+
+        /// <summary>Opens the game picker.</summary>
+        public static void Play(Control host)
+        {
+            host.GetNodeOrNull<GamePickerPanel>("GamePickerPanel")?.Open();
         }
 
         /// <summary>Opens the save/load panel in load mode.</summary>

@@ -1,0 +1,33 @@
+{
+  "id": "frontend",
+  "kind": "frontend",
+  "name": "Front-end",
+  "author": "ct",
+  "version": "1.0.0",
+  "description": "Loaded with every game and on its own without one: the main menu, settings, save browser and the mod manager.",
+  "locale": [
+    { "lang": "ru", "name": "Оболочка", "description": "Загружается с каждой игрой и без неё: главное меню, настройки, сохранения и менеджер модов." }
+  ],
+  "mechanics": [
+    {
+      "id": "menu",
+      "name": "Main menu",
+      "role": "ui",
+      "description": "Main menu, settings and the save/load panels.",
+      "locale": [
+        { "lang": "ru", "name": "Главное меню", "description": "Главное меню, настройки и панели сохранения/загрузки." }
+      ],
+      "mods": ["base_menu>=1", "interface>=1", "audio_base>=1"]
+    },
+    {
+      "id": "mods",
+      "name": "Mod manager",
+      "role": "tools",
+      "description": "Catalog, installation and the game constructor.",
+      "locale": [
+        { "lang": "ru", "name": "Менеджер модов", "description": "Каталог, установка и конструктор игр." }
+      ],
+      "mods": ["mod_manager>=1"]
+    }
+  ]
+}

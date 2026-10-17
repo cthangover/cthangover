@@ -26,6 +26,7 @@ namespace Cthangover.BaseMenu
     {
         private SettingsMenu _settingsMenu;
         private SaveLoadMenu _saveLoadMenu;
+        private GamePickerPanel _gamePicker;
         private readonly Dictionary<Button, string> _btnKeys = new();
 
         public override void _Ready()
@@ -64,6 +65,14 @@ namespace Cthangover.BaseMenu
             _saveLoadMenu.Name = "SaveLoadPanel";
             _saveLoadMenu.Visible = false;
             AddChild(_saveLoadMenu);
+
+            _gamePicker = new GamePickerPanel { Name = "GamePickerPanel" };
+            AddChild(_gamePicker);
+            _gamePicker.SavesRequested += gameId =>
+            {
+                _gamePicker.Visible = false;
+                _saveLoadMenu.OpenForGame(gameId);
+            };
 
             var telegramLink = GetNode<RichTextLabel>("TelegramLink");
             telegramLink.MetaClicked += OnTelegramLinkClicked;

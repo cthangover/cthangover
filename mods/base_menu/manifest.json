@@ -8,5 +8,10 @@
   "sources": [
     "src/**/*.cs"
   ],
-  "depends": ["interface>=1"]
+  "depends": ["interface>=1"],
+  "test_suites": [
+    {"id": "menu_flow", "activate": ["--itest=menu_flow"]},
+    {"id": "save_dormancy", "activate": ["--itest=save_dormancy"]},
+    {"id": "new_game", "activate": ["--itest=new_game"]}
+  ]
 }

@@ -186,6 +186,12 @@ namespace Mods.ModManager
             UpdateHeader();
         }
 
+        /// <summary>
+        /// Deep link used by the main menu's game picker ("Configure"): shows
+        /// the collections tab with the scheme editor open on the game.
+        /// </summary>
+        public void OpenCollectionEditor(string collectionId) => OpenEditor(collectionId, false);
+
         /// <summary>Opens the editor on the second level of the collections tab.</summary>
         private void OpenEditor(string collectionId, bool newGame)
         {

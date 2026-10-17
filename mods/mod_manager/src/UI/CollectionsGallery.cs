@@ -21,7 +21,7 @@ namespace Mods.ModManager
     /// <see cref="ModCollection.Origin"/>, status badges derived from the
     /// summary (draft, missing, problems, enable, ready), the Installed/Total
     /// progress bar and its action buttons; the plan is applied through
-    /// <see cref="CollectionApplyRunner"/> exactly like the scheme editor does.
+    /// <see cref="ModCollectionInstaller"/> exactly like the scheme editor does.
     /// <para/>
     /// The whole layout is code-built (no .tscn) following the UiKit helper
     /// style; a dashed "build your own game" card and the empty state with a
@@ -452,7 +452,7 @@ namespace Mods.ModManager
             bool success;
             try
             {
-                success = await CollectionApplyRunner.ApplyAsync(plan, _sessionInstalled);
+                success = await ModCollectionInstaller.ApplyAsync(plan, _sessionInstalled);
             }
             catch (Exception ex)
             {
