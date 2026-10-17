@@ -4,7 +4,6 @@ namespace Cthangover.Core.Mods.HotReload
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
-    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Cthangover.Core.Games;
@@ -65,8 +64,13 @@ namespace Cthangover.Core.Mods.HotReload
         {
             Instance = this;
             ProcessMode = ProcessModeEnum.Always;
-            foreach (var root in ModRegistry.Instance.RootPaths.Where(Directory.Exists))
+            // A root that does not exist yet (user://mods before the first
+            // download) is created, so mods dropped there later are seen too.
+            foreach (var root in ModRegistry.Instance.RootPaths)
+            {
+                Directory.CreateDirectory(root);
                 Watch(root);
+            }
             GameLogger.Log("MODS_RELOAD", $"Hot reload: watching {watchers.Count} mod root(s); Ctrl+Shift+R reloads by hand");
         }
 

@@ -70,5 +70,59 @@ namespace Engine.Tests.Games
             Assert.Equal("card_novel", parsed.GameId);
             Assert.Equal(save, parsed.LoadSave);
         }
+
+        [Fact]
+        public void WithSelection_Game_ReplacesTheSelection_KeepsDevSwitches()
+        {
+            var running = GameLaunchArgs.Parse(new[] { "--game=card_novel", "--new", "--itest=new_game", "--with-mods=validator" });
+
+            var next = running.WithSelection("cthangover", "slot_2");
+
+            Assert.Equal(GameLaunchMode.Game, next.Mode);
+            Assert.Equal("cthangover", next.GameId);
+            Assert.Equal("slot_2", next.LoadSave);
+            Assert.False(next.NewGame);
+            Assert.Contains("--itest=new_game", next.UserArgs);
+            Assert.Equal(new[] { "validator" }, next.WithMods.ToArray());
+            Assert.DoesNotContain("--game=card_novel", next.UserArgs);
+        }
+
+        [Fact]
+        public void WithSelection_NewGame_WhenNoSaveIsGiven()
+        {
+            var next = GameLaunchArgs.Parse(new string[0]).WithSelection("cthangover");
+
+            Assert.True(next.NewGame);
+            Assert.Null(next.LoadSave);
+        }
+
+        [Fact]
+        public void WithSelection_NullGame_IsTheFrontEnd_EvenWithDevSwitches()
+        {
+            var running = GameLaunchArgs.Parse(new[] { "--all-mods", "--itest=menu_flow" });
+
+            var next = running.WithSelection(null);
+
+            Assert.Equal(GameLaunchMode.Frontend, next.Mode);
+            Assert.True(next.ForceFrontend);
+            Assert.False(next.AllMods);
+            Assert.Contains("--itest=menu_flow", next.UserArgs);
+        }
+
+        [Fact]
+        public void SetCurrent_MakesTheSelectionProcessWide()
+        {
+            var selection = GameLaunchArgs.Parse(new[] { "--game=card_novel", "--new" });
+            try
+            {
+                GameLaunchArgs.SetCurrent(selection);
+
+                Assert.Same(selection, GameLaunchArgs.Current);
+            }
+            finally
+            {
+                GameLaunchArgs.SetCurrent(null);
+            }
+        }
     }
 }

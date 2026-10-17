@@ -10,14 +10,14 @@ using Godot;
 namespace Cthangover.Mods.Dialog
 {
     /// <summary>
-    /// Engine-mod initializer for the dialog subsystem. On resources-ready it:
-    /// binds the core <c>ScenarioCommandBridge</c> to this mod's strategy
-    /// factory (flushing every hot-loaded mod assembly buffered so far),
-    /// publishes the scenario event factory used by the core SceneManager, and
+    /// Engine-mod initializer for the dialog subsystem. On resources-ready it
+    /// publishes the scenario event factory used by the core SceneManager and
     /// parks the <c>/root/DialogRunner</c> node implementing the core
     /// <c>IInteractiveDialogRunner</c> contract. All operations are idempotent:
     /// <c>ModManager.Reload()</c> re-runs <c>OnModResourcesReady</c>, so node
-    /// creation and binding must tolerate repeat invocations.
+    /// creation must tolerate repeat invocations. Scenario command strategies
+    /// of every mod reach their factory through
+    /// <see cref="ScenarioCommandStrategyConsumer"/>, not through this initializer.
     /// </summary>
     public class DialogModInitializer : IModInitializer
     {
@@ -27,18 +27,14 @@ namespace Cthangover.Mods.Dialog
         public void OnModLoaded(string modId) { }
 
         /// <summary>
-        /// Binds the strategy bridge, publishes the scenario event factory and
-        /// queues the dialog runner node. Safe to call again after a mod reload.
+        /// Publishes the scenario event factory and queues the dialog runner
+        /// node. Safe to call again after a mod reload.
         /// </summary>
         public void OnModResourcesReady()
         {
             if (initialized)
                 return;
             initialized = true;
-
-            // Scenario command strategies: first-wins inside the factory, so a
-            // reloaded dialog assembly keeps the strategy set stable.
-            ScenarioCommandBridge.Bind(assembly => ScenarioCommandStrategyFactory.RegisterAssembly(assembly));
 
             // Scenario-backed events (scene definitions and test-play) are built
             // by the core SceneManager through this factory.

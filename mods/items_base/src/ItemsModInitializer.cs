@@ -13,9 +13,11 @@ namespace Cthangover.Mods.Items
     /// core state bag lazily produces the mod-owned <c>Inventory</c> and
     /// <c>RecipeData</c> on first access; and</item>
     /// <item>binds <see cref="ItemActionBridge"/> to this mod's
-    /// <c>ItemActionFactory</c>, flushing every GDScript-declared action and
-    /// hot-loaded mod assembly buffered so far.</item>
+    /// <c>ItemActionFactory</c>, flushing every GDScript-declared action
+    /// buffered so far.</item>
     /// </list>
+    /// C# item actions of every mod reach the factory through
+    /// <see cref="ItemActionConsumer"/>, not through this initializer.
     /// Persistence lives in <see cref="ItemsSaveable"/>, discovered
     /// automatically by <c>ModSaveableRegistry</c>.
     /// </summary>
@@ -32,9 +34,7 @@ namespace Cthangover.Mods.Items
             RuntimeData.InventoryFactory ??= () => new Inventory();
             RuntimeData.RecipeDataFactory ??= () => new RecipeData();
 
-            ItemActionBridge.Bind(
-                action => ItemActionFactory.Instance.Register(action),
-                assembly => ItemActionFactory.RegisterAssembly(assembly));
+            ItemActionBridge.Bind(action => ItemActionFactory.Instance.Register(action));
         }
     }
 }

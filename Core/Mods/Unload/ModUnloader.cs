@@ -39,7 +39,8 @@ namespace Cthangover.Core.Mods.Unload
         /// Unloads <paramref name="modIdsInUnloadOrder"/> (dependents first).
         /// <paramref name="tree"/> is the live scene tree (null outside Godot).
         /// <paramref name="hostAssemblies"/> overrides the assemblies whose
-        /// statics are swept (default: the kernel plus every surviving mod).
+        /// statics are swept (default: every surviving mod, plus the kernel
+        /// inside the engine).
         /// Unknown ids are ignored.
         /// </summary>
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -125,7 +126,11 @@ namespace Cthangover.Core.Mods.Unload
 
         private static IEnumerable<Assembly> DefaultHosts()
         {
-            yield return typeof(ModUnloader).Assembly;
+            // The kernel's statics are read only inside the engine: outside it
+            // (unit tests) reading one may run a static constructor that calls
+            // into Godot, which kills the process instead of throwing.
+            if (GameEnvironment.IsRuntime)
+                yield return typeof(ModUnloader).Assembly;
             foreach (var record in ModAssemblyLoader.Records(ModAssemblyLoader.LoadedModIds))
             {
                 foreach (var assembly in record.Assemblies)

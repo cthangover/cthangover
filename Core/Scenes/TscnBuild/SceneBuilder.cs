@@ -65,7 +65,7 @@ namespace Cthangover.Core.Scenes.TscnBuild
             {
                 var entryType = ScriptTypeRegistry.ResolveByName(scene.EntryPointClass)
                     ?? Type.GetType(scene.EntryPointClass)
-                    ?? AppDomain.CurrentDomain.GetAssemblies()
+                    ?? Reflections.LoadedAssemblies()
                         .SelectMany(a => a.GetTypes())
                         .FirstOrDefault(t => t.FullName == scene.EntryPointClass || t.Name == scene.EntryPointClass);
                 if (entryType != null && typeof(ITscnSceneEntryPoint).IsAssignableFrom(entryType))

@@ -12,6 +12,7 @@
   "test_suites": [
     {"id": "menu_flow", "activate": ["--itest=menu_flow"]},
     {"id": "save_dormancy", "activate": ["--itest=save_dormancy"]},
-    {"id": "new_game", "activate": ["--itest=new_game"]}
+    {"id": "new_game", "activate": ["--itest=new_game"]},
+    {"id": "hot_reload", "activate": ["--itest=hot_reload"]}
   ]
 }

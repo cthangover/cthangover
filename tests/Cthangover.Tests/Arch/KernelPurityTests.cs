@@ -44,7 +44,7 @@ namespace Engine.Tests.Arch
             new("Cthangover.Core.UI.Lights", Enforced: true, "свет перенесён в engine-мод time_base (UiLightController/LampBehaviour/LightDef); SceneManager работает через LightingBridge"),
             new("Cthangover.Core.UI.Dialog", Enforced: true, "диалоги перенесены в engine-мод dialog_base; в ядре остаётся контракт переходного периода IDialogBox — точный список в AllowedTypes"),
             new("Cthangover.Core.UI.Executable", Enforced: true, "executable-события перенесены в engine-мод dialog_base; в ядре остаются контракты IExecutableEvent/IExecutableEventChain/IConditionedEvent/IScenarioEventFactory/IEventObject — точный список в AllowedTypes"),
-            new("Cthangover.Core.Scenarios", Enforced: true, "сценарный DSL перенесён в engine-мод dialog_base; в ядре остаются ScenarioMetadata (метаданные .scenario) и мост ScenarioCommandBridge — точный список в AllowedTypes"),
+            new("Cthangover.Core.Scenarios", Enforced: true, "сценарный DSL перенесён в engine-мод dialog_base; в ядре остаются ScenarioMetadata (метаданные .scenario) — точный список в AllowedTypes"),
             new("Cthangover.Core.Audio", Enforced: true, "аудио перенесено в engine-мод audio_base; контракт переходного периода IAudioService + enum'ы MixerType/MusicType/SoundType остаются в ядре"),
             new("Cthangover.Core.UI.View", Enforced: true, "видовой экран фона перенесён в engine-мод interface (ViewBox/ViewBoxNavigator/ZoomViewBoxController/AlignType); SceneManager и SaveScreenshotService работают через контракт IBackgroundView"),
             new("Cthangover.Core.UI.Theming", Enforced: true, "дизайн-система перенесена в engine-мод interface (UiKit); в ядре остаются CthangoverTheme/UiTokens — их использует Launcher в boot-окне до компиляции модов — точный список в AllowedTypes"),
@@ -134,8 +134,8 @@ namespace Engine.Tests.Arch
             // implementation (DialogBox, the DSL parser, the command strategies),
             // the executable event engine and the scenario actions live in the
             // dialog_base engine mod; the core resolves them through IDialogBox,
-            // the executable contracts, IScenarioEventFactory and the
-            // ScenarioCommandBridge delivery point.
+            // the executable contracts and IScenarioEventFactory; command
+            // strategies reach the mod's factory through its own assembly consumer.
             "Cthangover.Core.UI.Dialog.IDialogBox",
             "Cthangover.Core.UI.Executable.IExecutableEvent",
             "Cthangover.Core.UI.Executable.IExecutableEventChain",
@@ -143,7 +143,6 @@ namespace Engine.Tests.Arch
             "Cthangover.Core.UI.Executable.IScenarioEventFactory",
             "Cthangover.Core.UI.Executable.IEventObject",
             "Cthangover.Core.Scenarios.ScenarioMetadata",
-            "Cthangover.Core.Scenarios.ScenarioCommandBridge",
 
             // skills_base: transition DTO that stays in the core. The grant
             // service, the factory and the skills UI live in the skills_base
@@ -220,6 +219,9 @@ namespace Engine.Tests.Arch
             "Cthangover.Core.UI.Menu.Launcher+MethodName",
             "Cthangover.Core.UI.Menu.Launcher+PropertyName",
             "Cthangover.Core.UI.Menu.Launcher+SignalName",
+            "Cthangover.Core.UI.Menu.ModSetTransitionScreen+MethodName",
+            "Cthangover.Core.UI.Menu.ModSetTransitionScreen+PropertyName",
+            "Cthangover.Core.UI.Menu.ModSetTransitionScreen+SignalName",
             "Cthangover.Core.UI.Menu.BootLogPanel+LogLine",
             "Cthangover.Core.UI.Menu.BootProgressBar+MethodName",
             "Cthangover.Core.UI.Menu.BootLogPanel+MethodName",

@@ -1,35 +1,47 @@
 using System;
 using System.Collections.Generic;
-using Cthangover.Core.Utils;
 
 namespace Cthangover.Validator
 {
     /// <summary>
-    /// Discovers all <see cref="IValidationStrategy"/> implementations in the
-    /// loaded assemblies through the project-wide reflection plugin mechanism
-    /// and returns them in deterministic execution order. The list is cached for
-    /// the process lifetime because mod assemblies are never unloaded; adding a
-    /// new strategy (for example scenario validation) is just shipping a new
-    /// public class with a parameterless constructor.
+    /// Registry of all <see cref="IValidationStrategy"/> implementations, served
+    /// in deterministic execution order. It discovers nothing itself:
+    /// <see cref="ValidationStrategyConsumer"/> delivers the strategies of every
+    /// mod as the kernel registers its assembly and takes them back when the mod
+    /// unloads (game switch, hot reload), so a validation run never executes a
+    /// strategy of a dead assembly. Adding a new strategy (for example scenario
+    /// validation) is just shipping a new public class with a parameterless
+    /// constructor in any mod.
     /// </summary>
     public static class ValidationStrategyRegistry
     {
         private static readonly object sync = new();
-        private static IReadOnlyList<IValidationStrategy> cached;
+        private static readonly List<IValidationStrategy> strategies = new();
 
-        /// <summary>Returns all discovered strategies sorted by phase and order; cached for the process lifetime.</summary>
+        /// <summary>Returns a snapshot of the registered strategies sorted by phase and order.</summary>
         public static IReadOnlyList<IValidationStrategy> GetStrategies()
         {
             lock (sync)
-            {
-                if (cached != null)
-                    return cached;
+                return strategies.ToArray();
+        }
 
-                var list = new List<IValidationStrategy>(Reflections.FindAndCreate<IValidationStrategy>());
-                list.Sort(Compare);
-                cached = list;
-                return cached;
+        /// <summary>Adds a strategy and keeps the execution order.</summary>
+        public static void Register(IValidationStrategy strategy)
+        {
+            if (strategy == null)
+                return;
+            lock (sync)
+            {
+                strategies.Add(strategy);
+                strategies.Sort(Compare);
             }
+        }
+
+        /// <summary>Removes exactly <paramref name="strategy"/> (its mod is being unloaded).</summary>
+        public static void Unregister(IValidationStrategy strategy)
+        {
+            lock (sync)
+                strategies.Remove(strategy);
         }
 
         private static int Compare(IValidationStrategy a, IValidationStrategy b)

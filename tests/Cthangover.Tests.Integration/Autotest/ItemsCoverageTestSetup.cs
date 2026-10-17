@@ -24,7 +24,7 @@ namespace Cthangover.Core.Autotest
     /// <item>migrated types (ItemFactory/ItemActionFactory) are loaded from a
     /// mod assembly, and the core assembly no longer defines them;</item>
     /// <item>a foreign mod's <c>IItemAction</c> (cooking) reached the items
-    /// factory through <c>ItemActionBridge</c>.</item>
+    /// factory through the mod's <c>ItemActionConsumer</c>.</item>
     /// </list>
     /// The machine-readable line is parsed by <c>tests/Cthangover.TestRunner</c>.
     /// </summary>
@@ -77,8 +77,8 @@ namespace Cthangover.Core.Autotest
                 kernelAssembly.GetType("Cthangover.Core.Items.Inventory", throwOnError: false) == null);
 
             // A foreign mod's IItemAction (cooking) reaches the items factory
-            // through ItemActionBridge's buffered delivery.
-            Check("cooking mod's IItemAction was delivered through ItemActionBridge",
+            // through the items mod's ItemActionConsumer.
+            Check("cooking mod's IItemAction was delivered through ItemActionConsumer",
                 SafeGet(() => ResolveAction("action/recipe/wolf_meat_to_ration")) != null);
 
             // ─── Inventory panel scene contract (tscn migration) ───

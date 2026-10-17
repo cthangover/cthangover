@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using Cthangover.Core.Characters;
 using Cthangover.Core.Settings;
 using Cthangover.Core.Utils;
@@ -11,20 +10,20 @@ namespace Cthangover.Core.Relationship
     /// <summary>
     /// Central registry and lifecycle dispatcher for recruit behaviours
     /// and conditions. Behaviours (<see cref="IRecruitBehaviour"/>) and
-    /// conditions (<see cref="IRecruitCondition"/>) are auto-discovered
-    /// from mod assemblies by <c>RecruitingInitializer</c>, which rescans
-    /// assemblies as mods announce themselves and does a full AppDomain
-    /// pass at resources-ready — the core's ModAssemblyLoader contains no
-    /// recruiting knowledge.
+    /// conditions (<see cref="IRecruitCondition"/>) of every mod arrive
+    /// through the kernel's assembly consumers
+    /// (<see cref="RecruitBehaviourConsumer"/>, <see cref="RecruitConditionConsumer"/>)
+    /// as mods load, and leave again when their mod unloads — the kernel
+    /// stays the only place that enumerates assemblies.
     ///
     /// <b>Condition gating</b> — <see cref="CanRecruit"/> evaluates every
     /// registered condition conjunctively (logical AND), so a single
     /// <c>false</c> blocks recruitment. This allows mods to compose
     /// recruitment gates without coordination.
     ///
-    /// <b>Id-based deduplication</b> — a rescan replaces any earlier
-    /// implementation with the same <c>Id</c>, so mod reloads (which re-run
-    /// registration) do not double-dispatch notifications.
+    /// <b>Id-based deduplication</b> — a registration replaces any earlier
+    /// implementation with the same <c>Id</c>, so two mods shipping the same
+    /// id never double-dispatch notifications.
     ///
     /// <b>Tick registration</b> — the first call to any lifecycle method
     /// triggers <see cref="RecruitTickController.EnsureRegistered"/>,
@@ -51,40 +50,10 @@ namespace Cthangover.Core.Relationship
         }
 
         /// <summary>
-        /// Scans an assembly for implementations of
-        /// <see cref="IRecruitBehaviour"/> and
-        /// <see cref="IRecruitCondition"/>, instantiates them via
-        /// the parameterless constructor, and registers them by Id.
-        /// Called by <c>RecruitingInitializer</c> as mods load.
+        /// Registers a behaviour, replacing an earlier one with the same Id. Fed
+        /// by <see cref="RecruitBehaviourConsumer"/> for every mod assembly.
         /// </summary>
-        public void RegisterAssembly(Assembly assembly)
-        {
-            foreach (var behaviour in Reflections.FindAndCreate<IRecruitBehaviour>(assembly))
-                RegisterBehaviour(behaviour);
-
-            foreach (var condition in Reflections.FindAndCreate<IRecruitCondition>(assembly))
-                RegisterCondition(condition);
-        }
-
-        /// <summary>
-        /// Scans every assembly loaded in the current <see cref="System.AppDomain"/>
-        /// and registers all behaviours and conditions. Serves as the
-        /// resources-ready safety net for assemblies whose name differs from the
-        /// mod id (precompiled DLLs).
-        /// </summary>
-        public void RegisterAll()
-        {
-            foreach (var behaviour in Reflections.FindAndCreate<IRecruitBehaviour>())
-                RegisterBehaviour(behaviour);
-
-            foreach (var condition in Reflections.FindAndCreate<IRecruitCondition>())
-                RegisterCondition(condition);
-
-            GameLogger.Log("RECRUIT",
-                $"RecruitBehaviourRegistry.RegisterAll: {_behaviours.Count} behaviour(s), {_conditions.Count} condition(s)");
-        }
-
-        private void RegisterBehaviour(IRecruitBehaviour behaviour)
+        public void RegisterBehaviour(IRecruitBehaviour behaviour)
         {
             if (behaviour == null)
                 return;
@@ -92,12 +61,28 @@ namespace Cthangover.Core.Relationship
             _behaviours.Add(behaviour);
         }
 
-        private void RegisterCondition(IRecruitCondition condition)
+        /// <summary>Removes exactly <paramref name="behaviour"/> (its mod is being unloaded).</summary>
+        public void UnregisterBehaviour(IRecruitBehaviour behaviour)
+        {
+            _behaviours.Remove(behaviour);
+        }
+
+        /// <summary>
+        /// Registers a condition, replacing an earlier one with the same Id. Fed
+        /// by <see cref="RecruitConditionConsumer"/> for every mod assembly.
+        /// </summary>
+        public void RegisterCondition(IRecruitCondition condition)
         {
             if (condition == null)
                 return;
             _conditions.RemoveAll(existing => existing.Id == condition.Id);
             _conditions.Add(condition);
+        }
+
+        /// <summary>Removes exactly <paramref name="condition"/> (its mod is being unloaded).</summary>
+        public void UnregisterCondition(IRecruitCondition condition)
+        {
+            _conditions.Remove(condition);
         }
 
         /// <summary>

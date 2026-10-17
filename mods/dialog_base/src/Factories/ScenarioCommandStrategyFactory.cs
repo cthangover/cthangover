@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Reflection;
 using Cthangover.Mods.Dialog.Scenarios;
 using Cthangover.Core.Utils;
 using Cthangover.Core.UI;
@@ -14,21 +13,17 @@ using Cthangover.Core.Interactive;
 namespace Cthangover.Mods.Dialog.Scenarios
 {
     /// <summary>
-    /// Auto-discovery registry for <see cref="IScenarioCommandStrategy"/> implementations.
-    /// On static initialization, scans the assembly via <c>Reflections.FindAndCreate</c>
-    /// and indexes all strategy instances by their <see cref="IScenarioCommandStrategy.Command"/>
-    /// name. Also supports runtime registration of external assemblies for plugin scenarios.
+    /// Registry of <see cref="IScenarioCommandStrategy"/> implementations,
+    /// indexed by their <see cref="IScenarioCommandStrategy.Command"/> name.
+    /// It discovers nothing itself: <see cref="ScenarioCommandStrategyConsumer"/>
+    /// delivers the strategies of every mod as the kernel registers its
+    /// assembly and takes them back when the mod unloads, so the table never
+    /// holds a strategy of a dead assembly (which would pin it and keep running
+    /// its old code after a hot reload).
     /// </summary>
     public static class ScenarioCommandStrategyFactory
     {
-        private static readonly Dictionary<string, IScenarioCommandStrategy> Strategies;
-
-        static ScenarioCommandStrategyFactory()
-        {
-            Strategies = new();
-            foreach (var strategy in Reflections.FindAndCreate<IScenarioCommandStrategy>())
-                Strategies[strategy.Command] = strategy;
-        }
+        private static readonly Dictionary<string, IScenarioCommandStrategy> Strategies = new();
 
         /// <summary>
         /// Looks up the <see cref="IScenarioCommandStrategy"/> registered for <paramref name="command"/>.
@@ -61,17 +56,23 @@ namespace Cthangover.Mods.Dialog.Scenarios
         }
 
         /// <summary>
-        /// Scans a plugin assembly for public <see cref="IScenarioCommandStrategy"/>
-        /// types, instantiates them, and registers them into the strategy table.
-        /// Duplicate command names are silently ignored.
+        /// Registers a strategy under its command name. The first strategy of a
+        /// command wins: a mod cannot silently take over a built-in command.
         /// </summary>
-        public static void RegisterAssembly(Assembly assembly)
+        public static void Register(IScenarioCommandStrategy strategy)
         {
-            foreach (var strategy in Reflections.FindAndCreate<IScenarioCommandStrategy>(assembly))
-            {
-                if (!Strategies.ContainsKey(strategy.Command))
-                    Strategies[strategy.Command] = strategy;
-            }
+            if (strategy != null && !Strategies.ContainsKey(strategy.Command))
+                Strategies[strategy.Command] = strategy;
+        }
+
+        /// <summary>
+        /// Removes <paramref name="strategy"/> (its mod is being unloaded). A
+        /// command owned by another strategy instance is left alone.
+        /// </summary>
+        public static void Unregister(IScenarioCommandStrategy strategy)
+        {
+            if (strategy != null && Strategies.TryGetValue(strategy.Command, out var registered) && registered == strategy)
+                Strategies.Remove(strategy.Command);
         }
     }
 }

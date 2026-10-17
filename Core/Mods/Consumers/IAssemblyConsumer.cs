@@ -22,7 +22,11 @@ namespace Cthangover.Core.Mods.Consumers
     /// (discovered by <see cref="AssemblyConsumerRegistry.RegisterFromAssembly"/>),
     /// giving a mod the ability to own its own reflection registry - for
     /// example a registry of custom status effects - and automatically
-    /// receive every assembly loaded after it, without any kernel edit.
+    /// receive every mod assembly, without any kernel edit: the ones
+    /// registered before it are replayed when it joins, later ones arrive
+    /// through the regular fan-out. <see cref="ModTypeConsumer{T}"/> is the
+    /// ready-made base for the common "collect every implementation of T"
+    /// case.
     /// </summary>
     public interface IAssemblyConsumer
     {

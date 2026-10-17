@@ -31,5 +31,31 @@ namespace Engine.Tests.Mods
                 ScriptTypeRegistry.Clear();
             }
         }
+
+        [Fact]
+        public void RemoveMod_ForgetsThatModsTypes_KeepsOthers()
+        {
+            ScriptTypeRegistry.Clear();
+            try
+            {
+                var sources = new List<(string, string)> { ("res://scripts/RegistryTestNode.cs", "") };
+                ScriptTypeRegistry.RegisterAssembly(typeof(RegistryTestNode).Assembly, "test_mod", sources);
+                ScriptTypeRegistry.RegisterAssembly(typeof(RegistryTestNode).Assembly, "other_mod", sources);
+
+                ScriptTypeRegistry.RemoveMod("test_mod");
+                Assert.Same(typeof(RegistryTestNode), ScriptTypeRegistry.ResolveByPath("scripts/RegistryTestNode.cs"));
+
+                ScriptTypeRegistry.RemoveMod("other_mod");
+                Assert.Null(ScriptTypeRegistry.ResolveByPath("scripts/RegistryTestNode.cs"));
+                Assert.Null(ScriptTypeRegistry.ResolveByName(nameof(RegistryTestNode)));
+
+                ScriptTypeRegistry.RemoveMod(null);
+                ScriptTypeRegistry.RemoveMod("never_registered");
+            }
+            finally
+            {
+                ScriptTypeRegistry.Clear();
+            }
+        }
     }
 }

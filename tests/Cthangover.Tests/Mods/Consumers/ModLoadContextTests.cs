@@ -90,5 +90,23 @@ namespace TestAlcMod
 
             Assert.Null(ModAssemblyLoader.UnloadMod("no_such_mod_anywhere"));
         }
+
+        [Fact]
+        public void TryUnload_MarksTheContextAndItsAssembliesReleased()
+        {
+            var modId = Cthangover.Tests.Mods.Unload.TestMods.NewId("test_released");
+            var compiled = Cthangover.Tests.Mods.Unload.TestMods.Compile(modId, "namespace ReleasedMod { public class Marker { } }");
+            var context = (ModLoadContext)System.Runtime.Loader.AssemblyLoadContext.GetLoadContext(compiled);
+
+            Assert.False(context.IsReleased);
+            Assert.False(ModLoadContext.IsReleasedAssembly(compiled));
+
+            ModAssemblyLoader.UnloadMod(modId);
+
+            Assert.True(context.IsReleased);
+            Assert.True(ModLoadContext.IsReleasedAssembly(compiled));
+            Assert.False(ModLoadContext.IsReleasedAssembly(typeof(ModLoadContext).Assembly));
+            Assert.False(ModLoadContext.IsReleasedAssembly(null));
+        }
     }
 }

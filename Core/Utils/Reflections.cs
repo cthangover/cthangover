@@ -35,7 +35,7 @@ namespace Cthangover.Core.Utils
 
             if (assemblyFilter == null)
             {
-                foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+                foreach (var assembly in LoadedAssemblies())
                     CheckAssembly(typeT, list, assembly, filter);
             }
             else
@@ -44,6 +44,24 @@ namespace Cthangover.Core.Utils
             }
 
             return list;
+        }
+
+        /// <summary>
+        /// The assemblies of the running game: <see cref="AppDomain.GetAssemblies"/>
+        /// without those of released mod contexts, which linger there until
+        /// collected (see <see cref="Mods.ModLoadContext.IsReleased"/>). Every
+        /// "all loaded assemblies" scan of the game uses this instead of the
+        /// AppDomain directly.
+        /// </summary>
+        public static List<Assembly> LoadedAssemblies()
+        {
+            var result = new List<Assembly>();
+            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                if (!Mods.ModLoadContext.IsReleasedAssembly(assembly))
+                    result.Add(assembly);
+            }
+            return result;
         }
 
         private static void CheckAssembly<T>(Type typeT, LinkedList<T> list, Assembly assemblyFilter, Predicate<Type> filter = null)

@@ -5,16 +5,18 @@ using Cthangover.Core.Utils;
 namespace Cthangover.Validator
 {
     /// <summary>
-    /// Discovers every <see cref="IEntityKindStrategy"/> in the loaded assemblies
-    /// through the project-wide reflection plugin mechanism and indexes it by
-    /// the entity kind it handles. The map is cached for the process lifetime
-    /// because mod assemblies are never unloaded; adding kind handling is just
-    /// shipping a new public class with a parameterless constructor.
+    /// Registry of <see cref="IEntityKindStrategy"/> implementations, indexed by
+    /// the entity kind each one handles. It discovers nothing itself:
+    /// <see cref="EntityKindStrategyConsumer"/> delivers the strategies of every
+    /// mod as the kernel registers its assembly and takes them back when the mod
+    /// unloads, so the map never holds a strategy of a dead assembly. Adding kind
+    /// handling is just shipping a new public class with a parameterless
+    /// constructor in any mod.
     /// </summary>
     public static class EntityKindStrategyRegistry
     {
         private static readonly object sync = new();
-        private static Dictionary<string, IEntityKindStrategy> cached;
+        private static readonly Dictionary<string, IEntityKindStrategy> strategies = new(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// Returns the strategy registered for the entity kind, or <c>null</c>
@@ -26,37 +28,49 @@ namespace Cthangover.Validator
             if (string.IsNullOrWhiteSpace(kind))
                 return null;
 
-            var strategies = GetStrategies();
-            strategies.TryGetValue(kind, out var strategy);
-            return strategy;
-        }
-
-        private static Dictionary<string, IEntityKindStrategy> GetStrategies()
-        {
             lock (sync)
             {
-                if (cached != null)
-                    return cached;
+                strategies.TryGetValue(kind, out var strategy);
+                return strategy;
+            }
+        }
 
-                var map = new Dictionary<string, IEntityKindStrategy>(StringComparer.OrdinalIgnoreCase);
-                foreach (var strategy in Reflections.FindAndCreate<IEntityKindStrategy>())
+        /// <summary>
+        /// Registers a strategy under its kind. The first strategy of a kind
+        /// wins; a second one is reported as an error and ignored.
+        /// </summary>
+        public static void Register(IEntityKindStrategy strategy)
+        {
+            if (strategy == null || string.IsNullOrWhiteSpace(strategy.Kind))
+                return;
+
+            lock (sync)
+            {
+                if (strategies.TryGetValue(strategy.Kind, out var existing))
                 {
-                    if (string.IsNullOrWhiteSpace(strategy.Kind))
-                        continue;
-
-                    if (map.TryGetValue(strategy.Kind, out var existing))
-                    {
-                        GameLogger.Log("VALIDATOR",
-                            $"entity kind '{strategy.Kind}' is handled by both '{existing.GetType().Name}' and '{strategy.GetType().Name}'; keeping the first",
-                            LogLevel.Error);
-                        continue;
-                    }
-
-                    map[strategy.Kind] = strategy;
+                    GameLogger.Log("VALIDATOR",
+                        $"entity kind '{strategy.Kind}' is handled by both '{existing.GetType().Name}' and '{strategy.GetType().Name}'; keeping the first",
+                        LogLevel.Error);
+                    return;
                 }
 
-                cached = map;
-                return cached;
+                strategies[strategy.Kind] = strategy;
+            }
+        }
+
+        /// <summary>
+        /// Removes <paramref name="strategy"/> (its mod is being unloaded). A kind
+        /// owned by another strategy instance is left alone.
+        /// </summary>
+        public static void Unregister(IEntityKindStrategy strategy)
+        {
+            if (strategy == null || string.IsNullOrWhiteSpace(strategy.Kind))
+                return;
+
+            lock (sync)
+            {
+                if (strategies.TryGetValue(strategy.Kind, out var registered) && registered == strategy)
+                    strategies.Remove(strategy.Kind);
             }
         }
     }

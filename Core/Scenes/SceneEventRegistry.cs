@@ -221,7 +221,7 @@ namespace Cthangover.Core.Scenes
 
 		private static Type FindType(string fullName)
 		{
-			foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+			foreach (var assembly in Reflections.LoadedAssemblies())
 			{
 				try
 				{
@@ -239,7 +239,7 @@ namespace Cthangover.Core.Scenes
 
 		private void RegisterFromAttributes()
 		{
-			foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+			foreach (var assembly in Reflections.LoadedAssemblies())
 				RegisterFromAttributes(assembly);
 		}
 

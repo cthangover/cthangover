@@ -174,8 +174,13 @@ namespace Cthangover.Core.Interactive
                 foreach (var kv in _objects)
                     ModEventBus.Publish(new InteractiveStateChangedEvent { Id = kv.Key });
             }
+            // Objects live inside the scene: leaving it to the main menu (or
+            // switching games) frees them with the scene before this runs.
             foreach (var kv in _objects)
-                kv.Value.Destruct();
+            {
+                if (GodotObject.IsInstanceValid(kv.Value))
+                    kv.Value.Destruct();
+            }
             _objects.Clear();
         }
 
