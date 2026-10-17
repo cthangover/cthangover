@@ -20,5 +20,8 @@ namespace Cthangover.Core.Mods
 
         /// <summary>Assemblies that went through the consumer fan-out, in registration order.</summary>
         public List<Assembly> Assemblies = new();
+
+        /// <summary>Files loaded into <see cref="Context"/> (see <see cref="ModAssemblyLoader.ArtifactsOf"/>).</summary>
+        public List<string> ArtifactPaths = new();
     }
 }

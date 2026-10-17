@@ -133,6 +133,9 @@ namespace Cthangover.Core.Mods
             }
 
             _initializers.RemoveAll(init => init.GetType().Assembly.GetName().Name == modId);
+            // The mod leaves the loaded set: initializers registered later must
+            // not get a catch-up OnModLoaded for it.
+            _loadedModIds.Remove(modId);
         }
 
         /// <summary>

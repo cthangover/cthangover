@@ -53,6 +53,17 @@ namespace Cthangover.Core.Mods.Compilation
         }
 
         /// <summary>
+        /// The artifact (<c>&lt;id&gt;_&lt;hash&gt;.dll</c>) each mod compiled to in
+        /// this process, recorded by <see cref="ModCompiler.EnsureCompiled"/>. It
+        /// is the source of truth for dependents: their cache key includes it
+        /// (<see cref="BuildDependencySignature"/>) and their compilation references
+        /// exactly it (<see cref="ModReferenceProvider"/>) instead of guessing the
+        /// newest file by timestamp — after a hot reload back to earlier sources
+        /// the right artifact is the older file.
+        /// </summary>
+        public static readonly System.Collections.Concurrent.ConcurrentDictionary<string, string> CurrentArtifacts = new(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>
         /// Builds a deterministic signature of a mod's dependencies for the
         /// compilation cache key: every dependency id together with the version that
         /// was actually loaded (or <c>missing</c>). Renaming or upgrading a dependency
@@ -69,7 +80,13 @@ namespace Cthangover.Core.Mods.Compilation
             foreach (var depId in dependencies.Distinct().OrderBy(id => id, StringComparer.OrdinalIgnoreCase))
             {
                 var version = mods != null && mods.TryGetValue(depId, out var dependency) ? dependency.Version : null;
-                parts.Add($"{depId}@{version ?? "missing"}");
+                // The dependency's own compiled artifact (content hash) joins the
+                // key: a dependency whose sources changed is a new assembly, and its
+                // dependents must recompile against it — otherwise a hot reload of
+                // the dependency keeps dependents linked to members that no longer
+                // exist (MissingMethodException at runtime instead of a compile error).
+                var artifact = CurrentArtifacts.TryGetValue(depId, out var path) ? "#" + Path.GetFileNameWithoutExtension(path) : string.Empty;
+                parts.Add($"{depId}@{version ?? "missing"}{artifact}");
             }
 
             return string.Join(";", parts);
@@ -118,29 +135,40 @@ namespace Cthangover.Core.Mods.Compilation
         /// </summary>
         public static Assembly TryLoadCached(string cachedPath, string modId = null)
         {
+            if (!IsUsableHit(cachedPath))
+                return null;
+
+            GameLogger.Log("MODS_COMPILE", $"ModCompiler.Compile: loading cached {cachedPath}");
+            // Disk load (not byte load) keeps the module file-backed, so the
+            // runtime finds the portable PDB written next to the DLL and a
+            // debugger binds line-level breakpoints in mod code.
+            return ModAssemblyLoader.LoadFromPath(cachedPath, modId)
+                ?? ModAssemblyLoader.LoadFromBytes(File.ReadAllBytes(cachedPath));
+        }
+
+        /// <summary>
+        /// The cache policy without the load: true when <paramref name="cachedPath"/>
+        /// may be used as is (DLL plus PDB present and <c>UseAssemblyCache</c>
+        /// enabled, or the artifact is the one a live mod context runs right now —
+        /// rewriting a loaded, memory-mapped DLL fails on Windows and would only
+        /// reproduce the same bytes). Otherwise stale files are deleted and false
+        /// tells the caller to compile.
+        /// </summary>
+        public static bool IsUsableHit(string cachedPath)
+        {
             // A DLL without its PDB (cache entry from before §9.2) is treated
             // as stale so every mod gains debug symbols after one recompile.
             var cachedPdbPath = Path.ChangeExtension(cachedPath, ".pdb");
-            if (File.Exists(cachedPath))
-            {
-                if (ModConfig.Instance.UseAssemblyCache && File.Exists(cachedPdbPath))
-                {
-                    GameLogger.Log("MODS_COMPILE", $"ModCompiler.Compile: loading cached {cachedPath}");
-                    // Disk load (not byte load) keeps the module file-backed, so
-                    // the runtime finds the portable PDB written next to the DLL
-                    // and a debugger binds line-level breakpoints in mod code.
-                    return ModAssemblyLoader.LoadFromPath(cachedPath, modId)
-                        ?? ModAssemblyLoader.LoadFromBytes(File.ReadAllBytes(cachedPath));
-                }
+            if (!File.Exists(cachedPath))
+                return false;
+            if (File.Exists(cachedPdbPath) && (ModConfig.Instance.UseAssemblyCache || ModAssemblyLoader.IsArtifactLoaded(cachedPath)))
+                return true;
 
-                File.Delete(cachedPath);
-                var stalePdb = Path.ChangeExtension(cachedPath, ".pdb");
-                if (File.Exists(stalePdb))
-                    File.Delete(stalePdb);
-                GameLogger.Log("MODS_COMPILE", $"ModCompiler.Compile: cached {cachedPath} need delete by settings 'use_assembly_cache'", LogLevel.Warning);
-            }
-
-            return null;
+            File.Delete(cachedPath);
+            if (File.Exists(cachedPdbPath))
+                File.Delete(cachedPdbPath);
+            GameLogger.Log("MODS_COMPILE", $"ModCompiler.Compile: cached {cachedPath} need delete by settings 'use_assembly_cache'", LogLevel.Warning);
+            return false;
         }
 
         /// <summary>

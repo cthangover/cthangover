@@ -85,6 +85,30 @@ namespace Cthangover.Core.Mods
         public static List<(string ModId, Assembly Assembly, List<(string FilePath, string Source)> Sources)> CompileAll(IDictionary<string, IModInfo> mods, CancellationToken cancellationToken = default)
         {
             var result = new List<(string ModId, Assembly Assembly, List<(string FilePath, string Source)> Sources)>();
+            foreach (var compiled in PrepareAll(mods, cancellationToken))
+            {
+                var assembly = ModAssemblyLoader.LoadFromPath(compiled.ArtifactPath, compiled.ModId)
+                    ?? ModAssemblyLoader.LoadFromBytes(File.ReadAllBytes(compiled.ArtifactPath));
+                if (assembly == null)
+                    continue;
+                result.Add((compiled.ModId, assembly, compiled.Sources));
+                GameLogger.Log("MODS_COMPILE", $"ModCompiler.CompileAll: Compiled mod '{compiled.ModId}', {compiled.Sources.Count} source file(s)");
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// The compile half of <see cref="CompileAll"/>: every mod with sources is
+        /// compiled into the cache in dependency order (each dependent against the
+        /// artifact its dependency just produced) and nothing is loaded. Failed
+        /// mods are left out of the result and reported through
+        /// <see cref="GameLogger.CompilationErrors"/> (cleared first), which is
+        /// how an in-process reload learns that it must not touch the running set.
+        /// Pure .NET, safe on a background thread.
+        /// </summary>
+        public static List<ModCompileArtifact> PrepareAll(IDictionary<string, IModInfo> mods, CancellationToken cancellationToken = default)
+        {
+            var result = new List<ModCompileArtifact>();
 
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -93,26 +117,31 @@ namespace Cthangover.Core.Mods
             if(!Directory.Exists(CacheRoot))
                 Directory.CreateDirectory(CacheRoot);
 
-            var modsWithCode = new List<ModInfo>();
-            foreach (var kvp in mods)
+            // Sorted over the whole set, then filtered: a dependency without code
+            // (base2d) still orders its own dependencies (time_base) before the
+            // mods that reach them through it (audio_base).
+            var infos = new List<ModInfo>();
+            foreach (var mod in mods.Values)
             {
-                var modInfo = kvp.Value as ModInfo;
-                if (modInfo?.Manifest?.Sources == null || modInfo.Manifest.Sources.Count == 0)
-                    continue;
-                modsWithCode.Add(modInfo);
+                if (mod is ModInfo { Manifest: not null } info)
+                    infos.Add(info);
             }
-
-            if (modsWithCode.Count == 0)
+            var sorted = new List<ModInfo>();
+            foreach (var info in ModCompileOrder.TopologicalSort(infos))
+            {
+                if (HasSources(info))
+                    sorted.Add(info);
+            }
+            if (sorted.Count == 0)
                 return result;
-
-            var sorted = ModCompileOrder.TopologicalSort(modsWithCode);
-
+            var done = 0;
             foreach (var modInfo in sorted)
             {
                 cancellationToken.ThrowIfCancellationRequested();
+
                 // Fine-grained progress for the launcher boot bar: every mod is
                 // one step of the Discovering phase, cache hits included.
-                BootProgress.ReportSub(result.Count / (float)sorted.Count);
+                BootProgress.ReportSub(done++ / (float)sorted.Count);
 
                 try
                 {
@@ -128,13 +157,20 @@ namespace Cthangover.Core.Mods
                     if (!string.IsNullOrEmpty(dependencySignature))
                         GameLogger.Log("MODS_COMPILE", $"  dependencies: {dependencySignature}", LogLevel.Debug);
 
-                    var visibleModIds = DependencyClosure(modInfo, mods);
-                    var assembly = Compile(modInfo.Id, sourceFiles, dependencySignature, cancellationToken, visibleModIds);
-                    if (assembly != null)
+                    // A mod whose dependency failed to compile would only produce
+                    // cascading errors against a stale dependency artifact.
+                    var failedDependency = FailedDependency(modInfo, mods, result);
+                    if (failedDependency != null)
                     {
-                        result.Add((modInfo.Id, assembly, sourceFiles));
-                        GameLogger.Log("MODS_COMPILE", $"ModCompiler.CompileAll: Compiled mod '{modInfo.Id}', {sourceFiles.Count} source file(s)");
+                        GameLogger.CompilationErrors.Add($"Mod '{modInfo.Id}': dependency '{failedDependency}' did not compile");
+                        GameLogger.Log("MODS_COMPILE", $"ModCompiler.CompileAll: skipped '{modInfo.Id}': dependency '{failedDependency}' did not compile", LogLevel.Error);
+                        continue;
                     }
+
+                    var visibleModIds = DependencyClosure(modInfo, mods);
+                    var artifact = EnsureCompiled(modInfo.Id, sourceFiles, dependencySignature, cancellationToken, visibleModIds);
+                    if (artifact != null)
+                        result.Add(new ModCompileArtifact(modInfo.Id, artifact, sourceFiles));
                 }
                 catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
                 {
@@ -148,6 +184,31 @@ namespace Cthangover.Core.Mods
             }
 
             return result;
+        }
+
+        private static bool HasSources(IModInfo mod)
+            => mod is ModInfo { Manifest.Sources.Count: > 0 };
+
+        /// <summary>A dependency (transitive) of <paramref name="modInfo"/> that has sources but is not among the compiled <paramref name="compiled"/>; null when all compiled.</summary>
+        private static string FailedDependency(ModInfo modInfo, IDictionary<string, IModInfo> mods, List<ModCompileArtifact> compiled)
+        {
+            foreach (var id in DependencyClosure(modInfo, mods))
+            {
+                if (!mods.TryGetValue(id, out var dependency) || !HasSources(dependency))
+                    continue;
+                var found = false;
+                foreach (var artifact in compiled)
+                {
+                    if (string.Equals(artifact.ModId, id, StringComparison.OrdinalIgnoreCase))
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                    return id;
+            }
+            return null;
         }
 
         /// <summary>
@@ -201,6 +262,30 @@ namespace Cthangover.Core.Mods
         /// </summary>
         public static Assembly Compile(string modId, IEnumerable<(string FilePath, string Source)> sources, string dependencySignature, CancellationToken cancellationToken = default, IReadOnlyCollection<string> knownModIds = null)
         {
+            var cachedPath = EnsureCompiled(modId, sources, dependencySignature, cancellationToken, knownModIds);
+            if (cachedPath == null)
+                return null;
+
+            // Disk load keeps the module file-backed so the adjacent PDB binds;
+            // byte load stays the fallback (plan §9.2). The modId overload
+            // routes the load into the mod's collectible context so a later
+            // unload can release it.
+            return ModAssemblyLoader.LoadFromPath(cachedPath, modId)
+                ?? ModAssemblyLoader.LoadFromBytes(File.ReadAllBytes(cachedPath));
+        }
+
+        /// <summary>
+        /// The compile half of <see cref="Compile(string, IEnumerable{(string FilePath, string Source)}, string, CancellationToken, IReadOnlyCollection{string})"/>
+        /// without the load: makes sure the cache holds the assembly for these
+        /// sources and returns its path (null on a compile error, which is logged
+        /// and added to <see cref="GameLogger.CompilationErrors"/>). An in-process
+        /// mod reload compiles every changed mod this way first and touches
+        /// nothing loaded until all of them compiled, so a typo leaves the running
+        /// game on the previous version. Records the result in
+        /// <see cref="ModAssemblyCache.CurrentArtifacts"/> for the dependents.
+        /// </summary>
+        public static string EnsureCompiled(string modId, IEnumerable<(string FilePath, string Source)> sources, string dependencySignature, CancellationToken cancellationToken = default, IReadOnlyCollection<string> knownModIds = null)
+        {
             var sourceList = sources.ToList();
             if (sourceList.Count == 0)
                 return null;
@@ -209,9 +294,11 @@ namespace Cthangover.Core.Mods
 
             var generators = GodotGeneratorHost.GetGodotGenerators();
             var cachedPath = ModAssemblyCache.BuildCachePath(modId, sourceList, dependencySignature, generators != null && generators.Length > 0);
-            var cached = ModAssemblyCache.TryLoadCached(cachedPath, modId);
-            if (cached != null)
-                return cached;
+            if (ModAssemblyCache.IsUsableHit(cachedPath))
+            {
+                ModAssemblyCache.CurrentArtifacts[modId] = cachedPath;
+                return cachedPath;
+            }
 
             var parseOptions = new CSharpParseOptions();
             // Encoding is mandatory for PDB emission: source strings read from
@@ -272,13 +359,10 @@ namespace Cthangover.Core.Mods
 
             GameLogger.Log("MODS_COMPILE", $"ModCompiler.Compile: Compilation of mod '{modId}' with {sourceList.Count} source files - success -> {cachedPath}");
 
-            // Disk load keeps the module file-backed so the adjacent PDB binds;
-            // byte load stays the fallback (plan §9.2). The modId overload
-            // routes the load into the mod's collectible context so a later
-            // unload can release it.
-            return ModAssemblyLoader.LoadFromPath(cachedPath, modId)
-                ?? ModAssemblyLoader.LoadFromBytes(ms.ToArray());
+            ModAssemblyCache.CurrentArtifacts[modId] = cachedPath;
+            return cachedPath;
         }
+
 
         /// <summary>
         /// Formats a Roslyn diagnostic the way IDEs and terminals link it:

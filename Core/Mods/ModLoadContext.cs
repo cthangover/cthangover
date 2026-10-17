@@ -112,24 +112,17 @@ namespace Cthangover.Core.Mods
             => IntPtr.Zero;
 
         /// <summary>
-        /// Attempts to unload the context: drops the path table, runs GC until
-        /// no progress, then unloads. Returns null on success; a diagnostic
-        /// string when the caller should verify collection separately (see
-        /// <see cref="CollectAndVerify"/>) — the honest signal lives in the
-        /// caller's <c>WeakReference</c>, because a weak reference taken
-        /// inside this very frame would see <c>this</c> alive by definition.
+        /// Starts the unload: drops the path table so nothing resolves into the
+        /// context any more, then asks the runtime to release it. Collection
+        /// happens on a later GC once nothing refers into the context; verify it
+        /// with a <c>WeakReference</c> held by the caller
+        /// (<see cref="Cthangover.Core.Mods.Unload.ModUnloadTicket"/>, <see cref="CollectAndVerify"/>) —
+        /// a weak reference taken inside this very frame would see <c>this</c>
+        /// alive by definition. Always returns null (kept for the old contract).
         /// </summary>
         public string TryUnload()
         {
-            // Drop our own path table first so nothing resolves into us anymore.
             assemblyPaths.Clear();
-
-            for (var attempts = 0; attempts < 5; attempts++)
-            {
-                GC.Collect(2, GCCollectionMode.Forced, blocking: true, compacting: true);
-                GC.WaitForPendingFinalizers();
-            }
-
             Unload();
             return null;
         }

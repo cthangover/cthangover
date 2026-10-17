@@ -52,12 +52,29 @@ namespace Cthangover.Core.Mods
 
         private readonly ModBootPipeline pipeline;
         private readonly ModLoadOrderService loadOrder;
+        private readonly ModSetReloader reloader;
 
         private ModRegistry()
         {
             Mods = mods;
             pipeline = new ModBootPipeline(this, mods, allDiscoveredMods, _existingPriorities);
             loadOrder = new ModLoadOrderService(this, pipeline, mods, allDiscoveredMods);
+            reloader = new ModSetReloader(this, pipeline, mods, allDiscoveredMods, _existingPriorities);
+        }
+
+        /// <summary>In-process replacement of the running mod set (game switch, hot reload).</summary>
+        public ModSetReloader Reloader => reloader;
+
+        /// <summary>Filesystem paths of the scanner roots resolved at boot (watched by the hot reload).</summary>
+        internal List<string> RootPaths
+        {
+            get
+            {
+                var paths = new List<string>();
+                foreach (var (_, url, _) in pipeline.ResolvedRoots)
+                    paths.Add(url);
+                return paths;
+            }
         }
 
         /// <summary>Primary mods root (the first accessible scanner root, lowest priority number).</summary>
@@ -126,45 +143,17 @@ namespace Cthangover.Core.Mods
         public void FinalizeGodotInit() => pipeline.FinalizeGodotInit();
 
         /// <summary>
-        /// Discards all loaded mods and re-runs discovery. The caller
-        /// (typically <c>ModManager.Reload</c>) is responsible for
-        /// additionally flushing asset caches. Holds the pipeline lock so a
-        /// reload is mutually exclusive with the boot phases; the reset order
-        /// mirrors the original initialization inverse — event bus
-        /// subscriptions first (while mod ids are still known), then the
-        /// registry state, then the static registries.
+        /// Full reload for the current selection: every mod with code is
+        /// released and loaded again from freshly compiled sources (see
+        /// <see cref="ModSetReloader"/>). Mods that fail to compile are left out,
+        /// as on a cold boot. The caller (typically <c>ModManager.Reload</c>) is
+        /// responsible for rebuilding the derived state.
         /// </summary>
         public void Reload()
         {
-            lock (pipeline.PipelineLock)
-            {
-                foreach (var kvp in mods)
-                    ModEventBus.Instance?.ClearForMod(kvp.Key);
-
-                Volatile.Write(ref initialized, false);
-                mods.Clear();
-                allDiscoveredMods.Clear();
-                _existingPriorities.Clear();
-                InvalidateOrder();
-                pipeline.ResetStagedAssemblies();
-                ScriptTypeRegistry.Clear();
-                ModNativeLoader.FreeAll();
-
-                // Collectible unload: reverse fan-out through the consumer
-                // registry and release each mod's AssemblyLoadContext. A mod
-                // whose references survive logs a diagnostic and degrades to
-                // the pre-collectible behaviour (assemblies stay until exit);
-                // re-initialization still rebuilds a consistent mod set.
-                foreach (var loadedId in ModAssemblyLoader.LoadedModIds)
-                {
-                    var diagnostic = ModAssemblyLoader.UnloadMod(loadedId);
-                    if (diagnostic != null)
-                        GameLogger.Log("MODS_REGISTRY", $"Reload: mod '{loadedId}' not fully unloaded: {diagnostic}", LogLevel.Warning);
-                }
-
-                using (ModAssemblyLoader.BeginBatch())
-                    Initialize();
-            }
+            var prep = reloader.Prepare(Games.GameLaunchArgs.Current, new[] { "*" });
+            var tree = GameEnvironment.IsRuntime ? Godot.Engine.GetMainLoop() as Godot.SceneTree : null;
+            reloader.Apply(prep, tree);
         }
 
         /// <summary>

@@ -13,9 +13,10 @@ namespace Cthangover.Validator
     /// The hook runs on the main thread; all Godot-bound work (settings load,
     /// <c>user://</c> path resolution) happens inside <see cref="ValidatorService.Start"/>,
     /// and the validation itself continues on a background task so the game start
-    /// is never blocked.
+    /// is never blocked. On unload (or re-registration during an in-process
+    /// reload) the pass in flight is stopped, see <see cref="ValidatorService.Stop"/>.
     /// </summary>
-    public class ValidatorInitializer : IModInitializer
+    public class ValidatorInitializer : IModInitializer, IModUnloadAware
     {
         /// <summary>
         /// Intentionally empty: asset-only mods are invisible to this callback, so
@@ -34,6 +35,17 @@ namespace Cthangover.Validator
         public void OnModResourcesReady()
         {
             ValidatorService.Start();
+        }
+
+        /// <summary>Stops the background pass while the validator's types are still alive.</summary>
+        public void OnModUnloading()
+        {
+            ValidatorService.Stop();
+        }
+
+        /// <summary>Nothing to drop: the validator keeps no references to other mods between passes.</summary>
+        public void OnModUnloaded(string modId)
+        {
         }
     }
 }
