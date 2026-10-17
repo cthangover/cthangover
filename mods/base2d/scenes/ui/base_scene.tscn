@@ -1,6 +1,5 @@
-[gd_scene load_steps=5 format=3 uid="uid://bs8k1n2m3p4q5"]
+[gd_scene load_steps=4 format=3 uid="uid://bs8k1n2m3p4q5"]
 
-[ext_resource type="Script" path="res://mods/dialog_base/src/UI/Executable/ExecutableMainEventChain.cs" id="1_chain"]
 [ext_resource type="PackedScene" path="res://scenes/ui/view_box.tscn" id="2_viewbox"]
 [ext_resource type="PackedScene" path="res://scenes/ui/top_view.tscn" id="3_topview"]
 [ext_resource type="Script" path="res://mods/interface/src/Messages/NotificationPanel.cs" id="4_notification"]
@@ -12,7 +11,6 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1_chain")
 
 [node name="Scene" type="Control" parent="."]
 layout_mode = 1

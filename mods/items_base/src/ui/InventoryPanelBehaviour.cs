@@ -900,7 +900,7 @@ namespace Cthangover.Core.UI.Inventory
                 InventoryItemUi.Translate(messageKey),
                 InventoryItemUi.Translate(item.Name)));
             GameData.Instance.Runtime.Inventory.Remove(item, 1);
-            PlaySound("ui/cook");
+            PlaySound("items/use");
         }
 
         private void OnDropClicked()
@@ -994,7 +994,7 @@ namespace Cthangover.Core.UI.Inventory
                 InventoryItemUi.Translate(item.Name),
                 targetName));
             GameData.Instance.Runtime.Inventory.Remove(item, 1);
-            PlaySound("battle/card_pick");
+            PlaySound("items/target");
         }
 
         private void OnTargetCancelled()
