@@ -96,7 +96,7 @@ namespace Cthangover.Core.Factories
                     return;
 
                 var map = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase);
-                foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+                foreach (var assembly in Reflections.LoadedAssemblies())
                 {
                     Type[] types;
                     try

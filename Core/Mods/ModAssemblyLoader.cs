@@ -273,20 +273,33 @@ namespace Cthangover.Core.Mods
             AssemblyConsumerRegistry.EnsureInitialized();
             AssemblyConsumerRegistry.FanOutLoaded(assembly, modId);
 
-            // Mod-contributed consumers join the registry too — after the
-            // fan-out of the assembly that declared them, so they observe the
-            // remaining mods but not themselves (mirroring how initializers
-            // get OnModLoaded catch-up).
-            AssemblyConsumerRegistry.RegisterFromAssembly(assembly);
-
+            List<(Assembly Assembly, string ModId)> registered;
             lock (loaderLock)
             {
                 if (!loadedMods.TryGetValue(modId, out var record))
                     loadedMods[modId] = record = new LoadedModAssembly { ModId = modId };
                 if (!record.Assemblies.Contains(assembly))
                     record.Assemblies.Add(assembly);
+                if (!registrationOrder.Contains((assembly, modId)))
+                    registrationOrder.Add((assembly, modId));
+                registered = new List<(Assembly, string)>(registrationOrder);
+            }
+
+            // Mod-contributed consumers (ModTypeConsumer registries) join after
+            // the fan-out of the assembly that declared them and catch up on
+            // every assembly registered so far, their own included (mirroring
+            // the initializers' two-way OnModLoaded catch-up): a mod's registry
+            // sees every mod regardless of load order, and no mod has to look
+            // assemblies up itself.
+            foreach (var consumer in AssemblyConsumerRegistry.RegisterFromAssembly(assembly))
+            {
+                foreach (var (previous, previousModId) in registered)
+                    AssemblyConsumerRegistry.CatchUp(consumer, previous, previousModId);
             }
         }
+
+        /// <summary>Assemblies in the order they went through <see cref="RegisterAssembly"/> (replayed to late consumers).</summary>
+        private static readonly List<(Assembly Assembly, string ModId)> registrationOrder = new();
 
         /// <summary>
         /// Unloads one mod through the full protocol of
@@ -328,7 +341,14 @@ namespace Cthangover.Core.Mods
                 foreach (var id in modIds ?? Array.Empty<string>())
                 {
                     if (id != null && loadedMods.Remove(id, out var record))
+                    {
                         result.Add(record);
+                        for (var i = registrationOrder.Count - 1; i >= 0; i--)
+                        {
+                            if (record.Assemblies.Contains(registrationOrder[i].Assembly))
+                                registrationOrder.RemoveAt(i);
+                        }
+                    }
                 }
             }
             return result;
@@ -395,7 +415,10 @@ namespace Cthangover.Core.Mods
         public static void ClearTracking()
         {
             lock (loaderLock)
+            {
                 loadedMods.Clear();
+                registrationOrder.Clear();
+            }
         }
 
         /// <summary>

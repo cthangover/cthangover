@@ -102,6 +102,17 @@
       "timeoutSeconds": 180
     },
     {
+      "name": "hot_reload",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--frontend",
+        "--itest=hot_reload",
+        "--hot-reload"
+      ],
+      "timeoutSeconds": 360
+    },
+    {
       "name": "new_game_cthangover",
       "scene": "res://scenes/menu/launcher.tscn",
       "args": [

@@ -14,8 +14,7 @@ namespace Cthangover.Core.Autotest
     /// Integration coverage for the dialog subsystem migrated into the
     /// dialog_base engine mod. The core keeps only the transition contracts
     /// (<c>IDialogBox</c>, the executable event contracts,
-    /// <c>IScenarioEventFactory</c>, <c>ScenarioMetadata</c> and the
-    /// <c>ScenarioCommandBridge</c>); the dialog UI, the DSL parser, the
+    /// <c>IScenarioEventFactory</c> and <c>ScenarioMetadata</c>); the dialog UI, the DSL parser, the
     /// command strategies and the executable event engine live in the mod
     /// assembly, so every check here proves the core-to-mod wiring at engine
     /// runtime:
@@ -29,7 +28,7 @@ namespace Cthangover.Core.Autotest
     /// factory) are loaded from a mod assembly, and the core assembly no
     /// longer defines them;</item>
     /// <item>the DSL command vocabulary resolved into the mod factory (the
-    /// ScenarioCommandBridge delivery point);</item>
+    /// mod's ScenarioCommandStrategyConsumer);</item>
     /// <item>the SubsystemRegistration marker declares the dialog subsystem
     /// for the coverage pipeline.</item>
     /// </list>
@@ -69,7 +68,7 @@ namespace Cthangover.Core.Autotest
                 kernelAssembly.GetType("Cthangover.Core.Scenarios.ScenarioParser", throwOnError: false) == null);
 
             var commandCount = SafeInt(() => CountCommands());
-            Check($"DSL command vocabulary resolved through ScenarioCommandBridge (commands={commandCount})",
+            Check($"DSL command vocabulary resolved through ScenarioCommandStrategyConsumer (commands={commandCount})",
                 commandCount >= 20);
 
             Check("SubsystemRegistration declares subsystem id 'dialog'",

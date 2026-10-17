@@ -57,6 +57,19 @@ namespace Cthangover.Core.Mods
         public string ModId => modId;
 
         /// <summary>
+        /// True once <see cref="TryUnload"/> released the context. Its assemblies
+        /// stay in <see cref="AppDomain.GetAssemblies"/> until the GC collects
+        /// them, so every "scan all loaded assemblies" must skip them — a scan
+        /// that still sees them re-registers the dying mod's types (and, after a
+        /// reload, finds two assemblies with the same name).
+        /// </summary>
+        public bool IsReleased { get; private set; }
+
+        /// <summary>True when <paramref name="assembly"/> belongs to a released mod context.</summary>
+        public static bool IsReleasedAssembly(Assembly assembly)
+            => assembly != null && assembly.IsCollectible && GetLoadContext(assembly) is ModLoadContext { IsReleased: true };
+
+        /// <summary>
         /// Registers a file-backed assembly (main compiled dll or a mod-shipped
         /// precompiled one) by its simple name. Must happen before the first
         /// resolve. Returns the assembly's simple name — the key for
@@ -122,6 +135,7 @@ namespace Cthangover.Core.Mods
         /// </summary>
         public string TryUnload()
         {
+            IsReleased = true;
             assemblyPaths.Clear();
             Unload();
             return null;

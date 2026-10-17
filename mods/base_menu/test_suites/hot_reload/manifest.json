@@ -1,0 +1,7 @@
+{
+  "name": "Hot Reload Test",
+  "description": "Hot reload in a running front-end: writes two probe mods (a library and a mod depending on it) into user://mods, loads them in place, edits the library source and lets the file watcher reload both (old contexts collected, the front-end kept), checks that a compile error is rejected while the previous code keeps running, fixes it, and finally drops the probes from the set. Activated only by --itest=hot_reload (with --frontend --hot-reload).",
+  "sources": [
+    "src/*.cs"
+  ]
+}

@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Loader;
 using Cthangover.Core.Mods;
+using Cthangover.Core.Mods.Providers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Xunit;
@@ -87,6 +88,82 @@ namespace TestBatchMod
             {
                 ModAssemblyLoader.UnloadMod(modId);
             }
+        }
+
+        [Fact]
+        public void ArtifactsOf_TracksTheFilesAContextRuns()
+        {
+            var modId = "test_batch_" + Guid.NewGuid().ToString("N").Substring(0, 12);
+            try
+            {
+                var assembly = CompileInBatch(modId);
+
+                Assert.Equal(new[] { assembly.Location }, ModAssemblyLoader.ArtifactsOf(modId));
+                Assert.True(ModAssemblyLoader.IsArtifactLoaded(assembly.Location));
+
+                ModAssemblyLoader.UnloadMod(modId);
+
+                Assert.Empty(ModAssemblyLoader.ArtifactsOf(modId));
+                Assert.False(ModAssemblyLoader.IsArtifactLoaded(assembly.Location));
+            }
+            finally
+            {
+                ModAssemblyLoader.UnloadMod(modId);
+            }
+        }
+
+        [Fact]
+        public void StagePrecompiledDlls_ContentAddressed_LoadStagedIntoTheModContext()
+        {
+            var modId = "test_dll_" + Guid.NewGuid().ToString("N").Substring(0, 12);
+            var root = Path.Combine(Path.GetTempPath(), "cthangover_test_mod_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(Path.Combine(root, "dll"));
+            try
+            {
+                var mod = new ModInfo { Id = modId, Name = modId, Manifest = new ModManifest { Id = modId }, FileProvider = new FolderModFileProvider(root, modId) };
+                EmitLibrary(modId + "_lib", "public class LibV1 { }", Path.Combine(root, "dll", "Lib.dll"));
+
+                var staged = ModAssemblyLoader.StagePrecompiledDlls(new[] { mod });
+                var stagedAgain = ModAssemblyLoader.StagePrecompiledDlls(new[] { mod });
+
+                Assert.Single(staged);
+                Assert.Equal(modId, staged[0].ModId);
+                Assert.StartsWith(modId + "_dll_", Path.GetFileName(staged[0].CachedPath));
+                Assert.EndsWith("_Lib.dll", staged[0].CachedPath);
+                Assert.True(File.Exists(staged[0].CachedPath));
+                Assert.Equal(staged, stagedAgain);
+
+                EmitLibrary(modId + "_lib", "public class LibV2 { }", Path.Combine(root, "dll", "Lib.dll"));
+                Assert.NotEqual(staged[0].CachedPath, ModAssemblyLoader.StagePrecompiledDlls(new[] { mod })[0].CachedPath);
+
+                using (ModAssemblyLoader.BeginBatch())
+                {
+                    var loaded = ModAssemblyLoader.LoadStagedDlls(staged);
+                    Assert.Single(loaded);
+                    Assert.Equal(modId, loaded[0].ModId);
+                    Assert.True(loaded[0].Assembly.IsCollectible);
+                    Assert.NotNull(loaded[0].Assembly.GetType("LibV1"));
+                }
+                Assert.True(ModAssemblyLoader.IsArtifactLoaded(staged[0].CachedPath));
+            }
+            finally
+            {
+                ModAssemblyLoader.UnloadMod(modId);
+                Directory.Delete(root, recursive: true);
+            }
+        }
+
+        private static MetadataReference ToReference(string path) => MetadataReference.CreateFromFile(path);
+
+        private static void EmitLibrary(string assemblyName, string source, string path)
+        {
+            var trustedPlatform = ((string)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES"))
+                .Split(Path.PathSeparator)
+                .Select(ToReference);
+            var compilation = CSharpCompilation.Create(assemblyName, new[] { CSharpSyntaxTree.ParseText(source) }, trustedPlatform,
+                new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+            var result = compilation.Emit(path);
+            Assert.True(result.Success, string.Join("\n", result.Diagnostics));
         }
 
         private static System.Reflection.Assembly CompileInBatch(string modId)

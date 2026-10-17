@@ -601,7 +601,7 @@ namespace Cthangover.Core.Scenes
                 var type = Type.GetType(info.ClassName);
                 if (type == null)
                 {
-                    type = AppDomain.CurrentDomain.GetAssemblies()
+                    type = Reflections.LoadedAssemblies()
                         .SelectMany(a => a.GetTypes())
                         .FirstOrDefault(t => t.FullName == info.ClassName);
                 }

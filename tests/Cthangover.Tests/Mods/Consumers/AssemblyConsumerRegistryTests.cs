@@ -10,6 +10,7 @@ namespace Cthangover.Tests.Mods.Consumers
     /// Consumer registry: discovery of kernel consumers, order, id dedup and
     /// failure isolation for both fan-out directions.
     /// </summary>
+    [Collection("mod-load-context")]
     public class AssemblyConsumerRegistryTests : IDisposable
     {
         public AssemblyConsumerRegistryTests()
@@ -113,6 +114,54 @@ namespace Cthangover.Tests.Mods.Consumers
             // victim (later in reverse order) still received its unload pass
             // even though bomb threw first.
             Assert.Equal(new[] { "unload:m" }, victim.Calls);
+        }
+
+        [Fact]
+        public void Register_ReturnsWhetherTheConsumerJoined()
+        {
+            Assert.True(AssemblyConsumerRegistry.Register(new RecordingConsumer("joins", 10)));
+            Assert.False(AssemblyConsumerRegistry.Register(new RecordingConsumer("joins", 20)));
+            Assert.False(AssemblyConsumerRegistry.Register(null));
+        }
+
+        [Fact]
+        public void RegisterFromAssembly_ReturnsTheConsumersThatJoined()
+        {
+            var joined = AssemblyConsumerRegistry.RegisterFromAssembly(typeof(RecordingInitializerConsumer).Assembly);
+            var again = AssemblyConsumerRegistry.RegisterFromAssembly(typeof(RecordingInitializerConsumer).Assembly);
+
+            Assert.Contains(joined, IsRecordingInitializers);
+            Assert.Empty(again);
+            Assert.Empty(AssemblyConsumerRegistry.RegisterFromAssembly(null));
+        }
+
+        private static bool IsFromMod(IAssemblyConsumer consumer) => consumer.Id == "from_mod";
+
+        private static bool IsRecordingInitializers(IAssemblyConsumer consumer) => consumer is RecordingInitializerConsumer;
+
+        [Fact]
+        public void CatchUp_DeliversOneAssembly_AndIsolatesFailures()
+        {
+            var consumer = new RecordingConsumer("late", 10);
+            var broken = new ThrowingConsumer();
+
+            AssemblyConsumerRegistry.CatchUp(consumer, typeof(AssemblyConsumerRegistryTests).Assembly, "early_mod");
+            AssemblyConsumerRegistry.CatchUp(broken, typeof(AssemblyConsumerRegistryTests).Assembly, "early_mod");
+
+            Assert.Equal(new[] { "load:early_mod" }, consumer.Calls);
+        }
+
+        [Fact]
+        public void RemoveOwned_DropsConsumersOfTheDyingAssembly()
+        {
+            AssemblyConsumerRegistry.Register(new RecordingConsumer("from_mod", 10));
+
+            var removed = AssemblyConsumerRegistry.RemoveOwned(new Cthangover.Core.Mods.Unload.AssemblyOwnership(new[] { typeof(AssemblyConsumerRegistryTests).Assembly }));
+
+            Assert.Equal(1, removed);
+            Assert.DoesNotContain(AssemblyConsumerRegistry.Consumers, IsFromMod);
+            Assert.True(AssemblyConsumerRegistry.Register(new RecordingConsumer("from_mod", 10)));
+            Assert.Equal(0, AssemblyConsumerRegistry.RemoveOwned(null));
         }
     }
 }

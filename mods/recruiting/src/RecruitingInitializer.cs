@@ -1,6 +1,3 @@
-using System;
-using System.Linq;
-using System.Reflection;
 using Cthangover.Core.Bootstrap;
 using Cthangover.Core.Events;
 using Cthangover.Core.Mods;
@@ -8,15 +5,10 @@ using Cthangover.Core.Mods;
 namespace Cthangover.Core.Relationship
 {
     /// <summary>
-    /// Lifecycle entry point of the recruiting mod. The core's ModAssemblyLoader
-    /// no longer knows about recruit behaviours, so this initializer takes over:
+    /// Lifecycle entry point of the recruiting mod. Behaviours and conditions of
+    /// all mods are not discovered here: the kernel delivers them through
+    /// <see cref="RecruitBehaviourConsumer"/> and <see cref="RecruitConditionConsumer"/>.
     /// <list type="number">
-    /// <item>Every mod announcement triggers a scan of that mod's assembly for
-    /// <see cref="IRecruitBehaviour"/> and <see cref="IRecruitCondition"/>
-    /// implementations (the compiler names source-compiled assemblies after their
-    /// mod id).</item>
-    /// <item>The resources-ready pass rescans the whole AppDomain as a safety net
-    /// for precompiled DLLs whose assembly name differs from the mod id.</item>
     /// <item>It registers a <see cref="RecruitingReset"/> with
     /// <see cref="AppServices"/>, so the core's "New Game" pipeline
     /// (<c>GameData.StartNewGame</c> → <c>AppServices.ResetForNewGame</c>)
@@ -37,17 +29,15 @@ namespace Cthangover.Core.Relationship
     {
         private static bool _defeatedSubscribed;
 
-        /// <summary>Registers behaviours and conditions from the mod that just announced itself.</summary>
+        /// <summary>Nothing to do per mod: recruit plugins arrive through the kernel's assembly consumers.</summary>
         public void OnModLoaded(string modId)
         {
-            RegisterAssembly(FindAssembly(modId));
         }
 
         /// <summary>
         /// Registers the roster reset owner with AppServices (idempotent —
-        /// duplicates by Id are ignored), installs the
-        /// <see cref="CharactersDefeatedEvent"/> subscription, and rescans
-        /// every loaded assembly. The roster is no longer cleared through a
+        /// duplicates by Id are ignored) and installs the
+        /// <see cref="CharactersDefeatedEvent"/> subscription. The roster is no longer cleared through a
         /// <c>NewGameStartedEvent</c> subscription: the core's reset loop
         /// invokes <see cref="RecruitingReset"/> instead.
         /// </summary>
@@ -55,7 +45,6 @@ namespace Cthangover.Core.Relationship
         {
             AppServices.Current.RegisterResettable(new RecruitingReset());
             EnsureDefeatedSubscription();
-            RecruitBehaviourRegistry.Instance.RegisterAll();
         }
 
         private static void EnsureDefeatedSubscription()
@@ -65,23 +54,6 @@ namespace Cthangover.Core.Relationship
 
             _defeatedSubscribed = true;
             ModEventBus.Subscribe<CharactersDefeatedEvent>(DefeatedCharactersRecruiter.Process);
-        }
-
-        private static void RegisterAssembly(Assembly assembly)
-        {
-            if (assembly == null)
-                return;
-
-            RecruitBehaviourRegistry.Instance.RegisterAssembly(assembly);
-        }
-
-        private static Assembly FindAssembly(string modId)
-        {
-            if (string.IsNullOrEmpty(modId))
-                return null;
-
-            return AppDomain.CurrentDomain.GetAssemblies()
-                .FirstOrDefault(assembly => assembly.GetName().Name == modId);
         }
     }
 

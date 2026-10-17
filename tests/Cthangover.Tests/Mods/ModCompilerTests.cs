@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using Cthangover.Core.Mods;
+using Cthangover.Core.Utils;
 
 namespace Engine.Tests.Mods
 {
@@ -161,6 +162,121 @@ public class TestB : IModInitializer { public void OnModLoaded(string m) { } pub
             {
                 ModCompiler.Compile("test_mod_cancelled", sources, cts.Token);
             });
+        }
+
+        [Fact]
+        public void EnsureCompiled_CompilesIntoTheCacheWithoutLoading()
+        {
+            var modId = "test_ensure_" + System.Guid.NewGuid().ToString("N").Substring(0, 8);
+            var sources = new List<(string, string)> { ("TestClass.cs", ValidClassCode) };
+            try
+            {
+                var first = ModCompiler.EnsureCompiled(modId, sources, null);
+                var second = ModCompiler.EnsureCompiled(modId, sources, null);
+
+                Assert.NotNull(first);
+                Assert.Equal(first, second);
+                Assert.True(File.Exists(first));
+                Assert.Equal(first, Cthangover.Core.Mods.Compilation.ModAssemblyCache.CurrentArtifacts[modId]);
+                Assert.False(ModAssemblyLoader.IsModLoaded(modId));
+                Assert.False(ModAssemblyLoader.IsArtifactLoaded(first));
+            }
+            finally
+            {
+                Cthangover.Core.Mods.Compilation.ModAssemblyCache.CurrentArtifacts.TryRemove(modId, out _);
+                ModCompiler.InvalidateCache(modId);
+            }
+        }
+
+        [Fact]
+        public void EnsureCompiled_CompileErrorOrNoSources_ReturnsNull()
+        {
+            var modId = "test_ensure_bad_" + System.Guid.NewGuid().ToString("N").Substring(0, 8);
+
+            Assert.Null(ModCompiler.EnsureCompiled(modId, new List<(string, string)> { ("Bad.cs", "public class {") }, null));
+            Assert.Null(ModCompiler.EnsureCompiled(modId, new List<(string, string)>(), null));
+        }
+
+        [Fact]
+        public void PrepareAll_CompilesInDependencyOrder_DependentFollowsTheDependencyArtifact()
+        {
+            var root = Path.Combine(Path.GetTempPath(), "cthangover_prepare_" + System.Guid.NewGuid().ToString("N"));
+            var lib = "test_lib_" + System.Guid.NewGuid().ToString("N").Substring(0, 8);
+            var app = "test_app_" + System.Guid.NewGuid().ToString("N").Substring(0, 8);
+            try
+            {
+                var mods = new Dictionary<string, IModInfo>
+                {
+                    [app] = SourceMod(root, app, "public class AppUser { public string Use() => new LibApi().Hello(); }", lib),
+                    [lib] = SourceMod(root, lib, "public class LibApi { public string Hello() => \"v1\"; }"),
+                };
+
+                var first = ModCompiler.PrepareAll(mods);
+
+                Assert.Equal(new[] { lib, app }, new[] { first[0].ModId, first[1].ModId });
+                Assert.NotEmpty(first[1].Sources);
+                Assert.False(ModAssemblyLoader.IsModLoaded(app));
+
+                File.WriteAllText(Path.Combine(root, lib, "src", "Code.cs"), "public class LibApi { public string Hello() => \"v2\"; }");
+                var second = ModCompiler.PrepareAll(mods);
+
+                Assert.NotEqual(first[0].ArtifactPath, second[0].ArtifactPath);
+                Assert.NotEqual(first[1].ArtifactPath, second[1].ArtifactPath);
+                Assert.Empty(GameLogger.CompilationErrors);
+            }
+            finally
+            {
+                Cleanup(root, lib, app);
+            }
+        }
+
+        [Fact]
+        public void PrepareAll_DependencyFails_DependentIsSkippedWithAnError()
+        {
+            var root = Path.Combine(Path.GetTempPath(), "cthangover_prepare_" + System.Guid.NewGuid().ToString("N"));
+            var lib = "test_lib_" + System.Guid.NewGuid().ToString("N").Substring(0, 8);
+            var app = "test_app_" + System.Guid.NewGuid().ToString("N").Substring(0, 8);
+            try
+            {
+                var mods = new Dictionary<string, IModInfo>
+                {
+                    [lib] = SourceMod(root, lib, "public class LibApi {"),
+                    [app] = SourceMod(root, app, "public class AppUser { }", lib),
+                };
+
+                var result = ModCompiler.PrepareAll(mods);
+
+                Assert.Empty(result);
+                Assert.Contains(GameLogger.CompilationErrors, NamesSkippedDependent(lib));
+            }
+            finally
+            {
+                Cleanup(root, lib, app);
+            }
+        }
+
+        private static System.Predicate<string> NamesSkippedDependent(string lib) => new SkippedDependentMatcher(lib).Matches;
+
+        private static ModInfo SourceMod(string root, string id, string code, params string[] depends)
+        {
+            var dir = Path.Combine(root, id);
+            Directory.CreateDirectory(Path.Combine(dir, "src"));
+            File.WriteAllText(Path.Combine(dir, "src", "Code.cs"), code);
+            var manifest = new ModManifest { Id = id, Name = id, Version = "1.0.0", Sources = new List<string> { "src/*.cs" }, Depends = new List<ModDependency>() };
+            foreach (var dependency in depends)
+                manifest.Depends.Add(ModDependency.Parse(dependency + ">=1"));
+            return new ModInfo { Id = id, Name = id, Manifest = manifest, FileProvider = new Cthangover.Core.Mods.Providers.FolderModFileProvider(dir, id) };
+        }
+
+        private static void Cleanup(string root, params string[] modIds)
+        {
+            foreach (var id in modIds)
+            {
+                Cthangover.Core.Mods.Compilation.ModAssemblyCache.CurrentArtifacts.TryRemove(id, out _);
+                ModCompiler.InvalidateCache(id);
+            }
+            if (Directory.Exists(root))
+                Directory.Delete(root, recursive: true);
         }
     }
 }

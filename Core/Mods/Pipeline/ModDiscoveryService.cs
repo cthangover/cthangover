@@ -189,7 +189,7 @@ namespace Cthangover.Core.Mods.Pipeline
 
                 try
                 {
-                    info.InstallSha256 = ModHasher.ComputeInstallSha256(fileProvider,
+                    info.InstallSha256 = InstallHashCache.Get(fileProvider,
                         ModConfig.Instance.CatalogIgnorePatterns);
                 }
                 catch (Exception ex)

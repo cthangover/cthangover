@@ -54,36 +54,63 @@ namespace Cthangover.Core.Mods.Consumers
         }
 
         /// <summary>
-        /// Discovers consumers in one assembly. Used for the kernel scan and
-        /// fanned out by the loader for mod assemblies.
+        /// Discovers consumers in one assembly (the kernel scan, and every mod
+        /// assembly through the loader). Returns the consumers that actually
+        /// joined — duplicates by <see cref="IAssemblyConsumer.Id"/> are ignored —
+        /// so the loader can replay the already registered assemblies to them.
         /// </summary>
-        public static void RegisterFromAssembly(Assembly assembly)
+        public static List<IAssemblyConsumer> RegisterFromAssembly(Assembly assembly)
         {
+            var joined = new List<IAssemblyConsumer>();
             if (assembly == null)
-                return;
-
+                return joined;
             foreach (var consumer in Reflections.FindAndCreate<IAssemblyConsumer>(assembly))
-                Register(consumer);
+            {
+                if (Register(consumer))
+                    joined.Add(consumer);
+            }
+            return joined;
         }
 
         /// <summary>
         /// Registers one consumer; the first registration of an id wins, later
-        /// duplicates (a mod re-contributing a kernel consumer) are ignored.
-        /// Re-sorts after insertion.
+        /// duplicates (a mod re-contributing a kernel consumer, a kept mod
+        /// re-registering during a reload) are ignored. Re-sorts after insertion.
+        /// Returns whether the consumer joined.
         /// </summary>
-        public static void Register(IAssemblyConsumer consumer)
+        public static bool Register(IAssemblyConsumer consumer)
         {
             if (consumer == null)
-                return;
+                return false;
 
             if (!consumerIds.Add(consumer.Id))
             {
                 GameLogger.Log("MODS_ASSEMBLY", $"AssemblyConsumerRegistry: duplicate consumer id '{consumer.Id}' ignored", LogLevel.Debug);
-                return;
+                return false;
             }
 
             consumers.Add(consumer);
             consumers.Sort(CompareConsumers);
+            return true;
+        }
+
+        /// <summary>
+        /// Delivers one already registered assembly to a consumer that joined
+        /// later (the catch-up of <see cref="ModAssemblyLoader.RegisterAssembly"/>),
+        /// isolated like the regular fan-out.
+        /// </summary>
+        public static void CatchUp(IAssemblyConsumer consumer, Assembly assembly, string modId)
+        {
+            try
+            {
+                consumer.OnAssemblyLoaded(assembly, modId);
+            }
+            catch (Exception ex)
+            {
+                GameLogger.Log("MODS_ASSEMBLY",
+                    $"AssemblyConsumer '{consumer.Id}' failed on catch-up of mod '{modId}': {ex.Message}",
+                    LogLevel.Error);
+            }
         }
 
         /// <summary>

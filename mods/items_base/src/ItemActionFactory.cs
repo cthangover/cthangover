@@ -1,19 +1,15 @@
 using System.Collections.Generic;
-using System.Reflection;
 using Cthangover.Core.Items;
-using Cthangover.Core.Utils;
 
 namespace Cthangover.Core.Factories.Impls
 {
     /// <summary>
-    /// Reflection-based plugin registry for item action behaviours.
-    /// On construction, scans every loaded assembly for <c>IItemAction</c>
-    /// implementations via <c>Reflections.FindAndCreate</c> and indexes
-    /// them by <c>ID</c>. This means a mod DLL can introduce a new item
-    /// action simply by containing a public class that implements the
-    /// interface — no registration code needed. <c>RegisterAssembly</c>
-    /// handles the hot-reload case when a mod assembly is compiled or
-    /// loaded at runtime.
+    /// Registry of item action behaviours, indexed by <c>ID</c>. It discovers
+    /// nothing itself: C# actions of every mod arrive through
+    /// <c>ItemActionConsumer</c> as the kernel registers their assembly and
+    /// leave with their mod, and GDScript-declared actions arrive through
+    /// <c>ItemActionBridge</c>. A mod therefore introduces a new item action
+    /// simply by containing a public class that implements the interface.
     ///
     /// The <c>"null"</c> ID string is treated as a no-op action (the
     /// fallback for items that don't have an on-use effect), avoiding
@@ -29,53 +25,39 @@ namespace Cthangover.Core.Factories.Impls
         /// <summary>Static lazy singleton; kept as the public API.</summary>
         public static ItemActionFactory Instance => _instance ??= new ItemActionFactory();
 
-		private readonly IDictionary<string, IItemAction> data;
-		
-		internal ItemActionFactory()
-		{
-			data = new Dictionary<string, IItemAction>();
-			foreach (var action in Reflections.FindAndCreate<IItemAction>())
-			{
-				// The scan covers every loaded assembly, and mod assemblies are
-				// never unloaded, so after a ModManager.Reload an implementation
-				// can be discovered twice (stale + fresh assembly copy). The
-				// first instance wins, matching RegisterAssembly's semantics.
-				if (!string.IsNullOrEmpty(action.ID) && !data.ContainsKey(action.ID))
-					data[action.ID] = action;
-			}
+        private readonly IDictionary<string, IItemAction> data = new Dictionary<string, IItemAction>();
 
-			GameLogger.Log("ITEMS", "loaded '" + data.Count + "' item actions");
-		}
+        internal ItemActionFactory()
+        {
+        }
 
-		/// <summary>Manually registers a single action under its <see cref="IItemAction.ID"/>; duplicates and null/empty ids are ignored.</summary>
-		public void Register(IItemAction action)
-		{
-			if (action != null && !string.IsNullOrEmpty(action.ID) && !data.ContainsKey(action.ID))
-				data[action.ID] = action;
-		}
+        /// <summary>Registers a single action under its <see cref="IItemAction.ID"/>; the first action of an id wins, null/empty ids are ignored.</summary>
+        public void Register(IItemAction action)
+        {
+            if (action != null && !string.IsNullOrEmpty(action.ID) && !data.ContainsKey(action.ID))
+                data[action.ID] = action;
+        }
 
-		/// <summary>
-		/// Resolves the behaviour registered under <paramref name="id"/>.
-		/// The special id <c>"null"</c> (or an empty value) is an explicit
-		/// no-action marker and returns <c>null</c>, as does an unknown id.
-		/// </summary>
-		public IItemAction Get(string id)
+        /// <summary>
+        /// Removes exactly <paramref name="action"/> (its mod is being unloaded);
+        /// an id owned by another action instance is left alone.
+        /// </summary>
+        public void Unregister(IItemAction action)
+        {
+            if (action != null && !string.IsNullOrEmpty(action.ID) && data.TryGetValue(action.ID, out var registered) && registered == action)
+                data.Remove(action.ID);
+        }
+
+        /// <summary>
+        /// Resolves the behaviour registered under <paramref name="id"/>.
+        /// The special id <c>"null"</c> (or an empty value) is an explicit
+        /// no-action marker and returns <c>null</c>, as does an unknown id.
+        /// </summary>
+        public IItemAction Get(string id)
         {
             if (string.IsNullOrWhiteSpace(id) || id == "null")
                 return null;
             return data[id];
         }
-
-        /// <summary>Scans one assembly for <see cref="IItemAction"/> implementations and registers the new ones — used for hot-loaded mod assemblies.</summary>
-        public static void RegisterAssembly(Assembly assembly)
-        {
-            var factory = Instance;
-            foreach (var action in Reflections.FindAndCreate<IItemAction>(assembly))
-            {
-                if (!factory.data.ContainsKey(action.ID))
-                    factory.data.Add(action.ID, action);
-            }
-        }
-
     }
 }
