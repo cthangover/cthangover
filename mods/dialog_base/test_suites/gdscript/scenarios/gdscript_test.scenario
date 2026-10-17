@@ -1,0 +1,10 @@
+scene: home_kitchen
+priority: 5
+condition: true
+is_one_run: true
+---
+set my_name Marao
+action gds.greet name=my_name
+action gds.quest_log quest_id=test_quest message=Scenario started from GDScript
+text "GDScript test actions executed. Check logs."
+end

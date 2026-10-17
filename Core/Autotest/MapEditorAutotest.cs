@@ -150,6 +150,9 @@ namespace Cthangover.Core.Autotest
             if (canvas != null)
             {
                 var controller = GetField(windowType, _window, "_controller");
+                // The window opens the first real map file on start; the checks
+                // below count zones and labels, so they start from an empty map.
+                controllerType.GetMethod("Clear").Invoke(controller, Array.Empty<object>());
                 controllerType.GetMethod("AddMarker").Invoke(controller, Array.Empty<object>());
 
                 canvas.Size = new Vector2(800f, 600f);

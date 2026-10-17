@@ -1,0 +1,13 @@
+{
+  "name": "GDScript test",
+  "description": "Integration test of GDScript mods: the suite scripts (actions, conditions, an item action, an initializer) go through .gd load, compile and registration; the driver checks every action is registered and evaluates the conditions. Mounted by --itest=gdscript.",
+  "sources": [
+    "src/*.cs"
+  ],
+  "gd_sources": [
+    "scripts/*.gd"
+  ],
+  "depends": [
+    "visual_novel_core>=1"
+  ]
+}

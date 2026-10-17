@@ -235,6 +235,9 @@ namespace Cthangover.Core.Mods.Pipeline
                     return;
                 }
 
+                // Test suites become virtual mods only behind their activate args.
+                ModTestSuites.Mount(mods, new List<string>(Games.GameLaunchArgs.Current.UserArgs));
+
                 foreach (var kvp in mods)
                     allDiscoveredMods[kvp.Key] = kvp.Value;
 

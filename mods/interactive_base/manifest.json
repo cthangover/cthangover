@@ -7,5 +7,8 @@
   "category": "engine, library",
   "depends": ["base2d>=1", "interface>=1"],
   "sources": [ "src/**/*.cs" ],
-  "ui": []
+  "ui": [],
+  "test_suites": [
+    {"id": "interactives", "activate": ["--itest=interactives"]}
+  ]
 }

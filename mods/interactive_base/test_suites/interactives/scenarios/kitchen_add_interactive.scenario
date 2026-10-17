@@ -1,0 +1,6 @@
+scene: interactives_test
+priority: 10
+is_one_run: true
+---
+interactive_add kitchen_lamp
+end
