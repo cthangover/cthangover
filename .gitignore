@@ -11,6 +11,9 @@ mockups/
 #ai
 .omo/
 .opencode/
+.dsh/
+.claude/
+undefined/
 
 gen/
 obj/

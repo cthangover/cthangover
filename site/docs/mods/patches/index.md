@@ -141,13 +141,20 @@ Everything works identically for items. `ItemInfo` accepts arbitrary JSON keys v
 }
 ```
 
-## Test Mod
+## Test fixture
 
-See `mods/test_defaults_and_patches/` — demonstrates the system:
+`mods/test_defaults_and_patches/` is a test fixture (`"fixture": true` in its manifest): `--all-mods` and games
+never load it, so its wildcard patches cannot leak into other tests. The `property_patches` integration test
+loads it explicitly and checks the merged entities:
+
+```bash
+godot --path . --headless -- --with-mods=test_defaults_and_patches --itest=property_patches
+```
 
 ```filestree
 mods/test_defaults_and_patches/
 ├── manifest.json
+├── src/PropertyPatchesTest.cs   ← itest driver
 └── patches/
     ├── character.json    ← Maraо: TestPatched=42, TestDefault=100; *: TestDefault=-20, TestGlobalPatch=1
     └── item.json         ← food/ration: Durability=99; *: Durability=50, GlobalItemProp=patched
