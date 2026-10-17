@@ -206,7 +206,24 @@ namespace Cthangover.Core.Settings
         /// <see cref="ModSaveableRegistry.CollectSaveData"/>, and writes
         /// JSON to <c>user://saves/{fileName}.json</c>.
         /// </summary>
-        public static void Save(string fileName)
+        public static void Save(string fileName) => Save(fileName, rememberSession: true);
+
+        /// <summary>
+        /// Prefix of technical saves (<see cref="HotReloadSlot"/>): written and
+        /// read like any slot, but hidden from the save browser and never
+        /// recorded as the "Continue" session.
+        /// </summary>
+        public const string HiddenSlotPrefix = "__";
+
+        /// <summary>The slot a hot reload parks the running session in while the mod set is replaced.</summary>
+        public const string HotReloadSlot = HiddenSlotPrefix + "hot_reload";
+
+        /// <summary>
+        /// <see cref="Save(string)"/> with control over the "Continue" record:
+        /// technical saves pass <paramref name="rememberSession"/> = false so the
+        /// player's last real save stays the one "Continue" loads.
+        /// </summary>
+        public static void Save(string fileName, bool rememberSession)
         {
             var gameData = GameData.Instance;
             var pkg = new SavePackage
@@ -253,7 +270,8 @@ namespace Cthangover.Core.Settings
                 file.StoreString(json);
 
                 GameLogger.Log("SAVE", $"Saved '{fileName}' (core={pkg.CoreVersion}, mods={pkg.ModData.Count})");
-                LastSessionStore.Record(Games.ActiveGame.Id, fileName);
+                if (rememberSession)
+                    LastSessionStore.Record(Games.ActiveGame.Id, fileName);
             }
             catch (Exception e)
             {
@@ -394,7 +412,10 @@ namespace Cthangover.Core.Settings
 
             foreach (var path in Directory.EnumerateFiles(absDir, "*.json", SearchOption.TopDirectoryOnly))
             {
-                var info = ReadSlotInfo(dir, System.IO.Path.GetFileNameWithoutExtension(path), path);
+                var slotName = System.IO.Path.GetFileNameWithoutExtension(path);
+                if (slotName.StartsWith(HiddenSlotPrefix, StringComparison.Ordinal))
+                    continue;
+                var info = ReadSlotInfo(dir, slotName, path);
                 if (info != null)
                     result.Add(info);
             }
