@@ -110,17 +110,33 @@ Two overlays are anchored to the `home_kitchen` scene: the cooking workbench liv
 
 ## Real example — Multiple dependencies
 
-From `mods/test_interactives/manifest.json`:
+From `mods/cooking/manifest.json`:
 
 ```jsonc
 {
-  "name": "Test Interactives",
-  "author": "ct",
-  "description": "Test mod demonstrating the interactive object system",
-  // core and interface are guaranteed to load before this mod
-  "depends": ["visual_novel_core", "interface"]
+  "id": "cooking",
+  // visual_novel_core, interface, items_base and time_base load before this mod
+  "depends": [ "visual_novel_core>=1", "interface>=1", "items_base>=1", "time_base>=1" ]
 }
 ```
+
+## Test suites (`test_suites`)
+
+Integration tests live inside the mod they test. A host manifest lists its suites; each suite folder
+(`test_suites/<id>/`) holds an ordinary `manifest.json` and is mounted as the virtual mod `<host>__<id>` only
+when a user arg starts with one of its `activate` prefixes (or `--with-test-suites`):
+
+```jsonc
+// mods/interactive_base/manifest.json
+"test_suites": [ { "id": "interactives", "activate": ["--itest=interactives"] } ]
+
+// mods/interactive_base/test_suites/interactives/manifest.json — depends on the host implicitly
+{ "sources": ["src/*.cs"], "depends": ["visual_novel_core>=1", "dialog_base>=1"] }
+```
+
+A suite may depend on mods its host must not (here the host sits below `visual_novel_core`). A normal launch, a
+game and `--all-mods` never load a suite. `"fixture": true` marks a whole mod as a test fixture: it is loaded
+only when named in `--with-mods=`.
 
 ## Creating a new mod — minimal manifest
 

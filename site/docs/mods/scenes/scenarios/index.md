@@ -89,16 +89,14 @@ switch_scene home_vestibule
 end
 ```
 
-### One-run event (test_interactives)
+### One-run event (interactives test suite)
 
 ```scenario
-scene: start_scene
+scene: interactives_test
 priority: 10
 is_one_run: true
 ---
-text "test"
 interactive_add kitchen_lamp
-text "wait"
 end
 ```
 
