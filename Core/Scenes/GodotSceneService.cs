@@ -34,6 +34,13 @@ namespace Cthangover.Core.Scenes
 		/// </summary>
 		public static bool IsTransitioning { get; private set; }
 
+		/// <summary>
+		/// Logical name of the Godot scene last switched to (a mod route such as
+		/// <c>novel_editor</c>, or <c>mainmenu</c>). Lets a tool that temporarily
+		/// leaves the screen (the scenario editor's play-test) come back to it.
+		/// </summary>
+		public string CurrentGodotSceneName => currentGodotSceneName;
+
 		/// <summary>Enables always-on processing (transitions must run while the game is paused) and caches the <see cref="SceneManager"/> autoload.</summary>
 		public override void _Ready()
 		{

@@ -84,6 +84,7 @@ namespace Mods.ModManager
         private string _statusMessage;
         private Button _duplicate;
         private Button _revert;
+        private Button _delete;
         private Label _savesInfo;
 
         /// <summary>Drafts created by "Duplicate", mapped to the game they were copied from (offer to copy its saves).</summary>
@@ -135,10 +136,10 @@ namespace Mods.ModManager
             _currentId = collectionId;
             _selectedGroupKey = null;
             _selectedModId = null;
-            if (string.IsNullOrEmpty(_currentId) || EffectiveCollection(_currentId) == null)
-                _currentId = FirstGameId();
-
-            Rebuild();
+            // The gallery re-reads the store on every refresh; re-read it here
+            // too, so a collection that appeared since this editor was built
+            // opens instead of falling back to the first game.
+            ReloadCollections();
         }
 
         /// <summary>Creates a fresh player game draft and opens it — the gallery's "build your own game" action.</summary>
@@ -213,13 +214,15 @@ namespace Mods.ModManager
             _savesInfo.AddThemeColorOverride("font_color", UiTokens.Muted);
             _duplicate = new Button { Text = TranslationServer.Translate("mod_manager/collection_duplicate") };
             _revert = new Button { Text = TranslationServer.Translate("mod_manager/collection_revert") };
-            foreach (var control in new Control[] { _savesInfo, _duplicate, _revert })
+            _delete = new Button { Text = TranslationServer.Translate("mod_manager/collection_delete") };
+            foreach (var control in new Control[] { _savesInfo, _duplicate, _revert, _delete })
             {
                 header.AddChild(control);
                 header.MoveChild(control, _json.GetIndex());
             }
             _duplicate.Pressed += OnDuplicatePressed;
             _revert.Pressed += OnRevertPressed;
+            _delete.Pressed += OnDeletePressed;
 
             CthangoverTheme.ApplyPrimary(_apply);
             CthangoverTheme.ApplyPrimary(_save);
@@ -516,6 +519,7 @@ namespace Mods.ModManager
             _duplicate.Disabled = current == null;
             _revert.Visible = OriginalCollection(_currentId)?.Origin == ModCollectionOrigin.User
                               && ModCollectionStore.HasShippedVersion(_currentId);
+            _delete.Visible = CollectionDeletion.CanDelete(current);
 
             if (_graph != null)
             {
@@ -1705,6 +1709,25 @@ namespace Mods.ModManager
             dialog.Canceled += dialog.QueueFree;
             AddChild(dialog);
             dialog.PopupCentered();
+        }
+
+        /// <summary>
+        /// Deletes the current player-made game after confirmation (its unsaved
+        /// draft goes too) and switches to the first remaining game.
+        /// </summary>
+        private void OnDeletePressed()
+        {
+            var deletedId = _currentId;
+            CollectionDeletion.Confirm(this, EffectiveCollection(deletedId), () =>
+            {
+                _overrides.Remove(deletedId);
+                _duplicatedFrom.Remove(deletedId);
+                _currentId = null;
+                _selectedGroupKey = null;
+                _selectedModId = null;
+                _statusMessage = TranslationServer.Translate("mod_manager/collection_delete_done");
+                ReloadCollections();
+            });
         }
 
         private void ShowNotice(string title, string text)

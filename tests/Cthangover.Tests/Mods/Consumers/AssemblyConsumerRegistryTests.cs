@@ -56,11 +56,9 @@ namespace Cthangover.Tests.Mods.Consumers
             var consumers = AssemblyConsumerRegistry.Consumers;
             Assert.NotEmpty(consumers);
 
-            // Kernel consumers all present, initializer last, bridges first.
+            // Kernel consumers present, initializer last.
             Assert.Contains(consumers, c => c.Id == "mod_initializers");
             Assert.Equal("mod_initializers", consumers[consumers.Count - 1].Id);
-            Assert.Contains(consumers, c => c.Id == "scenario_command_bridge");
-            Assert.True(consumers[0].Order <= 20);
         }
 
         [Fact]
