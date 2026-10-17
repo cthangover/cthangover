@@ -21,6 +21,12 @@ namespace Cthangover.Validator
     /// thread. Strategies are discovered by reflection and executed in
     /// (Phase, Order, Id) order: contract strategies fill the shared
     /// <see cref="ValidationGraph"/>, reconciliation strategies consume it.
+    ///
+    /// A pass in flight is cancelled by <see cref="Stop"/> when the mod is
+    /// unloaded or re-registered by an in-process mod-set reload: its thread
+    /// runs validator code (and reflects over other mods' assemblies), so a
+    /// pass left running would keep every one of those assemblies loaded, and
+    /// it would read file providers the reload disposes.
     /// </summary>
     public static class ValidatorService
     {
@@ -29,6 +35,10 @@ namespace Cthangover.Validator
 
         private static readonly object stateLock = new();
         private static bool running;
+        private static CancellationTokenSource cancellation;
+        private static Task pass;
+        private static List<IModInfo> queuedMods;
+        private static string queuedReportDirectory;
 
         /// <summary>True while a validation pass is in flight.</summary>
         public static bool IsRunning
@@ -69,7 +79,53 @@ namespace Cthangover.Validator
             WarmUp();
 
             GameLogger.Log("VALIDATOR", $"validator: started, {mods.Count} mod(s) queued");
-            Task.Run(() => Run(mods, reportDirectory));
+            lock (stateLock)
+            {
+                queuedMods = mods;
+                queuedReportDirectory = reportDirectory;
+                cancellation = new CancellationTokenSource();
+                pass = Task.Run(RunQueued);
+            }
+        }
+
+        /// <summary>
+        /// Cancels the pass in flight and waits (bounded) until its thread has
+        /// left validator code. Main thread, from the unload notification.
+        /// </summary>
+        public static void Stop()
+        {
+            Task running;
+            lock (stateLock)
+            {
+                cancellation?.Cancel();
+                running = pass;
+            }
+            if (running == null)
+                return;
+            try
+            {
+                if (!running.Wait(TimeSpan.FromSeconds(10)))
+                    GameLogger.Log("VALIDATOR", "validator: pass did not stop within 10 s; its mods stay in memory until it ends", LogLevel.Warning);
+            }
+            catch (AggregateException)
+            {
+                // Run logs its own failures; a cancelled pass is the expected outcome here.
+            }
+        }
+
+        private static void RunQueued()
+        {
+            List<IModInfo> mods;
+            string reportDirectory;
+            CancellationToken token;
+            lock (stateLock)
+            {
+                mods = queuedMods;
+                reportDirectory = queuedReportDirectory;
+                token = cancellation.Token;
+                queuedMods = null;
+            }
+            Run(mods, reportDirectory, token);
         }
 
         private static List<IModInfo> SnapshotMods()
@@ -86,17 +142,21 @@ namespace Cthangover.Validator
             return result;
         }
 
-        private static void Run(List<IModInfo> mods, string reportDirectory)
+        private static void Run(List<IModInfo> mods, string reportDirectory, CancellationToken token)
         {
             try
             {
-                var report = BuildReport(mods);
+                var report = BuildReport(mods, token);
 
                 GameLogger.Log("VALIDATOR",
                     $"validator: {report.Summary.Errors} errors, {report.Summary.Warnings} warnings, {report.Summary.Infos} infos");
 
                 if (ValidatorSettings.WriteReport)
                     ReportWriter.Write(report, reportDirectory);
+            }
+            catch (OperationCanceledException)
+            {
+                GameLogger.Log("VALIDATOR", "validator: pass cancelled (mod set reloading)");
             }
             catch (Exception ex)
             {
@@ -109,7 +169,7 @@ namespace Cthangover.Validator
             }
         }
 
-        private static ValidationReport BuildReport(List<IModInfo> mods)
+        private static ValidationReport BuildReport(List<IModInfo> mods, CancellationToken token)
         {
             var report = new ValidationReport
             {
@@ -129,7 +189,7 @@ namespace Cthangover.Validator
                 });
             }
 
-            Analyze(mods, report, CancellationToken.None);
+            Analyze(mods, report, token);
             ApplySummary(report);
             return report;
         }
@@ -160,6 +220,10 @@ namespace Cthangover.Validator
                 try
                 {
                     strategy.Validate(context);
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
                 }
                 catch (Exception ex)
                 {

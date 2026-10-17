@@ -109,9 +109,12 @@ namespace Cthangover.Core.Mods
                         var libraryName = NormalizeLibraryName(fileName);
                         var cachedPath = Path.Combine(CacheRoot, $"{mod.Id}_native_{fileName}");
 
-                        File.WriteAllBytes(cachedPath, bytes);
-
-                        if (_nameToPath.ContainsKey(libraryName))
+                        // Checked before the write: a library registered earlier (a
+                        // previous mod, or this mod before an in-process reload) is
+                        // loaded by the OS and its file must not be rewritten.
+                        if (_nameToPath.TryGetValue(libraryName, out var registered) && registered == cachedPath)
+                            continue;
+                        if (registered != null)
                         {
                             GameLogger.Log("MODS_NATIVE",
                                 $"ModNativeLoader.LoadNativeDlls: native library '{libraryName}' already registered " +
@@ -120,6 +123,7 @@ namespace Cthangover.Core.Mods
                             continue;
                         }
 
+                        File.WriteAllBytes(cachedPath, bytes);
                         _nameToPath[libraryName] = cachedPath;
                         GameLogger.Log("MODS_NATIVE",
                             $"ModNativeLoader.LoadNativeDlls: registered native library '{libraryName}' " +

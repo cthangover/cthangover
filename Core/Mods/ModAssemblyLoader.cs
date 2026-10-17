@@ -93,6 +93,7 @@ namespace Cthangover.Core.Mods
                 // dependents resolve inter-mod types through it.
                 var context = new ModLoadContext(modId, ResolveDependencyContext);
                 loadedMods[modId] = new LoadedModAssembly { ModId = modId, Context = context };
+                Unload.GodotScriptBridgeUnload.Track(context);
                 return context;
             }
         }
@@ -158,6 +159,8 @@ namespace Cthangover.Core.Mods
                                     loadedMods[modId] = record = new LoadedModAssembly { ModId = modId };
                                 record.Context = context;
                             }
+                            if (!record.ArtifactPaths.Contains(dllPath, StringComparer.OrdinalIgnoreCase))
+                                record.ArtifactPaths.Add(dllPath);
                         }
                     }
                 }
@@ -286,36 +289,89 @@ namespace Cthangover.Core.Mods
         }
 
         /// <summary>
-        /// Unloads one mod's assemblies: reverse fan-out through the consumer
-        /// registry, then release of the collectible context. The context
-        /// cannot be released while anything still holds a reference — the
-        /// diagnostic is logged, never thrown, and the failure mode degrades
-        /// to the pre-collectible behaviour (assemblies stay in memory until
-        /// process exit) instead of crashing the game.
+        /// Unloads one mod through the full protocol of
+        /// <see cref="Unload.ModUnloader"/> (reverse fan-out, engine objects,
+        /// leftover references, context release). The context cannot be
+        /// collected while anything still holds a reference — verify with the
+        /// ticket the protocol returns; this convenience entry only reports
+        /// whether there was anything collectible to release.
         /// </summary>
-        /// <returns>Null on success, otherwise the leak diagnostic string.</returns>
+        /// <returns>Null on success, otherwise a diagnostic string.</returns>
         public static string UnloadMod(string modId)
         {
             if (string.IsNullOrEmpty(modId))
                 return null;
 
-            LoadedModAssembly record;
+            bool collectible;
             lock (loaderLock)
             {
-                if (!loadedMods.TryGetValue(modId, out record))
+                if (!loadedMods.TryGetValue(modId, out var record))
                     return null;
-                loadedMods.Remove(modId);
+                collectible = record.Context != null;
             }
 
-            foreach (var assembly in record.Assemblies)
-                AssemblyConsumerRegistry.FanOutUnloading(assembly, modId);
+            var tree = GameEnvironment.IsRuntime ? Godot.Engine.GetMainLoop() as SceneTree : null;
+            Unload.ModUnloader.Unload(new[] { modId }, tree);
+            return collectible ? null : "loaded in default context (no collectible context recorded)";
+        }
 
-            GameLogger.Log("MODS_ASSEMBLY", $"ModAssemblyLoader.UnloadMod: reverse fan-out done for '{modId}' ({record.Assemblies.Count} assembly/ies)");
+        /// <summary>
+        /// Removes the records of <paramref name="modIds"/> from tracking and
+        /// returns them in the given order — the first step of an unload (no
+        /// dependent can resolve into a context once it left the table).
+        /// </summary>
+        internal static List<LoadedModAssembly> Detach(IEnumerable<string> modIds)
+        {
+            var result = new List<LoadedModAssembly>();
+            lock (loaderLock)
+            {
+                foreach (var id in modIds ?? Array.Empty<string>())
+                {
+                    if (id != null && loadedMods.Remove(id, out var record))
+                        result.Add(record);
+                }
+            }
+            return result;
+        }
 
-            if (record.Context == null)
-                return "loaded in default context (no collectible context recorded)";
+        /// <summary>Tracked records of <paramref name="modIds"/>, in the given order (unknown ids skipped).</summary>
+        internal static List<LoadedModAssembly> Records(IEnumerable<string> modIds)
+        {
+            var result = new List<LoadedModAssembly>();
+            lock (loaderLock)
+            {
+                foreach (var id in modIds ?? Array.Empty<string>())
+                {
+                    if (id != null && loadedMods.TryGetValue(id, out var record))
+                        result.Add(record);
+                }
+            }
+            return result;
+        }
 
-            return record.Context.TryUnload();
+        /// <summary>
+        /// The files a mod's context runs (compiled cache artifact, precompiled
+        /// copies). A reload compares them with what the mod compiles to now:
+        /// equal files mean the code did not change and the context is kept.
+        /// </summary>
+        public static IReadOnlyList<string> ArtifactsOf(string modId)
+        {
+            lock (loaderLock)
+                return loadedMods.TryGetValue(modId, out var record) ? record.ArtifactPaths.ToList() : new List<string>();
+        }
+
+        /// <summary>True when a live mod context runs <paramref name="dllPath"/>.</summary>
+        public static bool IsArtifactLoaded(string dllPath)
+        {
+            lock (loaderLock)
+            {
+                foreach (var record in loadedMods.Values)
+                {
+                    if (record.ArtifactPaths.Contains(dllPath, StringComparer.OrdinalIgnoreCase))
+                        return true;
+                }
+                return false;
+            }
         }
 
         /// <summary>True when the mod has assemblies tracked for a possible unload.</summary>
@@ -354,8 +410,19 @@ namespace Cthangover.Core.Mods
         /// <returns>A list of <c>(modId, assembly)</c> pairs for every loaded
         /// precompiled DLL, in discovery order.</returns>
         public static List<(string ModId, Assembly Assembly)> LoadPrecompiledDlls(IEnumerable<IModInfo> mods, CancellationToken cancellationToken = default)
+            => LoadStagedDlls(StagePrecompiledDlls(mods, cancellationToken), cancellationToken);
+
+        /// <summary>
+        /// Copies each mod's <c>dll/*.dll</c> into the assembly cache under a
+        /// content-addressed name (<c>&lt;mod&gt;_dll_&lt;hash&gt;_&lt;file&gt;</c>)
+        /// without loading anything. The hash makes the path the identity of the
+        /// library: an unchanged DLL keeps its path (an in-process reload keeps
+        /// the mod's context), a changed one gets a new file instead of
+        /// overwriting the one a live context has memory-mapped.
+        /// </summary>
+        public static List<(string ModId, string CachedPath)> StagePrecompiledDlls(IEnumerable<IModInfo> mods, CancellationToken cancellationToken = default)
         {
-            var result = new List<(string ModId, Assembly Assembly)>();
+            var result = new List<(string ModId, string CachedPath)>();
 
             if (!Directory.Exists(ModCompiler.CacheRoot))
                 Directory.CreateDirectory(ModCompiler.CacheRoot);
@@ -368,35 +435,55 @@ namespace Cthangover.Core.Mods
                 if (dllFiles.Count == 0)
                     continue;
 
-                GameLogger.Log("MODS_ASSEMBLY", $"ModAssemblyLoader.LoadPrecompiledDlls: found {dllFiles.Count} precompiled DLL(s) in mod '{mod.Id}'");
+                GameLogger.Log("MODS_ASSEMBLY", $"ModAssemblyLoader.StagePrecompiledDlls: found {dllFiles.Count} precompiled DLL(s) in mod '{mod.Id}'");
 
                 foreach (var (filePath, bytes) in dllFiles)
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-
                     try
                     {
-                        var fileName = Path.GetFileName(filePath);
-                        var cachedPath = Path.Combine(ModCompiler.CacheRoot, $"{mod.Id}_dll_{fileName}");
-
-                        File.WriteAllBytes(cachedPath, bytes);
-
-                        var assembly = LoadFromPath(cachedPath, mod.Id) ?? LoadFromBytes(bytes);
-                        if (assembly != null)
-                        {
-                            ModNativeLoader.InstallResolverOnAssembly(assembly);
-                            result.Add((mod.Id, assembly));
-                            GameLogger.Log("MODS_ASSEMBLY", $"ModAssemblyLoader.LoadPrecompiledDlls: loaded precompiled DLL '{filePath}' from mod '{mod.Id}'");
-                        }
+                        var hash = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(bytes)).Substring(0, 16).ToLowerInvariant();
+                        var cachedPath = Path.Combine(ModCompiler.CacheRoot, $"{mod.Id}_dll_{hash}_{Path.GetFileName(filePath)}");
+                        if (!File.Exists(cachedPath))
+                            File.WriteAllBytes(cachedPath, bytes);
+                        result.Add((mod.Id, cachedPath));
                     }
                     catch (Exception ex)
                     {
                         GameLogger.CompilationErrors.Add($"Mod '{mod.Id}', DLL '{filePath}': {ex.Message}");
-                        GameLogger.Log("MODS_ASSEMBLY", $"ModAssemblyLoader.LoadPrecompiledDlls: failed to load precompiled DLL '{filePath}' from mod '{mod.Id}': {ex.Message}", LogLevel.Error);
+                        GameLogger.Log("MODS_ASSEMBLY", $"ModAssemblyLoader.StagePrecompiledDlls: failed to stage '{filePath}' from mod '{mod.Id}': {ex.Message}", LogLevel.Error);
                     }
                 }
             }
 
+            return result;
+        }
+
+        /// <summary>
+        /// Loads DLLs staged by <see cref="StagePrecompiledDlls"/> into their mods'
+        /// contexts WITHOUT registering them (registration is main-thread work).
+        /// Returns <c>(modId, assembly)</c> pairs in staging order.
+        /// </summary>
+        public static List<(string ModId, Assembly Assembly)> LoadStagedDlls(IEnumerable<(string ModId, string CachedPath)> staged, CancellationToken cancellationToken = default)
+        {
+            var result = new List<(string ModId, Assembly Assembly)>();
+            foreach (var (modId, cachedPath) in staged)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                try
+                {
+                    var assembly = LoadFromPath(cachedPath, modId) ?? LoadFromBytes(File.ReadAllBytes(cachedPath));
+                    if (assembly == null)
+                        continue;
+                    ModNativeLoader.InstallResolverOnAssembly(assembly);
+                    result.Add((modId, assembly));
+                    GameLogger.Log("MODS_ASSEMBLY", $"ModAssemblyLoader.LoadStagedDlls: loaded precompiled DLL '{Path.GetFileName(cachedPath)}' of mod '{modId}'");
+                }
+                catch (Exception ex)
+                {
+                    GameLogger.CompilationErrors.Add($"Mod '{modId}', DLL '{cachedPath}': {ex.Message}");
+                    GameLogger.Log("MODS_ASSEMBLY", $"ModAssemblyLoader.LoadStagedDlls: failed to load '{cachedPath}' of mod '{modId}': {ex.Message}", LogLevel.Error);
+                }
+            }
             return result;
         }
 

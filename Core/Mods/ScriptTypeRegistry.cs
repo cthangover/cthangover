@@ -207,6 +207,23 @@ namespace Cthangover.Core.Mods
             return null;
         }
 
+        /// <summary>
+        /// Forgets one mod's node types (a mod unload or re-registration during
+        /// an in-process reload); the other mods and the kernel types stay.
+        /// </summary>
+        public static void RemoveMod(string modId)
+        {
+            if (string.IsNullOrEmpty(modId))
+                return;
+            if (_modNameToType.TryGetValue(modId, out var nameDict))
+            {
+                var types = new HashSet<Type>(nameDict.Values);
+                _allTypes.RemoveAll(types.Contains);
+            }
+            _modPathToType.Remove(modId);
+            _modNameToType.Remove(modId);
+        }
+
         /// <summary>Wipes every mapping and re-registers the core assembly fallback; called on mod reload.</summary>
         public static void Clear()
         {

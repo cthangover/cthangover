@@ -11,6 +11,7 @@ using Cthangover.Core.Localization;
 using Cthangover.Core.Scenes;
 using Cthangover.Core.UI;
 using Cthangover.Core.Mods.Patches;
+using Cthangover.Core.Mods.Pipeline;
 using Cthangover.Core.Mods.Providers;
 using Cthangover.Core.Mods.Resolvers;
 using Cthangover.Core.Utils;
@@ -101,33 +102,116 @@ namespace Cthangover.Core.Mods
             registry.FinalizeGodotInit();
         }
 
+        /// <summary>True while an in-process reload is being applied or verified; a second reload is refused meanwhile.</summary>
+        public bool IsReloading { get; private set; }
+
+        /// <summary>The last applied (or rejected) in-process reload.</summary>
+        public ModReloadResult LastReload { get; private set; }
+
         /// <summary>
-        /// Hot-reloads the mod set and rebuilds every piece of derived state in
-        /// the boot-phase order, so the reloaded mod set is fully usable without
-        /// a restart: resolver caches, the IGameRegistry set (data-driven via
-        /// <see cref="AppServices.Registries"/>), mod initializers (they
-        /// re-register scene routes and gameplay cores), mod settings, locale
-        /// and the logical scene table. Adding a registry needs no edit here —
-        /// only its line in AppServices.
+        /// Full synchronous reload of the current selection (every mod with code
+        /// is released and loaded again) with every piece of derived state
+        /// rebuilt; see <see cref="ApplyReload"/>. Kept for tooling and setups
+        /// that change mods on disk and need the new set immediately.
         /// </summary>
         public void Reload()
         {
+            var tree = GameEnvironment.IsRuntime ? Engine.GetMainLoop() as SceneTree : null;
+            var prep = registry.Reloader.Prepare(Games.GameLaunchArgs.Current, new[] { "*" });
+            ApplyPrepared(prep, tree, requireSuccess: false);
+        }
+
+        /// <summary>
+        /// First half of an in-process reload, on a background thread: the mod
+        /// set of <paramref name="selection"/> discovered and compiled, nothing
+        /// running touched (<see cref="ModSetReloader.Prepare"/>).
+        /// </summary>
+        public System.Threading.Tasks.Task<ModReloadPreparation> PrepareReloadAsync(Games.GameLaunchArgs selection, IReadOnlyCollection<string> force = null, CancellationToken cancellationToken = default)
+            => System.Threading.Tasks.Task.Run(() => registry.Reloader.Prepare(selection, force, cancellationToken), cancellationToken);
+
+        /// <summary>
+        /// Second half, on the main thread: switches to the prepared set and
+        /// rebuilds everything derived from it in the boot-phase order (resolver
+        /// caches, the <c>IGameRegistry</c> set, initializers, mod settings,
+        /// locale, the logical scene table, the session runtime). A failed
+        /// preparation is discarded and reported without touching the running
+        /// set. Callers leave the current scene first: nodes of released mods
+        /// are freed by the unload.
+        /// </summary>
+        public ModReloadResult ApplyReload(ModReloadPreparation prep, SceneTree tree)
+            => ApplyPrepared(prep, tree, requireSuccess: true);
+
+        /// <summary>
+        /// Waits (engine frames) until the contexts released by
+        /// <paramref name="result"/> are collected, logs survivors as errors,
+        /// then publishes <see cref="ModSetReloadedEvent"/>.
+        /// </summary>
+        public async System.Threading.Tasks.Task<ModReloadResult> VerifyReloadAsync(ModReloadResult result, SceneTree tree)
+        {
+            try
+            {
+                if (result.Applied && tree != null)
+                {
+                    result.Leaked = await result.Ticket.CollectAsync(tree);
+                    foreach (var leaked in result.Leaked)
+                        GameLogger.Log("MODS_RELOAD", $"Mod '{leaked}' was released but its code is still referenced (see MODS_UNLOAD above) — it stays in memory", LogLevel.Error);
+                }
+                Events.ModEventBus.Publish(new Events.ModSetReloadedEvent
+                {
+                    Applied = result.Applied,
+                    Loaded = result.Plan?.Load.ToArray() ?? Array.Empty<string>(),
+                    Unloaded = result.Plan?.Unload.ToArray() ?? Array.Empty<string>(),
+                    Leaked = result.Leaked.ToArray(),
+                    Errors = result.Errors.ToArray(),
+                });
+                return result;
+            }
+            finally
+            {
+                IsReloading = false;
+            }
+        }
+
+        private ModReloadResult ApplyPrepared(ModReloadPreparation prep, SceneTree tree, bool requireSuccess)
+        {
+            if (IsReloading)
+            {
+                registry.Reloader.Discard(prep);
+                GameLogger.Log("MODS_RELOAD", "Reload refused: another reload is in progress", LogLevel.Warning);
+                return LastReload = new ModReloadResult(false, null, null, new[] { "another reload is in progress" });
+            }
+
+            if (requireSuccess && !prep.Succeeded)
+            {
+                registry.Reloader.Discard(prep);
+                return LastReload = new ModReloadResult(false, null, null, prep.Errors);
+            }
+
+            IsReloading = true;
             foreach (var resolver in resolvers.Values)
                 resolver.ClearCache();
             AppServices.Current.ClearRegistries();
             UiHost.Instance?.ClearAll();
-            registry.Reload();
+
+            var result = registry.Reloader.Apply(prep, tree);
 
             // Rebind: same relative order as the boot phases after the mod set
             // is final (Registries → ResourcesReady → ModSettings → Locale →
-            // Scenes), with the exception that UiHost panels stay cleared until
-            // the next shell entry.
+            // Scenes → runtime), with the exception that UiHost panels stay
+            // cleared until the next shell entry.
+            foreach (var resolver in resolvers.Values)
+                resolver.ClearCache();
             AppServices.Current.RebuildRegistries();
             ModInitializerRegistry.NotifyResourcesReady();
             ModSettingsRegistry.LoadAll();
             LocaleLoader.LoadCurrentLanguage();
             Scenes.SceneManager.RescanScenes();
-            GameLogger.Log("MODS", "Reload complete: registries, initializers, settings, locale and scenes rebuilt");
+            Settings.GameData.Instance?.ResetRuntime("mod set reloaded");
+            GameLogger.Log("MODS", "Reload complete: registries, initializers, settings, locale, scenes and runtime rebuilt");
+
+            if (tree == null)
+                IsReloading = false;
+            return LastReload = result;
         }
 
         /// <summary>Initializes the resolver with the shared context and stores it under its <see cref="IModAssetResolver.Id"/>.</summary>

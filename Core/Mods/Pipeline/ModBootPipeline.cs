@@ -327,6 +327,9 @@ namespace Cthangover.Core.Mods.Pipeline
         /// </summary>
         internal object PipelineLock => pipelineLock;
 
+        /// <summary>Scanner roots resolved by <see cref="PreparePaths"/>; an in-process reload rescans them (<see cref="ModSetReloader.Prepare"/>).</summary>
+        internal IReadOnlyList<(IModScanner Scanner, string Url, int Priority)> ResolvedRoots => resolvedRoots;
+
         /// <summary>
         /// Discards the assemblies staged by <see cref="DiscoverAndCompile"/>
         /// (the <c>ModRegistry.Reload</c> path): both collections are replaced

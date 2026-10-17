@@ -26,6 +26,16 @@ namespace Cthangover.Core.Mods;
 /// </summary>
 public static class ModGDScriptLoader
 {
+	private static readonly HashSet<string> loadedModIds = new(StringComparer.OrdinalIgnoreCase);
+
+	/// <summary>
+	/// Mods whose GDScripts were loaded in this process. GDScript registrations
+	/// (actions, conditions, hooks, initializers) are not tracked per mod and
+	/// cannot be withdrawn, so an in-process reload loads the scripts of a mod
+	/// once and leaves them in place afterwards.
+	/// </summary>
+	public static IReadOnlyCollection<string> LoadedModIds => loadedModIds;
+
 	/// <summary>
 	/// Walks every mod's <c>gd_sources</c> patterns, compiles each matching
 	/// <c>.gd</c> file, and auto-registers it into the subsystems whose method
@@ -41,6 +51,8 @@ public static class ModGDScriptLoader
 			var modInfo = kvp.Value as ModInfo;
 			var gdSources = modInfo?.Manifest?.GdSources;
 			if (gdSources == null || gdSources.Count == 0)
+				continue;
+			if (!loadedModIds.Add(kvp.Key))
 				continue;
 
 			foreach (var pattern in gdSources)

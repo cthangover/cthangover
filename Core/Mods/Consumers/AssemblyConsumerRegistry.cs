@@ -86,6 +86,26 @@ namespace Cthangover.Core.Mods.Consumers
             consumers.Sort(CompareConsumers);
         }
 
+        /// <summary>
+        /// Drops consumers contributed by dying mod assemblies (a kept consumer
+        /// instance pins its mod's load context). Returns how many were removed.
+        /// </summary>
+        public static int RemoveOwned(Unload.AssemblyOwnership ownership)
+        {
+            if (ownership == null || ownership.IsEmpty)
+                return 0;
+            var removed = 0;
+            for (var i = consumers.Count - 1; i >= 0; i--)
+            {
+                if (!ownership.Owns(consumers[i].GetType()))
+                    continue;
+                consumerIds.Remove(consumers[i].Id);
+                consumers.RemoveAt(i);
+                removed++;
+            }
+            return removed;
+        }
+
         private static int CompareConsumers(IAssemblyConsumer a, IAssemblyConsumer b)
         {
             var byOrder = a.Order.CompareTo(b.Order);

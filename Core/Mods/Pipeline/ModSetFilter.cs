@@ -159,22 +159,30 @@ namespace Cthangover.Core.Mods.Pipeline
         }
 
         /// <summary>
-        /// Keeps only the mods of the game chosen with <c>--game=&lt;id&gt;</c>:
-        /// its collection's resolved graph, every front-end collection and the
-        /// <c>--with-mods</c> extras (see <see cref="Games.GameModSet"/>). The set is
-        /// recomputed from the current collection on every boot, so the player's
-        /// edits apply on the next launch. Without <c>--game</c> (or with
-        /// <c>--all-mods</c>) nothing is filtered; an unknown game id logs an
-        /// error and also loads every mod, so a stale shortcut still starts.
+        /// Keeps only the mods of the game chosen with <c>--game=&lt;id&gt;</c>
+        /// and makes it the <see cref="Games.ActiveGame"/> (boot path); see
+        /// <see cref="SelectActiveGame"/>.
         /// </summary>
         public static void FilterToActiveGame(IDictionary<string, IModInfo> mods)
+            => SelectActiveGame(mods, Games.GameLaunchArgs.Current).Apply();
+
+        /// <summary>
+        /// Keeps only the mods of the game in <paramref name="args"/>: its
+        /// collection's resolved graph, every front-end collection and the
+        /// <c>--with-mods</c> extras (see <see cref="Games.GameModSet"/>). The set is
+        /// recomputed from the current collection every time, so the player's
+        /// edits apply on the next boot or game switch. Without <c>--game</c> (or with
+        /// <c>--all-mods</c>) nothing is filtered; an unknown game id logs an
+        /// error and also loads every mod, so a stale shortcut still starts.
+        /// Returns the choice without applying it (an in-process reload applies
+        /// it only once the new set compiled).
+        /// </summary>
+        public static Games.ActiveGameChoice SelectActiveGame(IDictionary<string, IModInfo> mods, Games.GameLaunchArgs args)
         {
-            Games.ActiveGame.Clear();
-            var args = Games.GameLaunchArgs.Current;
             if (args.Mode == Games.GameLaunchMode.AllMods)
             {
                 RemoveFixtures(mods, args.WithMods);
-                return;
+                return Games.ActiveGameChoice.None;
             }
 
             // Mounted test suites ride along like --with-mods (with their depends).
@@ -192,19 +200,18 @@ namespace Cthangover.Core.Mods.Pipeline
                 if (frontend == null)
                 {
                     GameLogger.Log("MODS_REGISTRY", "No front-end collection installed; loading every mod", LogLevel.Error);
-                    return;
+                    return Games.ActiveGameChoice.None;
                 }
 
                 RemoveOutside(mods, frontend.ModIds, "front-end");
-                Games.ActiveGame.ActivateFrontend(frontend);
-                return;
+                return new Games.ActiveGameChoice(frontend, frontend: true);
             }
 
             var set = Games.GameModSet.Compute(args.GameId, collections, discovered, DisabledModsStore.Load(), extras);
             if (set == null)
             {
                 GameLogger.Log("MODS_REGISTRY", $"Game '{args.GameId}' is not a known game collection; loading every mod", LogLevel.Error);
-                return;
+                return Games.ActiveGameChoice.None;
             }
 
             foreach (var missing in set.MissingMods)
@@ -213,7 +220,7 @@ namespace Cthangover.Core.Mods.Pipeline
                 GameLogger.Log("MODS_REGISTRY", $"Game '{args.GameId}': {problem.Title}", LogLevel.Warning);
 
             RemoveOutside(mods, set.ModIds, args.GameId);
-            Games.ActiveGame.Activate(set);
+            return new Games.ActiveGameChoice(set, frontend: false);
         }
 
         /// <summary>

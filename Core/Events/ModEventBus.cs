@@ -61,6 +61,7 @@ namespace Cthangover.Core.Events
                 list.Add(new TypedSubscription
                 {
                     Handler = e => handler((T)e),
+                    Original = handler,
                     ModId = modId,
                     Priority = priority,
                 });
@@ -79,7 +80,7 @@ namespace Cthangover.Core.Events
                 if (!_typedSubs.TryGetValue(type, out var list))
                     return;
 
-                list.RemoveAll(s => s.Handler is Action<T> typed && typed == handler);
+                list.RemoveAll(s => s.Original is Action<T> typed && typed == handler);
             }
         }
 
@@ -229,6 +230,46 @@ namespace Cthangover.Core.Events
             GameLogger.Log("EVENT_BUS", $"Cleared all subscriptions for mod '{modId}'");
         }
 
+        /// <summary>
+        /// Unload pass by code ownership rather than by declared mod id: removes
+        /// typed subscriptions whose handler lives in a dying mod assembly and
+        /// subscriptions to event types declared there. Most mods subscribe
+        /// without passing their id, so <see cref="ClearForMod"/> alone leaves
+        /// their handlers behind — and every such handler pins the mod's load
+        /// context. Returns the number of removed subscriptions.
+        /// </summary>
+        public static int RemoveOwned(Mods.Unload.AssemblyOwnership ownership)
+        {
+            if (ownership == null || ownership.IsEmpty)
+                return 0;
+            var removed = 0;
+            lock (_lock)
+            {
+                var ownedTypes = new List<Type>();
+                foreach (var type in _typedSubs.Keys)
+                {
+                    if (ownership.Owns(type))
+                        ownedTypes.Add(type);
+                }
+                foreach (var type in ownedTypes)
+                {
+                    removed += _typedSubs[type].Count;
+                    _typedSubs.Remove(type);
+                }
+                foreach (var list in _typedSubs.Values)
+                {
+                    for (var i = list.Count - 1; i >= 0; i--)
+                    {
+                        if (!ownership.Owns(list[i].Original))
+                            continue;
+                        list.RemoveAt(i);
+                        removed++;
+                    }
+                }
+            }
+            return removed;
+        }
+
         /// <summary>Wipes every subscription on both the typed and string layers. Test/setup helper — not part of the normal unload path.</summary>
         public void ClearAll()
         {
@@ -314,6 +355,8 @@ namespace Cthangover.Core.Events
         {
             /// <summary>Type-erased handler; the generic wrapper casts back to the event type.</summary>
             public Action<ModEvent> Handler;
+            /// <summary>The subscriber's own delegate: identity for <see cref="Unsubscribe{T}"/>, ownership for <see cref="RemoveOwned"/>.</summary>
+            public Delegate Original;
             /// <summary>Owning mod id for <see cref="ClearForMod"/>; null for engine subscriptions.</summary>
             public string ModId;
             /// <summary>Delivery order for [LifecycleEvent] event types (lower = earlier).</summary>

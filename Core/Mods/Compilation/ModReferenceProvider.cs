@@ -227,8 +227,15 @@ namespace Cthangover.Core.Mods.Compilation
 
                 if (newestById != null)
                 {
-                    foreach (var entry in newestById.Values)
-                        TryAddReference(references, entry.Path);
+                    foreach (var entry in newestById)
+                    {
+                        // The artifact this process compiled the dependency to wins
+                        // over the newest file (see ModAssemblyCache.CurrentArtifacts).
+                        var path = ModAssemblyCache.CurrentArtifacts.TryGetValue(entry.Key, out var current) && File.Exists(current)
+                            ? current
+                            : entry.Value.Path;
+                        TryAddReference(references, path);
+                    }
                 }
             }
 
