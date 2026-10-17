@@ -66,7 +66,7 @@ namespace Cthangover.Validator
             var mods = SnapshotMods();
             var reportDirectory = ValidatorSettings.GetReportDirectory();
 
-            WarmScenarioRegistries();
+            WarmUp();
 
             GameLogger.Log("VALIDATOR", $"validator: started, {mods.Count} mod(s) queued");
             Task.Run(() => Run(mods, reportDirectory));
@@ -129,8 +129,22 @@ namespace Cthangover.Validator
                 });
             }
 
+            Analyze(mods, report, CancellationToken.None);
+            ApplySummary(report);
+            return report;
+        }
+
+        /// <summary>
+        /// Runs every enabled strategy over <paramref name="mods"/> and returns
+        /// the populated context — declarations, references and issues —
+        /// without writing a report. Other tool mods (e.g. the resource atlas)
+        /// build on the same graph instead of re-parsing scenarios and data.
+        /// Call <see cref="WarmUp"/> on the main thread first.
+        /// </summary>
+        public static ValidationContext Analyze(IReadOnlyList<IModInfo> mods, ValidationReport report, CancellationToken cancellationToken)
+        {
             var graph = new ValidationGraph();
-            var context = new ValidationContext(mods, report, graph, CancellationToken.None);
+            var context = new ValidationContext(mods, report ?? new ValidationReport(), graph, cancellationToken);
             var strategies = ValidationStrategyRegistry.GetStrategies();
 
             GameLogger.Log("VALIDATOR", $"validator: running {strategies.Count} strategy(ies)");
@@ -153,8 +167,7 @@ namespace Cthangover.Validator
                 }
             }
 
-            ApplySummary(report);
-            return report;
+            return context;
         }
 
         private static bool IsFeatureEnabled(ValidationFeature feature)
@@ -178,7 +191,7 @@ namespace Cthangover.Validator
         /// classes on first use; warming them here keeps the background
         /// validation pass free of first-touch instantiation of game types.
         /// </summary>
-        private static void WarmScenarioRegistries()
+        public static void WarmUp()
         {
             var commands = 0;
             foreach (var _ in ScenarioCommandStrategyFactory.GetAllCommandNames())

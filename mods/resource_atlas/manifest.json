@@ -1,0 +1,10 @@
+{
+  "id": "resource_atlas",
+  "name": "Resource Atlas",
+  "version": "0.1.0",
+  "author": "ct",
+  "description": "Cross-mod resource map for developers and AI agents: which mod requests resources (sounds, textures, scenes, entities, actions, locale keys, res:// files) provided by another mod, which mod overrides or patches another mod's resources, and whether each link is backed by manifest depends. Activated by the --resource-atlas user arg; writes report.md/report.json and prints [TEST_RESULT].",
+  "category": "tools, debug",
+  "sources": ["src/**/*.cs"],
+  "depends": ["validator>=0.1"]
+}
