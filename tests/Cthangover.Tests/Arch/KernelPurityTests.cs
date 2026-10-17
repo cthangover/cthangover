@@ -183,8 +183,12 @@ namespace Engine.Tests.Arch
             // launcher.tscn instantiate them before the mod pipeline
             // compiles), the SceneEventController autoload that ticks from
             // the first frames, the pure-C# NotificationBuffer and the
-            // CthangoverTheme/UiTokens boot styling.
+            // CthangoverTheme/UiTokens boot styling. ModSetTransitionScreen is
+            // boot-window UI of the same kind: it is the current scene while an
+            // in-process game switch or hot reload has released the old mods and
+            // not yet loaded the new ones, so no mod scene can exist at that time.
             "Cthangover.Core.UI.Base.ModSpriteLoader",
+            "Cthangover.Core.UI.Menu.ModSetTransitionScreen",
             "Cthangover.Core.UI.Menu.Launcher",
             "Cthangover.Core.UI.Menu.BootLogPanel",
             "Cthangover.Core.UI.Menu.BootProgressBar",

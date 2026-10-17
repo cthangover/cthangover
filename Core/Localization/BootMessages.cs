@@ -25,5 +25,42 @@ namespace Cthangover.Core.Localization
                 _ => "The first launch may take a while: mods are being compiled and cached...",
             };
         }
+
+        /// <summary>
+        /// Title of the screen shown while the process switches its mod set
+        /// (another game, hot reload). The new set's locale is not merged yet,
+        /// so this cannot come from mod locale files either.
+        /// </summary>
+        public static string LoadingMods(string language)
+        {
+            return language switch
+            {
+                "ru-ru" => "Загрузка модов...",
+                "zh" => "正在加载模组...",
+                _ => "Loading mods...",
+            };
+        }
+
+        /// <summary>Title shown when the new mod set did not compile and the switch was cancelled.</summary>
+        public static string LoadingModsFailed(string language)
+        {
+            return language switch
+            {
+                "ru-ru" => "Не удалось загрузить моды — ошибки компиляции:",
+                "zh" => "无法加载模组 — 编译错误：",
+                _ => "Could not load the mods — compile errors:",
+            };
+        }
+
+        /// <summary>Button that leaves the failed switch screen.</summary>
+        public static string Back(string language)
+        {
+            return language switch
+            {
+                "ru-ru" => "Назад",
+                "zh" => "返回",
+                _ => "Back",
+            };
+        }
     }
 }

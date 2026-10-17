@@ -13,15 +13,15 @@ namespace Cthangover.BaseMenu
     /// <summary>
     /// Menu-side rules for entering games: "Continue", starting a game and
     /// loading a save. A game other than the running one (or any game from
-    /// the front-end) is entered by restarting the process, because the boot
-    /// decides the mod set. Before a save is loaded into a changed composition
+    /// the front-end) is entered by replacing the mod set in-process
+    /// (<see cref="GameSession.SwitchToAsync"/>). Before a save is loaded into a changed composition
     /// the player sees what changes (added mechanics start fresh, removed ones
     /// keep their data dormant) and a backup is taken.
     /// </summary>
     internal static class GameFlow
     {
-        /// <summary>Set after installing mods in this process: entering any game must reboot to load them.</summary>
-        public static bool RestartRequired { get; set; }
+        /// <summary>Set after installing mods in this process: entering any game, even the running one, reloads the mod set to pick them up.</summary>
+        public static bool ReloadRequired { get; set; }
 
         public static bool HasContinue() => LastSessionStore.Load() != null;
 
@@ -34,10 +34,10 @@ namespace Cthangover.BaseMenu
 
         public static void StartGame(Node host, string gameId)
         {
-            if (IsRunning(gameId) && !RestartRequired)
+            if (IsRunning(gameId) && !ReloadRequired)
                 GameSession.StartNew(host);
             else
-                GameSession.RestartInto(host, gameId);
+                Switch(host, gameId, null);
         }
 
         /// <summary>
@@ -80,10 +80,16 @@ namespace Cthangover.BaseMenu
             if (backup)
                 SaveService.BackupSave(gameId, fileName);
 
-            if (IsRunning(gameId) && !RestartRequired)
+            if (IsRunning(gameId) && !ReloadRequired)
                 GameSession.LoadAndEnter(host, fileName);
             else
-                GameSession.RestartInto(host, gameId, fileName);
+                Switch(host, gameId, fileName);
+        }
+
+        private static async void Switch(Node host, string gameId, string fileName)
+        {
+            if (await GameSession.SwitchToAsync(host, gameId, fileName))
+                ReloadRequired = false;
         }
 
         private static bool IsRunning(string gameId)

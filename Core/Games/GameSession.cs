@@ -1,5 +1,8 @@
-using System.Collections.Generic;
+using System;
+using System.Threading.Tasks;
+using Cthangover.Core.Mods;
 using Cthangover.Core.Scenes;
+using Cthangover.Core.UI.Menu;
 using Cthangover.Core.Settings;
 using Cthangover.Core.Utils;
 using Godot;
@@ -11,7 +14,7 @@ namespace Cthangover.Core.Games
     /// after boot) and the menu mods. Starting enters the active game's
     /// entry scene; loading falls back to it when the saved scene no longer
     /// exists (its mechanic was removed from the game). Switching to another
-    /// game restarts the process, because the boot decides the mod set.
+    /// game replaces the mod set in-process (<see cref="SwitchToAsync"/>).
     /// </summary>
     public static class GameSession
     {
@@ -47,19 +50,99 @@ namespace Cthangover.Core.Games
             return true;
         }
 
+        /// <summary>True while <see cref="SwitchToAsync"/> runs; menus ignore further switch requests meanwhile.</summary>
+        public static bool IsSwitching { get; private set; }
+
         /// <summary>
-        /// Restarts the process into <paramref name="gameId"/>: a new game, or
-        /// <paramref name="loadSave"/> of that game. Engine args are kept, user
-        /// args are replaced.
+        /// Switches the running process to <paramref name="gameId"/> — a new
+        /// game, or <paramref name="loadSave"/> of it — without a restart: the
+        /// window shows <see cref="ModSetTransitionScreen"/>, the game's mod set
+        /// is prepared (compiled) in the background, mods that leave the set are
+        /// unloaded and their contexts released, the new ones load, and the game
+        /// is entered exactly as a cold <c>--game</c> launch would. Mods shared by
+        /// both sets (the front-end, common engine mods) stay loaded. When the new
+        /// set does not compile, the running set is untouched and the screen
+        /// lists the errors with a way back to the main menu. Returns whether the
+        /// game was entered.
         /// </summary>
-        public static void RestartInto(Node host, string gameId, string loadSave = null)
+        public static async Task<bool> SwitchToAsync(Node host, string gameId, string loadSave = null)
         {
-            var args = new List<string>(OS.GetCmdlineArgs());
-            args.Add("--");
-            args.AddRange(GameLaunchArgs.Build(gameId, loadSave));
-            GameLogger.Log("GAME", $"Restarting into game '{gameId}' ({(loadSave == null ? "new game" : "load " + loadSave)})");
-            OS.SetRestartOnExit(true, args.ToArray());
-            host.GetTree().Quit();
+            var tree = host.GetTree();
+            var manager = ModManager.Instance;
+            if (IsSwitching || manager.IsReloading)
+            {
+                GameLogger.Log("GAME", $"Switch into '{gameId}' ignored: a mod-set switch is already running", LogLevel.Warning);
+                return false;
+            }
+
+            IsSwitching = true;
+            try
+            {
+                GameLogger.Log("GAME", $"Switching into game '{gameId}' ({(loadSave == null ? "new game" : "load " + loadSave)}) in-process");
+                var selection = GameLaunchArgs.Current.WithSelection(gameId, loadSave);
+                var screen = ModSetTransitionScreen.Show(tree);
+
+                var prep = await manager.PrepareReloadAsync(selection);
+                var result = manager.ApplyReload(prep, tree);
+                if (!result.Applied)
+                {
+                    screen.ShowErrors(result.Errors, OpenMainMenuDeferred);
+                    return false;
+                }
+
+                await manager.VerifyReloadAsync(result, tree);
+
+                var anchor = tree.Root.GetNodeOrNull<SceneManager>("SceneManager");
+                if (string.IsNullOrEmpty(loadSave))
+                {
+                    StartNew(anchor);
+                    return true;
+                }
+
+                if (LoadAndEnter(anchor, loadSave))
+                    return true;
+
+                GameLogger.Log("GAME", $"Save '{loadSave}' of game '{gameId}' could not be loaded", LogLevel.Error);
+                OpenMainMenu(tree);
+                return false;
+            }
+            catch (Exception ex)
+            {
+                GameLogger.Log("GAME", $"Switch into '{gameId}' FAILED: {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}", LogLevel.Error);
+                OpenMainMenu(tree);
+                return false;
+            }
+            finally
+            {
+                IsSwitching = false;
+            }
+        }
+
+        /// <summary>
+        /// Enters the title screen. The menu scene is provided by the
+        /// <c>base_menu</c> mod and resolved through the runtime tscn pipeline
+        /// (which also applies scene patches); if even that cannot be built, the
+        /// engine loader runs anyway so a broken mod set degrades to a loud log
+        /// instead of a crash.
+        /// </summary>
+        public static void OpenMainMenu(SceneTree tree)
+        {
+            var path = GodotSceneService.GetScenePath(GodotSceneType.MainMenu);
+            var node = TscnScenes.LoadAndBuild(path);
+            if (node != null)
+            {
+                tree.ChangeSceneToNode(node);
+                return;
+            }
+
+            GameLogger.Log("LAUNCHER", $"main menu scene '{path}' could not be built by any mod — falling back to the native loader", LogLevel.Warning);
+            tree.ChangeSceneToFile("res://" + path);
+        }
+
+        private static void OpenMainMenuDeferred()
+        {
+            if (Engine.GetMainLoop() is SceneTree tree)
+                OpenMainMenu(tree);
         }
 
         private static void EnterScene(Node host, string scene)

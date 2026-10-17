@@ -345,26 +345,7 @@ namespace Cthangover.Core.UI.Menu
             OpenMainMenu();
         }
 
-        /// <summary>
-        /// Enters the title screen. The menu scene is provided by the
-        /// <c>base_menu</c> mod and resolved through the runtime tscn pipeline
-        /// (which also applies scene patches). The scene exists only inside the
-        /// base_menu mod; if even that cannot be built, the engine loader runs
-        /// anyway so a broken mod set degrades to a loud log instead of a crash.
-        /// </summary>
-        private void OpenMainMenu()
-        {
-            const string path = "scenes/menu/main_menu.tscn";
-            var node = TscnScenes.LoadAndBuild(path);
-            if (node != null)
-            {
-                GetTree().ChangeSceneToNode(node);
-                return;
-            }
-
-            GameLogger.Log("LAUNCHER", $"main menu scene '{path}' could not be built by any mod — falling back to the native loader", LogLevel.Warning);
-            GetTree().ChangeSceneToFile("res://" + path);
-        }
+        private void OpenMainMenu() => Games.GameSession.OpenMainMenu(GetTree());
 
         private void BuildUI()
         {
