@@ -1,0 +1,848 @@
+{
+  "generated": "2026-10-17T13:06:13.2786540Z",
+  "languages": [
+    "en",
+    "ru"
+  ],
+  "mods": [
+    "interface",
+    "effects_base",
+    "locale_atlas",
+    "test_mod",
+    "base_menu",
+    "time_base",
+    "mod_manager",
+    "live2d",
+    "map_base",
+    "skills_base",
+    "base2d",
+    "base_menu__menu_flow",
+    "base_menu__new_game",
+    "base_menu__save_dormancy",
+    "audio_base",
+    "characters_base",
+    "interactive_base",
+    "items_base",
+    "dialog_base",
+    "quests_base",
+    "recruiting",
+    "tools",
+    "turn_battle_base",
+    "validator",
+    "visual_novel_core",
+    "card_battle",
+    "cooking",
+    "dialog_base__autoplay",
+    "dialog_base__gdscript",
+    "ff_battle",
+    "interactive_base__interactives",
+    "items_base__inventory",
+    "live2d__avatar",
+    "murakami",
+    "resource_atlas",
+    "starter_party",
+    "test_mod_a",
+    "tools__windows",
+    "cooking__cooking_walk",
+    "test_mod_b",
+    "test_defaults_and_patches"
+  ],
+  "summary": {
+    "files": 78,
+    "keys": 1081,
+    "complete": 1079,
+    "attention": 2,
+    "references": 844,
+    "errors": 0,
+    "warnings": 4,
+    "failingMods": []
+  },
+  "files": [
+    {
+      "mod": "interface",
+      "file": "locale/ui_en.properties",
+      "language": "en",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 245,
+      "bytes": 9995
+    },
+    {
+      "mod": "interface",
+      "file": "locale/ui_ru.properties",
+      "language": "ru",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 245,
+      "bytes": 13643
+    },
+    {
+      "mod": "effects_base",
+      "file": "locale/en.properties",
+      "language": "en",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 2,
+      "bytes": 166
+    },
+    {
+      "mod": "effects_base",
+      "file": "locale/ru.properties",
+      "language": "ru",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 2,
+      "bytes": 286
+    },
+    {
+      "mod": "locale_atlas",
+      "file": "locale/en.properties",
+      "language": "en",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 2,
+      "bytes": 217
+    },
+    {
+      "mod": "locale_atlas",
+      "file": "locale/ru.properties",
+      "language": "ru",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 2,
+      "bytes": 393
+    },
+    {
+      "mod": "test_mod",
+      "file": "locale/en.properties",
+      "language": "en",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 1,
+      "bytes": 33
+    },
+    {
+      "mod": "test_mod",
+      "file": "locale/ru.properties",
+      "language": "ru",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 1,
+      "bytes": 48
+    },
+    {
+      "mod": "base_menu",
+      "file": "locale/en.properties",
+      "language": "en",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 69,
+      "bytes": 3054
+    },
+    {
+      "mod": "base_menu",
+      "file": "locale/ru.properties",
+      "language": "ru",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 69,
+      "bytes": 4422
+    },
+    {
+      "mod": "time_base",
+      "file": "locale/en.properties",
+      "language": "en",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 2,
+      "bytes": 245
+    },
+    {
+      "mod": "time_base",
+      "file": "locale/ru.properties",
+      "language": "ru",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 2,
+      "bytes": 332
+    },
+    {
+      "mod": "mod_manager",
+      "file": "locale/en.properties",
+      "language": "en",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 198,
+      "bytes": 10213
+    },
+    {
+      "mod": "mod_manager",
+      "file": "locale/ru.properties",
+      "language": "ru",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 198,
+      "bytes": 13675
+    },
+    {
+      "mod": "live2d",
+      "file": "locale/en.properties",
+      "language": "en",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 2,
+      "bytes": 131
+    },
+    {
+      "mod": "live2d",
+      "file": "locale/ru.properties",
+      "language": "ru",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 2,
+      "bytes": 188
+    },
+    {
+      "mod": "map_base",
+      "file": "locale/en.properties",
+      "language": "en",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 2,
+      "bytes": 265
+    },
+    {
+      "mod": "map_base",
+      "file": "locale/ru.properties",
+      "language": "ru",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 2,
+      "bytes": 367
+    },
+    {
+      "mod": "skills_base",
+      "file": "locale/en.properties",
+      "language": "en",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 2,
+      "bytes": 220
+    },
+    {
+      "mod": "skills_base",
+      "file": "locale/ru.properties",
+      "language": "ru",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 2,
+      "bytes": 333
+    },
+    {
+      "mod": "base2d",
+      "file": "locale/en.properties",
+      "language": "en",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 2,
+      "bytes": 225
+    },
+    {
+      "mod": "base2d",
+      "file": "locale/ru.properties",
+      "language": "ru",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 2,
+      "bytes": 355
+    },
+    {
+      "mod": "audio_base",
+      "file": "locale/en.properties",
+      "language": "en",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 2,
+      "bytes": 221
+    },
+    {
+      "mod": "audio_base",
+      "file": "locale/ru.properties",
+      "language": "ru",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 2,
+      "bytes": 331
+    },
+    {
+      "mod": "characters_base",
+      "file": "locale/en.properties",
+      "language": "en",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 2,
+      "bytes": 297
+    },
+    {
+      "mod": "characters_base",
+      "file": "locale/ru.properties",
+      "language": "ru",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 2,
+      "bytes": 421
+    },
+    {
+      "mod": "interactive_base",
+      "file": "locale/en.properties",
+      "language": "en",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 2,
+      "bytes": 273
+    },
+    {
+      "mod": "interactive_base",
+      "file": "locale/ru.properties",
+      "language": "ru",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 2,
+      "bytes": 374
+    },
+    {
+      "mod": "items_base",
+      "file": "locale/en.properties",
+      "language": "en",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 2,
+      "bytes": 150
+    },
+    {
+      "mod": "items_base",
+      "file": "locale/ru.properties",
+      "language": "ru",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 2,
+      "bytes": 271
+    },
+    {
+      "mod": "dialog_base",
+      "file": "locale/en.properties",
+      "language": "en",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 2,
+      "bytes": 267
+    },
+    {
+      "mod": "dialog_base",
+      "file": "locale/ru.properties",
+      "language": "ru",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 2,
+      "bytes": 378
+    },
+    {
+      "mod": "quests_base",
+      "file": "locale/en.properties",
+      "language": "en",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 4,
+      "bytes": 299
+    },
+    {
+      "mod": "quests_base",
+      "file": "locale/ru.properties",
+      "language": "ru",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 4,
+      "bytes": 447
+    },
+    {
+      "mod": "recruiting",
+      "file": "locale/en.properties",
+      "language": "en",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 10,
+      "bytes": 553
+    },
+    {
+      "mod": "recruiting",
+      "file": "locale/ru.properties",
+      "language": "ru",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 10,
+      "bytes": 811
+    },
+    {
+      "mod": "tools",
+      "file": "locale/catalog_export_en.properties",
+      "language": "en",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 4,
+      "bytes": 221
+    },
+    {
+      "mod": "tools",
+      "file": "locale/catalog_export_ru.properties",
+      "language": "ru",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 4,
+      "bytes": 307
+    },
+    {
+      "mod": "tools",
+      "file": "locale/ui_en.properties",
+      "language": "en",
+      "encoding": "UTF-8",
+      "lineEndings": "CRLF",
+      "keys": 242,
+      "bytes": 14995
+    },
+    {
+      "mod": "tools",
+      "file": "locale/ui_ru.properties",
+      "language": "ru",
+      "encoding": "UTF-8",
+      "lineEndings": "CRLF",
+      "keys": 242,
+      "bytes": 20603
+    },
+    {
+      "mod": "turn_battle_base",
+      "file": "locale/en.properties",
+      "language": "en",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 2,
+      "bytes": 265
+    },
+    {
+      "mod": "turn_battle_base",
+      "file": "locale/ru.properties",
+      "language": "ru",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 2,
+      "bytes": 408
+    },
+    {
+      "mod": "validator",
+      "file": "locale/en.properties",
+      "language": "en",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 10,
+      "bytes": 585
+    },
+    {
+      "mod": "validator",
+      "file": "locale/ru.properties",
+      "language": "ru",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 10,
+      "bytes": 891
+    },
+    {
+      "mod": "visual_novel_core",
+      "file": "locale/en.properties",
+      "language": "en",
+      "encoding": "UTF-8",
+      "lineEndings": "CRLF",
+      "keys": 78,
+      "bytes": 4225
+    },
+    {
+      "mod": "visual_novel_core",
+      "file": "locale/ru.properties",
+      "language": "ru",
+      "encoding": "UTF-8",
+      "lineEndings": "CRLF",
+      "keys": 78,
+      "bytes": 5836
+    },
+    {
+      "mod": "visual_novel_core",
+      "file": "locale/scenarios_en.properties",
+      "language": "en",
+      "encoding": "UTF-8",
+      "lineEndings": "CRLF",
+      "keys": 22,
+      "bytes": 968
+    },
+    {
+      "mod": "visual_novel_core",
+      "file": "locale/scenarios_ru.properties",
+      "language": "ru",
+      "encoding": "UTF-8",
+      "lineEndings": "CRLF",
+      "keys": 22,
+      "bytes": 1211
+    },
+    {
+      "mod": "card_battle",
+      "file": "locale/ui_en.properties",
+      "language": "en",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 34,
+      "bytes": 1684
+    },
+    {
+      "mod": "card_battle",
+      "file": "locale/ui_ru.properties",
+      "language": "ru",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 34,
+      "bytes": 2308
+    },
+    {
+      "mod": "cooking",
+      "file": "locale/en.properties",
+      "language": "en",
+      "encoding": "UTF-8",
+      "lineEndings": "CRLF",
+      "keys": 21,
+      "bytes": 1179
+    },
+    {
+      "mod": "cooking",
+      "file": "locale/ru.properties",
+      "language": "ru",
+      "encoding": "UTF-8",
+      "lineEndings": "CRLF",
+      "keys": 21,
+      "bytes": 1699
+    },
+    {
+      "mod": "cooking",
+      "file": "locale/scenarios_en.properties",
+      "language": "en",
+      "encoding": "UTF-8",
+      "lineEndings": "CRLF",
+      "keys": 3,
+      "bytes": 116
+    },
+    {
+      "mod": "cooking",
+      "file": "locale/scenarios_ru.properties",
+      "language": "ru",
+      "encoding": "UTF-8",
+      "lineEndings": "CRLF",
+      "keys": 3,
+      "bytes": 164
+    },
+    {
+      "mod": "dialog_base__gdscript",
+      "file": "locale/en.properties",
+      "language": "en",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 2,
+      "bytes": 203
+    },
+    {
+      "mod": "dialog_base__gdscript",
+      "file": "locale/ru.properties",
+      "language": "ru",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 2,
+      "bytes": 328
+    },
+    {
+      "mod": "ff_battle",
+      "file": "locale/ui_en.properties",
+      "language": "en",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 55,
+      "bytes": 2690
+    },
+    {
+      "mod": "ff_battle",
+      "file": "locale/ui_ru.properties",
+      "language": "ru",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 55,
+      "bytes": 3488
+    },
+    {
+      "mod": "interactive_base__interactives",
+      "file": "locale/en.properties",
+      "language": "en",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 2,
+      "bytes": 202
+    },
+    {
+      "mod": "interactive_base__interactives",
+      "file": "locale/ru.properties",
+      "language": "ru",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 2,
+      "bytes": 315
+    },
+    {
+      "mod": "interactive_base__interactives",
+      "file": "locale/scenarios_en.properties",
+      "language": "en",
+      "encoding": "UTF-8",
+      "lineEndings": "CRLF",
+      "keys": 1,
+      "bytes": 78
+    },
+    {
+      "mod": "interactive_base__interactives",
+      "file": "locale/scenarios_ru.properties",
+      "language": "ru",
+      "encoding": "UTF-8",
+      "lineEndings": "CRLF",
+      "keys": 1,
+      "bytes": 123
+    },
+    {
+      "mod": "live2d__avatar",
+      "file": "locale/en.properties",
+      "language": "en",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 2,
+      "bytes": 218
+    },
+    {
+      "mod": "live2d__avatar",
+      "file": "locale/ru.properties",
+      "language": "ru",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 2,
+      "bytes": 275
+    },
+    {
+      "mod": "murakami",
+      "file": "locale/en.properties",
+      "language": "en",
+      "encoding": "UTF-8",
+      "lineEndings": "CRLF",
+      "keys": 10,
+      "bytes": 695
+    },
+    {
+      "mod": "murakami",
+      "file": "locale/ru.properties",
+      "language": "ru",
+      "encoding": "UTF-8",
+      "lineEndings": "CRLF",
+      "keys": 10,
+      "bytes": 1000
+    },
+    {
+      "mod": "murakami",
+      "file": "locale/scenarios_en.properties",
+      "language": "en",
+      "encoding": "UTF-8",
+      "lineEndings": "CRLF",
+      "keys": 48,
+      "bytes": 4065
+    },
+    {
+      "mod": "murakami",
+      "file": "locale/scenarios_ru.properties",
+      "language": "ru",
+      "encoding": "UTF-8",
+      "lineEndings": "CRLF",
+      "keys": 48,
+      "bytes": 5230
+    },
+    {
+      "mod": "resource_atlas",
+      "file": "locale/en.properties",
+      "language": "en",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 2,
+      "bytes": 192
+    },
+    {
+      "mod": "resource_atlas",
+      "file": "locale/ru.properties",
+      "language": "ru",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 2,
+      "bytes": 317
+    },
+    {
+      "mod": "starter_party",
+      "file": "locale/en.properties",
+      "language": "en",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 2,
+      "bytes": 277
+    },
+    {
+      "mod": "starter_party",
+      "file": "locale/ru.properties",
+      "language": "ru",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 2,
+      "bytes": 450
+    },
+    {
+      "mod": "test_mod_a",
+      "file": "locale/en.properties",
+      "language": "en",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 4,
+      "bytes": 238
+    },
+    {
+      "mod": "test_mod_a",
+      "file": "locale/ru.properties",
+      "language": "ru",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 4,
+      "bytes": 346
+    },
+    {
+      "mod": "test_mod_b",
+      "file": "locale/en.properties",
+      "language": "en",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 7,
+      "bytes": 316
+    },
+    {
+      "mod": "test_mod_b",
+      "file": "locale/ru.properties",
+      "language": "ru",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 7,
+      "bytes": 443
+    },
+    {
+      "mod": "test_defaults_and_patches",
+      "file": "locale/en.properties",
+      "language": "en",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 2,
+      "bytes": 187
+    },
+    {
+      "mod": "test_defaults_and_patches",
+      "file": "locale/ru.properties",
+      "language": "ru",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 2,
+      "bytes": 276
+    }
+  ],
+  "keys": [
+    {
+      "key": "mod_test_mod_desc",
+      "declared": false,
+      "missing": [],
+      "empty": [],
+      "partial": {},
+      "declarations": {},
+      "references": [
+        {
+          "mod": "test_mod",
+          "file": "manifest.json",
+          "line": 0,
+          "via": "manifest",
+          "fallback": null,
+          "optional": true
+        }
+      ]
+    },
+    {
+      "key": "mod_test_mod_name",
+      "declared": false,
+      "missing": [],
+      "empty": [],
+      "partial": {},
+      "declarations": {},
+      "references": [
+        {
+          "mod": "test_mod",
+          "file": "manifest.json",
+          "line": 0,
+          "via": "manifest",
+          "fallback": null,
+          "optional": true
+        }
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "severity": "warning",
+      "code": "key_undeclared_optional",
+      "mod": "test_mod",
+      "key": "mod_test_mod_desc",
+      "language": "en",
+      "file": "manifest.json",
+      "line": 0,
+      "message": "not declared; the manifest text is shown instead",
+      "fix": "locale/en.properties: mod_test_mod_desc = …"
+    },
+    {
+      "severity": "warning",
+      "code": "key_undeclared_optional",
+      "mod": "test_mod",
+      "key": "mod_test_mod_desc",
+      "language": "ru",
+      "file": "manifest.json",
+      "line": 0,
+      "message": "not declared; the manifest text is shown instead",
+      "fix": "locale/ru.properties: mod_test_mod_desc = …"
+    },
+    {
+      "severity": "warning",
+      "code": "key_undeclared_optional",
+      "mod": "test_mod",
+      "key": "mod_test_mod_name",
+      "language": "en",
+      "file": "manifest.json",
+      "line": 0,
+      "message": "not declared; the manifest text is shown instead",
+      "fix": "locale/en.properties: mod_test_mod_name = …"
+    },
+    {
+      "severity": "warning",
+      "code": "key_undeclared_optional",
+      "mod": "test_mod",
+      "key": "mod_test_mod_name",
+      "language": "ru",
+      "file": "manifest.json",
+      "line": 0,
+      "message": "not declared; the manifest text is shown instead",
+      "fix": "locale/ru.properties: mod_test_mod_name = …"
+    }
+  ]
+}

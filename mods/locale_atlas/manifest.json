@@ -1,0 +1,11 @@
+{
+  "id": "locale_atlas",
+  "name": "Locale Atlas",
+  "version": "0.1.0",
+  "author": "ct",
+  "description": "Localization key map for developers and AI agents: every key declared in locale/*.properties or referenced by scenarios, C#, JSON, scenes, collections and manifests, per language. Reports keys that are missing in some languages, empty, undeclared or duplicated, collection texts without a translation, and the encoding of every locale file (UTF-8 validity, BOM, mojibake, control characters, line endings). Activated by the --locale-atlas user arg; writes report.md/report.json and prints [TEST_RESULT].",
+  "category": "tools, debug",
+  "sources": ["src/**/*.cs"],
+  "test_sources": ["tests/*.cs"],
+  "depends": []
+}
