@@ -200,6 +200,12 @@ namespace Cthangover.Core.UI.Menu
                 return;
             }
 
+            // Game launch (--game=<id> [--new | --load=<save>]): the boot already
+            // kept only that game's mods, so go straight into it. A failed load
+            // falls through to the normal launcher flow with the error logged.
+            if (Boot.IsReady && Games.ActiveGame.IsActive && EnterActiveGame())
+                return;
+
             GetNodeOrNull<ModSpriteLoader>("Background/SpriteLoader")?.Reload();
 
             HideBootOverlay();
@@ -225,6 +231,28 @@ namespace Cthangover.Core.UI.Menu
         /// On an unknown name the error is logged and the launcher falls back to
         /// its normal flow (menu/UI) — a typo must never crash the game.
         /// </summary>
+        /// <summary>
+        /// Enters the active game from the launch args: loads the requested save
+        /// or starts a new game at the collection's entry scene. Returns false
+        /// when the requested save could not be loaded.
+        /// </summary>
+        private bool EnterActiveGame()
+        {
+            var args = Games.GameLaunchArgs.Current;
+            HideBootOverlay();
+            if (!string.IsNullOrEmpty(args.LoadSave))
+            {
+                if (Games.GameSession.LoadAndEnter(this, args.LoadSave))
+                    return true;
+
+                GameLogger.Log("GAME", $"Save '{args.LoadSave}' of game '{Games.ActiveGame.Id}' could not be loaded", LogLevel.Error);
+                return false;
+            }
+
+            Games.GameSession.StartNew(this);
+            return true;
+        }
+
         private async System.Threading.Tasks.Task LaunchRequestedSceneAsync(string sceneName)
         {
             var sceneManager = GetNodeOrNull<SceneManager>("/root/SceneManager");
@@ -411,7 +439,7 @@ namespace Cthangover.Core.UI.Menu
             CthangoverTheme.ApplyDanger(exitBtn);
             btnRow.AddChild(exitBtn);
 
-            var playBtn = new Button();
+            var playBtn = new Button { Name = "LauncherPlay" };
             playBtn.Text = Tr("launcher/play");
             playBtn.Pressed += OnPlayClick;
             CthangoverTheme.ApplyPrimary(playBtn);

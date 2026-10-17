@@ -166,6 +166,24 @@ namespace Cthangover.TestRunner
         }
 
         /// <summary>
+        /// A plain launch boots only the front-end (main menu + mod manager), so
+        /// every integration test that does not name a game gets
+        /// <c>--all-mods</c> after the <c>--</c> separator, keeping the scenes
+        /// on the full mod set they were written for.
+        /// </summary>
+        private static List<string> WithModSet(IReadOnlyList<string> testArgs)
+        {
+            var args = new List<string>(testArgs ?? Array.Empty<string>());
+            if (args.Any(a => a.StartsWith("--game=", StringComparison.Ordinal) || a == "--all-mods" || a == "--frontend"))
+                return args;
+
+            if (!args.Contains("--"))
+                args.Add("--");
+            args.Add("--all-mods");
+            return args;
+        }
+
+        /// <summary>
         /// Runs one integration scene headless and evaluates it from three
         /// sources: process exit code, the scene's <c>[TEST_RESULT]</c> line
         /// (authoritative for check counts) and the timeout flag.
@@ -195,8 +213,7 @@ namespace Cthangover.TestRunner
             args.Add("--path");
             args.Add(root);
             args.Add(test.Scene);
-            if (test.Args != null)
-                args.AddRange(test.Args);
+            args.AddRange(WithModSet(test.Args));
 
             var run = ProcessRunner.Run(godot, args, root, test.TimeoutSeconds);
             var parsed = ResultParser.Parse(run.Output);

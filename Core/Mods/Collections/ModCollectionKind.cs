@@ -19,5 +19,11 @@ namespace Cthangover.Core.Mods
 
         /// <summary>Developer toolset (editors, validators, the mod manager).</summary>
         Toolset,
+
+        /// <summary>
+        /// Front-end loaded with every game and on its own when no game is
+        /// selected: the main menu, the mod manager and what they need.
+        /// </summary>
+        Frontend,
     }
 }

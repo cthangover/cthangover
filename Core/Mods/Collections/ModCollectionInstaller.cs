@@ -1,16 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Cthangover.Core.Mods;
 using Cthangover.Core.Utils;
 using Godot;
 
-namespace Mods.ModManager
+namespace Cthangover.Core.Mods
 {
     /// <summary>
-    /// Shared "apply a collection plan" routine for every hub surface that can
-    /// install a collection: the gallery cards and the scheme editor's bottom
-    /// build bar. Downloads every <see cref="ModCollectionPlan.Install"/> item
+    /// Shared "apply a collection plan" routine for every surface that can
+    /// install a collection: the mod hub gallery, the scheme editor and the
+    /// main menu's game picker. Downloads every <see cref="ModCollectionPlan.Install"/> item
     /// through <see cref="ModDownloader"/> in graph order and, when all of them
     /// succeeded, re-enables the <see cref="ModCollectionPlan.Enable"/> ids in
     /// <c>disabled_mods.json</c> — the same file operations the collections
@@ -18,7 +17,7 @@ namespace Mods.ModManager
     /// session are added to the caller's set so both the registry-blind UI and
     /// a restart banner stay honest until the next launch.
     /// </summary>
-    public static class CollectionApplyRunner
+    public static class ModCollectionInstaller
     {
         /// <summary>
         /// Applies the plan; returns true when every download succeeded and
@@ -39,7 +38,7 @@ namespace Mods.ModManager
                 }
                 catch (Exception ex)
                 {
-                    GameLogger.Log("MOD_HUB", $"Install '{item.ModId}' failed: {ex.Message}", LogLevel.Error);
+                    GameLogger.Log("MOD_COLLECTIONS", $"Install '{item.ModId}' failed: {ex.Message}", LogLevel.Error);
                     success = false;
                 }
 

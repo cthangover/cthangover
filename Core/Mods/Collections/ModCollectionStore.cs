@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using Cthangover.Core.Utils;
 using Godot;
@@ -134,6 +135,7 @@ namespace Cthangover.Core.Mods
                     continue;
 
                 collection.Origin = ModCollectionOrigin.BuiltIn;
+                collection.SourceModId = provider.Mod;
                 result.Add(collection);
             }
 
@@ -148,7 +150,17 @@ namespace Cthangover.Core.Mods
         public static List<ModCollection> LoadAll()
         {
             ModRegistry.Instance.Initialize();
+            return LoadAll(ModRegistry.Instance.AllDiscoveredMods.Values);
+        }
 
+        /// <summary>
+        /// Same merge as <see cref="LoadAll()"/> over an explicit mod list. The
+        /// boot pipeline uses it while the registry is still being built (the
+        /// active game decides which discovered mods survive), so it must not
+        /// touch <see cref="ModRegistry"/>.
+        /// </summary>
+        public static List<ModCollection> LoadAll(IEnumerable<IModInfo> discoveredMods)
+        {
             var byId = new Dictionary<string, ModCollection>(StringComparer.OrdinalIgnoreCase);
 
             var catalog = CatalogService.CachedCollections;
@@ -158,9 +170,9 @@ namespace Cthangover.Core.Mods
                     AddIfValid(byId, collection, ModCollectionOrigin.Catalog, overwrite: false);
             }
 
-            foreach (var info in ModRegistry.Instance.AllDiscoveredMods.Values)
+            foreach (var info in discoveredMods ?? Array.Empty<IModInfo>())
             {
-                foreach (var collection in LoadFromProvider(info.FileProvider))
+                foreach (var collection in LoadFromProvider(info?.FileProvider))
                     AddIfValid(byId, collection, ModCollectionOrigin.BuiltIn, overwrite: true);
             }
 
@@ -168,6 +180,34 @@ namespace Cthangover.Core.Mods
                 AddIfValid(byId, collection, ModCollectionOrigin.User, overwrite: true);
 
             return new List<ModCollection>(byId.Values);
+        }
+
+        /// <summary>
+        /// True when a mod or catalog ships a collection with this id — the
+        /// player's version then only overrides it, and "revert" restores the
+        /// shipped one.
+        /// </summary>
+        public static bool HasShippedVersion(string id)
+        {
+            if (string.IsNullOrEmpty(id))
+                return false;
+
+            if (CatalogService.CachedCollections?.Any(c => string.Equals(c?.Id, id, StringComparison.OrdinalIgnoreCase)) == true)
+                return true;
+
+            ModRegistry.Instance.Initialize();
+            return ModRegistry.Instance.AllDiscoveredMods.Values
+                .Any(info => LoadFromProvider(info?.FileProvider).Any(c => string.Equals(c.Id, id, StringComparison.OrdinalIgnoreCase)));
+        }
+
+        /// <summary>Drops the player's version of a collection; returns true when one existed.</summary>
+        public static bool RemoveUser(string id)
+        {
+            var user = LoadUser();
+            var removed = user.RemoveAll(c => string.Equals(c.Id, id, StringComparison.OrdinalIgnoreCase)) > 0;
+            if (removed)
+                SaveUser(user);
+            return removed;
         }
 
         private static void AddIfValid(

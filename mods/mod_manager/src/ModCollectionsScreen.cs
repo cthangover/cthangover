@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using Cthangover.Core.Mods;
+using Cthangover.Core.Settings;
 using Cthangover.Core.UI;
 using Cthangover.Core.UI.Theming;
 using Cthangover.Core.Utils;
@@ -81,6 +82,12 @@ namespace Mods.ModManager
         private bool _installing;
         private bool _restartRequired;
         private string _statusMessage;
+        private Button _duplicate;
+        private Button _revert;
+        private Label _savesInfo;
+
+        /// <summary>Drafts created by "Duplicate", mapped to the game they were copied from (offer to copy its saves).</summary>
+        private readonly Dictionary<string, string> _duplicatedFrom = new(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// When true the editor runs as the second level of the collections
@@ -200,6 +207,19 @@ namespace Mods.ModManager
             _tabPlan.Text = TranslationServer.Translate("mod_manager/collection_tab_plan");
             _apply.Text = TranslationServer.Translate("mod_manager/collection_apply");
             _edgesToggle.Text = TranslationServer.Translate("mod_manager/collection_links");
+
+            var header = _json.GetParent();
+            _savesInfo = new Label { VerticalAlignment = VerticalAlignment.Center };
+            _savesInfo.AddThemeColorOverride("font_color", UiTokens.Muted);
+            _duplicate = new Button { Text = TranslationServer.Translate("mod_manager/collection_duplicate") };
+            _revert = new Button { Text = TranslationServer.Translate("mod_manager/collection_revert") };
+            foreach (var control in new Control[] { _savesInfo, _duplicate, _revert })
+            {
+                header.AddChild(control);
+                header.MoveChild(control, _json.GetIndex());
+            }
+            _duplicate.Pressed += OnDuplicatePressed;
+            _revert.Pressed += OnRevertPressed;
 
             CthangoverTheme.ApplyPrimary(_apply);
             CthangoverTheme.ApplyPrimary(_save);
@@ -487,6 +507,15 @@ namespace Mods.ModManager
             _dirty.Visible = dirty;
             _save.Disabled = !dirty;
             _reset.Disabled = !dirty;
+
+            var current = EffectiveCollection(_currentId);
+            var isGame = current?.Kind == ModCollectionKind.Game;
+            _savesInfo.Visible = isGame;
+            if (isGame)
+                _savesInfo.Text = string.Format(TranslationServer.Translate("mod_manager/collection_saves"), SaveService.ListSaves(_currentId).Count);
+            _duplicate.Disabled = current == null;
+            _revert.Visible = OriginalCollection(_currentId)?.Origin == ModCollectionOrigin.User
+                              && ModCollectionStore.HasShippedVersion(_currentId);
 
             if (_graph != null)
             {
@@ -812,7 +841,7 @@ namespace Mods.ModManager
             var refs = group.Mods.Where(m => string.Equals(m.ModId, modId, StringComparison.OrdinalIgnoreCase)).ToList();
             foreach (var reference in refs)
             {
-                var collection = Draft(reference.CollectionId);
+                var collection = DraftForEdit(group, reference.CollectionId);
                 var mechanic = collection?.Mechanics?.FirstOrDefault(m =>
                     string.Equals(m.Id, reference.MechanicId, StringComparison.OrdinalIgnoreCase));
                 if (mechanic?.Mods == null)
@@ -1406,7 +1435,7 @@ namespace Mods.ModManager
 
             if (group.IsInclude)
             {
-                collection = Draft(group.CollectionId);
+                collection = DraftForEdit(group, group.CollectionId);
                 if (collection == null)
                     return;
 
@@ -1496,10 +1525,19 @@ namespace Mods.ModManager
             }
 
             ModCollectionStore.SaveUser(user);
+            var duplicates = _overrides.Keys
+                .Where(id => _duplicatedFrom.ContainsKey(id) && SaveService.ListSaves(_duplicatedFrom[id]).Count > 0)
+                .Select(id => (Copy: id, Source: _duplicatedFrom[id]))
+                .ToList();
             _overrides.Clear();
-            _statusMessage = TranslationServer.Translate("mod_manager/collection_save_ok");
+            _duplicatedFrom.Clear();
+            // A game's mod set is computed at launch: edits apply on the next start.
+            _statusMessage = TranslationServer.Translate("mod_manager/collection_save_ok") + " "
+                             + TranslationServer.Translate("mod_manager/collection_next_launch");
 
             ReloadCollections();
+            foreach (var (copy, source) in duplicates)
+                OfferSavesCopy(source, copy);
         }
 
         private void ResetDrafts()
@@ -1535,30 +1573,191 @@ namespace Mods.ModManager
             dialog.PopupCentered();
         }
 
+        /// <summary>
+        /// Shows the current collection as JSON and lets the player edit it:
+        /// "Apply" parses the text into the draft (the id must stay the same),
+        /// so documents can be fixed or extended beyond what the canvas offers.
+        /// </summary>
         private void OpenJsonDialog()
         {
             var collection = EffectiveCollection(_currentId);
-            var text = collection == null
-                ? string.Empty
-                : JsonSerializer.Serialize(collection, JsonOptionsProvider.WriteIndentedOptions);
+            if (collection == null)
+                return;
 
             var view = new TextEdit
             {
-                Text = text,
-                Editable = false,
-                CustomMinimumSize = new Vector2(520, 340),
+                Text = JsonSerializer.Serialize(collection, JsonOptionsProvider.WriteIndentedOptions),
+                Editable = true,
+                CustomMinimumSize = new Vector2(620, 420),
             };
 
-            var dialog = new AcceptDialog
+            var dialog = new ConfirmationDialog
             {
                 Title = TranslationServer.Translate("mod_manager/collection_json"),
-                OkButtonText = TranslationServer.Translate("mod_manager/back"),
+                OkButtonText = TranslationServer.Translate("mod_manager/collection_json_apply"),
+                CancelButtonText = TranslationServer.Translate("mod_manager/cancel"),
                 Exclusive = true,
             };
             dialog.AddChild(view);
+            dialog.Confirmed += () =>
+            {
+                var error = ApplyJson(view.Text);
+                dialog.QueueFree();
+                if (error != null)
+                    ShowNotice(TranslationServer.Translate("mod_manager/collection_json"), error);
+            };
             dialog.Canceled += dialog.QueueFree;
             AddChild(dialog);
-            dialog.PopupCentered(new Vector2I(600, 440));
+            dialog.PopupCentered(new Vector2I(700, 520));
+        }
+
+        /// <summary>Replaces the current draft with parsed JSON; returns an error message or null.</summary>
+        private string ApplyJson(string text)
+        {
+            ModCollection parsed;
+            try
+            {
+                parsed = JsonSerializer.Deserialize<ModCollection>(text, JsonOptionsProvider.ReadOptions);
+            }
+            catch (JsonException ex)
+            {
+                return string.Format(TranslationServer.Translate("mod_manager/collection_json_invalid"), ex.Message);
+            }
+
+            if (parsed == null || !string.Equals(parsed.Id, _currentId, StringComparison.OrdinalIgnoreCase))
+                return TranslationServer.Translate("mod_manager/collection_json_id_changed");
+
+            parsed.Origin = ModCollectionOrigin.User;
+            parsed.SourceModId = OriginalCollection(_currentId)?.SourceModId;
+            _overrides[_currentId] = parsed;
+            RebuildGameSelect();
+            Rebuild();
+            return null;
+        }
+
+        /// <summary>Copies the current game under a new id (its saves are offered on save).</summary>
+        private void OnDuplicatePressed()
+        {
+            var source = EffectiveCollection(_currentId);
+            if (source == null)
+                return;
+
+            var copy = CloneCollection(source);
+            copy.Id = UniqueGameId();
+            copy.Kind = source.Kind;
+            copy.Origin = ModCollectionOrigin.User;
+            copy.SourceModId = source.SourceModId;
+            copy.Name = string.Format(TranslationServer.Translate("mod_manager/collection_copy_name"),
+                CollectionText.Resolve(source.GetLocalizedName(TranslationServer.GetLocale())));
+            copy.Locale = null;
+
+            _overrides[copy.Id] = copy;
+            _duplicatedFrom[copy.Id] = source.Id;
+            _currentId = copy.Id;
+            _selectedGroupKey = null;
+            _selectedModId = null;
+            RebuildGameSelect();
+            Rebuild();
+            OpenSaveDialog();
+        }
+
+        private void OfferSavesCopy(string sourceId, string copyId)
+        {
+            var dialog = new ConfirmationDialog
+            {
+                Title = TranslationServer.Translate("mod_manager/collection_duplicate"),
+                DialogText = string.Format(TranslationServer.Translate("mod_manager/collection_copy_saves"), SaveService.ListSaves(sourceId).Count),
+                OkButtonText = TranslationServer.Translate("mod_manager/collection_copy_saves_ok"),
+                CancelButtonText = TranslationServer.Translate("mod_manager/cancel"),
+                Exclusive = true,
+            };
+            dialog.Confirmed += () =>
+            {
+                SaveService.CopyGameSaves(sourceId, copyId);
+                dialog.QueueFree();
+                UpdateHeader();
+            };
+            dialog.Canceled += dialog.QueueFree;
+            AddChild(dialog);
+            dialog.PopupCentered();
+        }
+
+        /// <summary>Drops the player's version of a shipped collection after confirmation.</summary>
+        private void OnRevertPressed()
+        {
+            var dialog = new ConfirmationDialog
+            {
+                Title = TranslationServer.Translate("mod_manager/collection_revert"),
+                DialogText = TranslationServer.Translate("mod_manager/collection_revert_confirm"),
+                OkButtonText = TranslationServer.Translate("mod_manager/collection_revert"),
+                CancelButtonText = TranslationServer.Translate("mod_manager/cancel"),
+                Exclusive = true,
+            };
+            dialog.Confirmed += () =>
+            {
+                ModCollectionStore.RemoveUser(_currentId);
+                _overrides.Remove(_currentId);
+                _statusMessage = TranslationServer.Translate("mod_manager/collection_revert_done") + " "
+                                 + TranslationServer.Translate("mod_manager/collection_next_launch");
+                dialog.QueueFree();
+                ReloadCollections();
+            };
+            dialog.Canceled += dialog.QueueFree;
+            AddChild(dialog);
+            dialog.PopupCentered();
+        }
+
+        private void ShowNotice(string title, string text)
+        {
+            var notice = new AcceptDialog { Title = title, DialogText = text, Exclusive = true };
+            notice.Confirmed += notice.QueueFree;
+            notice.Canceled += notice.QueueFree;
+            AddChild(notice);
+            notice.PopupCentered();
+        }
+
+        /// <summary>
+        /// Copy-on-write for shared blocks: an edit inside an included
+        /// collection must not change every game that includes it. The first
+        /// edit forks the block into "&lt;block&gt;.&lt;game&gt;" (a component
+        /// owned by this game) and repoints the include; later edits reuse it.
+        /// </summary>
+        private ModCollection DraftForEdit(ModCollectionGroup group, string collectionId)
+        {
+            if (!group.IsInclude || string.Equals(collectionId, _currentId, StringComparison.OrdinalIgnoreCase))
+                return Draft(collectionId);
+
+            if (!string.Equals(collectionId, group.CollectionId, StringComparison.OrdinalIgnoreCase))
+            {
+                _statusMessage = TranslationServer.Translate("mod_manager/collection_nested_readonly");
+                UpdateBanner();
+                return null;
+            }
+
+            var include = FindInclude(group);
+            if (include == null)
+                return null;
+
+            var forkId = $"{collectionId}.{_currentId}";
+            if (EffectiveCollection(forkId) == null)
+            {
+                var source = EffectiveCollection(collectionId);
+                if (source == null)
+                    return null;
+
+                var fork = CloneCollection(source);
+                fork.Id = forkId;
+                fork.Kind = ModCollectionKind.Component;
+                fork.Origin = ModCollectionOrigin.User;
+                fork.SourceModId = source.SourceModId;
+                _overrides[forkId] = fork;
+                _statusMessage = string.Format(TranslationServer.Translate("mod_manager/collection_forked"),
+                    CollectionText.Resolve(source.GetLocalizedName(TranslationServer.GetLocale())));
+                UpdateBanner();
+            }
+
+            include.Ref = forkId;
+            return Draft(forkId);
         }
 
         /* ═══════════════ Actions ═══════════════ */
@@ -1619,36 +1818,9 @@ namespace Mods.ModManager
                 EffectiveCollection(_currentId)?.DisplayTitle ?? _currentId));
             UpdateApplyButton();
 
-            var failed = false;
-            foreach (var item in plan.Install)
-            {
-                bool success;
-                try
-                {
-                    success = await ModDownloader.InstallAsync(item.ModId, item.Version, item.SourceUrl);
-                }
-                catch (Exception ex)
-                {
-                    GameLogger.Log("MOD_COLLECTIONS", $"Install '{item.ModId}' failed: {ex.Message}", LogLevel.Error);
-                    success = false;
-                }
-
-                if (!success)
-                {
-                    failed = true;
-                    break;
-                }
-
-                _sessionInstalled.Add(item.ModId);
-            }
-
+            var failed = !await ModCollectionInstaller.ApplyAsync(plan, _sessionInstalled);
             if (!failed)
             {
-                var disabled = DisabledModsStore.Load();
-                foreach (var id in plan.Enable)
-                    disabled.Remove(id);
-                DisabledModsStore.Save(disabled);
-
                 _restartRequired = true;
                 _statusMessage = null;
             }

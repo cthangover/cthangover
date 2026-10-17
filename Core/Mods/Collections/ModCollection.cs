@@ -89,11 +89,35 @@ namespace Cthangover.Core.Mods
         public List<ModCollectionMechanic> Mechanics { get; set; }
 
         /// <summary>
+        /// Where a new game of this collection starts. Only meaningful for
+        /// <see cref="ModCollectionKind.Game"/>; null falls back to the
+        /// historical <c>start_scene</c>.
+        /// </summary>
+        [JsonPropertyName("entry")]
+        public ModCollectionEntry Entry { get; set; }
+
+        /// <summary>
+        /// Game parameters mods read through the kernel's active game
+        /// (e.g. <c>"battle.core": "card_battle"</c>). Keys are owned by the
+        /// mods that read them; unknown keys are ignored.
+        /// </summary>
+        [JsonPropertyName("settings")]
+        public Dictionary<string, string> Settings { get; set; }
+
+        /// <summary>Cover image for the game picker, relative to the mod that ships the collection.</summary>
+        [JsonPropertyName("cover")]
+        public string Cover { get; set; }
+
+        /// <summary>
         /// Catalog URLs that published this collection. Filled by
         /// <see cref="CatalogService"/> during refresh; null for local files.
         /// </summary>
         [JsonPropertyName("source_urls")]
         public List<string> SourceUrls { get; set; }
+
+        /// <summary>Mod that ships the document (built-in collections); resolves <see cref="Cover"/>. Set by <see cref="ModCollectionStore"/>.</summary>
+        [JsonIgnore]
+        public string SourceModId { get; set; }
 
         /// <summary>Where this instance was loaded from; set by <see cref="ModCollectionStore"/>.</summary>
         [JsonIgnore]

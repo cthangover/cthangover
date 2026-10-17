@@ -1,0 +1,10 @@
+{
+  "name": "Menu Flow Test",
+  "description": "Integration test mod for the front-end: boots only the menu collections, checks the Play/Continue/New game buttons, the game picker cards, the per-game save browser and the composition comparison. Activated only by --itest=menu_flow (with --frontend).",
+  "sources": [
+    "src/*.cs"
+  ],
+  "depends": [
+    "mod_manager>=1"
+  ]
+}

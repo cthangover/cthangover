@@ -171,6 +171,7 @@ namespace Cthangover.Core.Mods.Pipeline
                 _ = ModConfig.Instance;
                 DisabledModsStore.WarmUp();
                 ModCollectionStore.WarmUp();
+                Games.GameLaunchArgs.WarmUp();
                 CollectionLayoutStore.WarmUp();
 
                 resolvedRoots.Clear();
@@ -242,6 +243,7 @@ namespace Cthangover.Core.Mods.Pipeline
                     allDiscoveredMods[kvp.Key] = kvp.Value;
 
                 ModSetFilter.FilterDisabledMods(mods);
+                ModSetFilter.FilterToActiveGame(mods);
                 ModSetFilter.ValidateDependencies(mods);
 
                 ModNativeLoader.LoadNativeDlls(mods.Values, cancellationToken);
