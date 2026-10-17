@@ -115,7 +115,7 @@ namespace Cthangover.Core.Mods
         /// either path are caught and returned as errors. Returns an
         /// empty list on success.
         /// </summary>
-        public static List<string> DispatchLoad(Dictionary<string, ModSlot> modData)
+        public static List<string> DispatchLoad(Dictionary<string, ModSlot> modData, ICollection<string> failedModIds = null)
         {
             var errors = new List<string>();
 
@@ -137,6 +137,7 @@ namespace Cthangover.Core.Mods
                     {
                         var modName = slot.Metadata?.ModName ?? entry.ModId;
                         errors.Add($"Mod '{entry.ModId}' ({modName}): {error ?? "unspecified error"}");
+                        failedModIds?.Add(entry.ModId);
                     }
                 }
                 catch (Exception ex)
@@ -145,10 +146,35 @@ namespace Cthangover.Core.Mods
                     var errorMsg = $"Mod '{entry.ModId}' ({modName}): {ex.Message}";
                     GameLogger.Log("MODS_SAVE", $"OnLoad failed: {errorMsg}", LogLevel.Error);
                     errors.Add(errorMsg);
+                    failedModIds?.Add(entry.ModId);
                 }
             }
 
             return errors;
+        }
+
+        /// <summary>
+        /// Tells every saveable whose mod had no restored slot that it joined
+        /// an existing game (<see cref="IModSaveable.OnJoinedExistingGame"/>).
+        /// </summary>
+        public static void NotifyJoined(IEnumerable<string> restoredModIds)
+        {
+            var restored = new HashSet<string>(restoredModIds ?? Array.Empty<string>(), StringComparer.Ordinal);
+            foreach (var entry in _saveables)
+            {
+                if (restored.Contains(entry.ModId))
+                    continue;
+
+                try
+                {
+                    entry.Instance.OnJoinedExistingGame();
+                    GameLogger.Log("MODS_SAVE", $"Mod '{entry.ModId}' joined an existing game (no data in the save)");
+                }
+                catch (Exception ex)
+                {
+                    GameLogger.Log("MODS_SAVE", $"OnJoinedExistingGame failed for mod '{entry.ModId}': {ex.Message}", LogLevel.Error);
+                }
+            }
         }
     }
 }

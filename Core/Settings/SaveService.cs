@@ -53,7 +53,31 @@ namespace Cthangover.Core.Settings
     /// </summary>
     public static class SaveService
     {
-        private const string SaveDir = "user://saves";
+        private const string SavesRoot = "user://saves";
+
+        /// <summary>
+        /// Saves of the active game live in <c>user://saves/&lt;game id&gt;/</c>,
+        /// so editing the game's mechanics keeps them; without an active game
+        /// (development launches with every mod) the shared root is used.
+        /// </summary>
+        private static string SaveDir => Games.ActiveGame.IsActive
+            ? $"{SavesRoot}/{Sanitize(Games.ActiveGame.Id)}"
+            : SavesRoot;
+
+        /// <summary>Slots carried forward for mods the current game runs without; see <see cref="SaveDormancy"/>.</summary>
+        private static Dictionary<string, ModSlot> _dormant = new();
+
+        /// <summary>Scene stored in the last successfully loaded save (null before any load).</summary>
+        public static string LastLoadedSceneName { get; private set; }
+
+        /// <summary>Composition changes found by the last load (mods that went dormant or came back).</summary>
+        public static SaveDormancy.Result LastLoadDormancy { get; private set; }
+
+        /// <summary>Forgets dormant slots; called when a new game starts.</summary>
+        public static void ClearDormant() => _dormant = new Dictionary<string, ModSlot>();
+
+        /// <summary>Directory of the active game's saves (Godot path).</summary>
+        public static string SaveDirectory => SaveDir;
 
         private static string _cachedCoreVersion;
         private static string CoreVersion
@@ -84,22 +108,18 @@ namespace Cthangover.Core.Settings
         /// to prevent path traversal.
         /// </summary>
         private static string GetSavePath(string fileName)
-        {
-            var safe = new string(fileName.Select(c =>
+            => $"{SaveDir}/{Sanitize(fileName)}.json";
+
+        private static string Sanitize(string name)
+            => new string((name ?? string.Empty).Select(c =>
                 char.IsLetterOrDigit(c) || c == '_' || c == '-' ? c : '_').ToArray());
-            return $"{SaveDir}/{safe}.json";
-        }
 
         /// <summary>
         /// Builds the PNG screenshot path for a save slot using the same
         /// sanitisation rules as <see cref="GetSavePath"/>.
         /// </summary>
         private static string GetScreenshotPath(string fileName)
-        {
-            var safe = new string(fileName.Select(c =>
-                char.IsLetterOrDigit(c) || c == '_' || c == '-' ? c : '_').ToArray());
-            return $"{SaveDir}/{safe}.png";
-        }
+            => $"{SaveDir}/{Sanitize(fileName)}.png";
 
         /// <summary>
         /// Ensures <c>user://saves/</c> directory exists, creating it
@@ -215,6 +235,9 @@ namespace Cthangover.Core.Settings
                 pkg.ModData[kvp.Key] = kvp.Value;
             }
 
+            pkg.Game = BuildGameInfo();
+            pkg.Dormant = _dormant.Count > 0 ? new Dictionary<string, ModSlot>(_dormant) : null;
+
             EnsureSaveDir();
 
             try
@@ -230,6 +253,7 @@ namespace Cthangover.Core.Settings
                 file.StoreString(json);
 
                 GameLogger.Log("SAVE", $"Saved '{fileName}' (core={pkg.CoreVersion}, mods={pkg.ModData.Count})");
+                LastSessionStore.Record(Games.ActiveGame.Id, fileName);
             }
             catch (Exception e)
             {
@@ -238,18 +262,20 @@ namespace Cthangover.Core.Settings
         }
 
         /// <summary>
-        /// Loads a save file: deserialises the <see cref="SavePackage"/>,
-        /// runs a three-phase validation/restore/dispatch.
+        /// Loads a save file of the active game. The game may have changed its
+        /// mechanics since the save was written, so the load adapts instead of
+        /// refusing:
         /// <list type="number">
-        /// <item><b>Phase 1</b> — validate <see cref="ModMetadata"/>:
-        ///   required mods must be present, core version must be
-        ///   compatible.</item>
-        /// <item><b>Phase 2</b> — restore core state via
-        ///   <see cref="RuntimeSerializer.RestoreCoreState"/>.</item>
-        /// <item><b>Phase 3</b> —
-        ///   <see cref="ModSaveableRegistry.DispatchLoad"/>: distribute
-        ///   remaining slots to mods.</item>
+        /// <item><b>Phase 1</b> — <see cref="SaveDormancy.Classify"/>: slots of
+        ///   mods that are not loaded, older than the save or need a newer core
+        ///   become dormant; dormant slots whose mod is back are revived.</item>
+        /// <item><b>Phase 2</b> — reset every state owner, then restore core
+        ///   state via <see cref="RuntimeSerializer.RestoreCoreState"/>.</item>
+        /// <item><b>Phase 3</b> — <see cref="ModSaveableRegistry.DispatchLoad"/>;
+        ///   a rejected slot is kept dormant; mods without a slot get
+        ///   <see cref="IModSaveable.OnJoinedExistingGame"/>.</item>
         /// </list>
+        /// Only a missing core slot fails the load.
         /// Returns <c>true</c> on success.
         /// </summary>
         public static bool Load(string fileName)
@@ -273,211 +299,368 @@ namespace Cthangover.Core.Settings
 
             GameLogger.Log("SAVE", $"Loading '{fileName}' (core={pkg.CoreVersion}, mods={pkg.ModData?.Count ?? 0})");
 
-            // ─── Phase 1: validate mod metadata ───
-            if (pkg.ModData != null && pkg.ModData.Count > 0)
-            {
-                foreach (var kvp in pkg.ModData)
-                {
-                    if (kvp.Key == SavePackage.CoreSlotKey)
-                        continue;
-
-                    var slot = kvp.Value;
-                    var meta = slot?.Metadata;
-                    if (meta == null || string.IsNullOrEmpty(meta.ModId))
-                        continue;
-
-                    var mod = ModManager.Instance.GetMod(meta.ModId);
-                    if (mod == null)
-                    {
-                        if (meta.IsRequired)
-                        {
-                            GameLogger.Log("SAVE",
-                                $"Cannot load save: required mod '{meta.ModId}' ({meta.ModName}) is not installed",
-                                LogLevel.Error);
-                            return false;
-                        }
-
-                        GameLogger.Log("SAVE",
-                            $"Mod '{meta.ModId}' ({meta.ModName}) not installed, skipping its data",
-                            LogLevel.Warning);
-                    }
-
-                    if (!string.IsNullOrEmpty(meta.MinCoreVersion))
-                    {
-                        try
-                        {
-                            if (VersionHelper.Compare(CoreVersion, meta.MinCoreVersion) < 0)
-                            {
-                                GameLogger.Log("SAVE",
-                                    $"Cannot load save: mod '{meta.ModId}' ({meta.ModName}) requires core >= {meta.MinCoreVersion}, but current is {CoreVersion}",
-                                    LogLevel.Error);
-                                return false;
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            GameLogger.Log("SAVE",
-                                $"Failed to compare MinCoreVersion '{meta.MinCoreVersion}' for mod '{meta.ModId}': {ex.Message}",
-                                LogLevel.Warning);
-                        }
-                    }
-
-                    if (mod != null && !string.IsNullOrEmpty(meta.ModVersion) && !string.IsNullOrEmpty(mod.Version))
-                    {
-                        try
-                        {
-                            var cmp = VersionHelper.Compare(meta.ModVersion, mod.Version);
-
-                            if (cmp > 0)
-                            {
-                                GameLogger.Log("SAVE",
-                                    $"Cannot load save: mod '{meta.ModId}' ({meta.ModName}) " +
-                                    $"was saved with version {meta.ModVersion}, but installed version is {mod.Version} " +
-                                    $"(downgrade not supported)",
-                                    LogLevel.Error);
-                                return false;
-                            }
-
-                            if (cmp < 0)
-                            {
-                                GameLogger.Log("SAVE",
-                                    $"Mod '{meta.ModId}' ({meta.ModName}) save version {meta.ModVersion} " +
-                                    $"is older than installed {mod.Version} — migration will run in OnLoad",
-                                    LogLevel.Warning);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            GameLogger.Log("SAVE",
-                                $"Failed to compare mod version for '{meta.ModId}' " +
-                                $"(save={meta.ModVersion}, installed={mod.Version}): {ex.Message}",
-                                LogLevel.Warning);
-                        }
-                    }
-                }
-            }
-
-            // ─── Phase 2: restore core state ───
+            // ─── Phase 1: decide which slots the current composition restores ───
+            // Nothing blocks the load except a missing core slot: slots of mods
+            // the game runs without stay dormant and come back with the mod.
             if (pkg.ModData == null || !pkg.ModData.TryGetValue(SavePackage.CoreSlotKey, out var coreSlot))
             {
                 GameLogger.Log("SAVE", "Save file is missing '__core__' slot — cannot restore game state", LogLevel.Error);
                 return false;
             }
+
+            if (pkg.Game != null && Games.ActiveGame.IsActive
+                && !string.Equals(pkg.Game.Id, Games.ActiveGame.Id, StringComparison.OrdinalIgnoreCase))
+            {
+                GameLogger.Log("SAVE",
+                    $"Save '{fileName}' belongs to game '{pkg.Game.Id}', loading it into '{Games.ActiveGame.Id}'",
+                    LogLevel.Warning);
+            }
+
+            var dormancy = SaveDormancy.Classify(
+                pkg.ModData,
+                pkg.Dormant,
+                id => ModManager.Instance.GetMod(id) is { } mod ? mod.Version ?? "0.0.0" : null,
+                CoreVersion,
+                DateTime.UtcNow);
+
+            foreach (var (modId, reason) in dormancy.NewlyDormant)
+                GameLogger.Log("SAVE", $"Mod '{modId}' data kept dormant ({reason}) — it returns when the mod is back", LogLevel.Warning);
+            foreach (var modId in dormancy.Revived)
+                GameLogger.Log("SAVE", $"Mod '{modId}' is back — restoring its dormant data");
+
+            // ─── Phase 2: fresh state, then core state ───
+            // Every state owner resets first, so a mod without a slot in this
+            // save starts from new-game defaults instead of the previous session.
+            GameData.Instance.ResetRuntime("load");
+            Bootstrap.AppServices.Current.ResetForNewGame();
             RuntimeSerializer.RestoreCoreState(coreSlot, GameData.Instance.Runtime);
 
-            // ─── Phase 3: dispatch mod data (everything except __core__) ───
-            var modOnlyData = new Dictionary<string, ModSlot>();
-            foreach (var kvp in pkg.ModData)
+            // ─── Phase 3: mod slots; a rejected slot is kept dormant, not lost ───
+            var failed = new List<string>();
+            var modErrors = ModSaveableRegistry.DispatchLoad(dormancy.Live, failed);
+            foreach (var error in modErrors)
+                GameLogger.Log("SAVE", $"Mod load error (data kept dormant): {error}", LogLevel.Error);
+            foreach (var modId in failed)
             {
-                if (kvp.Key != SavePackage.CoreSlotKey)
-                    modOnlyData[kvp.Key] = kvp.Value;
+                dormancy.Dormant[modId] = SaveDormancy.MarkDormant(dormancy.Live[modId], SaveDormancy.Reason.LoadFailed, DateTime.UtcNow);
+                dormancy.Live.Remove(modId);
+                dormancy.NewlyDormant.Add((modId, SaveDormancy.Reason.LoadFailed));
             }
 
-            var modErrors = ModSaveableRegistry.DispatchLoad(modOnlyData);
-            if (modErrors.Count > 0)
-            {
-                foreach (var error in modErrors)
-                    GameLogger.Log("SAVE", $"Mod load error: {error}", LogLevel.Error);
-                return false;
-            }
+            ModSaveableRegistry.NotifyJoined(dormancy.Live.Keys);
 
+            _dormant = dormancy.Dormant;
+            LastLoadDormancy = dormancy;
+            LastLoadedSceneName = RuntimeSerializer.ReadSlotPreview(coreSlot.Metadata).CurrentSceneName;
+            LastSessionStore.Record(Games.ActiveGame.Id, fileName);
             return true;
         }
 
         /// <summary>
-        /// Enumerates all existing save slots up to <paramref name="slotCount"/>.
-        /// For each slot (<c>slot_1</c> through <c>slot_N</c>), reads the
-        /// JSON to extract preview metadata from the <c>"__core__"</c>
-        /// slot's <see cref="ModMetadata.CustomData"/> for the load-game UI.
-        /// Empty slots (no file on disk) are represented by
-        /// <see cref="SaveSlotInfo"/> instances with
-        /// <see cref="SaveSlotInfo.IsEmpty"/> = <c>true</c>.
+        /// Slots of the active game for the classic fixed grid: existing saves
+        /// <c>slot_1..slot_N</c> plus empty placeholders. Kept for callers that
+        /// still think in a fixed count; the save browser uses
+        /// <see cref="ListSaves"/> with unlimited slots.
         /// </summary>
         public static List<SaveSlotInfo> GetSaveSlots(int slotCount)
         {
+            var existing = ListSaves(Games.ActiveGame.Id).ToDictionary(s => s.FileName);
             var result = new List<SaveSlotInfo>();
-            var absDir = Path;
-
-            var existingSaves = new Dictionary<string, SaveSlotInfo>();
-
-            if (DirAccess.DirExistsAbsolute(absDir))
-            {
-                var dir = DirAccess.Open(SaveDir);
-                if (dir != null)
-                {
-                    dir.ListDirBegin();
-                    var fileName = dir.GetNext();
-                    while (!string.IsNullOrEmpty(fileName))
-                    {
-                        if (!dir.CurrentIsDir() && fileName.EndsWith(".json"))
-                        {
-                            var slotName = fileName.Substring(0, fileName.Length - 5);
-                            try
-                            {
-                                using var file = Godot.FileAccess.Open($"{SaveDir}/{fileName}", Godot.FileAccess.ModeFlags.Read);
-                                if (file != null)
-                                {
-                                    var json = file.GetAsText();
-                                    var pkg = JsonSerializer.Deserialize<SavePackage>(json, JsonOptionsProvider.ReadOptions);
-
-                                    var preview = new RuntimeSerializer.CoreSlotPreview();
-                                    if (pkg?.ModData != null
-                                        && pkg.ModData.TryGetValue(SavePackage.CoreSlotKey, out var coreSlot))
-                                    {
-                                        preview = RuntimeSerializer.ReadSlotPreview(coreSlot.Metadata);
-                                    }
-
-                                    var info = new SaveSlotInfo
-                                    {
-                                        FileName = slotName,
-                                        SaveTime = pkg?.Timestamp ?? DateTime.MinValue,
-                                        SceneName = preview.CurrentSceneName ?? "unknown",
-                                        HasScreenshot = File.Exists(
-                                            ProjectSettings.GlobalizePath(GetScreenshotPath(slotName))),
-                                        IsEmpty = false,
-                                        ScreenshotPath = GetScreenshotPath(slotName),
-                                        GameTime = preview.GameTime,
-                                        CharacterCount = preview.CharacterCount,
-                                        LampPercent = 0f,
-                                    };
-
-                                    existingSaves[slotName] = info;
-                                }
-                            }
-                            catch
-                            {
-                            }
-                        }
-
-                        fileName = dir.GetNext();
-                    }
-
-                    dir.ListDirEnd();
-                }
-            }
-
-            for (int i = 0; i < slotCount; i++)
+            for (var i = 0; i < slotCount; i++)
             {
                 var slotName = $"slot_{i + 1}";
-                if (existingSaves.TryGetValue(slotName, out var info))
-                {
-                    result.Add(info);
-                }
-                else
-                {
-                    result.Add(new SaveSlotInfo
-                    {
-                        FileName = slotName,
-                        SaveTime = DateTime.MinValue,
-                        SceneName = "",
-                        HasScreenshot = false,
-                        IsEmpty = true,
-                        ScreenshotPath = GetScreenshotPath(slotName),
-                    });
-                }
+                result.Add(existing.TryGetValue(slotName, out var info) ? info : EmptySlot(Games.ActiveGame.Id, slotName));
             }
 
             return result;
+        }
+
+        /// <summary>Godot directory of a game's saves; null/empty id is the shared root (saves made without a game).</summary>
+        public static string GameDirectory(string gameId)
+            => string.IsNullOrEmpty(gameId) ? SavesRoot : $"{SavesRoot}/{Sanitize(gameId)}";
+
+        /// <summary>
+        /// Every save of one game (null = saves made without a game), ordered by
+        /// slot number. Slots are unlimited: the browser appends an empty slot
+        /// named by <see cref="NextSlotName"/>.
+        /// </summary>
+        public static List<SaveSlotInfo> ListSaves(string gameId)
+        {
+            var result = new List<SaveSlotInfo>();
+            var dir = GameDirectory(gameId);
+            var absDir = GameEnvironment.IsRuntime ? ProjectSettings.GlobalizePath(dir) : dir;
+            if (!Directory.Exists(absDir))
+                return result;
+
+            foreach (var path in Directory.EnumerateFiles(absDir, "*.json", SearchOption.TopDirectoryOnly))
+            {
+                var info = ReadSlotInfo(dir, System.IO.Path.GetFileNameWithoutExtension(path), path);
+                if (info != null)
+                    result.Add(info);
+            }
+
+            result.Sort((a, b) =>
+            {
+                var byNumber = SlotNumber(a.FileName).CompareTo(SlotNumber(b.FileName));
+                return byNumber != 0 ? byNumber : string.CompareOrdinal(a.FileName, b.FileName);
+            });
+            return result;
+        }
+
+        /// <summary>
+        /// Games that have saves on disk (newest first), plus the shared root
+        /// as an entry with a null id when saves without a game exist.
+        /// </summary>
+        public static List<SaveGameSummary> ListGamesWithSaves()
+        {
+            var result = new List<SaveGameSummary>();
+            var absRoot = GameEnvironment.IsRuntime ? ProjectSettings.GlobalizePath(SavesRoot) : SavesRoot;
+            if (!Directory.Exists(absRoot))
+                return result;
+
+            foreach (var gameDir in Directory.EnumerateDirectories(absRoot))
+            {
+                var gameId = System.IO.Path.GetFileName(gameDir);
+                if (gameId == BackupDirectoryName)
+                    continue;
+                var saves = ListSaves(gameId);
+                if (saves.Count > 0)
+                    result.Add(Summarize(gameId, saves));
+            }
+
+            var legacy = ListSaves(null);
+            if (legacy.Count > 0)
+                result.Add(Summarize(null, legacy));
+
+            result.Sort((a, b) => b.LastSave.CompareTo(a.LastSave));
+            return result;
+        }
+
+        /// <summary>First free <c>slot_N</c> after the highest used number of the game.</summary>
+        public static string NextSlotName(string gameId)
+        {
+            var max = 0;
+            foreach (var save in ListSaves(gameId))
+                max = Math.Max(max, SlotNumber(save.FileName) == int.MaxValue ? 0 : SlotNumber(save.FileName));
+            return $"slot_{max + 1}";
+        }
+
+        /// <summary>Reads a save of any game without loading it (composition preview, game id).</summary>
+        public static SavePackage ReadPackage(string gameId, string fileName)
+        {
+            var path = ProjectSettings.GlobalizePath($"{GameDirectory(gameId)}/{Sanitize(fileName)}.json");
+            try
+            {
+                return File.Exists(path)
+                    ? JsonSerializer.Deserialize<SavePackage>(File.ReadAllText(path), JsonOptionsProvider.ReadOptions)
+                    : null;
+            }
+            catch (Exception ex)
+            {
+                GameLogger.Log("SAVE", $"Could not read save '{path}': {ex.Message}", LogLevel.Warning);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Copies a save of <paramref name="gameId"/> into <c>backup/</c> next to
+        /// it before it is loaded into a changed composition; returns the
+        /// backup path.
+        /// </summary>
+        public static string BackupSave(string gameId, string fileName)
+        {
+            var gameDir = ProjectSettings.GlobalizePath(GameDirectory(gameId));
+            var source = System.IO.Path.Combine(gameDir, Sanitize(fileName) + ".json");
+            if (!File.Exists(source))
+                return null;
+
+            var backupDir = System.IO.Path.Combine(gameDir, BackupDirectoryName);
+            Directory.CreateDirectory(backupDir);
+            var target = System.IO.Path.Combine(backupDir, $"{Sanitize(fileName)}_{DateTime.Now:yyyyMMdd_HHmmss}.json");
+            File.Copy(source, target, overwrite: true);
+            GameLogger.Log("SAVE", $"Backup of '{fileName}' before a composition change: {target}");
+            return target;
+        }
+
+        /// <summary>
+        /// Moves a save made without a game (shared root) into
+        /// <paramref name="gameId"/>'s folder under a free slot name, together
+        /// with its screenshot. Returns the new slot name.
+        /// </summary>
+        public static string AdoptLegacySave(string fileName, string gameId)
+        {
+            var slot = NextSlotName(gameId);
+            var fromDir = ProjectSettings.GlobalizePath(GameDirectory(null));
+            var toDir = ProjectSettings.GlobalizePath(GameDirectory(gameId));
+            Directory.CreateDirectory(toDir);
+            foreach (var extension in new[] { ".json", ".png" })
+            {
+                var from = System.IO.Path.Combine(fromDir, Sanitize(fileName) + extension);
+                if (File.Exists(from))
+                    File.Move(from, System.IO.Path.Combine(toDir, slot + extension));
+            }
+
+            GameLogger.Log("SAVE", $"Save '{fileName}' without a game moved to game '{gameId}' as '{slot}'");
+            return slot;
+        }
+
+        /// <summary>
+        /// Copies every save of <paramref name="fromGameId"/> into
+        /// <paramref name="toGameId"/> (a duplicated game), rewriting the game id
+        /// inside each file so the copy owns them. Returns the number copied.
+        /// </summary>
+        public static int CopyGameSaves(string fromGameId, string toGameId)
+        {
+            var fromDir = ProjectSettings.GlobalizePath(GameDirectory(fromGameId));
+            var toDir = ProjectSettings.GlobalizePath(GameDirectory(toGameId));
+            if (!Directory.Exists(fromDir) || string.IsNullOrEmpty(toGameId))
+                return 0;
+
+            Directory.CreateDirectory(toDir);
+            var copied = 0;
+            foreach (var path in Directory.EnumerateFiles(fromDir, "*.json", SearchOption.TopDirectoryOnly))
+            {
+                try
+                {
+                    var pkg = JsonSerializer.Deserialize<SavePackage>(File.ReadAllText(path), JsonOptionsProvider.ReadOptions);
+                    if (pkg == null)
+                        continue;
+                    pkg.Game ??= new SaveGameInfo();
+                    pkg.Game.Id = toGameId;
+                    var name = System.IO.Path.GetFileName(path);
+                    File.WriteAllText(System.IO.Path.Combine(toDir, name), JsonSerializer.Serialize(pkg, JsonOptionsProvider.WriteCompactOptions));
+                    var screenshot = System.IO.Path.ChangeExtension(path, ".png");
+                    if (File.Exists(screenshot))
+                        File.Copy(screenshot, System.IO.Path.Combine(toDir, System.IO.Path.GetFileName(screenshot)), overwrite: true);
+                    copied++;
+                }
+                catch (Exception ex)
+                {
+                    GameLogger.Log("SAVE", $"Could not copy save '{path}': {ex.Message}", LogLevel.Warning);
+                }
+            }
+
+            GameLogger.Log("SAVE", $"Copied {copied} save(s) from game '{fromGameId}' to '{toGameId}'");
+            return copied;
+        }
+
+        private const string BackupDirectoryName = "backup";
+
+        private static SaveGameSummary Summarize(string gameId, List<SaveSlotInfo> saves)
+        {
+            var newest = saves.OrderByDescending(s => s.SaveTime).First();
+            return new SaveGameSummary
+            {
+                GameId = gameId,
+                GameName = newest.GameName ?? gameId,
+                SaveCount = saves.Count,
+                LastSave = newest.SaveTime,
+                LastFileName = newest.FileName,
+            };
+        }
+
+        private static SaveSlotInfo ReadSlotInfo(string godotDir, string slotName, string absolutePath)
+        {
+            try
+            {
+                var pkg = JsonSerializer.Deserialize<SavePackage>(File.ReadAllText(absolutePath), JsonOptionsProvider.ReadOptions);
+                var preview = new RuntimeSerializer.CoreSlotPreview();
+                if (pkg?.ModData != null && pkg.ModData.TryGetValue(SavePackage.CoreSlotKey, out var coreSlot))
+                    preview = RuntimeSerializer.ReadSlotPreview(coreSlot.Metadata);
+
+                var screenshot = $"{godotDir}/{slotName}.png";
+                return new SaveSlotInfo
+                {
+                    FileName = slotName,
+                    SaveTime = pkg?.Timestamp ?? DateTime.MinValue,
+                    SceneName = preview.CurrentSceneName ?? "unknown",
+                    HasScreenshot = File.Exists(System.IO.Path.ChangeExtension(absolutePath, ".png")),
+                    IsEmpty = false,
+                    ScreenshotPath = screenshot,
+                    GameTime = preview.GameTime,
+                    CharacterCount = preview.CharacterCount,
+                    LampPercent = 0f,
+                    GameId = pkg?.Game?.Id,
+                    GameName = pkg?.Game?.Name,
+                    Mods = pkg?.Game?.Mods,
+                };
+            }
+            catch (Exception ex)
+            {
+                GameLogger.Log("SAVE", $"Skipping unreadable save '{absolutePath}': {ex.Message}", LogLevel.Warning);
+                return null;
+            }
+        }
+
+        /// <summary>Empty placeholder for a free slot of a game.</summary>
+        public static SaveSlotInfo EmptySlot(string gameId, string slotName) => new()
+        {
+            FileName = slotName,
+            SaveTime = DateTime.MinValue,
+            SceneName = "",
+            HasScreenshot = false,
+            IsEmpty = true,
+            ScreenshotPath = $"{GameDirectory(gameId)}/{slotName}.png",
+            GameId = gameId,
+        };
+
+        private static int SlotNumber(string fileName)
+            => fileName != null && fileName.StartsWith("slot_", StringComparison.Ordinal)
+               && int.TryParse(fileName.Substring(5), out var number)
+                ? number
+                : int.MaxValue;
+
+        /// <summary>
+        /// Removes dormant slots from every save of every game (and from the
+        /// running session), returning how many slots were dropped. Offered in
+        /// the save settings: dormant data is kept indefinitely otherwise.
+        /// </summary>
+        public static int PurgeDormantData()
+        {
+            var purged = _dormant.Count;
+            ClearDormant();
+
+            var root = GameEnvironment.IsRuntime ? ProjectSettings.GlobalizePath(SavesRoot) : "saves";
+            if (!Directory.Exists(root))
+                return purged;
+
+            foreach (var path in Directory.EnumerateFiles(root, "*.json", SearchOption.AllDirectories))
+            {
+                try
+                {
+                    var pkg = JsonSerializer.Deserialize<SavePackage>(File.ReadAllText(path), JsonOptionsProvider.ReadOptions);
+                    if (pkg?.Dormant == null || pkg.Dormant.Count == 0)
+                        continue;
+
+                    purged += pkg.Dormant.Count;
+                    pkg.Dormant = null;
+                    File.WriteAllText(path, JsonSerializer.Serialize(pkg, JsonOptionsProvider.WriteCompactOptions));
+                }
+                catch (Exception ex)
+                {
+                    GameLogger.Log("SAVE", $"Could not purge dormant data in '{path}': {ex.Message}", LogLevel.Warning);
+                }
+            }
+
+            GameLogger.Log("SAVE", $"Purged {purged} dormant slot(s)");
+            return purged;
+        }
+
+        /// <summary>Snapshot of the active game for <see cref="SavePackage.Game"/>; null without an active game.</summary>
+        private static SaveGameInfo BuildGameInfo()
+        {
+            if (!Games.ActiveGame.IsActive)
+                return null;
+
+            var info = new SaveGameInfo
+            {
+                Id = Games.ActiveGame.Id,
+                Name = Games.ActiveGame.Collection?.DisplayTitle,
+                Version = Games.ActiveGame.Collection?.Version,
+            };
+            foreach (var modId in ModRegistry.Instance.GetOrderedModIds())
+                info.Mods.Add(new SaveGameMod { Id = modId, Version = ModManager.Instance.GetMod(modId)?.Version });
+            return info;
         }
 
         /// <summary>

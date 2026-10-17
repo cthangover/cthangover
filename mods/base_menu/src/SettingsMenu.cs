@@ -455,6 +455,13 @@ namespace Cthangover.BaseMenu
                 };
                 row.AddChild(label);
 
+                if (def.Type == SettingType.Action)
+                {
+                    AddActionControls(row, modId, def);
+                    _settingsContainer.AddChild(row);
+                    continue;
+                }
+
                 Control control = CreateControlForType(def);
                 ApplyControlValue(control, def, currentBlob);
                 _controlKeys[control] = def.Key;
@@ -538,6 +545,45 @@ namespace Cthangover.BaseMenu
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Action setting: a button (with an optional confirmation) that runs
+        /// <see cref="ModSettingsRegistry.RunAction"/> and shows the result next
+        /// to it. Actions store no value, so they stay out of <c>_controlKeys</c>.
+        /// </summary>
+        private void AddActionControls(HBoxContainer row, string modId, ModSettingDefinition def)
+        {
+            var button = new Button { Text = TranslationServer.Translate(def.ActionText ?? def.Name) };
+            var result = new Label { VerticalAlignment = VerticalAlignment.Center, SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+
+            void Run() => result.Text = TranslationServer.Translate(ModSettingsRegistry.RunAction(modId, def.Key) ?? string.Empty);
+
+            button.Pressed += () =>
+            {
+                if (string.IsNullOrEmpty(def.ConfirmText))
+                {
+                    Run();
+                    return;
+                }
+
+                var dialog = new ConfirmationDialog
+                {
+                    DialogText = TranslationServer.Translate(def.ConfirmText),
+                    Exclusive = true,
+                };
+                dialog.Confirmed += () =>
+                {
+                    Run();
+                    dialog.QueueFree();
+                };
+                dialog.Canceled += dialog.QueueFree;
+                AddChild(dialog);
+                dialog.PopupCentered();
+            };
+
+            row.AddChild(button);
+            row.AddChild(result);
         }
 
         private static Control CreateControlForType(ModSettingDefinition def)

@@ -43,11 +43,25 @@ namespace Cthangover.BaseMenu
 
         private List<SaveSlotInfo> _slotModels;
 
+        /// <summary>Width kept free for the vertical scroll bar of the parent <see cref="ScrollContainer"/>.</summary>
+        private const float ScrollBarReserve = 14f;
+
         public override void _Ready()
         {
             _itemScene = new ModScenePrefab("scenes/menu/save_slot_item.tscn");
             Resized += OnResized;
+            if (GetParent() is Control viewport)
+                viewport.Resized += OnResized;
         }
+
+        /// <summary>
+        /// Area one screen of slots occupies: the parent scroll viewport when
+        /// the list scrolls (slots are unlimited), otherwise the list itself.
+        /// </summary>
+        private Vector2 ViewportSize()
+            => GetParent() is ScrollContainer scroll
+                ? new Vector2(scroll.Size.X - ScrollBarReserve, scroll.Size.Y)
+                : Size;
 
         /// <summary>
         /// Stores the slot data models and triggers a full grid rebuild via <see cref="Refresh"/>.
@@ -81,12 +95,16 @@ namespace Cthangover.BaseMenu
             if (_slotModels == null || _itemScene == null)
                 return;
 
-            var contentSize = Size;
+            var contentSize = ViewportSize();
             if (contentSize.X <= 0 || contentSize.Y <= 0)
                 return;
 
+            // One screen holds ColumnCount × RowCount slots; more rows extend
+            // the list and the parent ScrollContainer scrolls.
             var cellWidth = (contentSize.X - (ColumnCount - 1) * SlotPadding) / ColumnCount;
             var cellHeight = (contentSize.Y - (RowCount - 1) * SlotPadding) / RowCount;
+            var rows = Math.Max(1, (_slotModels.Count + ColumnCount - 1) / ColumnCount);
+            CustomMinimumSize = new Vector2(0, rows * cellHeight + (rows - 1) * SlotPadding);
 
             for (int i = 0; i < _slotModels.Count; i++)
             {
@@ -112,9 +130,16 @@ namespace Cthangover.BaseMenu
 
         private void OnResized()
         {
-            if (_slotModels != null && _items.Count == 0 && Size.X > 0 && Size.Y > 0)
+            var view = ViewportSize();
+            if (_slotModels != null && view.X > 0 && view.Y > 0
+                && (_items.Count == 0 || Math.Abs(view.X - _laidOutFor.X) > 1 || Math.Abs(view.Y - _laidOutFor.Y) > 1))
+            {
+                _laidOutFor = view;
                 Refresh();
+            }
         }
+
+        private Vector2 _laidOutFor;
 
         private void OnItemSlotPressed(string fileName)
         {

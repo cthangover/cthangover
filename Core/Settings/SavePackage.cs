@@ -33,5 +33,19 @@ namespace Cthangover.Core.Settings
         /// The reserved key <c>"__core__"</c> holds core game state.
         /// </summary>
         public Dictionary<string, ModSlot> ModData { get; set; } = new();
+
+        /// <summary>
+        /// Game that wrote the save (null for saves made without an active
+        /// game collection, e.g. development launches with every mod).
+        /// </summary>
+        public SaveGameInfo Game { get; set; }
+
+        /// <summary>
+        /// Slots of mods the game ran without (removed mechanic, older
+        /// installed version, rejected data), carried forward untouched so the
+        /// data comes back with the mod; see <see cref="SaveDormancy"/>.
+        /// Purged on request from the save settings.
+        /// </summary>
+        public Dictionary<string, ModSlot> Dormant { get; set; }
     }
 }

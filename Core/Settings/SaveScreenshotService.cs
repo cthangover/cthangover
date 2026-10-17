@@ -20,7 +20,7 @@ namespace Cthangover.Core.Settings
     /// </summary>
     public static class SaveScreenshotService
     {
-        private const string SaveDir = "user://saves";
+        private static string SaveDir => SaveService.SaveDirectory;
 
         /// <summary>
         /// Captures the current background image, downscales it to 320×180,
@@ -62,7 +62,17 @@ namespace Cthangover.Core.Settings
         {
             var safe = new string(fileName.Select(c =>
                 char.IsLetterOrDigit(c) || c == '_' || c == '-' ? c : '_').ToArray());
-            var path = $"{SaveDir}/{safe}.png";
+            return LoadScreenshotFromPath($"{SaveDir}/{safe}.png");
+        }
+
+        /// <summary>
+        /// Loads a thumbnail by its Godot path (<see cref="SaveSlotInfo.ScreenshotPath"/>),
+        /// so the save browser can show saves of any game, not only the active one.
+        /// </summary>
+        public static Texture2D LoadScreenshotFromPath(string path)
+        {
+            if (string.IsNullOrEmpty(path))
+                return null;
             var absPath = ProjectSettings.GlobalizePath(path);
 
             if (!System.IO.File.Exists(absPath))

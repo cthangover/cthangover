@@ -58,6 +58,15 @@ namespace Cthangover.Core.Mods
 
         /// <summary>Applicable only when <c>Type == SettingType.Slider</c>.</summary>
         public float Step { get; set; }
+
+        /// <summary>
+        /// <c>SettingType.Action</c> only: button caption (locale key). The
+        /// action runs through <see cref="IModSettingsActions.RunAction"/>.
+        /// </summary>
+        public string ActionText { get; set; }
+
+        /// <summary><c>SettingType.Action</c> only: confirmation question (locale key); null runs immediately.</summary>
+        public string ConfirmText { get; set; }
     }
 
     /// <summary>
@@ -71,6 +80,9 @@ namespace Cthangover.Core.Mods
         Float,
         String,
         Enum,
-        Slider
+        Slider,
+
+        /// <summary>A button that runs a mod command (no stored value), e.g. purging data.</summary>
+        Action
     }
 }
