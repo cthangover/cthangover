@@ -121,8 +121,24 @@ The game uses **"last wins"** — the mod later in the load order overrides earl
 | **Shaders** | Same-name shader from a later mod overrides the earlier one |
 | **Locale strings** | Same key from a later translation file overrides the earlier one |
 | **Scene definitions** | Multiple mods can contribute to the same scene — they accumulate |
-| **Scenario definitions** | Accumulated and sorted by their own `priority` and `after` metadata |
+| **Scenarios** | Different names accumulate and run by their own `priority` and `after` metadata; the **same file name** from a later mod replaces the earlier scenario (even if it targets another scene) |
 | **Property arrays** | Arrays in `ExtraProperties` (e.g. `Skills: ["a"]`) are **concatenated** across patches, not overwritten |
+
+### Add or replace — the mod decides
+
+Overriding is a right of a mod, not a duty. Nothing is replaced unless a mod
+asks for it, and it asks in one way only:
+
+- **To add**, use your own name: a new scenario for someone else's scene, a new
+  item, a new background. It works next to the existing content.
+- **To replace**, ship the **same name** (texture, file path, entity `ID`,
+  scenario file name) **and declare `depends` on the mod that owns it**. The
+  dependency puts your mod later in the load order, so your version wins and
+  the original files stay untouched.
+- **Same name without a dependency is a mistake**: two unrelated mods have no
+  defined order between them, so the winner would be arbitrary. The
+  resource atlas (the `resource_atlas` mod, `--resource-atlas`) reports it as an error
+  ("one key provided by mods not linked by depends").
 
 When a resource is overridden, a `Warning` is logged so you can inspect the conflict.
 Overrides are also recorded in `ModConflictRegistry` (resource type, winning and overridden

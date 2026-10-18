@@ -151,6 +151,14 @@ namespace Cthangover.ResourceAtlas
                     Provide(result, "scene_file", file.Substring("scenes/".Length), mod.Id, file);
             }
 
+            foreach (var file in ModFileReader.ListFiles(provider, "scenarios", true))
+            {
+                // Scenarios are identified by file name: a mod replaces another
+                // mod's scenario by shipping the same name and depending on it.
+                if (file.EndsWith(".scenario", StringComparison.OrdinalIgnoreCase))
+                    Provide(result, "scenario", Path.GetFileNameWithoutExtension(file), mod.Id, file);
+            }
+
             foreach (var file in ModFileReader.ListFiles(provider, "locale", true))
             {
                 if (file.EndsWith(".properties", StringComparison.OrdinalIgnoreCase))

@@ -102,6 +102,21 @@ end
 
 The interactive lamp is added once, on first visit. Subsequent visits skip this scenario.
 
+## Adding or replacing a scenario
+
+A scenario is identified by its **file name** (without `.scenario`): that is the
+id the completion history, `after:` links and the studio use.
+
+- **Add** a scenario to any scene — even one from another mod — by giving it a
+  name of your own (prefix it with your mod or game, e.g. `my_novel_town_shop`).
+  It runs next to the scene's other scenarios, ordered by `priority`.
+- **Replace** another mod's scenario by shipping a file with the **same name**
+  and adding that mod to your `depends`. Mods load dependencies first, so your
+  file wins; it may even target a different scene. The original mod is not
+  changed.
+- Two mods that ship the same name without a dependency between them have no
+  defined winner — the resource atlas reports this as an error.
+
 ## How the engine selects scenarios
 
 1. Player enters `scene: home_kitchen`
