@@ -14,7 +14,9 @@ namespace Cthangover.Core.Mods.Resolvers
     /// <c>.json</c> files. When multiple mods define the same scene name,
     /// the first mod's definition is the base, and subsequent mods merge
     /// their values on top — enabling mods to extend a base scene with
-    /// additional backgrounds or change the default scenario.
+    /// additional backgrounds or change the default scenario. Overlays
+    /// (<see cref="ModOverlays"/>) are read after the mods, so an overlay can
+    /// add new scenes or extend existing ones the same way.
     /// </summary>
     public class SceneDefinitionResolver : ModAssetResolver
     {
@@ -44,6 +46,9 @@ namespace Cthangover.Core.Mods.Resolvers
                 var provider = Context.Mods[modId].FileProvider;
                 CollectSceneDefsRecursive(provider, modId, "scenes", result, ref foundAny);
             }
+
+            foreach (var overlay in ModOverlays.All)
+                CollectSceneDefsRecursive(overlay.Value, overlay.Key, "scenes", result, ref foundAny);
 
             if (!foundAny)
             {
