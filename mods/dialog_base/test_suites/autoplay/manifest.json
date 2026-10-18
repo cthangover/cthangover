@@ -1,10 +1,10 @@
 {
   "name": "Test Runner",
-  "description": "Test harness mod: ports the integration DialogAutoDriver into an engine mod. Activated by --choices=/--timeout= user args; auto-plays the active dialog, prints [TEST_RESULT] and quits. Depends on cthangover_story and dialog_base.",
+  "description": "Test harness mod: ports the integration DialogAutoDriver into an engine mod. Activated by --choices=/--timeout= user args; auto-plays the active dialog, prints [TEST_RESULT] and quits. Depends on cthangover_game and dialog_base.",
   "sources": [
     "src/*.cs"
   ],
   "depends": [
-    "cthangover_story>=1"
+    "cthangover_game>=1"
   ]
 }

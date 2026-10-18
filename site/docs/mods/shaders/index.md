@@ -74,8 +74,8 @@ uniform — adjusting it from the Godot inspector updates the effect live.
 
 ## Shipped core shaders
 
-Besides the interface shaders listed above, the `cthangover_story` mod ships its own shader
-family in `mods/cthangover_story/shaders/`: a set of `2d_cubism_*.gdshader` files
+Besides the interface shaders listed above, the `cthangover_game` mod ships its own shader
+family in `mods/cthangover_game/shaders/`: a set of `2d_cubism_*.gdshader` files
 (`mask`, plus the blend modes `mask_mul` / `mask_add` / `mask_mix`, each blend mode
 also in an `_inv` inverted variant, and `norm_mul` / `norm_add` / `norm_mix`)
 used for Cubism-style sprite masking and normal blending. The folder also contains

@@ -15,7 +15,7 @@ mods/<mod_name>/
 The base mod ships one file:
 
 ```filestree
-mods/cthangover_story/
+mods/cthangover_game/
 └── map/
     └── map.json        # "home" and "town_entry" zones + two labels
 ```

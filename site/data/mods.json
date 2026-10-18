@@ -91,7 +91,7 @@
     "gameplay"
    ],
    "deps": [
-    "cthangover_story",
+    "cthangover_game",
     "ui_base",
     "items_base",
     "time_base"
@@ -108,7 +108,7 @@
     "characters"
    ],
    "deps": [
-    "cthangover_story",
+    "cthangover_game",
     "ui_base",
     "characters_base",
     "quests_base",
@@ -120,19 +120,19 @@
    "id": "cthangover_party",
    "name": "Cthangover: Starter Party",
    "version": "1.0.0",
-   "desc": "Seeds the default starter party (Marao) and the slave_master skill after mod resources are ready, and restores it on NewGameStartedEvent. Split out of cthangover_story so the base content mod stays pure content (scenes/dialogs/quests/data) with no C# gameplay logic.",
+   "desc": "Seeds the default starter party (Marao) and the slave_master skill after mod resources are ready, and restores it on NewGameStartedEvent. Split out of cthangover_game so the base content mod stays pure content (scenes/dialogs/quests/data) with no C# gameplay logic.",
    "cat": [
     "engine",
     "library"
    ],
    "deps": [
-    "cthangover_story",
+    "cthangover_game",
     "skills_base"
    ],
    "test": false
   },
   {
-   "id": "cthangover_story",
+   "id": "cthangover_game",
    "name": "Cthangover: Story",
    "version": "2.0.0",
    "desc": "Story content of the Cthangover game: scenes, scenarios, characters, items, quests, backgrounds and the main game collection.",
@@ -423,7 +423,7 @@
     "other"
    ],
    "deps": [
-    "cthangover_story",
+    "cthangover_game",
     "cthangover_murakami",
     "cooking",
     "characters_base",

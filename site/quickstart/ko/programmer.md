@@ -40,7 +40,7 @@ mods/
   "description": "새 액션과 모드 설정",             // 모드 목록에 표시되는 모드 설명
   "sources": ["src/*.cs"],                       // 소스를 모으는 패턴 (모든 ".cs" 파일)
   "author": "programmer",                        // 작성자
-  "depends": ["cthangover_story"]               // 본편 게임에 대한 의존성 (모드 로드 순서를 직접 정할 필요가 없음)
+  "depends": ["cthangover_game"]               // 본편 게임에 대한 의존성 (모드 로드 순서를 직접 정할 필요가 없음)
 }
 ```
 

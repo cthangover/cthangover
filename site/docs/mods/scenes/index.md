@@ -24,7 +24,7 @@ Scene definitions map scene IDs to default backgrounds, ambient music, and entry
 
 ## Real examples
 
-From `mods/cthangover_story/scenes/`:
+From `mods/cthangover_game/scenes/`:
 
 ```jsonc
 {

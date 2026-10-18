@@ -34,7 +34,7 @@ Quest definitions with status-based progression and tag-based conditions that co
 
 ## Real examples
 
-### Awakening quest — `cthangover_story/quests/quests.json`
+### Awakening quest — `cthangover_game/quests/quests.json`
 
 ```jsonc
 {
@@ -58,7 +58,7 @@ Quest definitions with status-based progression and tag-based conditions that co
 }
 ```
 
-### Old House quest — `cthangover_story/quests/quests.json`
+### Old House quest — `cthangover_game/quests/quests.json`
 
 Opened when the hero reaches the villa; the house arc is not written yet, so
 the quest deliberately has no `StatusToDescription` — the journal shows its

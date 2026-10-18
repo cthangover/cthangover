@@ -40,7 +40,7 @@ mods/
   "description": "Nueva acción y ajustes del mod", // Descripción del mod que se muestra en la lista de mods
   "sources": ["src/*.cs"],                       // Patrón para recoger el código fuente (todos los archivos ".cs")
   "author": "programmer",                        // Autor
-  "depends": ["cthangover_story"]               // Dependencia del juego principal (así no hay que ordenar a mano la carga del mod)
+  "depends": ["cthangover_game"]               // Dependencia del juego principal (así no hay que ordenar a mano la carga del mod)
 }
 ```
 

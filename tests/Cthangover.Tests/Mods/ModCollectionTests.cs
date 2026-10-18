@@ -31,7 +31,7 @@ namespace Engine.Tests.Mods
                         Id = "vn_core",
                         Name = "Novel Core",
                         Description = "Story engine.",
-                        Mods = new List<string> { "cthangover_story>=1" },
+                        Mods = new List<string> { "cthangover_game>=1" },
                     },
                     new()
                     {
@@ -58,7 +58,7 @@ namespace Engine.Tests.Mods
             Assert.Equal("Novel Core", restored.Mechanics[0].Name);
             Assert.Equal("Story engine.", restored.Mechanics[0].Description);
             Assert.Single(restored.Mechanics[0].Mods);
-            Assert.Equal("cthangover_story>=1", restored.Mechanics[0].Mods[0]);
+            Assert.Equal("cthangover_game>=1", restored.Mechanics[0].Mods[0]);
             Assert.False(restored.Mechanics[0].Optional);
 
             Assert.Equal("cards", restored.Mechanics[1].Id);

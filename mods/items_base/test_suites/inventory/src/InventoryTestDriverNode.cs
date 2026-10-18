@@ -100,7 +100,7 @@ namespace Mods.InventoryTest
                 return;
             }
 
-            // Шаг 1: UI-запись инвентаря зарегистрирована модом cthangover_story.
+            // Шаг 1: UI-запись инвентаря зарегистрирована модом cthangover_game.
             if (step == 1)
             {
                 Check("entry registered", () =>

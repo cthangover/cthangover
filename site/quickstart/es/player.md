@@ -34,7 +34,7 @@ Todo mod necesita un manifiesto. Crea `mods/quickstart_player/manifest.json`:
   "name": "Marao Buff",             // Nombre que se muestra en el menú de gestión de mods
   "description": "¡Mi primer mod!", // Descripción visible en la lista de mods y en el catálogo
   "author": "player",               // Autor del mod (cadena arbitraria)
-  "depends": ["cthangover_story"]  // Dependencia del juego principal (así no hay que ordenar a mano la carga del mod)
+  "depends": ["cthangover_game"]  // Dependencia del juego principal (así no hay que ordenar a mano la carga del mod)
 }
 ```
 
@@ -64,7 +64,7 @@ Crea `mods/quickstart_player/patches/character.json`:
 
 ### Cómo funciona
 
-- **`"Id": "Marao"`** — el objetivo del parche: el personaje con identificador `Marao` (definido en el mod `cthangover_story`).
+- **`"Id": "Marao"`** — el objetivo del parche: el personaje con identificador `Marao` (definido en el mod `cthangover_game`).
 - **`"Health": 5000`**, **`"Attack": 1200`** y **`"Point": 2`** — sobrescriben los campos del personaje. Los valores nuevos reemplazan a los antiguos.
 - **`"Actions$add": ["physics/stun"]`** — el sufijo `$add` significa «añadir elementos al array». La acción `physics/stun` se añade a la lista. Las acciones por defecto `physics/attack` y `physics/defence` se mantienen. Aturdir cuesta 2 PA — por eso también subimos `Point`.
 

@@ -65,6 +65,27 @@ Use `[SceneEvent]` for game-logic hooks. Use manifest `ui` entries when you need
 
 The `conflicts_with` manifest field is **declarative only**: it is parsed (`Core/Mods/ModManifest.cs`) and exported to catalog entries, but the runtime does **not** enforce conflicts — no mods are disabled or blocked at load time. Treat it as informational metadata describing mutually exclusive mod pairs for catalogs and tooling.
 
+## Naming your mod
+
+The `id` tells other modders what role the mod plays, by a fixed suffix or
+prefix, in lowercase `snake_case`. The folder name, `id`, the repository
+(`mod_<id>`) and the locale keys `mod_<id>_name`/`mod_<id>_desc` match.
+
+| Role | Pattern | Examples |
+|---|---|---|
+| Engine subsystem other mods build on | `<subject>_base` | `dialog_base`, `ui_base`, `shell2d_base` |
+| Mechanic, optional for a game | plain noun or `<variant>_<mechanic>` | `cooking`, `card_battle` |
+| The game itself: scenes, story, entry point | `<game>_game` | `cthangover_game` |
+| Further content of one game | `<game>_<part>` | `cthangover_murakami`, `cthangover_party` |
+| Reusable content any game may take | `<theme>_pack` | `town_pack` |
+| Template to copy | `<what>_template` | `novel_template` |
+| Developer tool | `<subject>_<tool>` | `editor_tools`, `resource_atlas` |
+| Test fixture | `test_<what>` | `test_defaults_and_patches` |
+
+Never use `core` in an id and never `base` as a prefix. The game a player
+picks is not a mod but a [collection package](../collections/) that lists
+these mods.
+
 ## `manifest.json` field reference
 
 Every mod's `manifest.json` is deserialized into `ModManifest` (`Core/Mods/ModManifest.cs`). All fields are optional:
@@ -92,8 +113,8 @@ Each `depends` entry is a string `[modId][op][version][?]`, parsed by `ModDepend
 ```jsonc
 {
     "depends": [
-        "cthangover_story",           // bare id — any version
-        "cthangover_story>=1",        // core 1 or newer
+        "cthangover_game",           // bare id — any version
+        "cthangover_game>=1",        // core 1 or newer
         "my_lib^1.2.0",   // version starting with segments 1.2.0
         "extra_icons<2",
         "soft_dep?"       // trailing ? — optional dependency

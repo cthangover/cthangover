@@ -40,7 +40,7 @@ mods/
   "description": "New action and mod settings", // Mod description shown in the mod list
   "sources": ["src/*.cs"],                      // Pattern for collecting source files (all ".cs" files)
   "author": "programmer",                       // Author
-  "depends": ["cthangover_story"]              // Dependency on the core game (so manual mod load ordering is not required)
+  "depends": ["cthangover_game"]              // Dependency on the core game (so manual mod load ordering is not required)
 }
 ```
 
