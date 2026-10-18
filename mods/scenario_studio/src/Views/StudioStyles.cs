@@ -251,43 +251,69 @@ namespace Cthangover.Mods.ScenarioStudio
             return style;
         }
 
-        /// <summary>Novice card of a line (<c>.ct-block</c>); the current one looks like a selected slot.</summary>
-        public static StyleBoxFlat Block(StudioCodeLine line)
+        /// <summary>Section caption of the novice moment (<c>.ct-moment__caption</c>).</summary>
+        public static Label Caption(string text)
         {
-            var current = line.IsCurrent;
-            var style = UiKit.Frame(UiTokens.RadiusMd, current ? UiTokens.SurfaceSelected : UiTokens.Surface2, current ? UiTokens.AccentLine : UiTokens.Line);
-            style.BorderWidthLeft = 3;
-            if (line.IsNew)
-                style.BorderColor = UiTokens.Success;
-            else if (line.Error != null)
-                style.BorderColor = UiTokens.Danger;
-            else if (current)
-                style.BorderColor = UiTokens.Accent;
-            else
-                style.BorderColor = UiTokens.LineStrong;
-            Pad(style, 12, 8);
+            var label = Text(text, UiTokens.FontTiny, UiTokens.Faint);
+            label.Uppercase = true;
+            return label;
+        }
+
+        /// <summary>
+        /// Card of what is on screen (<c>.ct-say</c>): selected surface with the gold
+        /// bar; a line added before it (<c>.ct-say--before</c>) is a plain card
+        /// with the success bar.
+        /// </summary>
+        public static StyleBoxFlat Say(bool before)
+        {
+            var style = before
+                ? UiKit.Frame(UiTokens.RadiusMd, UiTokens.Surface2, UiTokens.Line)
+                : UiKit.Frame(UiTokens.RadiusMd, UiTokens.SurfaceSelected, UiTokens.AccentLine);
+            Pad(style, 12, 10);
+            style.ContentMarginLeft = 0;
             return style;
         }
 
-        public static Color KindColor(StudioLineKind kind)
+        /// <summary>
+        /// Coloured 3px left bar of a card (gold for the line on screen, green for
+        /// new lines). StyleBoxFlat has a single border colour, so the bar is its
+        /// own strip at the start of the card row; the card style then has no left
+        /// content margin and the bar is followed by <see cref="BarGap"/>.
+        /// </summary>
+        public static ColorRect Bar(Color color) => new()
+        {
+            Color = color,
+            CustomMinimumSize = new Vector2(3, 0),
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+        };
+
+        /// <summary>Space between a <see cref="Bar"/> and the card content.</summary>
+        public const int BarGap = 9;
+
+        /// <summary>Answer row (<c>.ct-branch</c>): broken answers are red-tinted, new ones get the success bar.</summary>
+        public static StyleBoxFlat Branch(bool broken, bool isNew)
+        {
+            var style = broken
+                ? UiKit.Frame(UiTokens.RadiusMd, UiTokens.DangerSoft, UiTokens.BadgeLine(UiTokens.TypeEnemy))
+                : UiKit.Frame(UiTokens.RadiusMd, UiTokens.Surface2, UiTokens.Line);
+            Pad(style, 12, 8);
+            if (isNew)
+                style.ContentMarginLeft = 0;
+            return style;
+        }
+
+        public static Color OutcomeColor(StudioOutcomeKind kind)
         {
             switch (kind)
             {
-                case StudioLineKind.Light:
-                case StudioLineKind.Background:
-                    return UiTokens.TypeResource;
-                case StudioLineKind.Choice:
-                case StudioLineKind.Option:
-                    return UiTokens.TypeRecipe;
-                case StudioLineKind.Label:
-                case StudioLineKind.Jump:
+                case StudioOutcomeKind.Scene:
                     return UiTokens.TypeTarget;
-                case StudioLineKind.Action:
+                case StudioOutcomeKind.Action:
                     return UiTokens.TypeUsed;
-                case StudioLineKind.End:
-                    return UiTokens.Muted;
+                case StudioOutcomeKind.Broken:
+                    return UiTokens.DangerText;
                 default:
-                    return UiTokens.Accent;
+                    return UiTokens.Muted;
             }
         }
 

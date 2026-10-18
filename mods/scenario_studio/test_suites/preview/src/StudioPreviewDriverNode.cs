@@ -81,26 +81,38 @@ namespace Cthangover.Mods.ScenarioStudio.Tests.Preview
                     break;
                 case 3:
                     Check(_panel.Mode == StudioMode.Novice, "novice mode selected");
-                    Check(CountOf<StudioBlockView>(Content()) == 12, "novice: one card per line");
                     Check(CountOf<StudioCodeLineView>(Content()) == 0, "novice: no script lines");
+                    Check(CountOf<StudioSayView>(Content()) == 1, "novice: one card for what is on screen");
+                    Check(CountOf<StudioBranchView>(Content()) == 2, "novice: the question's two answers");
+                    Check(BrokenBranches() == 0, "novice: both answers lead somewhere");
+                    Press(FindButton(_panel, TranslationServer.Translate("studio/add_option")));
+                    break;
+                case 4:
+                    Check(CountOf<StudioBranchView>(Content()) == 3, "novice: new answer added");
+                    Check(BrokenBranches() == 1, "novice: the new answer leads nowhere yet");
+                    Press(FindButton(_panel, TranslationServer.Translate("studio/add_line_before")));
+                    break;
+                case 5:
+                    Check(CountOf<StudioSayView>(Content()) == 2, "novice: new line shown before the question");
+                    Check(Mathf.Abs(_panel.GetNode<Control>("Dock").Size.X - StudioStyles.DockWidth) < 1, "novice: dock width unchanged");
                     Shot("now_novice");
                     Press(_panel.GetNode<Button>(Root + "Header/Row/ModeSwitch/Items/AuthorButton"));
                     Press(_panel.GetNode<Button>(Root + "Tabs/Row/SceneTab"));
                     break;
-                case 4:
+                case 6:
                     CheckTab(StudioTab.Scene, "scene");
                     Press(_panel.GetNode<Button>(Root + "Tabs/Row/StateTab"));
                     break;
-                case 5:
+                case 7:
                     CheckTab(StudioTab.State, "state");
                     Check(CountOf<LineEdit>(Content()) > 0, "state: editable values");
                     Press(_panel.GetNode<Button>(Root + "Tabs/Row/LogTab"));
                     break;
-                case 6:
+                case 8:
                     CheckTab(StudioTab.Log, "log");
                     Press(_panel.GetNode<Button>(Root + "Tabs/Row/MapTab"));
                     break;
-                case 7:
+                case 9:
                     CheckTab(StudioTab.Map, "map");
                     Press(_panel.GetNode<Button>(Root + "Header/Row/CloseButton"));
                     break;
@@ -137,6 +149,17 @@ namespace Cthangover.Mods.ScenarioStudio.Tests.Preview
             Check(_panel.Tab == tab, $"{name}: tab selected");
             Check(Content().GetChildCount() > 0, $"{name}: body filled");
             Shot("tab_" + name);
+        }
+
+        private int BrokenBranches()
+        {
+            var broken = 0;
+            foreach (var node in Content().GetChildren())
+            {
+                if (node is StudioBranchView branch && branch.IsBroken)
+                    broken++;
+            }
+            return broken;
         }
 
         private VBoxContainer Content() => _panel.GetNode<VBoxContainer>(Root + "Body/Scroll/Content");
