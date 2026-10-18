@@ -18,11 +18,15 @@ namespace Cthangover.Core.Mods.Resolvers
     /// script text for a given scenario ID, with <c>${include}</c>
     /// directives already expanded.
     ///
-    /// Overlays (<see cref="ModOverlays"/>) are read before the mods: an overlay
-    /// scenario overrides every mod scenario with the same name, in whatever
-    /// scene the mod scenario was, because names are the scenario identity
-    /// (completion history, <c>after</c> links). That is how an edit layer
-    /// changes a scenario of a read-only zip mod.
+    /// A scenario is identified by its file name (completion history,
+    /// <c>after</c> links, the studio). Adding content means a new name; a mod
+    /// <b>replaces</b> another mod's scenario by shipping the same name — mods
+    /// are read in load order (dependencies first), so the later one wins, the
+    /// same rule as files and entities. The replacement may even move the
+    /// scenario to another scene. Two mods not linked by <c>depends</c> that
+    /// ship one name have no defined order; the resource atlas reports that.
+    /// Overlays (<see cref="ModOverlays"/>) win over every mod: that is how an
+    /// edit layer changes a scenario of a read-only zip mod.
     /// </summary>
     public class ScenarioResolver : ModAssetResolver
     {
@@ -63,10 +67,44 @@ namespace Cthangover.Core.Mods.Resolvers
                 CollectScenarioDefsRecursive(provider, modId, "scenarios", result, overridden);
             }
 
+            DropReplaced(result);
+
             _defCache = result;
 
             GameLogger.Log("MODS", $"CollectScenarioDefinitions → {result.Count} scene(s) with scenarios");
             return result;
+        }
+
+        /// <summary>
+        /// Keeps only the last definition of every scenario name, across all
+        /// scenes: definitions are added in load order, so the last one comes
+        /// from the mod loaded later — the one that depends on (and replaces)
+        /// the earlier one. Scenes left without scenarios are removed.
+        /// </summary>
+        public static void DropReplaced(Dictionary<string, List<ScenarioDefinition>> result)
+        {
+            var winners = new Dictionary<string, ScenarioDefinition>();
+            foreach (var list in result.Values)
+            {
+                foreach (var def in list)
+                    winners[def.Name] = def;
+            }
+
+            foreach (var scene in result.Keys.ToList())
+            {
+                var list = result[scene];
+                for (var i = list.Count - 1; i >= 0; i--)
+                {
+                    var winner = winners[list[i].Name];
+                    if (winner == list[i])
+                        continue;
+                    GameLogger.Log("MODS", $"scenario '{list[i].Name}' from mod '{list[i].ModId}' is replaced by mod '{winner.ModId}'");
+                    list.RemoveAt(i);
+                }
+
+                if (list.Count == 0)
+                    result.Remove(scene);
+            }
         }
 
         /// <summary>
