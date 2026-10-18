@@ -7,7 +7,7 @@ namespace Cthangover.Mods.ScenarioStudio
         Skip,
         Scenario,
         Stop,
-        Choice,
+        End,
         Edit,
     }
 }

@@ -2,6 +2,7 @@ namespace Cthangover.Mods.ScenarioStudio
 {
     using System.Text;
     using Cthangover.Core.UI.Theming;
+    using Cthangover.Mods.Dialog.Scenarios;
     using Godot;
 
     /// <summary>
@@ -14,6 +15,30 @@ namespace Cthangover.Mods.ScenarioStudio
     /// </summary>
     public static class StudioSyntax
     {
+        /// <summary>
+        /// Highlighter for the inline text editor with the same palette: every
+        /// registered command word (plus <c>select</c>/<c>option</c>) gold, quoted
+        /// text ink, comments faint, <c>:labels</c> teal.
+        /// </summary>
+        public static CodeHighlighter CreateHighlighter()
+        {
+            var highlighter = new CodeHighlighter
+            {
+                NumberColor = UiTokens.Body,
+                SymbolColor = UiTokens.Muted,
+                FunctionColor = UiTokens.Body,
+                MemberVariableColor = UiTokens.Body,
+            };
+            foreach (var command in ScenarioCommandStrategyFactory.GetAllCommandNames())
+                highlighter.AddKeywordColor(command, UiTokens.AccentBright);
+            highlighter.AddKeywordColor("select", UiTokens.AccentBright);
+            highlighter.AddKeywordColor("option", UiTokens.AccentBright);
+            highlighter.AddColorRegion("\"", "\"", UiTokens.Ink);
+            highlighter.AddColorRegion("#", "", UiTokens.Faint, true);
+            highlighter.AddColorRegion(":", " ", UiTokens.TypeTarget, true);
+            return highlighter;
+        }
+
         public static string ToBbCode(string line)
         {
             var text = line ?? string.Empty;

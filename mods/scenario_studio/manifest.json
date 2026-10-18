@@ -3,12 +3,12 @@
   "name": "Scenario Studio",
   "version": "0.1.0",
   "author": "ct",
-  "description": "In-game scenario debugger and live editor: a non-modal dock over the running game with pause/step/restart, the current scenario line, scene candidates, game state, an event log and the scene map; an author mode (script text) and a novice mode (blocks). Prototype stage: the dock shows stub data and is not wired to the runtime yet.",
+  "description": "In-game scenario debugger and live editor: a non-modal dock over the running game with pause, step, breakpoints and restarts (with state rollback), the current scenario line, scene candidates with the reason they did or did not start, editable game state, an event log and the scene map. Edits go into folder mods or into a per-game studio layer over read-only mods, which can be exported as a mod. Author mode shows the script, novice mode the story moment.",
   "category": "tools, editor",
   "sources": [
     "src/**/*.cs"
   ],
-  "depends": ["interface>=1"],
+  "depends": ["interface>=1", "dialog_base>=1"],
   "ui": [
     {
       "id": "studio",
@@ -20,6 +20,6 @@
     }
   ],
   "test_suites": [
-    {"id": "preview", "activate": ["--itest=studio_preview"]}
+    {"id": "live", "activate": ["--itest=studio_live"]}
   ]
 }

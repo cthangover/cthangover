@@ -13,7 +13,7 @@ namespace Cthangover.Mods.ScenarioStudio
     /// </summary>
     public partial class StudioSayView : PanelContainer
     {
-        public StudioSayView(StudioCodeLine line, bool before, Action<string> picked)
+        public StudioSayView(StudioCodeLine line, bool before, Action<StudioActionButton> edit)
         {
             MouseFilter = MouseFilterEnum.Ignore;
             AddThemeStyleboxOverride("panel", StudioStyles.Say(before));
@@ -37,9 +37,10 @@ namespace Cthangover.Mods.ScenarioStudio
             text.AutowrapMode = TextServer.AutowrapMode.WordSmart;
             body.AddChild(text);
 
-            var edit = StudioPrototypeButton.Create("studio/edit", picked);
-            edit.SizeFlagsVertical = SizeFlags.ShrinkBegin;
-            row.AddChild(edit);
+            var button = StudioActionButton.Create("studio/edit", edit);
+            button.Line = line;
+            button.SizeFlagsVertical = SizeFlags.ShrinkBegin;
+            row.AddChild(button);
         }
 
         /// <summary>The player-visible text in quotes, or an empty placeholder for a line that has none.</summary>

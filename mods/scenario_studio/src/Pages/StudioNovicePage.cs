@@ -11,38 +11,45 @@ namespace Cthangover.Mods.ScenarioStudio
     /// right before it, every answer with where it leads, then what else the
     /// scene has queued. The only insert actions are the ones that make sense
     /// here: a line before the question (or after a plain line) and a new
-    /// answer, which starts broken until its target is chosen. Ends with the
-    /// same "this change affects" plate as the author mode.
+    /// answer, which starts broken until its target is chosen. Requests carry
+    /// 0-based indices into the scenario text, where the dock inserts. Ends
+    /// with the same "this change affects" plate as the author mode.
     /// </summary>
     public sealed class StudioNovicePage
     {
-        /// <summary>A new line is requested at the given line index.</summary>
+        /// <summary>A new line is requested at the given text index.</summary>
         public event Action<int> LineRequested;
 
-        /// <summary>A new answer is requested at the given line index.</summary>
+        /// <summary>A new answer is requested at the given text index.</summary>
         public event Action<int> OptionRequested;
+
+        /// <summary>"Edit" on a line, question or answer.</summary>
+        public event Action<StudioActionButton> EditRequested;
+
+        /// <summary>"Choose where" on an answer.</summary>
+        public event Action<StudioActionButton> TargetRequested;
 
         private StudioMoment _moment;
 
-        public void Build(VBoxContainer content, StudioSession session, Action<string> picked)
+        public void Build(VBoxContainer content, StudioSession session)
         {
             _moment = StudioMoment.Build(session);
             if (_moment.Say == null)
             {
-                content.AddChild(UiKit.EmptyState(TranslationServer.Translate("studio/moment_empty"), UiTokens.FontBody));
+                content.AddChild(UiKit.EmptyState(TranslationServer.Translate(session.HasScenario ? "studio/moment_empty" : "studio/no_scenario"), UiTokens.FontBody));
                 return;
             }
 
             content.AddChild(StudioStyles.Caption(TranslationServer.Translate("studio/moment_now")));
             foreach (var line in _moment.Before)
-                content.AddChild(new StudioSayView(line, true, picked));
-            content.AddChild(new StudioSayView(_moment.Say, false, picked));
+                content.AddChild(new StudioSayView(line, true, OnEdit));
+            content.AddChild(new StudioSayView(_moment.Say, false, OnEdit));
 
             if (_moment.IsQuestion)
             {
                 content.AddChild(StudioStyles.Caption(TranslationServer.Translate("studio/moment_answers")));
                 foreach (var branch in _moment.Branches)
-                    content.AddChild(new StudioBranchView(branch, picked));
+                    content.AddChild(new StudioBranchView(branch, OnEdit, OnTarget));
             }
 
             var actions = UiKit.Row(UiTokens.Space2);
@@ -60,7 +67,7 @@ namespace Cthangover.Mods.ScenarioStudio
         {
             foreach (var candidate in session.Candidates)
             {
-                if (candidate.Status == StudioCandidateStatus.Waiting)
+                if (candidate.Status == StudioCandidateStatus.Queued)
                     return UiKit.Hint(string.Format(TranslationServer.Translate("studio/next_waiting"), candidate.Name), UiTokens.FontBodySmall);
             }
             return UiKit.Hint(TranslationServer.Translate("studio/next_none"), UiTokens.FontBodySmall);
@@ -75,10 +82,18 @@ namespace Cthangover.Mods.ScenarioStudio
 
         private void OnLinePressed()
         {
-            var at = _moment.IsQuestion ? _moment.SayIndex : _moment.SayIndex + 1;
-            LineRequested?.Invoke(at);
+            var say = _moment.Say.Number - 1;
+            LineRequested?.Invoke(_moment.IsQuestion ? say : say + 1);
         }
 
-        private void OnOptionPressed() => OptionRequested?.Invoke(_moment.AfterBranchesIndex);
+        private void OnOptionPressed()
+        {
+            var last = _moment.Branches.Count > 0 ? _moment.Branches[^1].Line : _moment.Say;
+            OptionRequested?.Invoke(last.Number);
+        }
+
+        private void OnEdit(StudioActionButton button) => EditRequested?.Invoke(button);
+
+        private void OnTarget(StudioActionButton button) => TargetRequested?.Invoke(button);
     }
 }

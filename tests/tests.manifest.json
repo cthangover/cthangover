@@ -273,13 +273,15 @@
       "timeoutSeconds": 180
     },
     {
-      "name": "studio_preview",
+      "name": "studio_live",
       "scene": "res://scenes/menu/launcher.tscn",
       "windowed": true,
       "args": [
         "--",
         "--scene=home_kitchen",
-        "--itest=studio_preview"
+        "--itest=studio_live",
+        "--studio-write=layer",
+        "--studio-layer=user://studio_test"
       ],
       "timeoutSeconds": 180
     },

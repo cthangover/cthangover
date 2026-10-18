@@ -21,6 +21,12 @@ namespace Cthangover.Mods.ScenarioStudio
         private readonly StudioCodeLine _line;
         private readonly Control _gutter;
 
+        /// <summary>The line this row shows.</summary>
+        public StudioCodeLine Line => _line;
+
+        /// <summary>The clickable gutter (breakpoint dot, number, marker).</summary>
+        public Control Gutter => _gutter;
+
         /// <summary>Raised when the gutter is clicked.</summary>
         public event Action<StudioCodeLine> BreakpointToggled;
 
@@ -89,7 +95,6 @@ namespace Cthangover.Mods.ScenarioStudio
             if (@event is not InputEventMouseButton mouse || !mouse.Pressed || mouse.ButtonIndex != MouseButton.Left)
                 return;
 
-            _line.HasBreakpoint = !_line.HasBreakpoint;
             _gutter.AcceptEvent();
             BreakpointToggled?.Invoke(_line);
         }

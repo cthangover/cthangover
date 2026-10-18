@@ -6,28 +6,36 @@ namespace Cthangover.Mods.ScenarioStudio
     using Godot;
 
     /// <summary>
-    /// Launch flag <c>--studio</c>: opens the studio dock as soon as the first
-    /// game scene is up, so a launcher script (<c>debug_scenario_studio.bat</c>)
-    /// lands straight in the studio instead of making the user find its toolbar
-    /// button. The opener is added deferred because resources-ready fires
-    /// before the shell scene exists.
+    /// Lifecycle entry of the studio mod. When resources are ready it mounts
+    /// the edit layer (<see cref="StudioLayer"/>) and parks <see cref="StudioLive"/>
+    /// at <c>/root</c>, so the debugger, the journal and the rollback snapshots
+    /// work from the first scene on, before the dock is ever opened. The launch
+    /// flag <c>--studio</c> additionally opens the dock with the first scene
+    /// (<c>debug_scenario_studio.bat</c>). Nodes are added deferred because
+    /// resources-ready fires before the shell scene exists.
     /// </summary>
     public class StudioLaunchInitializer : IModInitializer
     {
         private const string Flag = "--studio";
 
-        private static bool openerQueued;
-
         public void OnModLoaded(string modId) { }
 
         public void OnModResourcesReady()
         {
-            if (openerQueued || !OS.GetCmdlineUserArgs().Contains(Flag))
+            if (StudioLive.Instance != null)
                 return;
 
-            openerQueued = true;
+            var args = OS.GetCmdlineUserArgs();
+            var layer = new StudioLayer(args);
+            layer.Mount();
+
+            var root = (Godot.Engine.GetMainLoop() as SceneTree)?.Root;
+            root?.CallDeferred("add_child", new StudioLive(layer));
+
+            if (!args.Contains(Flag))
+                return;
             GameLogger.Log("UI", "Scenario studio: --studio given, the dock opens with the first scene");
-            (Godot.Engine.GetMainLoop() as SceneTree)?.Root?.CallDeferred("add_child", new StudioAutoOpenNode());
+            root?.CallDeferred("add_child", new StudioAutoOpenNode());
         }
     }
 }

@@ -42,11 +42,19 @@ namespace Cthangover.Mods.ScenarioStudio
             return label;
         }
 
-        /// <summary>Monospace state plate: running is green, paused is warning yellow.</summary>
-        public static void RunState(PanelContainer plate, Label text, bool paused, string caption)
+        /// <summary>Monospace state plate: running green, paused and held warning yellow, idle muted.</summary>
+        public static void RunState(PanelContainer plate, Label text, StudioRunState state, string caption)
         {
-            var color = paused ? UiTokens.Warning : UiTokens.Success;
-            plate.AddThemeStyleboxOverride("panel", Chip(UiTokens.BadgeFill(color), UiTokens.BadgeLine(color)));
+            var color = state switch
+            {
+                StudioRunState.Running => UiTokens.Success,
+                StudioRunState.Idle => UiTokens.Muted,
+                _ => UiTokens.Warning,
+            };
+            var style = state == StudioRunState.Idle
+                ? Chip(Colors.Transparent, UiTokens.Line)
+                : Chip(UiTokens.BadgeFill(color), UiTokens.BadgeLine(color));
+            plate.AddThemeStyleboxOverride("panel", style);
             text.Text = caption.ToUpperInvariant();
             text.AddThemeFontOverride("font", Mono);
             text.AddThemeFontSizeOverride("font_size", UiTokens.FontTiny);
@@ -339,8 +347,10 @@ namespace Cthangover.Mods.ScenarioStudio
             {
                 case StudioCandidateStatus.Running:
                     return UiTokens.Success;
-                case StudioCandidateStatus.Waiting:
+                case StudioCandidateStatus.Queued:
                     return UiTokens.Warning;
+                case StudioCandidateStatus.Failed:
+                    return UiTokens.Danger;
                 case StudioCandidateStatus.Skipped:
                     return UiTokens.TypeEnemy;
                 case StudioCandidateStatus.Completed:
@@ -360,8 +370,8 @@ namespace Cthangover.Mods.ScenarioStudio
                     return UiTokens.TypeUsed;
                 case StudioLogCategory.Stop:
                     return UiTokens.TypeEnemy;
-                case StudioLogCategory.Choice:
-                    return UiTokens.TypeRecipe;
+                case StudioLogCategory.End:
+                    return UiTokens.Muted;
                 case StudioLogCategory.Edit:
                     return UiTokens.Success;
                 default:
