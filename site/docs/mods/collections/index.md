@@ -457,6 +457,8 @@ A game is three layers, and only the first one is yours to write:
 1. **Your game's mod** — `<game>_game` (for example `lighthouse_game`): your
    scenes, scenarios and texts. Copy `mods/my_novel_game`, rename the folder,
    `id`, scene and scenario names (prefix them with your game) and locale keys.
+   Its scenario lines are written in English (`text "…" key=…`); other
+   languages, Russian included, live only in `locale/scenarios_<lang>.properties`.
 2. **Packs and mechanics you reuse** — `town_pack` for backgrounds and sound,
    `cooking` or `card_battle` for gameplay. Depend on them instead of copying
    their files: a fix in the pack reaches every game. To change a pack's
