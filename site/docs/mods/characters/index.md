@@ -125,7 +125,7 @@ Be honest with yourself about what this gives you:
 
 ## Real examples
 
-### Player character — `cthangover_story/characters/player/marao.json`
+### Player character — `cthangover_game/characters/player/marao.json`
 
 ```jsonc
 {
@@ -150,7 +150,7 @@ Be honest with yourself about what this gives you:
 }
 ```
 
-### Enemy — `cthangover_story/characters/enemies/wolf_1.json`
+### Enemy — `cthangover_game/characters/enemies/wolf_1.json`
 
 ```jsonc
 {
@@ -186,7 +186,7 @@ Be honest with yourself about what this gives you:
 }
 ```
 
-### Boss enemy — `cthangover_story/characters/enemies/werewolf_girl_1.json`
+### Boss enemy — `cthangover_game/characters/enemies/werewolf_girl_1.json`
 
 ```jsonc
 {
@@ -280,7 +280,7 @@ read whatever keys they care about (the stock physics actions use
 executors (`IActionExecutor`) can read their own via the `GetStr` / `GetInt` /
 `GetFloat` / `GetBool` helpers on `ActionCharacter`.
 
-The cthangover_story mod keeps its actions in `characters/actions/*.json`,
+The cthangover_game mod keeps its actions in `characters/actions/*.json`,
 each file a standalone `Kind: "action"` envelope — there is no index file:
 
 ```jsonc

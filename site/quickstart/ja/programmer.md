@@ -40,7 +40,7 @@ mods/
   "description": "新しいアクションとMod設定",       // Mod一覧に表示されるModの説明
   "sources": ["src/*.cs"],                       // ソースを集めるパターン（すべての ".cs" ファイル）
   "author": "programmer",                        // 作者
-  "depends": ["cthangover_story"]               // 本編ゲームへの依存（ロード順を手動で並べる必要がなくなる）
+  "depends": ["cthangover_game"]               // 本編ゲームへの依存（ロード順を手動で並べる必要がなくなる）
 }
 ```
 

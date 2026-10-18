@@ -34,7 +34,7 @@ Mỗi mod cần một manifest. Tạo `mods/quickstart_player/manifest.json`:
   "name": "Marao Buff",               // Tên hiển thị trong menu quản lý mod
   "description": "Mod đầu tiên của tôi!", // Mô tả hiển thị trong danh sách mod và danh mục
   "author": "player",                 // Tác giả mod (chuỗi tùy ý)
-  "depends": ["cthangover_story"]    // Phụ thuộc vào trò chơi chính (không cần tự sắp xếp thứ tự tải mod)
+  "depends": ["cthangover_game"]    // Phụ thuộc vào trò chơi chính (không cần tự sắp xếp thứ tự tải mod)
 }
 ```
 
@@ -64,7 +64,7 @@ Tạo `mods/quickstart_player/patches/character.json`:
 
 ### Cách hoạt động
 
-- **`"Id": "Marao"`** — mục tiêu của bản vá: nhân vật có định danh `Marao` (được định nghĩa trong mod `cthangover_story`).
+- **`"Id": "Marao"`** — mục tiêu của bản vá: nhân vật có định danh `Marao` (được định nghĩa trong mod `cthangover_game`).
 - **`"Health": 5000`**, **`"Attack": 1200`** và **`"Point": 2`** — ghi đè các trường của nhân vật. Giá trị mới thay thế giá trị cũ.
 - **`"Actions$add": ["physics/stun"]`** — hậu tố `$add` nghĩa là "thêm phần tử vào mảng". Hành động `physics/stun` được thêm vào danh sách; các hành động mặc định `physics/attack` và `physics/defence` vẫn giữ nguyên. Choáng tốn 2 AP — vì vậy chúng ta cũng tăng `Point`.
 

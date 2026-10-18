@@ -104,7 +104,7 @@ effect.
 
 ## Real examples
 
-### Consumable — `cthangover_story/items/food/ration.json`
+### Consumable — `cthangover_game/items/food/ration.json`
 
 ```jsonc
 {
@@ -123,7 +123,7 @@ effect.
 }
 ```
 
-### Crafting material — `cthangover_story/items/food/wolf_meat.json`
+### Crafting material — `cthangover_game/items/food/wolf_meat.json`
 
 ```jsonc
 {

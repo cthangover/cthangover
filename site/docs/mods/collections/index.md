@@ -75,7 +75,7 @@ is not read.
       "name": "Novel Core",                                // Frame title in the scheme
       "description": "Scenes, scenarios, dialogue.",       // Tooltip
       "role": "story",                                     // Slot role the mechanic fills in the scheme editor
-      "mods": ["cthangover_story>=1"],                    // Versioned mod references (same syntax as manifest depends)
+      "mods": ["cthangover_game>=1"],                    // Versioned mod references (same syntax as manifest depends)
       "optional": false,                                   // Marks the mechanic as skippable
       "selected": null,                                    // Player's choice for an optional mechanic (null = on)
       "locale": [                                          // Per-mechanic localized strings, same shape as below
@@ -157,7 +157,7 @@ Entries of `mechanics[].mods` and `includes[].ref` use the same format as
 
 ```jsonc
 "mods": [
-  "cthangover_story",       // any version
+  "cthangover_game",       // any version
   "turn_battle_base>=1",     // at least 1.x
   "card_battle=1.2.0"        // exactly this version
 ]

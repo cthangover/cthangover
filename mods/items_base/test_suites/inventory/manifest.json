@@ -5,6 +5,6 @@
     "src/*.cs"
   ],
   "depends": [
-    "cthangover_story>=1"
+    "cthangover_game>=1"
   ]
 }

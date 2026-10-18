@@ -26,7 +26,7 @@
       "role": "engine",
       "description": "Scenes, scenarios, dialogs, interactive objects, effects, time and lighting, the world map: what the editors preview and play.",
       "locale": [ { "lang": "ru", "name": "Движок новеллы", "description": "Сцены, сценарии, диалоги, интерактив, эффекты, время и свет, карта мира: то, что редакторы показывают и проигрывают." } ],
-      "mods": ["cthangover_story>=1", "shell2d_base>=1", "dialog_base>=1", "interactive_base>=1", "effects_base>=1", "time_base>=1", "map_base>=1"]
+      "mods": ["cthangover_game>=1", "shell2d_base>=1", "dialog_base>=1", "interactive_base>=1", "effects_base>=1", "time_base>=1", "map_base>=1"]
     },
     {
       "id": "story",

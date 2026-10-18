@@ -53,7 +53,7 @@ settings/volume = Volume
 
 ## Real examples
 
-From `mods/cthangover_story/locale/en.properties`:
+From `mods/cthangover_game/locale/en.properties`:
 
 ```properties
 # Character names

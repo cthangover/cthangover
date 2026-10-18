@@ -40,7 +40,7 @@ mods/
   "description": "Hành động mới và cài đặt mod",    // Mô tả mod hiển thị trong danh sách mod
   "sources": ["src/*.cs"],                         // Mẫu để thu thập mã nguồn (tất cả tệp ".cs")
   "author": "programmer",                          // Tác giả
-  "depends": ["cthangover_story"]                 // Phụ thuộc vào trò chơi chính (không cần tự sắp xếp thứ tự tải mod)
+  "depends": ["cthangover_game"]                 // Phụ thuộc vào trò chơi chính (không cần tự sắp xếp thứ tự tải mod)
 }
 ```
 

@@ -19,7 +19,7 @@ music/
 - `.ogg` — Vorbis-compressed audio, any bitrate
 - Files are referenced by name (without extension) in playlists
 
-## Real example — `cthangover_story/music/playlists/default.json`
+## Real example — `cthangover_game/music/playlists/default.json`
 
 ```jsonc
 {

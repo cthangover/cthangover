@@ -47,7 +47,7 @@ Every layer sees the result of the previous ones, so a later mod can override a 
 mods/
 ├── shell2d_base/
 │   └── scenes/ui/base_scene.tscn           ← BaseScene / Scene / ViewBox / TopView / slots / notifications
-└── cthangover_story/
+└── cthangover_game/
     └── patches/scenes/ui/base_scene.tscn   ← DialogCanvas on top of the shell
 ```
 

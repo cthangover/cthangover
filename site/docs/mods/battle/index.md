@@ -177,7 +177,7 @@ flowchart LR
      "name": "MyBattle",                                   // Human-readable mod name
      "description": "Custom battle system",                // Short description
      "sources": ["src/**/*.cs"],                           // Glob patterns for C# source files
-     "depends": ["cthangover_story", "turn_battle_base"]  // Battle platform dependency
+     "depends": ["cthangover_game", "turn_battle_base"]  // Battle platform dependency
    }
 ```
 

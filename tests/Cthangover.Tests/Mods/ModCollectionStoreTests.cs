@@ -68,7 +68,7 @@ namespace Engine.Tests.Mods
                     Version = "1.0.0",
                     Mechanics = new List<ModCollectionMechanic>
                     {
-                        new() { Id = "core", Name = "Core", Mods = new List<string> { "cthangover_story>=1" } },
+                        new() { Id = "core", Name = "Core", Mods = new List<string> { "cthangover_game>=1" } },
                         new() { Id = "cards", Mods = new List<string> { "card_battle" }, Optional = true },
                     },
                 },
@@ -85,7 +85,7 @@ namespace Engine.Tests.Mods
             Assert.Equal("1.0.0", novel.Version);
             Assert.Equal(2, novel.Mechanics.Count);
             Assert.Equal("core", novel.Mechanics[0].Id);
-            Assert.Equal("cthangover_story>=1", novel.Mechanics[0].Mods[0]);
+            Assert.Equal("cthangover_game>=1", novel.Mechanics[0].Mods[0]);
             Assert.True(novel.Mechanics[1].Optional);
             Assert.All(loaded, c => Assert.Equal(ModCollectionOrigin.User, c.Origin));
             Assert.All(loaded, c => Assert.NotNull(c.Package));
