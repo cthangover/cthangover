@@ -238,8 +238,12 @@ namespace Cthangover.Core.Scenes
                 }
                 else if (string.IsNullOrEmpty(TestScenarioText))
                 {
-                    GameLogger.Log("SCENE", $"SwitchScene: test play redirect '{sceneName}' -> 'mainmenu'");
-                    sceneName = "mainmenu";
+                    // The played scenario leaves its scene: that is the end of
+                    // the play-test. Stay put — the editor that started it
+                    // takes the player back where the play-test began.
+                    GameLogger.Log("SCENE", $"SwitchScene: test play ends on switch to '{sceneName}'");
+                    IsTestPlayActive = false;
+                    return;
                 }
             }
 

@@ -275,6 +275,19 @@
       "timeoutSeconds": 180
     },
     {
+      "name": "ingame_play",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "windowed": true,
+      "args": [
+        "--",
+        "--game=novel_template",
+        "--new",
+        "--with-mods=editor_tools",
+        "--itest=ingame_play"
+      ],
+      "timeoutSeconds": 240
+    },
+    {
       "name": "map_editor",
       "scene": "res://scenes/test/map_editor_autotest.tscn",
       "timeoutSeconds": 120
