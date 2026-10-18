@@ -34,7 +34,7 @@ mods/
   "name": "Marao Buff",             // Mod管理メニューに表示される名前
   "description": "初めてのMod！",    // Mod一覧とカタログに表示される説明
   "author": "player",               // Modの作者（任意の文字列）
-  "depends": ["visual_novel_core"]  // 本編ゲームへの依存（ロード順を手動で並べる必要がなくなる）
+  "depends": ["cthangover_story"]  // 本編ゲームへの依存（ロード順を手動で並べる必要がなくなる）
 }
 ```
 
@@ -64,7 +64,7 @@ mods/
 
 ### 仕組み
 
-- **`"Id": "Marao"`** — パッチの対象：識別子 `Marao` のキャラクター（`visual_novel_core` Modで定義）。
+- **`"Id": "Marao"`** — パッチの対象：識別子 `Marao` のキャラクター（`cthangover_story` Modで定義）。
 - **`"Health": 5000`**、**`"Attack": 1200`**、**`"Point": 2`** — キャラクターのフィールドを上書きします。新しい値が古い値を置き換えます。
 - **`"Actions$add": ["physics/stun"]`** — サフィックス `$add` は「配列に要素を追加する」という意味です。アクション `physics/stun` がリストに追加され、標準の `physics/attack` と `physics/defence` はそのまま残ります。スタンには 2 AP が必要なので、`Point` も上げています。
 

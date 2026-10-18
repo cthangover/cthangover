@@ -1,0 +1,325 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://mods/map_base/src/MapWidget.cs" id="1_script"]
+[ext_resource type="Script" path="res://mods/map_base/src/MapZonesLayer.cs" id="2_zones"]
+
+[node name="MapWidget" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+script = ExtResource("1_script")
+
+[node name="Bg" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.9)
+
+[node name="EmptyState" type="CenterContainer" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="EmptyBox" type="VBoxContainer" parent="EmptyState"]
+layout_mode = 2
+theme_override_constants/separation = 8
+mouse_filter = 2
+
+[node name="Title" type="Label" parent="EmptyState/EmptyBox"]
+layout_mode = 2
+text = "MAP UNAVAILABLE"
+horizontal_alignment = 1
+mouse_filter = 2
+
+[node name="Hint" type="Label" parent="EmptyState/EmptyBox"]
+custom_minimum_size = Vector2(420, 0)
+layout_mode = 2
+text = "EMPTY HINT"
+horizontal_alignment = 1
+autowrap_mode = 3
+mouse_filter = 2
+
+[node name="MapRoot" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Sheet" type="Panel" parent="MapRoot"]
+layout_mode = 1
+anchors_preset = 0
+mouse_filter = 2
+
+[node name="MapImage" type="TextureRect" parent="MapRoot/Sheet"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 0
+
+[node name="Frame" type="Panel" parent="MapRoot/Sheet"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = 12.0
+offset_right = -12.0
+offset_bottom = -12.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="ZonesLayer" type="Control" parent="MapRoot/Sheet"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+script = ExtResource("2_zones")
+
+[node name="MarkersLayer" type="Control" parent="MapRoot/Sheet"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="CloseButton" type="Button" parent="MapRoot/Sheet"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -62.0
+offset_top = 24.0
+offset_right = -24.0
+offset_bottom = 62.0
+grow_horizontal = 0
+mouse_filter = 0
+text = "X"
+
+[node name="Hud" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 0
+offset_left = 40.0
+offset_top = 26.0
+offset_right = 400.0
+offset_bottom = 96.0
+grow_horizontal = 1
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="Title" type="Label" parent="Hud"]
+layout_mode = 2
+text = "MAP"
+mouse_filter = 2
+
+[node name="Sub" type="Label" parent="Hud"]
+layout_mode = 2
+text = "SUBTITLE"
+mouse_filter = 2
+
+[node name="Legend" type="PanelContainer" parent="."]
+layout_mode = 1
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 40.0
+offset_top = -72.0
+offset_right = 340.0
+offset_bottom = -32.0
+grow_horizontal = 1
+mouse_filter = 2
+
+[node name="Items" type="HBoxContainer" parent="Legend"]
+layout_mode = 2
+theme_override_constants/separation = 16
+mouse_filter = 2
+
+[node name="Current" type="HBoxContainer" parent="Legend/Items"]
+layout_mode = 2
+theme_override_constants/separation = 7
+mouse_filter = 2
+
+[node name="Dot" type="Panel" parent="Legend/Items/Current"]
+custom_minimum_size = Vector2(10, 10)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+
+[node name="Text" type="Label" parent="Legend/Items/Current"]
+layout_mode = 2
+text = "HERE"
+mouse_filter = 2
+
+[node name="Available" type="HBoxContainer" parent="Legend/Items"]
+layout_mode = 2
+theme_override_constants/separation = 7
+mouse_filter = 2
+
+[node name="Dot" type="Panel" parent="Legend/Items/Available"]
+custom_minimum_size = Vector2(10, 10)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+
+[node name="Text" type="Label" parent="Legend/Items/Available"]
+layout_mode = 2
+text = "AVAILABLE"
+mouse_filter = 2
+
+[node name="Locked" type="HBoxContainer" parent="Legend/Items"]
+layout_mode = 2
+theme_override_constants/separation = 7
+mouse_filter = 2
+
+[node name="Dot" type="Panel" parent="Legend/Items/Locked"]
+custom_minimum_size = Vector2(10, 10)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+
+[node name="Text" type="Label" parent="Legend/Items/Locked"]
+layout_mode = 2
+text = "CLOSED"
+mouse_filter = 2
+
+[node name="Hint" type="PanelContainer" parent="."]
+layout_mode = 1
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = -220.0
+offset_top = -62.0
+offset_right = 220.0
+offset_bottom = -32.0
+grow_horizontal = 2
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="Hint"]
+layout_mode = 2
+text = "HINT"
+horizontal_alignment = 1
+mouse_filter = 2
+
+[node name="ZoneCard" type="PanelContainer" parent="."]
+visible = false
+layout_mode = 1
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = -384.0
+offset_right = -24.0
+grow_horizontal = 0
+grow_vertical = 2
+mouse_filter = 0
+
+[node name="Column" type="VBoxContainer" parent="ZoneCard"]
+layout_mode = 2
+theme_override_constants/separation = 12
+mouse_filter = 2
+
+[node name="Head" type="HBoxContainer" parent="ZoneCard/Column"]
+layout_mode = 2
+theme_override_constants/separation = 12
+mouse_filter = 2
+
+[node name="Emblem" type="Panel" parent="ZoneCard/Column/Head"]
+custom_minimum_size = Vector2(58, 58)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+
+[node name="Glyph" type="TextureRect" parent="ZoneCard/Column/Head/Emblem"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 14.0
+offset_top = 14.0
+offset_right = -14.0
+offset_bottom = -14.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Info" type="VBoxContainer" parent="ZoneCard/Column/Head"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 3
+mouse_filter = 2
+
+[node name="Name" type="Label" parent="ZoneCard/Column/Head/Info"]
+layout_mode = 2
+text = "LOCATION"
+mouse_filter = 2
+
+[node name="Sub" type="Label" parent="ZoneCard/Column/Head/Info"]
+layout_mode = 2
+text = "scene"
+mouse_filter = 2
+
+[node name="Badges" type="HBoxContainer" parent="ZoneCard/Column"]
+layout_mode = 2
+theme_override_constants/separation = 5
+mouse_filter = 2
+
+[node name="Desc" type="Label" parent="ZoneCard/Column"]
+layout_mode = 2
+text = "DESCRIPTION"
+autowrap_mode = 3
+mouse_filter = 2
+
+[node name="Rule" type="Panel" parent="ZoneCard/Column"]
+custom_minimum_size = Vector2(0, 1)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Caption" type="Label" parent="ZoneCard/Column"]
+layout_mode = 2
+text = "TRANSITION"
+mouse_filter = 2
+
+[node name="CardHint" type="Label" parent="ZoneCard/Column"]
+layout_mode = 2
+text = "CARD HINT"
+autowrap_mode = 3
+mouse_filter = 2
+
+[node name="Message" type="Label" parent="ZoneCard/Column"]
+visible = false
+layout_mode = 2
+text = "MESSAGE"
+autowrap_mode = 3
+mouse_filter = 2
+
+[node name="GoButton" type="Button" parent="ZoneCard/Column"]
+layout_mode = 2
+text = "GO"

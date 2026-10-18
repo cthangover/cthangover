@@ -40,7 +40,7 @@ mods/
   "description": "새 액션과 모드 설정",             // 모드 목록에 표시되는 모드 설명
   "sources": ["src/*.cs"],                       // 소스를 모으는 패턴 (모든 ".cs" 파일)
   "author": "programmer",                        // 작성자
-  "depends": ["visual_novel_core"]               // 본편 게임에 대한 의존성 (모드 로드 순서를 직접 정할 필요가 없음)
+  "depends": ["cthangover_story"]               // 본편 게임에 대한 의존성 (모드 로드 순서를 직접 정할 필요가 없음)
 }
 ```
 
@@ -228,7 +228,7 @@ mymod/enable_mod = Enable mod
 |---|---|
 | 씬 입장/퇴장 구독하기 | [Scene Subscriptions](site/docs/mods/configs/) |
 | 나만의 전투 모드 만들기 | [Battle System](site/docs/mods/battle/) |
-| 도구 창 만들기 | [Creating a Custom Tool](site/docs/mods/tools/tutorial) |
+| 도구 창 만들기 | [Creating a Custom Tool](site/docs/mods/editor_tools/tutorial) |
 | GDScript로 모드 작성하기 | [GDScript in Mods](site/docs/mods/src/gdscript/) |
 | 사용 가능한 모든 인터페이스 | [C# Source Code in Mods](site/docs/mods/src/) |
 

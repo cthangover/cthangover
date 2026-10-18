@@ -44,7 +44,7 @@ mods/
   "name": "나의 술집",                          // 모드 메뉴에 표시되는 모드 이름
   "description": "마을에 술집 씬을 추가합니다",   // 모드 메뉴에 표시되는 모드 설명
   "author": "modder",                         // 모드 작성자
-  "depends": ["visual_novel_core"]            // 본편 게임에 대한 의존성 (모드 로드 순서를 직접 정할 필요가 없음)
+  "depends": ["cthangover_story"]            // 본편 게임에 대한 의존성 (모드 로드 순서를 직접 정할 필요가 없음)
 }
 ```
 
@@ -78,7 +78,7 @@ mods/
 
 어떤 PNG 이미지든 괜찮습니다. 게임은 셰이더 조명과 시간대를 지원하므로 배경은 자동으로 조명됩니다.
 
-> 이미지가 없다면 임시로 `mods/visual_novel_core/backgrounds/home/kitchen.png` → `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png`로 복사하세요. 소리 없이도 됩니다: `"defaultAmbient": ""`로 지정하세요.
+> 이미지가 없다면 임시로 `mods/cthangover_story/backgrounds/home/kitchen.png` → `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png`로 복사하세요. 소리 없이도 됩니다: `"defaultAmbient": ""`로 지정하세요.
 
 ---
 
@@ -123,7 +123,7 @@ end
 
 ## 6단계: 마을 확장 (씬 우선순위)
 
-이제 `visual_novel_core`의 원본 파일을 **건드리지 않고** 마을 씬에 술집 입구를 추가합니다.
+이제 `cthangover_story`의 원본 파일을 **건드리지 않고** 마을 씬에 술집 입구를 추가합니다.
 
 `mods/quickstart_modder/scenarios/town_entry_override.scenario`:
 
@@ -150,8 +150,8 @@ end
 | priority | 시나리오 | 모드 |
 |---|---|---|
 | `1` | 우리의 `town_entry_override` | `quickstart_modder` |
-| `10`–`30` | 무라카미와의 만남 (해당 `condition:`이 충족되는 동안만) | `murakami` |
-| `40` | 기본 마을 메뉴 | `visual_novel_core` |
+| `10`–`30` | 무라카미와의 만남 (해당 `condition:`이 충족되는 동안만) | `cthangover_murakami` |
+| `40` | 기본 마을 메뉴 | `cthangover_story` |
 
 씬에 들어가면 엔진은 `priority` 오름차순 — **가장 작은** 값부터 — 으로 조건을 만족하는 첫 시나리오를 실행합니다. 시나리오가 씬을 바꾸지 않고 끝나면 다음 시나리오가 시작됩니다. 그래서:
 

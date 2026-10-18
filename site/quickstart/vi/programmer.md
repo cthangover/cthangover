@@ -40,7 +40,7 @@ mods/
   "description": "Hành động mới và cài đặt mod",    // Mô tả mod hiển thị trong danh sách mod
   "sources": ["src/*.cs"],                         // Mẫu để thu thập mã nguồn (tất cả tệp ".cs")
   "author": "programmer",                          // Tác giả
-  "depends": ["visual_novel_core"]                 // Phụ thuộc vào trò chơi chính (không cần tự sắp xếp thứ tự tải mod)
+  "depends": ["cthangover_story"]                 // Phụ thuộc vào trò chơi chính (không cần tự sắp xếp thứ tự tải mod)
 }
 ```
 
@@ -228,7 +228,7 @@ Khởi động lại trò chơi:
 |---|---|
 | Đăng ký sự kiện vào/ra cảnh | [Scene Subscriptions](site/docs/mods/configs/) |
 | Tạo chế độ chiến đấu riêng | [Battle System](site/docs/mods/battle/) |
-| Làm cửa sổ công cụ | [Creating a Custom Tool](site/docs/mods/tools/tutorial) |
+| Làm cửa sổ công cụ | [Creating a Custom Tool](site/docs/mods/editor_tools/tutorial) |
 | Viết mod bằng GDScript | [GDScript in Mods](site/docs/mods/src/gdscript/) |
 | Tất cả interface có sẵn | [C# Source Code in Mods](site/docs/mods/src/) |
 

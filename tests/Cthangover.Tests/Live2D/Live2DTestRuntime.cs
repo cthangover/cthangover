@@ -13,7 +13,7 @@ namespace Engine.Tests.Live2D
     /// runtime Live2DCubismCore.dll is placed next to the mod binaries, while in
     /// the unit test process a DllImport resolver (registered from this module
     /// initializer for both the Live2D assembly and the test assembly) loads it
-    /// directly from mods/live2d/native. Without the resolver, tests that exercise
+    /// directly from mods/live2d_base/native. Without the resolver, tests that exercise
     /// the real native core (Haru.moc3 fixture) would fail with DllNotFoundException.
     /// </summary>
     internal static class Live2DTestRuntime
@@ -44,7 +44,7 @@ namespace Engine.Tests.Live2D
                 else
                     (fileName, sdkDir) = ("libLive2DCubismCore.so", Path.Combine("linux", "x86_64"));
 
-                var shipped = Path.Combine(RepoRoot, "mods", "live2d", "native", fileName);
+                var shipped = Path.Combine(RepoRoot, "mods", "live2d_base", "native", fileName);
                 if (File.Exists(shipped))
                     return shipped;
                 return Path.Combine(RepoRoot, "sdk", "CubismSdkForNative-5-r.5", "Core", "dll", sdkDir, fileName);

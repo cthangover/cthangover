@@ -15,7 +15,7 @@ locally-installed mods.
   },
   "mods": [                                                // List of mod entries in this catalog
     {
-      "id": "live2d",                                      // Canonical mod identifier (matches manifest.json id)
+      "id": "live2d_base",                                 // Canonical mod identifier (matches manifest.json id)
       "name": "Live2D Cubism",                             // Fallback display name (used when no locale matches)
       "author": "ct",                                      // Author credit string
       "version": "1.0.0",                                  // Latest release version (semver)
@@ -35,7 +35,7 @@ locally-installed mods.
       "category": "library",                               // Category slug or comma-separated combination (e.g. "library, gameplay"): story, characters, gameplay, visual, audio, ui, locale, library, engine, overhaul, tools, editor, debug, other
       "tags": ["live2d", "ui", "graphics", "2d"],          // Search/filter tags
       "icon_url": "https://git.cthangover.ru/cthangover/mod_live2d/raw/branch/master/mod.png", // Full URL to preview icon (PNG or JPEG)
-      "depends": ["visual_novel_core>=1"],                              // Versioned dependency strings
+      "depends": ["cthangover_story>=1"],                              // Versioned dependency strings
       "conflicts_with": [],                                // Mutually exclusive mod IDs
       "downloads": [                                       // Version-specific download entries with mirrors
         {
@@ -78,7 +78,7 @@ locally-installed mods.
 | `category` | string | Category slug or comma-separated combination of slugs (e.g. `"library, gameplay"`): `story`, `characters`, `gameplay`, `visual`, `audio`, `ui`, `locale`, `library`, `engine`, `overhaul`, `tools`, `editor`, `debug`, `other` |
 | `tags` | string[] | Search/filter tags |
 | `icon_url` | string | Full URL to preview icon (PNG or JPEG) |
-| `depends` | string[] | Versioned dependency strings (e.g. `"visual_novel_core>=1"`) |
+| `depends` | string[] | Versioned dependency strings (e.g. `"cthangover_story>=1"`) |
 | `conflicts_with` | string[] | Mutually exclusive mod IDs |
 | `downloads` | object[] | Version-specific download entries with mirrors |
 | `downloads[].version` | string | Semver version of this download entry |

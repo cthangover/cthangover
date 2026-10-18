@@ -39,22 +39,22 @@ Patches are applied on top of the scene that won the override battle in `TscnSce
 
 Every layer sees the result of the previous ones, so a later mod can override a value set by an earlier patch.
 
-## Cross-mod base scene (base2d + visual novel)
+## Cross-mod base scene (shell2d_base + visual novel)
 
-`base2d` owns the 2D shell scene; content mods add their layers to it with a patch instead of shipping their own shell:
+`shell2d_base` owns the 2D shell scene; content mods add their layers to it with a patch instead of shipping their own shell:
 
 ```filestree
 mods/
-├── base2d/
+├── shell2d_base/
 │   └── scenes/ui/base_scene.tscn           ← BaseScene / Scene / ViewBox / TopView / slots / notifications
-└── visual_novel_core/
+└── cthangover_story/
     └── patches/scenes/ui/base_scene.tscn   ← DialogCanvas on top of the shell
 ```
 
 ```ini
 [gd_scene load_steps=3 format=3]
 
-[ext_resource type="PackedScene" path="res://mods/base2d/scenes/ui/base_scene.tscn" id="1_target"]
+[ext_resource type="PackedScene" path="res://mods/shell2d_base/scenes/ui/base_scene.tscn" id="1_target"]
 [ext_resource type="PackedScene" path="res://scenes/ui/dialog_canvas.tscn" id="2_dialog"]
 
 [node name="BaseScene" instance=ExtResource("1_target")]

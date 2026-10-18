@@ -24,7 +24,7 @@ Scene definitions map scene IDs to default backgrounds, ambient music, and entry
 
 ## Real examples
 
-From `mods/visual_novel_core/scenes/`:
+From `mods/cthangover_story/scenes/`:
 
 ```jsonc
 {

@@ -8,7 +8,7 @@ Welcome to the cthangover documentation. Here you'll find guides, code examples,
 
 cthangover is not tied to a single genre. The C# kernel (`Core/`) provides genre-neutral infrastructure only: scenes and scenarios with the DSL, the mod registry, saves, resources, UI hosting, events, audio, and pluggable battle rulesets. It makes no assumptions about dialogue, portraits, or the shape of the game.
 
-A **game core** is an ordinary mod that turns the kernel into a concrete game. `visual_novel_core` is the reference core shipped with the project: it defines characters, avatars, backgrounds, quests, items, and scenarios for a dialogue-driven story game. It is only one possible core — the kernel does not require it, and it uses the same public interfaces available to every mod.
+A **game core** is an ordinary mod that turns the kernel into a concrete game. `cthangover_story` is the reference core shipped with the project: it defines characters, avatars, backgrounds, quests, items, and scenarios for a dialogue-driven story game. It is only one possible core — the kernel does not require it, and it uses the same public interfaces available to every mod.
 
 Any genre can be built the same way. For example, a 2D sprite RPG with tile movement, turn-based encounters, and its own inventory UI can be plugged in as a core mod: it reuses the kernel (scenes, saves, events, resource pipeline) and brings its own assets, scenarios, actions, and UI scenes. The same approach works for other genres.
 
@@ -81,7 +81,7 @@ A core can be disabled or replaced. Mods that depend on a specific core must dec
 |---|---|
 | [Source Code (C#)](mods/src/) | C# in mods — Roslyn compilation, interfaces |
 | [GDScript in Mods](mods/src/gdscript/) | Scenario actions, conditions, battle, items, lifecycle |
-| [Developer Tools](mods/tools/) | Custom editor windows and toolbar integration |
+| [Developer Tools](mods/editor_tools/) | Custom editor windows and toolbar integration |
 | [Locale](mods/locale/) | Localization system |
 | [UI Wrappers](mods/wrappers/) | UI template wrapper system |
 | [Scene Event Metadata](mods/metadata/) | `[SceneEvent]` attribute for declarative hooks |

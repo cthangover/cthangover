@@ -1,0 +1,152 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://mods/items_base/src/ui/InventoryPanelBehaviour.cs" id="1_script"]
+
+[node name="InventoryPanel" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+script = ExtResource("1_script")
+
+[node name="Backdrop" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 40.0
+offset_top = 78.0
+offset_right = -40.0
+offset_bottom = -30.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+
+[node name="Margin" type="MarginContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 14
+mouse_filter = 1
+
+[node name="Root" type="VBoxContainer" parent="Panel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+mouse_filter = 1
+
+[node name="Header" type="HBoxContainer" parent="Panel/Margin/Root"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="Title" type="Label" parent="Panel/Margin/Root/Header"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+
+[node name="Tabs" type="HBoxContainer" parent="Panel/Margin/Root/Header"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="HeaderSpacer" type="Control" parent="Panel/Margin/Root/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="ApBox" type="HBoxContainer" parent="Panel/Margin/Root/Header"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ApLabel" type="Label" parent="Panel/Margin/Root/Header/ApBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+
+[node name="ApPips" type="HBoxContainer" parent="Panel/Margin/Root/Header/ApBox"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="CloseButton" type="Button" parent="Panel/Margin/Root/Header"]
+custom_minimum_size = Vector2(38, 38)
+layout_mode = 2
+focus_mode = 0
+text = "✕"
+
+[node name="Rule" type="Panel" parent="Panel/Margin/Root"]
+custom_minimum_size = Vector2(0, 1)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Toolbar" type="HBoxContainer" parent="Panel/Margin/Root"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Search" type="LineEdit" parent="Panel/Margin/Root/Toolbar"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 13
+
+[node name="SortOption" type="OptionButton" parent="Panel/Margin/Root/Toolbar"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+
+[node name="Body" type="HBoxContainer" parent="Panel/Margin/Root"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 14
+
+[node name="Left" type="VBoxContainer" parent="Panel/Margin/Root/Body"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="GridScroll" type="ScrollContainer" parent="Panel/Margin/Root/Body/Left"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="GridContent" type="Control" parent="Panel/Margin/Root/Body/Left/GridScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 0
+
+[node name="GridFooter" type="HBoxContainer" parent="Panel/Margin/Root/Body/Left"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="ShownLabel" type="Label" parent="Panel/Margin/Root/Body/Left/GridFooter"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+
+[node name="HintLabel" type="Label" parent="Panel/Margin/Root/Body/Left/GridFooter"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+
+[node name="Right" type="PanelContainer" parent="Panel/Margin/Root/Body"]
+custom_minimum_size = Vector2(430, 0)
+layout_mode = 2
+
+[node name="PassportScroll" type="ScrollContainer" parent="Panel/Margin/Root/Body/Right"]
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="Passport" type="VBoxContainer" parent="Panel/Margin/Root/Body/Right/PassportScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 14

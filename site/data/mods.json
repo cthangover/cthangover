@@ -1,12 +1,12 @@
 {
  "generated": "2026-10-18",
  "stats": {
-  "mods": 28,
+  "mods": 30,
   "dslCommands": 29,
-  "coreFiles": 476,
-  "coreLoc": 43657,
-  "modFiles": 601,
-  "modLoc": 74858
+  "coreFiles": 480,
+  "coreLoc": 43934,
+  "modFiles": 652,
+  "modLoc": 80072
  },
  "battle": [
   {
@@ -14,7 +14,7 @@
    "version": "2.0.0",
    "deps": [
     "characters_base",
-    "interface",
+    "ui_base",
     "items_base",
     "quests_base",
     "time_base"
@@ -24,7 +24,7 @@
    "id": "card_battle",
    "version": "1.0.0",
    "deps": [
-    "interface",
+    "ui_base",
     "turn_battle_base"
    ]
   },
@@ -32,7 +32,7 @@
    "id": "ff_battle",
    "version": "1.0.0",
    "deps": [
-    "interface",
+    "ui_base",
     "turn_battle_base"
    ]
   }
@@ -48,36 +48,8 @@
     "library"
    ],
    "deps": [
-    "base2d",
-    "interface"
-   ],
-   "test": false
-  },
-  {
-   "id": "base2d",
-   "name": "2D Platform",
-   "version": "1.0.0",
-   "desc": "2D presentation platform: base shell scene with the view box, toolbar, panel slots and notifications. Parent for all 2D mods; content mods fill the shell through scene patches.",
-   "cat": [
-    "engine",
-    "library"
-   ],
-   "deps": [
-    "time_base",
-    "interface"
-   ],
-   "test": false
-  },
-  {
-   "id": "base_menu",
-   "name": "Base Menu",
-   "version": "1.0.0",
-   "desc": "Registry-driven main menu: built-in buttons, settings and save/load panels moved out of the core.",
-   "cat": [
-    "ui"
-   ],
-   "deps": [
-    "interface"
+    "shell2d_base",
+    "ui_base"
    ],
    "test": false
   },
@@ -90,7 +62,7 @@
     "gameplay"
    ],
    "deps": [
-    "interface",
+    "ui_base",
     "turn_battle_base"
    ],
    "test": false
@@ -105,8 +77,8 @@
     "library"
    ],
    "deps": [
-    "base2d",
-    "interface"
+    "shell2d_base",
+    "ui_base"
    ],
    "test": false
   },
@@ -119,10 +91,64 @@
     "gameplay"
    ],
    "deps": [
-    "visual_novel_core",
-    "interface",
+    "cthangover_story",
+    "ui_base",
     "items_base",
     "time_base"
+   ],
+   "test": false
+  },
+  {
+   "id": "cthangover_murakami",
+   "name": "Cthangover: Murakami",
+   "version": "1.0.0",
+   "desc": "Story line about Murakami: a wild wolf prowling the town, the meeting scenario chain (start, wolf battle, werewolf boss, escort home), the Murakami character with her avatar set and the meeting quest.",
+   "cat": [
+    "story",
+    "characters"
+   ],
+   "deps": [
+    "cthangover_story",
+    "ui_base",
+    "characters_base",
+    "quests_base",
+    "turn_battle_base"
+   ],
+   "test": false
+  },
+  {
+   "id": "cthangover_party",
+   "name": "Cthangover: Starter Party",
+   "version": "1.0.0",
+   "desc": "Seeds the default starter party (Marao) and the slave_master skill after mod resources are ready, and restores it on NewGameStartedEvent. Split out of cthangover_story so the base content mod stays pure content (scenes/dialogs/quests/data) with no C# gameplay logic.",
+   "cat": [
+    "engine",
+    "library"
+   ],
+   "deps": [
+    "cthangover_story",
+    "skills_base"
+   ],
+   "test": false
+  },
+  {
+   "id": "cthangover_story",
+   "name": "Cthangover: Story",
+   "version": "2.0.0",
+   "desc": "Story content of the Cthangover game: scenes, scenarios, characters, items, quests, backgrounds and the main game collection.",
+   "cat": [
+    "story"
+   ],
+   "deps": [
+    "shell2d_base",
+    "dialog_base",
+    "interactive_base",
+    "skills_base",
+    "map_base",
+    "ui_base",
+    "characters_base",
+    "items_base",
+    "quests_base"
    ],
    "test": false
   },
@@ -136,12 +162,30 @@
     "library"
    ],
    "deps": [
-    "base2d",
+    "shell2d_base",
     "interactive_base",
     "effects_base",
     "time_base",
     "map_base",
-    "interface"
+    "ui_base"
+   ],
+   "test": false
+  },
+  {
+   "id": "editor_tools",
+   "name": "Editor Tools",
+   "version": "1.0.0",
+   "desc": "Developer toolbox of ToolBox windows: scenario graph editor, map editor with zones, scene builder with inspector, interactive and light editors, and the mod catalog export window.",
+   "cat": [
+    "tools",
+    "editor"
+   ],
+   "deps": [
+    "dialog_base",
+    "interactive_base",
+    "time_base",
+    "map_base",
+    "ui_base"
    ],
    "test": false
   },
@@ -166,7 +210,7 @@
     "gameplay"
    ],
    "deps": [
-    "interface",
+    "ui_base",
     "turn_battle_base"
    ],
    "test": false
@@ -181,20 +225,9 @@
     "library"
    ],
    "deps": [
-    "base2d",
-    "interface"
+    "shell2d_base",
+    "ui_base"
    ],
-   "test": false
-  },
-  {
-   "id": "interface",
-   "name": "Interface",
-   "version": "1.0.0",
-   "desc": "Engine UI subsystem: widget toolkit (Widget/ModWidget/lists), ViewBox background viewport, ToolBox toolbar, GameMenu/SaveIcon, notification panels, UiKit design system, DeviceInput. Kernel keeps only contracts (IWidget, IDialogBox, IToolbarHost, ISaveIconHost, IBackgroundView, IUiLazyConstruct, MenuRegistry, ToolFactory, NotificationBuffer, SceneEventController, CthangoverTheme/UiTokens boot styling) and drives this mod through those seams.",
-   "cat": [
-    "ui"
-   ],
-   "deps": [],
    "test": false
   },
   {
@@ -206,13 +239,13 @@
     "gameplay"
    ],
    "deps": [
-    "base2d",
-    "interface"
+    "shell2d_base",
+    "ui_base"
    ],
    "test": false
   },
   {
-   "id": "live2d",
+   "id": "live2d_base",
    "name": "Live2D Cubism",
    "version": "1.0.0",
    "desc": "Live2D Cubism C# runtime: model loading, rendering, physics, animation, effects",
@@ -221,7 +254,7 @@
     "visual"
    ],
    "deps": [
-    "interface"
+    "ui_base"
    ],
    "test": false
   },
@@ -247,7 +280,20 @@
     "library"
    ],
    "deps": [
-    "interface"
+    "ui_base"
+   ],
+   "test": false
+  },
+  {
+   "id": "menu_base",
+   "name": "Menu",
+   "version": "1.0.0",
+   "desc": "Registry-driven main menu: built-in buttons, settings and save/load panels moved out of the core.",
+   "cat": [
+    "ui"
+   ],
+   "deps": [
+    "ui_base"
    ],
    "test": false
   },
@@ -261,25 +307,22 @@
     "ui"
    ],
    "deps": [
-    "interface"
+    "ui_base"
    ],
    "test": false
   },
   {
-   "id": "murakami",
-   "name": "Murakami",
+   "id": "novel_template",
+   "name": "Novel Template",
    "version": "1.0.0",
-   "desc": "Story line about Murakami: a wild wolf prowling the town, the meeting scenario chain (start, wolf battle, werewolf boss, escort home), the Murakami character with her avatar set and the meeting quest.",
+   "desc": "Starting point for a new visual novel: a town where you can go into a bar or back home, and a way back from both. Nothing but scenes, backgrounds, text and scene switches on the bare novel engine — copy it, rename it and grow your story from here.",
    "cat": [
-    "story",
-    "characters"
+    "story"
    ],
    "deps": [
-    "visual_novel_core",
-    "interface",
-    "characters_base",
-    "quests_base",
-    "turn_battle_base"
+    "shell2d_base",
+    "dialog_base",
+    "audio_base"
    ],
    "test": false
   },
@@ -294,7 +337,7 @@
    ],
    "deps": [
     "characters_base",
-    "interface"
+    "ui_base"
    ],
    "test": false
   },
@@ -307,9 +350,9 @@
     "gameplay"
    ],
    "deps": [
-    "base2d",
+    "shell2d_base",
     "characters_base",
-    "interface"
+    "ui_base"
    ],
    "test": false
   },
@@ -328,6 +371,36 @@
    "test": false
   },
   {
+   "id": "scenario_studio",
+   "name": "Scenario Studio",
+   "version": "0.1.0",
+   "desc": "In-game scenario debugger and live editor: a non-modal dock over the running game with pause, step, breakpoints and restarts (with state rollback), the current scenario line, scene candidates with the reason they did or did not start, editable game state, an event log and the scene map. Edits go into folder mods or into a per-game studio layer over read-only mods, which can be exported as a mod. Author mode shows the script, novice mode the story moment.",
+   "cat": [
+    "tools",
+    "editor"
+   ],
+   "deps": [
+    "ui_base",
+    "dialog_base"
+   ],
+   "test": false
+  },
+  {
+   "id": "shell2d_base",
+   "name": "2D Shell",
+   "version": "1.0.0",
+   "desc": "2D presentation platform: base shell scene with the view box, toolbar, panel slots and notifications. Parent for all 2D mods; content mods fill the shell through scene patches.",
+   "cat": [
+    "engine",
+    "library"
+   ],
+   "deps": [
+    "time_base",
+    "ui_base"
+   ],
+   "test": false
+  },
+  {
    "id": "skills_base",
    "name": "Skills Engine",
    "version": "1.0.0",
@@ -337,22 +410,7 @@
     "library"
    ],
    "deps": [
-    "interface"
-   ],
-   "test": false
-  },
-  {
-   "id": "starter_party",
-   "name": "Starter Party",
-   "version": "1.0.0",
-   "desc": "Seeds the default starter party (Marao) and the slave_master skill after mod resources are ready, and restores it on NewGameStartedEvent. Split out of visual_novel_core so the base content mod stays pure content (scenes/dialogs/quests/data) with no C# gameplay logic.",
-   "cat": [
-    "engine",
-    "library"
-   ],
-   "deps": [
-    "visual_novel_core",
-    "skills_base"
+    "ui_base"
    ],
    "test": false
   },
@@ -365,8 +423,8 @@
     "other"
    ],
    "deps": [
-    "visual_novel_core",
-    "murakami",
+    "cthangover_story",
+    "cthangover_murakami",
     "cooking",
     "characters_base",
     "items_base"
@@ -383,25 +441,7 @@
     "library"
    ],
    "deps": [
-    "interface"
-   ],
-   "test": false
-  },
-  {
-   "id": "tools",
-   "name": "Tools",
-   "version": "1.0.0",
-   "desc": "Developer toolbox of ToolBox windows: scenario graph editor, map editor with zones, scene builder with inspector, interactive and light editors, and the mod catalog export window.",
-   "cat": [
-    "tools",
-    "editor"
-   ],
-   "deps": [
-    "dialog_base",
-    "interactive_base",
-    "time_base",
-    "map_base",
-    "interface"
+    "ui_base"
    ],
    "test": false
   },
@@ -416,11 +456,22 @@
    ],
    "deps": [
     "characters_base",
-    "interface",
+    "ui_base",
     "items_base",
     "quests_base",
     "time_base"
    ],
+   "test": false
+  },
+  {
+   "id": "ui_base",
+   "name": "UI",
+   "version": "1.0.0",
+   "desc": "Engine UI subsystem: widget toolkit (Widget/ModWidget/lists), ViewBox background viewport, ToolBox toolbar, GameMenu/SaveIcon, notification panels, UiKit design system, DeviceInput. Kernel keeps only contracts (IWidget, IDialogBox, IToolbarHost, ISaveIconHost, IBackgroundView, IUiLazyConstruct, MenuRegistry, ToolFactory, NotificationBuffer, SceneEventController, CthangoverTheme/UiTokens boot styling) and drives this mod through those seams.",
+   "cat": [
+    "ui"
+   ],
+   "deps": [],
    "test": false
   },
   {
@@ -436,32 +487,10 @@
     "interactive_base"
    ],
    "test": false
-  },
-  {
-   "id": "visual_novel_core",
-   "name": "Visual Novel Core",
-   "version": "2.0.0",
-   "desc": "Visual novel content and UI on top of the 2D platform: scenarios, characters, items, quests and the dialog layer patched into the base shell",
-   "cat": [
-    "engine",
-    "story"
-   ],
-   "deps": [
-    "base2d",
-    "dialog_base",
-    "interactive_base",
-    "skills_base",
-    "map_base",
-    "interface",
-    "characters_base",
-    "items_base",
-    "quests_base"
-   ],
-   "test": false
   }
  ],
  "dslSample": {
-  "file": "mods/murakami/scenarios/murakami/meeting/murakami_meeting_after_battle.scenario",
+  "file": "mods/cthangover_murakami/scenarios/murakami/meeting/murakami_meeting_after_battle.scenario",
   "text": "scene: town_entry\npriority: 20\ncondition: MeetingMurakamiQuest.hasTag(\"wolf_battle\") && MeetingMurakamiQuest.notHasTag(\"boss_battle\")\n---\nbackground \"town/meetingmurakami/00002-1920617752\"\ntext \"[Волк определённо целился в этот дом — следы вели прямо к порогу]\" key=meeting_murakami/after_wolf/tracks\n\nselect \"[Марао решил осмотреть жилище]\" key=meeting_murakami/after_wolf/inspect\noption \"Подойти к двери\" key=meeting_murakami/after_wolf/opt_approach -> :approach\n\n:approach\nbackground \"town/meetingmurakami/00014-1724512349\"\ntext \"- Милая леди!\" key=meeting_murakami/after_wolf/greeting first=marao/think\ntext \"- Что вы тут делаете в одиночестве?\" key=meeting_murakami/after_wolf/alone first=marao/think\ntext \".\" key=meeting_murakami/after_wolf/dot1\ntext \"..\" key=meeting_murakami/after_wolf/dot2\ntext \"...\" key=meeting_murakami/after_wolf/dot3\ntext \"- Помогите...\" key=meeting_murakami/after_wolf/help second=murakami/fear_1\ntext \"- Оно там... внутри...\" key=meeting_murakami/after_wolf/inside second=murakami/fear_2\n\nselect \"[Девушка дрожит от страха]\" key=meeting_murakami/after_wolf/fear\noption \"Войти\" key=meeting_murakami/after_wolf/opt_enter -> :enter\n\n:enter\nlight_set [{\"x\":0.8433963,\"y\":0.037922725,\"radius\":600,\"influence\":1,\"color\":\"#ffff00\"},{\"x\":0.29016176,\"y\":0.16111115,\"radius\":600,\"influence\":1,\"color\":\"#ffff00\"}]\nbackground \"town/meetingmurakami/00079-2783395178\"\ntext \"[Марао, не колеблясь, перешагнул порог]\" key=meeting_murakami/after_wolf/enter\ntext \"- Так-так...\" key=meeting_murakami/after_wolf/look_around first=marao/think\n\nbackground \"town/meetingmurakami/00078-2783395178\""
  }
 }

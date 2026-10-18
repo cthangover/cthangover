@@ -41,9 +41,9 @@ namespace Cthangover.Tests.Mods.HotReload
         [Theory]
         [InlineData("/game/mods/cooking/src/Cooking.cs")]
         [InlineData(@"C:\game\mods\cooking\manifest.json")]
-        [InlineData("/game/mods/visual_novel_core/scenarios/start.scenario")]
-        [InlineData("/game/mods/base_menu/locale/ru.properties")]
-        [InlineData("/game/mods/tools/scenes/novel_editor_hub.tscn")]
+        [InlineData("/game/mods/cthangover_story/scenarios/start.scenario")]
+        [InlineData("/game/mods/menu_base/locale/ru.properties")]
+        [InlineData("/game/mods/editor_tools/scenes/novel_editor_hub.tscn")]
         public void IsRelevantChange_ModContent(string path)
         {
             Assert.True(HotReloadSettings.IsRelevantChange(path));
@@ -55,7 +55,7 @@ namespace Cthangover.Tests.Mods.HotReload
         [InlineData("/game/mods/cooking/src/.Cooking.cs.swp")]
         [InlineData("/game/mods/cooking/src/Cooking.cs~")]
         [InlineData("/game/mods/cooking/.git/index")]
-        [InlineData("/game/mods/live2d/source_code/obj/Live2D.dll")]
+        [InlineData("/game/mods/live2d_base/source_code/obj/Live2D.dll")]
         [InlineData("/game/mods/x/save.tmp")]
         [InlineData("")]
         [InlineData(null)]

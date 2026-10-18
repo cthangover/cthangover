@@ -44,7 +44,7 @@ mods/
   "name": "我的酒吧",                      // 模组菜单中显示的名称
   "description": "为城镇添加酒吧场景",       // 模组菜单中显示的描述
   "author": "modder",                     // 模组作者
-  "depends": ["visual_novel_core"]        // 依赖核心游戏（无需手动排列模组加载顺序）
+  "depends": ["cthangover_story"]        // 依赖核心游戏（无需手动排列模组加载顺序）
 }
 ```
 
@@ -78,7 +78,7 @@ mods/
 
 任何 PNG 图片都可以。游戏支持着色器光照和昼夜时间 — 背景会自动被照亮。
 
-> 如果没有自己的图片，可以临时复制 `mods/visual_novel_core/backgrounds/home/kitchen.png` → `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png`。也可以不要声音：设置 `"defaultAmbient": ""`。
+> 如果没有自己的图片，可以临时复制 `mods/cthangover_story/backgrounds/home/kitchen.png` → `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png`。也可以不要声音：设置 `"defaultAmbient": ""`。
 
 ---
 
@@ -123,7 +123,7 @@ end
 
 ## 步骤 6：扩展城镇（场景优先级）
 
-现在，在**不修改** `visual_novel_core` 原始文件的情况下，为城镇场景添加酒吧入口。
+现在，在**不修改** `cthangover_story` 原始文件的情况下，为城镇场景添加酒吧入口。
 
 `mods/quickstart_modder/scenarios/town_entry_override.scenario`：
 
@@ -150,8 +150,8 @@ end
 | priority | 剧本 | 模组 |
 |---|---|---|
 | `1` | 我们的 `town_entry_override` | `quickstart_modder` |
-| `10`–`30` | 与村上相遇（仅在其 `condition:` 满足时） | `murakami` |
-| `40` | 标准城镇菜单 | `visual_novel_core` |
+| `10`–`30` | 与村上相遇（仅在其 `condition:` 满足时） | `cthangover_murakami` |
+| `40` | 标准城镇菜单 | `cthangover_story` |
 
 进入场景时，引擎按 `priority` 升序 — 从**最小**值开始 — 运行第一个符合条件的剧本。当一个剧本在没有切换场景的情况下结束时，下一个剧本就会开始。因此：
 

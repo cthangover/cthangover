@@ -1,0 +1,52 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://mods/map_base/src/MapMarker.cs" id="1_script"]
+
+[node name="MapMarker" type="VBoxContainer"]
+theme_override_constants/separation = 4
+alignment = 1
+mouse_filter = 0
+script = ExtResource("1_script")
+
+[node name="EmblemWrap" type="Control" parent="."]
+custom_minimum_size = Vector2(46, 46)
+layout_mode = 2
+size_flags_horizontal = 4
+mouse_filter = 2
+
+[node name="Emblem" type="Panel" parent="EmblemWrap"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Glyph" type="TextureRect" parent="EmblemWrap/Emblem"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 13.0
+offset_top = 13.0
+offset_right = -13.0
+offset_bottom = -13.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="."]
+layout_mode = 2
+text = "LOCATION"
+horizontal_alignment = 1
+mouse_filter = 2
+
+[node name="NoteLabel" type="Label" parent="."]
+visible = false
+layout_mode = 2
+text = "NOTE"
+horizontal_alignment = 1
+mouse_filter = 2

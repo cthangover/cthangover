@@ -1,0 +1,404 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://mods/skills_base/src/SkillsPanel/SkillsPanelBehaviour.cs" id="1_script"]
+
+[node name="SkillsPanel" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+script = ExtResource("1_script")
+
+[node name="Bg" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.9)
+
+[node name="Window" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 40.0
+offset_top = 78.0
+offset_right = -40.0
+offset_bottom = -30.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Margin" type="MarginContainer" parent="Window"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 14
+
+[node name="Root" type="VBoxContainer" parent="Window/Margin"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 12
+
+[node name="Header" type="HBoxContainer" parent="Window/Margin/Root"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 18
+
+[node name="Title" type="Label" parent="Window/Margin/Root/Header"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="TabsRow" type="HBoxContainer" parent="Window/Margin/Root/Header"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 6
+
+[node name="Spacer" type="Control" parent="Window/Margin/Root/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="ProgressLabel" type="Label" parent="Window/Margin/Root/Header"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="ProgressValue" type="Label" parent="Window/Margin/Root/Header"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="CloseButton" type="Button" parent="Window/Margin/Root/Header"]
+custom_minimum_size = Vector2(38, 38)
+layout_mode = 2
+theme_type_variation = "CthangoverIcon"
+text = "✕"
+
+[node name="Rule" type="Panel" parent="Window/Margin/Root"]
+custom_minimum_size = Vector2(0, 1)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Body" type="HBoxContainer" parent="Window/Margin/Root"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+theme_override_constants/separation = 14
+
+[node name="Showcase" type="VBoxContainer" parent="Window/Margin/Root/Body"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_constants/separation = 10
+
+[node name="Toolbar" type="HBoxContainer" parent="Window/Margin/Root/Body/Showcase"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 10
+
+[node name="SearchEdit" type="LineEdit" parent="Window/Margin/Root/Body/Showcase/Toolbar"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SortOption" type="OptionButton" parent="Window/Margin/Root/Body/Showcase/Toolbar"]
+layout_mode = 2
+
+[node name="RarityTabs" type="HFlowContainer" parent="Window/Margin/Root/Body/Showcase"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/h_separation = 6
+theme_override_constants/v_separation = 6
+
+[node name="GridScroll" type="ScrollContainer" parent="Window/Margin/Root/Body/Showcase"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="GridContent" type="Control" parent="Window/Margin/Root/Body/Showcase/GridScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="EmptyLabel" type="Label" parent="Window/Margin/Root/Body/Showcase"]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="Footer" type="HBoxContainer" parent="Window/Margin/Root/Body/Showcase"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 16
+
+[node name="Hint" type="Label" parent="Window/Margin/Root/Body/Showcase/Footer"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="ResetButton" type="Button" parent="Window/Margin/Root/Body/Showcase/Footer"]
+layout_mode = 2
+
+[node name="Side" type="PanelContainer" parent="Window/Margin/Root/Body"]
+custom_minimum_size = Vector2(400, 0)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SideScroll" type="ScrollContainer" parent="Window/Margin/Root/Body/Side"]
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="Passport" type="VBoxContainer" parent="Window/Margin/Root/Body/Side/SideScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_constants/separation = 14
+
+[node name="SideLabel" type="Label" parent="Window/Margin/Root/Body/Side/SideScroll/Passport"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Plate" type="Control" parent="Window/Margin/Root/Body/Side/SideScroll/Passport"]
+custom_minimum_size = Vector2(340, 438)
+layout_mode = 2
+size_flags_horizontal = 4
+mouse_filter = 2
+
+[node name="PlateBg" type="Panel" parent="Window/Margin/Root/Body/Side/SideScroll/Passport/Plate"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="PlateArt" type="PanelContainer" parent="Window/Margin/Root/Body/Side/SideScroll/Passport/Plate"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.03
+anchor_top = 0.03
+anchor_right = 0.97
+anchor_bottom = 0.68
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="PlateImage" type="TextureRect" parent="Window/Margin/Root/Body/Side/SideScroll/Passport/Plate/PlateArt"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 6
+
+[node name="PlateGems" type="Label" parent="Window/Margin/Root/Body/Side/SideScroll/Passport/Plate"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.97
+anchor_right = 0.97
+offset_left = -64.0
+offset_top = 14.0
+offset_right = -8.0
+offset_bottom = 32.0
+grow_horizontal = 0
+mouse_filter = 2
+horizontal_alignment = 2
+
+[node name="PlateMedal" type="PanelContainer" parent="Window/Margin/Root/Body/Side/SideScroll/Passport/Plate"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -17.0
+offset_top = -17.0
+offset_right = 17.0
+offset_bottom = 17.0
+grow_horizontal = 2
+mouse_filter = 2
+
+[node name="MedalGlyph" type="Label" parent="Window/Margin/Root/Body/Side/SideScroll/Passport/Plate/PlateMedal"]
+layout_mode = 2
+mouse_filter = 2
+text = "◆"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="PlateNameBox" type="PanelContainer" parent="Window/Margin/Root/Body/Side/SideScroll/Passport/Plate"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.14
+anchor_top = 0.8
+anchor_right = 0.86
+anchor_bottom = 0.93
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="PlateName" type="Label" parent="Window/Margin/Root/Body/Side/SideScroll/Passport/Plate/PlateNameBox"]
+layout_mode = 2
+mouse_filter = 2
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="Badges" type="HFlowContainer" parent="Window/Margin/Root/Body/Side/SideScroll/Passport"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/h_separation = 6
+theme_override_constants/v_separation = 6
+
+[node name="Desc" type="Label" parent="Window/Margin/Root/Body/Side/SideScroll/Passport"]
+layout_mode = 2
+mouse_filter = 2
+autowrap_mode = 3
+
+[node name="Chips" type="HFlowContainer" parent="Window/Margin/Root/Body/Side/SideScroll/Passport"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/h_separation = 5
+theme_override_constants/v_separation = 5
+
+[node name="Grant" type="PanelContainer" parent="Window/Margin/Root/Body/Side/SideScroll/Passport"]
+visible = false
+layout_mode = 2
+mouse_filter = 2
+
+[node name="GrantRow" type="HBoxContainer" parent="Window/Margin/Root/Body/Side/SideScroll/Passport/Grant"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 10
+
+[node name="GrantIcon" type="TextureRect" parent="Window/Margin/Root/Body/Side/SideScroll/Passport/Grant/GrantRow"]
+custom_minimum_size = Vector2(44, 44)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="GrantInfo" type="VBoxContainer" parent="Window/Margin/Root/Body/Side/SideScroll/Passport/Grant/GrantRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="GrantCaption" type="Label" parent="Window/Margin/Root/Body/Side/SideScroll/Passport/Grant/GrantRow/GrantInfo"]
+layout_mode = 2
+mouse_filter = 2
+autowrap_mode = 3
+
+[node name="GrantName" type="Label" parent="Window/Margin/Root/Body/Side/SideScroll/Passport/Grant/GrantRow/GrantInfo"]
+layout_mode = 2
+mouse_filter = 2
+autowrap_mode = 3
+
+[node name="Empty" type="Label" parent="Window/Margin/Root/Body/Side/SideScroll/Passport"]
+visible = false
+layout_mode = 2
+mouse_filter = 2
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Hud" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -458.0
+offset_top = -232.0
+offset_right = -32.0
+offset_bottom = -22.0
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="HudAccent" type="Panel" parent="Hud"]
+layout_mode = 1
+anchors_preset = -1
+anchor_bottom = 1.0
+offset_right = 2.0
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="HudMargin" type="MarginContainer" parent="Hud"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 15
+theme_override_constants/margin_top = 13
+theme_override_constants/margin_right = 15
+theme_override_constants/margin_bottom = 12
+
+[node name="HudColumn" type="VBoxContainer" parent="Hud/HudMargin"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="HudHead" type="HBoxContainer" parent="Hud/HudMargin/HudColumn"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 10
+
+[node name="HudTitle" type="Label" parent="Hud/HudMargin/HudColumn/HudHead"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="HudSpacer" type="Control" parent="Hud/HudMargin/HudColumn/HudHead"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="HudCount" type="Label" parent="Hud/HudMargin/HudColumn/HudHead"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="HudRule" type="Panel" parent="Hud/HudMargin/HudColumn"]
+custom_minimum_size = Vector2(0, 1)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="HudScroll" type="ScrollContainer" parent="Hud/HudMargin/HudColumn"]
+custom_minimum_size = Vector2(0, 96)
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="HudList" type="GridContainer" parent="Hud/HudMargin/HudColumn/HudScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_constants/h_separation = 20
+theme_override_constants/v_separation = 4
+columns = 2
+
+[node name="HudEmpty" type="Label" parent="Hud/HudMargin/HudColumn"]
+visible = false
+layout_mode = 2
+mouse_filter = 2
+autowrap_mode = 3
+
+[node name="HudFoot" type="Label" parent="Hud/HudMargin/HudColumn"]
+layout_mode = 2
+mouse_filter = 2
+autowrap_mode = 3

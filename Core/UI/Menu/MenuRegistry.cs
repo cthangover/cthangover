@@ -19,7 +19,7 @@ namespace Cthangover.Core.UI.Menu
     /// <see cref="MenuButtonEntry"/>s with a scene binding);</item>
     /// <item>programmatically, from mod initializers via
     /// <see cref="RegisterButton"/> / <see cref="RegisterPanel"/>, which is how
-    /// the <c>base_menu</c> mod publishes the built-in new game / load /
+    /// the <c>menu_base</c> mod publishes the built-in new game / load /
     /// settings / exit items and the settings and save/load panels.</item>
     /// </list>
     /// <para/>

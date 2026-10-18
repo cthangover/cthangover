@@ -5,7 +5,7 @@
     "src/*.cs"
   ],
   "depends": [
-    "visual_novel_core>=1",
+    "cthangover_story>=1",
     "cooking>=1"
   ]
 }

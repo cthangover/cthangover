@@ -23,7 +23,7 @@ run/main_scene="res://scenes/menu/launcher.tscn"
 config/use_custom_user_dir=true
 config/features=PackedStringArray("4.6", "C#", "Forward Plus", "Mobile")
 boot_splash/bg_color=Color(0.19599697, 0.15303564, 0.19599697, 1)
-config/icon="res://mods/interface/ui/icon.png"
+config/icon="res://mods/ui_base/ui/icon.png"
 
 [autoload]
 

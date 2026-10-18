@@ -43,9 +43,9 @@ entity kind.
 
 ```jsonc
 {
-  "id": "card_novel",                                      // Required. Canonical id, unique across all sources
+  "id": "my_novel",                                        // Required. Canonical id, unique across all sources
   "kind": "Game",                                          // Game | Component | Toolset — see "Collection kinds"
-  "name": "Card Novel",                                    // Display name (falls back to id; see Localization)
+  "name": "My Novel",                                      // Display name (falls back to id; see Localization)
   "author": "ct",                                          // Author credit
   "version": "1.0.0",                                      // Semver; picks the newest of same-id catalog collections
   "description": "A visual novel with card battles.",      // Shown on the gallery card and in the details panel
@@ -68,7 +68,7 @@ entity kind.
       "name": "Novel Core",                                // Frame title in the scheme
       "description": "Scenes, scenarios, dialogue.",       // Tooltip
       "role": "story",                                     // Slot role the mechanic fills in the scheme editor
-      "mods": ["visual_novel_core>=1"],                    // Versioned mod references (same syntax as manifest depends)
+      "mods": ["cthangover_story>=1"],                    // Versioned mod references (same syntax as manifest depends)
       "optional": false,                                   // Marks the mechanic as skippable
       "selected": null,                                    // Player's choice for an optional mechanic (null = on)
       "locale": [                                          // Per-mechanic localized strings, same shape as below
@@ -150,7 +150,7 @@ Entries of `mechanics[].mods` and `includes[].ref` use the same format as
 
 ```jsonc
 "mods": [
-  "visual_novel_core",       // any version
+  "cthangover_story",       // any version
   "turn_battle_base>=1",     // at least 1.x
   "card_battle=1.2.0"        // exactly this version
 ]
@@ -184,7 +184,7 @@ duplicating the document.
 Any text field that starts with `@` is a **locale key**, not literal text:
 
 ```jsonc
-"name": "@collections/vn_starter_novel/name"
+"name": "@collections/my_novel/name"
 ```
 
 The text after `@` is resolved through `TranslationServer`, which merges the
@@ -205,13 +205,13 @@ ships the collection is the natural owner:
 
 ```properties
 # en.properties
-collections/vn_starter_novel/name = Card Novel
-collections/vn_starter_novel/description = A visual novel with card battles.
-collections/vn_starter_novel/mechanic/vn_core/name = Novel Core
-collections/vn_starter_novel/mechanic/cards/name = Card Battle
+collections/my_novel/name = My Novel
+collections/my_novel/description = A visual novel with an optional card-battle layer.
+collections/my_novel/mechanic/vn_core/name = Novel Core
+collections/my_novel/mechanic/cards/name = Card Battle
 
 # ru.properties — same keys, Russian values
-collections/vn_starter_novel/name = Карточная новелла
+collections/my_novel/name = Моя новелла
 ```
 
 Because translations are merged from all loaded mods, a separate language-pack
@@ -337,37 +337,38 @@ mismatches are shown as warnings but do not block apply.
    bundled copy overrides an online catalog entry with the same id; the player
    can override both locally.
 
-A complete example — `mods/visual_novel_core/collections/vn_starter_novel.json`,
-demonstrating `kind`, `@key` markers and `locale[]` together:
+A complete example — a game that names its texts through `@key` markers and also
+carries `locale[]` for the game picker:
 
 ```jsonc
 {
-  "id": "vn_starter_novel",
+  "id": "my_novel",
   "kind": "Game",
-  "name": "@collections/vn_starter_novel/name",              // resolved from locale/*.properties
-  "description": "@collections/vn_starter_novel/description",
-  "author": "ct",
+  "name": "@collections/my_novel/name",              // resolved from locale/*.properties
+  "description": "@collections/my_novel/description",
+  "author": "you",
   "version": "1.0.0",
+  "entry": { "scene": "my_town" },
   "tags": ["novel", "cards"],
   "locale": [
-    { "lang": "en", "name": "Card Novel", "description": "A visual novel with an optional card-battle layer." },
-    { "lang": "ru", "name": "Карточная новелла", "description": "Визуальная новелла с необязательным слоем карточных боёв." }
+    { "lang": "en", "name": "My Novel", "description": "A visual novel with an optional card-battle layer." },
+    { "lang": "ru", "name": "Моя новелла", "description": "Визуальная новелла с необязательным слоем карточных боёв." }
   ],
   "mechanics": [
     {
-      "id": "vn_core",
-      "name": "@collections/vn_starter_novel/mechanic/vn_core/name",
-      "description": "@collections/vn_starter_novel/mechanic/vn_core/description",
+      "id": "story",
+      "name": "@collections/my_novel/mechanic/story/name",
+      "description": "@collections/my_novel/mechanic/story/description",
       "role": "story",
-      "mods": ["visual_novel_core>=1"]
+      "mods": ["my_novel_story>=1", "shell2d_base>=1", "dialog_base>=1"]
     },
     {
       "id": "cards",
-      "name": "@collections/vn_starter_novel/mechanic/cards/name",
-      "description": "@collections/vn_starter_novel/mechanic/cards/description",
+      "name": "@collections/my_novel/mechanic/cards/name",
+      "description": "@collections/my_novel/mechanic/cards/description",
       "role": "battle",
       "optional": true,
-      "mods": ["turn_battle_base>=1"]
+      "mods": ["turn_battle_base>=1", "card_battle>=1"]
     }
   ]
 }
@@ -383,12 +384,12 @@ A catalog may publish collections in its root envelope:
   "mods": [ /* ... */ ],
   "collections": [
     {
-      "id": "card_novel",
+      "id": "my_novel",
       "kind": "Game",
-      "name": "Card Novel",
+      "name": "My Novel",
       "version": "1.0.0",
       "mechanics": [
-        { "id": "vn_core", "name": "Novel Core", "mods": ["visual_novel_core>=1"] }
+        { "id": "story", "name": "Story", "mods": ["my_novel_story>=1"] }
       ]
     }
   ]
@@ -443,20 +444,12 @@ Writes (downloading, enabling) stay outside the plan: the UI passes
 
 ## Real examples
 
-- `mods/visual_novel_core/collections/vn_starter_novel.json` — a two-mechanic game
-  assembled around the visual novel core, demonstrating `@key` localization
-  markers and an optional card-battle mechanic.
-- `mods/card_battle/collections/card_novel.json` — a story game assembled from
-  five mechanics (novel core, story, turn battle, cards, interface) with
-  `locale[]` entries; the arrows show real dependencies such as
-  `card_battle → turn_battle_base → interface`.
-- `mods/tools/collections/dev_tools.json` — the developer toolset
-  (`"kind": "Toolset"`), with the optional `validation` mechanic demonstrating
-  the `optional` flag.
-
-## Related
-
-- [Configs — manifest.json](../configs/) — mod identity and `depends` syntax
-- [Mod Catalog & Network Repository](../catalog/) — catalog schema, merging, checksums
-- [Locale — Localization](../locale/) — `.properties` format and key conventions
-- [Mod Load Order](../load-order/) — how `depends` affects loading
+- `mods/novel_template/collections/novel_template.json` — the smallest playable
+  game: one story mechanic (the template's scenes and scenarios) and the novel
+  engine (`shell2d_base`, `dialog_base`, `audio_base`), texts in `locale[]`.
+  Start a new novel by copying the `novel_template` mod.
+- `mods/cthangover_story/collections/cthangover.json` — the main game: story,
+  novel engine, characters, quests, items, battles with an optional second
+  battle core, Live2D and tools, each as its own mechanic.
+- `mods/editor_tools/collections/novel_editor.json` — a "game" whose entry scene
+  is the editor hub instead of a story scene.

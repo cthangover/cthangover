@@ -44,7 +44,7 @@ mods/
   "name": "Mi bar",                                  // Nombre del mod que se muestra en el menú de mods
   "description": "Añade una escena de bar al pueblo", // Descripción del mod que se muestra en el menú de mods
   "author": "modder",                                // Autor del mod
-  "depends": ["visual_novel_core"]                   // Dependencia del juego principal (así no hay que ordenar a mano la carga del mod)
+  "depends": ["cthangover_story"]                   // Dependencia del juego principal (así no hay que ordenar a mano la carga del mod)
 }
 ```
 
@@ -78,7 +78,7 @@ Coloca una imagen en `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png` y e
 
 Sirve cualquier imagen PNG. El juego admite iluminación por shaders y hora del día — el fondo se iluminará automáticamente.
 
-> Si no tienes una imagen propia, copia temporalmente `mods/visual_novel_core/backgrounds/home/kitchen.png` → `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png`. También puedes prescindir del sonido: pon `"defaultAmbient": ""`.
+> Si no tienes una imagen propia, copia temporalmente `mods/cthangover_story/backgrounds/home/kitchen.png` → `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png`. También puedes prescindir del sonido: pon `"defaultAmbient": ""`.
 
 ---
 
@@ -123,7 +123,7 @@ end
 
 ## Paso 6: Extender el pueblo (prioridad de escena)
 
-Ahora añadiremos una entrada al bar en la escena del pueblo, **sin tocar** los archivos originales de `visual_novel_core`.
+Ahora añadiremos una entrada al bar en la escena del pueblo, **sin tocar** los archivos originales de `cthangover_story`.
 
 `mods/quickstart_modder/scenarios/town_entry_override.scenario`:
 
@@ -150,8 +150,8 @@ La escena `town_entry` tiene ahora varios escenarios:
 | priority | Escenario | Mod |
 |---|---|---|
 | `1` | nuestro `town_entry_override` | `quickstart_modder` |
-| `10`–`30` | el encuentro con Murakami (solo mientras se cumplen sus `condition:`) | `murakami` |
-| `40` | el menú estándar del pueblo | `visual_novel_core` |
+| `10`–`30` | el encuentro con Murakami (solo mientras se cumplen sus `condition:`) | `cthangover_murakami` |
+| `40` | el menú estándar del pueblo | `cthangover_story` |
 
 Al entrar en una escena, el motor ejecuta el primer escenario apto en orden ascendente de `priority` — empezando por el **menor**. Cuando un escenario termina sin cambiar de escena, se inicia el siguiente. Por eso:
 

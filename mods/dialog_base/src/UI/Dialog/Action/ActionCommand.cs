@@ -44,6 +44,8 @@ namespace Cthangover.Mods.Dialog.Action
         public float StartTime { get; private set; }
         /// <summary>Action IDs whose <see cref="Destruct"/> will be triggered when this action destructs. Used for cross-action cleanup dependencies.</summary>
         public ISet<string> DelayedDestruct { get; } = new HashSet<string>();
+        /// <summary>1-based scenario line the action was parsed from; 0 when built in code.</summary>
+        public int SourceLine { get; set; }
 
         /// <summary>
         /// Scene node lookup seam for subclasses. Replaces direct

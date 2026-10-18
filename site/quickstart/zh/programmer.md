@@ -40,7 +40,7 @@ mods/
   "description": "新动作和模组设置",         // 模组列表中显示的描述
   "sources": ["src/*.cs"],                // 收集源文件的模式（所有 ".cs" 文件）
   "author": "programmer",                 // 作者
-  "depends": ["visual_novel_core"]        // 依赖核心游戏（无需手动排列模组加载顺序）
+  "depends": ["cthangover_story"]        // 依赖核心游戏（无需手动排列模组加载顺序）
 }
 ```
 
@@ -228,7 +228,7 @@ mymod/enable_mod = Enable mod
 |---|---|
 | 订阅场景进入/退出 | [Scene Subscriptions](site/docs/mods/configs/) |
 | 创建自己的战斗模式 | [Battle System](site/docs/mods/battle/) |
-| 制作工具窗口 | [Creating a Custom Tool](site/docs/mods/tools/tutorial) |
+| 制作工具窗口 | [Creating a Custom Tool](site/docs/mods/editor_tools/tutorial) |
 | 用 GDScript 编写模组 | [GDScript in Mods](site/docs/mods/src/gdscript/) |
 | 所有可用接口 | [C# Source Code in Mods](site/docs/mods/src/) |
 

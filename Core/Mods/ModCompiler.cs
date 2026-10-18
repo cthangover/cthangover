@@ -118,7 +118,7 @@ namespace Cthangover.Core.Mods
                 Directory.CreateDirectory(CacheRoot);
 
             // Sorted over the whole set, then filtered: a dependency without code
-            // (base2d) still orders its own dependencies (time_base) before the
+            // (shell2d_base) still orders its own dependencies (time_base) before the
             // mods that reach them through it (audio_base).
             var infos = new List<ModInfo>();
             foreach (var mod in mods.Values)

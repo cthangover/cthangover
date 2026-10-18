@@ -60,7 +60,7 @@ stat (e.g. `characters/skills/effects/recruit`), `Value` is the magnitude
 (`+10%` vs `+10`). Effects sharing a `Key` are summed across every owned
 skill by `SkillEffectAggregator` into the skills panel's global "collection
 effect" plate — so one key must keep the same unit across all skills. The
-reference definition `visual_novel_core/characters/skills/slave_master.json`
+reference definition `cthangover_story/characters/skills/slave_master.json`
 ships one effect: `+10%` recruitment (`"Value": 10, "Percent": true`).
 
 ## Granting action cards

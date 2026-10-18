@@ -8,7 +8,7 @@
   "sources": [
     "src/**/*.cs"
   ],
-  "depends": ["characters_base>=1", "interface>=1"],
+  "depends": ["characters_base>=1", "ui_base>=1"],
   "ui": [
     {
       "id": "journal",

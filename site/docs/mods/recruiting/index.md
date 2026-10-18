@@ -24,7 +24,7 @@ Because the event type lives in the core and carries ids only, neither side depe
 With `recruiting` disabled:
 
 - `turn_battle_base` still publishes `CharactersDefeatedEvent` — into an empty subscription list;
-- `visual_novel_core` and `cooking` load normally (they no longer depend on recruiting);
+- `cthangover_story` and `cooking` load normally (they no longer depend on recruiting);
 - the save file simply has no `recruiting` slot;
 - a core save from an older version opens with an empty roster (no backward-compatible `Recruits` blob is read).
 

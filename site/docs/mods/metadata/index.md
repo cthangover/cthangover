@@ -92,8 +92,8 @@ Each `depends` entry is a string `[modId][op][version][?]`, parsed by `ModDepend
 ```jsonc
 {
     "depends": [
-        "visual_novel_core",           // bare id — any version
-        "visual_novel_core>=1",        // core 1 or newer
+        "cthangover_story",           // bare id — any version
+        "cthangover_story>=1",        // core 1 or newer
         "my_lib^1.2.0",   // version starting with segments 1.2.0
         "extra_icons<2",
         "soft_dep?"       // trailing ? — optional dependency

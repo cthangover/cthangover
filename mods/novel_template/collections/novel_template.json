@@ -1,0 +1,33 @@
+{
+  "id": "novel_template",
+  "kind": "game",
+  "name": "Novel Template",
+  "author": "ct",
+  "version": "1.0.0",
+  "description": "The smallest playable novel: a town, a bar and a home connected by scene switches. Made to show a modder how scenes, scenarios and transitions fit together.",
+  "cover": "mod.png",
+  "entry": { "scene": "template_town" },
+  "tags": ["novel", "template"],
+  "locale": [
+    { "lang": "en", "name": "Novel Template", "description": "The smallest playable novel: a town, a bar and a home connected by scene switches. Made to show a modder how scenes, scenarios and transitions fit together." },
+    { "lang": "ru", "name": "Шаблон новеллы", "description": "Самая маленькая играбельная новелла: город, бар и дом, связанные переходами между сценами. Сделана, чтобы показать моддеру, как устроены сцены, сценарии и переходы." }
+  ],
+  "mechanics": [
+    {
+      "id": "story",
+      "name": "Story",
+      "role": "story",
+      "description": "The template's scenes, scenarios, backgrounds and the bar ambience.",
+      "locale": [ { "lang": "ru", "name": "Сюжет", "description": "Сцены, сценарии, фоны шаблона и звук бара." } ],
+      "mods": ["novel_template>=1"]
+    },
+    {
+      "id": "novel_engine",
+      "name": "Novel engine",
+      "role": "engine",
+      "description": "2D shell, dialogs and the scenario DSL, audio.",
+      "locale": [ { "lang": "ru", "name": "Движок новеллы", "description": "2D-оболочка, диалоги и сценарный DSL, звук." } ],
+      "mods": ["shell2d_base>=1", "dialog_base>=1", "audio_base>=1"]
+    }
+  ]
+}

@@ -36,9 +36,10 @@ namespace Cthangover.Mods.Dialog.Scenarios
             var lines = text.Split('\n');
             ActionSelect pendingSelect = null;
 
-            foreach (var rawLine in lines)
+            for (var lineIndex = 0; lineIndex < lines.Length; lineIndex++)
             {
-                var line = rawLine.Trim();
+                var lineNumber = lineIndex + 1;
+                var line = lines[lineIndex].Trim();
                 if (line.Length == 0 || line.StartsWith('#'))
                 {
                     FinalizePendingSelect(dlg, ref pendingSelect);
@@ -48,51 +49,19 @@ namespace Cthangover.Mods.Dialog.Scenarios
                 if (line.StartsWith(':'))
                 {
                     FinalizePendingSelect(dlg, ref pendingSelect);
-                    dlg.Point(line.Substring(1));
+                    dlg.Point(line.Substring(1)).SourceLine = lineNumber;
                     continue;
                 }
 
-                var tokens = Tokenize(line);
-                if (tokens.Count == 0) continue;
-
-                var cmd = tokens[0].ToLowerInvariant();
-                tokens.RemoveAt(0);
-
                 var positional = new List<string>();
                 var named = new Dictionary<string, string>();
-                var arrowTarget = "";
-
-                for (var i = 0; i < tokens.Count; i++)
-                {
-                    var t = tokens[i];
-                    if (t == "->")
-                    {
-                        if (i + 1 < tokens.Count)
-                        {
-                            arrowTarget = tokens[i + 1].TrimStart(':');
-                            i++;
-                        }
-                        continue;
-                    }
-
-                    var eqIdx = t.IndexOf('=');
-                    if (eqIdx > 0)
-                    {
-                        var name = t.Substring(0, eqIdx);
-                        if (IsValidIdent(name))
-                        {
-                            named[name.ToLowerInvariant()] = t.Substring(eqIdx + 1);
-                            continue;
-                        }
-                    }
-
-                    positional.Add(t);
-                }
+                var cmd = SplitLine(line, positional, named, out var arrowTarget);
+                if (cmd == null) continue;
 
                 if (cmd == "select")
                 {
                     FinalizePendingSelect(dlg, ref pendingSelect);
-                    pendingSelect = new ActionSelect();
+                    pendingSelect = new ActionSelect { SourceLine = lineNumber };
                     var promptText = positional.Count > 0 ? positional[0] : null;
 
                     if (named.TryGetValue("key", out var key) && locale != null)
@@ -141,12 +110,65 @@ namespace Cthangover.Mods.Dialog.Scenarios
                 FinalizePendingSelect(dlg, ref pendingSelect);
 
                 var strategy = ScenarioCommandStrategyFactory.Get(cmd);
-                if (strategy != null)
-                    strategy.Execute(dlg, positional, named, arrowTarget, locale);
+                if (strategy == null)
+                    continue;
+
+                var firstNew = dlg.Queue.Count;
+                strategy.Execute(dlg, positional, named, arrowTarget, locale);
+                for (var i = firstNew; i < dlg.Queue.Count; i++)
+                {
+                    if (dlg.Queue[i] != null && dlg.Queue[i].SourceLine == 0)
+                        dlg.Queue[i].SourceLine = lineNumber;
+                }
             }
 
             FinalizePendingSelect(dlg, ref pendingSelect);
             return dlg;
+        }
+
+        /// <summary>
+        /// Splits one trimmed, non-empty DSL line the way <see cref="Parse"/> does:
+        /// returns the lowercase command word (null for an empty line) and fills
+        /// the positional tokens, the <c>name=value</c> pairs (names lowercased)
+        /// and the <c>-&gt; :label</c> target. Tools that read scenarios without
+        /// running them (the scenario studio) use it to agree with the parser.
+        /// </summary>
+        public static string SplitLine(string line, List<string> positional, Dictionary<string, string> named, out string arrowTarget)
+        {
+            arrowTarget = "";
+            var tokens = Tokenize(line);
+            if (tokens.Count == 0)
+                return null;
+
+            var cmd = tokens[0].ToLowerInvariant();
+            for (var i = 1; i < tokens.Count; i++)
+            {
+                var t = tokens[i];
+                if (t == "->")
+                {
+                    if (i + 1 < tokens.Count)
+                    {
+                        arrowTarget = tokens[i + 1].TrimStart(':');
+                        i++;
+                    }
+                    continue;
+                }
+
+                var eqIdx = t.IndexOf('=');
+                if (eqIdx > 0)
+                {
+                    var name = t.Substring(0, eqIdx);
+                    if (IsValidIdent(name))
+                    {
+                        named[name.ToLowerInvariant()] = t.Substring(eqIdx + 1);
+                        continue;
+                    }
+                }
+
+                positional.Add(t);
+            }
+
+            return cmd;
         }
 
         /// <summary>

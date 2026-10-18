@@ -7,7 +7,7 @@ namespace Cthangover.Core.Mods
     /// Implements the collection text convention: a <c>name</c>,
     /// <c>description</c>, include <c>label</c>/<c>note</c> (or a locale entry)
     /// that starts with <c>'@'</c> is a translation key (e.g.
-    /// <c>"@collections/card_novel/name"</c>), registered by
+    /// <c>"@collections/novel_template/name"</c>), registered by
     /// <see cref="LocaleLoader"/> from the <c>locale/*.properties</c> files of
     /// every mod. The remainder after <c>'@'</c> is looked up through Godot's
     /// <c>TranslationServer</c>; when no translation is registered the raw text

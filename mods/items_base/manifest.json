@@ -8,8 +8,22 @@
   "sources": [
     "src/**/*.cs"
   ],
-  "depends": ["base2d>=1", "interface>=1"],
+  "depends": ["shell2d_base>=1", "ui_base>=1"],
   "test_suites": [
     {"id": "inventory", "activate": ["--itest=inventory"]}
+  ],
+  "ui": [
+    {
+      "id": "inventory",
+      "kind": "panel",
+      "slot": "ModBeforeUIPanel",
+      "scene_path": "scenes/ui/inventory_panel.tscn",
+      "button": {
+        "icon": "bag",
+        "locale": "ui/inventory/title",
+        "index": 20
+      },
+      "priority": 10
+    }
   ]
 }

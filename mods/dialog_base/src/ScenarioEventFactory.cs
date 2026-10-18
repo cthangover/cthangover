@@ -17,8 +17,8 @@ namespace Cthangover.Mods.Dialog
             return new ScenarioEvent { ScenarioText = scenarioText };
         }
 
-        /// <summary>Builds an event from a scene event definition's scenario fields.</summary>
-        public IExecutableEvent CreateFromDefinition(string scenarioText, string scenarioId, string condition, bool? lightUseTime, bool isOneRun)
+        /// <summary>Builds an event from a scene event definition's scenario fields, remembering the source file.</summary>
+        public IExecutableEvent CreateFromDefinition(string scenarioText, string scenarioId, string condition, bool? lightUseTime, bool isOneRun, string modId, string filePath)
         {
             return new ScenarioEvent
             {
@@ -27,6 +27,8 @@ namespace Cthangover.Mods.Dialog
                 Condition = condition,
                 LightUseTime = lightUseTime,
                 IsOneRun = isOneRun,
+                SourceModId = modId,
+                SourcePath = filePath,
             };
         }
     }

@@ -19,7 +19,7 @@ Every mod may declare dependencies in `manifest.json` using **versioned dependen
 ```jsonc
 {
   "id": "cooking",                                         // Canonical mod identifier
-  "depends": ["visual_novel_core>=1", "interface>=1"]                   // Versioned dependency strings
+  "depends": ["cthangover_story>=1", "ui_base>=1"]                   // Versioned dependency strings
 }
 ```
 
@@ -29,14 +29,14 @@ A dependency string has the format: `modId[operator][version][?]`
 
 | String | Meaning | Example |
 |--------|---------|---------|
-| `visual_novel_core>=1` | version ≥ 1.0.0 | Any core 1.x or higher |
-| `visual_novel_core=1.0.0` | exact match | Strictly 1.0.0 |
-| `visual_novel_core^1` | prefix match | 1.x.x — matches 1.0.0, 1.5.0, but not 2.0.0 |
-| `visual_novel_core>1` | greater than | Any version above 1.0.0 |
-| `visual_novel_core<2` | less than | Any version below 2.0.0 |
-| `visual_novel_core<=1` | less or equal | Version ≤ 1.0.0 |
-| `visual_novel_core` | any version | No version constraint |
-| `visual_novel_core>=1?` | optional | If core is installed, must be ≥1; no error if absent |
+| `cthangover_story>=1` | version ≥ 1.0.0 | Any core 1.x or higher |
+| `cthangover_story=1.0.0` | exact match | Strictly 1.0.0 |
+| `cthangover_story^1` | prefix match | 1.x.x — matches 1.0.0, 1.5.0, but not 2.0.0 |
+| `cthangover_story>1` | greater than | Any version above 1.0.0 |
+| `cthangover_story<2` | less than | Any version below 2.0.0 |
+| `cthangover_story<=1` | less or equal | Version ≤ 1.0.0 |
+| `cthangover_story` | any version | No version constraint |
+| `cthangover_story>=1?` | optional | If core is installed, must be ≥1; no error if absent |
 
 Version comparison is **segment-based** with zero-padding: `1` equals `1.0` equals `1.0.0`.
 Segments may contain letters (e.g. `1a`, `alpha-3`). Each segment is compared as integer
@@ -60,13 +60,13 @@ requiring it.
 
 `=` requires **all** segments to match (with zero-padding):
 
-- `visual_novel_core=1.0` does **not** match `1.0.5` — the third segment `"0"` ≠ `"5"`.
-- `visual_novel_core=1.0.0` matches `1.0.0`.
+- `cthangover_story=1.0` does **not** match `1.0.5` — the third segment `"0"` ≠ `"5"`.
+- `cthangover_story=1.0.0` matches `1.0.0`.
 
 `^` matches only the specified segments, ignoring the rest:
 
-- `visual_novel_core^1.0` matches `1.0.0`, `1.0.5`, but **not** `1.1.0`.
-- `visual_novel_core^1` matches `1.0.0`, `1.1.0`, `1.9.0`, but **not** `2.0.0`.
+- `cthangover_story^1.0` matches `1.0.0`, `1.0.5`, but **not** `1.1.0`.
+- `cthangover_story^1` matches `1.0.0`, `1.1.0`, `1.9.0`, but **not** `2.0.0`.
 
 This follows the convention used by npm, Cargo, pip, Factorio, and Minecraft Fabric.
 
@@ -156,7 +156,7 @@ no UI to reorder mods manually — see Layer 2 above.
 Manual load order is saved to `user://mod_load_order.json` as a JSON array of mod IDs:
 
 ```jsonc
-["visual_novel_core", "cooking", "hunting", "ui_overhaul"]              // Mod IDs in manual load order (first = highest priority)
+["cthangover_story", "cooking", "hunting", "ui_overhaul"]              // Mod IDs in manual load order (first = highest priority)
 ```
 
 New mods (not yet in the saved order) are placed alphabetically within their
@@ -171,7 +171,7 @@ Declare dependencies with version constraints for safety:
 ```jsonc
 {
   "id": "my_mod",                                          // Canonical mod identifier
-  "depends": ["visual_novel_core>=1", "interface>=1"],                  // Versioned dependency strings
+  "depends": ["cthangover_story>=1", "ui_base>=1"],                  // Versioned dependency strings
   "version": "1.0.0"                                       // Semver version of this mod
 }
 ```

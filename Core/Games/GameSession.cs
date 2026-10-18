@@ -120,7 +120,7 @@ namespace Cthangover.Core.Games
 
         /// <summary>
         /// Enters the title screen. The menu scene is provided by the
-        /// <c>base_menu</c> mod and resolved through the runtime tscn pipeline
+        /// <c>menu_base</c> mod and resolved through the runtime tscn pipeline
         /// (which also applies scene patches); if even that cannot be built, the
         /// engine loader runs anyway so a broken mod set degrades to a loud log
         /// instead of a crash.
