@@ -1,12 +1,16 @@
 /* ============================================================
    cthangover — быстрые старты: три трека × 7 языков из
    quickstart/quickstart-index.json (build-quickstart-index.py).
+   Маршрут: #/quickstart/<lang>/<page> (тот же вид, что в sitemap:
+   /quickstart/<lang>/<page> редиректится сюда с главной);
+   короткие #/quickstart/<page> и ?tab=<page> тоже понимаются.
    Фолбэк честный: нет перевода — показываем en с бейджем.
    ============================================================ */
 (function () {
   "use strict";
 
   var INDEX_URL = "/quickstart/quickstart-index.json";
+  var TABS = ["index", "player", "modder", "programmer"];
 
   var contentEl = document.getElementById("qsContent");
   if (!contentEl) return;
@@ -17,87 +21,86 @@
   var tabsEl = document.getElementById("qsTabs");
 
   var index = null;
-  var loaded = false;
   var curTab = "index";
 
-  function t(k){ var d = I18N[lang] || I18N.en; return d[k] || I18N.en[k] || k; }
+  /* убрать html-блоки быстрых стартов: карточки-ссылки дублируют треки
+     страницы, а мета-строку (<div class="qs-meta"><span>…) превратить в курсив */
+  function preprocess(md) {
+    var lines = md.split("\n"), out = [], inCards = false, inMeta = false, metaBuf = [];
+    for (var i = 0; i < lines.length; i++) {
+      var L = lines[i];
+      if (/<div class="quickstart-cards">/.test(L)) { inCards = true; continue; }
+      if (inCards) { if (/<\/div>/.test(L)) inCards = false; continue; }
+      if (/<div class="qs-meta">/.test(L)) { inMeta = true; metaBuf = []; continue; }
+      if (inMeta) {
+        var m = L.match(/<span>([^<]*)<\/span>/);
+        if (m) { metaBuf.push(m[1]); continue; }
+        if (/<\/div>/.test(L)) { inMeta = false; out.push("*" + metaBuf.join(" · ") + "*"); continue; }
+      }
+      out.push(L);
+    }
+    return out.join("\n");
+  }
 
-  function loadIndex(cb) {
-    if (loaded) { cb(); return; }
-    fetch(INDEX_URL)
-      .then(function (r) {
-        if (!r.ok) throw new Error("HTTP " + r.status);
-        return r.json();
-      })
-      .then(function (data) { index = data; loaded = true; cb(); })
-      .catch(function () {
-        try {
-          var xhr = new XMLHttpRequest();
-          xhr.open("GET", INDEX_URL, true);
-          xhr.onload = function () {
-            if (xhr.status === 0 || xhr.status === 200) {
-              try { index = JSON.parse(xhr.responseText); } catch (e) { index = {}; }
-            } else index = {};
-            loaded = true;
-            cb();
-          };
-          xhr.onerror = function () { index = {}; loaded = true; cb(); };
-          xhr.send();
-        } catch (e) { index = {}; loaded = true; cb(); }
-      });
+  /* {lang, tab} из адреса; lang === null — язык в адресе не указан */
+  function parseRoute() {
+    var route = { lang: null, tab: null };
+    var m = (location.hash || "").match(/^#\/quickstart\/?([\w\/]*)/);
+    var segs = m ? m[1].split("/").filter(Boolean) : [];
+    if (segs.length && I18N[segs[0]]) route.lang = segs.shift();
+    if (segs.length) route.tab = segs[0];
+    var p = (location.search || "").match(/[?&]tab=(\w+)/);
+    if (!route.tab && p) route.tab = p[1];
+    return route;
+  }
+
+  function writeRoute() {
+    var hash = "#/quickstart/" + lang + "/" + (curTab === "index" ? "" : curTab);
+    if (location.hash !== hash) history.replaceState(null, "", hash);
   }
 
   function renderPills() {
     var html = "";
     for (var i = 0; i < LANGS.length; i++) {
-      html += '<button data-l="' + LANGS[i][0] + '" class="' +
+      html += '<button data-l="' + LANGS[i][0] + '" title="' + esc(LANGS[i][1]) + '" class="' +
               (LANGS[i][0] === lang ? "sel" : "") + '">' +
               LANGS[i][0].toUpperCase() + "</button>";
     }
     pillsEl.innerHTML = html;
     var bs = pillsEl.querySelectorAll("button");
     for (var j = 0; j < bs.length; j++) {
-      (function (b) {
-        b.addEventListener("click", function () { setLang(b.getAttribute("data-l")); });
-      })(bs[j]);
+      bs[j].addEventListener("click", function () { setLang(this.getAttribute("data-l")); });
     }
-  }
-
-  function mdFor(tab, use) {
-    if (!index) return null;
-    if (tab === "index") return index[use + "/index"];
-    return index[use + "/" + tab];
   }
 
   function renderPanel() {
-    if (!loaded) {
+    if (!index) {
       contentEl.innerHTML = '<div class="docs-error">…</div>';
       return;
     }
-    var md = mdFor(curTab, lang);
-    var has = !!md;
-    var use = has ? lang : "en";
-    if (!has) md = mdFor(curTab, use);
+    var use = index[lang + "/" + curTab] ? lang : "en";
+    var md = index[use + "/" + curTab];
+    var path = "quickstart/" + use + "/" + curTab + ".md";
 
-    fallbackEl.style.display = has ? "none" : "";
+    fileEl.textContent = path;
+    fallbackEl.style.display = use === lang ? "none" : "";
     if (!md) {
-      fileEl.textContent = "quickstart/" + use + "/" + curTab + ".md";
       contentEl.innerHTML = '<div class="docs-error">' +
-        esc(t("not_found")) + ': <code>quickstart/' + esc(use) + "/" + esc(curTab) + ".md</code></div>";
+        esc(t("not_found")) + ": <code>" + esc(path) + "</code></div>";
       return;
     }
-    fileEl.textContent = "quickstart/" + use + "/" + curTab + ".md";
-    contentEl.innerHTML = marked.parse(qsPreprocess(md));
+    contentEl.innerHTML = marked.parse(preprocess(md));
     bindLinks();
   }
 
+  /* ссылки между треками внутри md: "#quickstart/<page>" или "#/quickstart/<lang>/<page>" */
   function bindLinks() {
     var links = contentEl.querySelectorAll("a[href]");
     for (var i = 0; i < links.length; i++) {
       links[i].addEventListener("click", function (e) {
         var href = this.getAttribute("href") || "";
-        var m = href.match(/^#quickstart\/(\w+)$/) || href.match(/^#\/quickstart\/\w+\/(\w+)$/);
-        if (m) {
+        var m = href.match(/^#\/?quickstart\/(?:\w+\/)?(\w+)\/?$/);
+        if (m && TABS.indexOf(m[1]) !== -1) {
           e.preventDefault();
           setTab(m[1]);
           window.scrollTo({ top: 0, behavior: "smooth" });
@@ -107,7 +110,7 @@
   }
 
   function setTab(tab) {
-    if (["index", "player", "modder", "programmer"].indexOf(tab) === -1) tab = "index";
+    if (TABS.indexOf(tab) === -1) tab = "index";
     curTab = tab;
     var tabs = tabsEl.querySelectorAll("button");
     for (var i = 0; i < tabs.length; i++) {
@@ -115,12 +118,16 @@
     }
     var tracks = document.querySelectorAll(".track");
     for (var k = 0; k < tracks.length; k++) {
-      tracks[k].classList.toggle("on",
-        tracks[k].getAttribute("data-tab") === tab && tab !== "index");
+      tracks[k].classList.toggle("on", tracks[k].getAttribute("data-tab") === tab);
     }
     renderPanel();
-    var hash = "#/quickstart/" + (tab === "index" ? "" : tab + "/");
-    if (location.hash !== hash) history.replaceState(null, "", hash);
+    writeRoute();
+  }
+
+  function applyRoute() {
+    var r = parseRoute();
+    if (r.lang) setLang(r.lang);
+    setTab(r.tab || "index");
   }
 
   document.addEventListener("DOMContentLoaded", function () {
@@ -128,41 +135,28 @@
 
     CTRender.configureMarked({
       base: "",
-      href: function (page) {
-        if (page.startsWith("/quickstart/")) return "#/quickstart/" + page.slice(12);
-        return "#/quickstart/" + page;
+      href: function (page, isDir, isDocs) {
+        if (isDocs) return "/docs.html#/docs/" + page + (isDir ? "/index" : "");
+        return "#/quickstart/" + page.replace(/^\/?quickstart\//, "");
       },
     });
 
-    var m = (location.hash || "").match(/^#\/quickstart(?:\/(\w+))?/);
-    var p = (location.search || "").match(/[?&]tab=(\w+)/);
-    curTab = (p && p[1]) || (m && m[1]) || "index";
-
-    var tbs = tabsEl.querySelectorAll("button");
-    for (var i = 0; i < tbs.length; i++) {
-      (function (b) {
-        b.addEventListener("click", function () { setTab(b.getAttribute("data-tab")); });
-      })(tbs[i]);
-    }
-    var trs = document.querySelectorAll(".track");
-    for (var k = 0; k < trs.length; k++) {
-      (function (b) {
-        b.addEventListener("click", function () { setTab(b.getAttribute("data-tab")); });
-      })(trs[k]);
+    var buttons = document.querySelectorAll("#qsTabs button, .track");
+    for (var i = 0; i < buttons.length; i++) {
+      buttons[i].addEventListener("click", function () { setTab(this.getAttribute("data-tab")); });
     }
 
-    window.addEventListener("hashchange", function () {
-      var hm = (location.hash || "").match(/^#\/quickstart(?:\/(\w+))?/);
-      if (hm) setTab(hm[1] || "index");
-    });
-
+    window.addEventListener("hashchange", applyRoute);
     document.addEventListener("langchange", function () {
       renderPills();
       renderPanel();
+      writeRoute();
     });
 
     renderPills();
-    setTab(curTab);
-    loadIndex(renderPanel);
+    applyRoute();
+    CTRender.loadJson(INDEX_URL,
+      function (data) { index = data; renderPanel(); },
+      function () { index = {}; renderPanel(); });
   });
 })();

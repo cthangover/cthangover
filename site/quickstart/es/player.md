@@ -6,13 +6,13 @@
 <span>Sin código</span>
 </div>
 
-Mejorarás al personaje Marao — aumentarás su salud, ataque y añadirás la habilidad "Aturdir" — usando el sistema de parches. Cero código, solo JSON.
+Vas a potenciar al personaje Marao — aumentar su salud y ataque, y añadirle la habilidad «Aturdir» — mediante el sistema de parches. Ni una sola línea de código, solo JSON.
 
 ---
 
 ## Paso 1: Crear la carpeta del mod
 
-Cada mod vive en su propia carpeta dentro de `mods/`. Crea:
+Cada mod vive en su propia carpeta dentro de `mods/` (junto al juego) o de `user://mods/` (la carpeta de datos del usuario; en Windows — `%APPDATA%\cthangover\mods`). Crea:
 
 ```filestree
 mods/
@@ -30,15 +30,15 @@ Todo mod necesita un manifiesto. Crea `mods/quickstart_player/manifest.json`:
 
 ```jsonc
 {
-  "id": "quickstart_player",        // Identificador único del mod, usa inglés
-  "name": "Mejora de Marao",        // Nombre mostrado en el menú de gestión de mods
-  "description": "¡Mi primer mod!", // Descripción visible en la lista de mods y catálogo
+  "id": "quickstart_player",        // Identificador único del mod, escríbelo en inglés
+  "name": "Marao Buff",             // Nombre que se muestra en el menú de gestión de mods
+  "description": "¡Mi primer mod!", // Descripción visible en la lista de mods y en el catálogo
   "author": "player",               // Autor del mod (cadena arbitraria)
-  "depends": ["visual_novel_core"]  // Dependencia del juego base (así no se requiere ordenar manualmente la carga de mods)
+  "depends": ["visual_novel_core"]  // Dependencia del juego principal (así no hay que ordenar a mano la carga del mod)
 }
 ```
 
-El propio archivo de manifiesto es obligatorio — un mod sin él se ignora —, pero ningún campo es estrictamente obligatorio: si se omite `id`, el nombre de la carpeta se usa como id del mod. Aun así, se recomienda rellenar `id` y `name`. El kernel detecta automáticamente la carpeta y la carga como mod.
+El archivo de manifiesto es obligatorio — un mod sin él se omite —, pero ningún campo es estrictamente obligatorio: si falta `id`, el nombre de la carpeta se usa como identificador. Aun así, se recomienda rellenar `id` y `name`. El juego encuentra la carpeta del mod por sí mismo, pero el mod solo entra en el juego después de conectarlo (paso 4).
 
 ---
 
@@ -50,9 +50,9 @@ Crea `mods/quickstart_player/patches/character.json`:
 {
   "Items": [
     {
-      "Id": "Marao", // ID del personaje a parchear (definido en el mod core)
+      "Id": "Marao", // ID del personaje a parchear (definido en el mod principal)
 
-      "Health": 5000, // Nuevos valores — sobrescriben los originales
+      "Health": 5000, // Nuevos valores de propiedades — sobrescriben los originales
       "Attack": 1200,
       "Point": 2,
 
@@ -64,31 +64,45 @@ Crea `mods/quickstart_player/patches/character.json`:
 
 ### Cómo funciona
 
-- **`"Id": "Marao"`** — el objetivo del parche: personaje con identificador `Marao` (definido en el mod `visual_novel_core`).
-- **`"Health": 5000`**, **`"Attack": 1200`**, **`"Point": 2`** — sobrescriben los campos del personaje. Los nuevos valores reemplazan a los antiguos.
-- **`"Actions$add": ["physics/stun"]`** — el sufijo `$add` significa "añadir al array". La acción `physics/stun` se agrega a la lista. Las acciones por defecto `physics/attack` y `physics/defence` permanecen.
+- **`"Id": "Marao"`** — el objetivo del parche: el personaje con identificador `Marao` (definido en el mod `visual_novel_core`).
+- **`"Health": 5000`**, **`"Attack": 1200`** y **`"Point": 2`** — sobrescriben los campos del personaje. Los valores nuevos reemplazan a los antiguos.
+- **`"Actions$add": ["physics/stun"]`** — el sufijo `$add` significa «añadir elementos al array». La acción `physics/stun` se añade a la lista. Las acciones por defecto `physics/attack` y `physics/defence` se mantienen. Aturdir cuesta 2 PA — por eso también subimos `Point`.
 
-> Más sobre parches: [Patches](site/docs/mods/patches/) y [Operaciones con Arrays](site/docs/mods/patches/arrays-and-identity).
+> Más sobre parches: [Patches](site/docs/mods/patches/) y [Array Operations](site/docs/mods/patches/arrays-and-identity).
 
 ---
 
-## Paso 4: Ejecutar y comprobar
+## Paso 4: Conectar el mod al juego
 
-Inicia el juego. Entra en cualquier batalla — Marao ahora tiene:
+El juego no carga todos los mods instalados, solo los que forman parte de la colección del juego. Añade tu nuevo mod una vez (la interfaz del juego está en inglés y ruso):
+
+1. En el menú principal abre **«Mods & Collections»** → pestaña **«Collections»**.
+2. En la tarjeta del juego **Cthangover** pulsa **«Edit scheme»**.
+3. Selecciona cualquier mecánica del esquema (por ejemplo, **«Story»**) y pulsa **«Add mod»**.
+4. Busca tu mod en la lista (por el nombre de `manifest.json`) y pulsa **«Add»**.
+5. Pulsa **«Save»** y confirma. Los cambios se aplican la próxima vez que se inicie el juego.
+
+> **Para desarrolladores.** Al ejecutar desde el código fuente puedes conectar el mod sin el menú, con un flag: `godot --path . -- --game=cthangover --new --with-mods=quickstart_player`.
+
+---
+
+## Paso 5: Ejecutar y comprobar
+
+Reinicia el juego y empieza una partida nueva. Entra en cualquier combate — ahora Marao tiene:
 
 - **5000 HP** en lugar de 16
 - **1200 ATK** en lugar de 5
 - **2 PA** en lugar de 1
-- Una tercera acción **"Aturdir"** junto a "Atacar" y "Defender"
+- Una tercera acción, **«Stun»** (Aturdir), junto a «Basic attack» y «Defence»
 
 ---
 
 ## ¿Qué sigue?
 
-| Quieres | Ve aquí |
+| Quieres | Ve a |
 |---|---|
 | Crear tu propia escena con diálogo | [Nivel 2 — Modder](#quickstart/modder) |
-| Profundizar en el sistema de parches | [Patches](site/docs/mods/patches/) |
+| Entender los parches a fondo | [Patches](site/docs/mods/patches/) |
 | Aprender sobre personajes | [Characters](site/docs/mods/characters/) |
 | Escribir tu primer mod en C# | [Nivel 3 — Programador](#quickstart/programmer) |
 
@@ -101,4 +115,4 @@ Inicia el juego. Entra en cualquier batalla — Marao ahora tiene:
 Descargar quickstart_player.zip
 </a>
 
-El mod descargable está en inglés. Para instalarlo, descomprime el mod en la carpeta `mods/` del juego — o usa el gestor de mods del juego, que instala los mods descargados en `user://mods/`; los mods de ahí tienen prioridad sobre los mods integrados con el mismo id.
+El mod descargable está en inglés. Para instalarlo, descomprime el archivo en la carpeta `mods/quickstart_player/` del juego — o coloca el propio `.zip` en `user://mods/`: el juego lee los mods directamente desde archivos comprimidos, y los mods de `user://mods/` tienen prioridad sobre los mods integrados con el mismo id. Después de instalarlo, conecta el mod al juego (paso 4).

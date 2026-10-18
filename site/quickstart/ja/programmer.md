@@ -6,7 +6,7 @@
 <span>Roslynコンパイル</span>
 </div>
 
-カスタムDSLアクションとメニュー設定をゲームに追加するC# Modを作成します。コードはRoslynによってオンザフライでコンパイルされます — Godotは不要です。
+ゲームにカスタムDSLアクションとメニュー設定を追加するC# Modを書きます。コードはゲーム起動時にRoslynでその場でコンパイルされます — Godotも `dotnet build` も不要です。
 
 ---
 
@@ -17,11 +17,14 @@ mods/
 └── quickstart_programmer/
     ├── manifest.json
     ├── src/
-    │   ├─── MyModSettings.cs
-    │   ├─── MyMod.cs
-    │   └─── MyEffectAction.cs
+    │   ├── MyModSettings.cs
+    │   ├── MyMod.cs
+    │   └── MyEffectAction.cs
+    ├── scenarios/
+    │   └── my_effect_demo.scenario
     └── locale/
-        └─── ja.properties
+        ├── ru.properties
+        └── en.properties
 ```
 
 ---
@@ -32,20 +35,20 @@ mods/
 
 ```jsonc
 {
-  "id": "quickstart_programmer",           // Mod ID
-  "name": "My Code Mod",                   // Modリストに表示されるMod名
-  "description": "新しいアクションとMod設定",  // Modリストに表示されるModの説明
-  "sources": ["src/*.cs"],                 // ソースファイルを収集するグロブパターン（すべての ".cs" ファイルを含む）
-  "author": "programmer",                  // 作者
-  "depends": ["visual_novel_core"]         // コアゲームへの依存（手動でMod読み込み順序を設定する必要なし）
+  "id": "quickstart_programmer",                 // ModのID
+  "name": "My Code Mod",                         // Mod一覧に表示されるMod名
+  "description": "新しいアクションとMod設定",       // Mod一覧に表示されるModの説明
+  "sources": ["src/*.cs"],                       // ソースを集めるパターン（すべての ".cs" ファイル）
+  "author": "programmer",                        // 作者
+  "depends": ["visual_novel_core"]               // 本編ゲームへの依存（ロード順を手動で並べる必要がなくなる）
 }
 ```
 
-`sources` フィールドは、RoslynでコンパイルするC#ファイルを指定します。
+`sources` フィールドは、RoslynでコンパイルするC#ファイルを指定します。コンパイルエラー（ファイルと行番号付き）はログの `MODS_COMPILE` カテゴリに出力されます。
 
 ---
 
-## ステップ 3：エントリポイント — IMod
+## ステップ 3：エントリポイント — IModInitializer
 
 `mods/quickstart_programmer/src/MyMod.cs`：
 
@@ -59,26 +62,26 @@ namespace Cthangover.MyCodeMod
     public class MyMod : IModInitializer
     {
         public void OnModLoaded(string modId) { }
-
+        
         public void OnModResourcesReady()
         {
-
-            GameLogger.Log("MY_MOD", "Modがロードされました！", LogLevel.Message);
+            
+            GameLogger.Log("MY_MOD", "My mod loaded!", LogLevel.Message);
         }
-
+        
     }
 }
 ```
 
-`IModInitializer` インターフェースはC# Modコードのライフサイクル エントリポイントで、実装はリフレクションで検出されます。`OnModLoaded` は各Modのロード時に呼び出され、`OnModResourcesReady` は全Modとそのリソースの準備ができた後に一度呼び出されます。
+`IModInitializer` インターフェースはModのC#コードのライフサイクルのエントリポイントで、実装はリフレクションで検出されます。`OnModLoaded` は各Modのロード時に呼ばれ（自分のModだけではありません — `modId` にはロードされたModのidが入ります）、`OnModResourcesReady` はすべてのModとそのリソースのロード後に一度だけ呼ばれます。
 
-> ログを扱う場合は、`GD.Print(...)` の代わりに `GameLogger.Log(...)` を使用してください。
+> ログを扱うなら `GD.Print(...)` ではなく `GameLogger.Log(...)` を使ってください。
 
 ---
 
 ## ステップ 4：メニュー設定 — IModSettings
 
-`MyModSettings.cs` に追加：
+`mods/quickstart_programmer/src/MyModSettings.cs`：
 
 ```csharp
 using System.Collections.Generic;
@@ -128,70 +131,106 @@ public class MyModSettings : IModSettings
 }
 ```
 
-Modのロード後、「設定 → Mod Settings」に移動すると — ボリュームスライダーとトグルが表示されます。
+`GetDefinitions` はコントロールを記述し、`WriteValues`/`ReadValues` は値を対称的に書き込み・読み込みます。ディスクへの保存とUIはコアが担当します。Modのロード後、「Settings」→「Mod Settings」タブに、スライダーとトグル付きであなたのModが表示されます。
 
 ---
 
 ## ステップ 5：カスタムDSLアクション — IScenarioAction
 
-`.scenario` ファイルで使用できる新しい `my_effect` アクションを追加しましょう。`MyEffectAction.cs` を作成：
+`.scenario` ファイルで使える新しいアクション `my_effect` を追加します。`mods/quickstart_programmer/src/MyEffectAction.cs`：
 
 ```csharp
-using Cthangover.Core.Scenarios;
 using Cthangover.Core.Actions;
 using Cthangover.Core.Utils;
 
 public class MyEffectAction : IScenarioAction
 {
     public string Name => "my_effect";
-
+    
     public void Run(IActionContext context)
     {
-        GameLogger.Log("MY_MOD", "新しいアクションが実行されました！", LogLevel.Message);
+        GameLogger.Log("MY_MOD", "New action executed!", LogLevel.Message);
     }
 }
 ```
 
-これで任意の `.scenario` ファイルに以下のように書けます：
+これで、どの `.scenario` ファイルでも次のように書けます：
 
 ```scenario
 action my_effect
 ```
 
-エンジンはリフレクションでクラスを見つけ、`Run` を呼び出します。
+エンジンはリフレクションでクラスを見つけ、`Run` を呼び出します。`context` を通じて、会話変数（`GetParam`）やゲームのサービス — クエスト、キャラクター、ライティング、シーン — にアクセスできます。
 
 ---
 
-## ステップ 6：ローカライゼーション
+## ステップ 6：試すためのシナリオ
 
-`mods/quickstart_programmer/locale/ja.properties`：
+アクションの動作を見るため、プレイヤーが家の外に出たときに呼び出します。`mods/quickstart_programmer/scenarios/my_effect_demo.scenario`：
+
+```scenario
+scene: home_outside
+priority: 0
+---
+action my_effect
+end
+```
+
+`priority: 0` — 私たちのシナリオは標準のもの（`priority: 10`）より先に実行され、`end` の後はいつもどおりゲームが続きます：シーンは通常のメニューを開きます。
+
+---
+
+## ステップ 7：ローカライゼーション
+
+設定のラベルは `Name` のローカライズキーです。`mods/quickstart_programmer/locale/ru.properties`：
 
 ```properties
-mymod/effect_volume = エフェクト音量
-mymod/enable_mod = Modを有効にする
+mymod/effect_volume = Громкость эффекта
+mymod/enable_mod = Включить мод
+```
+
+`mods/quickstart_programmer/locale/en.properties`：
+
+```properties
+mymod/effect_volume = Effect volume
+mymod/enable_mod = Enable mod
 ```
 
 ---
 
-## ステップ 7：確認
+## ステップ 8：Modをゲームに接続する
 
-ゲームを開始します：
+ゲームはインストール済みのModをすべて読み込むわけではなく、ゲームのコレクションに含まれるModだけを読み込みます（ゲームのUIは英語とロシア語です）：
 
-1. 設定メニューを開く → "Mod Settings" タブ → スライダーとチェックボックス付きのModが表示されます。
-2. `action my_effect` コマンドを含むテスト用 `.scenario` を作成します。
-3. ゲームログに `[MY_MOD] 新しいアクションが実行されました！` と表示されます。
+1. メインメニューで **「Mods & Collections」** → **「Collections」** タブを開きます。
+2. **Cthangover** のゲームカードで **「Edit scheme」** を押します。
+3. スキーム上の任意のメカニクス（例：**「Story」**）を選択し、**「Add mod」** を押します。
+4. リストから自分のMod（`manifest.json` の名前）を見つけて **「Add」** を押します。
+5. **「Save」** を押して確定します。変更は次回のゲーム起動時に反映されます。
+
+> **開発者向け。** ソースからメニューなしで：`godot --path . -- --game=cthangover --new --with-mods=quickstart_programmer --scene=home_outside`。
+
+---
+
+## ステップ 9：確認
+
+ゲームを再起動します：
+
+1. 「Settings」→「Mod Settings」タブを開くと、スライダーとトグル付きのあなたのModがあります。
+2. ゲームのログ（`user://logs/cthangover.log`、Windowsでは `%APPDATA%\cthangover\logs\cthangover.log`）に、ロード後 `[MY_MOD] My mod loaded!` が出力されます。
+3. 家の外に出ると、ログに `[MY_MOD] New action executed!` が出ます。
 
 ---
 
 ## 次は？
 
-| やりたいこと | こちらへ |
+| やりたいこと | 行き先 |
 |---|---|
-| シーンの入退場をサブスクライブ | [シーンサブスクリプション](site/docs/mods/configs/) |
-| 独自のバトルモードを作成 | [バトルシステム](site/docs/mods/battle/) |
-| ツールウィンドウを作成 | [カスタムツールの作成](site/docs/mods/tools/tutorial) |
-| GDScriptでModを作成 | [ModでのGDScript](site/docs/mods/src/gdscript/) |
-| 利用可能なすべてのインターフェース | [ModでのC#ソースコード](site/docs/mods/src/) |
+| シーンの入退場を購読する | [Scene Subscriptions](site/docs/mods/configs/) |
+| 独自のバトルモードを作る | [Battle System](site/docs/mods/battle/) |
+| ツールウィンドウを作る | [Creating a Custom Tool](site/docs/mods/tools/tutorial) |
+| GDScriptでModを書く | [GDScript in Mods](site/docs/mods/src/gdscript/) |
+| 利用可能なすべてのインターフェース | [C# Source Code in Mods](site/docs/mods/src/) |
 
 ---
 
@@ -202,4 +241,4 @@ mymod/enable_mod = Modを有効にする
 quickstart_programmer.zip をダウンロード
 </a>
 
-ダウンロード可能なModは英語です。
+ダウンロード可能なModは英語です。アーカイブを `mods/quickstart_programmer/` に展開するか、`.zip` を `user://mods/` に置き、Modをゲームに接続してください（ステップ 8）。

@@ -3,7 +3,7 @@
 Sources (read-only, live next to the site folder):
     ../mods/*/manifest.json          - mod catalog
     ../Core/**/*.cs                  - kernel size stats
-    ../Core/Scenarios/Impls/*.cs     - DSL command strategies (count)
+    ../mods/dialog_base/src/Scenarios/Impls/*.cs - DSL command strategies (count)
     ../mods/**/ *.scenario           - a real DSL sample
 
 Output:
@@ -79,7 +79,7 @@ def cs_stats(base):
 
 
 def dsl_commands():
-    impls = os.path.join(CORE_DIR, "Scenarios", "Impls")
+    impls = os.path.join(MODS_DIR, "dialog_base", "src", "Scenarios", "Impls")
     if not os.path.isdir(impls):
         return 0
     return len([n for n in os.listdir(impls) if n.endswith("CommandStrategy.cs")])

@@ -18,7 +18,7 @@
 
 <a href="#quickstart/programmer" class="qs-card">
 <h3>레벨 3 — 프로그래머</h3>
-<p>커스텀 액션, 메뉴 설정, 씬 구독이 포함된 C# 모드를 작성하세요.</p>
+<p>커스텀 DSL 액션과 메뉴 설정이 포함된 C# 모드를 작성하세요.</p>
 <span class="qs-card-meta">C# + Godot API · 20분</span>
 </a>
 

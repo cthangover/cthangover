@@ -21,7 +21,7 @@ feat_cap:"Возможности",feat_title:"Что уже в ядре",
 f1t:"Roslyn в рантайме",f1d:"C#-исходники модов компилируются при загрузке; кэш по хэшу содержимого.",
 f2t:"tscn-патчи сцен",f2d:"Мод достраивает чужую сцену: узлы, свойства, связи между нодами.",
 f3t:"JSON-патчи данных",f3d:"$set · $add · $remove, wildcard-пути, слияние массивов по ключу.",
-f4t:"DSL сценариев",f4d:"29 команд, условия в шапке сцены, метки и выборы с ключами локализации.",
+f4t:"DSL сценариев",f4d:"{n} команд, условия в шапке сцены, метки и выборы с ключами локализации.",
 f5t:"Шина событий",f5d:"20 типизированных событий C#, мост в GDScript через [EventKey].",
 f6t:"Сохранения по слотам",f6d:"У каждого мода свой слот IModSaveable: версии, миграции, скриншоты.",
 f7t:"Карта и время суток",f7d:"Зоны карты и четыре фазы суток — управляются прямо из сценария.",
@@ -34,7 +34,7 @@ ff_t:"ff_battle",ff_d:"Классический пошаговый бой в с�
 dsl_cap:"DSL · .scenario",dsl_title:"Сценарий — текстовый файл",
 dsl_p1:"Сцена описывается текстом: шапка с указанием сцены-владельца, приоритетом и условием запуска, дальше — команды с метками и переходами. Реплики несут ключи локализации, поэтому перевод подключается файлами .properties.",
 dsl_p2:"Никакого редактора: scenario-файлы правятся в том же редакторе, что и код. Синтаксис расширяется — новые команды это новые стратегии в моде.",
-mods_cap:"Каталог",mods_title:"17 модов уже в репозитории",
+mods_cap:"Каталог",mods_title:"{n} модов уже в репозитории",
 mods_note:"Названия и описания — как в manifest.json (english). Тестовые моды помечены.",
 cat_engine:"движок",cat_gameplay:"геймплей",cat_story:"сюжет",cat_library:"библиотека",cat_ui:"интерфейс",cat_test:"тест",cat_tools:"инструменты",
 story_cap:"Сюжет",story_title:"История живёт в модах контента",
@@ -50,8 +50,8 @@ qs_l2k:"Трек 2",qs_l2t:"Моддер",qs_l2d:"Своя сцена: диал�
 qs_l3k:"Трек 3",qs_l3t:"Программист",qs_l3d:"C#-мод: кастомное действие, настройки в меню, подписки на события.",qs_m3:"C# + Godot API · 20 минут",
 qs_lang:"Язык материала",fallback_note:"материал показан на английском",
 search_ph:"Поиск по разделам…",toc:"На этой странице",prev:"Назад",next:"Далее",
-built_from:"собрано из",not_translated:"раздел доступен на английском",fallback_en:"fallback: en",
-on_git:"править в Gitea",license:"Лицензия MIT",
+built_from:"собрано из",not_translated:"раздел доступен на английском",
+on_git:"править в Gitea",depends:"зависит от",docs_sections:"Разделы",license:"Лицензия MIT",
 built_by:"собрано из",md_files:"Markdown-файлов",
 not_found:"Раздел ещё не написан",docs_here:"Документация — на английском: дерево слева, перевод подключается по мере готовности."},
 
@@ -70,7 +70,7 @@ feat_cap:"Features",feat_title:"Already in the kernel",
 f1t:"Roslyn at runtime",f1d:"Mod C# sources compile on load; the cache is keyed by content hash.",
 f2t:"tscn scene patches",f2d:"A mod extends someone else's scene: nodes, properties, connections.",
 f3t:"JSON data patches",f3d:"$set · $add · $remove, wildcard paths, key-based array merging.",
-f4t:"Scenario DSL",f4d:"29 commands, conditions in the scene header, labels and localized choices.",
+f4t:"Scenario DSL",f4d:"{n} commands, conditions in the scene header, labels and localized choices.",
 f5t:"Event bus",f5d:"20 typed C# events, GDScript bridge via [EventKey].",
 f6t:"Slot-based saves",f6d:"Every mod gets its own IModSaveable slot: versions, migrations, screenshots.",
 f7t:"Map and time of day",f7d:"Map zones and four day phases — driven right from a scenario.",
@@ -83,7 +83,7 @@ ff_t:"ff_battle",ff_d:"Classic turn-based combat in the Final Fantasy style.",
 dsl_cap:"DSL · .scenario",dsl_title:"A scenario is a text file",
 dsl_p1:"A scene is plain text: a header naming the owner scene, priority and launch condition, then commands with labels and jumps. Lines carry localization keys, so translations arrive as .properties files.",
 dsl_p2:"No editor required: scenario files are edited in the same editor as the code. The syntax is extensible — a new command is a new strategy class in a mod.",
-mods_cap:"Catalog",mods_title:"17 mods already in the repository",
+mods_cap:"Catalog",mods_title:"{n} mods already in the repository",
 mods_note:"Names and descriptions exactly as in manifest.json (english). Test mods are tagged.",
 cat_engine:"engine",cat_gameplay:"gameplay",cat_story:"story",cat_library:"library",cat_ui:"interface",cat_test:"test",cat_tools:"tools",
 story_cap:"Story",story_title:"The story lives in content mods",
@@ -99,8 +99,8 @@ qs_l2k:"Track 2",qs_l2t:"Modder",qs_l2d:"Your own scene: dialogue, choices and j
 qs_l3k:"Track 3",qs_l3t:"Programmer",qs_l3d:"A C# mod: custom action, menu settings, event subscriptions.",qs_m3:"C# + Godot API · 20 minutes",
 qs_lang:"Material language",fallback_note:"material shown in English",
 search_ph:"Search sections…",toc:"On this page",prev:"Previous",next:"Next",
-built_from:"built from",not_translated:"section available in English",fallback_en:"fallback: en",
-on_git:"edit on Gitea",license:"MIT License",
+built_from:"built from",not_translated:"section available in English",
+on_git:"edit on Gitea",depends:"depends on",docs_sections:"Sections",license:"MIT License",
 built_by:"assembled from",md_files:"Markdown files",
 not_found:"Section not written yet",docs_here:"Documentation is English-first: tree on the left, translations arrive as they land."},
 
@@ -119,7 +119,7 @@ feat_cap:"Características",feat_title:"Ya en el núcleo",
 f1t:"Roslyn en runtime",f1d:"El C# de los mods se compila al cargar; caché por hash del contenido.",
 f2t:"Parches tscn",f2d:"Un mod amplía la escena de otro: nodos, propiedades, conexiones.",
 f3t:"Parches JSON",f3d:"$set · $add · $remove, rutas wildcard, fusión de arrays por clave.",
-f4t:"DSL de escenas",f4d:"29 comandos, condiciones en la cabecera, etiquetas y opciones localizadas.",
+f4t:"DSL de escenas",f4d:"{n} comandos, condiciones en la cabecera, etiquetas y opciones localizadas.",
 f5t:"Bus de eventos",f5d:"20 eventos tipados de C#, puente a GDScript vía [EventKey].",
 f6t:"Guardados por slots",f6d:"Cada mod tiene su slot IModSaveable: versiones, migraciones, capturas.",
 f7t:"Mapa y hora del día",f7d:"Zonas de mapa y cuatro fases del día, controladas desde el guion.",
@@ -132,7 +132,7 @@ ff_t:"ff_battle",ff_d:"Combate por turnos clásico al estilo Final Fantasy.",
 dsl_cap:"DSL · .scenario",dsl_title:"Un guion es un archivo de texto",
 dsl_p1:"Una escena es texto plano: cabecera con escena propietaria, prioridad y condición de arranque; después, comandos con etiquetas y saltos. Las líneas llevan claves de localización: las traducciones llegan como .properties.",
 dsl_p2:"Sin editor: los .scenario se editan con el mismo editor que el código. La sintaxis es extensible: un comando nuevo es una estrategia nueva en un mod.",
-mods_cap:"Catálogo",mods_title:"17 mods ya en el repositorio",
+mods_cap:"Catálogo",mods_title:"{n} mods ya en el repositorio",
 mods_note:"Nombres y descripciones tal cual en manifest.json (inglés). Los mods de prueba van etiquetados.",
 cat_engine:"motor",cat_gameplay:"jugabilidad",cat_story:"historia",cat_library:"librería",cat_ui:"interfaz",cat_test:"prueba",cat_tools:"herramientas",
 story_cap:"Historia",story_title:"La historia vive en los mods de contenido",
@@ -148,8 +148,8 @@ qs_l2k:"Camino 2",qs_l2t:"Modder",qs_l2d:"Tu propia escena: diálogo, decisiones
 qs_l3k:"Camino 3",qs_l3t:"Programador",qs_l3d:"Un mod C#: acción propia, ajustes en el menú, suscripciones a eventos.",qs_m3:"C# + Godot API · 20 minutos",
 qs_lang:"Idioma del material",fallback_note:"material mostrado en inglés",
 search_ph:"Buscar secciones…",toc:"En esta página",prev:"Anterior",next:"Siguiente",
-built_from:"generado desde",not_translated:"sección disponible en inglés",fallback_en:"respaldo: en",
-on_git:"editar en Gitea",license:"Licencia MIT",
+built_from:"generado desde",not_translated:"sección disponible en inglés",
+on_git:"editar en Gitea",depends:"depende de",docs_sections:"Secciones",license:"Licencia MIT",
 built_by:"generado a partir de",md_files:"archivos Markdown",
 not_found:"Sección aún sin escribir",docs_here:"La documentación está en inglés: árbol a la izquierda; las traducciones llegan según estén listas."},
 
@@ -168,7 +168,7 @@ feat_cap:"特性",feat_title:"内核已具备",
 f1t:"运行时 Roslyn",f1d:"模组的 C# 源码在加载时编译，按内容哈希缓存。",
 f2t:"tscn 场景补丁",f2d:"模组可以扩建别人的场景：节点、属性、连接。",
 f3t:"JSON 数据补丁",f3d:"$set · $add · $remove、通配符路径、按键合并数组。",
-f4t:"场景 DSL",f4d:"29 条指令、场景头条件、标签与带本地化键的选项。",
+f4t:"场景 DSL",f4d:"{n} 条指令、场景头条件、标签与带本地化键的选项。",
 f5t:"事件总线",f5d:"20 个 C# 类型化事件，经 [EventKey] 桥接 GDScript。",
 f6t:"分槽存档",f6d:"每个模组有自己的 IModSaveable 槽位：版本、迁移、截图。",
 f7t:"地图与昼夜",f7d:"地图区域与四个时段——直接由剧本驱动。",
@@ -181,7 +181,7 @@ ff_t:"ff_battle",ff_d:"经典最终幻想风回合制战斗。",
 dsl_cap:"DSL · .scenario",dsl_title:"剧本就是文本文件",
 dsl_p1:"一个场景就是纯文本：头部声明所属场景、优先级与触发条件，随后是指令、标签与跳转。台词带本地化键，翻译以 .properties 文件接入。",
 dsl_p2:"不需要编辑器：.scenario 与代码用同一个编辑器修改。语法可扩展——新指令就是模组里一个新的策略类。",
-mods_cap:"目录",mods_title:"仓库中已有 17 个模组",
+mods_cap:"目录",mods_title:"仓库中已有 {n} 个模组",
 mods_note:"名称与描述与 manifest.json 一致（英文）。测试模组已标注。",
 cat_engine:"引擎",cat_gameplay:"玩法",cat_story:"剧情",cat_library:"库",cat_ui:"界面",cat_test:"测试",cat_tools:"工具",
 story_cap:"剧情",story_title:"故事活在内容模组里",
@@ -197,8 +197,8 @@ qs_l2k:"路线 2",qs_l2t:"模组制作者",qs_l2d:"自己的场景：用 DSL 写
 qs_l3k:"路线 3",qs_l3t:"程序员",qs_l3d:"C# 模组：自定义动作、菜单设置、事件订阅。",qs_m3:"C# + Godot API · 20 分钟",
 qs_lang:"材料语言",fallback_note:"材料以英文显示",
 search_ph:"搜索章节…",toc:"本页目录",prev:"上一页",next:"下一页",
-built_from:"构建自",not_translated:"该章节仅提供英文",fallback_en:"回退：en",
-on_git:"在 Gitea 中编辑",license:"MIT 许可证",
+built_from:"构建自",not_translated:"该章节仅提供英文",
+on_git:"在 Gitea 中编辑",depends:"依赖",docs_sections:"章节",license:"MIT 许可证",
 built_by:"由",md_files:"个 Markdown 文件构建",
 not_found:"章节尚未编写",docs_here:"文档以英文为主：左侧为目录树；翻译就绪后接入。"},
 
@@ -217,7 +217,7 @@ feat_cap:"機能",feat_title:"カーネルに既にあるもの",
 f1t:"ランタイム Roslyn",f1d:"ModのC#ソースをロード時にコンパイル。内容ハッシュでキャッシュ。",
 f2t:"tscnシーンパッチ",f2d:"他のModのシーンを拡張：ノード・プロパティ・接続。",
 f3t:"JSONパッチ",f3d:"$set · $add · $remove、ワイルドカード、キーによる配列マージ。",
-f4t:"シナリオDSL",f4d:"29コマンド、ヘッダ条件、ラベル、ローカライズキー付き選択肢。",
+f4t:"シナリオDSL",f4d:"{n}コマンド、ヘッダ条件、ラベル、ローカライズキー付き選択肢。",
 f5t:"イベントバス",f5d:"20の型付きC#イベント。[EventKey] でGDScriptへブリッジ。",
 f6t:"スロット式セーブ",f6d:"Modごとに IModSaveable スロット：バージョン・マイグレーション・スクリーンショット。",
 f7t:"マップと時刻",f7d:"マップゾーンと4つの時間帯をシナリオから直接制御。",
@@ -230,7 +230,7 @@ ff_t:"ff_battle",ff_d:"FINAL FANTASY風のクラシックなターン制戦闘�
 dsl_cap:"DSL · .scenario",dsl_title:"シナリオはテキストファイル",
 dsl_p1:"シーンはプレーンテキスト。ヘッダに所有シーン・優先度・開始条件を書き、続いてコマンドとラベル・ジャンプ。セリフはローカライズキーを持ち、翻訳は .properties で届きます。",
 dsl_p2:"エディタは不要：.scenario はコードと同じエディタで編集します。構文は拡張可能——新しいコマンドはMod内の新しいストラテジークラス。",
-mods_cap:"カタログ",mods_title:"リポジトリには既に17のMod",
+mods_cap:"カタログ",mods_title:"リポジトリには既に{n}のMod",
 mods_note:"名称・説明は manifest.json のまま（英語）。テスト用Modにはタグ付き。",
 cat_engine:"エンジン",cat_gameplay:"ゲームプレイ",cat_story:"ストーリー",cat_library:"ライブラリ",cat_ui:"インターフェース",cat_test:"テスト",cat_tools:"ツール",
 story_cap:"ストーリー",story_title:"物語はコンテントModの中に",
@@ -246,8 +246,8 @@ qs_l2k:"コース 2",qs_l2t:"Modder",qs_l2d:"自分のシーンをDSLで：会�
 qs_l3k:"コース 3",qs_l3t:"プログラマー",qs_l3d:"C# Mod：カスタムアクション、メニュー設定、イベント購読。",qs_m3:"C# + Godot API · 20分",
 qs_lang:"教材の言語",fallback_note:"教材は英語で表示",
 search_ph:"セクションを検索…",toc:"このページの目次",prev:"前へ",next:"次へ",
-built_from:"生成元",not_translated:"このセクションは英語のみ",fallback_en:"フォールバック: en",
-on_git:"Giteaで編集",license:"MITライセンス",
+built_from:"生成元",not_translated:"このセクションは英語のみ",
+on_git:"Giteaで編集",depends:"依存",docs_sections:"セクション",license:"MITライセンス",
 built_by:"組み立て元",md_files:"個のMarkdownファイル",
 not_found:"セクションは未作成",docs_here:"ドキュメントは英語主体：左がツリー。翻訳は準備でき次第追加。"},
 
@@ -256,7 +256,7 @@ kicker:"모드 지향 엔진 · Godot 4.6 · C# / .NET 8 · MIT",
 hero_h1a:"모드가 조립하는",hero_h1b:"비주얼 노벨",
 hero_tag:"Core/ 커널에는 게임 장면이 하나도 없습니다. 부팅 때 mods/ 에서 모드를 읽고 Roslyn으로 C#을 컴파일해 전투 규칙부터 대화까지 게임을 조립합니다. 모든 메커니즘은 평범한 폴더—열고, 고치고, 뗄 수 있습니다.",
 cta_start:"5분 만에 시작",cta_docs:"문서",
-st_dsl_l:"개의 DSL 명령",st_mods_l:"개의 모드 동봉",st_loc_l:"만 줄의 C#(커널+모드)",st_battle_l:"가지 전투 규칙",
+st_dsl_l:"개의 DSL 명령",st_mods_l:"개의 모드 동봉",st_loc_l:"줄의 C#(커널+모드)",st_battle_l:"가지 전투 규칙",
 arch_cap:"조립 라인",arch_title:"게임은 층층이 조립됩니다",
 arch_l1t:"커널 · Core/",arch_l1d:"시나리오 DSL, 모드 레지스트리, 저장, 이벤트, 리소스, UI, 오디오. 콘텐츠 없이 서비스만.",
 arch_l2t:"플랫폼 · base2d",arch_l2d:"2D 껍데기 장면: 뷰 박스, 툴바, 패널 슬롯, 알림.",
@@ -266,7 +266,7 @@ feat_cap:"기능",feat_title:"커널에 이미 있는 것",
 f1t:"런타임 Roslyn",f1d:"모드의 C# 소스를 적재 시 컴파일, 내용 해시로 캐시.",
 f2t:"tscn 장면 패치",f2d:"모드가 남의 장면을 확장: 노드, 속성, 연결.",
 f3t:"JSON 데이터 패치",f3d:"$set · $add · $remove, 와일드카드, 키 기준 배열 병합.",
-f4t:"시나리오 DSL",f4d:"29개 명령, 헤더 조건, 라벨, 현지화 키가 붙은 선택지.",
+f4t:"시나리오 DSL",f4d:"{n}개 명령, 헤더 조건, 라벨, 현지화 키가 붙은 선택지.",
 f5t:"이벤트 버스",f5d:"20개의 형식화된 C# 이벤트, [EventKey]로 GDScript 브리지.",
 f6t:"슬롯별 저장",f6d:"모드마다 IModSaveable 슬롯: 버전, 마이그레이션, 스크린샷.",
 f7t:"맵과 시간대",f7d:"맵 구역과 네 시간대를 시나리오에서 곧장 제어.",
@@ -279,7 +279,7 @@ ff_t:"ff_battle",ff_d:"파이널판타지풍 클래식 턴제 전투.",
 dsl_cap:"DSL · .scenario",dsl_title:"시나리오는 텍스트 파일",
 dsl_p1:"장면은 평문입니다. 헤더에 소유 장면·우선순위·발동 조건을 적고, 명령과 라벨·점프가 이어집니다. 대사는 현지화 키를 가지며 번역은 .properties 로 붙습니다.",
 dsl_p2:"에디터 불필요: .scenario 는 코드와 같은 에디터에서 고칩니다. 문법은 확장 가능—새 명령은 모드 안의 새 전략 클래스.",
-mods_cap:"카탈로그",mods_title:"저장소에 이미 17개의 모드",
+mods_cap:"카탈로그",mods_title:"저장소에 이미 {n}개의 모드",
 mods_note:"이름과 설명은 manifest.json 그대로(영어). 테스트 모드는 태그 표시.",
 cat_engine:"엔진",cat_gameplay:"게임플레이",cat_story:"스토리",cat_library:"라이브러리",cat_ui:"인터페이스",cat_test:"테스트",cat_tools:"도구",
 story_cap:"스토리",story_title:"이야기는 콘텐츠 모드 안에",
@@ -295,8 +295,8 @@ qs_l2k:"트랙 2",qs_l2t:"모더",qs_l2d:"DSL로 자기 장면: 대화, 선택�
 qs_l3k:"트랙 3",qs_l3t:"프로그래머",qs_l3d:"C# 모드: 커스텀 액션, 메뉴 설정, 이벤트 구독.",qs_m3:"C# + Godot API · 20분",
 qs_lang:"교재 언어",fallback_note:"교재는 영어로 표시",
 search_ph:"섹션 검색…",toc:"이 페이지 목차",prev:"이전",next:"다음",
-built_from:"생성 원본",not_translated:"이 섹션은 영어만 제공",fallback_en:"폴백: en",
-on_git:"Gitea에서 편집",license:"MIT 라이선스",
+built_from:"생성 원본",not_translated:"이 섹션은 영어만 제공",
+on_git:"Gitea에서 편집",depends:"의존",docs_sections:"섹션",license:"MIT 라이선스",
 built_by:"조립원",md_files:"개의 Markdown 파일",
 not_found:"아직 작성되지 않은 섹션",docs_here:"문서는 영어 우선: 왼쪽이 트리. 번역은 준비되는 대로."},
 
@@ -315,7 +315,7 @@ feat_cap:"Tính năng",feat_title:"Đã có trong nhân",
 f1t:"Roslyn lúc chạy",f1d:"Mã C# của mod được biên dịch khi tải; cache theo hash nội dung.",
 f2t:"Vá cảnh tscn",f2d:"Mod mở rộng cảnh của mod khác: node, thuộc tính, kết nối.",
 f3t:"Vá dữ liệu JSON",f3d:"$set · $add · $remove, đường dẫn wildcard, gộp mảng theo khóa.",
-f4t:"DSL kịch bản",f4d:"29 lệnh, điều kiện trong phần đầu, nhãn, lựa chọn có khóa bản địa hóa.",
+f4t:"DSL kịch bản",f4d:"{n} lệnh, điều kiện trong phần đầu, nhãn, lựa chọn có khóa bản địa hóa.",
 f5t:"Bus sự kiện",f5d:"20 sự kiện C# có kiểu, cầu sang GDScript qua [EventKey].",
 f6t:"Lưu game theo slot",f6d:"Mỗi mod một slot IModSaveable: phiên bản, di trú, ảnh chụp.",
 f7t:"Bản đồ và thời gian",f7d:"Vùng bản đồ và bốn pha ngày—điều khiển thẳng từ kịch bản.",
@@ -328,7 +328,7 @@ ff_t:"ff_battle",ff_d:"Chiến đấu theo lượt cổ điển phong cách Fina
 dsl_cap:"DSL · .scenario",dsl_title:"Kịch bản là tệp văn bản",
 dsl_p1:"Một cảnh là văn bản thuần: phần đầu ghi cảnh sở hữu, ưu tiên, điều kiện khởi phát; tiếp theo là lệnh với nhãn và bước nhảy. Lời thoại mang khóa bản địa hóa, bản dịch đến bằng .properties.",
 dsl_p2:"Không cần trình soạn thảo: .scenario sửa bằng chính trình soạn thảo mã nguồn. Cú pháp mở rộng được—một lệnh mới là một lớp chiến lược trong mod.",
-mods_cap:"Danh mục",mods_title:"Kho đã có 17 mod",
+mods_cap:"Danh mục",mods_title:"Kho đã có {n} mod",
 mods_note:"Tên và mô tả nguyên như manifest.json (tiếng Anh). Mod kiểm thử được gắn thẻ.",
 cat_engine:"engine",cat_gameplay:"lối chơi",cat_story:"cốt truyện",cat_library:"thư viện",cat_ui:"giao diện",cat_test:"kiểm thử",cat_tools:"công cụ",
 story_cap:"Cốt truyện",story_title:"Câu chuyện sống trong mod nội dung",
@@ -344,8 +344,8 @@ qs_l2k:"Lộ trình 2",qs_l2t:"Modder",qs_l2d:"Cảnh của riêng bạn: hội 
 qs_l3k:"Lộ trình 3",qs_l3t:"Lập trình viên",qs_l3d:"Mod C#: hành động tùy chỉnh, cài đặt menu, đăng ký sự kiện.",qs_m3:"C# + Godot API · 20 phút",
 qs_lang:"Ngôn ngữ tài liệu",fallback_note:"tài liệu hiển thị tiếng Anh",
 search_ph:"Tìm mục…",toc:"Trong trang này",prev:"Trước",next:"Tiếp",
-built_from:"dựng từ",not_translated:"mục này chỉ có tiếng Anh",fallback_en:"dự phòng: en",
-on_git:"sửa trên Gitea",license:"Giấy phép MIT",
+built_from:"dựng từ",not_translated:"mục này chỉ có tiếng Anh",
+on_git:"sửa trên Gitea",depends:"phụ thuộc",docs_sections:"Mục lục",license:"Giấy phép MIT",
 built_by:"lắp ráp từ",md_files:"tệp Markdown",
 not_found:"Mục chưa được viết",docs_here:"Tài liệu ưu tiên tiếng Anh: cây bên trái; bản dịch có lúc nào thêm lúc đó."}
 };
@@ -373,7 +373,20 @@ function getInitialLang(){
 
 var lang = getInitialLang();
 
-function t(k){ var d = I18N[lang] || I18N.en; return d[k] || I18N.en[k] || k; }
+/* t("key") — строка интерфейса на текущем языке (фолбэк en, затем сам ключ).
+   t("key", {n: 31}) подставляет {n} — так числа из data/mods.json попадают в фразы. */
+function t(k, vars){
+  var d = I18N[lang] || I18N.en;
+  var s = d[k] || I18N.en[k] || k;
+  if (vars) for (var v in vars) s = s.split("{" + v + "}").join(vars[v]);
+  return s;
+}
+
+function esc(s){
+  var d = document.createElement("div");
+  d.appendChild(document.createTextNode(String(s)));
+  return d.innerHTML;
+}
 
 function applyI18n(){
   document.documentElement.lang = lang;
@@ -390,12 +403,14 @@ function applyI18n(){
   for (var m=0;m<mb.length;m++){ mb[m].className = mb[m].getAttribute("data-l")===lang ? "sel" : ""; }
 }
 
+/* Смена языка: статичные data-i18n переводятся здесь, динамические блоки
+   страница перерисовывает сама по событию "langchange". */
 function setLang(l){
-  if (!I18N[l]) l = "en";
+  if (!I18N[l]) l = DEFAULT_LANG;
+  if (l === lang) return;
   lang = l;
   applyI18n();
-  try { document.dispatchEvent(new CustomEvent("langchange", { detail: lang })); } catch(e) {}
-  if (typeof renderDynamic === "function") renderDynamic();
+  document.dispatchEvent(new CustomEvent("langchange", { detail: lang }));
 }
 
 function buildLangMenu(menuEl){
@@ -406,55 +421,21 @@ function buildLangMenu(menuEl){
   menuEl.innerHTML = mh;
   var mb = menuEl.querySelectorAll("button");
   for (var j=0;j<mb.length;j++){
-    (function(b){
-      b.addEventListener("click", function(e){
-        e.stopPropagation();
-        setLang(b.getAttribute("data-l"));
-        menuEl.classList.remove("open");
-      });
-    })(mb[j]);
+    mb[j].addEventListener("click", function(e){
+      e.stopPropagation();
+      setLang(this.getAttribute("data-l"));
+      menuEl.classList.remove("open");
+    });
   }
-}
-
-function initHeader(activePage){
-  var menu = document.getElementById("langMenu");
-  buildLangMenu(menu);
-  document.getElementById("langBtn").addEventListener("click", function(e){
-    e.stopPropagation(); menu.classList.toggle("open");
-  });
-  document.addEventListener("click", function(){ menu.classList.remove("open"); });
-  var links = document.querySelectorAll("nav.main a");
-  for (var i=0;i<links.length;i++){
-    links[i].classList.toggle("on", links[i].getAttribute("data-nav")===activePage);
-  }
-  applyI18n();
-}
-
-/* strip quickstart html-blocks, convert meta spans to an emphasised line */
-function qsPreprocess(md){
-  var lines = md.split("\n"), out = [], inCards = false, inMeta = false, metaBuf = [];
-  for (var i=0;i<lines.length;i++){
-    var L = lines[i];
-    if (/<div class="quickstart-cards">/.test(L)) { inCards = true; continue; }
-    if (inCards) { if (/<\/div>/.test(L)) inCards = false; continue; }
-    if (/<div class="qs-meta">/.test(L)) { inMeta = true; metaBuf = []; continue; }
-    if (inMeta) {
-      var m = L.match(/<span>([^<]*)<\/span>/);
-      if (m) { metaBuf.push(m[1]); continue; }
-      if (/<\/div>/.test(L)) { inMeta = false; out.push("*" + metaBuf.join(" · ") + "*"); continue; }
-    }
-    out.push(L);
-  }
-  return out.join("\n");
 }
 
 /* ---------- инициализация шапки (общая для трёх страниц) ---------- */
 function initHeaderChrome(activePage){
   var menu = document.getElementById("langMenu");
-  if (menu){
+  var btn = document.getElementById("langBtn");
+  if (menu && btn){
     buildLangMenu(menu);
-    var btn = document.getElementById("langBtn");
-    if (btn) btn.addEventListener("click", function(e){ e.stopPropagation(); menu.classList.toggle("open"); });
+    btn.addEventListener("click", function(e){ e.stopPropagation(); menu.classList.toggle("open"); });
     document.addEventListener("click", function(){ menu.classList.remove("open"); });
   }
   var toggle = document.getElementById("navToggle");
@@ -467,5 +448,4 @@ function initHeaderChrome(activePage){
     links[i].classList.toggle("on", links[i].getAttribute("data-nav")===activePage);
   }
   applyI18n();
-  document.dispatchEvent(new CustomEvent("langchange", { detail: lang }));
 }

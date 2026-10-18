@@ -6,7 +6,7 @@
 <span>Roslyn-компиляция</span>
 </div>
 
-Вы напишете C#-мод, который добавляет в игру: кастомный DSL-экшен и настройки в меню. Код компилируется на лету через Roslyn — Godot не нужен.
+Вы напишете C#-мод, который добавляет в игру кастомный DSL-экшен и настройки в меню. Код компилируется на лету через Roslyn при запуске игры — ни Godot, ни `dotnet build` не нужны.
 
 ---
 
@@ -17,11 +17,14 @@ mods/
 └── quickstart_programmer/
     ├── manifest.json
     ├── src/
-    │   ├─── MyModSettings.cs
-    │   ├─── MyMod.cs
-    │   └─── MyEffectAction.cs
+    │   ├── MyModSettings.cs
+    │   ├── MyMod.cs
+    │   └── MyEffectAction.cs
+    ├── scenarios/
+    │   └── my_effect_demo.scenario
     └── locale/
-        └─── ru.properties
+        ├── ru.properties
+        └── en.properties
 ```
 
 ---
@@ -41,11 +44,11 @@ mods/
 }
 ```
 
-Поле `sources` указывает, какие C#-файлы нужно скомпилировать через Roslyn.
+Поле `sources` указывает, какие C#-файлы нужно скомпилировать через Roslyn. Ошибки компиляции (с файлом и строкой) пишутся в лог в категории `MODS_COMPILE`.
 
 ---
 
-## Шаг 3: Точка входа — IMod
+## Шаг 3: Точка входа — IModInitializer
 
 `mods/quickstart_programmer/src/MyMod.cs`:
 
@@ -70,7 +73,7 @@ namespace Cthangover.MyCodeMod
 }
 ```
 
-Интерфейс `IModInitializer` — точка входа жизненного цикла C#-кода мода; реализации обнаруживаются через reflection. `OnModLoaded` вызывается при загрузке каждого мода, `OnModResourcesReady` — один раз после загрузки всех модов и их ресурсов.
+Интерфейс `IModInitializer` — точка входа жизненного цикла C#-кода мода; реализации обнаруживаются через reflection. `OnModLoaded` вызывается при загрузке каждого мода (не только вашего — в `modId` приходит id загруженного мода), `OnModResourcesReady` — один раз после загрузки всех модов и их ресурсов.
 
 > Используйте `GameLogger.Log(...)` вместо `GD.Print(...)`, если хотите работать с логами.
 
@@ -78,7 +81,7 @@ namespace Cthangover.MyCodeMod
 
 ## Шаг 4: Настройки в меню — IModSettings
 
-Добавим в `MyModSettings.cs`:
+`mods/quickstart_programmer/src/MyModSettings.cs`:
 
 ```csharp
 using System.Collections.Generic;
@@ -128,16 +131,15 @@ public class MyModSettings : IModSettings
 }
 ```
 
-После загрузки мода в меню «Настройки → Mod Settings» появится ваш мод с ползунком громкости и переключателем.
+`GetDefinitions` описывает элементы управления, `WriteValues`/`ReadValues` — симметричная запись и чтение значений; сохранение на диск и UI берёт на себя ядро. После загрузки мода в меню «Настройки» → вкладка «Настройки модов» появится ваш мод с ползунком и переключателем.
 
 ---
 
 ## Шаг 5: Кастомный DSL-экшен — IScenarioAction
 
-Добавим новый экшен `my_effect`, доступный в `.scenario` файл MyEffectAction.cs:
+Добавим новый экшен `my_effect`, доступный в `.scenario` файлах. `mods/quickstart_programmer/src/MyEffectAction.cs`:
 
 ```csharp
-using Cthangover.Core.Scenarios;
 using Cthangover.Core.Actions;
 using Cthangover.Core.Utils;
 
@@ -158,28 +160,65 @@ public class MyEffectAction : IScenarioAction
 action my_effect
 ```
 
-Движок найдёт ваш класс через reflection и вызовет `Run`.
+Движок найдёт ваш класс через reflection и вызовет `Run`. Через `context` доступны переменные диалога (`GetParam`) и сервисы игры: квесты, персонажи, освещение, сцена.
 
 ---
 
-## Шаг 6: Локализация
+## Шаг 6: Сценарий для проверки
 
-`mods/quickstart_programmer/locale/ru.properties`:
+Чтобы увидеть экшен в деле, вызовем его при выходе из дома. `mods/quickstart_programmer/scenarios/my_effect_demo.scenario`:
+
+```scenario
+scene: home_outside
+priority: 0
+---
+action my_effect
+end
+```
+
+`priority: 0` — наш сценарий запускается раньше стандартного (`priority: 10`), а после `end` игра продолжается как обычно: на сцене открывается её обычное меню.
+
+---
+
+## Шаг 7: Локализация
+
+Подписи настроек — это ключи локализации из `Name`. `mods/quickstart_programmer/locale/ru.properties`:
 
 ```properties
 mymod/effect_volume = Громкость эффекта
 mymod/enable_mod = Включить мод
 ```
 
+`mods/quickstart_programmer/locale/en.properties`:
+
+```properties
+mymod/effect_volume = Effect volume
+mymod/enable_mod = Enable mod
+```
+
 ---
 
-## Шаг 7: Проверяем
+## Шаг 8: Подключаем мод к игре
 
-Запустите игру:
+Игра загружает не все установленные моды, а только те, что входят в коллекцию игры:
 
-1. Откройте меню настроек → вкладка «Mod Settings» → ваш мод с ползунком и чекбоксом.
-2. Напишите тестовый `.scenario` с командой `action my_effect`.
-3. В логах игры появляется `[MY_MOD] Новое действие выполнилось!`.
+1. В главном меню откройте **«Моды и коллекции»** → вкладка **«Коллекции»**.
+2. На карточке игры **Cthangover** нажмите **«Изменить схему»**.
+3. Выделите на схеме любую механику (например, **«Сюжет»**) и нажмите **«Добавить мод»**.
+4. Найдите в списке свой мод (по имени из `manifest.json`) и нажмите **«Добавить»**.
+5. Нажмите **«Сохранить»** и подтвердите. Изменения вступят в силу при следующем запуске игры.
+
+> **Для разработчиков.** Из исходников без меню: `godot --path . -- --game=cthangover --new --with-mods=quickstart_programmer --scene=home_outside`.
+
+---
+
+## Шаг 9: Проверяем
+
+Перезапустите игру:
+
+1. Откройте «Настройки» → вкладка «Настройки модов» → ваш мод с ползунком и переключателем.
+2. В логе игры (`user://logs/cthangover.log`, на Windows — `%APPDATA%\cthangover\logs\cthangover.log`) после загрузки есть строка `[MY_MOD] Мой мод загружен!`.
+3. Выйдите из дома на улицу — в логе появляется `[MY_MOD] Новое действие выполнилось!`.
 
 ---
 
@@ -202,4 +241,4 @@ mymod/enable_mod = Включить мод
 Скачать quickstart_programmer.zip
 </a>
 
-Скачиваемый мод на английском языке.
+Сообщения в логе скачиваемого мода — на английском языке. Распакуйте архив в `mods/quickstart_programmer/` или положите `.zip` в `user://mods/`, затем подключите мод к игре (шаг 8).

@@ -18,7 +18,7 @@ Chọn con đường của bạn — mỗi con đường đều dẫn đến m�
 
 <a href="#quickstart/programmer" class="qs-card">
 <h3>Cấp 3 — Lập Trình Viên</h3>
-<p>Viết mod C# với hành động tùy chỉnh, cài đặt menu và đăng ký theo dõi cảnh.</p>
+<p>Viết mod C# với hành động DSL tùy chỉnh và cài đặt trong menu.</p>
 <span class="qs-card-meta">C# + Godot API · 20 phút</span>
 </a>
 

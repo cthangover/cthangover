@@ -6,7 +6,7 @@
 <span>Roslyn 编译</span>
 </div>
 
-你将编写一个 C# 模组，为游戏添加：自定义 DSL 动作和菜单设置。代码通过 Roslyn 即时编译 — 无需 Godot。
+你将编写一个 C# 模组，为游戏添加自定义 DSL 动作和菜单设置。代码在游戏启动时通过 Roslyn 即时编译 — 不需要 Godot，也不需要 `dotnet build`。
 
 ---
 
@@ -17,11 +17,14 @@ mods/
 └── quickstart_programmer/
     ├── manifest.json
     ├── src/
-    │   ├─── MyModSettings.cs
-    │   ├─── MyMod.cs
-    │   └─── MyEffectAction.cs
+    │   ├── MyModSettings.cs
+    │   ├── MyMod.cs
+    │   └── MyEffectAction.cs
+    ├── scenarios/
+    │   └── my_effect_demo.scenario
     └── locale/
-        └─── zh.properties
+        ├── ru.properties
+        └── en.properties
 ```
 
 ---
@@ -32,20 +35,20 @@ mods/
 
 ```jsonc
 {
-  "id": "quickstart_programmer",   // 模组 ID
-  "name": "My Code Mod",           // 模组列表中显示的模组名称
-  "description": "新动作和模组设置",  // 模组列表中显示的模组描述
-  "sources": ["src/*.cs"],         // 收集源文件的 glob 模式（包含所有 ".cs" 文件）
-  "author": "programmer",          // 作者
-  "depends": ["visual_novel_core"] // 依赖核心游戏（无需手动排列模组加载顺序）
+  "id": "quickstart_programmer",          // 模组 ID
+  "name": "My Code Mod",                  // 模组列表中显示的名称
+  "description": "新动作和模组设置",         // 模组列表中显示的描述
+  "sources": ["src/*.cs"],                // 收集源文件的模式（所有 ".cs" 文件）
+  "author": "programmer",                 // 作者
+  "depends": ["visual_novel_core"]        // 依赖核心游戏（无需手动排列模组加载顺序）
 }
 ```
 
-`sources` 字段指定要通过 Roslyn 编译哪些 C# 文件。
+`sources` 字段指定需要通过 Roslyn 编译的 C# 文件。编译错误（带文件和行号）会写入日志的 `MODS_COMPILE` 类别。
 
 ---
 
-## 步骤 3：入口点 — IMod
+## 步骤 3：入口点 — IModInitializer
 
 `mods/quickstart_programmer/src/MyMod.cs`：
 
@@ -59,26 +62,26 @@ namespace Cthangover.MyCodeMod
     public class MyMod : IModInitializer
     {
         public void OnModLoaded(string modId) { }
-
+        
         public void OnModResourcesReady()
         {
-
-            GameLogger.Log("MY_MOD", "我的模组已加载！", LogLevel.Message);
+            
+            GameLogger.Log("MY_MOD", "My mod loaded!", LogLevel.Message);
         }
-
+        
     }
 }
 ```
 
-`IModInitializer` 接口是模组 C# 代码的生命周期入口点，实现通过反射自动发现。`OnModLoaded` 在每个模组加载时调用；`OnModResourcesReady` 在所有模组及其资源就绪后调用一次。
+`IModInitializer` 接口是模组 C# 代码生命周期的入口点；实现类通过反射发现。`OnModLoaded` 在每个模组加载时调用（不仅是你的模组 — `modId` 中是刚加载的模组 id），`OnModResourcesReady` 在所有模组及其资源加载完成后调用一次。
 
-> 如果要处理日志，请使用 `GameLogger.Log(...)` 替代 `GD.Print(...)`。
+> 如果需要处理日志，请使用 `GameLogger.Log(...)` 而不是 `GD.Print(...)`。
 
 ---
 
 ## 步骤 4：菜单设置 — IModSettings
 
-添加到 `MyModSettings.cs`：
+`mods/quickstart_programmer/src/MyModSettings.cs`：
 
 ```csharp
 using System.Collections.Generic;
@@ -128,58 +131,94 @@ public class MyModSettings : IModSettings
 }
 ```
 
-模组加载后，前往 "设置 → Mod Settings" — 你的模组会显示音量滑块和开关。
+`GetDefinitions` 描述控件，`WriteValues`/`ReadValues` 对称地写入和读取值；保存到磁盘和界面由核心负责。模组加载后，你的模组会出现在"Settings" → "Mod Settings"标签页中，带有滑块和开关。
 
 ---
 
 ## 步骤 5：自定义 DSL 动作 — IScenarioAction
 
-让我们添加一个新的 `my_effect` 动作，可在 `.scenario` 文件中使用。创建 `MyEffectAction.cs`：
+添加一个新动作 `my_effect`，可在 `.scenario` 文件中使用。`mods/quickstart_programmer/src/MyEffectAction.cs`：
 
 ```csharp
-using Cthangover.Core.Scenarios;
 using Cthangover.Core.Actions;
 using Cthangover.Core.Utils;
 
 public class MyEffectAction : IScenarioAction
 {
     public string Name => "my_effect";
-
+    
     public void Run(IActionContext context)
     {
-        GameLogger.Log("MY_MOD", "新动作已执行！", LogLevel.Message);
+        GameLogger.Log("MY_MOD", "New action executed!", LogLevel.Message);
     }
 }
 ```
 
-现在在任何 `.scenario` 文件中你可以写：
+现在你可以在任何 `.scenario` 文件中写：
 
 ```scenario
 action my_effect
 ```
 
-引擎通过反射找到你的类并调用 `Run`。
+引擎会通过反射找到你的类并调用 `Run`。通过 `context` 可以访问对话变量（`GetParam`）和游戏服务：任务、角色、光照、场景。
 
 ---
 
-## 步骤 6：本地化
+## 步骤 6：用于测试的剧本
 
-`mods/quickstart_programmer/locale/zh.properties`：
+为了看到动作的效果，我们在玩家走出家门时调用它。`mods/quickstart_programmer/scenarios/my_effect_demo.scenario`：
+
+```scenario
+scene: home_outside
+priority: 0
+---
+action my_effect
+end
+```
+
+`priority: 0` — 我们的剧本在标准剧本（`priority: 10`）之前运行，`end` 之后游戏照常继续：场景打开它的常规菜单。
+
+---
+
+## 步骤 7：本地化
+
+设置的标签就是 `Name` 中的本地化键。`mods/quickstart_programmer/locale/ru.properties`：
 
 ```properties
-mymod/effect_volume = 特效音量
-mymod/enable_mod = 启用模组
+mymod/effect_volume = Громкость эффекта
+mymod/enable_mod = Включить мод
+```
+
+`mods/quickstart_programmer/locale/en.properties`：
+
+```properties
+mymod/effect_volume = Effect volume
+mymod/enable_mod = Enable mod
 ```
 
 ---
 
-## 步骤 7：检查
+## 步骤 8：将模组连接到游戏
 
-启动游戏：
+游戏不会加载所有已安装的模组，只加载属于游戏合集的模组（游戏界面提供英语和俄语）：
 
-1. 打开设置菜单 → "Mod Settings" 标签页 → 你的模组带有滑块和复选框。
-2. 编写一个测试 `.scenario`，使用 `action my_effect` 命令。
-3. 游戏日志显示 `[MY_MOD] 新动作已执行！`。
+1. 在主菜单中打开 **"Mods & Collections"** → **"Collections"** 标签页。
+2. 在 **Cthangover** 游戏卡片上点击 **"Edit scheme"**。
+3. 在方案图上选中任意机制（例如 **"Story"**），然后点击 **"Add mod"**。
+4. 在列表中找到你的模组（按 `manifest.json` 中的名称），点击 **"Add"**。
+5. 点击 **"Save"** 并确认。更改将在下次启动游戏时生效。
+
+> **开发者提示。** 从源码运行、无需菜单：`godot --path . -- --game=cthangover --new --with-mods=quickstart_programmer --scene=home_outside`。
+
+---
+
+## 步骤 9：检查
+
+重启游戏：
+
+1. 打开"Settings" → "Mod Settings"标签页 → 你的模组带有滑块和开关。
+2. 游戏日志（`user://logs/cthangover.log`，Windows 上为 `%APPDATA%\cthangover\logs\cthangover.log`）在加载后包含 `[MY_MOD] My mod loaded!`。
+3. 走出家门 — 日志中出现 `[MY_MOD] New action executed!`。
 
 ---
 
@@ -187,11 +226,11 @@ mymod/enable_mod = 启用模组
 
 | 想要 | 前往 |
 |---|---|
-| 订阅场景进入/退出事件 | [场景订阅](site/docs/mods/configs/) |
-| 创建自己的战斗模式 | [战斗系统](site/docs/mods/battle/) |
-| 制作工具窗口 | [创建自定义工具](site/docs/mods/tools/tutorial) |
-| 用 GDScript 编写模组 | [Mod 中的 GDScript](site/docs/mods/src/gdscript/) |
-| 所有可用接口 | [Mod 中的 C# 源代码](site/docs/mods/src/) |
+| 订阅场景进入/退出 | [Scene Subscriptions](site/docs/mods/configs/) |
+| 创建自己的战斗模式 | [Battle System](site/docs/mods/battle/) |
+| 制作工具窗口 | [Creating a Custom Tool](site/docs/mods/tools/tutorial) |
+| 用 GDScript 编写模组 | [GDScript in Mods](site/docs/mods/src/gdscript/) |
+| 所有可用接口 | [C# Source Code in Mods](site/docs/mods/src/) |
 
 ---
 
@@ -202,4 +241,4 @@ mymod/enable_mod = 启用模组
 下载 quickstart_programmer.zip
 </a>
 
-可下载的模组为英文版本。
+可下载的模组为英文版本。将压缩包解压到 `mods/quickstart_programmer/`，或把 `.zip` 放进 `user://mods/`，然后将模组连接到游戏（步骤 8）。

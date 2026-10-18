@@ -18,7 +18,7 @@ Choose your path — each one leads to a working result.
 
 <a href="#quickstart/programmer" class="qs-card">
 <h3>Level 3 — Programmer</h3>
-<p>Write a C# mod with a custom action, menu settings, and scene subscriptions.</p>
+<p>Write a C# mod with a custom DSL action and settings in the menu.</p>
 <span class="qs-card-meta">C# + Godot API · 20 minutes</span>
 </a>
 

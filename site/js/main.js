@@ -21,16 +21,15 @@
     } catch (e) {}
   })();
 
-  function esc(s) {
-    var d = document.createElement("div");
-    d.appendChild(document.createTextNode(String(s)));
-    return d.innerHTML;
-  }
-
   /* ---------- данные ---------- */
   var DATA = null;
 
-  function t(k){ var d = I18N[lang] || I18N.en; return d[k] || I18N.en[k] || k; }
+  /* числа до загрузки data/mods.json (и при file://) — те же, что в разметке */
+  var FALLBACK_STATS = { mods: 28, dslCommands: 29 };
+
+  function stat(k) {
+    return (DATA && DATA.stats && DATA.stats[k]) || FALLBACK_STATS[k];
+  }
 
   var LAYERS = [
     { k: "arch_l1t", d: "arch_l1d", rn: "I" },
@@ -71,7 +70,7 @@
     var html = "";
     for (var i = 0; i < TILES.length; i++) {
       html += '<div class="tile"><span class="no">' + RN2[i] + '</span><h3>' +
-              esc(t(TILES[i][0])) + '</h3><p>' + esc(t(TILES[i][1])) + '</p></div>';
+              esc(t(TILES[i][0])) + '</h3><p>' + esc(t(TILES[i][1], { n: stat("dslCommands") })) + '</p></div>';
     }
     el.innerHTML = html;
   }
@@ -94,7 +93,7 @@
               '<span class="id">' + (titleKey ? esc(t(titleKey)) : esc(b.id)) + '</span>' +
               '<span class="v">v' + esc(b.version) + '</span>' +
               '<p>' + (descKey ? esc(t(descKey)) : esc(b.desc || "")) + '</p>' +
-              (deps ? '<div class="base">depends: ' + esc(deps) + '</div>' : '') +
+              (deps ? '<div class="base">' + esc(t("depends")) + ': ' + esc(deps) + '</div>' : '') +
               '</div>';
     }
     el.innerHTML = html;
@@ -138,7 +137,7 @@
         var key = CAT_KEYS[m.cat[c]];
         chips += '<span class="chip">' + esc(key ? t(key) : m.cat[c]) + '</span>';
       }
-      if (m.test) chips += '<span class="chip test">test</span>';
+      if (m.test) chips += '<span class="chip test">' + esc(t("cat_test")) + '</span>';
       var deps = (m.deps || []).join(" · ");
       html += '<div class="mod"><div class="row1"><span class="id">' + esc(m.id) +
               '</span><span class="v">v' + esc(m.version) + '</span><span class="chips">' + chips +
@@ -147,19 +146,23 @@
               '</div>';
     }
     el.innerHTML = html;
-    var cap = document.querySelector('#mods_title, [data-i18n="mods_title"]');
   }
 
+  function setText(id, v) {
+    var e = document.getElementById(id);
+    if (e) e.textContent = v;
+  }
+
+  /* числа в разметке — статичный фолбэк; заголовок каталога переводится
+     здесь, а не через data-i18n, потому что в нём число модов */
   function renderStats() {
+    setText("modsTitle", t("mods_title", { n: stat("mods") }));
     if (!DATA || !DATA.stats) return;
     var s = DATA.stats;
-    var set = function (id, v) { var e = document.getElementById(id); if (e) e.textContent = v; };
-    set("statDsl", s.dslCommands);
-    set("statMods", s.mods);
-    set("statLoc", Math.round((s.coreLoc + s.modLoc) / 1000) + "K");
-    set("statBattle", (DATA.battle && DATA.battle.length) || 3);
-    var mt = document.querySelector('[data-i18n="mods_title"]');
-    if (mt) mt.textContent = t("mods_title");
+    setText("statDsl", s.dslCommands);
+    setText("statMods", s.mods);
+    setText("statLoc", Math.round((s.coreLoc + s.modLoc) / 1000) + "K");
+    setText("statBattle", (DATA.battle && DATA.battle.length) || 3);
   }
 
   function renderDynamic() {

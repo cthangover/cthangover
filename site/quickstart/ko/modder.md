@@ -6,47 +6,45 @@
 <span>코드 불필요</span>
 </div>
 
-자체 씬이 있는 모드를 만듭니다 — 대화, 선택지, 전환이 있는 방입니다. 또한 원본 파일을 건드리지 않고 기존 주방 씬에 "선술집 가기" 옵션을 추가합니다.
+대화, 선택지, 전환이 있는 나만의 씬 — 술집 — 을 담은 모드를 만듭니다. 그리고 원본 파일을 건드리지 않고 기존 마을 씬에 술집 입구를 추가합니다.
 
 ---
 
 ## 1단계: 모드 구조
 
-폴더와 기본 파일 생성:
+폴더와 기본 파일을 만드세요:
 
 ```filestree
 mods/
 └── quickstart_modder/
     ├── manifest.json
     ├── scenes/
-    │   └── my_alko_bar.json              # 새로운 장소 — 선술집!
+    │   └── my_alko_bar.json              # 새로운 장소 — 술집!
     ├── scenarios/
-    │   ├── my_alko_bar.scenario          # 선술집 내부 시나리오, 플레이어가 새 장소와 상호작용 가능
-    │   └── town_entry_override.scenario  # 마을 씬을 재정의하여 새 장소로의 전환 추가
+    │   ├── my_alko_bar.scenario          # 술집 안의 시나리오, 플레이어가 새 장소와 상호작용하게 함
+    │   └── town_entry_override.scenario  # 마을 씬을 확장해 새 장소로 가는 전환을 추가
     ├── backgrounds/
     │   └── my_alko_bar/
-    │       └── bg.png                    # 선술집 내부 이미지
-    ├── sounds/
-    │   └── locations/
-    │       └── alkobar/
-    │           └── bar_ambient.ogg       # 선술집 배경 소음
-    └── locale/
-        └── ru.properties                 # 러시아어 로컬라이제이션
+    │       └── bg.png                    # 술집 내부 이미지
+    └── sounds/
+        └── locations/
+            └── alkobar/
+                └── bar_ambient.ogg       # 술집 배경 소음
 ```
 
 ---
 
 ## 2단계: manifest.json
 
-`mods/quickstart_modder/manifest.json`：
+`mods/quickstart_modder/manifest.json`:
 
 ```jsonc
 {
-  "id": "alko_bar",                     // 모드 ID
-  "name": "내 선술집",                   // 모드 메뉴에 표시되는 모드 이름
-  "description": "마을에 선술집 씬 추가",  // 모드 메뉴에 표시되는 모드 설명
-  "author": "modder",                   // 모드 작성자
-  "depends": ["visual_novel_core"]      // 코어 게임 의존성 (수동으로 모드 로드 순서를 정할 필요 없음)
+  "id": "quickstart_modder",                  // 모드 ID
+  "name": "나의 술집",                          // 모드 메뉴에 표시되는 모드 이름
+  "description": "마을에 술집 씬을 추가합니다",   // 모드 메뉴에 표시되는 모드 설명
+  "author": "modder",                         // 모드 작성자
+  "depends": ["visual_novel_core"]            // 본편 게임에 대한 의존성 (모드 로드 순서를 직접 정할 필요가 없음)
 }
 ```
 
@@ -54,55 +52,56 @@ mods/
 
 ## 3단계: 씬 정의
 
-`mods/quickstart_modder/scenes/my_alko_bar.json`：
+`mods/quickstart_modder/scenes/my_alko_bar.json`:
 
 ```jsonc
 {
-  "name": "my_alko_bar",                              // 새로운 고유 씬 식별자 생성 (switch_scene에서 사용), 이것이 새 씬이 됩니다.
-  "defaultBackground": "my_alko_bar/bg",              // backgrounds/ 내 PNG 배경 경로 (확장자 없음)
-  "defaultAmbient": "locations/alkobar/bar_ambient",  // 이 장소의 환경음 ID (확장자 없음), 예: 씬에 들어갈 때 재생되는 "술집 소음"
-  "defaultScenario": "scenarios/my_alko_bar.scenario" // 다른 것이 지정되지 않은 경우 이 씬에서 실행될 기본 시나리오
+  "name": "my_alko_bar",                              // 새롭고 고유한 씬 식별자 (switch_scene에서 사용), 이것이 새 씬이 됨
+  "defaultBackground": "my_alko_bar/bg",              // backgrounds/ 안의 PNG 배경 경로 (확장자 없이)
+  "defaultAmbient": "locations/alkobar/bar_ambient",  // 이 장소의 환경음 ID (sounds/ 안의 경로, 확장자 없이), 예: 입장 시 재생되는 "술집 소음"
+  "defaultScenario": "scenarios/my_alko_bar.scenario" // 다른 것이 없을 때 이 씬에서 실행되는 기본 시나리오
 }
 ```
 
 | 필드 | 설명 |
 |---|---|
-| `name` | 고유 씬 ID. `switch_scene`에서 사용 |
-| `defaultBackground` | `backgrounds/` 내 배경 경로 (확장자 없음) |
-| `defaultAmbient` | 환경음. 빈 문자열 — 소리 없음 |
-| `defaultScenario` | 씬 진입 시 실행될 `.scenario` 파일 경로 |
+| `name` | 씬의 고유 ID. `switch_scene`에서 사용 |
+| `defaultBackground` | `backgrounds/` 안의 배경 경로 (확장자 없이) |
+| `defaultAmbient` | 환경음: `sounds/` 안의 경로, 확장자 없이. 빈 문자열 — 소리 없음 |
+| `defaultScenario` | 입장 시 실행되는 `.scenario` 파일 경로 |
 
 ---
 
-## 4단계: 배경
+## 4단계: 배경과 소리
 
-`mods/quickstart_modder/backgrounds/my_alko_bar/bg.png`에 이미지를 배치하세요.
+이미지를 `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png`에, 환경음을 `mods/quickstart_modder/sounds/locations/alkobar/bar_ambient.ogg`에 넣으세요.
 
-어떤 PNG 이미지든 사용 가능합니다. 게임은 셰이더 기반 조명과 시간대를 지원하며 — 배경이 자동으로 조명됩니다.
+어떤 PNG 이미지든 괜찮습니다. 게임은 셰이더 조명과 시간대를 지원하므로 배경은 자동으로 조명됩니다.
 
-> 이미지가 없다면, 임시로 `mods/visual_novel_core/backgrounds/home/kitchen.png` → `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png`를 복사하세요.
+> 이미지가 없다면 임시로 `mods/visual_novel_core/backgrounds/home/kitchen.png` → `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png`로 복사하세요. 소리 없이도 됩니다: `"defaultAmbient": ""`로 지정하세요.
 
 ---
 
 ## 5단계: DSL 시나리오
 
-`mods/quickstart_modder/scenarios/my_alko_bar.scenario`：
+`mods/quickstart_modder/scenarios/my_alko_bar.scenario`:
 
 ```scenario
 scene: my_alko_bar
 priority: 10
 ---
-text "당신은 반쯤 빈 술집에 들어선다."
-text "지루한 바텐더가 카운터 뒤에 서 있다."
+text "반쯤 빈 술집에 들어선다."
+text "카운터 뒤에서 바텐더가 따분해하고 있다."
 
-select "[무엇을 하시겠습니까?]"
-option "카운터로 다가간다" -> :bar
-option "떠난다" -> :leave
+:menu
+select "[무엇을 할까?]"
+option "카운터로 간다" -> :bar
+option "나간다" -> :leave
 
 :bar
 text "바텐더가 고개를 끄덕인다."
-text "— 뭘 드릴까요?"
-end
+text "— 무엇을 드릴까요?"
+goto -> :menu
 
 :leave
 switch_scene town_entry
@@ -111,57 +110,82 @@ end
 
 ### 여기서 무슨 일이 일어나고 있나
 
-- **`text`** — 대화 줄을 표시합니다. `key=` 매개변수는 로컬라이제이션 키입니다.
+- **`scene:`** / **`priority:`** — 헤더: 시나리오가 어느 씬에 속하고 어떤 순서로 실행되는지. 헤더와 본문은 `---` 줄로 구분합니다.
+- **`text`** — 대화 한 줄을 표시합니다. 매개변수 `key=`는 로컬라이제이션 키입니다(여기서는 필요 없음: 없으면 텍스트 자체가 표시됨).
 - **`select`** — 선택 메뉴를 엽니다. 따옴표 안의 텍스트는 프롬프트입니다.
-- **`option`** — 선택 옵션. `-> :label` — 선택 시 이동할 위치.
-- **`:bar`**, **`:leave`** — 점프용 레이블.
+- **`option`** — 선택지입니다. `-> :label` — 선택 시 이동할 곳.
+- **`:menu`**, **`:bar`**, **`:leave`** — 이동용 레이블.
+- **`goto -> :menu`** — 무조건 이동: 바텐더와 이야기한 뒤 메뉴가 다시 열립니다.
 - **`switch_scene`** — 플레이어를 다른 씬으로 이동시킵니다.
-- **`end`** — 시나리오를 종료합니다 (플레이어는 씬에 머무릅니다).
+- **`end`** — 시나리오를 끝냅니다.
 
 ---
 
 ## 6단계: 마을 확장 (씬 우선순위)
 
-이제 원본 `visual_novel_core` 파일을 **건드리지 않고** 마을 씬에 "술집 가기" 옵션을 추가합니다.
+이제 `visual_novel_core`의 원본 파일을 **건드리지 않고** 마을 씬에 술집 입구를 추가합니다.
 
-`mods/quickstart_modder/scenarios/town_entry_override.scenario`：
+`mods/quickstart_modder/scenarios/town_entry_override.scenario`:
 
 ```scenario
 scene: town_entry
 priority: 1
 ---
-select "오늘 마을 냄새가 다르군..."
-option "집으로 돌아간다" -> :home
-option "술집에 간다" -> :alko_bar
-
-:home
-switch_scene home_outside
-end
+select "반쯤 열린 술집 문틈으로 음악이 흘러나온다..."
+option "술집에 들어간다" -> :alko_bar
+option "지나친다" -> :pass
 
 :alko_bar
 switch_scene my_alko_bar
+end
+
+:pass
 end
 ```
 
 ### 왜 이것이 작동하는가
 
-`town_entry` 씬에는 이제 두 개의 시나리오가 있습니다:
-- `priority: 40` — 기본값 (`visual_novel_core` 모드에서)
-- `priority: 1` — 우리 것 (`quickstart_modder`에서)
+이제 `town_entry` 씬에는 여러 시나리오가 있습니다:
 
-엔진은 씬의 시나리오를 `priority` 오름차순으로 실행합니다 — **가장 낮은** 값이 **먼저** 실행됩니다. 우리의 `priority: 1` 시나리오가 기본 시나리오보다 먼저 시작되므로 플레이어가 새 옵션을 먼저 봅니다.
+| priority | 시나리오 | 모드 |
+|---|---|---|
+| `1` | 우리의 `town_entry_override` | `quickstart_modder` |
+| `10`–`30` | 무라카미와의 만남 (해당 `condition:`이 충족되는 동안만) | `murakami` |
+| `40` | 기본 마을 메뉴 | `visual_novel_core` |
 
-> 더 알아보기: [씬 우선순위 시스템](site/docs/mods/scenes/).
+씬에 들어가면 엔진은 `priority` 오름차순 — **가장 작은** 값부터 — 으로 조건을 만족하는 첫 시나리오를 실행합니다. 시나리오가 씬을 바꾸지 않고 끝나면 다음 시나리오가 시작됩니다. 그래서:
+
+- "술집에 들어간다" — `switch_scene`이 플레이어를 술집으로 데려갑니다;
+- "지나친다" — 우리 시나리오는 그냥 끝나고(`end`), 이후는 원래 게임대로 진행됩니다: 무라카미의 스토리 씬 또는 기본 마을 메뉴.
+
+이렇게 모드는 아무것도 망가뜨리지 않고 새로운 것을 추가합니다. 우리 시나리오가 마을 메뉴를 직접 그렸다면 스토리와 다른 모드를 모두 가렸을 것입니다.
+
+> 더 알아보기: [Scene Priority System](site/docs/mods/scenes/).
 
 ---
 
-## 7단계: 확인
+## 7단계: 모드를 게임에 연결하기
 
-게임을 시작합니다:
+게임은 설치된 모든 모드를 불러오지 않고, 게임 컬렉션에 포함된 모드만 불러옵니다. 모드를 추가하세요(게임 UI는 영어와 러시아어로 제공됩니다):
 
-1. 마을에 들어가면 — "술집에 간다" 옵션이 보입니다.
-2. 클릭 — 대화와 선택지가 있는 `my_alko_bar` 씬에 있습니다.
-3. "떠난다" 선택 — 마을로 돌아갑니다.
+1. 메인 메뉴에서 **"Mods & Collections"** → **"Collections"** 탭을 엽니다.
+2. **Cthangover** 게임 카드에서 **"Edit scheme"**을 누릅니다.
+3. 스킴에서 아무 메커닉(예: **"Story"**)을 선택하고 **"Add mod"**를 누릅니다.
+4. 목록에서 자신의 모드(`manifest.json`의 이름)를 찾아 **"Add"**를 누릅니다.
+5. **"Save"**를 누르고 확인합니다. 변경 사항은 다음 게임 실행 시 적용됩니다.
+
+---
+
+## 8단계: 확인
+
+게임을 다시 시작하세요:
+
+1. 마을에 들어가면 가장 먼저 "술집에 들어간다" / "지나친다" 선택지가 나타납니다.
+2. "술집에 들어간다"를 누르면 — 배경, 술집 소음, 대화, 선택지가 있는 나만의 `my_alko_bar` 씬에 있습니다.
+3. "나간다"를 선택하면 — 마을로 돌아갑니다.
+4. "지나친다"를 선택하면 — 게임이 평소대로 계속됩니다.
+
+> **개발자용.** 소스에서는 프롤로그를 플레이하지 않고 바로 씬을 열 수 있습니다: `godot --path . -- --game=cthangover --new --with-mods=quickstart_modder --scene=town_entry`.
 
 ---
 
@@ -169,9 +193,9 @@ end
 
 | 하고 싶은 것 | 이동 |
 |---|---|
-| 모든 DSL 명령 마스터 | [DSL 명령 참조](site/docs/mods/scenes/scenarios/dsl/) |
-| 상호작용 가능한 객체 추가 | [상호작용 객체](site/docs/mods/interactives/) |
-| C# 모드 작성 | [레벨 3 — 프로그래머](#quickstart/programmer) |
+| 모든 DSL 명령어 익히기 | [DSL Command Reference](site/docs/mods/scenes/scenarios/dsl/) |
+| 인터랙티브 오브젝트 추가하기 | [Interactive Objects](site/docs/mods/interactives/) |
+| C# 모드 작성하기 | [레벨 3 — 프로그래머](#quickstart/programmer) |
 
 ---
 
@@ -182,4 +206,4 @@ end
 quickstart_modder.zip 다운로드
 </a>
 
-다운로드 가능한 모드의 대사는 러시아어로 되어 있습니다.
+다운로드 가능한 모드의 대사는 러시아어로 되어 있습니다. 압축 파일을 `mods/quickstart_modder/`에 풀거나 `.zip`을 `user://mods/`에 넣은 뒤 모드를 게임에 연결하세요(7단계).

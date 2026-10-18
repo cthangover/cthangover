@@ -6,13 +6,13 @@
 <span>コード不要</span>
 </div>
 
-パッチシステムを使って、キャラクター Marao を強化します — 体力と攻撃力を上げ、「スタン」アビリティを追加します。コードは一切不要、JSONだけです。
+パッチシステムを使って、キャラクター Marao を強化します — HPと攻撃力を上げ、「スタン」スキルを追加します。コードは一行も書きません。JSONだけです。
 
 ---
 
 ## ステップ 1：Modフォルダを作成
 
-各Modは `mods/` 内の独自フォルダに配置されます。作成：
+各Modは `mods/`（ゲームの隣）または `user://mods/`（ユーザーデータフォルダ。Windowsでは `%APPDATA%\cthangover\mods`）の中に専用フォルダを持ちます。次のように作成します：
 
 ```filestree
 mods/
@@ -26,37 +26,37 @@ mods/
 
 ## ステップ 2：manifest.json
 
-すべてのModにマニフェストが必要です。`mods/quickstart_player/manifest.json` を作成：
+すべてのModにはマニフェストが必要です。`mods/quickstart_player/manifest.json` を作成します：
 
 ```jsonc
 {
-  "id": "quickstart_player",       // 一意のMod識別子、英語を使用
-  "name": "Marao強化",              // Mod管理メニューに表示される名前
-  "description": "初めてのMod！",    // Modリストとカタログに表示される説明
-  "author": "player",              // Mod作者（任意の文字列）
-  "depends": ["visual_novel_core"] // コアゲームへの依存（手動でMod読み込み順序を設定する必要なし）
+  "id": "quickstart_player",        // Modの一意な識別子。英語で書く
+  "name": "Marao Buff",             // Mod管理メニューに表示される名前
+  "description": "初めてのMod！",    // Mod一覧とカタログに表示される説明
+  "author": "player",               // Modの作者（任意の文字列）
+  "depends": ["visual_novel_core"]  // 本編ゲームへの依存（ロード順を手動で並べる必要がなくなる）
 }
 ```
 
-manifest.json ファイル自体は必須です（ないModは読み込まれません）が、個々の項目は厳密には必須ではありません。`id` を省略するとフォルダ名がModのIDとして使われます。とはいえ `id` と `name` の記入をお勧めします。カーネルがフォルダを自動検出し、Modとしてロードします。
+マニフェストファイル自体は必須です — ないModはスキップされます — が、厳密に必須のフィールドはありません：`id` を省略するとフォルダ名がModの識別子になります。それでも `id` と `name` は書いておくことを推奨します。ゲームはModフォルダを自動で見つけますが、Modがゲームに入るのは接続した後です（ステップ 4）。
 
 ---
 
 ## ステップ 3：キャラクターパッチ
 
-`mods/quickstart_player/patches/character.json` を作成：
+`mods/quickstart_player/patches/character.json` を作成します：
 
 ```jsonc
 {
   "Items": [
     {
-      "Id": "Marao",  // パッチ対象のキャラクターID（visual_novel_visual_novel_core Modで定義）
+      "Id": "Marao", // パッチ対象のキャラクターID（本編Modで定義）
 
-      "Health": 5000, // 新しいプロパティ値 — 元の値を上書き
+      "Health": 5000, // 新しいプロパティ値 — 元の値を上書きする
       "Attack": 1200,
       "Point": 2,
 
-      "Actions$add": ["physics/stun"] // $add は配列に要素を追加
+      "Actions$add": ["physics/stun"] // $add は配列に要素を追加する
     }
   ]
 }
@@ -66,31 +66,45 @@ manifest.json ファイル自体は必須です（ないModは読み込まれま
 
 - **`"Id": "Marao"`** — パッチの対象：識別子 `Marao` のキャラクター（`visual_novel_core` Modで定義）。
 - **`"Health": 5000`**、**`"Attack": 1200`**、**`"Point": 2`** — キャラクターのフィールドを上書きします。新しい値が古い値を置き換えます。
-- **`"Actions$add": ["physics/stun"]`** — 接尾辞 `$add` は「配列に追加」を意味します。アクション `physics/stun` がリストに追加されます。デフォルトの `physics/attack` と `physics/defence` はそのまま残ります。
+- **`"Actions$add": ["physics/stun"]`** — サフィックス `$add` は「配列に要素を追加する」という意味です。アクション `physics/stun` がリストに追加され、標準の `physics/attack` と `physics/defence` はそのまま残ります。スタンには 2 AP が必要なので、`Point` も上げています。
 
-> パッチの詳細：[Patches](site/docs/mods/patches/) と [配列操作](site/docs/mods/patches/arrays-and-identity)。
+> パッチの詳細：[Patches](site/docs/mods/patches/) と [Array Operations](site/docs/mods/patches/arrays-and-identity)。
 
 ---
 
-## ステップ 4：実行して確認
+## ステップ 4：Modをゲームに接続する
 
-ゲームを起動します。任意の戦闘に入ると — Marao は次のように変わります：
+ゲームはインストール済みのModをすべて読み込むわけではなく、ゲームのコレクションに含まれるModだけを読み込みます。新しいModを一度だけ追加してください（ゲームのUIは英語とロシア語です）：
 
-- **5000 HP** （16の代わりに）
-- **1200 ATK** （5の代わりに）
-- **2 AP** （1の代わりに）
-- 3つ目のアクション **「スタン」** が「攻撃」「防御」と並んで表示
+1. メインメニューで **「Mods & Collections」** → **「Collections」** タブを開きます。
+2. **Cthangover** のゲームカードで **「Edit scheme」** を押します。
+3. スキーム上の任意のメカニクス（例：**「Story」**）を選択し、**「Add mod」** を押します。
+4. リストから自分のMod（`manifest.json` の名前）を見つけて **「Add」** を押します。
+5. **「Save」** を押して確定します。変更は次回のゲーム起動時に反映されます。
+
+> **開発者向け。** ソースから実行する場合は、メニューを使わずフラグで接続できます：`godot --path . -- --game=cthangover --new --with-mods=quickstart_player`。
+
+---
+
+## ステップ 5：実行して確認
+
+ゲームを再起動し、新しいゲームを始めます。どの戦闘に入っても、Marao は次のようになっています：
+
+- HP 16 → **5000**
+- ATK 5 → **1200**
+- AP 1 → **2**
+- 「Basic attack」「Defence」の隣に3つ目のアクション **「Stun」**（スタン）
 
 ---
 
 ## 次は？
 
-| やりたいこと | こちらへ |
+| やりたいこと | 行き先 |
 |---|---|
-| ダイアログ付きの独自シーンを作成 | [レベル 2 — モッダー](#quickstart/modder) |
-| パッチシステムを深く理解 | [Patches](site/docs/mods/patches/) |
+| 会話付きの独自シーンを作る | [レベル 2 — モッダー](#quickstart/modder) |
+| パッチシステムを深く理解する | [Patches](site/docs/mods/patches/) |
 | キャラクターについて学ぶ | [Characters](site/docs/mods/characters/) |
-| 初めてのC# Modを作成 | [レベル 3 — プログラマー](#quickstart/programmer) |
+| 初めてのC# Modを書く | [レベル 3 — プログラマー](#quickstart/programmer) |
 
 ---
 
@@ -101,4 +115,4 @@ manifest.json ファイル自体は必須です（ないModは読み込まれま
 quickstart_player.zip をダウンロード
 </a>
 
-ダウンロード可能なModは英語です。インストールするには、Modをゲームの `mods/` フォルダに展開してください。ゲーム内のModマネージャーを使えば、ダウンロードしたModは `user://mods/` にインストールされ、同じIDの内蔵Modより優先されます。
+ダウンロード可能なModは英語です。インストールするには、アーカイブをゲームの `mods/quickstart_player/` フォルダに展開するか、`.zip` をそのまま `user://mods/` に置いてください：ゲームはアーカイブから直接Modを読み込み、`user://mods/` のModは同じidの組み込みModより優先されます。インストール後、Modをゲームに接続してください（ステップ 4）。

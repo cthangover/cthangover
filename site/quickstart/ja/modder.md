@@ -6,13 +6,13 @@
 <span>コード不要</span>
 </div>
 
-独自のシーンを持つModを作成します — ダイアログ、選択肢、遷移のある部屋です。さらに、元のファイルに触れることなく、既存のキッチンシーンに「酒場へ行く」オプションを追加します。
+会話・選択肢・遷移を持つ独自のシーン — バー — を含むModを作ります。さらに、元のファイルに触れずに、既存の町のシーンへバーの入口を追加します。
 
 ---
 
 ## ステップ 1：Modの構造
 
-フォルダと基本ファイルを作成：
+フォルダと基本ファイルを作成します：
 
 ```filestree
 mods/
@@ -21,17 +21,15 @@ mods/
     ├── scenes/
     │   └── my_alko_bar.json              # 新しいロケーション — 酒場！
     ├── scenarios/
-    │   ├── my_alko_bar.scenario          # 酒場内のシナリオ、プレイヤーが新しいロケーションと対話できるように
-    │   └── town_entry_override.scenario  # 町のシーンを上書きして新しいロケーションへの遷移を追加
+    │   ├── my_alko_bar.scenario          # バーの中のシナリオ。新しいロケーションでプレイヤーが行動できるようにする
+    │   └── town_entry_override.scenario  # 町のシーンを拡張して、新しいロケーションへの遷移を追加する
     ├── backgrounds/
     │   └── my_alko_bar/
-    │       └── bg.png                    # 酒場の内装画像
-    ├── sounds/
-    │   └── locations/
-    │       └── alkobar/
-    │           └── bar_ambient.ogg       # 酒場の環境音
-    └── locale/
-        └── ru.properties                 # ロシア語ローカライゼーション
+    │       └── bg.png                    # バーの内装画像
+    └── sounds/
+        └── locations/
+            └── alkobar/
+                └── bar_ambient.ogg       # バーの環境音
 ```
 
 ---
@@ -42,11 +40,11 @@ mods/
 
 ```jsonc
 {
-  "id": "alko_bar",                    // Mod ID
-  "name": "私の酒場",                   // Modメニューに表示されるMod名
-  "description": "町に酒場シーンを追加",  // Modメニューに表示されるModの説明
-  "author": "modder",                 // Mod作者
-  "depends": ["visual_novel_core"]    // コアゲームへの依存（手動でMod読み込み順序を設定する必要なし）
+  "id": "quickstart_modder",                    // ModのID
+  "name": "マイ酒場",                            // Modメニューに表示されるMod名
+  "description": "町に酒場のシーンを追加する",     // Modメニューに表示されるModの説明
+  "author": "modder",                           // Modの作者
+  "depends": ["visual_novel_core"]              // 本編ゲームへの依存（ロード順を手動で並べる必要がなくなる）
 }
 ```
 
@@ -58,29 +56,29 @@ mods/
 
 ```jsonc
 {
-  "name": "my_alko_bar",                              // 新しい一意のシーン識別子を作成（switch_sceneで使用）、これが新しいシーンになります。
+  "name": "my_alko_bar",                              // 新しい一意なシーン識別子（switch_scene で使用）。これが新しいシーンになる
   "defaultBackground": "my_alko_bar/bg",              // backgrounds/ 内のPNG背景へのパス（拡張子なし）
-  "defaultAmbient": "locations/alkobar/bar_ambient",  // このロケーションの環境音ID（拡張子なし）、例：シーンに入ると再生される「酒場の騒音」
-  "defaultScenario": "scenarios/my_alko_bar.scenario" // 他に何も指定されていない場合にこのシーンで実行されるデフォルトシナリオ
+  "defaultAmbient": "locations/alkobar/bar_ambient",  // このロケーションの環境音ID（sounds/ 内のパス、拡張子なし）。例：入場時に流れる「バーの喧騒」
+  "defaultScenario": "scenarios/my_alko_bar.scenario" // 他に何もなければこのシーンで実行されるデフォルトシナリオ
 }
 ```
 
 | フィールド | 説明 |
 |---|---|
-| `name` | 一意のシーンID。`switch_scene` で使用 |
+| `name` | シーンの一意なID。`switch_scene` で使用 |
 | `defaultBackground` | `backgrounds/` 内の背景へのパス（拡張子なし） |
-| `defaultAmbient` | 環境音。空文字列 — 音なし |
-| `defaultScenario` | シーン進入時に実行される `.scenario` ファイルへのパス |
+| `defaultAmbient` | 環境音：`sounds/` 内のパス（拡張子なし）。空文字列 — 音なし |
+| `defaultScenario` | 入場時に実行される `.scenario` ファイルへのパス |
 
 ---
 
-## ステップ 4：背景
+## ステップ 4：背景と音
 
-`mods/quickstart_modder/backgrounds/my_alko_bar/bg.png` に画像を配置します。
+画像を `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png` に、環境音を `mods/quickstart_modder/sounds/locations/alkobar/bar_ambient.ogg` に置きます。
 
-任意のPNG画像が使用可能です。ゲームはシェーダーベースのライティングと時間帯をサポートしており — 背景は自動的に照らされます。
+どんなPNG画像でも構いません。ゲームはシェーダーによるライティングと時間帯に対応しており、背景は自動的にライティングされます。
 
-> 画像がない場合は、一時的に `mods/visual_novel_core/backgrounds/home/kitchen.png` → `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png` をコピーしてください。
+> 自分の画像がない場合は、一時的に `mods/visual_novel_core/backgrounds/home/kitchen.png` → `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png` とコピーしてください。音なしでも構いません：`"defaultAmbient": ""` と指定します。
 
 ---
 
@@ -92,17 +90,18 @@ mods/
 scene: my_alko_bar
 priority: 10
 ---
-text "あなたは半分空っぽの酒場に入る。"
-text "退屈そうなバーテンダーがカウンターの後ろに立っている。"
+text "あなたは半分空いたバーに入る。"
+text "カウンターの向こうでバーテンダーが退屈そうにしている。"
 
-select "[どうしますか？]"
-option "カウンターに近づく" -> :bar
+:menu
+select "[どうする？]"
+option "カウンターへ行く" -> :bar
 option "立ち去る" -> :leave
 
 :bar
 text "バーテンダーがうなずく。"
-text "— ご注文は？"
-end
+text "「何にしますか？」"
+goto -> :menu
 
 :leave
 switch_scene town_entry
@@ -111,18 +110,20 @@ end
 
 ### ここで何が起きているか
 
-- **`text`** — ダイアログ行を表示します。`key=` パラメータはローカライゼーションキーです。
+- **`scene:`** / **`priority:`** — ヘッダー：シナリオがどのシーンに属し、どの順番で実行されるか。ヘッダーと本体は `---` の行で区切ります。
+- **`text`** — 会話の一行を表示します。パラメータ `key=` はローカライズキーです（ここでは不要：なければテキスト自体が表示されます）。
 - **`select`** — 選択メニューを開きます。引用符内のテキストはプロンプトです。
-- **`option`** — 選択肢。`-> :label` — 選択時にジャンプする場所。
-- **`:bar`**、**`:leave`** — ジャンプ用のラベル。
-- **`switch_scene`** — プレイヤーを別のシーンに移動します。
-- **`end`** — シナリオを終了します（プレイヤーはシーンに留まります）。
+- **`option`** — 選択肢です。`-> :label` — 選んだときのジャンプ先。
+- **`:menu`**、**`:bar`**、**`:leave`** — ジャンプ用のラベル。
+- **`goto -> :menu`** — 無条件ジャンプ：バーテンダーと話した後、再びメニューが開きます。
+- **`switch_scene`** — プレイヤーを別のシーンへ移動させます。
+- **`end`** — シナリオを終了します。
 
 ---
 
 ## ステップ 6：町の拡張（シーン優先度）
 
-元の `visual_novel_core` ファイルに**触れずに**、町のシーンに「酒場へ行く」オプションを追加しましょう。
+次に、`visual_novel_core` の元のファイルに**触れずに**、町のシーンへバーの入口を追加します。
 
 `mods/quickstart_modder/scenarios/town_entry_override.scenario`：
 
@@ -130,48 +131,71 @@ end
 scene: town_entry
 priority: 1
 ---
-select "今日の町はいつもと違う匂いがする..."
-option "家に帰る" -> :home
-option "酒場へ行く" -> :alko_bar
-
-:home
-switch_scene home_outside
-end
+select "半開きのバーの扉から音楽が漏れてくる…"
+option "バーに入る" -> :alko_bar
+option "通り過ぎる" -> :pass
 
 :alko_bar
 switch_scene my_alko_bar
+end
+
+:pass
 end
 ```
 
 ### なぜこれが機能するのか
 
-`town_entry` シーンには2つのシナリオがあります：
-- `priority: 40` — デフォルト（`visual_novel_core` Modから）
-- `priority: 1` — 私たちのもの（`quickstart_modder` から）
+`town_entry` シーンには今、複数のシナリオがあります：
 
-エンジンはシーンのシナリオを `priority` の昇順で実行します — **最も低い**値が**最初**に実行されます。私たちの `priority: 1` のシナリオはデフォルトより先に始まるため、プレイヤーはまず新しいオプションを見ます。
+| priority | シナリオ | Mod |
+|---|---|---|
+| `1` | 私たちの `town_entry_override` | `quickstart_modder` |
+| `10`–`30` | ムラカミとの出会い（その `condition:` が満たされている間のみ） | `murakami` |
+| `40` | 標準の町メニュー | `visual_novel_core` |
 
-> 詳細：[シーン優先度システム](site/docs/mods/scenes/)。
+シーンに入ると、エンジンは `priority` の昇順 — **最も小さい**値から — で、条件を満たす最初のシナリオを実行します。シナリオがシーンを変えずに終了すると、次のシナリオが始まります。つまり：
+
+- 「バーに入る」 — `switch_scene` がプレイヤーをバーへ連れて行きます；
+- 「通り過ぎる」 — 私たちのシナリオは単に終了し（`end`）、その後は元のゲームどおりに進みます：ムラカミのストーリーシーンか、標準の町メニューです。
+
+こうしてModは何も壊さずに新しいものを追加します。もし私たちのシナリオが町のメニューを自前で描いたら、ストーリーも他のModも覆い隠してしまうでしょう。
+
+> 詳細：[Scene Priority System](site/docs/mods/scenes/)。
 
 ---
 
-## ステップ 7：確認
+## ステップ 7：Modをゲームに接続する
 
-ゲームを開始します：
+ゲームはインストール済みのModをすべて読み込むわけではなく、ゲームのコレクションに含まれるModだけを読み込みます。Modを追加してください（ゲームのUIは英語とロシア語です）：
 
-1. 町に入る — 「酒場へ行く」オプションが表示されます。
-2. クリック — ダイアログと選択肢のある `my_alko_bar` シーンにいます。
-3. 「立ち去る」を選択 — 町に戻ります。
+1. メインメニューで **「Mods & Collections」** → **「Collections」** タブを開きます。
+2. **Cthangover** のゲームカードで **「Edit scheme」** を押します。
+3. スキーム上の任意のメカニクス（例：**「Story」**）を選択し、**「Add mod」** を押します。
+4. リストから自分のMod（`manifest.json` の名前）を見つけて **「Add」** を押します。
+5. **「Save」** を押して確定します。変更は次回のゲーム起動時に反映されます。
+
+---
+
+## ステップ 8：確認
+
+ゲームを再起動します：
+
+1. 町に入ると、最初に「バーに入る」/「通り過ぎる」の選択肢が表示されます。
+2. 「バーに入る」を押すと — 背景、バーの喧騒、会話、選択肢のある自分の `my_alko_bar` シーンにいます。
+3. 「立ち去る」を選ぶと — 町に戻ります。
+4. 「通り過ぎる」を選ぶと — ゲームはいつもどおり続きます。
+
+> **開発者向け。** ソースからなら、プロローグをプレイせずにすぐシーンを開けます：`godot --path . -- --game=cthangover --new --with-mods=quickstart_modder --scene=town_entry`。
 
 ---
 
 ## 次は？
 
-| やりたいこと | こちらへ |
+| やりたいこと | 行き先 |
 |---|---|
-| すべてのDSLコマンドをマスター | [DSLコマンドリファレンス](site/docs/mods/scenes/scenarios/dsl/) |
-| インタラクティブオブジェクトを追加 | [インタラクティブオブジェクト](site/docs/mods/interactives/) |
-| C# Modを作成 | [レベル 3 — プログラマー](#quickstart/programmer) |
+| すべてのDSLコマンドを習得する | [DSL Command Reference](site/docs/mods/scenes/scenarios/dsl/) |
+| インタラクティブオブジェクトを追加する | [Interactive Objects](site/docs/mods/interactives/) |
+| C# Modを書く | [レベル 3 — プログラマー](#quickstart/programmer) |
 
 ---
 
@@ -182,4 +206,4 @@ end
 quickstart_modder.zip をダウンロード
 </a>
 
-ダウンロード可能なModのセリフはロシア語です。
+ダウンロード可能なModのセリフはロシア語です。アーカイブを `mods/quickstart_modder/` に展開するか、`.zip` を `user://mods/` に置き、Modをゲームに接続してください（ステップ 7）。

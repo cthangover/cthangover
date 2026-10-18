@@ -18,7 +18,7 @@
 
 <a href="#quickstart/programmer" class="qs-card">
 <h3>レベル 3 — プログラマー</h3>
-<p>カスタムアクション、メニュー設定、シーンサブスクリプションを持つC# Modを作成します。</p>
+<p>カスタムDSLアクションとメニュー設定を持つC# Modを作成します。</p>
 <span class="qs-card-meta">C# + Godot API · 20分</span>
 </a>
 

@@ -6,7 +6,7 @@
 <span>Compilación Roslyn</span>
 </div>
 
-Escribirás un mod en C# que añade al juego: una acción DSL personalizada y ajustes en el menú. El código se compila al vuelo mediante Roslyn — no necesitas Godot.
+Vas a escribir un mod en C# que añade al juego una acción DSL personalizada y ajustes en el menú. El código se compila sobre la marcha con Roslyn al iniciar el juego — no necesitas ni Godot ni `dotnet build`.
 
 ---
 
@@ -17,11 +17,14 @@ mods/
 └── quickstart_programmer/
     ├── manifest.json
     ├── src/
-    │   ├─── MyModSettings.cs
-    │   ├─── MyMod.cs
-    │   └─── MyEffectAction.cs
+    │   ├── MyModSettings.cs
+    │   ├── MyMod.cs
+    │   └── MyEffectAction.cs
+    ├── scenarios/
+    │   └── my_effect_demo.scenario
     └── locale/
-        └─── es.properties
+        ├── ru.properties
+        └── en.properties
 ```
 
 ---
@@ -32,20 +35,20 @@ mods/
 
 ```jsonc
 {
-  "id": "quickstart_programmer",                    // ID del mod
-  "name": "My Code Mod",                            // Nombre del mod mostrado en la lista de mods
-  "description": "Nueva acción y ajustes del mod",  // Descripción del mod mostrada en la lista de mods
-  "sources": ["src/*.cs"],                          // Patrón glob para recopilar archivos fuente (incluye todos los archivos ".cs")
-  "author": "programmer",                           // Autor
-  "depends": ["visual_novel_core"]                  // Dependencia del juego base (así no se requiere ordenar manualmente la carga de mods)
+  "id": "quickstart_programmer",                 // ID del mod
+  "name": "My Code Mod",                         // Nombre del mod que se muestra en la lista de mods
+  "description": "Nueva acción y ajustes del mod", // Descripción del mod que se muestra en la lista de mods
+  "sources": ["src/*.cs"],                       // Patrón para recoger el código fuente (todos los archivos ".cs")
+  "author": "programmer",                        // Autor
+  "depends": ["visual_novel_core"]               // Dependencia del juego principal (así no hay que ordenar a mano la carga del mod)
 }
 ```
 
-El campo `sources` especifica qué archivos C# compilar mediante Roslyn.
+El campo `sources` indica qué archivos C# se compilan con Roslyn. Los errores de compilación (con archivo y línea) van al log en la categoría `MODS_COMPILE`.
 
 ---
 
-## Paso 3: Punto de entrada — IMod
+## Paso 3: Punto de entrada — IModInitializer
 
 `mods/quickstart_programmer/src/MyMod.cs`:
 
@@ -59,26 +62,26 @@ namespace Cthangover.MyCodeMod
     public class MyMod : IModInitializer
     {
         public void OnModLoaded(string modId) { }
-
+        
         public void OnModResourcesReady()
         {
-
-            GameLogger.Log("MY_MOD", "¡Mi mod cargado!", LogLevel.Message);
+            
+            GameLogger.Log("MY_MOD", "My mod loaded!", LogLevel.Message);
         }
-
+        
     }
 }
 ```
 
-La interfaz `IModInitializer` es el punto de entrada del ciclo de vida del código C# de un mod; las implementaciones se descubren mediante reflection. `OnModLoaded` se llama cuando carga cada mod; `OnModResourcesReady` se llama una vez cuando todos los mods y sus recursos están listos.
+La interfaz `IModInitializer` es el punto de entrada del ciclo de vida del código C# del mod; las implementaciones se descubren por reflexión. `OnModLoaded` se llama al cargar cada mod (no solo el tuyo: `modId` trae el id del mod cargado), `OnModResourcesReady` — una vez, después de cargar todos los mods y sus recursos.
 
-> Usa `GameLogger.Log(...)` en lugar de `GD.Print(...)` si quieres trabajar con logs.
+> Usa `GameLogger.Log(...)` en lugar de `GD.Print(...)` si quieres trabajar con los logs.
 
 ---
 
 ## Paso 4: Ajustes del menú — IModSettings
 
-Añade a `MyModSettings.cs`:
+`mods/quickstart_programmer/src/MyModSettings.cs`:
 
 ```csharp
 using System.Collections.Generic;
@@ -128,26 +131,25 @@ public class MyModSettings : IModSettings
 }
 ```
 
-Después de cargar el mod, ve a "Ajustes → Mod Settings" — tu mod aparece con un deslizador de volumen y un interruptor.
+`GetDefinitions` describe los controles, `WriteValues`/`ReadValues` escriben y leen los valores de forma simétrica; el núcleo se encarga del guardado en disco y de la interfaz. Una vez cargado, tu mod aparece en «Settings» → pestaña «Mod Settings» con un deslizador y un interruptor.
 
 ---
 
 ## Paso 5: Acción DSL personalizada — IScenarioAction
 
-Añadamos una nueva acción `my_effect`, usable en archivos `.scenario`. Crea `MyEffectAction.cs`:
+Añadamos una acción nueva, `my_effect`, disponible en los archivos `.scenario`. `mods/quickstart_programmer/src/MyEffectAction.cs`:
 
 ```csharp
-using Cthangover.Core.Scenarios;
 using Cthangover.Core.Actions;
 using Cthangover.Core.Utils;
 
 public class MyEffectAction : IScenarioAction
 {
     public string Name => "my_effect";
-
+    
     public void Run(IActionContext context)
     {
-        GameLogger.Log("MY_MOD", "¡Nueva acción ejecutada!", LogLevel.Message);
+        GameLogger.Log("MY_MOD", "New action executed!", LogLevel.Message);
     }
 }
 ```
@@ -158,40 +160,77 @@ Ahora en cualquier archivo `.scenario` puedes escribir:
 action my_effect
 ```
 
-El motor encuentra tu clase mediante reflection y llama a `Run`.
+El motor encontrará tu clase por reflexión y llamará a `Run`. A través de `context` tienes las variables del diálogo (`GetParam`) y los servicios del juego: misiones, personajes, iluminación, la escena.
 
 ---
 
-## Paso 6: Localización
+## Paso 6: Un escenario para probarla
 
-`mods/quickstart_programmer/locale/es.properties`:
+Para ver la acción funcionando, la llamaremos cuando el jugador salga de casa. `mods/quickstart_programmer/scenarios/my_effect_demo.scenario`:
+
+```scenario
+scene: home_outside
+priority: 0
+---
+action my_effect
+end
+```
+
+`priority: 0` — nuestro escenario se ejecuta antes que el estándar (`priority: 10`), y después de `end` el juego sigue como siempre: la escena abre su menú habitual.
+
+---
+
+## Paso 7: Localización
+
+Las etiquetas de los ajustes son las claves de localización de `Name`. `mods/quickstart_programmer/locale/ru.properties`:
 
 ```properties
-mymod/effect_volume = Volumen del efecto
-mymod/enable_mod = Activar mod
+mymod/effect_volume = Громкость эффекта
+mymod/enable_mod = Включить мод
+```
+
+`mods/quickstart_programmer/locale/en.properties`:
+
+```properties
+mymod/effect_volume = Effect volume
+mymod/enable_mod = Enable mod
 ```
 
 ---
 
-## Paso 7: Comprobarlo
+## Paso 8: Conectar el mod al juego
 
-Inicia el juego:
+El juego no carga todos los mods instalados, solo los que forman parte de la colección del juego (la interfaz del juego está en inglés y ruso):
 
-1. Abre el menú de ajustes → pestaña "Mod Settings" → tu mod con deslizador y casilla.
-2. Escribe un `.scenario` de prueba con el comando `action my_effect`.
-3. Los logs del juego muestran `[MY_MOD] ¡Nueva acción ejecutada!`.
+1. En el menú principal abre **«Mods & Collections»** → pestaña **«Collections»**.
+2. En la tarjeta del juego **Cthangover** pulsa **«Edit scheme»**.
+3. Selecciona cualquier mecánica del esquema (por ejemplo, **«Story»**) y pulsa **«Add mod»**.
+4. Busca tu mod en la lista (por el nombre de `manifest.json`) y pulsa **«Add»**.
+5. Pulsa **«Save»** y confirma. Los cambios se aplican la próxima vez que se inicie el juego.
+
+> **Para desarrolladores.** Desde el código fuente, sin el menú: `godot --path . -- --game=cthangover --new --with-mods=quickstart_programmer --scene=home_outside`.
+
+---
+
+## Paso 9: Comprobarlo
+
+Reinicia el juego:
+
+1. Abre «Settings» → pestaña «Mod Settings» → tu mod con un deslizador y un interruptor.
+2. El log del juego (`user://logs/cthangover.log`, en Windows — `%APPDATA%\cthangover\logs\cthangover.log`) contiene `[MY_MOD] My mod loaded!` tras la carga.
+3. Sal de casa — en el log aparece `[MY_MOD] New action executed!`.
 
 ---
 
 ## ¿Qué sigue?
 
-| Quieres | Ve aquí |
+| Quieres | Ve a |
 |---|---|
-| Suscribirte a entrada/salida de escenas | [Suscripciones de Escena](site/docs/mods/configs/) |
-| Crear tu propio modo de batalla | [Sistema de Batalla](site/docs/mods/battle/) |
-| Hacer una ventana de herramienta | [Crear una Herramienta Personalizada](site/docs/mods/tools/tutorial) |
-| Escribir mods en GDScript | [GDScript en Mods](site/docs/mods/src/gdscript/) |
-| Todas las interfaces disponibles | [Código Fuente C# en Mods](site/docs/mods/src/) |
+| Suscribirte a la entrada/salida de escenas | [Scene Subscriptions](site/docs/mods/configs/) |
+| Crear tu propio modo de combate | [Battle System](site/docs/mods/battle/) |
+| Hacer una ventana de herramienta | [Creating a Custom Tool](site/docs/mods/tools/tutorial) |
+| Escribir mods en GDScript | [GDScript in Mods](site/docs/mods/src/gdscript/) |
+| Todas las interfaces disponibles | [C# Source Code in Mods](site/docs/mods/src/) |
 
 ---
 
@@ -202,4 +241,4 @@ Inicia el juego:
 Descargar quickstart_programmer.zip
 </a>
 
-El mod descargable está en inglés.
+El mod descargable está en inglés. Descomprime el archivo en `mods/quickstart_programmer/` o coloca el `.zip` en `user://mods/` y después conecta el mod al juego (paso 8).

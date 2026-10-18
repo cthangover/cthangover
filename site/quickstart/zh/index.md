@@ -18,7 +18,7 @@
 
 <a href="#quickstart/programmer" class="qs-card">
 <h3>等级 3 — 程序员</h3>
-<p>编写 C# 模组，包含自定义动作、菜单设置和场景订阅。</p>
+<p>编写 C# 模组，包含自定义 DSL 动作和菜单设置。</p>
 <span class="qs-card-meta">C# + Godot API · 20 分钟</span>
 </a>
 

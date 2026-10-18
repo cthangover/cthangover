@@ -168,7 +168,7 @@ namespace Cthangover.Core.Mods
                     }
 
                     var visibleModIds = DependencyClosure(modInfo, mods);
-                    var artifact = EnsureCompiled(modInfo.Id, sourceFiles, dependencySignature, cancellationToken, visibleModIds);
+                    var artifact = EnsureCompiled(modInfo.Id, sourceFiles, dependencySignature, cancellationToken, visibleModIds, modInfo.FileProvider?.RootPath);
                     if (artifact != null)
                         result.Add(new ModCompileArtifact(modInfo.Id, artifact, sourceFiles));
                 }
@@ -283,8 +283,11 @@ namespace Cthangover.Core.Mods
         /// nothing loaded until all of them compiled, so a typo leaves the running
         /// game on the previous version. Records the result in
         /// <see cref="ModAssemblyCache.CurrentArtifacts"/> for the dependents.
+        /// <paramref name="modRoot"/> is the mod's directory on disk; syntax trees
+        /// are parsed with paths under it so the Godot generator emits a correct
+        /// <c>[ScriptPath]</c> (see <see cref="ModReferenceProvider.ResolveSourcePath"/>).
         /// </summary>
-        public static string EnsureCompiled(string modId, IEnumerable<(string FilePath, string Source)> sources, string dependencySignature, CancellationToken cancellationToken = default, IReadOnlyCollection<string> knownModIds = null)
+        public static string EnsureCompiled(string modId, IEnumerable<(string FilePath, string Source)> sources, string dependencySignature, CancellationToken cancellationToken = default, IReadOnlyCollection<string> knownModIds = null, string modRoot = null)
         {
             var sourceList = sources.ToList();
             if (sourceList.Count == 0)
@@ -305,7 +308,7 @@ namespace Cthangover.Core.Mods
             // mod providers carry no BOM, and Roslyn refuses to emit debug
             // information for trees without an explicit encoding.
             var syntaxTrees = sourceList
-                .Select(s => CSharpSyntaxTree.ParseText(s.Source, options: parseOptions, path: ModReferenceProvider.ResolveSourcePath(modId, s.FilePath), encoding: System.Text.Encoding.UTF8, cancellationToken: cancellationToken))
+                .Select(s => CSharpSyntaxTree.ParseText(s.Source, options: parseOptions, path: ModReferenceProvider.ResolveSourcePath(modId, s.FilePath, modRoot), encoding: System.Text.Encoding.UTF8, cancellationToken: cancellationToken))
                 .ToList();
 
             var metadataReferences = new List<MetadataReference>();

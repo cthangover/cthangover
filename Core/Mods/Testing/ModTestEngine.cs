@@ -115,7 +115,7 @@ namespace Cthangover.Core.Mods.Testing
                             ? $"{mod.Id}/{file}"
                             : $"{mod.Id}/tests/{file}";
                         sources.Add((reportPath, mod.FileProvider.ReadFileText(file)));
-                        treePaths.Add(Compilation.ModReferenceProvider.ResolveSourcePath(mod.Id, file));
+                        treePaths.Add(Compilation.ModReferenceProvider.ResolveSourcePath(mod.Id, file, mod.FileProvider?.RootPath));
                     }
                 }
             }
