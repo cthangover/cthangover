@@ -304,6 +304,13 @@ installed this way are remembered for the rest of the session
 (`sessionInstalled`), so the scheme updates immediately even though the
 registry only learns about them after a restart.
 
+Editing the collection of the game that is already running (say, adding the
+editors mechanic from the main menu) applies the next time the player enters
+that game: **New game** or **Load** sees that the loaded mod set or the
+definition no longer matches the collection (`GameCatalog.IsActiveOutdated`)
+and switches the mod set in place instead of re-entering the stale one. No
+restart of the process is needed.
+
 Applying is blocked while any required mod is `Missing` from the catalog or
 while scheme errors are present — enabling a mod whose dependency cannot be
 loaded would only make the registry drop it at the next boot. Version

@@ -144,6 +144,12 @@ The `editor_tools` mod provides six development tools:
 | `map_editor` | Visual world-map zone editor — canvas with draggable regions/markers/labels per scene, locked/hidden flags, per-zone title keys and images, load/save of the zone JSON (see [Map & Zones](../map/)) | `tools/map_editor/title` |
 | `catalog_export` | Exports a catalog entry (`catalog.json`) for a mod — download URL, category, tags, changelog, status, min game version, icon URL | `mods/catalog_title` |
 
+The scenario editor's play-test works inside a running game too: **Stop**
+brings the player back to the scene they were in (or to the tool's own route,
+or to the main menu when the editor was opened from there), and a scene switch
+made by the played scenario itself ends the play-test where it is instead of
+throwing the player to the main menu.
+
 Each tool has a provider class (`ScenarioEditorToolProvider`, `SceneBuilderToolProvider`, `LightEditorToolProvider`, `InteractiveEditorToolProvider`, `MapEditorToolProvider`, `CatalogExportToolProvider`) implementing `IToolProvider`, and a dedicated window class extending `ToolWindow`.
 
 Three tools also provide `IToolBoxButton` implementations for quick access from the HUD toolbar:
