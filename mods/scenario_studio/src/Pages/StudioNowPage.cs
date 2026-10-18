@@ -6,13 +6,12 @@ namespace Cthangover.Mods.ScenarioStudio
     using Godot;
 
     /// <summary>
-    /// "Now" tab: the running scenario around the debugger position plus the
-    /// tools to extend it on the spot. The author mode shows the script with a
-    /// gutter (<see cref="StudioCodeLineView"/>), the novice mode the same lines
-    /// as cards (<see cref="StudioBlockView"/>) with the insert bar placed right
-    /// under the current card, where the new line will play. Both end with the
-    /// "this change affects" plate naming the mod that receives the edit and the
-    /// mod it overrides, so nobody changes someone else's content unknowingly.
+    /// "Now" tab in the author mode: the running scenario as script with a
+    /// gutter (<see cref="StudioCodeLineView"/>) and the insert bar for a line
+    /// after the current one. It ends with the "this change affects" plate
+    /// naming the mod that receives the edit and the mod it overrides, so
+    /// nobody changes someone else's content unknowingly; the novice mode
+    /// (<see cref="StudioNovicePage"/>) shows the same plate.
     /// <para/>
     /// One instance lives as long as the dock; <see cref="Build"/> refills the
     /// body and wires the controls to this instance's handlers.
@@ -25,17 +24,7 @@ namespace Cthangover.Mods.ScenarioStudio
         /// <summary>One of the insert buttons was pressed.</summary>
         public event Action<StudioLineKind> InsertRequested;
 
-        public void Build(VBoxContainer content, StudioSession session, StudioMode mode)
-        {
-            if (mode == StudioMode.Author)
-                BuildAuthor(content, session);
-            else
-                BuildNovice(content, session);
-
-            content.AddChild(BuildScopeBanner(session));
-        }
-
-        private void BuildAuthor(VBoxContainer content, StudioSession session)
+        public void Build(VBoxContainer content, StudioSession session)
         {
             var well = new PanelContainer { MouseFilter = Control.MouseFilterEnum.Ignore };
             well.AddThemeStyleboxOverride("panel", StudioStyles.CodeWell());
@@ -50,24 +39,13 @@ namespace Cthangover.Mods.ScenarioStudio
                 lines.AddChild(view);
             }
 
-            var current = session.CurrentIndex;
-            var caption = current < 0 ? string.Empty : string.Format(TranslationServer.Translate("studio/after_line"), session.Lines[current].Number);
-            content.AddChild(BuildInsertBar(caption, large: false));
+            var at = session.InsertionIndexAfterCurrent();
+            var caption = at <= 0 ? string.Empty : string.Format(TranslationServer.Translate("studio/after_line"), session.Lines[at - 1].Number);
+            content.AddChild(BuildInsertBar(caption));
+            content.AddChild(BuildScopeBanner(session));
         }
 
-        private void BuildNovice(VBoxContainer content, StudioSession session)
-        {
-            var list = UiKit.Column(UiTokens.Space2);
-            content.AddChild(list);
-            foreach (var line in session.Lines)
-            {
-                list.AddChild(new StudioBlockView(line));
-                if (line.IsCurrent)
-                    list.AddChild(BuildInsertBar(string.Empty, large: true));
-            }
-        }
-
-        private Control BuildInsertBar(string caption, bool large)
+        private Control BuildInsertBar(string caption)
         {
             var bar = new PanelContainer { MouseFilter = Control.MouseFilterEnum.Ignore };
             bar.AddThemeStyleboxOverride("panel", StudioStyles.InsertBar());
@@ -85,20 +63,21 @@ namespace Cthangover.Mods.ScenarioStudio
                 row.AddChild(label);
             }
 
-            row.AddChild(InsertButton("studio/add_line", large, OnAddLine));
-            row.AddChild(InsertButton("studio/add_choice", false, OnAddChoice));
-            row.AddChild(InsertButton("studio/add_jump", false, OnAddJump));
+            row.AddChild(InsertButton("studio/add_line", OnAddLine));
+            row.AddChild(InsertButton("studio/add_choice", OnAddChoice));
+            row.AddChild(InsertButton("studio/add_jump", OnAddJump));
             return bar;
         }
 
-        private static Button InsertButton(string key, bool primary, Action handler)
+        private static Button InsertButton(string key, Action handler)
         {
-            var button = StudioStyles.SmallButton(new Button(), TranslationServer.Translate(key), primary);
+            var button = StudioStyles.SmallButton(new Button(), TranslationServer.Translate(key));
             button.Pressed += handler;
             return button;
         }
 
-        private static Control BuildScopeBanner(StudioSession session)
+        /// <summary>"This change affects" plate: the edit scope and, when it differs, the mod it overrides.</summary>
+        public static Control BuildScopeBanner(StudioSession session)
         {
             var banner = new PanelContainer { MouseFilter = Control.MouseFilterEnum.Ignore };
             banner.AddThemeStyleboxOverride("panel", StudioStyles.ScopeBanner());

@@ -27,6 +27,7 @@ namespace Cthangover.Mods.ScenarioStudio
 
         private readonly StudioSession _session = StudioSession.CreateStub();
         private readonly StudioNowPage _nowPage = new();
+        private readonly StudioNovicePage _novicePage = new();
         private StudioMode _mode = StudioMode.Author;
         private StudioTab _tab = StudioTab.Now;
         private string _status;
@@ -110,6 +111,8 @@ namespace Cthangover.Mods.ScenarioStudio
             _content = GetNode<VBoxContainer>(Root + "Body/Scroll/Content");
             _nowPage.BreakpointToggled += OnBreakpointToggled;
             _nowPage.InsertRequested += OnInsertRequested;
+            _novicePage.LineRequested += OnNoviceLineRequested;
+            _novicePage.OptionRequested += OnNoviceOptionRequested;
 
             _statusLabel = GetNode<Label>(Root + "Footer/Row/Status");
             _statusLabel.AddThemeFontSizeOverride("font_size", UiTokens.FontBodySmall);
@@ -183,8 +186,11 @@ namespace Cthangover.Mods.ScenarioStudio
             Clear(_content);
             switch (_tab)
             {
+                case StudioTab.Now when _mode == StudioMode.Author:
+                    _nowPage.Build(_content, _session);
+                    break;
                 case StudioTab.Now:
-                    _nowPage.Build(_content, _session, _mode);
+                    _novicePage.Build(_content, _session, OnPrototypeAction);
                     break;
                 case StudioTab.Scene:
                     StudioScenePage.Build(_content, _session, OnPrototypeAction);
@@ -269,23 +275,39 @@ namespace Cthangover.Mods.ScenarioStudio
 
         private void OnInsertRequested(StudioLineKind kind)
         {
+            InsertLine(_session.InsertionIndexAfterCurrent(), NewLine(kind));
+        }
+
+        private void OnNoviceLineRequested(int at) => InsertLine(at, NewLine(StudioLineKind.Line));
+
+        private void OnNoviceOptionRequested(int at) => InsertLine(at, NewLine(StudioLineKind.Option));
+
+        private void InsertLine(int at, StudioCodeLine line)
+        {
+            _session.InsertAt(at, line);
+            _status = null;
+            Refresh();
+        }
+
+        /// <summary>
+        /// A fresh line of the given kind as the studio inserts it: DSL written in
+        /// the current language (what an author would type) plus the structure the
+        /// novice view reads. A new answer has no target yet, so it shows as broken
+        /// until one is chosen.
+        /// </summary>
+        private StudioCodeLine NewLine(StudioLineKind kind)
+        {
             switch (kind)
             {
                 case StudioLineKind.Choice:
-                    _session.InsertAfterCurrent(kind, $"select \"{Tr("studio/new_choice_text")}\"",
-                        new StudioText("studio/novice_choice", new StudioText("studio/new_choice_text")));
-                    break;
+                    return new StudioCodeLine { Kind = kind, Text = $"select \"{Tr("studio/new_choice_text")}\"", Say = new StudioText("studio/new_choice_text") };
+                case StudioLineKind.Option:
+                    return new StudioCodeLine { Kind = kind, Text = $"option \"{Tr("studio/new_option_text")}\"", Say = new StudioText("studio/new_option_text") };
                 case StudioLineKind.Jump:
-                    _session.InsertAfterCurrent(kind, "switch_scene yard", new StudioText("studio/novice_jump", "yard"));
-                    break;
+                    return new StudioCodeLine { Kind = kind, Text = "switch_scene yard", Target = "yard" };
                 default:
-                    _session.InsertAfterCurrent(kind, $"text \"{Tr("studio/new_line_text")}\"",
-                        new StudioText("studio/novice_line", new StudioText("studio/new_line_text")));
-                    break;
+                    return new StudioCodeLine { Kind = StudioLineKind.Line, Text = $"text \"{Tr("studio/new_line_text")}\"", Say = new StudioText("studio/new_line_text") };
             }
-
-            _status = null;
-            Refresh();
         }
 
         private void OnEditPressed() => OnPrototypeAction(Tr("studio/edit_text"));

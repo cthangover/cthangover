@@ -55,24 +55,37 @@ namespace Cthangover.Mods.ScenarioStudio
         }
 
         /// <summary>
-        /// Inserts a line right after the current one and renumbers the tail. The
-        /// line stays marked new until <see cref="Apply"/>, which is how the dock
-        /// shows unapplied edits.
+        /// Where "insert after the current line" puts a line: right after it, or
+        /// after the whole answer list when the current line is a question —
+        /// a line between <c>select</c> and its <c>option</c>s would cut the
+        /// question short in the parser.
         /// </summary>
-        public void InsertAfterCurrent(StudioLineKind kind, string text, StudioText noviceText)
+        public int InsertionIndexAfterCurrent()
         {
             var index = CurrentIndex;
-            var at = index < 0 ? Lines.Count : index + 1;
-            var number = at < Lines.Count ? Lines[at].Number : Lines.Count + 1;
+            if (index < 0)
+                return Lines.Count;
 
-            Lines.Insert(at, new StudioCodeLine
+            var at = index + 1;
+            if (Lines[index].Kind == StudioLineKind.Choice)
             {
-                Number = number,
-                Text = text,
-                Kind = kind,
-                NoviceText = noviceText,
-                IsNew = true,
-            });
+                while (at < Lines.Count && Lines[at].Kind == StudioLineKind.Option)
+                    at++;
+            }
+            return at;
+        }
+
+        /// <summary>
+        /// Inserts a line at <paramref name="at"/> and renumbers the tail. The line
+        /// stays marked new until <see cref="Apply"/>, which is how the dock shows
+        /// unapplied edits.
+        /// </summary>
+        public void InsertAt(int at, StudioCodeLine line)
+        {
+            at = System.Math.Clamp(at, 0, Lines.Count);
+            line.Number = at < Lines.Count ? Lines[at].Number : Lines.Count == 0 ? 1 : Lines[^1].Number + 1;
+            line.IsNew = true;
+            Lines.Insert(at, line);
 
             for (var i = at + 1; i < Lines.Count; i++)
                 Lines[i].Number++;
@@ -120,19 +133,19 @@ namespace Cthangover.Mods.ScenarioStudio
                 EditScope = layer,
             };
 
-            AddLine(session, 4, StudioLineKind.Light, "light_set [{\"x\":0.43,\"y\":0.57,\"radius\":500},{\"x\":0.10,\"y\":0.27,\"radius\":500}]", new StudioText("studio/novice_light", 2)).IsDone = true;
-            var current = AddLine(session, 5, StudioLineKind.Choice, "select key=rooms/kitchen/prompt", new StudioText("studio/novice_choice", new StudioText("rooms/kitchen/prompt")));
+            AddLine(session, 4, StudioLineKind.Light, "light_set [{\"x\":0.43,\"y\":0.57,\"radius\":500},{\"x\":0.10,\"y\":0.27,\"radius\":500}]", null, null).IsDone = true;
+            var current = AddLine(session, 5, StudioLineKind.Choice, "select key=rooms/kitchen/prompt", new StudioText("rooms/kitchen/prompt"), null);
             current.IsCurrent = true;
             current.HasBreakpoint = true;
-            AddLine(session, 6, StudioLineKind.Option, "option key=rooms/kitchen/opt_exit -> :exit", new StudioText("studio/novice_option", new StudioText("rooms/kitchen/opt_exit"), "exit"));
-            AddLine(session, 7, StudioLineKind.Option, "option key=rooms/kitchen/opt_cook -> :cook", new StudioText("studio/novice_option", new StudioText("rooms/kitchen/opt_cook"), "cook"));
-            AddLine(session, 8, StudioLineKind.Jump, "goto :yard", new StudioText("studio/novice_goto", "yard")).Error = new StudioText("studio/error_label_missing", ":yard");
-            AddLine(session, 10, StudioLineKind.Label, ":exit", new StudioText("studio/novice_label", "exit"));
-            AddLine(session, 11, StudioLineKind.Jump, "switch_scene home_vestibule", new StudioText("studio/novice_jump", "home_vestibule"));
-            AddLine(session, 12, StudioLineKind.End, "end", new StudioText("studio/novice_end"));
-            AddLine(session, 14, StudioLineKind.Label, ":cook", new StudioText("studio/novice_label", "cook"));
-            AddLine(session, 15, StudioLineKind.Action, "action toggle_cooking_workbench", new StudioText("studio/novice_action", "toggle_cooking_workbench"));
-            AddLine(session, 16, StudioLineKind.End, "end", new StudioText("studio/novice_end"));
+            AddLine(session, 6, StudioLineKind.Option, "option key=rooms/kitchen/opt_exit -> :exit", new StudioText("rooms/kitchen/opt_exit"), "exit");
+            AddLine(session, 7, StudioLineKind.Option, "option key=rooms/kitchen/opt_cook -> :cook", new StudioText("rooms/kitchen/opt_cook"), "cook");
+            AddLine(session, 8, StudioLineKind.Jump, "goto :yard", null, "yard").Error = new StudioText("studio/error_label_missing", ":yard");
+            AddLine(session, 10, StudioLineKind.Label, ":exit", null, "exit");
+            AddLine(session, 11, StudioLineKind.Jump, "switch_scene home_vestibule", null, "home_vestibule");
+            AddLine(session, 12, StudioLineKind.End, "end", null, null);
+            AddLine(session, 14, StudioLineKind.Label, ":cook", null, "cook");
+            AddLine(session, 15, StudioLineKind.Action, "action toggle_cooking_workbench", null, "toggle_cooking_workbench");
+            AddLine(session, 16, StudioLineKind.End, "end", null, null);
 
             session.Candidates.Add(new StudioCandidate { Name = "home_kitchen_cooking", Scope = cooking, Priority = 5, ConditionOk = true, Status = StudioCandidateStatus.Running, Reason = new StudioText("studio/reason_order", 5) });
             session.Candidates.Add(new StudioCandidate { Name = "home_kitchen_default", Scope = core, Priority = 5, ConditionOk = true, Status = StudioCandidateStatus.Waiting, Reason = new StudioText("studio/reason_waiting", "home_kitchen_cooking") });
@@ -165,9 +178,9 @@ namespace Cthangover.Mods.ScenarioStudio
             return session;
         }
 
-        private static StudioCodeLine AddLine(StudioSession session, int number, StudioLineKind kind, string text, StudioText novice)
+        private static StudioCodeLine AddLine(StudioSession session, int number, StudioLineKind kind, string text, StudioText say, string target)
         {
-            var line = new StudioCodeLine { Number = number, Kind = kind, Text = text, NoviceText = novice };
+            var line = new StudioCodeLine { Number = number, Kind = kind, Text = text, Say = say, Target = target };
             session.Lines.Add(line);
             return line;
         }
