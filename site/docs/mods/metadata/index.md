@@ -78,7 +78,7 @@ prefix, in lowercase `snake_case`. The folder name, `id`, the repository
 | The game itself: scenes, story, entry point | `<game>_game` | `cthangover_game` |
 | Further content of one game | `<game>_<part>` | `cthangover_murakami`, `cthangover_party` |
 | Reusable content any game may take | `<theme>_pack` | `town_pack` |
-| Template to copy | `<what>_template` | `novel_template` |
+| Template to copy | `<what>_template` | the collection `novel_template` (its own mod: `my_novel_game`) |
 | Developer tool | `<subject>_<tool>` | `editor_tools`, `resource_atlas` |
 | Test fixture | `test_<what>` | `test_defaults_and_patches` |
 

@@ -1,0 +1,10 @@
+scene: my_novel_bar
+priority: 10
+---
+text "В баре тепло и шумно, но сегодня здесь нечего делать." key=my_novel/bar/intro
+select "Что дальше?" key=my_novel/bar/prompt
+option "Вернуться в город" key=my_novel/bar/opt_town -> :town
+
+:town
+switch_scene my_novel_town
+end

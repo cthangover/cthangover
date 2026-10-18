@@ -1,12 +1,12 @@
 {
  "generated": "2026-10-18",
  "stats": {
-  "mods": 30,
+  "mods": 31,
   "dslCommands": 29,
   "coreFiles": 480,
-  "coreLoc": 43934,
+  "coreLoc": 44020,
   "modFiles": 652,
-  "modLoc": 80072
+  "modLoc": 80088
  },
  "battle": [
   {
@@ -99,6 +99,28 @@
    "test": false
   },
   {
+   "id": "cthangover_game",
+   "name": "Cthangover: Story",
+   "version": "2.0.0",
+   "desc": "Story content of the Cthangover game: scenes, scenarios, characters, items, quests, backgrounds and the main game collection.",
+   "cat": [
+    "story"
+   ],
+   "deps": [
+    "shell2d_base",
+    "dialog_base",
+    "interactive_base",
+    "skills_base",
+    "map_base",
+    "ui_base",
+    "characters_base",
+    "items_base",
+    "quests_base",
+    "town_pack"
+   ],
+   "test": false
+  },
+  {
    "id": "cthangover_murakami",
    "name": "Cthangover: Murakami",
    "version": "1.0.0",
@@ -128,27 +150,6 @@
    "deps": [
     "cthangover_game",
     "skills_base"
-   ],
-   "test": false
-  },
-  {
-   "id": "cthangover_game",
-   "name": "Cthangover: Story",
-   "version": "2.0.0",
-   "desc": "Story content of the Cthangover game: scenes, scenarios, characters, items, quests, backgrounds and the main game collection.",
-   "cat": [
-    "story"
-   ],
-   "deps": [
-    "shell2d_base",
-    "dialog_base",
-    "interactive_base",
-    "skills_base",
-    "map_base",
-    "ui_base",
-    "characters_base",
-    "items_base",
-    "quests_base"
    ],
    "test": false
   },
@@ -312,17 +313,18 @@
    "test": false
   },
   {
-   "id": "novel_template",
-   "name": "Novel Template",
+   "id": "my_novel_game",
+   "name": "My Novel",
    "version": "1.0.0",
-   "desc": "Starting point for a new visual novel: a town where you can go into a bar or back home, and a way back from both. Nothing but scenes, backgrounds, text and scene switches on the bare novel engine — copy it, rename it and grow your story from here.",
+   "desc": "The novel template's own content: a town where you can go into a bar or back home, and a way back from both. Only scenes, scenarios and text; backgrounds and sound come from town_pack. Rename it after your game (<game>_game) and grow your story from here.",
    "cat": [
     "story"
    ],
    "deps": [
     "shell2d_base",
     "dialog_base",
-    "audio_base"
+    "audio_base",
+    "town_pack"
    ],
    "test": false
   },
@@ -443,6 +445,18 @@
    "deps": [
     "ui_base"
    ],
+   "test": false
+  },
+  {
+   "id": "town_pack",
+   "name": "Town Pack",
+   "version": "1.0.0",
+   "desc": "Reusable town content for any game: the town entrance (five variants with depth maps), a home vestibule, a bar and the bar ambience. Backgrounds: town/town_entry_0..4, home/vestibule, bar/bar; sound: bar/bar_ambient.",
+   "cat": [
+    "visual",
+    "audio"
+   ],
+   "deps": [],
    "test": false
   },
   {

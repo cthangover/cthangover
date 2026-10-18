@@ -1,0 +1,9 @@
+{
+  "id": "my_novel_game",
+  "name": "My Novel",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "The novel template's own content: a town where you can go into a bar or back home, and a way back from both. Only scenes, scenarios and text; backgrounds and sound come from town_pack. Rename it after your game (<game>_game) and grow your story from here.",
+  "category": "story",
+  "depends": ["shell2d_base>=1", "dialog_base>=1", "audio_base>=1", "town_pack>=1"]
+}

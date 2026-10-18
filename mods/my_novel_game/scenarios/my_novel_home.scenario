@@ -1,0 +1,10 @@
+scene: my_novel_home
+priority: 10
+---
+text "Дома тихо. Здесь пока ничего нет — самое место для новой истории." key=my_novel/home/intro
+select "Что дальше?" key=my_novel/home/prompt
+option "Вернуться в город" key=my_novel/home/opt_town -> :town
+
+:town
+switch_scene my_novel_town
+end

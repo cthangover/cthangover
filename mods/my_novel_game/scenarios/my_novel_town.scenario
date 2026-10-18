@@ -1,0 +1,16 @@
+scene: my_novel_town
+priority: 10
+---
+# The town is the hub: every visit shows the same choice.
+text "Вечерний город. Фонари уже горят, по мостовой тянет прохладой." key=my_novel/town/intro
+select "Куда пойти?" key=my_novel/town/prompt
+option "Зайти в бар" key=my_novel/town/opt_bar -> :bar
+option "Вернуться домой" key=my_novel/town/opt_home -> :home
+
+:bar
+switch_scene my_novel_bar
+end
+
+:home
+switch_scene my_novel_home
+end
