@@ -85,7 +85,8 @@
   }
 
   /* относительные ссылки внутри md -> хэш-маршруты/абсолютные пути.
-     opts.href(baseSlug, href, isDir) -> новый href или null (оставить как есть) */
+     opts.href(page, isDir, isDocs) -> новый href или null (оставить как есть);
+     isDocs — ссылка явно указывает в docs/ ("docs/…", "/site/docs/…") */
   function configureMarked(opts) {
     var use = { renderer: createRenderer() };
     if (opts && typeof opts.href === "function") {
@@ -134,7 +135,7 @@
           }
         }
 
-        var mapped = opts.href(page, isDir);
+        var mapped = opts.href(page, isDir, siteAbsolute);
         if (mapped) token.href = mapped + hash;
       };
     }
@@ -190,10 +191,33 @@
     window.addEventListener("mouseup", function () { isPanning = false; });
   }
 
+  /* JSON-индекс контента. fetch не работает при открытии с file:// —
+     тогда пробуем XHR (статус 0 там означает успех). onFail() без аргументов. */
+  function loadJson(url, onOk, onFail) {
+    fetch(url)
+      .then(function (r) {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      })
+      .then(onOk)
+      .catch(function () {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", url, true);
+        xhr.onload = function () {
+          if (xhr.status !== 0 && xhr.status !== 200) { onFail(); return; }
+          var data;
+          try { data = JSON.parse(xhr.responseText); } catch (e) { onFail(); return; }
+          onOk(data);
+        };
+        xhr.onerror = onFail;
+        xhr.send();
+      });
+  }
+
   window.CTRender = {
     configureMarked: configureMarked,
     addHeadingIds: addHeadingIds,
     renderMermaid: renderMermaid,
-    escapeCode: escapeCode,
+    loadJson: loadJson,
   };
 })();

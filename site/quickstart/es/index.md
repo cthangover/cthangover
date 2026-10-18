@@ -18,7 +18,7 @@ Elige tu camino — cada uno te lleva a un resultado funcional.
 
 <a href="#quickstart/programmer" class="qs-card">
 <h3>Nivel 3 — Programador</h3>
-<p>Escribe un mod en C# con una acción personalizada, ajustes en el menú y suscripciones a escenas.</p>
+<p>Escribe un mod en C# con una acción DSL personalizada y ajustes en el menú.</p>
 <span class="qs-card-meta">C# + API de Godot · 20 minutos</span>
 </a>
 

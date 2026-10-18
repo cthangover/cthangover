@@ -19,6 +19,9 @@
   var searchInput = document.getElementById("docsSearch");
   var searchClear = document.getElementById("searchClear");
   var crumbsEl = document.getElementById("crumbs");
+  var gitEl = document.getElementById("gitLink");
+  var sideEl = document.getElementById("docsSide");
+  var sideToggle = document.getElementById("sideToggle");
   var metaEl = document.getElementById("docMeta");
   var pagerPrev = document.getElementById("pagerPrev");
   var pagerNext = document.getElementById("pagerNext");
@@ -28,73 +31,11 @@
   var canonicalLink = document.querySelector('link[rel="canonical"]');
   var defaultTitle = document.title;
 
-  var docsIndex = {};
+  var docsIndex = null;     /* slug -> markdown; null, пока индекс не загружен */
   var docsTree = [];
   var flat = [];            /* [{slug,title}] в порядке дерева — для prev/next */
-  var loaded = false;
   var currentPage = null;
   var searchTimer = null;
-
-  function esc(s) {
-    var d = document.createElement("div");
-    d.appendChild(document.createTextNode(String(s)));
-    return d.innerHTML;
-  }
-
-  function t(k){ var d = I18N[lang] || I18N.en; return d[k] || I18N.en[k] || k; }
-
-  /* ---------------- загрузка индекса ---------------- */
-  function loadIndex(callback) {
-    if (loaded) { callback(); return; }
-    fetch(INDEX_URL)
-      .then(function (r) {
-        if (!r.ok) throw new Error("HTTP " + r.status);
-        return r.json();
-      })
-      .then(function (data) {
-        docsIndex = data;
-        docsTree = data._tree || [];
-        buildFlat(docsTree);
-        loaded = true;
-        renderTree(currentFilter());
-        callback();
-      })
-      .catch(function () {
-        if (location.protocol === "file:") {
-          tryXhr(INDEX_URL, function (text) {
-            try {
-              docsIndex = JSON.parse(text);
-              docsTree = docsIndex._tree || [];
-              buildFlat(docsTree);
-              loaded = true;
-              renderTree(currentFilter());
-            } catch (e) {
-              docsIndex = {};
-              loaded = true;
-            }
-            callback();
-          }, callback);
-          return;
-        }
-        container.innerHTML =
-          '<div class="docs-error">Failed to load ' + esc(INDEX_URL) + "</div>";
-        loaded = true;
-        callback();
-      });
-  }
-
-  function tryXhr(url, ok, fail) {
-    try {
-      var xhr = new XMLHttpRequest();
-      xhr.open("GET", url, true);
-      xhr.onload = function () {
-        if (xhr.status === 0 || xhr.status === 200) ok(xhr.responseText);
-        else fail();
-      };
-      xhr.onerror = function () { fail(); };
-      xhr.send();
-    } catch (e) { fail(); }
-  }
 
   /* ---------------- дерево / плоский список ---------------- */
   function buildFlat(nodes) {
@@ -150,19 +91,23 @@
       return;
     }
 
+    /* глубина — отступ ссылки: дочерние страницы раздела (configs/game_config)
+       визуально вложены в родителя; группы без index.md сбрасывают отступ */
     var html = "";
-    (function walk(list) {
+    (function walk(list, depth) {
       for (var i = 0; i < list.length; i++) {
         var n = list[i];
         if (!n.slug) {
           html += '<div class="grp">' + esc(n.title) + "</div>";
-        } else {
-          var on = n.slug === currentPage ? " on" : "";
-          html += '<a href="#/docs/' + n.slug + '" class="' + on.trim() + '" data-slug="' + n.slug + '">' + esc(n.title) + "</a>";
+          if (n.children) walk(n.children, 0);
+          continue;
         }
-        if (n.children) walk(n.children);
+        var cls = (n.slug === currentPage ? "on" : "") + (depth ? " sub" : "");
+        html += '<a href="#/docs/' + n.slug + '" class="' + cls.trim() +
+                '" style="--d:' + depth + '" data-slug="' + n.slug + '">' + esc(n.title) + "</a>";
+        if (n.children) walk(n.children, depth + 1);
       }
-    })(nodes);
+    })(nodes, 0);
 
     treeEl.innerHTML = html;
     var links = treeEl.querySelectorAll("a");
@@ -204,15 +149,11 @@
 
   /* ---------------- загрузка страницы ---------------- */
   function loadPage(slug) {
+    if (!docsIndex) return; /* страницу откроет колбэк загрузки индекса */
     var frag = "";
     var fIdx = slug.indexOf("#");
     if (fIdx !== -1) { frag = slug.slice(fIdx + 1); slug = slug.slice(0, fIdx); }
     slug = normalizeSlug(slug);
-    if (!loaded) {
-      container.innerHTML = '<div class="docs-error">…</div>';
-      loadIndex(function () { loadPage(slug); });
-      return;
-    }
 
     var md = docsIndex[slug];
     if (!md) {
@@ -238,6 +179,8 @@
     if (canonicalLink) {
       canonicalLink.setAttribute("href", "https://cthangover.ru/docs/" + slug);
     }
+    if (gitEl) gitEl.href = GIT_BASE + slug + ".md";
+    setSideOpen(false);
     window.scrollTo(0, 0);
     if (frag) {
       var target = document.getElementById(frag);
@@ -268,7 +211,7 @@
     var note = lang === "en" ? "" : t("not_translated");
     metaEl.innerHTML =
       '<span class="f">▣ docs/' + slug + ".md</span>" +
-      '<span class="g">' + t("built_from") + " build-docs-index.py</span>" +
+      '<span class="g">' + esc(t("built_from")) + " build-docs-index.py</span>" +
       "<span>EN</span>" +
       (note ? '<span class="r">' + esc(note) + "</span>" : "");
 
@@ -276,12 +219,12 @@
     for (var j = 0; j < flat.length; j++) if (flat[j].slug === slug) idx = j;
     if (idx > 0) {
       pagerPrev.classList.remove("invisible");
-      pagerPrev.onclick = function (e) { e.preventDefault(); loadPage(flat[idx - 1].slug); window.scrollTo(0, 0); };
+      pagerPrev.onclick = function (e) { e.preventDefault(); loadPage(flat[idx - 1].slug); };
       pagerPrevT.textContent = flat[idx - 1].title;
     } else pagerPrev.classList.add("invisible");
     if (idx >= 0 && idx < flat.length - 1) {
       pagerNext.classList.remove("invisible");
-      pagerNext.onclick = function (e) { e.preventDefault(); loadPage(flat[idx + 1].slug); window.scrollTo(0, 0); };
+      pagerNext.onclick = function (e) { e.preventDefault(); loadPage(flat[idx + 1].slug); };
       pagerNextT.textContent = flat[idx + 1].title;
     } else pagerNext.classList.add("invisible");
 
@@ -320,6 +263,23 @@
     };
   }
 
+  /* ---------------- дерево на телефоне ----------------
+     На узком экране сайдбар стоит над статьёй, и ~60 ссылок дерева
+     уталкивают текст за несколько экранов вниз — там дерево свёрнуто
+     под кнопку и сворачивается после перехода на страницу. */
+  function setSideOpen(open) {
+    if (!sideEl || !sideToggle) return;
+    sideEl.classList.toggle("open", open);
+    sideToggle.setAttribute("aria-expanded", open ? "true" : "false");
+  }
+
+  function bindSideToggle() {
+    if (!sideToggle) return;
+    sideToggle.addEventListener("click", function () {
+      setSideOpen(!sideEl.classList.contains("open"));
+    });
+  }
+
   /* ---------------- поиск ---------------- */
   function bindSearch() {
     if (!searchInput) return;
@@ -339,6 +299,7 @@
     document.addEventListener("keydown", function (e) {
       if (e.key === "/" && document.activeElement !== searchInput && !/^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName)) {
         e.preventDefault();
+        setSideOpen(true);
         searchInput.focus();
       }
     });
@@ -348,6 +309,7 @@
   document.addEventListener("DOMContentLoaded", function () {
     initHeaderChrome("docs");
     bindSearch();
+    bindSideToggle();
     CTRender.configureMarked({
       base: function () { return currentPage || "index"; },
       href: function (page) {
@@ -372,7 +334,7 @@
         }
         return "#/docs/" + page;
       },
-    });;;
+    });
     window.addEventListener("hashchange", function () { loadPage(parseRoute()); });
     document.addEventListener("langchange", function () {
       if (currentPage) updateChrome(currentPage);
@@ -380,6 +342,15 @@
     window.addEventListener("load", function () {
       if (currentPage) CTRender.renderMermaid();
     });
-    loadPage(parseRoute());
+    container.innerHTML = '<div class="docs-error">…</div>';
+    CTRender.loadJson(INDEX_URL, function (data) {
+      docsIndex = data;
+      docsTree = data._tree || [];
+      buildFlat(docsTree);
+      renderTree(currentFilter());
+      loadPage(parseRoute());
+    }, function () {
+      container.innerHTML = '<div class="docs-error">Failed to load <code>' + esc(INDEX_URL) + "</code></div>";
+    });
   });
 })();

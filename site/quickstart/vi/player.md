@@ -6,13 +6,13 @@
 <span>Không cần code</span>
 </div>
 
-Bạn sẽ cường hóa nhân vật Marao — tăng máu, tấn công và thêm khả năng "Choáng" — bằng hệ thống vá (patch). Không dòng code nào, chỉ JSON.
+Bạn sẽ cường hóa nhân vật Marao — tăng máu, tăng tấn công và thêm kỹ năng "Choáng" — thông qua hệ thống bản vá. Không một dòng code nào, chỉ JSON.
 
 ---
 
 ## Bước 1: Tạo thư mục mod
 
-Mỗi mod nằm trong thư mục riêng bên trong `mods/`. Tạo:
+Mỗi mod nằm trong thư mục riêng bên trong `mods/` (cạnh trò chơi) hoặc `user://mods/` (thư mục dữ liệu người dùng; trên Windows — `%APPDATA%\cthangover\mods`). Hãy tạo:
 
 ```filestree
 mods/
@@ -26,19 +26,19 @@ mods/
 
 ## Bước 2: manifest.json
 
-Mỗi mod cần một tệp kê khai. Tạo `mods/quickstart_player/manifest.json`:
+Mỗi mod cần một manifest. Tạo `mods/quickstart_player/manifest.json`:
 
 ```jsonc
 {
-  "id": "quickstart_player",        // Định danh duy nhất của mod, dùng tiếng Anh
-  "name": "Cường Hóa Marao",        // Tên hiển thị trong menu quản lý mod
-  "description": "Mod đầu tiên!",   // Mô tả hiển thị trong danh sách mod và catalog
-  "author": "player",               // Tác giả mod (chuỗi tùy ý)
-  "depends": ["visual_novel_core"]  // Phụ thuộc vào game lõi (không cần sắp xếp thứ tự tải mod thủ công)
+  "id": "quickstart_player",          // Định danh duy nhất của mod, viết bằng tiếng Anh
+  "name": "Marao Buff",               // Tên hiển thị trong menu quản lý mod
+  "description": "Mod đầu tiên của tôi!", // Mô tả hiển thị trong danh sách mod và danh mục
+  "author": "player",                 // Tác giả mod (chuỗi tùy ý)
+  "depends": ["visual_novel_core"]    // Phụ thuộc vào trò chơi chính (không cần tự sắp xếp thứ tự tải mod)
 }
 ```
 
-Bản thân tệp manifest.json là bắt buộc — mod thiếu nó sẽ bị bỏ qua — nhưng không trường nào là bắt buộc tuyệt đối: nếu bỏ qua `id`, tên thư mục sẽ được dùng làm id của mod. Vẫn nên điền cả `id` và `name`. Kernel sẽ tự động phát hiện thư mục và tải nó như một mod.
+Bản thân tệp manifest là bắt buộc — mod không có nó sẽ bị bỏ qua — nhưng không trường nào thực sự bắt buộc: nếu thiếu `id`, tên thư mục sẽ được dùng làm định danh mod. Dù vậy, vẫn nên điền `id` và `name`. Trò chơi tự tìm thấy thư mục mod, nhưng mod chỉ vào trò chơi sau khi bạn kết nối nó (bước 4).
 
 ---
 
@@ -50,7 +50,7 @@ Tạo `mods/quickstart_player/patches/character.json`:
 {
   "Items": [
     {
-      "Id": "Marao", // ID nhân vật cần vá (được định nghĩa trong mod core)
+      "Id": "Marao", // ID nhân vật cần vá (được định nghĩa trong mod chính)
 
       "Health": 5000, // Giá trị thuộc tính mới — ghi đè giá trị gốc
       "Attack": 1200,
@@ -64,22 +64,36 @@ Tạo `mods/quickstart_player/patches/character.json`:
 
 ### Cách hoạt động
 
-- **`"Id": "Marao"`** — mục tiêu vá: nhân vật có định danh `Marao` (được định nghĩa trong mod `visual_novel_core`).
-- **`"Health": 5000`**, **`"Attack": 1200`**, **`"Point": 2`** — ghi đè các trường của nhân vật. Giá trị mới thay thế giá trị cũ.
-- **`"Actions$add": ["physics/stun"]`** — hậu tố `$add` nghĩa là "thêm vào mảng". Hành động `physics/stun` được thêm vào danh sách. Các hành động mặc định `physics/attack` và `physics/defence` vẫn được giữ lại.
+- **`"Id": "Marao"`** — mục tiêu của bản vá: nhân vật có định danh `Marao` (được định nghĩa trong mod `visual_novel_core`).
+- **`"Health": 5000`**, **`"Attack": 1200`** và **`"Point": 2`** — ghi đè các trường của nhân vật. Giá trị mới thay thế giá trị cũ.
+- **`"Actions$add": ["physics/stun"]`** — hậu tố `$add` nghĩa là "thêm phần tử vào mảng". Hành động `physics/stun` được thêm vào danh sách; các hành động mặc định `physics/attack` và `physics/defence` vẫn giữ nguyên. Choáng tốn 2 AP — vì vậy chúng ta cũng tăng `Point`.
 
-> Tìm hiểu thêm về vá: [Patches](site/docs/mods/patches/) và [Thao tác Mảng](site/docs/mods/patches/arrays-and-identity).
+> Tìm hiểu thêm về bản vá: [Patches](site/docs/mods/patches/) và [Array Operations](site/docs/mods/patches/arrays-and-identity).
 
 ---
 
-## Bước 4: Chạy và kiểm tra
+## Bước 4: Kết nối mod với trò chơi
 
-Khởi động trò chơi. Vào bất kỳ trận đấu nào — Marao giờ có:
+Trò chơi không tải mọi mod đã cài, mà chỉ tải các mod thuộc bộ sưu tập (collection) của trò chơi. Hãy thêm mod mới vào đó một lần (giao diện trò chơi có tiếng Anh và tiếng Nga):
+
+1. Trong menu chính, mở **"Mods & Collections"** → tab **"Collections"**.
+2. Trên thẻ trò chơi **Cthangover**, nhấn **"Edit scheme"**.
+3. Chọn bất kỳ cơ chế nào trên sơ đồ (ví dụ **"Story"**) và nhấn **"Add mod"**.
+4. Tìm mod của bạn trong danh sách (theo tên trong `manifest.json`) và nhấn **"Add"**.
+5. Nhấn **"Save"** và xác nhận. Thay đổi có hiệu lực ở lần khởi động trò chơi tiếp theo.
+
+> **Dành cho nhà phát triển.** Khi chạy từ mã nguồn, bạn có thể kết nối mod mà không cần menu, bằng cờ: `godot --path . -- --game=cthangover --new --with-mods=quickstart_player`.
+
+---
+
+## Bước 5: Chạy và kiểm tra
+
+Khởi động lại trò chơi và bắt đầu ván mới. Vào bất kỳ trận chiến nào — giờ Marao có:
 
 - **5000 HP** thay vì 16
 - **1200 ATK** thay vì 5
 - **2 AP** thay vì 1
-- Hành động thứ ba **"Choáng"** bên cạnh "Tấn công" và "Phòng thủ"
+- Hành động thứ ba **"Stun"** (Choáng) bên cạnh "Basic attack" và "Defence"
 
 ---
 
@@ -87,8 +101,8 @@ Khởi động trò chơi. Vào bất kỳ trận đấu nào — Marao giờ c�
 
 | Bạn muốn | Đi đến |
 |---|---|
-| Tạo cảnh riêng với hội thoại | [Cấp 2 — Người Tạo Mod](#quickstart/modder) |
-| Hiểu sâu hơn về hệ thống vá | [Patches](site/docs/mods/patches/) |
+| Tạo cảnh riêng có hội thoại | [Cấp 2 — Người Tạo Mod](#quickstart/modder) |
+| Hiểu sâu hơn hệ thống bản vá | [Patches](site/docs/mods/patches/) |
 | Tìm hiểu về nhân vật | [Characters](site/docs/mods/characters/) |
 | Viết mod C# đầu tiên | [Cấp 3 — Lập Trình Viên](#quickstart/programmer) |
 
@@ -101,4 +115,4 @@ Khởi động trò chơi. Vào bất kỳ trận đấu nào — Marao giờ c�
 Tải xuống quickstart_player.zip
 </a>
 
-Mod tải về bằng tiếng Anh. Để cài đặt, hãy giải nén mod vào thư mục `mods/` của trò chơi — hoặc dùng trình quản lý mod trong game; các mod tải về sẽ được cài vào `user://mods/` và được ưu tiên hơn mod tích hợp sẵn cùng id.
+Mod tải về bằng tiếng Anh. Để cài đặt, hãy giải nén tệp vào thư mục `mods/quickstart_player/` của trò chơi — hoặc đặt chính tệp `.zip` vào `user://mods/`: trò chơi đọc mod trực tiếp từ tệp nén, và mod trong `user://mods/` được ưu tiên hơn mod tích hợp có cùng id. Sau khi cài, hãy kết nối mod với trò chơi (bước 4).

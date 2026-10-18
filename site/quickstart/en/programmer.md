@@ -6,7 +6,7 @@
 <span>Roslyn compilation</span>
 </div>
 
-You'll write a C# mod that adds to the game: a custom DSL action and settings in the menu. Code is compiled on the fly via Roslyn — no Godot needed.
+You'll write a C# mod that adds a custom DSL action and menu settings to the game. The code is compiled on the fly via Roslyn when the game starts — you need neither Godot nor `dotnet build`.
 
 ---
 
@@ -17,11 +17,14 @@ mods/
 └── quickstart_programmer/
     ├── manifest.json
     ├── src/
-    │   ├─── MyModSettings.cs
-    │   ├─── MyMod.cs
-    │   └─── MyEffectAction.cs
+    │   ├── MyModSettings.cs
+    │   ├── MyMod.cs
+    │   └── MyEffectAction.cs
+    ├── scenarios/
+    │   └── my_effect_demo.scenario
     └── locale/
-        └─── en.properties
+        ├── ru.properties
+        └── en.properties
 ```
 
 ---
@@ -35,17 +38,17 @@ mods/
   "id": "quickstart_programmer",                // Mod ID
   "name": "My Code Mod",                        // Mod name shown in the mod list
   "description": "New action and mod settings", // Mod description shown in the mod list
-  "sources": ["src/*.cs"],                      // Glob pattern for collecting source files (include all ".cs" files)
+  "sources": ["src/*.cs"],                      // Pattern for collecting source files (all ".cs" files)
   "author": "programmer",                       // Author
   "depends": ["visual_novel_core"]              // Dependency on the core game (so manual mod load ordering is not required)
 }
 ```
 
-The `sources` field specifies which C# files to compile via Roslyn.
+The `sources` field specifies which C# files to compile via Roslyn. Compilation errors (with file and line) go to the log under the `MODS_COMPILE` category.
 
 ---
 
-## Step 3: Entry point — IMod
+## Step 3: Entry point — IModInitializer
 
 `mods/quickstart_programmer/src/MyMod.cs`:
 
@@ -59,18 +62,18 @@ namespace Cthangover.MyCodeMod
     public class MyMod : IModInitializer
     {
         public void OnModLoaded(string modId) { }
-
+        
         public void OnModResourcesReady()
         {
-
+            
             GameLogger.Log("MY_MOD", "My mod loaded!", LogLevel.Message);
         }
-
+        
     }
 }
 ```
 
-The `IModInitializer` interface is the lifecycle entry point for C# mod code — implementations are discovered via reflection. `OnModLoaded` is called for every mod that loads; `OnModResourcesReady` fires once after all mods and their resources are ready.
+The `IModInitializer` interface is the lifecycle entry point of a mod's C# code; implementations are discovered via reflection. `OnModLoaded` is called when each mod loads (not only yours — `modId` holds the id of the mod that was loaded), `OnModResourcesReady` — once after all mods and their resources are loaded.
 
 > Use `GameLogger.Log(...)` instead of `GD.Print(...)` if you want to work with logs.
 
@@ -78,7 +81,7 @@ The `IModInitializer` interface is the lifecycle entry point for C# mod code —
 
 ## Step 4: Menu settings — IModSettings
 
-Add to `MyModSettings.cs`:
+`mods/quickstart_programmer/src/MyModSettings.cs`:
 
 ```csharp
 using System.Collections.Generic;
@@ -128,23 +131,22 @@ public class MyModSettings : IModSettings
 }
 ```
 
-After the mod loads, go to "Settings → Mod Settings" — your mod appears with a volume slider and a toggle.
+`GetDefinitions` describes the controls, `WriteValues`/`ReadValues` write and read the values symmetrically; the core takes care of saving to disk and of the UI. After the mod loads, your mod appears in "Settings" → the "Mod Settings" tab with a slider and a toggle.
 
 ---
 
 ## Step 5: Custom DSL action — IScenarioAction
 
-Let's add a new `my_effect` action, usable in `.scenario` files. Create `MyEffectAction.cs`:
+Let's add a new action `my_effect`, available in `.scenario` files. `mods/quickstart_programmer/src/MyEffectAction.cs`:
 
 ```csharp
-using Cthangover.Core.Scenarios;
 using Cthangover.Core.Actions;
 using Cthangover.Core.Utils;
 
 public class MyEffectAction : IScenarioAction
 {
     public string Name => "my_effect";
-
+    
     public void Run(IActionContext context)
     {
         GameLogger.Log("MY_MOD", "New action executed!", LogLevel.Message);
@@ -158,11 +160,34 @@ Now in any `.scenario` file you can write:
 action my_effect
 ```
 
-The engine finds your class via reflection and calls `Run`.
+The engine will find your class via reflection and call `Run`. Through `context` you get dialog variables (`GetParam`) and game services: quests, characters, lighting, the scene.
 
 ---
 
-## Step 6: Localization
+## Step 6: A scenario to try it
+
+To see the action in action, let's call it when the player steps out of the house. `mods/quickstart_programmer/scenarios/my_effect_demo.scenario`:
+
+```scenario
+scene: home_outside
+priority: 0
+---
+action my_effect
+end
+```
+
+`priority: 0` — our scenario runs before the standard one (`priority: 10`), and after `end` the game continues as usual: the scene opens its normal menu.
+
+---
+
+## Step 7: Localization
+
+The setting labels are the localization keys from `Name`. `mods/quickstart_programmer/locale/ru.properties`:
+
+```properties
+mymod/effect_volume = Громкость эффекта
+mymod/enable_mod = Включить мод
+```
 
 `mods/quickstart_programmer/locale/en.properties`:
 
@@ -173,23 +198,37 @@ mymod/enable_mod = Enable mod
 
 ---
 
-## Step 7: Check it
+## Step 8: Connect the mod to the game
 
-Start the game:
+The game does not load every installed mod — only the mods that belong to the game's collection:
 
-1. Open the settings menu → "Mod Settings" tab → your mod with a slider and checkbox.
-2. Write a test `.scenario` with the `action my_effect` command.
-3. The game logs show `[MY_MOD] New action executed!`.
+1. In the main menu, open **"Mods & Collections"** → the **"Collections"** tab.
+2. On the **Cthangover** game card, click **"Edit scheme"**.
+3. Select any mechanic on the scheme (for example, **"Story"**) and click **"Add mod"**.
+4. Find your mod in the list (by the name from `manifest.json`) and click **"Add"**.
+5. Click **"Save"** and confirm. Changes apply the next time the game starts.
+
+> **For developers.** From source, without the menu: `godot --path . -- --game=cthangover --new --with-mods=quickstart_programmer --scene=home_outside`.
+
+---
+
+## Step 9: Testing
+
+Restart the game:
+
+1. Open "Settings" → the "Mod Settings" tab → your mod with a slider and a toggle.
+2. The game log (`user://logs/cthangover.log`, on Windows — `%APPDATA%\cthangover\logs\cthangover.log`) contains `[MY_MOD] My mod loaded!` after loading.
+3. Step out of the house — `[MY_MOD] New action executed!` appears in the log.
 
 ---
 
 ## What's next?
 
-| Want to | Go here |
+| Want to | Go to |
 |---|---|
-| Subscribe to scene entry/exit | [Scene Subscriptions](site/docs/mods/configs/) |
+| Subscribe to scene enter/exit | [Scene Subscriptions](site/docs/mods/configs/) |
 | Create your own battle mode | [Battle System](site/docs/mods/battle/) |
-| Make a tool window | [Creating a Custom Tool](site/docs/mods/tools/tutorial) |
+| Build a tool window | [Creating a Custom Tool](site/docs/mods/tools/tutorial) |
 | Write mods in GDScript | [GDScript in Mods](site/docs/mods/src/gdscript/) |
 | All available interfaces | [C# Source Code in Mods](site/docs/mods/src/) |
 
@@ -202,4 +241,4 @@ Start the game:
 Download quickstart_programmer.zip
 </a>
 
-The downloadable mod is in English.
+The downloadable mod is in English. Unpack the archive into `mods/quickstart_programmer/` or put the `.zip` into `user://mods/`, then connect the mod to the game (step 8).

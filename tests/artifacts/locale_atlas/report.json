@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-17T13:06:13.2786540Z",
+  "generated": "2026-10-17T19:34:43.8338762Z",
   "languages": [
     "en",
     "ru"
@@ -10,12 +10,13 @@
     "locale_atlas",
     "test_mod",
     "base_menu",
-    "time_base",
     "mod_manager",
-    "live2d",
+    "time_base",
     "map_base",
     "skills_base",
+    "live2d",
     "base2d",
+    "base_menu__hot_reload",
     "base_menu__menu_flow",
     "base_menu__new_game",
     "base_menu__save_dormancy",
@@ -30,6 +31,10 @@
     "turn_battle_base",
     "validator",
     "visual_novel_core",
+    "murakami",
+    "resource_atlas",
+    "starter_party",
+    "tools__windows",
     "card_battle",
     "cooking",
     "dialog_base__autoplay",
@@ -38,21 +43,17 @@
     "interactive_base__interactives",
     "items_base__inventory",
     "live2d__avatar",
-    "murakami",
-    "resource_atlas",
-    "starter_party",
     "test_mod_a",
-    "tools__windows",
     "cooking__cooking_walk",
     "test_mod_b",
     "test_defaults_and_patches"
   ],
   "summary": {
     "files": 78,
-    "keys": 1081,
-    "complete": 1079,
+    "keys": 1084,
+    "complete": 1082,
     "attention": 2,
-    "references": 844,
+    "references": 856,
     "errors": 0,
     "warnings": 4,
     "failingMods": []
@@ -137,7 +138,7 @@
       "encoding": "UTF-8",
       "lineEndings": "LF",
       "keys": 69,
-      "bytes": 3054
+      "bytes": 3052
     },
     {
       "mod": "base_menu",
@@ -146,7 +147,25 @@
       "encoding": "UTF-8",
       "lineEndings": "LF",
       "keys": 69,
-      "bytes": 4422
+      "bytes": 4424
+    },
+    {
+      "mod": "mod_manager",
+      "file": "locale/en.properties",
+      "language": "en",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 201,
+      "bytes": 10502
+    },
+    {
+      "mod": "mod_manager",
+      "file": "locale/ru.properties",
+      "language": "ru",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 201,
+      "bytes": 14088
     },
     {
       "mod": "time_base",
@@ -165,42 +184,6 @@
       "lineEndings": "LF",
       "keys": 2,
       "bytes": 332
-    },
-    {
-      "mod": "mod_manager",
-      "file": "locale/en.properties",
-      "language": "en",
-      "encoding": "UTF-8",
-      "lineEndings": "LF",
-      "keys": 198,
-      "bytes": 10213
-    },
-    {
-      "mod": "mod_manager",
-      "file": "locale/ru.properties",
-      "language": "ru",
-      "encoding": "UTF-8",
-      "lineEndings": "LF",
-      "keys": 198,
-      "bytes": 13675
-    },
-    {
-      "mod": "live2d",
-      "file": "locale/en.properties",
-      "language": "en",
-      "encoding": "UTF-8",
-      "lineEndings": "LF",
-      "keys": 2,
-      "bytes": 131
-    },
-    {
-      "mod": "live2d",
-      "file": "locale/ru.properties",
-      "language": "ru",
-      "encoding": "UTF-8",
-      "lineEndings": "LF",
-      "keys": 2,
-      "bytes": 188
     },
     {
       "mod": "map_base",
@@ -237,6 +220,24 @@
       "lineEndings": "LF",
       "keys": 2,
       "bytes": 333
+    },
+    {
+      "mod": "live2d",
+      "file": "locale/en.properties",
+      "language": "en",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 2,
+      "bytes": 131
+    },
+    {
+      "mod": "live2d",
+      "file": "locale/ru.properties",
+      "language": "ru",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 2,
+      "bytes": 188
     },
     {
       "mod": "base2d",
@@ -491,6 +492,78 @@
       "bytes": 1211
     },
     {
+      "mod": "murakami",
+      "file": "locale/en.properties",
+      "language": "en",
+      "encoding": "UTF-8",
+      "lineEndings": "CRLF",
+      "keys": 10,
+      "bytes": 695
+    },
+    {
+      "mod": "murakami",
+      "file": "locale/ru.properties",
+      "language": "ru",
+      "encoding": "UTF-8",
+      "lineEndings": "CRLF",
+      "keys": 10,
+      "bytes": 1000
+    },
+    {
+      "mod": "murakami",
+      "file": "locale/scenarios_en.properties",
+      "language": "en",
+      "encoding": "UTF-8",
+      "lineEndings": "CRLF",
+      "keys": 48,
+      "bytes": 4065
+    },
+    {
+      "mod": "murakami",
+      "file": "locale/scenarios_ru.properties",
+      "language": "ru",
+      "encoding": "UTF-8",
+      "lineEndings": "CRLF",
+      "keys": 48,
+      "bytes": 5230
+    },
+    {
+      "mod": "resource_atlas",
+      "file": "locale/en.properties",
+      "language": "en",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 2,
+      "bytes": 192
+    },
+    {
+      "mod": "resource_atlas",
+      "file": "locale/ru.properties",
+      "language": "ru",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 2,
+      "bytes": 317
+    },
+    {
+      "mod": "starter_party",
+      "file": "locale/en.properties",
+      "language": "en",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 2,
+      "bytes": 277
+    },
+    {
+      "mod": "starter_party",
+      "file": "locale/ru.properties",
+      "language": "ru",
+      "encoding": "UTF-8",
+      "lineEndings": "LF",
+      "keys": 2,
+      "bytes": 450
+    },
+    {
       "mod": "card_battle",
       "file": "locale/ui_en.properties",
       "language": "en",
@@ -633,78 +706,6 @@
       "lineEndings": "LF",
       "keys": 2,
       "bytes": 275
-    },
-    {
-      "mod": "murakami",
-      "file": "locale/en.properties",
-      "language": "en",
-      "encoding": "UTF-8",
-      "lineEndings": "CRLF",
-      "keys": 10,
-      "bytes": 695
-    },
-    {
-      "mod": "murakami",
-      "file": "locale/ru.properties",
-      "language": "ru",
-      "encoding": "UTF-8",
-      "lineEndings": "CRLF",
-      "keys": 10,
-      "bytes": 1000
-    },
-    {
-      "mod": "murakami",
-      "file": "locale/scenarios_en.properties",
-      "language": "en",
-      "encoding": "UTF-8",
-      "lineEndings": "CRLF",
-      "keys": 48,
-      "bytes": 4065
-    },
-    {
-      "mod": "murakami",
-      "file": "locale/scenarios_ru.properties",
-      "language": "ru",
-      "encoding": "UTF-8",
-      "lineEndings": "CRLF",
-      "keys": 48,
-      "bytes": 5230
-    },
-    {
-      "mod": "resource_atlas",
-      "file": "locale/en.properties",
-      "language": "en",
-      "encoding": "UTF-8",
-      "lineEndings": "LF",
-      "keys": 2,
-      "bytes": 192
-    },
-    {
-      "mod": "resource_atlas",
-      "file": "locale/ru.properties",
-      "language": "ru",
-      "encoding": "UTF-8",
-      "lineEndings": "LF",
-      "keys": 2,
-      "bytes": 317
-    },
-    {
-      "mod": "starter_party",
-      "file": "locale/en.properties",
-      "language": "en",
-      "encoding": "UTF-8",
-      "lineEndings": "LF",
-      "keys": 2,
-      "bytes": 277
-    },
-    {
-      "mod": "starter_party",
-      "file": "locale/ru.properties",
-      "language": "ru",
-      "encoding": "UTF-8",
-      "lineEndings": "LF",
-      "keys": 2,
-      "bytes": 450
     },
     {
       "mod": "test_mod_a",

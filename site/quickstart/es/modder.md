@@ -6,7 +6,7 @@
 <span>Sin código</span>
 </div>
 
-Crearás un mod con tu propia escena — una sala con diálogo, elecciones y transiciones. Además añadirás una opción "Ir a la taberna" a la escena de la cocina sin tocar los archivos originales.
+Vas a crear un mod con tu propia escena — un bar con diálogo, opciones y transiciones. Y además añadirás una entrada al bar en la escena existente del pueblo, sin tocar los archivos originales.
 
 ---
 
@@ -21,17 +21,15 @@ mods/
     ├── scenes/
     │   └── my_alko_bar.json              # ¡Nuestra nueva ubicación — el bar!
     ├── scenarios/
-    │   ├── my_alko_bar.scenario          # Escenario dentro del bar, permite al jugador interactuar con la nueva ubicación
-    │   └── town_entry_override.scenario  # Sobrescribe la escena del pueblo para añadir una transición a nuestra nueva ubicación
+    │   ├── my_alko_bar.scenario          # Escenario dentro del bar, para que el jugador interactúe con la nueva ubicación
+    │   └── town_entry_override.scenario  # Ampliamos la escena del pueblo para añadir la transición a nuestra ubicación
     ├── backgrounds/
     │   └── my_alko_bar/
     │       └── bg.png                    # Imagen del interior del bar
-    ├── sounds/
-    │   └── locations/
-    │       └── alkobar/
-    │           └── bar_ambient.ogg       # Sonido ambiente de ruido de bar
-    └── locale/
-        └── ru.properties                 # Localización para ruso
+    └── sounds/
+        └── locations/
+            └── alkobar/
+                └── bar_ambient.ogg       # Sonido de fondo del bar
 ```
 
 ---
@@ -42,11 +40,11 @@ mods/
 
 ```jsonc
 {
-  "id": "alko_bar",                         // ID del mod
-  "name": "Mi Bar",                         // Nombre del mod mostrado en el menú de mods
-  "description": "Añade un bar al pueblo",  // Descripción del mod mostrada en el menú de mods
-  "author": "modder",                       // Autor del mod
-  "depends": ["visual_novel_core"]          // Dependencia del juego base (así no se requiere ordenar manualmente la carga de mods)
+  "id": "quickstart_modder",                         // ID del mod
+  "name": "Mi bar",                                  // Nombre del mod que se muestra en el menú de mods
+  "description": "Añade una escena de bar al pueblo", // Descripción del mod que se muestra en el menú de mods
+  "author": "modder",                                // Autor del mod
+  "depends": ["visual_novel_core"]                   // Dependencia del juego principal (así no hay que ordenar a mano la carga del mod)
 }
 ```
 
@@ -58,29 +56,29 @@ mods/
 
 ```jsonc
 {
-  "name": "my_alko_bar",                              // Crea un nuevo identificador de escena único (usado en switch_scene), esta será la nueva escena.
+  "name": "my_alko_bar",                              // Un identificador de escena nuevo y único (se usa en switch_scene): es nuestra futura escena
   "defaultBackground": "my_alko_bar/bg",              // Ruta al fondo PNG dentro de backgrounds/ (sin extensión)
-  "defaultAmbient": "locations/alkobar/bar_ambient",  // ID del sonido ambiente para esta ubicación (sin extensión), ej. "ruido de bar" que suena al entrar en la escena
-  "defaultScenario": "scenarios/my_alko_bar.scenario" // Escenario por defecto que se ejecutará en esta escena si no se especifica otra cosa
+  "defaultAmbient": "locations/alkobar/bar_ambient",  // ID del sonido ambiente de esta ubicación (ruta dentro de sounds/ sin extensión), p. ej. «ruido del bar», que suena al entrar
+  "defaultScenario": "scenarios/my_alko_bar.scenario" // Escenario por defecto que se ejecuta en esta escena si no hay otro
 }
 ```
 
-| Campo | Descripción |
+| Campo | Significado |
 |---|---|
-| `name` | ID único de la escena. Usado en `switch_scene` |
+| `name` | ID único de la escena. Se usa en `switch_scene` |
 | `defaultBackground` | Ruta al fondo dentro de `backgrounds/` (sin extensión) |
-| `defaultAmbient` | Sonido ambiente. Cadena vacía — sin sonido |
-| `defaultScenario` | Ruta al archivo `.scenario` que se ejecuta al entrar en la escena |
+| `defaultAmbient` | Sonido ambiente: ruta dentro de `sounds/` sin extensión. Cadena vacía — sin sonido |
+| `defaultScenario` | Ruta al archivo `.scenario` que se ejecuta al entrar |
 
 ---
 
-## Paso 4: Fondo
+## Paso 4: Fondo y sonido
 
-Coloca una imagen en `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png`.
+Coloca una imagen en `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png` y el sonido ambiente en `mods/quickstart_modder/sounds/locations/alkobar/bar_ambient.ogg`.
 
-Cualquier imagen PNG servirá. El juego soporta iluminación por shader y hora del día — el fondo se iluminará automáticamente.
+Sirve cualquier imagen PNG. El juego admite iluminación por shaders y hora del día — el fondo se iluminará automáticamente.
 
-> Si no tienes una imagen, copia temporalmente `mods/visual_novel_core/backgrounds/home/kitchen.png` → `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png`.
+> Si no tienes una imagen propia, copia temporalmente `mods/visual_novel_core/backgrounds/home/kitchen.png` → `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png`. También puedes prescindir del sonido: pon `"defaultAmbient": ""`.
 
 ---
 
@@ -93,16 +91,17 @@ scene: my_alko_bar
 priority: 10
 ---
 text "Entras en un bar medio vacío."
-text "Un camarero aburrido está tras la barra."
+text "Tras la barra, un camarero se aburre."
 
-select "¿Qué harás?"
-option "Acercarte a la barra" -> :bar
-option "Irte" -> :leave
+:menu
+select "[¿Qué vas a hacer?]"
+option "Acercarse a la barra" -> :bar
+option "Salir" -> :leave
 
 :bar
-text "El camarero te hace un gesto con la cabeza."
-text "— ¿Qué te pongo?"
-end
+text "El camarero te saluda con la cabeza."
+text "— ¿Qué le pongo?"
+goto -> :menu
 
 :leave
 switch_scene town_entry
@@ -111,18 +110,20 @@ end
 
 ### Qué está pasando aquí
 
-- **`text`** — muestra una línea de diálogo. El parámetro `key=` es una clave de localización.
-- **`select`** — abre un menú de elección. El texto entre comillas es el aviso.
-- **`option`** — una opción de elección. `-> :label` — a dónde saltar al seleccionar.
-- **`:bar`**, **`:leave`** — etiquetas para saltos.
-- **`switch_scene`** — mueve al jugador a otra escena.
-- **`end`** — finaliza el escenario (el jugador permanece en la escena).
+- **`scene:`** / **`priority:`** — la cabecera: a qué escena pertenece el escenario y en qué orden se ejecuta. Se separa del cuerpo con una línea `---`.
+- **`text`** — muestra una línea de diálogo. El parámetro `key=` es una clave de localización (aquí no hace falta: sin ella se muestra el propio texto).
+- **`select`** — abre un menú de opciones. El texto entre comillas es el enunciado.
+- **`option`** — una opción. `-> :label` — a dónde saltar al elegirla.
+- **`:menu`**, **`:bar`**, **`:leave`** — etiquetas de salto.
+- **`goto -> :menu`** — salto incondicional: después de hablar con el camarero, el menú se abre de nuevo.
+- **`switch_scene`** — lleva al jugador a otra escena.
+- **`end`** — termina el escenario.
 
 ---
 
 ## Paso 6: Extender el pueblo (prioridad de escena)
 
-Ahora añadimos una opción "Ir al bar" a la escena del pueblo, **sin tocar** el archivo original de `visual_novel_core`.
+Ahora añadiremos una entrada al bar en la escena del pueblo, **sin tocar** los archivos originales de `visual_novel_core`.
 
 `mods/quickstart_modder/scenarios/town_entry_override.scenario`:
 
@@ -130,47 +131,70 @@ Ahora añadimos una opción "Ir al bar" a la escena del pueblo, **sin tocar** el
 scene: town_entry
 priority: 1
 ---
-select "El pueblo huele diferente hoy..."
-option "Volver a casa" -> :home
-option "Ir al bar" -> :alko_bar
-
-:home
-switch_scene home_outside
-end
+select "Por la puerta entreabierta del bar sale música..."
+option "Entrar en el bar" -> :alko_bar
+option "Pasar de largo" -> :pass
 
 :alko_bar
 switch_scene my_alko_bar
+end
+
+:pass
 end
 ```
 
 ### Por qué funciona
 
-La escena `town_entry` ahora tiene dos escenarios:
-- `priority: 40` — por defecto (del mod `visual_novel_core`)
-- `priority: 1` — el nuestro (de `quickstart_modder`)
+La escena `town_entry` tiene ahora varios escenarios:
 
-El motor ejecuta los escenarios de una escena en orden ascendente de `priority` — el valor **menor** va **primero**. Nuestro escenario con `priority: 1` empieza antes que el predeterminado, así el jugador ve las nuevas opciones primero.
+| priority | Escenario | Mod |
+|---|---|---|
+| `1` | nuestro `town_entry_override` | `quickstart_modder` |
+| `10`–`30` | el encuentro con Murakami (solo mientras se cumplen sus `condition:`) | `murakami` |
+| `40` | el menú estándar del pueblo | `visual_novel_core` |
 
-> Más información: [Sistema de Prioridad de Escenas](site/docs/mods/scenes/).
+Al entrar en una escena, el motor ejecuta el primer escenario apto en orden ascendente de `priority` — empezando por el **menor**. Cuando un escenario termina sin cambiar de escena, se inicia el siguiente. Por eso:
+
+- «Entrar en el bar» — `switch_scene` lleva al jugador al bar;
+- «Pasar de largo» — nuestro escenario simplemente termina (`end`) y todo sigue como en el juego original: la escena de la historia de Murakami o el menú estándar del pueblo.
+
+Así el mod añade algo nuevo sin romper nada. Si nuestro escenario dibujara él mismo el menú del pueblo, taparía tanto la historia como otros mods.
+
+> Más información: [Scene Priority System](site/docs/mods/scenes/).
 
 ---
 
-## Paso 7: Comprobarlo
+## Paso 7: Conectar el mod al juego
 
-Inicia el juego:
+El juego no carga todos los mods instalados, solo los que forman parte de la colección del juego. Añade tu mod (la interfaz del juego está en inglés y ruso):
 
-1. Entra en el pueblo — ves la opción "Ir al bar".
-2. Haz clic — estás en tu escena `my_alko_bar` con diálogo y elecciones.
-3. Elige "Irte" — vuelves al pueblo.
+1. En el menú principal abre **«Mods & Collections»** → pestaña **«Collections»**.
+2. En la tarjeta del juego **Cthangover** pulsa **«Edit scheme»**.
+3. Selecciona cualquier mecánica del esquema (por ejemplo, **«Story»**) y pulsa **«Add mod»**.
+4. Busca tu mod en la lista (por el nombre de `manifest.json`) y pulsa **«Add»**.
+5. Pulsa **«Save»** y confirma. Los cambios se aplican la próxima vez que se inicie el juego.
+
+---
+
+## Paso 8: Comprobarlo
+
+Reinicia el juego:
+
+1. Ve al pueblo — lo primero que verás es la elección «Entrar en el bar» / «Pasar de largo».
+2. Pulsa «Entrar en el bar» — estás en tu escena `my_alko_bar` con fondo, ruido de bar, diálogo y opciones.
+3. Elige «Salir» — vuelves al pueblo.
+4. Elige «Pasar de largo» — el juego continúa como siempre.
+
+> **Para desarrolladores.** Desde el código fuente puedes abrir la escena directamente, sin jugar el prólogo: `godot --path . -- --game=cthangover --new --with-mods=quickstart_modder --scene=town_entry`.
 
 ---
 
 ## ¿Qué sigue?
 
-| Quieres | Ve aquí |
+| Quieres | Ve a |
 |---|---|
-| Dominar todos los comandos DSL | [Referencia de Comandos DSL](site/docs/mods/scenes/scenarios/dsl/) |
-| Añadir objetos interactivos | [Objetos Interactivos](site/docs/mods/interactives/) |
+| Dominar todos los comandos DSL | [DSL Command Reference](site/docs/mods/scenes/scenarios/dsl/) |
+| Añadir objetos interactivos | [Interactive Objects](site/docs/mods/interactives/) |
 | Escribir un mod en C# | [Nivel 3 — Programador](#quickstart/programmer) |
 
 ---
@@ -182,4 +206,4 @@ Inicia el juego:
 Descargar quickstart_modder.zip
 </a>
 
-El texto de los diálogos del mod descargable está en ruso.
+El texto de los diálogos del mod descargable está en ruso. Descomprime el archivo en `mods/quickstart_modder/` o coloca el `.zip` en `user://mods/` y después conecta el mod al juego (paso 7).

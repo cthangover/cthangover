@@ -1,12 +1,12 @@
 {
- "generated": "2026-10-14",
+ "generated": "2026-10-18",
  "stats": {
-  "mods": 31,
-  "dslCommands": 0,
-  "coreFiles": 412,
-  "coreLoc": 36600,
-  "modFiles": 543,
-  "modLoc": 66607
+  "mods": 28,
+  "dslCommands": 29,
+  "coreFiles": 476,
+  "coreLoc": 43657,
+  "modFiles": 601,
+  "modLoc": 74858
  },
  "battle": [
   {
@@ -14,7 +14,6 @@
    "version": "2.0.0",
    "deps": [
     "characters_base",
-    "visual_novel_core",
     "interface",
     "items_base",
     "quests_base",
@@ -25,7 +24,6 @@
    "id": "card_battle",
    "version": "1.0.0",
    "deps": [
-    "visual_novel_core",
     "interface",
     "turn_battle_base"
    ]
@@ -34,7 +32,6 @@
    "id": "ff_battle",
    "version": "1.0.0",
    "deps": [
-    "visual_novel_core",
     "interface",
     "turn_battle_base"
    ]
@@ -93,7 +90,6 @@
     "gameplay"
    ],
    "deps": [
-    "visual_novel_core",
     "interface",
     "turn_battle_base"
    ],
@@ -170,24 +166,10 @@
     "gameplay"
    ],
    "deps": [
-    "visual_novel_core",
     "interface",
     "turn_battle_base"
    ],
    "test": false
-  },
-  {
-   "id": "gdscript_test",
-   "name": "GDScript Integration Test Mod",
-   "version": "1.0.0",
-   "desc": "Integration tests for GDScript mod actions. Exercises the full pipeline: .gd load -> compile -> action registration -> scenario execution.",
-   "cat": [
-    "other"
-   ],
-   "deps": [
-    "visual_novel_core"
-   ],
-   "test": true
   },
   {
    "id": "interactive_base",
@@ -216,20 +198,6 @@
    "test": false
   },
   {
-   "id": "inventory_test",
-   "name": "Inventory Test",
-   "version": "1.0.0",
-   "desc": "Integration test mod: drives the inventory GUI end-to-end (open panel, seed items via public API, verify grid, click a cell, search filter, close) and reports [TEST_RESULT]. Activated by --itest=inventory user arg.",
-   "cat": [
-    "other"
-   ],
-   "deps": [
-    "visual_novel_core",
-    "items_base"
-   ],
-   "test": false
-  },
-  {
    "id": "items_base",
    "name": "Items Base",
    "version": "1.0.0",
@@ -253,26 +221,21 @@
     "visual"
    ],
    "deps": [
-    "visual_novel_core",
     "interface"
    ],
    "test": false
   },
   {
-   "id": "live2d_test",
-   "name": "Live2D Test",
-   "version": "1.0.0",
-   "desc": "Test and demo mod for the live2d runtime: the sample Ren model (expressions, motions) shown by the home_outside overlay scene plus an avatar test driver. Requires live2d>=1.",
+   "id": "locale_atlas",
+   "name": "Locale Atlas",
+   "version": "0.1.0",
+   "desc": "Localization key map for developers and AI agents: every key declared in locale/*.properties or referenced by scenarios, C#, JSON, scenes, collections and manifests, per language. Reports keys that are missing in some languages, empty, undeclared or duplicated, collection texts without a translation, and the encoding of every locale file (UTF-8 validity, BOM, mojibake, control characters, line endings). Activated by the --locale-atlas user arg; writes report.md/report.json and prints [TEST_RESULT].",
    "cat": [
-    "visual",
-    "other"
+    "tools",
+    "debug"
    ],
-   "deps": [
-    "visual_novel_core",
-    "live2d",
-    "interface"
-   ],
-   "test": true
+   "deps": [],
+   "test": false
   },
   {
    "id": "map_base",
@@ -298,7 +261,6 @@
     "ui"
    ],
    "deps": [
-    "visual_novel_core",
     "interface"
    ],
    "test": false
@@ -314,7 +276,10 @@
    ],
    "deps": [
     "visual_novel_core",
-    "interface"
+    "interface",
+    "characters_base",
+    "quests_base",
+    "turn_battle_base"
    ],
    "test": false
   },
@@ -345,6 +310,20 @@
     "base2d",
     "characters_base",
     "interface"
+   ],
+   "test": false
+  },
+  {
+   "id": "resource_atlas",
+   "name": "Resource Atlas",
+   "version": "0.1.0",
+   "desc": "Cross-mod resource map for developers and AI agents: which mod requests resources (sounds, textures, scenes, entities, actions, locale keys, res:// files) provided by another mod, which mod overrides or patches another mod's resources, and whether each link is backed by manifest depends. Activated by the --resource-atlas user arg; writes report.md/report.json and prints [TEST_RESULT].",
+   "cat": [
+    "tools",
+    "debug"
+   ],
+   "deps": [
+    "validator"
    ],
    "test": false
   },
@@ -381,40 +360,16 @@
    "id": "test_defaults_and_patches",
    "name": "Test Defaults and Patches",
    "version": "1.0.0",
-   "desc": "Test mod demonstrating property patches system with wildcard and targeted patches",
-   "cat": [
-    "other"
-   ],
-   "deps": [
-    "visual_novel_core"
-   ],
-   "test": true
-  },
-  {
-   "id": "test_interactives",
-   "name": "Test Interactives",
-   "version": "1.0.0",
-   "desc": "Test mod demonstrating the interactive object system — clickable elements on scene with highlight",
+   "desc": "Test fixture of the property patches system: a targeted patch (Marao, food/ration) and wildcard patches of every character and item. Marked as a fixture, so --all-mods and games never load it; the property_patches itest loads it explicitly (--with-mods=test_defaults_and_patches --itest=property_patches) and checks the merged entities.",
    "cat": [
     "other"
    ],
    "deps": [
     "visual_novel_core",
-    "interface"
-   ],
-   "test": true
-  },
-  {
-   "id": "test_runner",
-   "name": "Test Runner",
-   "version": "1.0.0",
-   "desc": "Test harness mod: ports the integration DialogAutoDriver into an engine mod. Activated by --choices=/--timeout= user args; auto-plays the active dialog, prints [TEST_RESULT] and quits. Depends on visual_novel_core and dialog_base.",
-   "cat": [
-    "other"
-   ],
-   "deps": [
-    "visual_novel_core",
-    "dialog_base"
+    "murakami",
+    "cooking",
+    "characters_base",
+    "items_base"
    ],
    "test": true
   },
@@ -442,7 +397,6 @@
     "editor"
    ],
    "deps": [
-    "visual_novel_core",
     "dialog_base",
     "interactive_base",
     "time_base",
@@ -462,7 +416,6 @@
    ],
    "deps": [
     "characters_base",
-    "visual_novel_core",
     "interface",
     "items_base",
     "quests_base",
@@ -499,7 +452,10 @@
     "interactive_base",
     "skills_base",
     "map_base",
-    "interface"
+    "interface",
+    "characters_base",
+    "items_base",
+    "quests_base"
    ],
    "test": false
   }

@@ -263,14 +263,31 @@ namespace Cthangover.Core.Mods.Compilation
         /// be parsed with its real location inside the project; otherwise the
         /// generated <c>[ScriptPath]</c> points nowhere and lifecycle callbacks
         /// never fire.
+        /// <para/>
+        /// <paramref name="modRoot"/> is the mod's real directory
+        /// (<see cref="IModFileProvider.RootPath"/>). It matters for mods whose
+        /// id is not their folder name — a test suite <c>host__suite</c> lives in
+        /// <c>mods/host/test_suites/suite/</c>; resolving it as
+        /// <c>mods/host__suite/</c> missed and yielded <c>res://src/...</c>.
+        /// Only directories inside the project are used (a zip or a
+        /// <c>user://</c> folder has no <c>res://</c> path); otherwise the
+        /// conventional <c>mods/&lt;modId&gt;/</c> location is tried.
         /// </summary>
-        public static string ResolveSourcePath(string modId, string filePath)
+        public static string ResolveSourcePath(string modId, string filePath, string modRoot = null)
         {
             var resRoot = _resRoot;
             if (string.IsNullOrEmpty(resRoot))
                 return filePath;
 
             var normalized = filePath.Replace('\\', '/');
+            var projectRoot = Path.GetFullPath(resRoot);
+            if (!string.IsNullOrEmpty(modRoot) && Directory.Exists(modRoot))
+            {
+                var fromRoot = Path.GetFullPath(Path.Combine(modRoot, normalized));
+                if (fromRoot.StartsWith(projectRoot, StringComparison.OrdinalIgnoreCase) && File.Exists(fromRoot))
+                    return fromRoot;
+            }
+
             var absolute = Path.GetFullPath(Path.Combine(resRoot, "mods", modId, normalized));
             return File.Exists(absolute) ? absolute : filePath;
         }
