@@ -29,13 +29,13 @@ namespace Cthangover.Tests.Mods.Pipeline
         [Fact]
         public void Compute_SameFiles_KeepsEveryMod()
         {
-            var files = Files(("interface", "c/interface_aa.dll"), ("base_menu", "c/base_menu_bb.dll"));
+            var files = Files(("interface", "c/interface_aa.dll"), ("menu_base", "c/menu_base_bb.dll"));
 
-            var plan = ModReloadPlan.Compute(new[] { "interface", "base_menu" }, files, new[] { "interface", "base_menu" }, files, Depends(), null);
+            var plan = ModReloadPlan.Compute(new[] { "interface", "menu_base" }, files, new[] { "interface", "menu_base" }, files, Depends(), null);
 
             Assert.Empty(plan.Unload);
             Assert.Empty(plan.Load);
-            Assert.Equal(new[] { "interface", "base_menu" }, plan.Keep);
+            Assert.Equal(new[] { "interface", "menu_base" }, plan.Keep);
         }
 
         [Fact]
@@ -58,16 +58,16 @@ namespace Cthangover.Tests.Mods.Pipeline
         public void Compute_ChangedDependency_ReloadsTransitiveDependents_DependentsFirst()
         {
             var plan = ModReloadPlan.Compute(
-                new[] { "interface", "base2d", "dialog_base", "base_menu" },
-                Files(("interface", "c/i1.dll"), ("base2d", "c/b.dll"), ("dialog_base", "c/d.dll"), ("base_menu", "c/m.dll")),
-                new[] { "interface", "base2d", "dialog_base", "base_menu" },
-                Files(("interface", "c/i2.dll"), ("base2d", "c/b.dll"), ("dialog_base", "c/d.dll"), ("base_menu", "c/m.dll")),
-                Depends(("base2d", new[] { "interface" }), ("dialog_base", new[] { "base2d" }), ("base_menu", new string[0])),
+                new[] { "interface", "shell2d_base", "dialog_base", "menu_base" },
+                Files(("interface", "c/i1.dll"), ("shell2d_base", "c/b.dll"), ("dialog_base", "c/d.dll"), ("menu_base", "c/m.dll")),
+                new[] { "interface", "shell2d_base", "dialog_base", "menu_base" },
+                Files(("interface", "c/i2.dll"), ("shell2d_base", "c/b.dll"), ("dialog_base", "c/d.dll"), ("menu_base", "c/m.dll")),
+                Depends(("shell2d_base", new[] { "interface" }), ("dialog_base", new[] { "shell2d_base" }), ("menu_base", new string[0])),
                 null);
 
-            Assert.Equal(new[] { "dialog_base", "base2d", "interface" }, plan.Unload);
-            Assert.Equal(new[] { "interface", "base2d", "dialog_base" }, plan.Load);
-            Assert.Equal(new[] { "base_menu" }, plan.Keep);
+            Assert.Equal(new[] { "dialog_base", "shell2d_base", "interface" }, plan.Unload);
+            Assert.Equal(new[] { "interface", "shell2d_base", "dialog_base" }, plan.Load);
+            Assert.Equal(new[] { "menu_base" }, plan.Keep);
         }
 
         [Fact]
@@ -105,12 +105,12 @@ namespace Cthangover.Tests.Mods.Pipeline
         [Fact]
         public void Compute_ForcedMod_ReloadsEvenUnchanged()
         {
-            var files = Files(("interface", "c/i.dll"), ("starter_party", "c/s.dll"));
+            var files = Files(("interface", "c/i.dll"), ("cthangover_party", "c/s.dll"));
 
-            var plan = ModReloadPlan.Compute(new[] { "interface", "starter_party" }, files, new[] { "interface", "starter_party" }, files, Depends(), new[] { "STARTER_PARTY" });
+            var plan = ModReloadPlan.Compute(new[] { "interface", "cthangover_party" }, files, new[] { "interface", "cthangover_party" }, files, Depends(), new[] { "CTHANGOVER_PARTY" });
 
-            Assert.Equal(new[] { "starter_party" }, plan.Unload);
-            Assert.Equal(new[] { "starter_party" }, plan.Load);
+            Assert.Equal(new[] { "cthangover_party" }, plan.Unload);
+            Assert.Equal(new[] { "cthangover_party" }, plan.Load);
             Assert.Equal(new[] { "interface" }, plan.Keep);
         }
 

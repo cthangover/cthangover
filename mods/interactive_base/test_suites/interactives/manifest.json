@@ -2,5 +2,5 @@
   "name": "Interactives test",
   "description": "Integration test of the interactive object system: the scenario command interactive_add places a clickable lamp on interactives_test; the driver checks the definition, hover DSL and that a click runs the onClick scenario. Mounted by --itest=interactives.",
   "sources": ["src/*.cs"],
-  "depends": ["visual_novel_core>=1", "dialog_base>=1"]
+  "depends": ["cthangover_story>=1", "dialog_base>=1"]
 }

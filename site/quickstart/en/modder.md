@@ -44,7 +44,7 @@ mods/
   "name": "My Booze Bar",                              // Mod name shown in the mod menu
   "description": "Adds a booze bar scene to the town", // Mod description shown in the mod menu
   "author": "modder",                                  // Mod author
-  "depends": ["visual_novel_core"]                     // Dependency on the core game (so manual mod load ordering is not required)
+  "depends": ["cthangover_story"]                     // Dependency on the core game (so manual mod load ordering is not required)
 }
 ```
 
@@ -78,7 +78,7 @@ Place an image at `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png`, and t
 
 Any PNG image will work. The game supports shader-based lighting and time of day — the background will be automatically lit.
 
-> If you don't have an image, temporarily copy `mods/visual_novel_core/backgrounds/home/kitchen.png` → `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png`. You can also skip the sound: set `"defaultAmbient": ""`.
+> If you don't have an image, temporarily copy `mods/cthangover_story/backgrounds/home/kitchen.png` → `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png`. You can also skip the sound: set `"defaultAmbient": ""`.
 
 ---
 
@@ -123,7 +123,7 @@ end
 
 ## Step 6: Extending the town (scene priority)
 
-Now let's add an entrance to the bar to the town scene, **without touching** the original `visual_novel_core` files.
+Now let's add an entrance to the bar to the town scene, **without touching** the original `cthangover_story` files.
 
 `mods/quickstart_modder/scenarios/town_entry_override.scenario`:
 
@@ -150,8 +150,8 @@ The `town_entry` scene now has several scenarios:
 | priority | Scenario | Mod |
 |---|---|---|
 | `1` | our `town_entry_override` | `quickstart_modder` |
-| `10`–`30` | meeting Murakami (only while their `condition:` holds) | `murakami` |
-| `40` | the standard town menu | `visual_novel_core` |
+| `10`–`30` | meeting Murakami (only while their `condition:` holds) | `cthangover_murakami` |
+| `40` | the standard town menu | `cthangover_story` |
 
 On entering a scene the engine runs the first eligible scenario in ascending `priority` order — starting from the **lowest**. When a scenario ends without changing the scene, the next one starts. So:
 

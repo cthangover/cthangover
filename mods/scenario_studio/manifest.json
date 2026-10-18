@@ -8,7 +8,7 @@
   "sources": [
     "src/**/*.cs"
   ],
-  "depends": ["interface>=1", "dialog_base>=1"],
+  "depends": ["ui_base>=1", "dialog_base>=1"],
   "ui": [
     {
       "id": "studio",

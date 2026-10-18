@@ -88,7 +88,7 @@ namespace Cthangover.Core.Autotest
 		}
 
 		/// <summary>
-		/// Builds the main menu from the base_menu mod at runtime. The old native
+		/// Builds the main menu from the menu_base mod at runtime. The old native
 		/// res://scenes/menu/main_menu.tscn no longer exists, so the test scene
 		/// cannot instance it statically; the mod-resolved scene is attached as a
 		/// child of this setup node and all lookups go through <c>_menu</c>.

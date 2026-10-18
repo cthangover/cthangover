@@ -144,6 +144,6 @@ func run(ctx):
     ctx.Character.AddToParty(hero)
     ctx.Character.SendNotification(hero)
 
-    if ctx.ModRegistry.IsLoaded("visual_novel_core"):
+    if ctx.ModRegistry.IsLoaded("cthangover_story"):
         ctx.Log("EVENT", "Core is loaded, all good")
 ```

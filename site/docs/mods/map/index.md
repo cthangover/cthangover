@@ -15,7 +15,7 @@ mods/<mod_name>/
 The base mod ships one file:
 
 ```filestree
-mods/visual_novel_core/
+mods/cthangover_story/
 └── map/
     └── map.json        # "home" and "town_entry" zones + two labels
 ```
@@ -114,7 +114,7 @@ Persistence is covered by an integration test that runs the real `SaveService` s
 
 ## Map editor
 
-The `tools` mod ships a visual map editor (`mods/tools/src/MapEditor/`, tool id `map_editor`). It edits the same zone JSON: a canvas with draggable polygon, marker and label handles, per-zone fields, load/save of `map/*.json` into the selected mod, and a game-like preview that renders the real `map_widget.tscn` with the unsaved data. The editor and the game share one style implementation (`MapZoneStyle`), so both views render zones identically; after saving, the running map reloads without a game restart.
+The `editor_tools` mod ships a visual map editor (`mods/editor_tools/src/MapEditor/`, tool id `map_editor`). It edits the same zone JSON: a canvas with draggable polygon, marker and label handles, per-zone fields, load/save of `map/*.json` into the selected mod, and a game-like preview that renders the real `map_widget.tscn` with the unsaved data. The editor and the game share one style implementation (`MapZoneStyle`), so both views render zones identically; after saving, the running map reloads without a game restart.
 
 See [Creating a Custom Tool](../tools/tutorial.md) for how tools like this are registered.
 

@@ -8,6 +8,19 @@
   "sources": [
     "src/**/*.cs"
   ],
-  "depends": ["interface>=1"],
-  "ui": []
+  "depends": ["ui_base>=1"],
+  "ui": [
+    {
+      "id": "map",
+      "kind": "panel",
+      "slot": "ModBeforeUIPanel",
+      "scene_path": "scenes/ui/map_widget.tscn",
+      "button": {
+        "icon": "map",
+        "locale": "ui/map/title",
+        "index": 10
+      },
+      "priority": 10
+    }
+  ]
 }

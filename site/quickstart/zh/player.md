@@ -34,7 +34,7 @@ mods/
   "name": "Marao Buff",            // 在模组管理菜单中显示的名称
   "description": "我的第一个模组！",  // 在模组列表和目录中显示的描述
   "author": "player",              // 模组作者（任意字符串）
-  "depends": ["visual_novel_core"] // 依赖核心游戏（无需手动排列模组加载顺序）
+  "depends": ["cthangover_story"] // 依赖核心游戏（无需手动排列模组加载顺序）
 }
 ```
 
@@ -64,7 +64,7 @@ manifest.json 文件本身是必需的 — 缺少它的模组会被跳过 — �
 
 ### 工作原理
 
-- **`"Id": "Marao"`** — 补丁目标：标识符为 `Marao` 的角色（在 `visual_novel_core` 模组中定义）。
+- **`"Id": "Marao"`** — 补丁目标：标识符为 `Marao` 的角色（在 `cthangover_story` 模组中定义）。
 - **`"Health": 5000`**、**`"Attack": 1200`** 和 **`"Point": 2`** — 覆盖角色的字段。新值替换旧值。
 - **`"Actions$add": ["physics/stun"]`** — 后缀 `$add` 表示"向数组追加元素"。动作 `physics/stun` 被添加到列表中，默认的 `physics/attack` 和 `physics/defence` 保留。眩晕需要 2 AP — 所以我们也提高了 `Point`。
 

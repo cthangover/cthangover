@@ -8,6 +8,19 @@
   "sources": [
     "src/**/*.cs"
   ],
-  "depends": ["interface>=1"],
-  "ui": []
+  "depends": ["ui_base>=1"],
+  "ui": [
+    {
+      "id": "skills",
+      "kind": "panel",
+      "slot": "ModBeforeUIPanel",
+      "scene_path": "scenes/ui/skills_panel/skills_panel.tscn",
+      "button": {
+        "icon": "skills",
+        "locale": "ui/skills/title",
+        "index": 40
+      },
+      "priority": 10
+    }
+  ]
 }

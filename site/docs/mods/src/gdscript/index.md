@@ -17,7 +17,7 @@ Mods can include `.gd` (GDScript) files alongside or instead of C# source code. 
   "name": "My GDScript Mod",                               // Human-readable mod name
   "version": "1.0.0",                                      // Semver version
   "gd_sources": ["scripts/*.gd"],                          // Glob patterns for .gd files
-  "depends": ["visual_novel_core"]                                      // Versioned dependency strings
+  "depends": ["cthangover_story"]                                      // Versioned dependency strings
 }
 ```
 

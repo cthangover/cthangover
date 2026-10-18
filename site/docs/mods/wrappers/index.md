@@ -43,7 +43,7 @@ Real example — `mods/cooking/manifest.json`:
 }
 ```
 
-A `panel` entry additionally declares its toolbar button — from `mods/visual_novel_core/manifest.json`:
+A `panel` entry additionally declares its toolbar button — from `mods/cthangover_story/manifest.json`:
 
 ```jsonc
 {

@@ -44,7 +44,7 @@ mods/
   "name": "マイ酒場",                            // Modメニューに表示されるMod名
   "description": "町に酒場のシーンを追加する",     // Modメニューに表示されるModの説明
   "author": "modder",                           // Modの作者
-  "depends": ["visual_novel_core"]              // 本編ゲームへの依存（ロード順を手動で並べる必要がなくなる）
+  "depends": ["cthangover_story"]              // 本編ゲームへの依存（ロード順を手動で並べる必要がなくなる）
 }
 ```
 
@@ -78,7 +78,7 @@ mods/
 
 どんなPNG画像でも構いません。ゲームはシェーダーによるライティングと時間帯に対応しており、背景は自動的にライティングされます。
 
-> 自分の画像がない場合は、一時的に `mods/visual_novel_core/backgrounds/home/kitchen.png` → `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png` とコピーしてください。音なしでも構いません：`"defaultAmbient": ""` と指定します。
+> 自分の画像がない場合は、一時的に `mods/cthangover_story/backgrounds/home/kitchen.png` → `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png` とコピーしてください。音なしでも構いません：`"defaultAmbient": ""` と指定します。
 
 ---
 
@@ -123,7 +123,7 @@ end
 
 ## ステップ 6：町の拡張（シーン優先度）
 
-次に、`visual_novel_core` の元のファイルに**触れずに**、町のシーンへバーの入口を追加します。
+次に、`cthangover_story` の元のファイルに**触れずに**、町のシーンへバーの入口を追加します。
 
 `mods/quickstart_modder/scenarios/town_entry_override.scenario`：
 
@@ -150,8 +150,8 @@ end
 | priority | シナリオ | Mod |
 |---|---|---|
 | `1` | 私たちの `town_entry_override` | `quickstart_modder` |
-| `10`–`30` | ムラカミとの出会い（その `condition:` が満たされている間のみ） | `murakami` |
-| `40` | 標準の町メニュー | `visual_novel_core` |
+| `10`–`30` | ムラカミとの出会い（その `condition:` が満たされている間のみ） | `cthangover_murakami` |
+| `40` | 標準の町メニュー | `cthangover_story` |
 
 シーンに入ると、エンジンは `priority` の昇順 — **最も小さい**値から — で、条件を満たす最初のシナリオを実行します。シナリオがシーンを変えずに終了すると、次のシナリオが始まります。つまり：
 

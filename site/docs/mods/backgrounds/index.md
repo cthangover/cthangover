@@ -13,7 +13,7 @@ backgrounds/
 
 ## Real example — Murakami meeting
 
-From `mods/murakami/backgrounds/town/meetingmurakami/`:
+From `mods/cthangover_murakami/backgrounds/town/meetingmurakami/`:
 
 ```filestree
 meetingmurakami/

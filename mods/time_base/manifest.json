@@ -8,6 +8,6 @@
   "sources": [
     "src/**/*.cs"
   ],
-  "depends": ["interface>=1"],
+  "depends": ["ui_base>=1"],
   "ui": []
 }

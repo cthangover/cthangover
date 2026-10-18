@@ -40,7 +40,7 @@ mods/
   "description": "新しいアクションとMod設定",       // Mod一覧に表示されるModの説明
   "sources": ["src/*.cs"],                       // ソースを集めるパターン（すべての ".cs" ファイル）
   "author": "programmer",                        // 作者
-  "depends": ["visual_novel_core"]               // 本編ゲームへの依存（ロード順を手動で並べる必要がなくなる）
+  "depends": ["cthangover_story"]               // 本編ゲームへの依存（ロード順を手動で並べる必要がなくなる）
 }
 ```
 
@@ -228,7 +228,7 @@ mymod/enable_mod = Enable mod
 |---|---|
 | シーンの入退場を購読する | [Scene Subscriptions](site/docs/mods/configs/) |
 | 独自のバトルモードを作る | [Battle System](site/docs/mods/battle/) |
-| ツールウィンドウを作る | [Creating a Custom Tool](site/docs/mods/tools/tutorial) |
+| ツールウィンドウを作る | [Creating a Custom Tool](site/docs/mods/editor_tools/tutorial) |
 | GDScriptでModを書く | [GDScript in Mods](site/docs/mods/src/gdscript/) |
 | 利用可能なすべてのインターフェース | [C# Source Code in Mods](site/docs/mods/src/) |
 

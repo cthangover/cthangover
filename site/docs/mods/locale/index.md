@@ -53,7 +53,7 @@ settings/volume = Volume
 
 ## Real examples
 
-From `mods/visual_novel_core/locale/en.properties`:
+From `mods/cthangover_story/locale/en.properties`:
 
 ```properties
 # Character names

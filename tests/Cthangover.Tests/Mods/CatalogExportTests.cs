@@ -28,7 +28,7 @@ namespace Engine.Tests.Mods
 				Category = CategoryType.Gameplay,
 				Tags = new List<string> { "test", "example" },
 				IconUrl = "https://example.com/icon.png",
-				Depends = new List<string> { "core>=1", "interface>=1?" },
+				Depends = new List<string> { "core>=1", "ui_base>=1?" },
 				ConflictsWith = new List<string> { "legacy_mod" },
 				Downloads = new List<CatalogEntryDownload>
 				{
@@ -397,7 +397,7 @@ namespace Engine.Tests.Mods
 			var original = new CatalogExportEntry
 			{
 				Id = "test",
-				Depends = new List<string> { "core>=1.0.0", "interface>=2", "opt_mod>=1?" },
+				Depends = new List<string> { "core>=1.0.0", "ui_base>=2", "opt_mod>=1?" },
 			};
 
 			var json = JsonSerializer.Serialize(original);
@@ -407,7 +407,7 @@ namespace Engine.Tests.Mods
 			Assert.NotNull(restored.Depends);
 			Assert.Equal(3, restored.Depends.Count);
 			Assert.Equal("core>=1.0.0", restored.Depends[0]);
-			Assert.Equal("interface>=2", restored.Depends[1]);
+			Assert.Equal("ui_base>=2", restored.Depends[1]);
 			Assert.Equal("opt_mod>=1?", restored.Depends[2]);
 		}
 	}

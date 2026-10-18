@@ -159,7 +159,7 @@ namespace Cthangover.Mods.Dialog.Executable
 			var dlg = new DialogQueue();
 			CreateDialog(dlg);
 
-			dialogBox.SetDialogQueueAndRun(dlg, null, 0, this);
+			dialogBox.SetDialogQueueAndRun(dlg, null, StartIndex(dlg), this);
 			IsFirstRun = false;
 			return true;
 		}
@@ -167,6 +167,9 @@ namespace Cthangover.Mods.Dialog.Executable
 		protected virtual void CreateDialog(DialogQueue dlg)
 		{
 		}
+
+		/// <summary>Queue index the dialog starts at; 0 unless a subclass starts mid-script.</summary>
+		protected virtual int StartIndex(DialogQueue dlg) => 0;
 	}
 
 }

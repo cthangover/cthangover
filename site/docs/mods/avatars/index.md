@@ -12,7 +12,7 @@ avatars/
 
 ## Real example — Murakami
 
-From `mods/murakami/avatars/murakami/`:
+From `mods/cthangover_murakami/avatars/murakami/`:
 
 ```filestree
 murakami/

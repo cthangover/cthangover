@@ -34,7 +34,7 @@ mods/
   "name": "Marao Buff",             // 모드 관리 메뉴에 표시되는 이름
   "description": "나의 첫 모드!",    // 모드 목록과 카탈로그에 표시되는 설명
   "author": "player",               // 모드 작성자 (임의의 문자열)
-  "depends": ["visual_novel_core"]  // 본편 게임에 대한 의존성 (모드 로드 순서를 직접 정할 필요가 없음)
+  "depends": ["cthangover_story"]  // 본편 게임에 대한 의존성 (모드 로드 순서를 직접 정할 필요가 없음)
 }
 ```
 
@@ -64,7 +64,7 @@ mods/
 
 ### 작동 원리
 
-- **`"Id": "Marao"`** — 패치 대상: 식별자가 `Marao`인 캐릭터(`visual_novel_core` 모드에 정의됨).
+- **`"Id": "Marao"`** — 패치 대상: 식별자가 `Marao`인 캐릭터(`cthangover_story` 모드에 정의됨).
 - **`"Health": 5000`**, **`"Attack": 1200`**, **`"Point": 2`** — 캐릭터의 필드를 덮어씁니다. 새 값이 이전 값을 대체합니다.
 - **`"Actions$add": ["physics/stun"]`** — 접미사 `$add`는 "배열에 요소 추가"를 뜻합니다. 액션 `physics/stun`이 목록에 추가되고, 기본 `physics/attack`과 `physics/defence`는 그대로 남습니다. 기절은 2 AP가 필요하므로 `Point`도 올렸습니다.
 

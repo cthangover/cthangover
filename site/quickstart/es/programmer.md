@@ -40,7 +40,7 @@ mods/
   "description": "Nueva acción y ajustes del mod", // Descripción del mod que se muestra en la lista de mods
   "sources": ["src/*.cs"],                       // Patrón para recoger el código fuente (todos los archivos ".cs")
   "author": "programmer",                        // Autor
-  "depends": ["visual_novel_core"]               // Dependencia del juego principal (así no hay que ordenar a mano la carga del mod)
+  "depends": ["cthangover_story"]               // Dependencia del juego principal (así no hay que ordenar a mano la carga del mod)
 }
 ```
 
@@ -228,7 +228,7 @@ Reinicia el juego:
 |---|---|
 | Suscribirte a la entrada/salida de escenas | [Scene Subscriptions](site/docs/mods/configs/) |
 | Crear tu propio modo de combate | [Battle System](site/docs/mods/battle/) |
-| Hacer una ventana de herramienta | [Creating a Custom Tool](site/docs/mods/tools/tutorial) |
+| Hacer una ventana de herramienta | [Creating a Custom Tool](site/docs/mods/editor_tools/tutorial) |
 | Escribir mods en GDScript | [GDScript in Mods](site/docs/mods/src/gdscript/) |
 | Todas las interfaces disponibles | [C# Source Code in Mods](site/docs/mods/src/) |
 

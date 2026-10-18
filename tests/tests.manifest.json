@@ -46,48 +46,25 @@
       "timeoutSeconds": 240
     },
     {
-      "name": "game_card_novel",
+      "name": "game_novel_template",
       "scene": "res://scenes/menu/launcher.tscn",
       "args": [
         "--",
-        "--game=card_novel",
+        "--game=novel_template",
         "--new",
         "--timeout=60"
       ],
       "timeoutSeconds": 180
     },
     {
-      "name": "game_vn_starter_novel",
+      "name": "resource_atlas_novel_template",
       "scene": "res://scenes/menu/launcher.tscn",
       "args": [
         "--",
-        "--game=vn_starter_novel",
-        "--new",
-        "--timeout=60"
-      ],
-      "timeoutSeconds": 180
-    },
-    {
-      "name": "resource_atlas_card_novel",
-      "scene": "res://scenes/menu/launcher.tscn",
-      "args": [
-        "--",
-        "--game=card_novel",
+        "--game=novel_template",
         "--with-mods=resource_atlas",
         "--resource-atlas",
-        "--atlas-out=res://tests/artifacts/resource_atlas/card_novel"
-      ],
-      "timeoutSeconds": 240
-    },
-    {
-      "name": "resource_atlas_vn_starter_novel",
-      "scene": "res://scenes/menu/launcher.tscn",
-      "args": [
-        "--",
-        "--game=vn_starter_novel",
-        "--with-mods=resource_atlas",
-        "--resource-atlas",
-        "--atlas-out=res://tests/artifacts/resource_atlas/vn_starter_novel"
+        "--atlas-out=res://tests/artifacts/resource_atlas/novel_template"
       ],
       "timeoutSeconds": 240
     },
@@ -161,7 +138,7 @@
       "scene": "res://scenes/menu/launcher.tscn",
       "args": [
         "--",
-        "--game=card_novel",
+        "--game=novel_template",
         "--new",
         "--itest=save_dormancy"
       ],

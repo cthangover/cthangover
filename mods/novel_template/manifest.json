@@ -1,0 +1,9 @@
+{
+  "id": "novel_template",
+  "name": "Novel Template",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Starting point for a new visual novel: a town where you can go into a bar or back home, and a way back from both. Nothing but scenes, backgrounds, text and scene switches on the bare novel engine — copy it, rename it and grow your story from here.",
+  "category": "story",
+  "depends": ["shell2d_base>=1", "dialog_base>=1", "audio_base>=1"]
+}

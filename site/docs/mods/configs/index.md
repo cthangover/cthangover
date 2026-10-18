@@ -25,7 +25,7 @@ Every mod needs a manifest and optionally a properties file. These define the mo
   // Glob patterns for native shared libraries (.dll / .so / .dylib)
   "depends_native": ["bin/*.dll"],
   // List of mod IDs that must be loaded before this mod (versioned strings allowed)
-  "depends": ["visual_novel_core", "interface"],
+  "depends": ["cthangover_story", "ui_base"],
   // Mutually exclusive mod IDs — informational metadata, never enforced (see load-order)
   "conflicts_with": [],
   // Declarative GUI entries anchored to shell slots (panel / overlay)
@@ -71,10 +71,10 @@ GDScript files are compiled by Godot's GDScript engine (no Roslyn needed). A sin
 ### Dependencies
 
 ```jsonc
-"depends": ["visual_novel_core"]
+"depends": ["cthangover_story"]
 ```
 
-The kernel resolves dependencies in topological order. Circular dependencies cause a load error. `visual_novel_core` is always loaded first.
+The kernel resolves dependencies in topological order. Circular dependencies cause a load error. `cthangover_story` is always loaded first.
 
 ### Scene lifecycle hooks
 
@@ -115,8 +115,8 @@ From `mods/cooking/manifest.json`:
 ```jsonc
 {
   "id": "cooking",
-  // visual_novel_core, interface, items_base and time_base load before this mod
-  "depends": [ "visual_novel_core>=1", "interface>=1", "items_base>=1", "time_base>=1" ]
+  // cthangover_story, interface, items_base and time_base load before this mod
+  "depends": [ "cthangover_story>=1", "ui_base>=1", "items_base>=1", "time_base>=1" ]
 }
 ```
 
@@ -131,10 +131,10 @@ when a user arg starts with one of its `activate` prefixes (or `--with-test-suit
 "test_suites": [ { "id": "interactives", "activate": ["--itest=interactives"] } ]
 
 // mods/interactive_base/test_suites/interactives/manifest.json — depends on the host implicitly
-{ "sources": ["src/*.cs"], "depends": ["visual_novel_core>=1", "dialog_base>=1"] }
+{ "sources": ["src/*.cs"], "depends": ["cthangover_story>=1", "dialog_base>=1"] }
 ```
 
-A suite may depend on mods its host must not (here the host sits below `visual_novel_core`). A normal launch, a
+A suite may depend on mods its host must not (here the host sits below `cthangover_story`). A normal launch, a
 game and `--all-mods` never load a suite. `"fixture": true` marks a whole mod as a test fixture: it is loaded
 only when named in `--with-mods=`.
 

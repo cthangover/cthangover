@@ -40,7 +40,7 @@ mods/
   "description": "Новое действие и настройки мода", // Описание мода, отображаемое в списке модов
   "sources": ["src/*.cs"],                          // Паттерн по которому будут собираться исходники (указываем все ".cs" файлы)
   "author": "programmer",                           // Автор
-  "depends": ["visual_novel_core"]                  // Зависимость от основной игры (чтобы не требовалось вручную располагать порядок загрузки мода)
+  "depends": ["cthangover_story"]                  // Зависимость от основной игры (чтобы не требовалось вручную располагать порядок загрузки мода)
 }
 ```
 
@@ -228,7 +228,7 @@ mymod/enable_mod = Enable mod
 |---|---|
 | Подписаться на вход/выход из сцены | [Scene Subscriptions](site/docs/mods/configs/) |
 | Создать свой боевой режим | [Battle System](site/docs/mods/battle/) |
-| Сделать окно инструмента | [Creating a Custom Tool](site/docs/mods/tools/tutorial) |
+| Сделать окно инструмента | [Creating a Custom Tool](site/docs/mods/editor_tools/tutorial) |
 | Писать моды на GDScript | [GDScript in Mods](site/docs/mods/src/gdscript/) |
 | Все доступные интерфейсы | [C# Source Code in Mods](site/docs/mods/src/) |
 

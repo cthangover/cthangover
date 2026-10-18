@@ -56,7 +56,7 @@ namespace Engine.Tests.Mods
                         {
                             Id = "core",
                             Name = "Core",
-                            Mods = new List<string> { "visual_novel_core>=1" },
+                            Mods = new List<string> { "cthangover_story>=1" },
                         },
                         new()
                         {
@@ -78,7 +78,7 @@ namespace Engine.Tests.Mods
             Assert.Equal("1.0.0", loaded[0].Version);
             Assert.Equal(2, loaded[0].Mechanics.Count);
             Assert.Equal("core", loaded[0].Mechanics[0].Id);
-            Assert.Equal("visual_novel_core>=1", loaded[0].Mechanics[0].Mods[0]);
+            Assert.Equal("cthangover_story>=1", loaded[0].Mechanics[0].Mods[0]);
             Assert.True(loaded[0].Mechanics[1].Optional);
             Assert.All(loaded, c => Assert.Equal(ModCollectionOrigin.User, c.Origin));
         }

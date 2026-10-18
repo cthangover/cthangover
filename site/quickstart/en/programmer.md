@@ -40,7 +40,7 @@ mods/
   "description": "New action and mod settings", // Mod description shown in the mod list
   "sources": ["src/*.cs"],                      // Pattern for collecting source files (all ".cs" files)
   "author": "programmer",                       // Author
-  "depends": ["visual_novel_core"]              // Dependency on the core game (so manual mod load ordering is not required)
+  "depends": ["cthangover_story"]              // Dependency on the core game (so manual mod load ordering is not required)
 }
 ```
 
@@ -228,7 +228,7 @@ Restart the game:
 |---|---|
 | Subscribe to scene enter/exit | [Scene Subscriptions](site/docs/mods/configs/) |
 | Create your own battle mode | [Battle System](site/docs/mods/battle/) |
-| Build a tool window | [Creating a Custom Tool](site/docs/mods/tools/tutorial) |
+| Build a tool window | [Creating a Custom Tool](site/docs/mods/editor_tools/tutorial) |
 | Write mods in GDScript | [GDScript in Mods](site/docs/mods/src/gdscript/) |
 | All available interfaces | [C# Source Code in Mods](site/docs/mods/src/) |
 

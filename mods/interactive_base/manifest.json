@@ -5,7 +5,7 @@
   "author": "ct",
   "description": "Interactive objects subsystem: JSON-driven scene interactives (hover/click hit areas, highlight effects) with DSL/scenario click actions. Owns InteractiveManager, the interactive definition resolver/factory and the InteractiveEditor data plane.",
   "category": "engine, library",
-  "depends": ["base2d>=1", "interface>=1"],
+  "depends": ["shell2d_base>=1", "ui_base>=1"],
   "sources": [ "src/**/*.cs" ],
   "ui": [],
   "test_suites": [

@@ -57,6 +57,26 @@ namespace Cthangover.Mods.Dialog
         /// <summary>True when the dialog queue is exhausted (index past end or queue is empty).</summary>
         public bool IsEnd => Lists.IsEmpty(dialogQueue) || index >= dialogQueue.Count;
 
+        /// <summary>
+        /// Process-wide debugging hook asked before every action (see
+        /// <see cref="IDialogDebugger"/>); null in normal play, which costs one
+        /// null check per action.
+        /// </summary>
+        public static IDialogDebugger Debugger { get; set; }
+
+        /// <summary>
+        /// True while the debugger holds the runtime before <see cref="CurrentAction"/>:
+        /// that action has not run yet, so advancing must wait for
+        /// <see cref="DialogBox.Resume"/> instead of skipping it.
+        /// </summary>
+        public bool IsHeld { get; set; }
+
+        /// <summary>Queue index of <see cref="CurrentAction"/>.</summary>
+        public int Index => index;
+
+        /// <summary>Current <c>${name}</c> variables of the dialog, for inspection.</summary>
+        public IReadOnlyDictionary<string, string> Variables => (IReadOnlyDictionary<string, string>)variables;
+
         /// <summary>Retrieves a stored variable value by name. Returns null if not set.</summary>
         public string GetVariable(string name)
         {
@@ -122,6 +142,7 @@ namespace Cthangover.Mods.Dialog
         {
             variables = new Dictionary<string, string>();
             DialogBox = dialogBox;
+            IsHeld = false;
 
             this.endDialogQueue = endQueue == null ? null : endQueue.ToList();
             if (Lists.IsNotEmpty(this.dialogQueue))
@@ -187,7 +208,13 @@ namespace Cthangover.Mods.Dialog
                 }
 
                 GameLogger.Log("DIALOG", $"Run: idx={index}/{dialogQueue.Count-1} type={action.GetType().Name} wait={action.WaitType}", LogLevel.Debug);
-                
+
+                if (Debugger != null && Debugger.ShouldHold(this, action))
+                {
+                    IsHeld = true;
+                    return;
+                }
+
                 action.Run(this);
 
                 if (iteration++ > 100000)
@@ -299,6 +326,30 @@ namespace Cthangover.Mods.Dialog
             {
                 ModEventBus.Publish(new DialogEndedEvent { LockerId = locker?.ID });
             }
+        }
+
+        /// <summary>
+        /// Drops the running queue without finishing it: destructs constructed
+        /// actions and forgets the queue, but — unlike <see cref="End"/> — runs no
+        /// end actions, does not mark a one-run scenario completed and publishes
+        /// no <see cref="DialogEndedEvent"/>. Used to restart a scenario that is
+        /// being edited; the caller hides the box (<see cref="DialogBox.Abort"/>).
+        /// </summary>
+        public void Abort()
+        {
+            if (Lists.IsNotEmpty(dialogQueue))
+            {
+                foreach (var action in dialogQueue)
+                    if (action != null && action.IsConstructed)
+                        action.Destruct();
+            }
+
+            dialogQueue = null;
+            endDialogQueue = null;
+            index = 0;
+            isLastGoTo = false;
+            IsHeld = false;
+            GameLogger.Log("DIALOG", "Abort: queue dropped without ending");
         }
 
         /// <summary>

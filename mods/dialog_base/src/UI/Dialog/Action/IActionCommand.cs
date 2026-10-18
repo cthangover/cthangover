@@ -39,6 +39,12 @@ namespace Cthangover.Mods.Dialog.Action
         float WaitTime { get; }
         /// <summary>Timestamp of the last <see cref="Run"/> call, in seconds since epoch.</summary>
         float StartTime { get; }
+        /// <summary>
+        /// 1-based line of the scenario text this action was parsed from, 0 for
+        /// actions built in code. Set by <see cref="Scenarios.ScenarioParser"/>;
+        /// debugging tools map the running action back to the script with it.
+        /// </summary>
+        int SourceLine { get; set; }
         
         #endregion
 

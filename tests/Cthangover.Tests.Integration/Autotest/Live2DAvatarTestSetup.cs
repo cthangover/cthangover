@@ -8,7 +8,7 @@ namespace Cthangover.Core.Autotest
 {
 	/// <summary>
 	/// Bootstrap интеграционного теста Live2D-аватара. Сам аватар управляется
-	/// сценой тестового набора live2d__avatar (набор мода live2d, монтируется
+	/// сценой тестового набора live2d_base__avatar (набор мода live2d_base, монтируется
 	/// флагом --itest=live2d_avatar; единственное место с компайл-тайм
 	/// доступом к Live2D-обёртке), поэтому эта сцена только проверяет
 	/// загрузку набора, инстанцирует мод-сцену через рантайм tscn-пайплайн и
@@ -21,10 +21,10 @@ namespace Cthangover.Core.Autotest
 		{
 			GameLogger.Log("TEST", "Live2DAvatarTestSetup: starting");
 
-			if (ModManager.Instance?.GetMod("live2d__avatar") == null)
+			if (ModManager.Instance?.GetMod("live2d_base__avatar") == null)
 			{
 				TryHealDisabledMod();
-				FailBootstrap("test suite 'live2d__avatar' is not mounted (needs --itest=live2d_avatar)");
+				FailBootstrap("test suite 'live2d_base__avatar' is not mounted (needs --itest=live2d_avatar)");
 				return;
 			}
 
@@ -40,7 +40,7 @@ namespace Cthangover.Core.Autotest
 		}
 
 		/// <summary>
-		/// Мод live2d (хозяин набора live2d__avatar) может быть выключен
+		/// Мод live2d_base (хозяин набора live2d_base__avatar) может быть выключен
 		/// в user://disabled_mods.json (например, после ручной проверки
 		/// тумблера в UI модов). Загрузка модов к этому моменту уже завершена,
 		/// поэтому текущий прогон падает, но перед выходом тест включает моды
@@ -50,7 +50,7 @@ namespace Cthangover.Core.Autotest
 		{
 			var disabled = DisabledModsStore.Load();
 			var healed = false;
-			foreach (var id in new[] { "live2d" })
+			foreach (var id in new[] { "live2d_base" })
 			{
 				if (!disabled.Contains(id))
 					continue;

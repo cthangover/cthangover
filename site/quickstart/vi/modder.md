@@ -44,7 +44,7 @@ mods/
   "name": "Quán bar của tôi",                     // Tên mod hiển thị trong menu mod
   "description": "Thêm cảnh quán bar vào thị trấn", // Mô tả mod hiển thị trong menu mod
   "author": "modder",                            // Tác giả mod
-  "depends": ["visual_novel_core"]               // Phụ thuộc vào trò chơi chính (không cần tự sắp xếp thứ tự tải mod)
+  "depends": ["cthangover_story"]               // Phụ thuộc vào trò chơi chính (không cần tự sắp xếp thứ tự tải mod)
 }
 ```
 
@@ -78,7 +78,7 @@ mods/
 
 Ảnh PNG nào cũng được. Trò chơi hỗ trợ chiếu sáng bằng shader và thời gian trong ngày — hình nền sẽ được chiếu sáng tự động.
 
-> Nếu chưa có ảnh riêng, hãy tạm sao chép `mods/visual_novel_core/backgrounds/home/kitchen.png` → `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png`. Cũng có thể bỏ âm thanh: đặt `"defaultAmbient": ""`.
+> Nếu chưa có ảnh riêng, hãy tạm sao chép `mods/cthangover_story/backgrounds/home/kitchen.png` → `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png`. Cũng có thể bỏ âm thanh: đặt `"defaultAmbient": ""`.
 
 ---
 
@@ -123,7 +123,7 @@ end
 
 ## Bước 6: Mở rộng thị trấn (ưu tiên cảnh)
 
-Giờ hãy thêm lối vào quán bar vào cảnh thị trấn, **không động đến** các tệp gốc của `visual_novel_core`.
+Giờ hãy thêm lối vào quán bar vào cảnh thị trấn, **không động đến** các tệp gốc của `cthangover_story`.
 
 `mods/quickstart_modder/scenarios/town_entry_override.scenario`:
 
@@ -150,8 +150,8 @@ Cảnh `town_entry` giờ có nhiều kịch bản:
 | priority | Kịch bản | Mod |
 |---|---|---|
 | `1` | `town_entry_override` của chúng ta | `quickstart_modder` |
-| `10`–`30` | cuộc gặp Murakami (chỉ khi `condition:` của chúng còn đúng) | `murakami` |
-| `40` | menu thị trấn tiêu chuẩn | `visual_novel_core` |
+| `10`–`30` | cuộc gặp Murakami (chỉ khi `condition:` của chúng còn đúng) | `cthangover_murakami` |
+| `40` | menu thị trấn tiêu chuẩn | `cthangover_story` |
 
 Khi vào một cảnh, engine chạy kịch bản hợp lệ đầu tiên theo thứ tự `priority` tăng dần — bắt đầu từ giá trị **nhỏ nhất**. Khi một kịch bản kết thúc mà không đổi cảnh, kịch bản tiếp theo sẽ bắt đầu. Vì vậy:
 
