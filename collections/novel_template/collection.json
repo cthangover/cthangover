@@ -6,7 +6,7 @@
   "version": "1.0.0",
   "description": "The smallest playable novel: a town, a bar and a home connected by scene switches. Made to show a modder how scenes, scenarios and transitions fit together.",
   "cover": "cover.png",
-  "entry": { "scene": "template_town" },
+  "entry": { "scene": "my_novel_town" },
   "tags": ["novel", "template"],
   "locale": [
     { "lang": "en", "name": "Novel Template", "description": "The smallest playable novel: a town, a bar and a home connected by scene switches. Made to show a modder how scenes, scenarios and transitions fit together." },
@@ -17,9 +17,17 @@
       "id": "story",
       "name": "Story",
       "role": "story",
-      "description": "The template's scenes, scenarios, backgrounds and the bar ambience.",
-      "locale": [ { "lang": "ru", "name": "Сюжет", "description": "Сцены, сценарии, фоны шаблона и звук бара." } ],
-      "mods": ["novel_template>=1"]
+      "description": "The game's own scenes and scenarios — rename my_novel_game after your game.",
+      "locale": [ { "lang": "ru", "name": "Сюжет", "description": "Собственные сцены и сценарии игры — переименуйте my_novel_game под свою игру." } ],
+      "mods": ["my_novel_game>=1"]
+    },
+    {
+      "id": "assets",
+      "name": "Assets",
+      "role": "content",
+      "description": "Reusable backgrounds and sound shared with other games: town, home, bar.",
+      "locale": [ { "lang": "ru", "name": "Ресурсы", "description": "Общие с другими играми фоны и звук: город, дом, бар." } ],
+      "mods": ["town_pack>=1"]
     },
     {
       "id": "novel_engine",

@@ -450,12 +450,31 @@ Writes (downloading, enabling) stay outside the plan: the UI passes
 `plan.Install` to `ModDownloader.InstallAsync` and removes `plan.Enable` from
 `DisabledModsStore`.
 
+## Start your own game
+
+A game is three layers, and only the first one is yours to write:
+
+1. **Your game's mod** — `<game>_game` (for example `lighthouse_game`): your
+   scenes, scenarios and texts. Copy `mods/my_novel_game`, rename the folder,
+   `id`, scene and scenario names (prefix them with your game) and locale keys.
+2. **Packs and mechanics you reuse** — `town_pack` for backgrounds and sound,
+   `cooking` or `card_battle` for gameplay. Depend on them instead of copying
+   their files: a fix in the pack reaches every game. To change a pack's
+   scenario or background for your game only, ship the same name and depend on
+   the pack — your version wins (see [load order](../load-order/)).
+3. **The engine** — `shell2d_base`, `dialog_base`, `audio_base`, …
+
+Then copy `collections/novel_template/` to `collections/<your game>/`, set the
+`id`, `entry.scene`, the cover and the mod lists, and the game appears in the
+picker.
+
 ## Real examples
 
 - `collections/novel_template/` — the smallest playable
-  game: one story mechanic (the template's scenes and scenarios) and the novel
-  engine (`shell2d_base`, `dialog_base`, `audio_base`), texts in `locale[]`.
-  Start a new novel by copying the `novel_template` mod.
+  game: the game's own content (`my_novel_game`: scenes, scenarios, text),
+  reusable assets (`town_pack`: town, home and bar backgrounds, bar ambience —
+  the main game uses the same pack) and the novel engine (`shell2d_base`,
+  `dialog_base`, `audio_base`). See "Start your own game" below.
 - `collections/cthangover/` — the main game: story,
   novel engine, characters, quests, items, battles with an optional second
   battle core, Live2D and tools, each as its own mechanic.

@@ -20,7 +20,7 @@
       "role": "story",
       "description": "Scenes, scenarios, the prologue, Murakami's story line and the starter party.",
       "locale": [ { "lang": "ru", "name": "Сюжет", "description": "Сцены, сценарии, пролог, линия Мураками и стартовая партия." } ],
-      "mods": ["cthangover_game>=2", "cthangover_murakami>=1", "cthangover_party>=1"]
+      "mods": ["cthangover_game>=2", "cthangover_murakami>=1", "cthangover_party>=1", "town_pack>=1"]
     },
     {
       "id": "novel_engine",
