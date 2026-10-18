@@ -61,6 +61,7 @@ namespace Cthangover.Core.Localization
         {
             var master = new Dictionary<string, string>();
 
+            MergeCollectionLocales(locale, master);
             MergeModLocales(locale, master);
 
             if (_translations.TryGetValue(locale, out var old))
@@ -83,29 +84,44 @@ namespace Cthangover.Core.Localization
             GameLogger.Log("LANG", $"Loaded {master.Count} strings for locale '{locale}' from mods");
         }
 
-        private static void MergeModLocales(string locale, Dictionary<string, string> master)
+        /// <summary>
+        /// Texts of collection packages (<c>collections/&lt;id&gt;/locale/</c>):
+        /// names and descriptions a game picker shows before the game's mods are
+        /// loaded. Merged before the mods, so a mod may still override a key.
+        /// </summary>
+        private static void MergeCollectionLocales(string locale, Dictionary<string, string> master)
+        {
+            foreach (var collection in ModCollectionStore.LoadAll())
+            {
+                if (collection.Package != null)
+                    MergeLocaleFiles(collection.Package, locale, master);
+            }
+        }
+
+        private static void MergeLocaleFiles(IModFileProvider provider, string locale, Dictionary<string, string> master)
         {
             var suffix = $"_{locale}.properties";
             var exactName = $"{locale}.properties";
+            foreach (var filePath in provider.ListFiles("locale").ToList())
+            {
+                if (filePath.EndsWith("/"))
+                    continue;
 
+                var fileName = System.IO.Path.GetFileName(filePath);
+                if (fileName == exactName || fileName.EndsWith(suffix))
+                    LoadPropertiesFromMod(provider, filePath, master);
+            }
+        }
+
+        private static void MergeModLocales(string locale, Dictionary<string, string> master)
+        {
             ModManager.Instance.Initialize();
 
             foreach (var modId in ModRegistry.Instance.GetOrderedModIds())
             {
                 if (!ModManager.Instance.Mods.TryGetValue(modId, out var modInfo))
                     continue;
-                var provider = modInfo.FileProvider;
-
-                var localeFiles = provider.ListFiles("locale").ToList();
-                foreach (var filePath in localeFiles)
-                {
-                    if (filePath.EndsWith("/"))
-                        continue;
-
-                    var fileName = System.IO.Path.GetFileName(filePath);
-                    if (fileName == exactName || fileName.EndsWith(suffix))
-                        LoadPropertiesFromMod(provider, filePath, master);
-                }
+                MergeLocaleFiles(modInfo.FileProvider, locale, master);
             }
         }
 

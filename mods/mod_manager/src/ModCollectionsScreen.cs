@@ -1632,7 +1632,7 @@ namespace Mods.ModManager
                 return TranslationServer.Translate("mod_manager/collection_json_id_changed");
 
             parsed.Origin = ModCollectionOrigin.User;
-            parsed.SourceModId = OriginalCollection(_currentId)?.SourceModId;
+            parsed.Package = OriginalCollection(_currentId)?.Package;
             _overrides[_currentId] = parsed;
             RebuildGameSelect();
             Rebuild();
@@ -1650,7 +1650,7 @@ namespace Mods.ModManager
             copy.Id = UniqueGameId();
             copy.Kind = source.Kind;
             copy.Origin = ModCollectionOrigin.User;
-            copy.SourceModId = source.SourceModId;
+            copy.Package = source.Package;
             copy.Name = string.Format(TranslationServer.Translate("mod_manager/collection_copy_name"),
                 CollectionText.Resolve(source.GetLocalizedName(TranslationServer.GetLocale())));
             copy.Locale = null;
@@ -1772,7 +1772,7 @@ namespace Mods.ModManager
                 fork.Id = forkId;
                 fork.Kind = ModCollectionKind.Component;
                 fork.Origin = ModCollectionOrigin.User;
-                fork.SourceModId = source.SourceModId;
+                fork.Package = source.Package;
                 _overrides[forkId] = fork;
                 _statusMessage = string.Format(TranslationServer.Translate("mod_manager/collection_forked"),
                     CollectionText.Resolve(source.GetLocalizedName(TranslationServer.GetLocale())));

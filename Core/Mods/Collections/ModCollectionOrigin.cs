@@ -8,10 +8,10 @@ namespace Cthangover.Core.Mods
     /// </summary>
     public enum ModCollectionOrigin
     {
-        /// <summary>Shipped inside a mod folder (<c>collections/*.json</c>).</summary>
+        /// <summary>Shipped with the game as a package in <c>collections/</c>.</summary>
         BuiltIn,
 
-        /// <summary>Created or edited by the player in <c>user://collections.json</c>.</summary>
+        /// <summary>Created, edited or downloaded by the player: a package in <c>user://collections/</c>.</summary>
         User,
 
         /// <summary>Fetched from an online catalog.</summary>

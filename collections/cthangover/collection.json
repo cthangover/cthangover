@@ -1,0 +1,110 @@
+{
+  "id": "cthangover",
+  "kind": "game",
+  "name": "Cthangover",
+  "author": "ct",
+  "version": "1.0.0",
+  "description": "The full game: the visual novel story with characters, quests, items and cooking, turn-based battles with card and Final Fantasy style cores, recruitment, Live2D avatars and the developer tools.",
+  "cover": "cover.png",
+  "entry": { "scene": "start_scene" },
+  "settings": { "battle.core": "card_battle" },
+  "tags": ["novel", "rpg", "cards", "full"],
+  "locale": [
+    { "lang": "en", "name": "Cthangover", "description": "The full game: the visual novel story with characters, quests, items and cooking, turn-based battles with card and Final Fantasy style cores, recruitment, Live2D avatars and the developer tools." },
+    { "lang": "ru", "name": "Cthangover", "description": "Полная игра: сюжет визуальной новеллы с персонажами, квестами, предметами и готовкой, пошаговые бои с карточным и FF-ядром, найм, Live2D-аватары и инструменты разработчика." }
+  ],
+  "mechanics": [
+    {
+      "id": "story",
+      "name": "Story",
+      "role": "story",
+      "description": "Scenes, scenarios, the prologue, Murakami's story line and the starter party.",
+      "locale": [ { "lang": "ru", "name": "Сюжет", "description": "Сцены, сценарии, пролог, линия Мураками и стартовая партия." } ],
+      "mods": ["cthangover_story>=2", "cthangover_murakami>=1", "cthangover_party>=1"]
+    },
+    {
+      "id": "novel_engine",
+      "name": "Novel engine",
+      "role": "engine",
+      "description": "2D shell, dialogs and scenario DSL, interactive objects, effects, in-game time and lighting, the world map.",
+      "locale": [ { "lang": "ru", "name": "Движок новеллы", "description": "2D-оболочка, диалоги и сценарный DSL, интерактивные объекты, эффекты, игровое время и свет, карта мира." } ],
+      "mods": ["shell2d_base>=1", "dialog_base>=1", "interactive_base>=1", "effects_base>=1", "time_base>=1", "map_base>=1"]
+    },
+    {
+      "id": "characters",
+      "name": "Characters and skills",
+      "role": "characters",
+      "description": "Characters, action cards, avatars, the character panel and skills.",
+      "locale": [ { "lang": "ru", "name": "Персонажи и навыки", "description": "Персонажи, карты действий, аватары, панель персонажей и навыки." } ],
+      "mods": ["characters_base>=1", "skills_base>=1"]
+    },
+    {
+      "id": "quests",
+      "name": "Quests",
+      "role": "quests",
+      "description": "Quest state, scenario quest actions and the journal.",
+      "locale": [ { "lang": "ru", "name": "Квесты", "description": "Состояние квестов, квестовые действия сценариев и журнал." } ],
+      "mods": ["quests_base>=1"]
+    },
+    {
+      "id": "items",
+      "name": "Items and cooking",
+      "role": "items",
+      "description": "Inventory, items and recipes, the kitchen workbench and rations.",
+      "locale": [ { "lang": "ru", "name": "Предметы и готовка", "description": "Инвентарь, предметы и рецепты, кухонный верстак и пайки." } ],
+      "mods": ["items_base>=1", "cooking>=1"]
+    },
+    {
+      "id": "battle",
+      "name": "Card battle",
+      "role": "battle",
+      "description": "Turn-based battle engine with the card battle core (the game's default).",
+      "locale": [ { "lang": "ru", "name": "Карточный бой", "description": "Пошаговый боевой движок с карточным ядром (основное в игре)." } ],
+      "mods": ["turn_battle_base>=2", "card_battle>=1"]
+    },
+    {
+      "id": "battle_ff",
+      "name": "FF-style battle",
+      "role": "battle_alt",
+      "description": "Alternative Final Fantasy style battle core, switchable with battle.set_core.",
+      "locale": [ { "lang": "ru", "name": "Бой в стиле FF", "description": "Альтернативное боевое ядро в стиле Final Fantasy, включается через battle.set_core." } ],
+      "optional": true,
+      "mods": ["ff_battle>=1"]
+    },
+    {
+      "id": "recruiting",
+      "name": "Recruitment",
+      "role": "gameplay",
+      "description": "Recruiting defeated characters: roster, join conditions and recruit upkeep.",
+      "locale": [ { "lang": "ru", "name": "Найм", "description": "Вербовка побеждённых: состав, условия присоединения и содержание рекрутов." } ],
+      "optional": true,
+      "mods": ["recruiting>=1"]
+    },
+    {
+      "id": "live2d",
+      "name": "Live2D",
+      "role": "visual",
+      "description": "Live2D Cubism runtime for animated avatars.",
+      "locale": [ { "lang": "ru", "name": "Live2D", "description": "Среда Live2D Cubism для анимированных аватаров." } ],
+      "optional": true,
+      "mods": ["live2d_base>=1"]
+    },
+    {
+      "id": "interface",
+      "name": "Interface and sound",
+      "role": "ui",
+      "description": "Widget toolkit and HUD, the main menu, music and sounds.",
+      "locale": [ { "lang": "ru", "name": "Интерфейс и звук", "description": "Виджеты и HUD, главное меню, музыка и звуки." } ],
+      "mods": ["ui_base>=1", "menu_base>=1", "audio_base>=1"]
+    },
+    {
+      "id": "dev_tools",
+      "name": "Developer tools",
+      "role": "tools",
+      "description": "Scenario and map editors, the validator, the resource atlas, the locale key map and the mod manager.",
+      "locale": [ { "lang": "ru", "name": "Инструменты разработчика", "description": "Редакторы сценариев и карт, валидатор, карта ресурсов, карта локализации и менеджер модов." } ],
+      "optional": true,
+      "mods": ["editor_tools>=1", "validator>=0.1", "resource_atlas>=0.1", "locale_atlas>=0.1", "mod_manager>=1"]
+    }
+  ]
+}

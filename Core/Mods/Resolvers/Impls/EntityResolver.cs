@@ -198,12 +198,6 @@ namespace Cthangover.Core.Mods.Resolvers
                 if (entry.EndsWith("/"))
                 {
                     var child = entry.TrimEnd('/');
-                    if (string.IsNullOrEmpty(directory)
-                        && string.Equals(child, ModCollectionStore.ProviderDirectory, StringComparison.OrdinalIgnoreCase))
-                    {
-                        continue;
-                    }
-
                     CollectJsonPaths(provider, child, result);
                     continue;
                 }

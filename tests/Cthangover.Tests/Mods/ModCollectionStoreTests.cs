@@ -1,43 +1,59 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text.Json;
+using System.IO.Compression;
 using Cthangover.Core.Mods;
-using Engine.Tests.Mods.Mocks;
+using Cthangover.Core.Mods.Providers;
 
 namespace Engine.Tests.Mods
 {
     /// <summary>
-    /// Tests the collection store: player files persist and survive round-trips,
-    /// broken files never throw, and bundled <c>collections/*.json</c> files are
-    /// discovered through <see cref="IModFileProvider"/> so both folder and zip
-    /// mods work identically.
+    /// Tests the collection store: collections are packages (a folder or zip
+    /// with <c>collection.json</c>, cover and <c>locale/</c>); the player's
+    /// packages persist and survive round-trips, a fork takes its source
+    /// package's cover and texts along, broken packages never throw.
     /// </summary>
     public class ModCollectionStoreTests : IDisposable
     {
-        private const string TestFile = "collections.json";
+        private readonly string _scratch = Path.Combine(Path.GetTempPath(), "collection_store_" + Guid.NewGuid().ToString("N"));
+
+        public ModCollectionStoreTests()
+        {
+            ClearUser();
+            Directory.CreateDirectory(_scratch);
+        }
 
         public void Dispose()
         {
+            ClearUser();
             try
             {
-                if (File.Exists(TestFile))
-                    File.Delete(TestFile);
+                Directory.Delete(_scratch, true);
             }
             catch
             {
             }
         }
 
-        [Fact]
-        public void LoadUser_NoFile_ReturnsEmpty()
+        private static void ClearUser()
         {
-            if (File.Exists(TestFile))
-                File.Delete(TestFile);
+            if (Directory.Exists(ModCollectionStore.UserPath))
+                Directory.Delete(ModCollectionStore.UserPath, true);
+        }
 
-            var result = ModCollectionStore.LoadUser();
+        private string Package(string name, string json)
+        {
+            var dir = Path.Combine(_scratch, name);
+            Directory.CreateDirectory(dir);
+            if (json != null)
+                File.WriteAllText(Path.Combine(dir, ModCollectionStore.DocumentName), json);
+            return dir;
+        }
 
-            Assert.Empty(result);
+        [Fact]
+        public void LoadUser_NoFolder_ReturnsEmpty()
+        {
+            Assert.Empty(ModCollectionStore.LoadUser());
         }
 
         [Fact]
@@ -47,23 +63,13 @@ namespace Engine.Tests.Mods
             {
                 new()
                 {
-                    Id = "card_novel",
-                    Name = "Card Novel",
+                    Id = "my_novel",
+                    Name = "My Novel",
                     Version = "1.0.0",
                     Mechanics = new List<ModCollectionMechanic>
                     {
-                        new()
-                        {
-                            Id = "core",
-                            Name = "Core",
-                            Mods = new List<string> { "cthangover_story>=1" },
-                        },
-                        new()
-                        {
-                            Id = "cards",
-                            Mods = new List<string> { "card_battle" },
-                            Optional = true,
-                        },
+                        new() { Id = "core", Name = "Core", Mods = new List<string> { "cthangover_story>=1" } },
+                        new() { Id = "cards", Mods = new List<string> { "card_battle" }, Optional = true },
                     },
                 },
                 new() { Id = "tools", Name = "Tools" },
@@ -73,103 +79,108 @@ namespace Engine.Tests.Mods
             var loaded = ModCollectionStore.LoadUser();
 
             Assert.Equal(2, loaded.Count);
-            Assert.Equal("card_novel", loaded[0].Id);
-            Assert.Equal("Card Novel", loaded[0].Name);
-            Assert.Equal("1.0.0", loaded[0].Version);
-            Assert.Equal(2, loaded[0].Mechanics.Count);
-            Assert.Equal("core", loaded[0].Mechanics[0].Id);
-            Assert.Equal("cthangover_story>=1", loaded[0].Mechanics[0].Mods[0]);
-            Assert.True(loaded[0].Mechanics[1].Optional);
+            var novel = loaded.Find(c => c.Id == "my_novel");
+            Assert.NotNull(novel);
+            Assert.Equal("My Novel", novel.Name);
+            Assert.Equal("1.0.0", novel.Version);
+            Assert.Equal(2, novel.Mechanics.Count);
+            Assert.Equal("core", novel.Mechanics[0].Id);
+            Assert.Equal("cthangover_story>=1", novel.Mechanics[0].Mods[0]);
+            Assert.True(novel.Mechanics[1].Optional);
             Assert.All(loaded, c => Assert.Equal(ModCollectionOrigin.User, c.Origin));
+            Assert.All(loaded, c => Assert.NotNull(c.Package));
+            Assert.True(File.Exists(Path.Combine(ModCollectionStore.UserPath, "my_novel", ModCollectionStore.DocumentName)));
         }
 
         [Fact]
-        public void SaveUser_Null_WritesEmptyListFile()
+        public void SaveUser_DropsPackagesMissingFromTheList()
         {
+            ModCollectionStore.SaveUser(new List<ModCollection> { new() { Id = "a" }, new() { Id = "b" } });
+
+            ModCollectionStore.SaveUser(new List<ModCollection> { new() { Id = "b" } });
+
+            var loaded = Assert.Single(ModCollectionStore.LoadUser());
+            Assert.Equal("b", loaded.Id);
+            Assert.False(Directory.Exists(Path.Combine(ModCollectionStore.UserPath, "a")));
+        }
+
+        [Fact]
+        public void SaveUser_Null_LeavesNoPackages()
+        {
+            ModCollectionStore.SaveUser(new List<ModCollection> { new() { Id = "a" } });
+
             ModCollectionStore.SaveUser(null);
 
-            Assert.True(File.Exists(TestFile));
             Assert.Empty(ModCollectionStore.LoadUser());
         }
 
         [Fact]
-        public void LoadUser_InvalidJson_ReturnsEmpty()
+        public void SaveUser_ForkCopiesCoverAndLocaleOfTheSourcePackage()
         {
-            File.WriteAllText(TestFile, "{ not a list }}}");
+            var source = Package("shipped", "{ \"id\": \"shipped\" }");
+            File.WriteAllBytes(Path.Combine(source, "cover.png"), new byte[] { 1, 2, 3 });
+            Directory.CreateDirectory(Path.Combine(source, "locale"));
+            File.WriteAllText(Path.Combine(source, "locale", "ru.properties"), "collections/shipped/name = Игра");
+            var fork = new ModCollection { Id = "fork", Cover = "cover.png", Package = new FolderModFileProvider(source, "shipped") };
 
-            var result = ModCollectionStore.LoadUser();
+            ModCollectionStore.SaveUser(new List<ModCollection> { fork });
 
-            Assert.Empty(result);
+            var dir = Path.Combine(ModCollectionStore.UserPath, "fork");
+            Assert.Equal(new byte[] { 1, 2, 3 }, File.ReadAllBytes(Path.Combine(dir, "cover.png")));
+            Assert.Equal("collections/shipped/name = Игра", File.ReadAllText(Path.Combine(dir, "locale", "ru.properties")));
+            var loaded = Assert.Single(ModCollectionStore.LoadUser());
+            Assert.Equal(new byte[] { 1, 2, 3 }, loaded.Package.ReadFileBinary(loaded.Cover));
         }
 
         [Fact]
-        public void LoadUser_EntryWithoutId_IsSkipped()
+        public void RemoveUser_DeletesThePackage()
         {
-            var json = """
-            [
-              { "name": "No id" },
-              { "id": "valid", "name": "Valid" }
-            ]
-            """;
-            File.WriteAllText(TestFile, json);
+            ModCollectionStore.SaveUser(new List<ModCollection> { new() { Id = "gone" } });
 
-            var result = ModCollectionStore.LoadUser();
-
-            var collection = Assert.Single(result);
-            Assert.Equal("valid", collection.Id);
+            Assert.True(ModCollectionStore.RemoveUser("gone"));
+            Assert.False(ModCollectionStore.RemoveUser("gone"));
+            Assert.Empty(ModCollectionStore.LoadUser());
         }
 
         [Fact]
-        public void LoadFromProvider_Null_ReturnsEmpty()
+        public void LoadPackages_ReadsFoldersAndZips()
         {
-            Assert.Empty(ModCollectionStore.LoadFromProvider(null));
-        }
-
-        [Fact]
-        public void LoadFromProvider_ReadsBundledCollection()
-        {
-            var provider = new MockModFileProvider("card_battle");
-            provider.AddFile("manifest.json", "{}");
-            provider.AddFile("collections/card_novel.json", """
+            Package("folder_game", "{ \"id\": \"folder_game\", \"name\": \"Folder\", \"mechanics\": [ { \"id\": \"m\", \"mods\": [\"card_battle>=1\"] } ] }");
+            using (var zip = ZipFile.Open(Path.Combine(_scratch, "zip_game.zip"), ZipArchiveMode.Create))
             {
-              "id": "card_novel",
-              "name": "Card Novel",
-              "mechanics": [
-                { "id": "cards", "name": "Cards", "mods": ["card_battle>=1"] }
-              ]
+                using var writer = new StreamWriter(zip.CreateEntry(ModCollectionStore.DocumentName).Open());
+                writer.Write("{ \"id\": \"zip_game\", \"name\": \"Zip\" }");
             }
-            """);
 
-            var result = ModCollectionStore.LoadFromProvider(provider);
+            var result = ModCollectionStore.LoadPackages(_scratch, ModCollectionOrigin.BuiltIn);
 
-            var collection = Assert.Single(result);
-            Assert.Equal("card_novel", collection.Id);
-            Assert.Equal(ModCollectionOrigin.BuiltIn, collection.Origin);
-            Assert.Equal("card_battle>=1", collection.Mechanics[0].Mods[0]);
+            Assert.Equal(2, result.Count);
+            var folder = result.Find(c => c.Id == "folder_game");
+            Assert.Equal("card_battle>=1", folder.Mechanics[0].Mods[0]);
+            Assert.Equal(ModCollectionOrigin.BuiltIn, folder.Origin);
+            Assert.Equal("Zip", result.Find(c => c.Id == "zip_game").Name);
         }
 
         [Fact]
-        public void LoadFromProvider_SkipsBrokenAndNonJsonFiles()
+        public void LoadPackages_SkipsBrokenAndForeignEntries()
         {
-            var provider = new MockModFileProvider("pack");
-            provider.AddFile("collections/notes.txt", "not a collection");
-            provider.AddFile("collections/broken.json", "{ broken ]");
-            provider.AddFile("collections/no_id.json", "{ \"name\": \"anonymous\" }");
-            provider.AddFile("collections/good.json", "{ \"id\": \"good\", \"name\": \"Good\" }");
+            Package("broken", "{ broken ]");
+            Package("no_id", "{ \"name\": \"anonymous\" }");
+            Package("empty_folder", null);
+            File.WriteAllText(Path.Combine(_scratch, "notes.txt"), "not a package");
+            Package("good", "{ \"id\": \"good\", \"name\": \"Good\" }");
 
-            var result = ModCollectionStore.LoadFromProvider(provider);
+            var result = ModCollectionStore.LoadPackages(_scratch, ModCollectionOrigin.User);
 
             var collection = Assert.Single(result);
             Assert.Equal("good", collection.Id);
         }
 
         [Fact]
-        public void LoadFromProvider_NoCollectionsFolder_ReturnsEmpty()
+        public void LoadPackages_MissingRoot_ReturnsEmpty()
         {
-            var provider = new MockModFileProvider("plain");
-            provider.AddFile("manifest.json", "{}");
-
-            Assert.Empty(ModCollectionStore.LoadFromProvider(provider));
+            Assert.Empty(ModCollectionStore.LoadPackages(Path.Combine(_scratch, "absent"), ModCollectionOrigin.User));
+            Assert.Empty(ModCollectionStore.LoadPackages(null, ModCollectionOrigin.User));
         }
     }
 }

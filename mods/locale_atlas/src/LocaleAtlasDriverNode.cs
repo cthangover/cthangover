@@ -91,6 +91,12 @@ namespace Cthangover.LocaleAtlas
                     result.Add((info.Id, info.FileProvider));
             }
 
+            foreach (var collection in ModCollectionStore.LoadAll())
+            {
+                if (collection.Package != null)
+                    result.Add((LocaleAtlasBuilder.CollectionSourcePrefix + collection.Id, collection.Package));
+            }
+
             return result;
         }
 

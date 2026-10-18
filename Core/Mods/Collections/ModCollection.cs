@@ -11,9 +11,9 @@ namespace Cthangover.Core.Mods
     /// a single mod, a collection describes a composition: the same mod can be a
     /// required backbone in one collection and an optional layer in another.
     /// <para/>
-    /// Collections are authored as JSON files shipped inside mod folders
-    /// (<c>collections/*.json</c>), fetched from online catalogs, or created by
-    /// the player (<c>user://collections.json</c>) — see
+    /// Collections are packages of their own (<c>collections/&lt;id&gt;/collection.json</c>
+    /// with a cover and texts), shipped with the game, fetched from online
+    /// catalogs or created by the player (<c>user://collections/</c>) — see
     /// <see cref="ModCollectionStore"/>. The dependency graph shown to the player
     /// is not stored here: it is derived from the mods' own <c>depends</c> by
     /// <see cref="ModCollectionResolver"/>, with <see cref="Mechanics"/> only
@@ -104,7 +104,7 @@ namespace Cthangover.Core.Mods
         [JsonPropertyName("settings")]
         public Dictionary<string, string> Settings { get; set; }
 
-        /// <summary>Cover image for the game picker, relative to the mod that ships the collection.</summary>
+        /// <summary>Cover image for the game picker, a path inside the collection package (e.g. <c>cover.png</c>).</summary>
         [JsonPropertyName("cover")]
         public string Cover { get; set; }
 
@@ -115,9 +115,14 @@ namespace Cthangover.Core.Mods
         [JsonPropertyName("source_urls")]
         public List<string> SourceUrls { get; set; }
 
-        /// <summary>Mod that ships the document (built-in collections); resolves <see cref="Cover"/>. Set by <see cref="ModCollectionStore"/>.</summary>
+        /// <summary>
+        /// The package the document was read from (a folder or zip under
+        /// <c>collections/</c> or <c>user://collections/</c>); resolves
+        /// <see cref="Cover"/> and the package's <c>locale/</c> files. Null for
+        /// catalog collections. Set by <see cref="ModCollectionStore"/>.
+        /// </summary>
         [JsonIgnore]
-        public string SourceModId { get; set; }
+        public IModFileProvider Package { get; set; }
 
         /// <summary>Where this instance was loaded from; set by <see cref="ModCollectionStore"/>.</summary>
         [JsonIgnore]

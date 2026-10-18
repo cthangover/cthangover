@@ -3,107 +3,98 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using Cthangover.Core.Mods.Providers;
 using Cthangover.Core.Utils;
 using Godot;
 
 namespace Cthangover.Core.Mods
 {
     /// <summary>
-    /// Loads and persists <see cref="ModCollection"/> definitions from the three
-    /// distribution channels:
+    /// Loads and persists <see cref="ModCollection"/> definitions. A collection
+    /// is its own distribution unit — a <b>package</b> next to the mods, not a
+    /// file inside one: a folder or zip named after the collection id that holds
+    /// <c>collection.json</c>, the cover image and an optional <c>locale/</c>
+    /// with the collection's texts. A game is an assembly of mods by many
+    /// authors, so no mod owns it; anyone can ship a game without touching the
+    /// mods it uses.
     /// <list type="bullet">
-    /// <item>mod folders — any mod may ship <c>collections/*.json</c>, read
-    /// through <see cref="IModFileProvider"/> so zip mods work too;</item>
-    /// <item>online catalogs — cached by <see cref="CatalogService"/>;</item>
-    /// <item>the player — <c>user://collections.json</c>, the seed of the
-    /// future in-game constructor.</item>
+    /// <item>built-in packages — <c>collections/</c> of the game directory
+    /// (<c>res://collections/</c>);</item>
+    /// <item>the player's packages — <c>user://collections/</c>: edited and
+    /// duplicated collections, downloaded ones;</item>
+    /// <item>online catalogs — documents cached by <see cref="CatalogService"/>
+    /// (no package: no cover or locale files).</item>
     /// </list>
     /// <see cref="LoadAll"/> merges the channels by id with explicit precedence:
-    /// user &gt; built-in &gt; catalog. That lets a shipping mod override an
-    /// outdated online collection without asking the catalog owner, and lets the
-    /// player edit any collection locally.
+    /// user &gt; built-in &gt; catalog, so a shipped game overrides an outdated
+    /// online one and the player can edit any collection locally. Packages are
+    /// read through <see cref="IModFileProvider"/>, so folders and zips behave
+    /// the same. Mods do not ship collections.
     /// </summary>
     public static class ModCollectionStore
     {
-        private const string UserFilePath = "user://collections.json";
+        /// <summary>Name of the document inside a package.</summary>
+        public const string DocumentName = "collection.json";
+
+        private const string BuiltInRoot = "res://collections/";
+        private const string UserRoot = "user://collections/";
+
+        private static string _builtInPath;
+        private static string _userPath;
 
         /// <summary>
-        /// Conventional mod-relative directory scanned for bundled collections.
-        /// The directory is reserved: the entity scanner skips it entirely
-        /// because collection documents also carry a <c>kind</c> field that is
-        /// not an entity kind.
-        /// </summary>
-        public const string ProviderDirectory = "collections";
-
-        private static string _resolvedPath;
-
-        /// <summary>
-        /// Resolves the user storage path once on the main thread before the
+        /// Resolves the package roots once on the main thread before the
         /// background mod-load phase, mirroring <see cref="DisabledModsStore"/>
         /// — <c>ProjectSettings.GlobalizePath</c> is Godot API and is not
         /// available from worker threads.
         /// </summary>
         public static void WarmUp()
         {
-            _resolvedPath = GameEnvironment.IsRuntime
-                ? ProjectSettings.GlobalizePath(UserFilePath)
-                : "collections.json";
+            _builtInPath = Resolve(BuiltInRoot, "collections");
+            _userPath = Resolve(UserRoot, "user_collections");
         }
 
-        private static string ResolvedPath =>
-            _resolvedPath ?? (GameEnvironment.IsRuntime
-                ? ProjectSettings.GlobalizePath(UserFilePath)
-                : "collections.json");
+        private static string Resolve(string godotPath, string fallback) =>
+            GameEnvironment.IsRuntime ? ProjectSettings.GlobalizePath(godotPath) : fallback;
 
-        /// <summary>Loads player-created collections; returns an empty list when the file is absent or broken.</summary>
-        public static List<ModCollection> LoadUser()
-        {
-            var path = ResolvedPath;
-            var result = new List<ModCollection>();
-            if (!File.Exists(path))
-                return result;
+        /// <summary>Absolute folder of the built-in packages.</summary>
+        public static string BuiltInPath => _builtInPath ?? Resolve(BuiltInRoot, "collections");
 
-            try
-            {
-                var json = File.ReadAllText(path);
-                var list = JsonSerializer.Deserialize<List<ModCollection>>(json, JsonOptionsProvider.ReadOptions);
-                if (list == null)
-                    return result;
+        /// <summary>Absolute folder of the player's packages.</summary>
+        public static string UserPath => _userPath ?? Resolve(UserRoot, "user_collections");
 
-                foreach (var collection in list)
-                {
-                    if (collection == null || string.IsNullOrEmpty(collection.Id))
-                    {
-                        GameLogger.Log("MOD_COLLECTIONS", "Skipping user collection without an id", LogLevel.Warning);
-                        continue;
-                    }
+        /// <summary>The player's collections (edited, duplicated, downloaded); empty when the folder is absent.</summary>
+        public static List<ModCollection> LoadUser() => LoadPackages(UserPath, ModCollectionOrigin.User);
 
-                    collection.Origin = ModCollectionOrigin.User;
-                    result.Add(collection);
-                }
-            }
-            catch (Exception ex)
-            {
-                GameLogger.Log("MOD_COLLECTIONS", $"Failed to load user collections: {ex.Message}", LogLevel.Warning);
-            }
+        /// <summary>Collections shipped with the game.</summary>
+        public static List<ModCollection> LoadBuiltIn() => LoadPackages(BuiltInPath, ModCollectionOrigin.BuiltIn);
 
-            return result;
-        }
-
-        /// <summary>Persists the player's collections, replacing the whole file.</summary>
+        /// <summary>
+        /// Replaces the player's collections with <paramref name="collections"/>:
+        /// each becomes the package <c>user://collections/&lt;id&gt;/</c>, and
+        /// player packages not in the list are removed. A collection that came
+        /// from another package (a fork of a built-in game) takes that package's
+        /// cover and <c>locale/</c> files along, so the copy shows the same.
+        /// </summary>
         public static void SaveUser(List<ModCollection> collections)
         {
             try
             {
-                var path = ResolvedPath;
-                var dir = Path.GetDirectoryName(path);
-                if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
-                    Directory.CreateDirectory(dir);
+                Directory.CreateDirectory(UserPath);
+                var keep = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                foreach (var collection in collections ?? new List<ModCollection>())
+                {
+                    if (collection == null || string.IsNullOrEmpty(collection.Id))
+                        continue;
+                    keep.Add(collection.Id);
+                    WritePackage(collection);
+                }
 
-                var json = JsonSerializer.Serialize(
-                    collections ?? new List<ModCollection>(),
-                    JsonOptionsProvider.WriteIndentedIgnoreNullOptions);
-                File.WriteAllText(path, json);
+                foreach (var dir in Directory.GetDirectories(UserPath))
+                {
+                    if (!keep.Contains(Path.GetFileName(dir)))
+                        Directory.Delete(dir, true);
+                }
             }
             catch (Exception ex)
             {
@@ -112,30 +103,37 @@ namespace Cthangover.Core.Mods
         }
 
         /// <summary>
-        /// Reads every <c>collections/*.json</c> bundled inside a mod. Used for
-        /// both folder and zip providers; a broken file is logged and skipped so
-        /// one bad collection cannot hide the others.
+        /// Reads every package under <paramref name="root"/>: subfolders and
+        /// <c>.zip</c> files holding a <see cref="DocumentName"/>. A broken
+        /// package is logged and skipped so one bad collection cannot hide the
+        /// others.
         /// </summary>
-        public static List<ModCollection> LoadFromProvider(IModFileProvider provider)
+        public static List<ModCollection> LoadPackages(string root, ModCollectionOrigin origin)
         {
             var result = new List<ModCollection>();
-            if (provider == null)
+            if (string.IsNullOrEmpty(root) || !Directory.Exists(root))
                 return result;
 
-            foreach (var entry in provider.ListFiles(ProviderDirectory))
+            foreach (var entry in Directory.GetFileSystemEntries(root).OrderBy(e => e, StringComparer.Ordinal))
             {
-                if (entry.EndsWith("/", StringComparison.Ordinal)
-                    || !entry.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
-                {
+                var name = Path.GetFileName(entry);
+                IModFileProvider package;
+                if (Directory.Exists(entry))
+                    package = new FolderModFileProvider(entry, name);
+                else if (entry.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+                    package = new ZipModFileProvider(entry, Path.GetFileNameWithoutExtension(name));
+                else
                     continue;
-                }
 
-                var collection = Parse(provider.ReadFileText(entry), $"{provider.Mod}/{entry}");
+                var collection = Parse(package.ReadFileText(DocumentName), $"{name}/{DocumentName}");
                 if (collection == null)
                     continue;
 
-                collection.Origin = ModCollectionOrigin.BuiltIn;
-                collection.SourceModId = provider.Mod;
+                if (!string.Equals(collection.Id, package.Mod, StringComparison.OrdinalIgnoreCase))
+                    GameLogger.Log("MOD_COLLECTIONS", $"Package '{name}' holds collection '{collection.Id}'; name the package after the id", LogLevel.Warning);
+
+                collection.Origin = origin;
+                collection.Package = package;
                 result.Add(collection);
             }
 
@@ -145,21 +143,10 @@ namespace Cthangover.Core.Mods
         /// <summary>
         /// Loads and merges collections from every channel, ordered by precedence
         /// (catalog, then built-in, then user — each step may replace an entry
-        /// with the same id). Entries without an id are ignored.
+        /// with the same id). Entries without an id are ignored. Reads no mod,
+        /// so the boot pipeline can call it before the mod set is decided.
         /// </summary>
         public static List<ModCollection> LoadAll()
-        {
-            ModRegistry.Instance.Initialize();
-            return LoadAll(ModRegistry.Instance.AllDiscoveredMods.Values);
-        }
-
-        /// <summary>
-        /// Same merge as <see cref="LoadAll()"/> over an explicit mod list. The
-        /// boot pipeline uses it while the registry is still being built (the
-        /// active game decides which discovered mods survive), so it must not
-        /// touch <see cref="ModRegistry"/>.
-        /// </summary>
-        public static List<ModCollection> LoadAll(IEnumerable<IModInfo> discoveredMods)
         {
             var byId = new Dictionary<string, ModCollection>(StringComparer.OrdinalIgnoreCase);
 
@@ -170,11 +157,8 @@ namespace Cthangover.Core.Mods
                     AddIfValid(byId, collection, ModCollectionOrigin.Catalog, overwrite: false);
             }
 
-            foreach (var info in discoveredMods ?? Array.Empty<IModInfo>())
-            {
-                foreach (var collection in LoadFromProvider(info?.FileProvider))
-                    AddIfValid(byId, collection, ModCollectionOrigin.BuiltIn, overwrite: true);
-            }
+            foreach (var collection in LoadBuiltIn())
+                AddIfValid(byId, collection, ModCollectionOrigin.BuiltIn, overwrite: true);
 
             foreach (var collection in LoadUser())
                 AddIfValid(byId, collection, ModCollectionOrigin.User, overwrite: true);
@@ -183,7 +167,7 @@ namespace Cthangover.Core.Mods
         }
 
         /// <summary>
-        /// True when a mod or catalog ships a collection with this id — the
+        /// True when the game or a catalog ships a collection with this id — the
         /// player's version then only overrides it, and "revert" restores the
         /// shipped one.
         /// </summary>
@@ -195,19 +179,69 @@ namespace Cthangover.Core.Mods
             if (CatalogService.CachedCollections?.Any(c => string.Equals(c?.Id, id, StringComparison.OrdinalIgnoreCase)) == true)
                 return true;
 
-            ModRegistry.Instance.Initialize();
-            return ModRegistry.Instance.AllDiscoveredMods.Values
-                .Any(info => LoadFromProvider(info?.FileProvider).Any(c => string.Equals(c.Id, id, StringComparison.OrdinalIgnoreCase)));
+            return LoadBuiltIn().Any(c => string.Equals(c.Id, id, StringComparison.OrdinalIgnoreCase));
         }
 
-        /// <summary>Drops the player's version of a collection; returns true when one existed.</summary>
+        /// <summary>Drops the player's package of a collection; returns true when one existed.</summary>
         public static bool RemoveUser(string id)
         {
-            var user = LoadUser();
-            var removed = user.RemoveAll(c => string.Equals(c.Id, id, StringComparison.OrdinalIgnoreCase)) > 0;
-            if (removed)
-                SaveUser(user);
+            if (string.IsNullOrEmpty(id))
+                return false;
+
+            var removed = false;
+            var dir = Path.Combine(UserPath, id);
+            if (Directory.Exists(dir))
+            {
+                Directory.Delete(dir, true);
+                removed = true;
+            }
+
+            var zip = dir + ".zip";
+            if (File.Exists(zip))
+            {
+                File.Delete(zip);
+                removed = true;
+            }
+
             return removed;
+        }
+
+        private static void WritePackage(ModCollection collection)
+        {
+            var dir = Path.Combine(UserPath, collection.Id);
+            Directory.CreateDirectory(dir);
+
+            var source = collection.Package;
+            var ownPackage = source is FolderModFileProvider folder
+                && string.Equals(Path.GetFullPath(folder.RootPath), Path.GetFullPath(dir), StringComparison.Ordinal);
+            if (source != null && !ownPackage)
+                CopyPackageFiles(source, dir, collection.Cover);
+
+            var json = JsonSerializer.Serialize(collection, JsonOptionsProvider.WriteIndentedIgnoreNullOptions);
+            File.WriteAllText(Path.Combine(dir, DocumentName), json);
+            collection.Package = new FolderModFileProvider(dir, collection.Id);
+        }
+
+        private static void CopyPackageFiles(IModFileProvider source, string dir, string cover)
+        {
+            if (!string.IsNullOrEmpty(cover))
+                CopyFile(source, cover, dir);
+
+            foreach (var entry in source.ListFiles("locale"))
+            {
+                if (!entry.EndsWith("/", StringComparison.Ordinal))
+                    CopyFile(source, entry, dir);
+            }
+        }
+
+        private static void CopyFile(IModFileProvider source, string path, string dir)
+        {
+            var bytes = source.ReadFileBinary(path);
+            if (bytes == null)
+                return;
+            var target = Path.Combine(dir, path.Replace('/', Path.DirectorySeparatorChar));
+            Directory.CreateDirectory(Path.GetDirectoryName(target));
+            File.WriteAllBytes(target, bytes);
         }
 
         private static void AddIfValid(
@@ -231,7 +265,7 @@ namespace Cthangover.Core.Mods
         {
             if (string.IsNullOrWhiteSpace(json))
             {
-                GameLogger.Log("MOD_COLLECTIONS", $"Collection file '{label}' is empty", LogLevel.Warning);
+                GameLogger.Log("MOD_COLLECTIONS", $"Collection file '{label}' is missing or empty", LogLevel.Warning);
                 return null;
             }
 

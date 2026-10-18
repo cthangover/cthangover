@@ -1,0 +1,41 @@
+{
+  "id": "dev_tools",
+  "kind": "toolset",
+  "name": "Developer Tools",
+  "author": "ct",
+  "version": "1.0.0",
+  "description": "Mod authoring toolset: the scenario graph editor, content validators and the mod manager.",
+  "locale": [
+    { "lang": "ru", "name": "Инструменты разработчика", "description": "Набор для авторов модов: графовый редактор сценариев, валидаторы контента и менеджер модов." }
+  ],
+  "mechanics": [
+    {
+      "id": "editor",
+      "name": "Scenario Editor",
+      "description": "Graph-based scenario and scene authoring tools.",
+      "locale": [
+        { "lang": "ru", "name": "Редактор сценариев", "description": "Графовые инструменты для создания сценариев и сцен." }
+      ],
+      "mods": ["editor_tools>=1"]
+    },
+    {
+      "id": "validation",
+      "name": "Validation",
+      "description": "Optional content validation suite, the cross-mod resource atlas and the localization key map.",
+      "locale": [
+        { "lang": "ru", "name": "Проверки", "description": "Необязательный набор проверок контента, карта ресурсов между модами и карта ключей локализации." }
+      ],
+      "mods": ["validator>=0.1", "resource_atlas>=0.1", "locale_atlas>=0.1"],
+      "optional": true
+    },
+    {
+      "id": "manager",
+      "name": "Mod Manager",
+      "description": "Catalog browser and installer.",
+      "locale": [
+        { "lang": "ru", "name": "Менеджер модов", "description": "Обзор каталога и установка модов." }
+      ],
+      "mods": ["mod_manager>=1"]
+    }
+  ]
+}

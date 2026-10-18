@@ -191,7 +191,7 @@ namespace Cthangover.Core.Mods.Pipeline
 
             var discovered = new Dictionary<string, IModInfo>(mods, System.StringComparer.OrdinalIgnoreCase);
             var collections = new Dictionary<string, ModCollection>(System.StringComparer.OrdinalIgnoreCase);
-            foreach (var collection in ModCollectionStore.LoadAll(discovered.Values))
+            foreach (var collection in ModCollectionStore.LoadAll())
                 collections[collection.Id] = collection;
 
             if (args.Mode == Games.GameLaunchMode.Frontend)
