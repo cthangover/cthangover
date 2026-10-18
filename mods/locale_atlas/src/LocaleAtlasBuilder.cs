@@ -26,12 +26,17 @@ namespace Cthangover.LocaleAtlas
     /// <item>manifest — <c>mod_&lt;id&gt;_name</c>/<c>_desc</c> used by the mod manager
     /// (optional: the manifest text is the fallback).</item>
     /// </list>
-    /// Collection files (<c>collections/*.json</c>) are also checked for inline
-    /// <c>locale</c> entries: a literal <c>name</c>/<c>description</c> is the
-    /// <c>en</c> text, every other project language needs a <c>locale</c> entry.
+    /// Collection packages come as sources named <see cref="CollectionSourcePrefix"/>
+    /// + id: their <c>locale/</c> files are declarations like a mod's, and their
+    /// <c>collection.json</c> is checked for inline <c>locale</c> entries — a
+    /// literal <c>name</c>/<c>description</c> is the <c>en</c> text, every other
+    /// project language needs a <c>locale</c> entry.
     /// </summary>
     public static class LocaleAtlasBuilder
     {
+        /// <summary>Source id prefix of a collection package (<c>collection:&lt;id&gt;</c>), as opposed to a mod.</summary>
+        public const string CollectionSourcePrefix = "collection:";
+
         /// <summary>Language of literal collection texts (fallback in <c>ModCollection.GetLocalizedName</c>).</summary>
         public const string CollectionBaseLanguage = "en";
 
@@ -66,6 +71,8 @@ namespace Cthangover.LocaleAtlas
                     result.Mods.Add(modId);
                     ScanLocaleFiles(modId, provider, result);
                     ScanReferences(modId, provider, result, collections, documents);
+                    if (modId.StartsWith(CollectionSourcePrefix, StringComparison.Ordinal))
+                        continue;
                     result.References.Add(new LocaleReference { Key = $"mod_{modId}_name", ModId = modId, File = "manifest.json", Via = "manifest", Optional = true });
                     result.References.Add(new LocaleReference { Key = $"mod_{modId}_desc", ModId = modId, File = "manifest.json", Via = "manifest", Optional = true });
                 }
@@ -229,7 +236,7 @@ namespace Cthangover.LocaleAtlas
                         AddMatches(SceneText, text, file, modId, "scene", result);
                         break;
                     case ".json":
-                        var isCollection = file.StartsWith("collections/", StringComparison.Ordinal);
+                        var isCollection = file == "collection.json" && modId.StartsWith(CollectionSourcePrefix, StringComparison.Ordinal);
                         if (!isCollection)
                             AddMatches(JsonTextField, text, file, modId, "json", result);
                         AddMatches(JsonAtKey, text, file, modId, isCollection ? "collection" : "json", result);

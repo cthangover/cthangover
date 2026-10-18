@@ -64,16 +64,15 @@ namespace Cthangover.Core.Games
             }).ToList();
         }
 
-        /// <summary>The collection's cover from the mod that ships it, or null.</summary>
+        /// <summary>The collection's cover from its package, or null.</summary>
         public static Texture2D LoadCover(ModCollection collection)
         {
-            if (string.IsNullOrEmpty(collection?.Cover) || string.IsNullOrEmpty(collection.SourceModId)
-                || !ModRegistry.Instance.AllDiscoveredMods.TryGetValue(collection.SourceModId, out var mod))
+            if (string.IsNullOrEmpty(collection?.Cover) || collection.Package == null)
                 return null;
 
             try
             {
-                var bytes = mod.FileProvider?.ReadFileBinary(collection.Cover);
+                var bytes = collection.Package.ReadFileBinary(collection.Cover);
                 if (bytes == null || bytes.Length == 0)
                     return null;
 

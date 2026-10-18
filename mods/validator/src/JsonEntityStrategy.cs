@@ -77,11 +77,6 @@ namespace Cthangover.Validator
                 if (!file.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
                     continue;
 
-                // The reserved collections/ folder holds scheme documents whose
-                // "kind" (game/component/toolset) is not an entity discriminator.
-                if (file.StartsWith(ModCollectionStore.ProviderDirectory + "/", StringComparison.OrdinalIgnoreCase))
-                    continue;
-
                 var document = ReadDocument(context, mod, file);
                 if (document == null)
                     continue;

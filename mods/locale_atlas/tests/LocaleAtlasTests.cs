@@ -170,13 +170,13 @@ namespace Cthangover.LocaleAtlas.Tests
         [ModTest("map/collection_texts_need_every_language")]
         static void CollectionTextsNeedEveryLanguage(ModTestContext ctx)
         {
-            var mod = new MemoryProvider("m")
+            var package = new MemoryProvider("c")
                 .Add("locale/en.properties", "x = X\n")
                 .Add("locale/ru.properties", "x = Икс\n")
-                .Add("collections/c.json",
+                .Add("collection.json",
                     "{ \"id\": \"c\", \"name\": \"Game\", \"locale\": [ { \"lang\": \"ru\", \"name\": \"Игра\" } ],\n" +
                     "  \"mechanics\": [ { \"id\": \"m1\", \"name\": \"Story\" }, { \"id\": \"m2\", \"name\": \"@x\" } ] }");
-            var result = LocaleAtlasBuilder.Build(new[] { ("m", (IModFileProvider)mod) });
+            var result = LocaleAtlasBuilder.Build(new[] { (LocaleAtlasBuilder.CollectionSourcePrefix + "c", (IModFileProvider)package) });
             var missing = result.Findings.Where(f => f.Code == "collection_text_missing").ToList();
             ModAssert.Equal(1, missing.Count, "only the literal mechanic without ru: " + string.Join("; ", missing.Select(f => f.Message)));
             ModAssert.Equal("m1", missing[0].Key, "mechanic id");

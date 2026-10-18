@@ -16,28 +16,35 @@ changes dependencies.
 
 ## Where collections live
 
-Collections are **mod resources, not core configuration**: any mod can ship
-them, and they load from the mod's own files exactly like scenes or locale
-files — nothing needs to be registered anywhere else.
+A collection is a **package of its own, not a file inside a mod**. A game is an
+assembly of mods by many authors — no single mod owns it — so collections ship
+next to the mods: anyone can publish a game, a toolset or a block without
+touching (or forking) the mods it uses.
+
+A package is a folder or a `.zip` named after the collection id:
+
+```
+collections/my_novel/
+  collection.json        ← the document (schema below)
+  cover.png              ← "cover": "cover.png" — shown in the game picker
+  locale/en.properties   ← texts of the collection ("@key" markers), optional
+  locale/ru.properties
+```
 
 | Source | Location | Precedence |
 |---|---|---|
-| Bundled with a mod | `<mod root>/collections/*.json` (folder or zip) | overrides catalog |
-| Created by the player | `user://collections.json` (JSON array) | overrides everything |
-| Published in a catalog | `"collections"` array of a [catalog JSON](../catalog/) | lowest |
+| Shipped with the game | `collections/<id>/` in the game directory (`res://collections/`) | overrides catalog |
+| The player's | `user://collections/<id>/` — edited, duplicated and downloaded collections | overrides everything |
+| Published in a catalog | `"collections"` array of a [catalog JSON](../catalog/) (document only: no cover, no locale files) | lowest |
 
 `ModCollectionStore.LoadAll()` merges the three channels by collection `id`
-(case-insensitive): catalog entries are inserted first, bundled files replace
-them, and player collections replace both. That lets a shipping mod fix an
-outdated online collection without asking the catalog owner, and lets the
-player edit any collection locally.
-
-Shipping collections is one step: add a `collections/` directory next to
-`manifest.json`, one JSON file per collection. Collections are read through
-`IModFileProvider`, so they work identically for folder mods, zip mods, and
-custom providers. The directory name is reserved — the entity scanner skips it
-entirely, because collection documents carry a `kind` field that is not an
-entity kind.
+(case-insensitive): catalog entries are inserted first, shipped packages
+replace them, and the player's packages replace both. Packages are read through
+`IModFileProvider`, so folders and zips work identically. The package's
+`locale/` files are merged into the game's translations at boot, before any
+mod, so the game picker shows localized names before the game's mods are
+loaded. **Mods do not ship collections**: a `collections/` folder inside a mod
+is not read.
 
 ## Collection JSON schema
 
@@ -200,8 +207,8 @@ collections/<collection_id>/mechanic/<mechanic_id>/name
 collections/<collection_id>/mechanic/<mechanic_id>/description
 ```
 
-Put the keys into the `locale/{lang}.properties` of any mod — the mod that
-ships the collection is the natural owner:
+Put the keys into the package's own `locale/{lang}.properties` — the
+collection carries its texts with it:
 
 ```properties
 # en.properties
@@ -288,7 +295,7 @@ mod count, tags and a status:
 | Draft | a partially assembled player collection, possibly with unsaved edits | **Continue building** |
 
 Secondary action on every card is **Edit scheme**. Tiles **+ Assemble your own
-game** create a new player collection, stored in `user://collections.json`.
+game** create a new player collection, stored as a package in `user://collections/<id>/`.
 
 How a player assembles a game: pick a game in the gallery → **Install** — the
 build plan downloads the missing mods and re-enables disabled ones → the game
@@ -319,22 +326,23 @@ mismatches are shown as warnings but do not block apply.
   **Enable N**, **Problems K**, a hint message, a shortcut to the mod manager
   and the primary **Apply collection** button (disabled while errors are
   present).
-- **Header** — Save (writes `user://collections.json`), Reset and a raw
+- **Header** — Save (writes the package `user://collections/<id>/`), Reset and a raw
   **JSON** view, plus the unsaved-edits marker.
 
-## Add collections to your mod
+## Ship your own collection
 
-1. Create a `collections/` directory next to your `manifest.json`.
-2. Add one JSON file per collection; the file name is free, the `id` inside
-   is what matters and must be unique across all sources.
+1. Create a folder named after your collection id: `collections/<id>/` for a
+   game shipped with the build, or `user://collections/<id>/` (zip it to share).
+2. Put the document into `collection.json`; the `id` inside must match the
+   folder name and be unique across all sources.
 3. Set `"kind": "Game"` for a playable assembly, `"Component"` for a
    reusable block, `"Toolset"` for developer tools.
 4. Declare `mechanics` (or `includes` of other collections) with versioned
    mod references.
 5. Localize: add a `locale[]` array and/or `@key` markers, then put the keys
-   into your `locale/{lang}.properties`.
-6. Ship the mod. The store merges your collections automatically and your
-   bundled copy overrides an online catalog entry with the same id; the player
+   into the package's `locale/{lang}.properties`; add a `cover.png`.
+6. Ship the package. The store merges it automatically and your
+   shipped copy overrides an online catalog entry with the same id; the player
    can override both locally.
 
 A complete example — a game that names its texts through `@key` markers and also
@@ -444,12 +452,12 @@ Writes (downloading, enabling) stay outside the plan: the UI passes
 
 ## Real examples
 
-- `mods/novel_template/collections/novel_template.json` — the smallest playable
+- `collections/novel_template/` — the smallest playable
   game: one story mechanic (the template's scenes and scenarios) and the novel
   engine (`shell2d_base`, `dialog_base`, `audio_base`), texts in `locale[]`.
   Start a new novel by copying the `novel_template` mod.
-- `mods/cthangover_story/collections/cthangover.json` — the main game: story,
+- `collections/cthangover/` — the main game: story,
   novel engine, characters, quests, items, battles with an optional second
   battle core, Live2D and tools, each as its own mechanic.
-- `mods/editor_tools/collections/novel_editor.json` — a "game" whose entry scene
+- `collections/novel_editor/` — a "game" whose entry scene
   is the editor hub instead of a story scene.

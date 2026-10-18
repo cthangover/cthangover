@@ -11,7 +11,7 @@ namespace Mods.ModManager
     /// own collections can go: a collection a mod or the catalog ships would
     /// come back on the next merge (its edited version is dropped with
     /// "Revert to built-in" instead). Deleting touches only
-    /// <c>user://collections.json</c> — the mods of the collection stay
+    /// <c>user://collections/</c> — the mods of the collection stay
     /// installed and its saves stay on disk (they reappear if a collection
     /// with the same id comes back), which the confirmation spells out.
     /// </summary>
