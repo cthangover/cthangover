@@ -29,6 +29,7 @@ namespace Cthangover.Mods.ScenarioStudio
 
             var add = StudioActionButton.Create("studio/new_scenario", create);
             add.Payload = session.SceneName;
+            add.SizeFlagsHorizontal = Control.SizeFlags.ShrinkBegin;
             content.AddChild(add);
         }
 

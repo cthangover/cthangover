@@ -26,7 +26,10 @@ namespace Cthangover.Mods.ScenarioStudio.Tests.Live
     ///   inserted line, the edit is in the test layer and the cooking mod's
     ///   file is untouched; the question then has the new answer;</item>
     /// <item>breakpoint on the question, restart, hold before it, continue;</item>
-    /// <item>the Scene, State, Log and Map tabs; closes the dock.</item>
+    /// <item>the Scene, State (a checkpoint is saved there), Log and Map tabs;</item>
+    /// <item>creates a scene in the layer, goes there and sees its scenario run
+    ///   from the layer, exports the layer as a mod, returns to the checkpoint
+    ///   and closes the dock.</item>
     /// </list>
     /// The test layer is deleted at the end. Ends with
     /// <c>[TEST_RESULT] name=studio_live passed=N failed=M</c>.
@@ -38,6 +41,8 @@ namespace Cthangover.Mods.ScenarioStudio.Tests.Live
         private const string Root = "Dock/Column/";
         private const float TickSeconds = 0.5f;
         private const float TimeoutSeconds = 150f;
+        private const string NewScene = "studio_test_yard";
+        private const string ExportId = "studio_test_export";
 
         private readonly string _shotsDir;
         private StudioPanel _panel;
@@ -187,6 +192,8 @@ namespace Cthangover.Mods.ScenarioStudio.Tests.Live
                 case 16:
                     Check(_panel.Session.State.Count > 0 && CountOf<StudioStateRow>() == _panel.Session.State.Count, "state tab: a row per state value");
                     Shot("state");
+                    MenuPick(100);
+                    Check(Live.HasCheckpoint, "checkpoint remembered from the restart menu");
                     Press(Root + "Tabs/Row/LogTab");
                     break;
                 case 17:
@@ -198,6 +205,43 @@ namespace Cthangover.Mods.ScenarioStudio.Tests.Live
                     Check(HasNode(_panel.Session, StudioNodeState.Here, "home_kitchen"), "map tab: you are in the kitchen");
                     Check(HasNode(_panel.Session, StudioNodeState.Next, "home_vestibule"), "map tab: the vestibule is an exit");
                     Shot("map");
+                    PressText("studio/map_new_scene");
+                    break;
+                case 19:
+                    AnswerPrompt(NewScene);
+                    break;
+                case 20:
+                    Check(File.Exists(Path.Combine(Live.Layer.RootPath, "scenes", NewScene + ".json")), "new scene written to the layer");
+                    Check(GetNodeOrNull<SceneManager>("/root/SceneManager")?.HasScene(NewScene) == true, "new scene is known to the scene manager");
+                    PressPayload(NewScene);
+                    break;
+                case 21:
+                    if (SceneManager.GetCurrentSceneName() != NewScene || Box?.Locker is not ScenarioEvent)
+                    {
+                        _step--;
+                        break;
+                    }
+                    Check(((ScenarioEvent)Box.Locker).SourceModId == StudioLayer.Id, $"the new scene's scenario runs from the layer ('{Box.Locker.ID}')");
+                    Shot("new_scene");
+                    PressText("studio/map_export");
+                    break;
+                case 22:
+                    AnswerPrompt(ExportId);
+                    break;
+                case 23:
+                    var exported = Path.Combine(ProjectSettings.GlobalizePath("user://mods/"), ExportId);
+                    Check(File.Exists(Path.Combine(exported, "manifest.json")) && File.Exists(Path.Combine(exported, "scenes", NewScene + ".json")), "layer exported as a mod with a manifest");
+                    if (Directory.Exists(exported))
+                        Directory.Delete(exported, true);
+                    MenuPick(101);
+                    break;
+                case 24:
+                    if (SceneManager.GetCurrentSceneName() != "home_kitchen")
+                    {
+                        _step--;
+                        break;
+                    }
+                    Check(true, "back at the checkpoint's scene");
                     Press(Root + "Header/Row/CloseButton");
                     break;
                 default:
@@ -317,6 +361,33 @@ namespace Cthangover.Mods.ScenarioStudio.Tests.Live
             Fail($"scene {scene} not offered as a target");
         }
 
+        private void PressPayload(string payload)
+        {
+            foreach (var button in Descendants<StudioActionButton>(Content()))
+            {
+                if (button.Payload != payload)
+                    continue;
+                button.EmitSignal(BaseButton.SignalName.Pressed);
+                return;
+            }
+            Fail($"no button for '{payload}'");
+        }
+
+        /// <summary>Types <paramref name="text"/> into the open studio prompt and confirms it.</summary>
+        private void AnswerPrompt(string text)
+        {
+            foreach (var child in _panel.GetChildren())
+            {
+                if (child is not ConfirmationDialog dialog || !dialog.Visible)
+                    continue;
+                foreach (var field in Descendants<LineEdit>(dialog))
+                    field.Text = text;
+                dialog.EmitSignal(AcceptDialog.SignalName.Confirmed);
+                return;
+            }
+            Fail("no studio prompt open");
+        }
+
         private void ToggleBreakpoint(int line)
         {
             foreach (var node in Descendants<StudioCodeLineView>(Content()))
@@ -330,10 +401,12 @@ namespace Cthangover.Mods.ScenarioStudio.Tests.Live
             Fail($"no script line {line} in the author view");
         }
 
-        private void Restart(StudioRestartMode mode)
+        private void Restart(StudioRestartMode mode) => MenuPick((long)mode);
+
+        private void MenuPick(long id)
         {
             var popup = _panel.GetNode<MenuButton>(Root + "Transport/Row/RestartButton").GetPopup();
-            popup.EmitSignal(PopupMenu.SignalName.IdPressed, (long)mode);
+            popup.EmitSignal(PopupMenu.SignalName.IdPressed, id);
         }
 
         private int Broken()
@@ -384,6 +457,9 @@ namespace Cthangover.Mods.ScenarioStudio.Tests.Live
             ModOverlays.Unmount(StudioLayer.Id);
             StudioLayer.RefreshContent();
             Directory.Delete(root, true);
+            var parent = Path.GetDirectoryName(root);
+            if (parent != null && Directory.GetFileSystemEntries(parent).Length == 0)
+                Directory.Delete(parent);
             Log($"test layer removed: {root}");
         }
 

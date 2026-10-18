@@ -38,6 +38,7 @@ namespace Cthangover.Mods.ScenarioStudio
 
         private readonly Dictionary<string, StudioWorkingCopy> _copies = new();
         private StudioSnapshot _snapshot;
+        private StudioSnapshot _checkpoint;
 
         public static StudioLive Instance { get; private set; }
 
@@ -405,6 +406,32 @@ namespace Cthangover.Mods.ScenarioStudio
                     return trimmed.Substring(1).Trim();
             }
             return null;
+        }
+
+        /// <summary>True when a manual checkpoint was saved in this session.</summary>
+        public bool HasCheckpoint => _checkpoint != null;
+
+        /// <summary>Remembers the whole game state and the scene now, to come back to with <see cref="RestoreCheckpoint"/>.</summary>
+        public void SaveCheckpoint()
+        {
+            _checkpoint = StudioSnapshot.Capture(null, SceneName);
+            Journal.Add(StudioLogCategory.Edit, new StudioText("studio/log_text_checkpoint_saved", SceneName));
+            Touch();
+        }
+
+        /// <summary>Brings back the saved checkpoint: game state, then its scene entered again.</summary>
+        public bool RestoreCheckpoint()
+        {
+            if (_checkpoint == null)
+                return false;
+
+            StopDialog();
+            Debugger.Reset();
+            if (!_checkpoint.Restore())
+                return false;
+            Journal.Add(StudioLogCategory.Edit, new StudioText("studio/log_text_checkpoint_restored", _checkpoint.SceneName));
+            GoToScene(_checkpoint.SceneName);
+            return true;
         }
 
         // ── new content ────────────────────────────────────────────

@@ -31,6 +31,8 @@ namespace Cthangover.Mods.ScenarioStudio
         private const long TargetEnd = 0;
         private const long TargetLabelBase = 1000;
         private const long TargetSceneBase = 2000;
+        private const int CheckpointSave = 100;
+        private const int CheckpointRestore = 101;
 
         private readonly StudioNowPage _nowPage = new();
         private readonly StudioNovicePage _novicePage = new();
@@ -175,6 +177,9 @@ namespace Cthangover.Mods.ScenarioStudio
             popup.AddItem(Tr("studio/restart_rollback"), (int)StudioRestartMode.Rollback);
             popup.AddItem(Tr("studio/restart_scene"), (int)StudioRestartMode.Scene);
             popup.AddItem(Tr("studio/restart_from_label"), (int)StudioRestartMode.FromLabel);
+            popup.AddSeparator(Tr("studio/checkpoint"));
+            popup.AddItem(Tr("studio/checkpoint_save"), CheckpointSave);
+            popup.AddItem(Tr("studio/checkpoint_restore"), CheckpointRestore);
             popup.IdPressed += OnRestartPicked;
         }
 
@@ -219,7 +224,15 @@ namespace Cthangover.Mods.ScenarioStudio
             _pauseButton.SetPressedNoSignal(Live.Debugger.IsPaused);
             _stepButton.Disabled = !_session.HasScenario;
             _continueButton.Disabled = !stopped;
-            _restartButton.Disabled = !_session.HasScenario;
+            var restartMenu = _restartButton.GetPopup();
+            for (var i = 0; i < restartMenu.ItemCount; i++)
+            {
+                var id = restartMenu.GetItemId(i);
+                if (id < CheckpointSave && !restartMenu.IsItemSeparator(i))
+                    restartMenu.SetItemDisabled(i, !_session.HasScenario);
+                else if (id == CheckpointRestore)
+                    restartMenu.SetItemDisabled(i, !Live.HasCheckpoint);
+            }
             _authorButton.SetPressedNoSignal(_mode == StudioMode.Author);
             _noviceButton.SetPressedNoSignal(_mode == StudioMode.Novice);
             for (var i = 0; i < _tabs.Length; i++)
@@ -397,8 +410,22 @@ namespace Cthangover.Mods.ScenarioStudio
         private void OnRestartPicked(long id)
         {
             CloseEditor();
-            Live.Restart((StudioRestartMode)id);
-            Changed();
+            switch (id)
+            {
+                case CheckpointSave:
+                    Live.SaveCheckpoint();
+                    _status = Tr("studio/checkpoint_saved");
+                    Refresh();
+                    return;
+                case CheckpointRestore:
+                    _status = Live.RestoreCheckpoint() ? Tr("studio/checkpoint_restored") : Tr("studio/checkpoint_none");
+                    Refresh();
+                    return;
+                default:
+                    Live.Restart((StudioRestartMode)id);
+                    Changed();
+                    return;
+            }
         }
 
         // ── author edits ───────────────────────────────────────────
