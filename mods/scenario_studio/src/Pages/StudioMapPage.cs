@@ -17,15 +17,20 @@ namespace Cthangover.Mods.ScenarioStudio
     {
         public static void Build(VBoxContainer content, StudioSession session, Action<StudioActionButton> go, Action<StudioActionButton> newScene, Action<StudioActionButton> link, Action<StudioActionButton> export)
         {
-            content.AddChild(UiKit.SectionTitle(TranslationServer.Translate("studio/map_from"), UiTokens.FontSmall));
+            var visited = false;
             foreach (var node in session.Nodes)
             {
                 if (node.State != StudioNodeState.Visited)
                     continue;
+                if (!visited)
+                    content.AddChild(UiKit.SectionTitle(TranslationServer.Translate("studio/map_from"), UiTokens.FontSmall));
+                visited = true;
                 content.AddChild(BuildNode(node, go));
                 content.AddChild(Arrow());
             }
 
+            if (!visited)
+                content.AddChild(UiKit.SectionTitle(TranslationServer.Translate("studio/map_here"), UiTokens.FontSmall));
             foreach (var node in session.Nodes)
             {
                 if (node.State == StudioNodeState.Here)
@@ -33,11 +38,16 @@ namespace Cthangover.Mods.ScenarioStudio
             }
 
             content.AddChild(UiKit.SectionTitle(TranslationServer.Translate("studio/map_to"), UiTokens.FontSmall));
+            var exits = 0;
             foreach (var node in session.Nodes)
             {
-                if (node.State == StudioNodeState.Next || node.State == StudioNodeState.New)
-                    content.AddChild(BuildNode(node, go));
+                if (node.State != StudioNodeState.Next && node.State != StudioNodeState.New)
+                    continue;
+                content.AddChild(BuildNode(node, go));
+                exits++;
             }
+            if (exits == 0)
+                content.AddChild(UiKit.Hint(TranslationServer.Translate("studio/map_no_exits"), UiTokens.FontBodySmall));
 
             var actions = new HFlowContainer { MouseFilter = Control.MouseFilterEnum.Ignore };
             actions.AddThemeConstantOverride("h_separation", UiTokens.Space2);
