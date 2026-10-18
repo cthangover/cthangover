@@ -1,20 +1,20 @@
 namespace Cthangover.Mods.ScenarioStudio
 {
+    using System;
     using Cthangover.Core.UI.Theming;
     using Cthangover.Mods.Interface.Theming;
     using Godot;
 
     /// <summary>
-    /// "State" tab: game state grouped by owner (time, quests, inventory, dialog
-    /// variables, completed scenarios). Values sit in editable fields because
-    /// changing one is the quickest way to test another branch of a scenario;
-    /// in the prototype the edits stay in the fields.
+    /// "State" tab: game state grouped by owner — time, dialog variables of the
+    /// running dialog, quests the current scenario refers to, inventory and the
+    /// one-run completion history. Variables, item counts and quest status are
+    /// editable (Enter writes them into the game), because changing one is the
+    /// quickest way to test another branch of a scenario.
     /// </summary>
     public static class StudioStatePage
     {
-        private const int KeyWidth = 170;
-
-        public static void Build(VBoxContainer content, StudioSession session)
+        public static void Build(VBoxContainer content, StudioSession session, Action<StudioStateEntry, string> submitted)
         {
             var hint = UiKit.Hint(TranslationServer.Translate("studio/state_hint"));
             hint.AutowrapMode = TextServer.AutowrapMode.WordSmart;
@@ -35,17 +35,8 @@ namespace Cthangover.Mods.ScenarioStudio
                     well.AddChild(rows);
                 }
 
-                var row = UiKit.Row(UiTokens.Space3);
-                var key = StudioStyles.Text(entry.Key.Resolve(), UiTokens.FontBodySmall, UiTokens.ChipKey, mono: true);
-                key.CustomMinimumSize = new Vector2(KeyWidth, 0);
-                key.ClipText = true;
-                key.VerticalAlignment = VerticalAlignment.Center;
-                row.AddChild(key);
-
-                var value = new LineEdit { Text = entry.Value.Resolve(), SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
-                value.AddThemeFontOverride("font", StudioStyles.Mono);
-                value.AddThemeFontSizeOverride("font_size", UiTokens.FontBodySmall);
-                row.AddChild(value);
+                var row = new StudioStateRow(entry);
+                row.Submitted += submitted;
                 rows.AddChild(row);
             }
         }

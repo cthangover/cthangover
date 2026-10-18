@@ -1,5 +1,6 @@
 namespace Cthangover.Mods.ScenarioStudio
 {
+    using Cthangover.Core.Utils;
     using Godot;
 
     /// <summary>
@@ -45,7 +46,15 @@ namespace Cthangover.Mods.ScenarioStudio
             var resolved = new object[Args.Length];
             for (var i = 0; i < Args.Length; i++)
                 resolved[i] = Args[i] is StudioText text ? text.Resolve() : Args[i];
-            return string.Format(format, resolved);
+            try
+            {
+                return string.Format(format, resolved);
+            }
+            catch (System.FormatException)
+            {
+                GameLogger.Log("UI", $"Scenario studio: '{Key}' expects other arguments than {Args.Length}", LogLevel.Warning);
+                return format;
+            }
         }
     }
 }

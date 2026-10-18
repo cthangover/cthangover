@@ -1,12 +1,13 @@
 namespace Cthangover.Mods.ScenarioStudio
 {
-    /// <summary>Outcome of a scene candidate in the scene composition, the answer to "why did (not) it start".</summary>
+    /// <summary>Outcome of a scene candidate as the dock shows it, the answer to "why did (not) it start".</summary>
     public enum StudioCandidateStatus
     {
         Running,
-        Waiting,
+        Queued,
         Skipped,
         Completed,
         Shadowed,
+        Failed,
     }
 }

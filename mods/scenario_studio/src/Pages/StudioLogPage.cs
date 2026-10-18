@@ -6,7 +6,7 @@ namespace Cthangover.Mods.ScenarioStudio
 
     /// <summary>
     /// "Log" tab: what happened, newest last — scene entries, skipped scenarios
-    /// with the reason, scenario starts, breakpoints, choices and studio edits.
+    /// with the reason, scenario starts and ends, stops and studio edits.
     /// Skips are tinted as warnings because they are the usual answer to
     /// "nothing happened".
     /// </summary>
@@ -50,8 +50,8 @@ namespace Cthangover.Mods.ScenarioStudio
                     return "studio/log_skip";
                 case StudioLogCategory.Stop:
                     return "studio/log_stop";
-                case StudioLogCategory.Choice:
-                    return "studio/log_choice";
+                case StudioLogCategory.End:
+                    return "studio/log_end";
                 case StudioLogCategory.Edit:
                     return "studio/log_edit";
                 default:

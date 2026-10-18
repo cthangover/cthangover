@@ -26,6 +26,12 @@ namespace Cthangover.Mods.ScenarioStudio
 
         public void Build(VBoxContainer content, StudioSession session)
         {
+            if (!session.HasScenario)
+            {
+                content.AddChild(UiKit.EmptyState(TranslationServer.Translate("studio/no_scenario"), UiTokens.FontBody));
+                return;
+            }
+
             var well = new PanelContainer { MouseFilter = Control.MouseFilterEnum.Ignore };
             well.AddThemeStyleboxOverride("panel", StudioStyles.CodeWell());
             content.AddChild(well);
@@ -39,8 +45,8 @@ namespace Cthangover.Mods.ScenarioStudio
                 lines.AddChild(view);
             }
 
-            var at = session.InsertionIndexAfterCurrent();
-            var caption = at <= 0 ? string.Empty : string.Format(TranslationServer.Translate("studio/after_line"), session.Lines[at - 1].Number);
+            var at = session.InsertionTextIndexAfterCurrent();
+            var caption = at <= 0 ? string.Empty : string.Format(TranslationServer.Translate("studio/after_line"), at);
             content.AddChild(BuildInsertBar(caption));
             content.AddChild(BuildScopeBanner(session));
         }
@@ -76,6 +82,28 @@ namespace Cthangover.Mods.ScenarioStudio
             return button;
         }
 
+        /// <summary>
+        /// Inline editor of the whole scenario text (the footer's "Edit text"),
+        /// filling the body; the dock reads the text back when editing ends.
+        /// </summary>
+        public static CodeEdit BuildEditor(VBoxContainer content, string text)
+        {
+            var editor = new CodeEdit
+            {
+                Text = text ?? string.Empty,
+                GuttersDrawLineNumbers = true,
+                HighlightCurrentLine = true,
+                WrapMode = TextEdit.LineWrappingMode.None,
+                SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+                CustomMinimumSize = new Vector2(0, 560),
+                SyntaxHighlighter = StudioSyntax.CreateHighlighter(),
+            };
+            editor.AddThemeFontOverride("font", StudioStyles.Mono);
+            editor.AddThemeFontSizeOverride("font_size", UiTokens.FontBodySmall);
+            content.AddChild(editor);
+            return editor;
+        }
+
         /// <summary>"This change affects" plate: the edit scope and, when it differs, the mod it overrides.</summary>
         public static Control BuildScopeBanner(StudioSession session)
         {
@@ -92,6 +120,8 @@ namespace Cthangover.Mods.ScenarioStudio
             var row = new HFlowContainer { MouseFilter = Control.MouseFilterEnum.Ignore };
             row.AddThemeConstantOverride("h_separation", UiTokens.Space3);
             column.AddChild(row);
+            if (session.EditScope == null)
+                return banner;
             row.AddChild(StudioStyles.Scope(session.EditScope));
             if (session.EditScope.ModId != session.FileScope.ModId)
             {

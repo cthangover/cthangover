@@ -7,13 +7,16 @@ namespace Cthangover.Mods.ScenarioStudio
     /// an answer) and <see cref="Target"/> where the line points — the label of
     /// an option or goto, the name of a label, the scene of a switch, the id of
     /// an action. <see cref="StudioMoment"/> follows those links. The flags
-    /// mirror what the runtime debugger will report: lines already executed, the
+    /// mirror what the debugger reports: lines already executed, the
     /// line the dialog stopped on, breakpoints, lines added but not yet applied
     /// and a parse error message.
     /// </summary>
     public sealed class StudioCodeLine
     {
+        /// <summary>1-based line number in the scenario text (header included), as in <c>SourceLine</c> of actions.</summary>
         public int Number { get; set; }
+        /// <summary>Number of this line in the text the running dialog was built from; 0 for a line added in the studio.</summary>
+        public int SourceLine { get; set; }
         public string Text { get; set; }
         public StudioLineKind Kind { get; set; }
         public StudioText Say { get; set; }

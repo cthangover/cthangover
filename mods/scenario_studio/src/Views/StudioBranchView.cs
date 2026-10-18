@@ -8,14 +8,15 @@ namespace Cthangover.Mods.ScenarioStudio
     /// <summary>
     /// One answer of the current question for the novice (<c>.ct-branch</c>):
     /// the answer text and, under it, where it leads — a scene, an action, the
-    /// end of the scenario — with the label hop already followed. A broken
-    /// answer says so in words and offers "Choose where" instead of "Edit".
+    /// end of the scenario — with the label hop already followed. Every answer
+    /// can be redirected ("Choose where"); a broken one says so in words and
+    /// offers only that, as the gold action.
     /// </summary>
     public partial class StudioBranchView : PanelContainer
     {
         public bool IsBroken { get; }
 
-        public StudioBranchView(StudioBranch branch, Action<string> picked)
+        public StudioBranchView(StudioBranch branch, Action<StudioActionButton> edit, Action<StudioActionButton> chooseTarget)
         {
             IsBroken = branch.Kind == StudioOutcomeKind.Broken;
             var isNew = branch.Line.IsNew;
@@ -36,11 +37,19 @@ namespace Cthangover.Mods.ScenarioStudio
             body.AddChild(text);
             body.AddChild(BuildOutcome(branch));
 
-            var action = StudioPrototypeButton.Create(IsBroken ? "studio/choose_target" : "studio/edit", picked);
+            var actions = UiKit.Column(UiTokens.Space1);
+            actions.SizeFlagsVertical = SizeFlags.ShrinkCenter;
+            row.AddChild(actions);
+
+            var target = StudioActionButton.Create("studio/choose_target", chooseTarget, primary: IsBroken);
+            target.Line = branch.Line;
+            actions.AddChild(target);
             if (IsBroken)
-                StudioStyles.SmallButton(action, action.Text, primary: true);
-            action.SizeFlagsVertical = SizeFlags.ShrinkCenter;
-            row.AddChild(action);
+                return;
+
+            var editText = StudioActionButton.Create("studio/edit", edit);
+            editText.Line = branch.Line;
+            actions.AddChild(editText);
         }
 
         private static Control BuildOutcome(StudioBranch branch)
