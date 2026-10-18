@@ -273,6 +273,17 @@
       "timeoutSeconds": 180
     },
     {
+      "name": "studio_preview",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "windowed": true,
+      "args": [
+        "--",
+        "--scene=home_kitchen",
+        "--itest=studio_preview"
+      ],
+      "timeoutSeconds": 180
+    },
+    {
       "name": "tools_hub",
       "scene": "res://scenes/menu/launcher.tscn",
       "windowed": true,
