@@ -29,6 +29,13 @@ namespace Cthangover.Core.Scenes
         public string ScenarioPath { get; set; }
 
         /// <summary>
+        /// Mod (or content overlay) that owns <see cref="ScenarioPath"/>. The
+        /// path is mod-relative, so it is only unambiguous together with the
+        /// owner: two mods may ship the same <c>scenarios/…</c> path.
+        /// </summary>
+        public string ModId { get; set; }
+
+        /// <summary>
         /// Execution priority; lower values execute earlier. Ties broken by
         /// <see cref="Id"/> ordering.
         /// </summary>

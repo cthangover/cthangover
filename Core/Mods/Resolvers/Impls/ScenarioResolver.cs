@@ -17,6 +17,12 @@ namespace Cthangover.Core.Mods.Resolvers
     /// definitions by their target scene name. Resolution returns the
     /// script text for a given scenario ID, with <c>${include}</c>
     /// directives already expanded.
+    ///
+    /// Overlays (<see cref="ModOverlays"/>) are read before the mods: an overlay
+    /// scenario overrides every mod scenario with the same name, in whatever
+    /// scene the mod scenario was, because names are the scenario identity
+    /// (completion history, <c>after</c> links). That is how an edit layer
+    /// changes a scenario of a read-only zip mod.
     /// </summary>
     public class ScenarioResolver : ModAssetResolver
     {
@@ -41,10 +47,20 @@ namespace Cthangover.Core.Mods.Resolvers
 
             var result = new Dictionary<string, List<ScenarioDefinition>>();
 
+            foreach (var overlay in ModOverlays.All)
+                CollectScenarioDefsRecursive(overlay.Value, overlay.Key, "scenarios", result, null);
+
+            var overridden = new HashSet<string>();
+            foreach (var list in result.Values)
+            {
+                foreach (var def in list)
+                    overridden.Add(def.Name);
+            }
+
             foreach (var modId in Context.GetOrderedModIds())
             {
                 var provider = Context.Mods[modId].FileProvider;
-                CollectScenarioDefsRecursive(provider, modId, "scenarios", result);
+                CollectScenarioDefsRecursive(provider, modId, "scenarios", result, overridden);
             }
 
             _defCache = result;
@@ -70,7 +86,7 @@ namespace Cthangover.Core.Mods.Resolvers
                 {
                     if (def.Name == scenarioId)
                     {
-                        var text = Context.ReadResolvedText(def.ModId, def.FilePath);
+                        var text = ReadText(def.ModId, def.FilePath);
                         if (text == null)
                         {
                             GameLogger.Log("MODS", $"ResolveScenario: '{scenarioId}' from mod '{def.ModId}' could not be read", LogLevel.Error);
@@ -113,6 +129,17 @@ namespace Cthangover.Core.Mods.Resolvers
 
             GameLogger.Log("MODS", $"ResolveScenario: '{scenarioId}' not found in override provider", LogLevel.Error);
             return null;
+        }
+
+        /// <summary>
+        /// Reads a scenario file of a mod or of an overlay (by its id) with
+        /// includes expanded; null when the file is missing.
+        /// </summary>
+        public string ReadText(string modId, string path)
+        {
+            if (ModOverlays.TryGet(modId, out var overlay))
+                return Context.ReadResolvedText(modId, path, overlay);
+            return Context.ReadResolvedText(modId, path);
         }
 
         /// <inheritdoc />
@@ -162,14 +189,14 @@ namespace Cthangover.Core.Mods.Resolvers
             }
         }
 
-        private void CollectScenarioDefsRecursive(IModFileProvider provider, string modId, string dir, Dictionary<string, List<ScenarioDefinition>> result)
+        private void CollectScenarioDefsRecursive(IModFileProvider provider, string modId, string dir, Dictionary<string, List<ScenarioDefinition>> result, HashSet<string> overridden)
         {
             foreach (var entry in provider.ListFiles(dir))
             {
                 if (entry.EndsWith("/"))
                 {
                     var subDir = entry.TrimEnd('/');
-                    CollectScenarioDefsRecursive(provider, modId, subDir, result);
+                    CollectScenarioDefsRecursive(provider, modId, subDir, result, overridden);
                     continue;
                 }
 
@@ -185,6 +212,11 @@ namespace Cthangover.Core.Mods.Resolvers
                     continue;
 
                 var name = Path.GetFileNameWithoutExtension(entry.Replace('\\', '/').Split('/')[^1]);
+                if (overridden != null && overridden.Contains(name))
+                {
+                    GameLogger.Log("MODS", $"scenario '{name}' from mod '{modId}' is overridden by an overlay");
+                    continue;
+                }
 
                 var def = new ScenarioDefinition
                 {
@@ -229,5 +261,17 @@ namespace Cthangover.Core.Mods.Resolvers
         /// <summary>Resolves through an explicit provider instead of the mod's own one.</summary>
         public static string Resolve(string id, IModFileProvider provider)
             => ModManager.Instance.GetResolver<ScenarioResolver>()?.Resolve(id, provider);
+
+        /// <summary>Reads a scenario file of a mod or an overlay with includes expanded; null when missing.</summary>
+        public static string ReadText(string modId, string path)
+            => ModManager.Instance.GetResolver<ScenarioResolver>()?.ReadText(modId, path);
+
+        /// <summary>
+        /// Drops the collected definitions so edited scenario files (headers,
+        /// new or removed files, overlay changes) are seen by the next scene
+        /// composition. Running events keep the text they were built with.
+        /// </summary>
+        public static void Invalidate()
+            => ModManager.Instance.GetResolver<ScenarioResolver>()?.ClearCache();
     }
 }

@@ -85,7 +85,7 @@ namespace Cthangover.Core.Scenes
             toolBox?.UpdateSaveIconVisibility();
         }
 
-        private void FilterCompletedScenarios(List<SceneEventInfo> composedEvents)
+        private void FilterCompletedScenarios(List<SceneEventInfo> composedEvents, Dictionary<SceneEventInfo, SceneCandidateReport> reports)
         {
             var runtime = GameData.Instance?.Runtime;
             if (runtime == null)
@@ -94,8 +94,10 @@ namespace Cthangover.Core.Scenes
             var beforeCount = composedEvents.Count;
             for (var i = composedEvents.Count - 1; i >= 0; i--)
             {
-                if (IsScenarioCompleted(composedEvents[i], runtime))
-                    composedEvents.RemoveAt(i);
+                if (!IsScenarioCompleted(composedEvents[i], runtime))
+                    continue;
+                reports[composedEvents[i]].Outcome = SceneCandidateOutcome.Completed;
+                composedEvents.RemoveAt(i);
             }
 
             if (beforeCount != composedEvents.Count)
@@ -267,9 +269,20 @@ namespace Cthangover.Core.Scenes
             FreezeActivity();
             ClearCurrentEvents();
 
+            var reportList = new List<SceneCandidateReport>();
+            var shadowed = new List<SceneCandidateReport>();
             try
             {
-                var composedEvents = ComposeEvents(sceneName);
+                var composedEvents = ComposeEvents(sceneName, shadowed);
+                var reports = new Dictionary<SceneEventInfo, SceneCandidateReport>();
+                foreach (var info in composedEvents ?? new List<SceneEventInfo>())
+                {
+                    var report = NewReport(info, SceneCandidateOutcome.Queued);
+                    reports[info] = report;
+                    reportList.Add(report);
+                }
+                reportList.AddRange(shadowed);
+
                 if (composedEvents == null || composedEvents.Count == 0)
                 {
                     currentSceneName = sceneName;
@@ -291,7 +304,7 @@ namespace Cthangover.Core.Scenes
                     Root = GetTree().CurrentScene,
                 });
 
-                FilterCompletedScenarios(composedEvents);
+                FilterCompletedScenarios(composedEvents, reports);
 
                 var pendingEvents = new List<IExecutableEvent>();
                 foreach (var eventInfo in composedEvents)
@@ -300,6 +313,7 @@ namespace Cthangover.Core.Scenes
                     {
                         if (!ScenarioCondition.Evaluate(eventInfo.Condition))
                         {
+                            reports[eventInfo].Outcome = SceneCandidateOutcome.ConditionFalse;
                             GameLogger.Log("SCENE", $"SwitchScene: skipped '{eventInfo.Id}' (condition not met: {eventInfo.Condition})", LogLevel.Warning);
                             continue;
                         }
@@ -310,9 +324,14 @@ namespace Cthangover.Core.Scenes
                             pendingEvents.Add(instance);
                             GameLogger.Log("SCENE", $"SwitchScene: created event '{eventInfo.Id}'");
                         }
+                        else
+                        {
+                            reports[eventInfo].Outcome = SceneCandidateOutcome.Failed;
+                        }
                     }
                     catch (Exception ex)
                     {
+                        reports[eventInfo].Outcome = SceneCandidateOutcome.Failed;
                         GameLogger.Log("SCENE", $"SwitchScene: failed to create event '{eventInfo.Id}': {ex.Message}", LogLevel.Error);
                     }
                 }
@@ -336,10 +355,26 @@ namespace Cthangover.Core.Scenes
             finally
             {
                 UnfreezeActivity();
+                if (!IsTestPlayActive)
+                    ModEventBus.Publish(new SceneComposedEvent { SceneName = sceneName, Candidates = reportList });
             }
         }
 
-        private List<SceneEventInfo> ComposeEvents(string sceneName)
+        private static SceneCandidateReport NewReport(SceneEventInfo info, SceneCandidateOutcome outcome)
+        {
+            return new SceneCandidateReport
+            {
+                Id = info.Id,
+                ModId = info.ModId,
+                ScenarioPath = info.ScenarioPath,
+                Priority = info.Priority,
+                Condition = info.Condition,
+                IsOneRun = info.IsOneRun,
+                Outcome = outcome,
+            };
+        }
+
+        private List<SceneEventInfo> ComposeEvents(string sceneName, List<SceneCandidateReport> shadowed)
         {
             if (IsTestPlayActive && !string.IsNullOrEmpty(TestScenarioText))
             {
@@ -367,6 +402,8 @@ namespace Cthangover.Core.Scenes
             {
                 if (seenIds.Add(evt.Id))
                     allEvents.Add(evt);
+                else
+                    shadowed.Add(NewReport(evt, SceneCandidateOutcome.Shadowed));
             }
 
             // 2. Collect .scenario file events from mods
@@ -376,19 +413,22 @@ namespace Cthangover.Core.Scenes
                 foreach (var scenario in scenarios)
                 {
                     var id = scenario.Name;
-                    if (!seenIds.Add(id))
-                        continue;
-
-                    allEvents.Add(new SceneEventInfo
+                    var info = new SceneEventInfo
                     {
                         Id = id,
                         ScenarioPath = scenario.FilePath,
+                        ModId = scenario.ModId,
                         Priority = scenario.Priority,
                         After = scenario.After,
                         Condition = scenario.Condition,
                         LightUseTime = scenario.LightUseTime,
                         IsOneRun = scenario.IsOneRun,
-                    });
+                    };
+
+                    if (seenIds.Add(id))
+                        allEvents.Add(info);
+                    else
+                        shadowed.Add(NewReport(info, SceneCandidateOutcome.Shadowed));
                 }
             }
 
@@ -626,7 +666,9 @@ namespace Cthangover.Core.Scenes
 
             if (!string.IsNullOrEmpty(info.ScenarioPath))
             {
-                var scenarioText = ReadScenarioText(info.ScenarioPath);
+                var scenarioText = string.IsNullOrEmpty(info.ModId)
+                    ? ReadScenarioText(info.ScenarioPath)
+                    : ScenarioDefs.ReadText(info.ModId, info.ScenarioPath);
                 if (scenarioText == null)
                 {
                     GameLogger.Log("SCENE", $"CreateEventInstance: cannot read scenario '{info.ScenarioPath}'", LogLevel.Error);
@@ -640,7 +682,7 @@ namespace Cthangover.Core.Scenes
                     return null;
                 }
 
-                return factory.CreateFromDefinition(scenarioText, info.Id, info.Condition, info.LightUseTime, info.IsOneRun);
+                return factory.CreateFromDefinition(scenarioText, info.Id, info.Condition, info.LightUseTime, info.IsOneRun, info.ModId, info.ScenarioPath);
             }
             
             GameLogger.Log("SCENE", $"CreateEventInstance: no ClassName or ScenarioPath for '{info.Id}'");

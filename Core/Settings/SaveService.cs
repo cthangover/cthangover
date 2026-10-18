@@ -225,10 +225,46 @@ namespace Cthangover.Core.Settings
         /// </summary>
         public static void Save(string fileName, bool rememberSession)
         {
+            var pkg = BuildPackage(fileName);
+
+            EnsureSaveDir();
+
+            try
+            {
+                string json = JsonSerializer.Serialize(pkg, JsonOptionsProvider.WriteCompactOptions);
+
+                using var file = Godot.FileAccess.Open(GetSavePath(fileName), Godot.FileAccess.ModeFlags.Write);
+                if (file == null)
+                {
+                    GameLogger.Log("SAVE", $"Failed to open save file for writing: {fileName}", LogLevel.Error);
+                    return;
+                }
+                file.StoreString(json);
+
+                GameLogger.Log("SAVE", $"Saved '{fileName}' (core={pkg.CoreVersion}, mods={pkg.ModData.Count})");
+                if (rememberSession)
+                    LastSessionStore.Record(Games.ActiveGame.Id, fileName);
+            }
+            catch (Exception e)
+            {
+                GameLogger.Log("SAVE", $"Error saving file '{fileName}': {e.Message}", LogLevel.Error);
+            }
+        }
+
+        /// <summary>
+        /// Collects the complete state of the running game into a package — the
+        /// core slot, every <see cref="IModSaveable"/> slot, the game info and the
+        /// dormant slots — without touching disk. <see cref="Save"/> writes it to
+        /// a slot file; tools keep it in memory as a snapshot and bring it back
+        /// with <see cref="ApplyPackage"/> (the scenario studio rolls a scenario
+        /// back to its start this way).
+        /// </summary>
+        public static SavePackage BuildPackage(string saveId)
+        {
             var gameData = GameData.Instance;
             var pkg = new SavePackage
             {
-                SaveId      = fileName,
+                SaveId      = saveId,
                 Timestamp   = DateTime.UtcNow,
                 CoreVersion = CoreVersion,
             };
@@ -254,29 +290,7 @@ namespace Cthangover.Core.Settings
 
             pkg.Game = BuildGameInfo();
             pkg.Dormant = _dormant.Count > 0 ? new Dictionary<string, ModSlot>(_dormant) : null;
-
-            EnsureSaveDir();
-
-            try
-            {
-                string json = JsonSerializer.Serialize(pkg, JsonOptionsProvider.WriteCompactOptions);
-
-                using var file = Godot.FileAccess.Open(GetSavePath(fileName), Godot.FileAccess.ModeFlags.Write);
-                if (file == null)
-                {
-                    GameLogger.Log("SAVE", $"Failed to open save file for writing: {fileName}", LogLevel.Error);
-                    return;
-                }
-                file.StoreString(json);
-
-                GameLogger.Log("SAVE", $"Saved '{fileName}' (core={pkg.CoreVersion}, mods={pkg.ModData.Count})");
-                if (rememberSession)
-                    LastSessionStore.Record(Games.ActiveGame.Id, fileName);
-            }
-            catch (Exception e)
-            {
-                GameLogger.Log("SAVE", $"Error saving file '{fileName}': {e.Message}", LogLevel.Error);
-            }
+            return pkg;
         }
 
         /// <summary>
@@ -315,6 +329,24 @@ namespace Cthangover.Core.Settings
                 return false;
             }
 
+            if (!ApplyPackage(pkg, fileName))
+                return false;
+
+            LastSessionStore.Record(Games.ActiveGame.Id, fileName);
+            return true;
+        }
+
+        /// <summary>
+        /// Restores the game state from a package built by <see cref="BuildPackage"/>
+        /// or read from a slot file — the three phases described on <see cref="Load"/>.
+        /// Does not touch the last-session record; <paramref name="sourceName"/> is
+        /// only used in the log. The package's slots may be reused by the restore,
+        /// so a snapshot that is applied repeatedly should be kept serialized and
+        /// deserialized per apply.
+        /// </summary>
+        public static bool ApplyPackage(SavePackage pkg, string sourceName)
+        {
+            var fileName = sourceName;
             GameLogger.Log("SAVE", $"Loading '{fileName}' (core={pkg.CoreVersion}, mods={pkg.ModData?.Count ?? 0})");
 
             // ─── Phase 1: decide which slots the current composition restores ───
@@ -370,7 +402,6 @@ namespace Cthangover.Core.Settings
             _dormant = dormancy.Dormant;
             LastLoadDormancy = dormancy;
             LastLoadedSceneName = RuntimeSerializer.ReadSlotPreview(coreSlot.Metadata).CurrentSceneName;
-            LastSessionStore.Record(Games.ActiveGame.Id, fileName);
             return true;
         }
 
