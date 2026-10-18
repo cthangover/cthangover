@@ -4,9 +4,9 @@
   "name": "Developer Tools",
   "author": "ct",
   "version": "1.0.0",
-  "description": "Mod authoring toolset: the scenario graph editor, content validators and the mod manager.",
+  "description": "Mod authoring toolset: the scenario graph editor, the in-game scenario studio, content validators and the mod manager.",
   "locale": [
-    { "lang": "ru", "name": "Инструменты разработчика", "description": "Набор для авторов модов: графовый редактор сценариев, валидаторы контента и менеджер модов." }
+    { "lang": "ru", "name": "Инструменты разработчика", "description": "Набор для авторов модов: графовый редактор сценариев, студия сценариев в игре, валидаторы контента и менеджер модов." }
   ],
   "mechanics": [
     {
@@ -17,6 +17,15 @@
         { "lang": "ru", "name": "Редактор сценариев", "description": "Графовые инструменты для создания сценариев и сцен." }
       ],
       "mods": ["editor_tools>=1"]
+    },
+    {
+      "id": "studio",
+      "name": "Scenario Studio",
+      "description": "In-game scenario debugger and live editor: the Studio button on the game's toolbar opens a dock with pause, step, restarts, the current line and edits.",
+      "locale": [
+        { "lang": "ru", "name": "Студия сценариев", "description": "Отладчик и живой редактор сценариев в игре: кнопка «Студия» на панели игры открывает док с паузой, шагом, перезапуском, текущей строкой и правками." }
+      ],
+      "mods": ["scenario_studio>=0.1"]
     },
     {
       "id": "validation",

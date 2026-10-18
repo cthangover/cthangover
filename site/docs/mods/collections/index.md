@@ -489,3 +489,8 @@ picker.
   battle core, Live2D and tools, each as its own mechanic.
 - `collections/novel_editor/` — a "game" whose entry scene
   is the editor hub instead of a story scene.
+- `collections/dev_tools/` — the developer toolset to add to any game: the
+  editors (`editor_tools`), the in-game scenario studio (`scenario_studio`,
+  opened by the **Studio** button on the game's toolbar), validators and the
+  mod manager. Add it to a game in the collection editor and enter the game
+  again — the mod set switches without a restart.
