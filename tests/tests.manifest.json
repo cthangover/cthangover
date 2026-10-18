@@ -79,6 +79,17 @@
       "timeoutSeconds": 180
     },
     {
+      "name": "collection_edit",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--game=novel_template",
+        "--new",
+        "--itest=collection_edit"
+      ],
+      "timeoutSeconds": 300
+    },
+    {
       "name": "hot_reload",
       "scene": "res://scenes/menu/launcher.tscn",
       "args": [

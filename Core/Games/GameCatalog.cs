@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using Cthangover.Core.Mods;
 using Cthangover.Core.Settings;
 using Cthangover.Core.Utils;
@@ -62,6 +63,32 @@ namespace Cthangover.Core.Games
                 Id = id,
                 Version = discovered.TryGetValue(id, out var info) ? info.Version : null,
             }).ToList();
+        }
+
+        /// <summary>
+        /// True when the running game no longer matches its collection: the
+        /// player edited it (in the menu's collection editor) after the game was
+        /// entered, so the mod set it would boot with now differs from the loaded
+        /// one, or its definition (entry scene, settings) changed. The menus then
+        /// enter the game through an in-process mod-set switch instead of
+        /// restarting it on the stale set. False without an active game.
+        /// </summary>
+        public static bool IsActiveOutdated()
+        {
+            if (!ActiveGame.IsActive)
+                return false;
+
+            var collections = LoadCollections();
+            if (!collections.TryGetValue(ActiveGame.Id, out var current))
+                return true;
+
+            var extras = new List<string>(GameLaunchArgs.Current.WithMods);
+            extras.AddRange(ModTestSuites.ActiveIds);
+            var set = GameModSet.Compute(ActiveGame.Id, collections, ModRegistry.Instance.AllDiscoveredMods, DisabledModsStore.Load(), extras);
+            if (set == null || !set.ModIds.SetEquals(ActiveGame.ModIds))
+                return true;
+
+            return JsonSerializer.Serialize(current) != JsonSerializer.Serialize(ActiveGame.Collection);
         }
 
         /// <summary>The collection's cover from its package, or null.</summary>
