@@ -158,7 +158,7 @@ namespace Cthangover.Core.Mods
             if (!GameEnvironment.IsRuntime)
                 return;
 
-            var configPath = ProjectSettings.GlobalizePath("res://config/mod_config.json");
+            var configPath = GamePaths.Globalize("res://config/mod_config.json");
             if (!File.Exists(configPath))
             {
                 GameLogger.Log("CONFIG", "mod_config.json not found, using defaults", LogLevel.Error);

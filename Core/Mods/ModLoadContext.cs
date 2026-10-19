@@ -20,9 +20,10 @@ namespace Cthangover.Core.Mods
     /// 2. assemblies of the mod's dependency mods — resolved through the
     ///    dependency's own context so inter-mod types are reference-equal
     ///    across both sides,
-    /// 3. <c>null</c> — falls through to the default context, which holds the
-    ///    kernel and GodotSharp (this is what makes "mods can use core types"
-    ///    work without any special casing).
+    /// 3. the context the kernel was loaded into (Godot's plugin context in an
+    ///    export), then the default context — the kernel and GodotSharp are
+    ///    always the very instances the game runs on (this is what makes "mods
+    ///    can use core types" work without any special casing).
     ///
     /// File-backed loading keeps the debugger story of plan-mod-testing §9.2:
     /// a portable PDB written next to the dll binds by naming convention and
@@ -37,6 +38,9 @@ namespace Cthangover.Core.Mods
     /// </summary>
     public sealed class ModLoadContext : AssemblyLoadContext
     {
+        private static readonly AssemblyLoadContext KernelContext =
+            GetLoadContext(typeof(ModLoadContext).Assembly) ?? Default;
+
         private readonly Dictionary<string, string> assemblyPaths = new(StringComparer.OrdinalIgnoreCase);
         private readonly Func<string, ModLoadContext> dependencyResolver;
         private readonly string modId;
@@ -115,7 +119,24 @@ namespace Cthangover.Core.Mods
             if (dependency != null && dependency.HasAssembly(name))
                 return dependency.LoadStaged(name);
 
-            // 3. Default context: kernel, GodotSharp, framework.
+            // 3. Kernel, GodotSharp, framework — through the context the kernel
+            //    itself lives in. In an export Godot loads Cthangover.dll into
+            //    its plugin context, while the default context of the
+            //    self-contained app finds the same file on disk and would load
+            //    a second copy: mod types then implement a foreign
+            //    IModInitializer and no initializer, setting or script binds.
+            //    In the editor run both are the same instance anyway.
+            if (KernelContext != Default)
+            {
+                try
+                {
+                    return KernelContext.LoadFromAssemblyName(assemblyName);
+                }
+                catch (Exception)
+                {
+                    // Not the kernel's: the default context decides below.
+                }
+            }
             return null;
         }
 

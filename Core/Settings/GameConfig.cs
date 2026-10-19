@@ -81,7 +81,7 @@ namespace Cthangover.Core.Settings
         /// </summary>
         private void Load()
         {
-            var configPath = GameEnvironment.IsRuntime ? ProjectSettings.GlobalizePath("res://config/game_config.json") : "config/game_config.json";
+            var configPath = GameEnvironment.IsRuntime ? GamePaths.Globalize("res://config/game_config.json") : "config/game_config.json";
             if (!File.Exists(configPath))
                 return;
 

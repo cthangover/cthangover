@@ -8,7 +8,7 @@ namespace Cthangover.Mods.ScenarioStudio
     /// an option or goto, the name of a label, the scene of a switch, the id of
     /// an action. <see cref="StudioMoment"/> follows those links. The flags
     /// mirror what the debugger reports: lines already executed, the
-    /// line the dialog stopped on, breakpoints, lines added but not yet applied
+    /// line the dialog stopped on, the lines it may be moved to, breakpoints, lines added but not yet applied
     /// and a parse error message.
     /// </summary>
     public sealed class StudioCodeLine
@@ -24,6 +24,8 @@ namespace Cthangover.Mods.ScenarioStudio
         public bool IsDone { get; set; }
         public bool IsCurrent { get; set; }
         public bool HasBreakpoint { get; set; }
+        /// <summary>The running dialog has an action of this line, so the ▶ marker may be dragged here.</summary>
+        public bool CanRunNext { get; set; }
         public bool IsNew { get; set; }
         public StudioText Error { get; set; }
     }

@@ -22,6 +22,9 @@ namespace Cthangover.Mods.ScenarioStudio
         /// <summary>Width of the dock; the scene offsets use the same value plus the 8px edge gap.</summary>
         public const int DockWidth = 480;
 
+        /// <summary>Smallest size the dock can be dragged to; its content may still demand more.</summary>
+        public static readonly Vector2 DockMinSize = new(360, 320);
+
         public static Font Mono => ToolWindow.GetMonospaceFont();
 
         /// <summary>Dock surface: window surface, line border, large radius and the window shadow, without any backdrop.</summary>
@@ -242,6 +245,17 @@ namespace Cthangover.Mods.ScenarioStudio
             }
 
             var style = new StyleBoxFlat { BgColor = background, BorderColor = bar, BorderWidthLeft = 2 };
+            Pad(style, 0, 1);
+            style.ContentMarginRight = UiTokens.Space4;
+            return style;
+        }
+
+        /// <summary>Row the dragged ▶ marker would land on: the current-line tint with a full accent outline.</summary>
+        public static StyleBoxFlat CodeLineDropTarget()
+        {
+            var style = new StyleBoxFlat { BgColor = UiTokens.AccentSoft, BorderColor = UiTokens.AccentBright };
+            style.SetBorderWidthAll(1);
+            style.BorderWidthLeft = 2;
             Pad(style, 0, 1);
             style.ContentMarginRight = UiTokens.Space4;
             return style;

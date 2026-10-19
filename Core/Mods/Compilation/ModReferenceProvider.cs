@@ -62,7 +62,7 @@ namespace Cthangover.Core.Mods.Compilation
 
             try
             {
-                _resRoot = ProjectSettings.GlobalizePath("res://");
+                _resRoot = GamePaths.Globalize("res://");
                 foreach (var config in new[] { "Debug", "Release" })
                 {
                     var buildDir = Path.Combine(_resRoot, ".godot", "mono", "temp", "bin", config);

@@ -1,6 +1,7 @@
 namespace Cthangover.Mods.ScenarioStudio
 {
     using System;
+    using System.Collections.Generic;
     using Cthangover.Core.UI.Theming;
     using Cthangover.Mods.Interface.Theming;
     using Godot;
@@ -13,6 +14,11 @@ namespace Cthangover.Mods.ScenarioStudio
     /// nobody changes someone else's content unknowingly; the novice mode
     /// (<see cref="StudioNovicePage"/>) shows the same plate.
     /// <para/>
+    /// Dragging the ▶ marker of the current line highlights the line under the
+    /// mouse when the running dialog can continue from it
+    /// (<see cref="StudioCodeLine.CanRunNext"/>) and on release asks for it
+    /// with <see cref="NextLineRequested"/>; a drop anywhere else does nothing.
+    /// <para/>
     /// One instance lives as long as the dock; <see cref="Build"/> refills the
     /// body and wires the controls to this instance's handlers.
     /// </summary>
@@ -24,8 +30,21 @@ namespace Cthangover.Mods.ScenarioStudio
         /// <summary>One of the insert buttons was pressed.</summary>
         public event Action<StudioLineKind> InsertRequested;
 
+        /// <summary>The ▶ marker was dropped on a line the dialog can continue from.</summary>
+        public event Action<StudioCodeLine> NextLineRequested;
+
+        private readonly List<StudioCodeLineView> _views = new();
+        private StudioCodeLineView _dropTarget;
+        private bool _dragging;
+
+        /// <summary>True while the ▶ marker is dragged: a redraw would drop the drag.</summary>
+        public bool IsDragging => _dragging;
+
         public void Build(VBoxContainer content, StudioSession session)
         {
+            _views.Clear();
+            _dropTarget = null;
+            _dragging = false;
             if (!session.HasScenario)
             {
                 content.AddChild(UiKit.EmptyState(TranslationServer.Translate("studio/no_scenario"), UiTokens.FontBody));
@@ -42,7 +61,10 @@ namespace Cthangover.Mods.ScenarioStudio
             {
                 var view = new StudioCodeLineView(line);
                 view.BreakpointToggled += OnBreakpointToggled;
+                view.MarkerDragged += OnMarkerDragged;
+                view.MarkerDropped += OnMarkerDropped;
                 lines.AddChild(view);
+                _views.Add(view);
             }
 
             var at = session.InsertionTextIndexAfterCurrent();
@@ -133,6 +155,38 @@ namespace Cthangover.Mods.ScenarioStudio
         }
 
         private void OnBreakpointToggled(StudioCodeLine line) => BreakpointToggled?.Invoke(line);
+
+        private void OnMarkerDragged(Vector2 at)
+        {
+            _dragging = true;
+            var target = DropTargetAt(at);
+            if (target == _dropTarget)
+                return;
+            _dropTarget?.ShowDropTarget(false);
+            _dropTarget = target;
+            _dropTarget?.ShowDropTarget(true);
+        }
+
+        private void OnMarkerDropped(Vector2 at)
+        {
+            _dragging = false;
+            _dropTarget?.ShowDropTarget(false);
+            _dropTarget = null;
+            var target = DropTargetAt(at);
+            if (target != null)
+                NextLineRequested?.Invoke(target.Line);
+        }
+
+        /// <summary>The row under <paramref name="at"/> (canvas coordinates) the dialog can continue from, or null.</summary>
+        private StudioCodeLineView DropTargetAt(Vector2 at)
+        {
+            foreach (var view in _views)
+            {
+                if (view.Line.CanRunNext && view.GetGlobalRect().HasPoint(at))
+                    return view;
+            }
+            return null;
+        }
 
         private void OnAddLine() => InsertRequested?.Invoke(StudioLineKind.Line);
 

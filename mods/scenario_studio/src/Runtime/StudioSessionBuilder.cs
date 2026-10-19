@@ -67,6 +67,7 @@ namespace Cthangover.Mods.ScenarioStudio
                 line.HasBreakpoint = line.SourceLine > 0 && live.Debugger.HasBreakpoint(evt.ID, line.SourceLine);
                 line.IsCurrent = current > 0 && line.SourceLine == current;
                 line.IsDone = running && !line.IsCurrent && line.SourceLine > 0 && live.Debugger.IsExecuted(line.SourceLine);
+                line.CanRunNext = running && !line.IsCurrent && live.CanRunFrom(line.SourceLine);
                 if (line.Kind == StudioLineKind.Label && current > 0 && line.SourceLine > 0 && line.SourceLine < current)
                     label = ":" + line.Target;
             }

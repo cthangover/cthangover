@@ -43,7 +43,7 @@ namespace Cthangover.Core.Mods.Discovery
         {
             if (GameEnvironment.IsRuntime)
             {
-                var path = ProjectSettings.GlobalizePath("res://mods/");
+                var path = GamePaths.Globalize("res://mods/");
                 yield return new ModSourceRoot { Url = path, Priority = 1 };
             }
             else

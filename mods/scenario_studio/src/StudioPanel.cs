@@ -12,7 +12,9 @@ namespace Cthangover.Mods.ScenarioStudio
     /// game (manifest <c>ui</c> entry <c>studio</c>, own toolbar icon
     /// <c>ui/icons/studio.png</c>). The root control spans the screen but
     /// ignores the mouse, so the game on the left keeps its input; only the
-    /// <c>Dock</c> panel catches clicks. The skeleton — header with the mode
+    /// <c>Dock</c> panel catches clicks. The dock sits in a <c>Frame</c> whose
+    /// header and edge/corner grips move and resize it (<see cref="StudioDockDrag"/>);
+    /// the geometry lives as long as the dock. The skeleton — header with the mode
     /// switch, transport row, "where we are", tab row, scrolling body and
     /// footer — lives in <c>scenes/studio_panel.tscn</c>; this behaviour dresses
     /// it with the studio styles and refills the body for the active tab and
@@ -26,7 +28,7 @@ namespace Cthangover.Mods.ScenarioStudio
     /// </summary>
     public partial class StudioPanel : Widget
     {
-        private const string Root = "Dock/Column/";
+        private const string Root = "Frame/Dock/Column/";
         private const float PollSeconds = 0.4f;
         private const long TargetEnd = 0;
         private const long TargetLabelBase = 1000;
@@ -36,6 +38,7 @@ namespace Cthangover.Mods.ScenarioStudio
 
         private readonly StudioNowPage _nowPage = new();
         private readonly StudioNovicePage _novicePage = new();
+        private readonly List<StudioDockDrag> _drags = new();
         private StudioMode _mode = StudioMode.Author;
         private StudioTab _tab = StudioTab.Now;
         private StudioSession _session = new();
@@ -79,8 +82,18 @@ namespace Cthangover.Mods.ScenarioStudio
         {
             MouseFilter = MouseFilterEnum.Ignore;
 
-            var dock = GetNode<PanelContainer>("Dock");
+            var frame = GetNode<Control>("Frame");
+            var dock = GetNode<PanelContainer>("Frame/Dock");
             dock.AddThemeStyleboxOverride("panel", StudioStyles.Dock());
+            _drags.Add(new StudioDockDrag(frame, dock, GetNode<Control>(Root + "Header"), StudioDockEdge.Move));
+            _drags.Add(new StudioDockDrag(frame, dock, GetNode<Control>("Frame/LeftGrip"), StudioDockEdge.Left));
+            _drags.Add(new StudioDockDrag(frame, dock, GetNode<Control>("Frame/RightGrip"), StudioDockEdge.Right));
+            _drags.Add(new StudioDockDrag(frame, dock, GetNode<Control>("Frame/TopGrip"), StudioDockEdge.Top));
+            _drags.Add(new StudioDockDrag(frame, dock, GetNode<Control>("Frame/BottomGrip"), StudioDockEdge.Bottom));
+            _drags.Add(new StudioDockDrag(frame, dock, GetNode<Control>("Frame/TopLeftGrip"), StudioDockEdge.Top | StudioDockEdge.Left));
+            _drags.Add(new StudioDockDrag(frame, dock, GetNode<Control>("Frame/TopRightGrip"), StudioDockEdge.Top | StudioDockEdge.Right));
+            _drags.Add(new StudioDockDrag(frame, dock, GetNode<Control>("Frame/BottomLeftGrip"), StudioDockEdge.Bottom | StudioDockEdge.Left));
+            _drags.Add(new StudioDockDrag(frame, dock, GetNode<Control>("Frame/BottomRightGrip"), StudioDockEdge.Bottom | StudioDockEdge.Right));
             foreach (var rule in new[] { "RuleHeader", "RuleTransport", "RuleContext", "RuleTabs", "RuleFooter" })
                 GetNode<ColorRect>(Root + rule).Color = UiTokens.Line;
 
@@ -138,6 +151,7 @@ namespace Cthangover.Mods.ScenarioStudio
             _content = GetNode<VBoxContainer>(Root + "Body/Scroll/Content");
             _nowPage.BreakpointToggled += OnBreakpointToggled;
             _nowPage.InsertRequested += OnInsertRequested;
+            _nowPage.NextLineRequested += OnNextLineRequested;
             _novicePage.LineRequested += OnNoviceLineRequested;
             _novicePage.OptionRequested += OnNoviceOptionRequested;
             _novicePage.EditRequested += OnEditLineRequested;
@@ -192,10 +206,10 @@ namespace Cthangover.Mods.ScenarioStudio
             Refresh();
         }
 
-        /// <summary>True while the user types or answers a prompt: redrawing would drop the edit.</summary>
+        /// <summary>True while the user types, answers a prompt or drags the ▶ marker: redrawing would drop it.</summary>
         private bool IsBusy()
         {
-            if (_editor != null || (_prompt != null && IsInstanceValid(_prompt)))
+            if (_editor != null || _nowPage.IsDragging || (_prompt != null && IsInstanceValid(_prompt)))
                 return true;
             var focus = GetViewport()?.GuiGetFocusOwner();
             return focus is LineEdit or TextEdit && _content.IsAncestorOf(focus);
@@ -435,6 +449,14 @@ namespace Cthangover.Mods.ScenarioStudio
             if (line.SourceLine > 0)
                 Live.Debugger.ToggleBreakpoint(_session.ScenarioName, line.SourceLine);
             Changed();
+        }
+
+        private void OnNextLineRequested(StudioCodeLine line)
+        {
+            if (Live.SetNextLine(line.SourceLine))
+                Changed();
+            else
+                SetStatus(Tr("studio/next_line_failed"));
         }
 
         private void OnInsertRequested(StudioLineKind kind)

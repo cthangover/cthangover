@@ -287,5 +287,28 @@ namespace Engine.Tests.Scenarios
             ScenarioCondition.SetFlag("dynamicFlag", "2");
             Assert.False(ScenarioCondition.Evaluate("dynamicFlag == \"1\""));
         }
+
+        [Fact]
+        public void ClearCache_CachedCondition_EvaluatesLiveStateAgain()
+        {
+            ScenarioCondition.SetFlag("clearCacheFlag", "on");
+            Assert.True(ScenarioCondition.Evaluate("clearCacheFlag == \"on\" && true"));
+
+            ScenarioCondition.ClearCache();
+            Assert.True(ScenarioCondition.Evaluate("clearCacheFlag == \"on\" && true"));
+
+            ScenarioCondition.SetFlag("clearCacheFlag", "off");
+            ScenarioCondition.ClearCache();
+            Assert.False(ScenarioCondition.Evaluate("clearCacheFlag == \"on\" && true"));
+        }
+
+        [Fact]
+        public void ClearCache_EmptyCache_DoesNotBreakEvaluation()
+        {
+            ScenarioCondition.ClearCache();
+            ScenarioCondition.ClearCache();
+            Assert.True(ScenarioCondition.Evaluate("true"));
+            Assert.False(ScenarioCondition.Evaluate("invalid condition ("));
+        }
     }
 }
