@@ -309,6 +309,26 @@ namespace Cthangover.Mods.Dialog
         }
 
         /// <summary>
+        /// Moves a running dialog to another action and holds it there
+        /// (<see cref="DialogRuntime.MoveTo"/>): a pending wait timer and an open
+        /// answer box are dropped, since they belong to the action left behind;
+        /// the shown text stays until the new action replaces it.
+        /// </summary>
+        public bool MoveTo(int queueIndex)
+        {
+            if (!IsRunning)
+                return false;
+
+            ClearWaitTimer();
+            if (answerBox != null)
+            {
+                answerBox.Hide();
+                answerBox = null;
+            }
+            return Runtime.MoveTo(queueIndex);
+        }
+
+        /// <summary>
         /// Stops the running dialog without finishing it (<see cref="DialogRuntime.Abort"/>)
         /// and frees the box for another queue: closes the answer box, hides
         /// and releases the locker. The scenario does not count as completed.

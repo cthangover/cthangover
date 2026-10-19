@@ -188,6 +188,31 @@ namespace Cthangover.Mods.Dialog
         }
 
         /// <summary>
+        /// Debugger "set next statement": makes the action at
+        /// <paramref name="queueIndex"/> the next one to run and holds the
+        /// runtime before it (<see cref="IsHeld"/>), so nothing runs until
+        /// <see cref="DialogBox.Resume"/>. The current action is destructed like
+        /// on a goto; actions between the old and the new position neither run
+        /// nor roll back — variables and game state stay as they are. Jumping
+        /// back to an action that already ran re-runs it, exactly like a
+        /// looping goto does. Returns false for an index outside the queue.
+        /// </summary>
+        public bool MoveTo(int queueIndex)
+        {
+            if (Lists.IsEmpty(dialogQueue) || queueIndex < 0 || queueIndex >= dialogQueue.Count)
+                return false;
+
+            var current = index >= 0 && index < dialogQueue.Count ? dialogQueue[index] : null;
+            if (current != null && current.IsConstructed && current.DestructType == DestructType.OnEndAction)
+                current.Destruct();
+
+            index = queueIndex;
+            isLastGoTo = false;
+            IsHeld = true;
+            return true;
+        }
+
+        /// <summary>
         /// Main execution loop. Iterates through actions, calling <see cref="IActionCommand.Run"/> on each and advancing
         /// automatically for <see cref="WaitType.NoWait"/> actions. Stops the loop on any wait-type action (WaitClick, WaitSelect,
         /// WaitTime, WaitEvent) so the runtime yields control until the condition is satisfied. Protected against infinite loops
