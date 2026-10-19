@@ -29,11 +29,36 @@
         <None Include="sdk\**\*.cs" />
         <Compile Remove="mods\**\*" />
         <None Include="mods\**\*" />
+        <!-- The release packaging copies the whole mods/ tree next to the
+             exported binaries; those loose copies must never re-enter the
+             core compilation through the default source glob. -->
+        <Compile Remove="releases\**\*" />
+        <None Include="releases\**\*" />
     </ItemGroup>
 
     <ItemGroup>
         <Folder Include="Core\Scenes\Nodes" />
         <Folder Include="mods\cooking\src\items" />
     </ItemGroup>
+
+    <!-- The runtime mod compiler hosts the Godot source generators
+         (GodotGeneratorHost resolves them next to the game binary first),
+         so the analyzer dll from the NuGet cache ships with the build and
+         the exported game does not depend on the developer's NuGet cache. -->
+    <Target Name="ShipGodotSourceGenerators" AfterTargets="Build">
+        <ItemGroup>
+            <GodotSourceGeneratorDll Include="$(NugetPackageRoot)godot.sourcegenerators\*\analyzers\dotnet\cs\Godot.SourceGenerators.dll" />
+        </ItemGroup>
+        <Copy SourceFiles="@(GodotSourceGeneratorDll)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+    </Target>
+
+    <!-- The export runs `dotnet publish`, whose output becomes the
+         data_Cthangover_<platform> folder of the release. -->
+    <Target Name="PublishGodotSourceGenerators" AfterTargets="Publish">
+        <ItemGroup>
+            <GodotSourceGeneratorDll Include="$(NugetPackageRoot)godot.sourcegenerators\*\analyzers\dotnet\cs\Godot.SourceGenerators.dll" />
+        </ItemGroup>
+        <Copy SourceFiles="@(GodotSourceGeneratorDll)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" />
+    </Target>
 
 </Project>

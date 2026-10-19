@@ -18,6 +18,7 @@ namespace Cthangover.Mods.ScenarioStudio.Tests.Live
     /// <item>waits for the kitchen scenario's question, opens the dock with the
     ///   <c>studio</c> UI toggle (the toolbar button) and checks the current
     ///   line is the running action's line;</item>
+    /// <item>widens the dock with its left grip and moves it by the header;</item>
     /// <item>pause and continue;</item>
     /// <item>novice mode: the question and its answers with outcomes; adds an
     ///   answer (broken), redirects it to a scene through "Choose where",
@@ -25,7 +26,9 @@ namespace Cthangover.Mods.ScenarioStudio.Tests.Live
     /// <item>applies: the scenario restarts with rollback and first shows the
     ///   inserted line, the edit is in the test layer and the cooking mod's
     ///   file is untouched; the question then has the new answer;</item>
-    /// <item>breakpoint on the question, restart, hold before it, continue;</item>
+    /// <item>breakpoint on the question, restart, hold before it; drags the
+    ///   ▶ marker back onto the inserted line, continues from there and is held
+    ///   by the breakpoint again, continue;</item>
     /// <item>the Scene, State (a checkpoint is saved there), Log and Map tabs;</item>
     /// <item>creates a scene in the layer, goes there and sees its scenario run
     ///   from the layer, exports the layer as a mod, returns to the checkpoint
@@ -38,8 +41,10 @@ namespace Cthangover.Mods.ScenarioStudio.Tests.Live
     {
         private const string ResultName = "studio_live";
         private const string EntryId = "studio";
-        private const string Root = "Dock/Column/";
+        private const string Root = "Frame/Dock/Column/";
         private const float TickSeconds = 0.5f;
+        private static readonly Vector2 Widen = new(-100, 0);
+        private static readonly Vector2 Shift = new(-60, -40);
         private const float TimeoutSeconds = 150f;
         private const string NewScene = "studio_test_yard";
         private const string ExportId = "studio_test_export";
@@ -52,6 +57,8 @@ namespace Cthangover.Mods.ScenarioStudio.Tests.Live
         private string _originalText;
         private int _questionLine;
         private int _answers;
+        private int _movedLine;
+        private Rect2 _frameRect;
         private int _step = -1;
         private int _passed;
         private int _failed;
@@ -115,16 +122,27 @@ namespace Cthangover.Mods.ScenarioStudio.Tests.Live
                     Check(IsCurrentLine(session, _questionLine), "current line is the question's line");
                     Check(session.FileScope?.ModId == _sourceMod, $"file scope is the scenario's mod ({session.FileScope?.ModId})");
                     Check(session.EditScope?.Kind == StudioScopeKind.Layer, "edits go to the studio layer");
-                    Check(Mathf.Abs(_panel.GetNode<Control>("Dock").Size.X - StudioStyles.DockWidth) < 1, "dock keeps its width");
+                    Check(Mathf.Abs(_panel.GetNode<Control>("Frame/Dock").Size.X - StudioStyles.DockWidth) < 1, "dock keeps its width");
                     Shot("author");
+                    _frameRect = FrameRect();
+                    Drag("Frame/LeftGrip", Widen);
                     Press(Root + "Transport/Row/PauseButton");
                     break;
                 case 2:
+                    var widened = FrameRect();
+                    Check(Mathf.Abs(widened.Size.X - (_frameRect.Size.X - Widen.X)) < 1 && Mathf.Abs(widened.End.X - _frameRect.End.X) < 1,
+                        $"left grip widens the dock to the left ({_frameRect} → {widened})");
+                    Check(Mathf.Abs(_panel.GetNode<Control>("Frame/Dock").Size.X - widened.Size.X) < 1, "the panel fills the widened frame");
+                    _frameRect = widened;
+                    Drag(Root + "Header", Shift);
                     Check(Live.Debugger.IsPaused && _panel.Session.RunState == StudioRunState.Paused, "pause is on");
                     Press(Root + "Transport/Row/ContinueButton");
                     Press(Root + "Header/Row/ModeSwitch/Items/NoviceButton");
                     break;
                 case 3:
+                    var moved = FrameRect();
+                    Check(moved.Position.DistanceTo(_frameRect.Position + Shift) < 1 && moved.Size.DistanceTo(_frameRect.Size) < 1,
+                        $"header drag moves the dock ({_frameRect} → {moved})");
                     Check(!Live.Debugger.IsPaused, "continue turns pause off");
                     Check(_panel.Mode == StudioMode.Novice, "novice mode selected");
                     Check(CountOf<StudioSayView>() == 1, "novice: the question on screen");
@@ -178,44 +196,60 @@ namespace Cthangover.Mods.ScenarioStudio.Tests.Live
                     Check(Box.Runtime.IsHeld && Box.AnswerVariantCount == 0, "held at the breakpoint before the question runs");
                     Check(_panel.Session.RunState == StudioRunState.Held, "dock shows the hold");
                     Shot("breakpoint");
-                    Press(Root + "Transport/Row/ContinueButton");
+                    DragMarkerBack();
                     break;
                 case 14:
+                    Check(Box.Runtime.IsHeld && Live.CurrentLine() == _movedLine && Box.AnswerVariantCount == 0,
+                        $"marker drag makes line {_movedLine} the next one (now {Live.CurrentLine()})");
+                    Check(IsCurrentLine(_panel.Session, _movedLine), "dock shows the moved line as current");
+                    Press(Root + "Transport/Row/ContinueButton");
+                    break;
+                case 15:
+                    var rerun = CurrentAction() as ActionText;
+                    Check(!Box.Runtime.IsHeld && rerun != null && rerun.Text == TranslationServer.Translate("studio/new_line_text"),
+                        $"continue runs from the moved line ('{rerun?.Text}')");
+                    Box.NextAction();
+                    break;
+                case 16:
+                    Check(Box.Runtime.IsHeld && Live.CurrentLine() == _questionLine, "the breakpoint holds the question again");
+                    Press(Root + "Transport/Row/ContinueButton");
+                    break;
+                case 17:
                     Check(!Box.Runtime.IsHeld && Box.AnswerVariantCount == _answers + 1, "continue runs the question");
                     Press(Root + "Tabs/Row/SceneTab");
                     break;
-                case 15:
+                case 18:
                     Check(_panel.Tab == StudioTab.Scene && IsRunningCandidate(_panel.Session, _scenario), "scene tab: the scenario is the running candidate");
                     Shot("scene");
                     Press(Root + "Tabs/Row/StateTab");
                     break;
-                case 16:
+                case 19:
                     Check(_panel.Session.State.Count > 0 && CountOf<StudioStateRow>() == _panel.Session.State.Count, "state tab: a row per state value");
                     Shot("state");
                     MenuPick(100);
                     Check(Live.HasCheckpoint, "checkpoint remembered from the restart menu");
                     Press(Root + "Tabs/Row/LogTab");
                     break;
-                case 17:
+                case 20:
                     Check(HasEditLog(_panel.Session), "log tab: the applied edit is logged");
                     Shot("log");
                     Press(Root + "Tabs/Row/MapTab");
                     break;
-                case 18:
+                case 21:
                     Check(HasNode(_panel.Session, StudioNodeState.Here, "home_kitchen"), "map tab: you are in the kitchen");
                     Check(HasNode(_panel.Session, StudioNodeState.Next, "home_vestibule"), "map tab: the vestibule is an exit");
                     Shot("map");
                     PressText("studio/map_new_scene");
                     break;
-                case 19:
+                case 22:
                     AnswerPrompt(NewScene);
                     break;
-                case 20:
+                case 23:
                     Check(File.Exists(Path.Combine(Live.Layer.RootPath, "scenes", NewScene + ".json")), "new scene written to the layer");
                     Check(GetNodeOrNull<SceneManager>("/root/SceneManager")?.HasScene(NewScene) == true, "new scene is known to the scene manager");
                     PressPayload(NewScene);
                     break;
-                case 21:
+                case 24:
                     if (SceneManager.GetCurrentSceneName() != NewScene || Box?.Locker is not ScenarioEvent)
                     {
                         _step--;
@@ -225,17 +259,17 @@ namespace Cthangover.Mods.ScenarioStudio.Tests.Live
                     Shot("new_scene");
                     PressText("studio/map_export");
                     break;
-                case 22:
+                case 25:
                     AnswerPrompt(ExportId);
                     break;
-                case 23:
+                case 26:
                     var exported = Path.Combine(ProjectSettings.GlobalizePath("user://mods/"), ExportId);
                     Check(File.Exists(Path.Combine(exported, "manifest.json")) && File.Exists(Path.Combine(exported, "scenes", NewScene + ".json")), "layer exported as a mod with a manifest");
                     if (Directory.Exists(exported))
                         Directory.Delete(exported, true);
                     MenuPick(101);
                     break;
-                case 24:
+                case 27:
                     if (SceneManager.GetCurrentSceneName() != "home_kitchen")
                     {
                         _step--;
@@ -399,6 +433,47 @@ namespace Cthangover.Mods.ScenarioStudio.Tests.Live
                 return;
             }
             Fail($"no script line {line} in the author view");
+        }
+
+        private Rect2 FrameRect()
+        {
+            var frame = _panel.GetNode<Control>("Frame");
+            return new Rect2(frame.Position, frame.Size);
+        }
+
+        /// <summary>Presses the left button on a dock handle, moves the mouse by <paramref name="delta"/> and releases.</summary>
+        private void Drag(string path, Vector2 delta)
+        {
+            var handle = _panel.GetNodeOrNull<Control>(path);
+            Check(handle != null, $"handle {path} found");
+            if (handle != null)
+                DragFrom(handle, delta);
+        }
+
+        private static void DragFrom(Control handle, Vector2 delta)
+        {
+            handle.EmitSignal(Control.SignalName.GuiInput, new InputEventMouseButton { ButtonIndex = MouseButton.Left, Pressed = true });
+            handle.EmitSignal(Control.SignalName.GuiInput, new InputEventMouseMotion { Position = delta, ButtonMask = MouseButtonMask.Left });
+            handle.EmitSignal(Control.SignalName.GuiInput, new InputEventMouseButton { ButtonIndex = MouseButton.Left, Position = delta });
+        }
+
+        /// <summary>Drags the ▶ marker of the current line onto the nearest line above it the dialog can run from.</summary>
+        private void DragMarkerBack()
+        {
+            StudioCodeLineView current = null;
+            StudioCodeLineView target = null;
+            foreach (var view in Descendants<StudioCodeLineView>(Content()))
+            {
+                if (view.Line.IsCurrent)
+                    current = view;
+                else if (current == null && view.Line.CanRunNext)
+                    target = view;
+            }
+            Check(current != null && target != null, "a current line and a runnable line above it");
+            if (current == null || target == null)
+                return;
+            _movedLine = target.Line.SourceLine;
+            DragFrom(current.Marker, target.GetGlobalRect().GetCenter() - current.Marker.GlobalPosition);
         }
 
         private void Restart(StudioRestartMode mode) => MenuPick((long)mode);

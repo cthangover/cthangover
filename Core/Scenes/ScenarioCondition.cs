@@ -88,5 +88,20 @@ namespace Cthangover.Core.Scenes
             evalCtx.QuestFactory = QuestServiceRegistry.Provider;
             return ast.Evaluate(evalCtx);
         }
+
+        /// <summary>
+        /// Forgets every cached AST. Leaves of a tree may be nodes of a mod's own
+        /// leaf parser (quest checks come from <c>quests_base</c>), so a cached
+        /// tree pins that mod's assembly; when the mod unloads, the unload sweep
+        /// nulls those references and the cached tree would throw on the next
+        /// evaluation. Called from <c>ScenarioConditionCacheConsumer</c> before
+        /// any mod assembly unloads; the next <see cref="Evaluate"/> re-parses
+        /// with the parsers registered at that moment.
+        /// </summary>
+        public static void ClearCache()
+        {
+            lock (AstLock)
+                AstCache.Clear();
+        }
     }
 }

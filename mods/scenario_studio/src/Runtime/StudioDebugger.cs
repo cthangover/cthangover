@@ -129,6 +129,31 @@ namespace Cthangover.Mods.ScenarioStudio
             Changed?.Invoke();
         }
 
+        /// <summary>
+        /// "Set next statement" of an IDE: the action of scenario line
+        /// <paramref name="line"/> becomes the next one to run and the dialog is
+        /// held before it in pause, whether it was held, waited for a click or
+        /// for an answer. Skipped and re-run lines change nothing in the game
+        /// state on their own. False when the line has no action in the queue
+        /// of the running dialog (a comment, an answer, a line added in the studio).
+        /// </summary>
+        public bool SetNext(DialogBox box, int line)
+        {
+            var queue = box?.Runtime.Dialog?.Queue;
+            if (line <= 0 || queue == null || !box.IsRunning || box.Locker != Event)
+                return false;
+
+            var target = IndexOf(queue, line);
+            if (target < 0 || !box.MoveTo(target))
+                return false;
+
+            IsPaused = true;
+            HeldLine = line;
+            _allowOnce = 0;
+            Changed?.Invoke();
+            return true;
+        }
+
         /// <summary>Forgets the current event, e.g. before restarting it.</summary>
         public void Reset()
         {
@@ -136,6 +161,17 @@ namespace Cthangover.Mods.ScenarioStudio
             HeldLine = 0;
             _allowOnce = 0;
             _executed.Clear();
+        }
+
+        /// <summary>Queue index of the first action built from scenario line <paramref name="line"/>, -1 when none.</summary>
+        public static int IndexOf(List<IActionCommand> queue, int line)
+        {
+            for (var i = 0; i < queue.Count; i++)
+            {
+                if (queue[i]?.SourceLine == line)
+                    return i;
+            }
+            return -1;
         }
 
         private void ReleaseHold(DialogBox box)

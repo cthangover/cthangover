@@ -17,9 +17,9 @@ flowchart TD
     end
 
     subgraph Runtime
-        MMB[Main-menu tool buttons] -->|Pressed: ShowWindow(CreateWindow())| TW[ToolWindow popup]
+        MMB[Main-menu tool buttons] -->|"Pressed: ShowWindow(CreateWindow())"| TW[ToolWindow popup]
         TB -->|AddToolButtons| BTN[Dynamic toolbar buttons]
-        BTN -->|Pressed: Get + ShowWindow(CreateWindow())| TW
+        BTN -->|"Pressed: Get + ShowWindow(CreateWindow())"| TW
     end
 
     subgraph Mod Assembly

@@ -119,6 +119,22 @@ namespace Cthangover.Mods.ScenarioStudio
             return queue != null && index >= 0 && index < queue.Count ? queue[index]?.SourceLine ?? 0 : 0;
         }
 
+        /// <summary>True when the running dialog has an action built from scenario line <paramref name="line"/>, so it can run next.</summary>
+        public bool CanRunFrom(int line)
+        {
+            var queue = IsCurrentRunning ? Box.Runtime.Dialog?.Queue : null;
+            return line > 0 && queue != null && StudioDebugger.IndexOf(queue, line) >= 0;
+        }
+
+        /// <summary>Makes scenario line <paramref name="line"/> the next one to run (<see cref="StudioDebugger.SetNext"/>) and logs it.</summary>
+        public bool SetNextLine(int line)
+        {
+            if (!Debugger.SetNext(Box, line))
+                return false;
+            Journal.Add(StudioLogCategory.Stop, new StudioText("studio/log_text_next_line", line));
+            return true;
+        }
+
         /// <summary>Current text of a scenario event's file (edits applied so far), or its built-in text.</summary>
         public static string SourceText(ScenarioEvent evt)
         {

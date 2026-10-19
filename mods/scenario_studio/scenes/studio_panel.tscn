@@ -12,7 +12,7 @@ grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("1_script")
 
-[node name="Dock" type="PanelContainer" parent="."]
+[node name="Frame" type="Control" parent="."]
 layout_mode = 1
 anchors_preset = 11
 anchor_left = 1.0
@@ -24,170 +24,183 @@ offset_right = -8.0
 offset_bottom = -8.0
 grow_horizontal = 0
 grow_vertical = 2
+mouse_filter = 2
 
-[node name="Column" type="VBoxContainer" parent="Dock"]
+[node name="Dock" type="PanelContainer" parent="Frame"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Column" type="VBoxContainer" parent="Frame/Dock"]
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="Header" type="MarginContainer" parent="Dock/Column"]
+[node name="Header" type="MarginContainer" parent="Frame/Dock/Column"]
 layout_mode = 2
+mouse_filter = 0
+mouse_default_cursor_shape = 13
 theme_override_constants/margin_left = 16
 theme_override_constants/margin_top = 10
 theme_override_constants/margin_right = 12
 theme_override_constants/margin_bottom = 10
 
-[node name="Row" type="HBoxContainer" parent="Dock/Column/Header"]
+[node name="Row" type="HBoxContainer" parent="Frame/Dock/Column/Header"]
 layout_mode = 2
+mouse_filter = 2
 theme_override_constants/separation = 10
 
-[node name="Title" type="Label" parent="Dock/Column/Header/Row"]
+[node name="Title" type="Label" parent="Frame/Dock/Column/Header/Row"]
 layout_mode = 2
 
-[node name="RunState" type="PanelContainer" parent="Dock/Column/Header/Row"]
+[node name="RunState" type="PanelContainer" parent="Frame/Dock/Column/Header/Row"]
 layout_mode = 2
 size_flags_vertical = 4
+mouse_filter = 2
 
-[node name="Text" type="Label" parent="Dock/Column/Header/Row/RunState"]
+[node name="Text" type="Label" parent="Frame/Dock/Column/Header/Row/RunState"]
 layout_mode = 2
 
-[node name="Spacer" type="Control" parent="Dock/Column/Header/Row"]
+[node name="Spacer" type="Control" parent="Frame/Dock/Column/Header/Row"]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 
-[node name="ModeSwitch" type="PanelContainer" parent="Dock/Column/Header/Row"]
+[node name="ModeSwitch" type="PanelContainer" parent="Frame/Dock/Column/Header/Row"]
 layout_mode = 2
 size_flags_vertical = 4
 
-[node name="Items" type="HBoxContainer" parent="Dock/Column/Header/Row/ModeSwitch"]
+[node name="Items" type="HBoxContainer" parent="Frame/Dock/Column/Header/Row/ModeSwitch"]
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="AuthorButton" type="Button" parent="Dock/Column/Header/Row/ModeSwitch/Items"]
+[node name="AuthorButton" type="Button" parent="Frame/Dock/Column/Header/Row/ModeSwitch/Items"]
 layout_mode = 2
 focus_mode = 0
 toggle_mode = true
 
-[node name="NoviceButton" type="Button" parent="Dock/Column/Header/Row/ModeSwitch/Items"]
+[node name="NoviceButton" type="Button" parent="Frame/Dock/Column/Header/Row/ModeSwitch/Items"]
 layout_mode = 2
 focus_mode = 0
 toggle_mode = true
 
-[node name="CloseButton" type="Button" parent="Dock/Column/Header/Row"]
+[node name="CloseButton" type="Button" parent="Frame/Dock/Column/Header/Row"]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 focus_mode = 0
 text = "✕"
 
-[node name="RuleHeader" type="ColorRect" parent="Dock/Column"]
+[node name="RuleHeader" type="ColorRect" parent="Frame/Dock/Column"]
 custom_minimum_size = Vector2(0, 1)
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Transport" type="MarginContainer" parent="Dock/Column"]
+[node name="Transport" type="MarginContainer" parent="Frame/Dock/Column"]
 layout_mode = 2
 theme_override_constants/margin_left = 16
 theme_override_constants/margin_top = 10
 theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 10
 
-[node name="Row" type="HBoxContainer" parent="Dock/Column/Transport"]
+[node name="Row" type="HBoxContainer" parent="Frame/Dock/Column/Transport"]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="PauseButton" type="Button" parent="Dock/Column/Transport/Row"]
+[node name="PauseButton" type="Button" parent="Frame/Dock/Column/Transport/Row"]
 layout_mode = 2
 focus_mode = 0
 toggle_mode = true
 
-[node name="StepButton" type="Button" parent="Dock/Column/Transport/Row"]
+[node name="StepButton" type="Button" parent="Frame/Dock/Column/Transport/Row"]
 layout_mode = 2
 focus_mode = 0
 
-[node name="ContinueButton" type="Button" parent="Dock/Column/Transport/Row"]
+[node name="ContinueButton" type="Button" parent="Frame/Dock/Column/Transport/Row"]
 layout_mode = 2
 focus_mode = 0
 
-[node name="Spacer" type="Control" parent="Dock/Column/Transport/Row"]
+[node name="Spacer" type="Control" parent="Frame/Dock/Column/Transport/Row"]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 
-[node name="RestartButton" type="MenuButton" parent="Dock/Column/Transport/Row"]
+[node name="RestartButton" type="MenuButton" parent="Frame/Dock/Column/Transport/Row"]
 layout_mode = 2
 focus_mode = 0
 
-[node name="RuleTransport" type="ColorRect" parent="Dock/Column"]
+[node name="RuleTransport" type="ColorRect" parent="Frame/Dock/Column"]
 custom_minimum_size = Vector2(0, 1)
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Context" type="MarginContainer" parent="Dock/Column"]
+[node name="Context" type="MarginContainer" parent="Frame/Dock/Column"]
 layout_mode = 2
 theme_override_constants/margin_left = 16
 theme_override_constants/margin_top = 10
 theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 10
 
-[node name="Column" type="VBoxContainer" parent="Dock/Column/Context"]
+[node name="Column" type="VBoxContainer" parent="Frame/Dock/Column/Context"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Crumbs" type="HFlowContainer" parent="Dock/Column/Context/Column"]
+[node name="Crumbs" type="HFlowContainer" parent="Frame/Dock/Column/Context/Column"]
 layout_mode = 2
 theme_override_constants/h_separation = 6
 
-[node name="Scope" type="HFlowContainer" parent="Dock/Column/Context/Column"]
+[node name="Scope" type="HFlowContainer" parent="Frame/Dock/Column/Context/Column"]
 layout_mode = 2
 theme_override_constants/h_separation = 8
 
-[node name="RuleContext" type="ColorRect" parent="Dock/Column"]
+[node name="RuleContext" type="ColorRect" parent="Frame/Dock/Column"]
 custom_minimum_size = Vector2(0, 1)
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Tabs" type="MarginContainer" parent="Dock/Column"]
+[node name="Tabs" type="MarginContainer" parent="Frame/Dock/Column"]
 layout_mode = 2
 theme_override_constants/margin_left = 16
 theme_override_constants/margin_top = 6
 theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 6
 
-[node name="Row" type="HBoxContainer" parent="Dock/Column/Tabs"]
+[node name="Row" type="HBoxContainer" parent="Frame/Dock/Column/Tabs"]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="NowTab" type="Button" parent="Dock/Column/Tabs/Row"]
+[node name="NowTab" type="Button" parent="Frame/Dock/Column/Tabs/Row"]
 layout_mode = 2
 focus_mode = 0
 toggle_mode = true
 
-[node name="SceneTab" type="Button" parent="Dock/Column/Tabs/Row"]
+[node name="SceneTab" type="Button" parent="Frame/Dock/Column/Tabs/Row"]
 layout_mode = 2
 focus_mode = 0
 toggle_mode = true
 
-[node name="StateTab" type="Button" parent="Dock/Column/Tabs/Row"]
+[node name="StateTab" type="Button" parent="Frame/Dock/Column/Tabs/Row"]
 layout_mode = 2
 focus_mode = 0
 toggle_mode = true
 
-[node name="LogTab" type="Button" parent="Dock/Column/Tabs/Row"]
+[node name="LogTab" type="Button" parent="Frame/Dock/Column/Tabs/Row"]
 layout_mode = 2
 focus_mode = 0
 toggle_mode = true
 
-[node name="MapTab" type="Button" parent="Dock/Column/Tabs/Row"]
+[node name="MapTab" type="Button" parent="Frame/Dock/Column/Tabs/Row"]
 layout_mode = 2
 focus_mode = 0
 toggle_mode = true
 
-[node name="RuleTabs" type="ColorRect" parent="Dock/Column"]
+[node name="RuleTabs" type="ColorRect" parent="Frame/Dock/Column"]
 custom_minimum_size = Vector2(0, 1)
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Body" type="MarginContainer" parent="Dock/Column"]
+[node name="Body" type="MarginContainer" parent="Frame/Dock/Column"]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/margin_left = 16
@@ -195,40 +208,120 @@ theme_override_constants/margin_top = 12
 theme_override_constants/margin_right = 10
 theme_override_constants/margin_bottom = 12
 
-[node name="Scroll" type="ScrollContainer" parent="Dock/Column/Body"]
+[node name="Scroll" type="ScrollContainer" parent="Frame/Dock/Column/Body"]
 layout_mode = 2
 horizontal_scroll_mode = 0
 
-[node name="Content" type="VBoxContainer" parent="Dock/Column/Body/Scroll"]
+[node name="Content" type="VBoxContainer" parent="Frame/Dock/Column/Body/Scroll"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
-[node name="RuleFooter" type="ColorRect" parent="Dock/Column"]
+[node name="RuleFooter" type="ColorRect" parent="Frame/Dock/Column"]
 custom_minimum_size = Vector2(0, 1)
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Footer" type="MarginContainer" parent="Dock/Column"]
+[node name="Footer" type="MarginContainer" parent="Frame/Dock/Column"]
 layout_mode = 2
 theme_override_constants/margin_left = 16
 theme_override_constants/margin_top = 10
 theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 10
 
-[node name="Row" type="HBoxContainer" parent="Dock/Column/Footer"]
+[node name="Row" type="HBoxContainer" parent="Frame/Dock/Column/Footer"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Status" type="Label" parent="Dock/Column/Footer/Row"]
+[node name="Status" type="Label" parent="Frame/Dock/Column/Footer/Row"]
 layout_mode = 2
 size_flags_horizontal = 3
 clip_text = true
 
-[node name="EditButton" type="Button" parent="Dock/Column/Footer/Row"]
+[node name="EditButton" type="Button" parent="Frame/Dock/Column/Footer/Row"]
 layout_mode = 2
 focus_mode = 0
 
-[node name="ApplyButton" type="Button" parent="Dock/Column/Footer/Row"]
+[node name="ApplyButton" type="Button" parent="Frame/Dock/Column/Footer/Row"]
 layout_mode = 2
 focus_mode = 0
+
+[node name="LeftGrip" type="Control" parent="Frame"]
+layout_mode = 1
+anchor_bottom = 1.0
+offset_left = -3.0
+offset_top = 8.0
+offset_right = 3.0
+offset_bottom = -8.0
+mouse_default_cursor_shape = 10
+
+[node name="RightGrip" type="Control" parent="Frame"]
+layout_mode = 1
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -3.0
+offset_top = 8.0
+offset_right = 3.0
+offset_bottom = -8.0
+mouse_default_cursor_shape = 10
+
+[node name="TopGrip" type="Control" parent="Frame"]
+layout_mode = 1
+anchor_right = 1.0
+offset_left = 8.0
+offset_top = -3.0
+offset_right = -8.0
+offset_bottom = 3.0
+mouse_default_cursor_shape = 9
+
+[node name="BottomGrip" type="Control" parent="Frame"]
+layout_mode = 1
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = -3.0
+offset_right = -8.0
+offset_bottom = 3.0
+mouse_default_cursor_shape = 9
+
+[node name="TopLeftGrip" type="Control" parent="Frame"]
+layout_mode = 1
+offset_left = -3.0
+offset_top = -3.0
+offset_right = 8.0
+offset_bottom = 8.0
+mouse_default_cursor_shape = 12
+
+[node name="TopRightGrip" type="Control" parent="Frame"]
+layout_mode = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -8.0
+offset_top = -3.0
+offset_right = 3.0
+offset_bottom = 8.0
+mouse_default_cursor_shape = 11
+
+[node name="BottomLeftGrip" type="Control" parent="Frame"]
+layout_mode = 1
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = -3.0
+offset_top = -8.0
+offset_right = 8.0
+offset_bottom = 3.0
+mouse_default_cursor_shape = 11
+
+[node name="BottomRightGrip" type="Control" parent="Frame"]
+layout_mode = 1
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -8.0
+offset_top = -8.0
+offset_right = 3.0
+offset_bottom = 3.0
+mouse_default_cursor_shape = 12

@@ -55,7 +55,7 @@ namespace Cthangover.Core.Mods
         }
 
         private static string Resolve(string godotPath, string fallback) =>
-            GameEnvironment.IsRuntime ? ProjectSettings.GlobalizePath(godotPath) : fallback;
+            GameEnvironment.IsRuntime ? GamePaths.Globalize(godotPath) : fallback;
 
         /// <summary>Absolute folder of the built-in packages.</summary>
         public static string BuiltInPath => _builtInPath ?? Resolve(BuiltInRoot, "collections");

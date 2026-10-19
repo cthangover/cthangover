@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Loader;
 using Cthangover.Core.Utils;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -22,6 +23,7 @@ namespace Cthangover.Core.Mods.Compilation
     {
         private static readonly object _generatorLock = new object();
         private static Type[] _godotGeneratorTypes;
+        private static readonly GeneratorLoadContext GeneratorContext = new GeneratorLoadContext();
 
         /// <summary>
         /// Locates the Godot source generator assembly shipped with the
@@ -67,7 +69,6 @@ namespace Cthangover.Core.Mods.Compilation
             {
                 if (_godotGeneratorTypes == null)
                 {
-                    InstallRoslynAssemblyResolver();
                     string dllPath = null;
                     try
                     {
@@ -79,7 +80,7 @@ namespace Cthangover.Core.Mods.Compilation
                             return Array.Empty<Microsoft.CodeAnalysis.ISourceGenerator>();
                         }
 
-                        var generatorAssembly = Assembly.LoadFrom(dllPath);
+                        var generatorAssembly = GeneratorContext.LoadFromAssemblyPath(dllPath);
                         _godotGeneratorTypes = generatorAssembly.GetTypes()
                             .Where(t => !t.IsAbstract && typeof(Microsoft.CodeAnalysis.ISourceGenerator).IsAssignableFrom(t))
                             .ToArray();
@@ -107,28 +108,58 @@ namespace Cthangover.Core.Mods.Compilation
         }
 
         /// <summary>
-        /// The generator assembly is built against an older Microsoft.CodeAnalysis
-        /// than the one the game ships. When the runtime fails to bind those
-        /// references by version, redirect them to the already-loaded instances -
-        /// CLR type identity then unifies and the generators run against the
-        /// game's Roslyn.
+        /// Isolated load context for the generator assembly. Every
+        /// <c>Microsoft.CodeAnalysis*</c> request binds to the Roslyn instance
+        /// the game itself runs on, so the loaded generator types implement the
+        /// very <see cref="ISourceGenerator"/> this host filters by. Version-based
+        /// binding (a plain <c>Assembly.LoadFrom</c>) may instead pull in or
+        /// reject a second Roslyn copy depending on the host process, leaving the
+        /// filter with zero matching types — silent loss of all generators.
+        /// Everything else (<c>System.Collections.Immutable</c> first of all)
+        /// resolves through the load context Roslyn itself lives in: Godot loads
+        /// the game assembly into its own plugin context with app-local copies of
+        /// those libraries, and a generator bound to the default context's copy
+        /// sees a different <c>ImmutableArray&lt;T&gt;</c> — its analyzer overrides
+        /// stop matching and the type load fails (seen on the Linux export).
         /// </summary>
-        private static void InstallRoslynAssemblyResolver()
+        private sealed class GeneratorLoadContext : AssemblyLoadContext
         {
-            AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
+            private static readonly AssemblyLoadContext RoslynContext =
+                GetLoadContext(typeof(Microsoft.CodeAnalysis.ISourceGenerator).Assembly) ?? Default;
+
+            public GeneratorLoadContext()
+                : base(nameof(GeneratorLoadContext))
+            { }
+
+            /// <inheritdoc />
+            protected override Assembly Load(AssemblyName assemblyName)
             {
-                var name = new AssemblyName(args.Name).Name;
-                if (name == null || !name.StartsWith("Microsoft.CodeAnalysis", StringComparison.Ordinal))
+                var name = assemblyName.Name;
+                if (name == null)
                     return null;
 
-                var loaded = AppDomain.CurrentDomain.GetAssemblies()
-                    .FirstOrDefault(a => !a.IsDynamic && a.GetName().Name == name);
-                if (loaded != null)
-                    return loaded;
+                if (name.StartsWith("Microsoft.CodeAnalysis", StringComparison.Ordinal))
+                {
+                    // The game's own Roslyn wins: same instance the filter's
+                    // typeof(ISourceGenerator) comes from. Collectible (mod) and
+                    // dynamic assemblies must never leak into another context.
+                    // A Roslyn part the game has not touched yet (Workspaces)
+                    // is loaded into Roslyn's context below.
+                    var loaded = AppDomain.CurrentDomain.GetAssemblies()
+                        .FirstOrDefault(a => !a.IsDynamic && !a.IsCollectible && a.GetName().Name == name);
+                    if (loaded != null)
+                        return loaded;
+                }
 
-                var local = Path.Combine(AppContext.BaseDirectory, name + ".dll");
-                return File.Exists(local) ? Assembly.LoadFrom(local) : null;
-            };
+                try
+                {
+                    return RoslynContext.LoadFromAssemblyName(assemblyName);
+                }
+                catch (Exception)
+                {
+                    return null;
+                }
+            }
         }
 
         /// <summary>
