@@ -190,6 +190,9 @@ namespace Cthangover.Core.Autotest
                 questBaseType.GetProperty("Name").SetValue(quest, id);
 
                 var instance = GetFactoryInstance(questFactoryType);
+                // Load the current data snapshot first: the factory rebuilds its
+                // quests from each new snapshot, which would drop an earlier injection.
+                questFactoryType.GetMethod("GetAll").Invoke(instance, null);
                 var dataField = questFactoryType.GetField("dataByID", BindingFlags.Instance | BindingFlags.NonPublic);
                 var dict = (IDictionary)dataField.GetValue(instance);
                 dict[id] = quest;

@@ -64,16 +64,17 @@ namespace Cthangover.Core.Factories.Impls
         /// </summary>
         private Dictionary<string, CharacterInfo> EnsureInfos()
         {
-            if (_allInfos != null)
-                return _allInfos;
-
-            GameLogger.Log("FACTORY", $"CharacterFactory.EnsureInfos: START, ModRegistry.IsInitialized={ModRegistry.Instance.IsInitialized}, mods count={ModRegistry.Instance.Mods?.Count ?? 0}", LogLevel.Debug);
-
+            // Entities.Collect is cached by the entity resolver until the next
+            // mod reload, so its dictionary identity is the data snapshot: a new
+            // one (reload, data edit, game switch with this mod kept) drops the
+            // built templates instead of serving the previous mod set's data.
             var infos = Entities.Collect<CharacterInfo>();
-            if (ModManager.Instance.IsInitialized)
-                _allInfos = infos;
+            if (ReferenceEquals(infos, _allInfos))
+                return infos;
 
-            GameLogger.Log("FACTORY", $"CharacterFactory.EnsureInfos: END, loaded {infos?.Count ?? 0} infos", LogLevel.Debug);
+            _allInfos = infos;
+            _cache.Clear();
+            GameLogger.Log("FACTORY", $"CharacterFactory.EnsureInfos: {infos?.Count ?? 0} infos (new data snapshot)", LogLevel.Debug);
             return infos;
         }
 

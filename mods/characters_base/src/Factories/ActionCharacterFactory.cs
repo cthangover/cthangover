@@ -56,12 +56,13 @@ namespace Cthangover.Core.Factories.Impls
         /// </summary>
         private Dictionary<string, ActionCharacterInfo> EnsureInfos()
         {
-            if (_allInfos != null)
-                return _allInfos;
-
+            // The resolver's dictionary identity is the data snapshot (see CharacterFactory.EnsureInfos).
             var infos = Entities.Collect<ActionCharacterInfo>();
-            if (ModManager.Instance.IsInitialized)
+            if (!ReferenceEquals(infos, _allInfos))
+            {
                 _allInfos = infos;
+                _cache.Clear();
+            }
             return infos;
         }
 

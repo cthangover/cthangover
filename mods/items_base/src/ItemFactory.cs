@@ -1,6 +1,4 @@
-using System.Collections.Generic;
 using Cthangover.Core.Items;
-using Cthangover.Core.Mods;
 using Cthangover.Core.Mods.Resolvers;
 using Cthangover.Core.Utils;
 
@@ -17,8 +15,6 @@ namespace Cthangover.Core.Factories.Impls
         /// <summary>Static lazy singleton; kept as the public API.</summary>
         public static ItemFactory Instance => _instance ??= new ItemFactory();
 
-        private Dictionary<string, ItemInfo> items;
-
         /// <summary>
         /// Builds a fresh <see cref="Item"/> from the collected <see cref="ItemInfo"/>,
         /// resolving the sprite through <see cref="ItemSpriteFactory"/>, the on-use
@@ -31,14 +27,9 @@ namespace Cthangover.Core.Factories.Impls
             if (string.IsNullOrEmpty(id))
                 return null;
 
-            var infos = items ?? Entities.Collect<ItemInfo>();
-
-            // The registry refuses mod-data access until Boot.IsReady, so
-            // this snapshot can never be collected from a half-built mod set;
-            // the cached field is reset when ModManager.Reload rebuilds the
-            // registry.
-            if (ModManager.Instance.IsInitialized)
-                items ??= infos;
+            // Entities.Collect is cached by the entity resolver until the next
+            // mod reload, so reading it every time serves the current data.
+            var infos = Entities.Collect<ItemInfo>();
 
             if (!infos.TryGetValue(id, out var info))
             {

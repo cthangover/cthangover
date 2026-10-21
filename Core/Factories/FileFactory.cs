@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using Cthangover.Core.Mods;
 using Cthangover.Core.Mods.Resolvers;
 
 namespace Cthangover.Core.Factories
@@ -8,19 +6,13 @@ namespace Cthangover.Core.Factories
 	/// Lightweight JSON-driven factory. All data discovery is delegated to
 	/// <see cref="EntityResolver"/>, which scans every mod file once and routes
 	/// entities by their declared kind (read from <typeparamref name="T"/>'s
-	/// <see cref="EntityKindAttribute"/>). The cache dictionary is built lazily
-	/// on the first <c>Get</c> call — factories that are created early (e.g.
-	/// during boot) but rarely accessed don't pay for parsing data they may
-	/// never use.
-	/// <para/>
-	/// The collected dictionary is published only after the mod registry is
-	/// finalized. A dirty cache is impossible: the registry refuses
-	/// mod-data access until <c>Boot.IsReady</c>, so a lookup can never
-	/// collect from a half-built mod set and cache an empty result.
+	/// <see cref="EntityKindAttribute"/>). Nothing is cached here: the
+	/// resolver keeps the collected dictionary until the next mod reload, so
+	/// every lookup sees the data of the running mod set — also from a factory
+	/// whose mod stays loaded across a reload.
 	/// </summary>
 	public abstract class FileFactory<T> : IFileFactory<T> where T : class, IIdentifiable
 	{
-		private Dictionary<string, T> cache;
 
 		/// <summary>
 		/// Returns the entity registered under <paramref name="id"/>, collecting
@@ -32,12 +24,10 @@ namespace Cthangover.Core.Factories
 			if (string.IsNullOrEmpty(id))
 				return null;
 
-			var infos = cache ?? Entities.Collect<T>();
-
-			if (ModManager.Instance.IsInitialized)
-				cache ??= infos;
-
-			infos.TryGetValue(id, out var item);
+			// Entities.Collect is cached by the entity resolver until the next mod
+			// reload; holding a copy here kept serving the previous mod set's data
+			// to factories of mods that stay loaded across a reload.
+			Entities.Collect<T>().TryGetValue(id, out var item);
 			return item;
 		}
 	}

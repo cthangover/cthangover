@@ -27,7 +27,9 @@ namespace Cthangover.Core.Quests
         /// <summary>Writes the full quest state list into the mod slot.</summary>
         public void OnSave(ModSlot slot)
         {
-            slot.Data[BlobKey] = new DataBlob(1, QuestFactory.Instance.GetAll());
+            var quests = QuestFactory.Instance.GetAll();
+            quests.AddRange(QuestFactory.Instance.Unresolved);
+            slot.Data[BlobKey] = new DataBlob(1, quests);
         }
 
         /// <summary>Restores quest state from the mod slot; an absent blob keeps fresh quest state.</summary>

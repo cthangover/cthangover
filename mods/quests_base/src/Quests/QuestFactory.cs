@@ -16,7 +16,8 @@ namespace Cthangover.Core.Quests
     /// definitions, on‑demand lookup by ID, and restoration of mutable state
     /// when the player loads a save file. The factory defers loading until
     /// the first access (via <see cref="Get"/> or <see cref="GetAll"/>) and
-    /// guards against re‑initialisation through the <c>isLoaded</c> flag.
+    /// rebuilds the definitions whenever the entity resolver hands out a new
+    /// data snapshot (a mod reload keeps this mod but may change the quests).
     /// Because quest definitions come from <see cref="QuestDefinition"/>
     /// objects collected by <see cref="ModManager.GetResolver{EntityResolver}()"/> through the
     /// DTO's <c>[EntityKind("quest")]</c> attribute, the factory remains
@@ -50,7 +51,8 @@ namespace Cthangover.Core.Quests
     public static QuestFactory Instance => instance.Value;
 
         private readonly IDictionary<string, QuestBase> dataByID = new Dictionary<string, QuestBase>();
-        private bool isLoaded;
+        private readonly List<QuestBase> unresolved = new();
+        private Dictionary<string, QuestDefinition> loadedDefinitions;
 		
         private QuestFactory()
         {
@@ -58,46 +60,45 @@ namespace Cthangover.Core.Quests
 
         /// <summary>
         /// Seeds the internal <c>dataByID</c> dictionary from mod JSON if it
-        /// has not been seeded yet. When <see cref="ModManager"/> is still
-        /// mid‑initialisation, the call is silently deferred (logged at
-        /// debug level) so that early code paths don't crash; the next
-        /// access will retry. Each <see cref="QuestDefinition"/> is
-        /// converted into a fresh <see cref="QuestBase"/> with default
-        /// status and an empty tag set.
+        /// has not been seeded from the current data snapshot. When
+        /// <see cref="ModManager"/> is still mid‑initialisation, the call is
+        /// deferred so that early code paths don't crash; the next access
+        /// retries. <c>Entities.Collect</c> is cached by the entity resolver
+        /// until the next mod reload, so a new dictionary means new data: the
+        /// quests are rebuilt from it, a quest that stays keeps its instance and
+        /// state, a new one starts with default status and an empty tag set.
         /// </summary>
         private void EnsureLoaded()
         {
-            if (isLoaded)
-                return;
-
             if (!ModManager.Instance.IsInitialized)
             {
                 GameLogger.Log("QUEST", "mods not initialized, quest loading deferred");
                 return;
             }
 
-            isLoaded = true;
-
+            Dictionary<string, QuestDefinition> definitions;
             try
             {
-                var definitions = Entities.Collect<QuestDefinition>();
-                if (definitions != null)
-                {
-                    foreach (var (id, def) in definitions)
-                    {
-                        var quest = new QuestBase
-                        {
-                            ID = def.ID,
-                            Name = def.Name,
-                            StatusToDescription = def.StatusToDescription ?? new Dictionary<int, string>(),
-                        };
-                        dataByID.Add(quest.ID, quest);
-                    }
-                }
+                definitions = Entities.Collect<QuestDefinition>();
             }
             catch (Exception ex)
             {
                 GameLogger.Log("QUEST", "failed to load quests from mods: " + ex.Message, LogLevel.Error);
+                return;
+            }
+
+            if (ReferenceEquals(definitions, loadedDefinitions))
+                return;
+            loadedDefinitions = definitions;
+
+            var previous = new Dictionary<string, QuestBase>(dataByID);
+            dataByID.Clear();
+            foreach (var def in definitions.Values)
+            {
+                var quest = previous.TryGetValue(def.ID, out var kept) ? kept : new QuestBase { ID = def.ID };
+                quest.Name = def.Name;
+                quest.StatusToDescription = def.StatusToDescription ?? new Dictionary<int, string>();
+                dataByID[quest.ID] = quest;
             }
 
             GameLogger.Log("QUEST", "loaded '" + dataByID.Count + "' quests");
@@ -127,6 +128,13 @@ namespace Cthangover.Core.Quests
         /// serialise the full quest state for the save file, and by the
         /// journal UI to populate the quest list window.
         /// </summary>
+        /// <summary>
+        /// Quests of the loaded save that no loaded mod defines (their mod left
+        /// the game). They take no part in the game, but the save writes them
+        /// back, so their progress returns with the mod. Cleared by a new game.
+        /// </summary>
+        public IReadOnlyList<QuestBase> Unresolved => unresolved;
+
         public List<QuestBase> GetAll()
         {
             EnsureLoaded();
@@ -140,8 +148,8 @@ namespace Cthangover.Core.Quests
         /// corresponding entry by ID, and overwrites its
         /// <see cref="QuestBase.Data"/> and <see cref="QuestBase.Status"/>
         /// properties. Entries whose ID is not registered (a removed mod or a
-        /// quest renamed between sessions) are skipped with a warning so that
-        /// an ageing save cannot block loading. Reads from empty or <c>null</c>
+        /// quest renamed between sessions) go to <see cref="Unresolved"/> with
+        /// a warning, so an ageing save neither blocks loading nor loses them. Reads from empty or <c>null</c>
         /// lists are silently ignored so that save files created before the
         /// quest system existed (or with no quest progress) do not break the
         /// pipeline. Publishes a single <see cref="QuestStateRestoredEvent"/>
@@ -152,13 +160,15 @@ namespace Cthangover.Core.Quests
         {
             EnsureLoaded();
 
+            unresolved.Clear();
             if(Lists.IsEmpty(quests))
                 return;
             foreach (var questFromSave in quests)
             {
                 if(!dataByID.TryGetValue(questFromSave.ID, out var quest))
                 {
-                    GameLogger.Log("QUEST", "quest '" + questFromSave.ID + "' from save is not registered, skipped", LogLevel.Warning);
+                    GameLogger.Log("QUEST", "quest '" + questFromSave.ID + "' from save is not registered; its state is kept in the save", LogLevel.Warning);
+                    unresolved.Add(questFromSave);
                     continue;
                 }
                 quest.Data   = questFromSave.Data;
@@ -183,6 +193,7 @@ namespace Cthangover.Core.Quests
         {
             EnsureLoaded();
 
+            unresolved.Clear();
             foreach (var quest in dataByID.Values)
             {
                 quest.Status = QuestStatus.NotStarted;
