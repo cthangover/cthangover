@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 using Cthangover.Core.Mods;
 using Cthangover.Core.Scenes;
@@ -14,7 +17,9 @@ namespace Cthangover.Core.Games
     /// after boot) and the menu mods. Starting enters the active game's
     /// entry scene; loading falls back to it when the saved scene no longer
     /// exists (its mechanic was removed from the game). Switching to another
-    /// game replaces the mod set in-process (<see cref="SwitchToAsync"/>).
+    /// game replaces the mod set in-process (<see cref="SwitchToAsync"/>); the
+    /// menu warms the mod sets of the games up in the background beforehand
+    /// (<see cref="WarmUp"/>), so the switch only loads cached assemblies.
     /// </summary>
     public static class GameSession
     {
@@ -53,6 +58,77 @@ namespace Cthangover.Core.Games
         /// <summary>True while <see cref="SwitchToAsync"/> runs; menus ignore further switch requests meanwhile.</summary>
         public static bool IsSwitching { get; private set; }
 
+        private static CancellationTokenSource warmUpCancel;
+        private static int warmUpRuns;
+
+        /// <summary>True while a background warm-up (<see cref="WarmUp"/>) is compiling.</summary>
+        public static bool IsWarmingUp => Volatile.Read(ref warmUpRuns) > 0;
+
+        /// <summary>
+        /// Compiles the mod sets of <paramref name="gameIds"/> into the assembly
+        /// cache in the background, one game after another, while the player is
+        /// in the menu (<see cref="ModManager.WarmUp"/>). Picking a game then only
+        /// loads cached assemblies instead of compiling them behind the loading
+        /// screen. A running warm-up is replaced; <see cref="SwitchToAsync"/>
+        /// cancels it, and the switch finishes whatever mod it was compiling.
+        /// </summary>
+        public static void WarmUp(IReadOnlyList<string> gameIds)
+        {
+            StopWarmUp();
+            if (gameIds == null || gameIds.Count == 0)
+                return;
+
+            var cancel = new CancellationTokenSource();
+            warmUpCancel = cancel;
+            var args = GameLaunchArgs.Current;
+            var manager = ModManager.Instance;
+            Interlocked.Increment(ref warmUpRuns);
+            Task.Run(() => WarmUpGames(manager, args, new List<string>(gameIds), cancel.Token));
+        }
+
+        /// <summary>Stops the background warm-up between two mods; already compiled mods stay in the cache.</summary>
+        public static void StopWarmUp()
+        {
+            warmUpCancel?.Cancel();
+            warmUpCancel = null;
+        }
+
+        private static void WarmUpGames(ModManager manager, GameLaunchArgs args, List<string> gameIds, CancellationToken cancellationToken)
+        {
+            try
+            {
+                WarmUpEach(manager, args, gameIds, cancellationToken);
+            }
+            finally
+            {
+                Interlocked.Decrement(ref warmUpRuns);
+            }
+        }
+
+        private static void WarmUpEach(ModManager manager, GameLaunchArgs args, List<string> gameIds, CancellationToken cancellationToken)
+        {
+            foreach (var gameId in gameIds)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    return;
+                var watch = Stopwatch.StartNew();
+                try
+                {
+                    manager.WarmUp(args.WithSelection(gameId, null), cancellationToken);
+                    GameLogger.Log("GAME", $"Warm-up: mods of '{gameId}' are in the assembly cache ({watch.ElapsedMilliseconds} ms)");
+                }
+                catch (OperationCanceledException)
+                {
+                    GameLogger.Log("GAME", $"Warm-up of '{gameId}' stopped: a game is starting");
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    GameLogger.Log("GAME", $"Warm-up of '{gameId}' failed: {ex.Message}", LogLevel.Warning);
+                }
+            }
+        }
+
         /// <summary>
         /// Switches the running process to <paramref name="gameId"/> — a new
         /// game, or <paramref name="loadSave"/> of it — without a restart: the
@@ -76,6 +152,7 @@ namespace Cthangover.Core.Games
             }
 
             IsSwitching = true;
+            StopWarmUp();
             try
             {
                 GameLogger.Log("GAME", $"Switching into game '{gameId}' ({(loadSave == null ? "new game" : "load " + loadSave)}) in-process");
