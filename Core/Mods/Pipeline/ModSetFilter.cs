@@ -92,9 +92,20 @@ namespace Cthangover.Core.Mods.Pipeline
         /// spec, a missing required mod (optional dependencies are skipped),
         /// or a loaded version failing the declared constraint. First failing
         /// dependency per mod wins (loop breaks); the reason carries both the
-        /// requirement and the actually loaded version.
+        /// requirement and the actually loaded version. Removal cascades: the
+        /// pass repeats until nothing more is removed, so a mod whose required
+        /// dependency was itself dropped is dropped too instead of compiling
+        /// against a mod that is gone.
         /// </summary>
         public static void ValidateDependencies(IDictionary<string, IModInfo> mods)
+        {
+            while (ValidateDependenciesOnce(mods))
+            {
+            }
+        }
+
+        /// <summary>One validation pass; true when it removed a mod.</summary>
+        private static bool ValidateDependenciesOnce(IDictionary<string, IModInfo> mods)
         {
             var toRemove = new HashSet<string>();
 
@@ -148,14 +159,12 @@ namespace Cthangover.Core.Mods.Pipeline
                 }
             }
 
-            if (toRemove.Count == 0)
-                return;
-
             foreach (var id in toRemove)
             {
                 mods.Remove(id);
                 GameLogger.Log("MODS_REGISTRY", $"Mod '{id}' filtered out (dependency validation failed)", LogLevel.Message);
             }
+            return toRemove.Count > 0;
         }
 
         /// <summary>
@@ -266,7 +275,7 @@ namespace Cthangover.Core.Mods.Pipeline
         /// </summary>
         private static string Tr(string key)
         {
-            if (!GameEnvironment.IsMainThread)
+            if (!GameEnvironment.IsRuntime || !GameEnvironment.IsMainThread)
                 return key;
             return TranslationServer.Translate(key);
         }
