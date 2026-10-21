@@ -8,6 +8,7 @@
   "sources": [
     "src/**/*.cs"
   ],
+  "test_sources": ["tests/*.cs"],
   "depends": ["characters_base>=1", "ui_base>=1"],
   "ui": [
     {
