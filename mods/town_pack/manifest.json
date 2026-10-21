@@ -3,7 +3,7 @@
   "name": "Town Pack",
   "version": "1.0.0",
   "author": "ct",
-  "description": "Reusable town content for any game: the town entrance (five variants with depth maps), a home vestibule, a bar and the bar ambience. Backgrounds: town/town_entry_0..4, home/vestibule, bar/bar; sound: bar/bar_ambient.",
+  "description": "Reusable town content for any game: the town entrance (with a depth map), a home vestibule, a bar and the bar ambience. Backgrounds: town/town_entry, home/vestibule, bar/bar; sound: bar/bar_ambient.",
   "category": "visual, audio",
   "depends": []
 }

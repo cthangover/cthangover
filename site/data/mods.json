@@ -1,12 +1,12 @@
 {
- "generated": "2026-10-18",
+ "generated": "2026-10-21",
  "stats": {
-  "mods": 31,
-  "dslCommands": 29,
-  "coreFiles": 480,
-  "coreLoc": 44020,
-  "modFiles": 652,
-  "modLoc": 80088
+  "mods": 35,
+  "dslCommands": 30,
+  "coreFiles": 485,
+  "coreLoc": 44511,
+  "modFiles": 735,
+  "modLoc": 86793
  },
  "battle": [
   {
@@ -373,6 +373,54 @@
    "test": false
   },
   {
+   "id": "rpg",
+   "name": "RPG World",
+   "version": "1.0.0",
+   "desc": "Top-down tile world in the spirit of RPG Maker on top of the 2D engine mods: maps of square tiles in three layers (back, main, front) with a collision layer, walking on the grid with WASD or the arrows, events that talk, teleport or start battles with the action key E/F or on touch, random encounters. A map is a logical scene, so entry scenarios, ambience, saving and the dialog box work on maps unchanged; battles run on the turn-based platform with the game's battle core and return to the same cell. Scenario actions: rpg.battle, rpg.teleport.",
+   "cat": [
+    "gameplay"
+   ],
+   "deps": [
+    "shell2d_base",
+    "ui_base",
+    "dialog_base",
+    "turn_battle_base"
+   ],
+   "test": false
+  },
+  {
+   "id": "rpg_demo_game",
+   "name": "RPG Demo",
+   "version": "1.0.0",
+   "desc": "Content of the RPG demo (collection rpg_demo): a village, the elder's house and a forest with a wolf at the cave, made of rpg_map files over the village_pack tileset. Shows teleports, talking NPCs, events that change with story flags, chests, a map monster with a win flag and random encounters in the forest. Only data and scenarios, no C#.",
+   "cat": [
+    "story"
+   ],
+   "deps": [
+    "rpg",
+    "village_pack",
+    "characters_base",
+    "dialog_base"
+   ],
+   "test": false
+  },
+  {
+   "id": "rpg_editor",
+   "name": "RPG Map Editor",
+   "version": "1.0.0",
+   "desc": "Editor of the rpg mod's tile maps (maps/*.json): paints the back, main and front tile layers and the collision layer with a pencil, an eraser and a flood fill from the tileset palette, places and edits map events (look, trigger, scenario, inline commands, teleport, condition), sets the map size, spawn and random encounters. Undo/redo, live update of the running world after saving, play from the spawn. Opens from the main menu tools, the novel editor hub and the in-game toolbar.",
+   "cat": [
+    "tools",
+    "editor"
+   ],
+   "deps": [
+    "rpg",
+    "editor_tools",
+    "ui_base"
+   ],
+   "test": false
+  },
+  {
    "id": "scenario_studio",
    "name": "Scenario Studio",
    "version": "0.1.0",
@@ -451,7 +499,7 @@
    "id": "town_pack",
    "name": "Town Pack",
    "version": "1.0.0",
-   "desc": "Reusable town content for any game: the town entrance (five variants with depth maps), a home vestibule, a bar and the bar ambience. Backgrounds: town/town_entry_0..4, home/vestibule, bar/bar; sound: bar/bar_ambient.",
+   "desc": "Reusable town content for any game: the town entrance (with a depth map), a home vestibule, a bar and the bar ambience. Backgrounds: town/town_entry, home/vestibule, bar/bar; sound: bar/bar_ambient.",
    "cat": [
     "visual",
     "audio"
@@ -499,6 +547,20 @@
    "deps": [
     "dialog_base",
     "interactive_base"
+   ],
+   "test": false
+  },
+  {
+   "id": "village_pack",
+   "name": "Village Pack",
+   "version": "1.0.0",
+   "desc": "Reusable pixel-art content for RPG maps: the 'village' tileset (grass, paths, water, trees with crowns for the front layer, houses, fences, chests, a forest floor and a cave mouth, with solid flags), charsets of a hero, an elder, a villager, a merchant, a slime and a wolf, battle portraits of the hero, the slime and the wolf, and two battle backgrounds (meadow, forest) with depth maps. Art only: no maps, no stories.",
+   "cat": [
+    "visual",
+    "characters"
+   ],
+   "deps": [
+    "rpg"
    ],
    "test": false
   }
