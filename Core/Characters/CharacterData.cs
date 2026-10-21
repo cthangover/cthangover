@@ -100,6 +100,14 @@ namespace Cthangover.Core.Characters
 		/// <returns>True when the character was added; false when the ID has no declared template (party unchanged).</returns>
 		public bool AddCharacterToParty(string characterType)
 		{
+			// A member already in the roster keeps its progress: a scenario that
+			// adds the character again only brings it back into the battle set.
+			if (characterType != null && Characters.ContainsKey(characterType))
+			{
+				BattleSet.Add(characterType);
+				return true;
+			}
+
 			var card = CharacterTemplateRegistry.Get(characterType);
 			if (card == null)
 			{
