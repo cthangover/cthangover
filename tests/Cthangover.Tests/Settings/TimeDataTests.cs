@@ -54,7 +54,7 @@ namespace Engine.Tests.Settings
         [Fact]
         public void SetTime_OneYear()
         {
-            var t = new TimeData(525600);
+            var t = new TimeData(518400);
             Assert.Equal(1, t.Years);
             Assert.Equal(0, t.Months);
             Assert.Equal(0, t.Days);
@@ -80,7 +80,7 @@ namespace Engine.Tests.Settings
         [Fact]
         public void SetTime_YearMonthDayBoundary()
         {
-            var t = new TimeData(525600 + 43200 + 1440);
+            var t = new TimeData(518400 + 43200 + 1440);
             Assert.Equal(1, t.Years);
             Assert.Equal(1, t.Months);
             Assert.Equal(1, t.Days);
@@ -91,7 +91,7 @@ namespace Engine.Tests.Settings
         [Fact]
         public void SetTime_FullExample()
         {
-            var t = new TimeData(525600 + 43200 + 1440 + 360 + 30);
+            var t = new TimeData(518400 + 43200 + 1440 + 360 + 30);
             Assert.Equal(1, t.Years);
             Assert.Equal(1, t.Months);
             Assert.Equal(1, t.Days);
@@ -180,6 +180,21 @@ namespace Engine.Tests.Settings
             Assert.Equal(70L, t.Tick);
             Assert.Equal(1, t.Hours);
             Assert.Equal(10, t.Minutes);
+        }
+
+        [Theory]
+        [InlineData(0L, 0, 12, 0, 0, 0)]
+        [InlineData(0L, 0, 0, 359, 23, 59)]
+        [InlineData(43200L * 5, 1, 0, 0, 0, 0)]
+        [InlineData(43200L * 11 + 1440 * 29 + 1439, 0, 0, 0, 0, 1)]
+        public void AddTime_KeepsTickAndComponentsInAgreement(long start, int years, int months, int days, int hours, int minutes)
+        {
+            var t = new TimeData(start);
+            t.AddTime(years, months, days, hours, minutes);
+
+            var fromTick = new TimeData(t.Tick);
+            Assert.Equal((fromTick.Years, fromTick.Months, fromTick.Days, fromTick.Hours, fromTick.Minutes),
+                (t.Years, t.Months, t.Days, t.Hours, t.Minutes));
         }
 
         [Fact]

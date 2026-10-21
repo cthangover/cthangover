@@ -5,8 +5,8 @@ using Godot;
 namespace Cthangover.Mods.Time
 {
     /// <summary>
-    /// In-game clock: subscribes to SceneEventController timer ticks and advances
-    /// GameData.Runtime.Time. Renders the time text on a Label and applies
+    /// In-game clock: subscribes to SceneEventController timer ticks and redraws
+    /// GameData.Runtime.Time (TimeTickController advances it). Renders the time text on a Label and applies
     /// Godot.Engine.TimeScale from the exported timeScale field for global
     /// time acceleration. The #if TOOLS block updates the rendered time in the
     /// editor inspector when properties change, giving designers live time preview.
