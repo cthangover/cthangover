@@ -119,8 +119,12 @@ namespace Cthangover.Core.Games
                 if (!set.ModIds.Add(id))
                     continue;
 
-                foreach (var dependency in (info as ModInfo)?.Manifest?.DependencyIds ?? new List<string>())
-                    pending.Push(dependency);
+                foreach (var dependency in (info as ModInfo)?.Manifest?.Depends ?? new List<ModDependency>())
+                {
+                    // An optional dependency joins only when it is installed.
+                    if (dependency.IsValid && (!dependency.IsOptional || discovered.ContainsKey(dependency.ModId)))
+                        pending.Push(dependency.ModId);
+                }
             }
         }
     }

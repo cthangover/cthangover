@@ -38,6 +38,16 @@ namespace Engine.Tests.Mods
         }
 
         [Fact]
+        public void RequiredDependencyIds_LeaveOutOptionalAndInvalid()
+        {
+            var manifest = JsonSerializer.Deserialize<ModManifest>(
+                "{\"id\":\"m\",\"depends\":[\"engine>=1\",\"voice?\",\"lore>=2?\",\"bad id!\"]}");
+
+            Assert.Equal(new[] { "engine", "voice", "lore" }, manifest.DependencyIds);
+            Assert.Equal(new[] { "engine" }, manifest.RequiredDependencyIds);
+        }
+
+        [Fact]
         public void Deserialize_MinimalFields()
         {
             var json = @"{ ""id"": ""minimal"" }";

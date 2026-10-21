@@ -138,6 +138,17 @@ namespace Cthangover.Core.Mods
             .ToList();
 
         /// <summary>
+        /// The dependency ids the mod cannot load without — <see cref="DependencyIds"/>
+        /// minus the optional (<c>id?</c>) ones. Cascades that disable or require
+        /// mods use this; ordering and compile references use every dependency.
+        /// </summary>
+        [JsonIgnore]
+        public List<string> RequiredDependencyIds => Depends?
+            .Where(d => d.IsValid && !d.IsOptional)
+            .Select(d => d.ModId)
+            .ToList();
+
+        /// <summary>
         /// Mutually exclusive mod IDs. If both mods are active,
         /// both are disabled with a conflict warning.
         /// </summary>

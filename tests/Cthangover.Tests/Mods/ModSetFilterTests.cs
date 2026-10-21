@@ -1,13 +1,29 @@
 namespace Cthangover.Tests.Mods
 {
+    using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Linq;
     using Cthangover.Core.Mods;
     using Cthangover.Core.Mods.Pipeline;
 
-    /// <summary>Dependency validation of the discovered mod set before compilation.</summary>
-    public class ModSetFilterTests
+    /// <summary>Disabling and dependency validation of the discovered mod set before compilation.</summary>
+    [Collection("disabled-mods-store")]
+    public class ModSetFilterTests : IDisposable
     {
+        public void Dispose() => File.Delete("disabled_mods.json");
+
+        [Fact]
+        public void FilterDisabledMods_CascadesOverRequiredDependenciesOnly()
+        {
+            DisabledModsStore.Save(new HashSet<string> { "voice" });
+            var mods = Set(Mod("voice"), Mod("story", "voice?"), Mod("dub", "voice>=1"), Mod("menu"));
+
+            ModSetFilter.FilterDisabledMods(mods);
+
+            Assert.Equal(new[] { "menu", "story" }, mods.Keys.OrderBy(k => k));
+        }
+
         [Fact]
         public void ValidateDependencies_DropsDependentsOfARemovedMod_Transitively()
         {
