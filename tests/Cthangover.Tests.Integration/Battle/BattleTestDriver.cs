@@ -126,7 +126,8 @@ namespace Cthangover.Core.Autotest
 
             if (TurnBattleBridge.IsDestroyed(battle))
             {
-                Finish(true, $"battle finished in {_elapsed:F1}s, end-turn presses={_turnPresses}");
+                _finished = true;
+                FinishAfterBattle($"battle finished in {_elapsed:F1}s, end-turn presses={_turnPresses}");
                 return;
             }
 
@@ -146,6 +147,33 @@ namespace Cthangover.Core.Autotest
             _turnPresses++;
             GameLogger.Log("BATTLE_TEST", $"BattleTestDriver: end turn #{_turnPresses}");
             endTurn.EmitSignal("pressed");
+        }
+
+        /// <summary>
+        /// Lets the battle scene's nodes be freed, then changes the party's
+        /// health the way an item does between battles: party attributes
+        /// outlive the battle, so a battle UI still subscribed to them would
+        /// throw from its freed widgets into whatever changed the value.
+        /// </summary>
+        private async void FinishAfterBattle(string message)
+        {
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+            try
+            {
+                foreach (var member in Settings.GameData.Instance.Runtime.CharacterData.Characters.Values)
+                {
+                    var health = member.Attributes?.Health;
+                    if (health != null)
+                        health.Value = health.Value;
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Finish(false, $"party health change after the battle threw {ex.GetType().Name}: {ex.Message}");
+                return;
+            }
+            Finish(true, message);
         }
 
         private void Finish(bool passed, string message)

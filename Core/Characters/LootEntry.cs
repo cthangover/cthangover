@@ -1,3 +1,4 @@
+using System;
 using System.Text.Json.Serialization;
 using Cthangover.Core.Mods.Patches;
 
@@ -42,5 +43,24 @@ namespace Cthangover.Core.Characters
         /// </summary>
         [JsonPropertyName("Probability")]
         public int Probability { get; set; }
+
+        /// <summary>
+        /// How many items this entry drops on one roll: 0 when the
+        /// <see cref="Probability"/> (percent, clamped to 0–100) misses,
+        /// otherwise a count between <see cref="MinCount"/> and
+        /// <see cref="MaxCount"/> inclusive. Swapped bounds are read in either
+        /// order and negative counts drop nothing — a slip in a loot table
+        /// must not throw on the victory screen, which rolls every entry.
+        /// </summary>
+        public int Roll(Random random)
+        {
+            var probability = Math.Clamp(Probability, 0, 100);
+            if (probability == 0 || (probability < 100 && random.Next(1, 101) > probability))
+                return 0;
+
+            var low = Math.Max(0, Math.Min(MinCount, MaxCount));
+            var high = Math.Max(0, Math.Max(MinCount, MaxCount));
+            return random.Next(low, high + 1);
+        }
     }
 }
