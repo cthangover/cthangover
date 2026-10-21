@@ -1,0 +1,27 @@
+{
+  "id": "rpg_editor",
+  "name": "RPG Map Editor",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Editor of the rpg mod's tile maps (maps/*.json): paints the back, main and front tile layers and the collision layer with a pencil, an eraser and a flood fill from the tileset palette, places and edits map events (look, trigger, scenario, inline commands, teleport, condition), sets the map size, spawn and random encounters. Undo/redo, live update of the running world after saving, play from the spawn. Opens from the main menu tools, the novel editor hub and the in-game toolbar.",
+  "category": "tools, editor",
+  "sources": [
+    "src/**/*.cs"
+  ],
+  "test_sources": [
+    "tests/*.cs"
+  ],
+  "depends": [
+    "rpg>=1",
+    "editor_tools>=1",
+    "ui_base>=1"
+  ],
+  "test_suites": [
+    {
+      "id": "edit",
+      "activate": [
+        "--itest=rpg_editor_edit"
+      ]
+    }
+  ]
+}
