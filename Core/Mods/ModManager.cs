@@ -130,6 +130,15 @@ namespace Cthangover.Core.Mods
             => System.Threading.Tasks.Task.Run(() => registry.Reloader.Prepare(selection, force, cancellationToken), cancellationToken);
 
         /// <summary>
+        /// Compiles the mod set of <paramref name="selection"/> into the assembly
+        /// cache without loading anything (<see cref="Pipeline.ModSetReloader.WarmUp"/>);
+        /// the menu runs it in the background for every game, so picking a game
+        /// does not wait for compilation. Blocking, call it off the main thread.
+        /// </summary>
+        public void WarmUp(Games.GameLaunchArgs selection, CancellationToken cancellationToken = default)
+            => registry.Reloader.WarmUp(selection, cancellationToken);
+
+        /// <summary>
         /// Second half, on the main thread: switches to the prepared set and
         /// rebuilds everything derived from it in the boot-phase order (resolver
         /// caches, the <c>IGameRegistry</c> set, initializers, mod settings,

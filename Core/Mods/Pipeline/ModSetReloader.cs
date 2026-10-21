@@ -60,24 +60,7 @@ namespace Cthangover.Core.Mods.Pipeline
             lock (pipeline.PipelineLock)
             {
                 prep.PreviousArtifacts = new Dictionary<string, string>(ModAssemblyCache.CurrentArtifacts, StringComparer.OrdinalIgnoreCase);
-                foreach (var (scanner, url, priority) in pipeline.ResolvedRoots)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    if (scanner.IsCanProvide(url))
-                        ModDiscoveryService.DiscoverMods(prep.Mods, prep.Priorities, scanner, url, priority, cancellationToken);
-                }
-
-                ModTestSuites.Mount(prep.Mods, new List<string>(selection.UserArgs));
-                foreach (var kvp in prep.Mods)
-                    prep.AllDiscovered[kvp.Key] = kvp.Value;
-
-                ModSetFilter.FilterDisabledMods(prep.Mods);
-                prep.Choice = ModSetFilter.SelectActiveGame(prep.Mods, selection);
-                ModSetFilter.ValidateDependencies(prep.Mods);
-
-                prep.Precompiled = ModAssemblyLoader.StagePrecompiledDlls(prep.Mods.Values, cancellationToken);
-                prep.Compiled = ModCompiler.PrepareAll(prep.Mods, cancellationToken);
-                prep.Errors.AddRange(GameLogger.CompilationErrors);
+                DiscoverAndCompile(prep, cancellationToken);
             }
 
             if (prep.Succeeded)
@@ -85,6 +68,59 @@ namespace Cthangover.Core.Mods.Pipeline
             else
                 GameLogger.Log("MODS_RELOAD", $"Mod set preparation FAILED with {prep.Errors.Count} error(s); the running set stays", LogLevel.Error);
             return prep;
+        }
+
+        /// <summary>
+        /// Compiles the mod set of <paramref name="selection"/> into the assembly
+        /// cache and throws the preparation away, so a later switch to that game
+        /// finds every mod compiled and only loads it. Nothing running changes:
+        /// it holds the pipeline lock like <see cref="Prepare"/> (a real switch
+        /// waits for the mod being compiled, then reuses it from the cache), and
+        /// afterwards restores the artifact table and
+        /// <see cref="GameLogger.CompilationErrors"/> — the errors of another
+        /// game's set are not the running set's errors. Background-safe; a
+        /// cancellation stops between mods.
+        /// </summary>
+        public void WarmUp(GameLaunchArgs selection, CancellationToken cancellationToken = default)
+        {
+            var prep = new ModReloadPreparation(selection, null);
+            lock (pipeline.PipelineLock)
+            {
+                var errors = new List<string>(GameLogger.CompilationErrors);
+                prep.PreviousArtifacts = new Dictionary<string, string>(ModAssemblyCache.CurrentArtifacts, StringComparer.OrdinalIgnoreCase);
+                try
+                {
+                    DiscoverAndCompile(prep, cancellationToken);
+                }
+                finally
+                {
+                    Discard(prep);
+                    GameLogger.CompilationErrors.Clear();
+                    GameLogger.CompilationErrors.AddRange(errors);
+                }
+            }
+        }
+
+        private void DiscoverAndCompile(ModReloadPreparation prep, CancellationToken cancellationToken)
+        {
+            foreach (var (scanner, url, priority) in pipeline.ResolvedRoots)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                if (scanner.IsCanProvide(url))
+                    ModDiscoveryService.DiscoverMods(prep.Mods, prep.Priorities, scanner, url, priority, cancellationToken);
+            }
+
+            ModTestSuites.Mount(prep.Mods, new List<string>(prep.Selection.UserArgs));
+            foreach (var kvp in prep.Mods)
+                prep.AllDiscovered[kvp.Key] = kvp.Value;
+
+            ModSetFilter.FilterDisabledMods(prep.Mods);
+            prep.Choice = ModSetFilter.SelectActiveGame(prep.Mods, prep.Selection);
+            ModSetFilter.ValidateDependencies(prep.Mods);
+
+            prep.Precompiled = ModAssemblyLoader.StagePrecompiledDlls(prep.Mods.Values, cancellationToken);
+            prep.Compiled = ModCompiler.PrepareAll(prep.Mods, cancellationToken);
+            prep.Errors.AddRange(GameLogger.CompilationErrors);
         }
 
         /// <summary>
