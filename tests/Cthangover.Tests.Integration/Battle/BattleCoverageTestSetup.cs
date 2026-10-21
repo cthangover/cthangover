@@ -39,11 +39,18 @@ namespace Cthangover.Core.Autotest
             var coreIds = TurnBattleBridge.CoreIds();
             GameLogger.Log("BATTLE_COVERAGE", $"registered cores: {coreIds.Count}");
 
+            var manifestTests = TestManifestNames.Load();
             foreach (var id in coreIds)
             {
                 if (!DeclaredTests.TryGetValue(id, out var testName))
                 {
                     Fail($"core={id} has no integration test declared");
+                    continue;
+                }
+
+                if (!manifestTests.Contains(testName))
+                {
+                    Fail($"core={id} declares test '{testName}', which tests/tests.manifest.json does not run");
                     continue;
                 }
 

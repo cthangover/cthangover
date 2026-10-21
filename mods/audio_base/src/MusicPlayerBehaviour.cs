@@ -276,24 +276,11 @@ namespace Cthangover.Mods.Audio
             if (dict == null || !dict.TryGetValue(playlistContext.LastMusicType, out var list) || Lists.IsEmpty(list))
                 return;
 
-            int iteration = 0;
-            for (;;)
-            {
-                int index = (int)(GD.Randi() % (uint)list.Count);
-                var nextMusic = list[index];
+            var nextMusic = TrackPicker.Next(list, playlistContext.LastMusicName, System.Random.Shared);
+            GameLogger.Log("AUDIO", $"NextSound -> '{nextMusic}' (type={playlistContext.LastMusicType}, scene={playlistContext.Playlist?.Scene})");
 
-                if (list.Count == 1 || playlistContext.LastMusicName != nextMusic)
-                {
-                    GameLogger.Log("AUDIO", $"NextSound -> '{nextMusic}' (type={playlistContext.LastMusicType}, scene={playlistContext.Playlist?.Scene})");
-
-                    StopMusic();
-                    PlayMusic(nextMusic);
-                    break;
-                }
-
-                if (iteration++ > 10)
-                    break;
-            }
+            StopMusic();
+            PlayMusic(nextMusic);
         }
 
         /// <summary>
