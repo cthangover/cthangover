@@ -78,7 +78,7 @@ namespace Cthangover.Mods.Rpg
             }
 
             RpgState.Instance.Place(mapId, target.X, target.Y, target.Dir);
-            var sceneManager = (Engine.GetMainLoop() as SceneTree)?.Root?.GetNodeOrNull<SceneManager>("SceneManager");
+            var sceneManager = (Godot.Engine.GetMainLoop() as SceneTree)?.Root?.GetNodeOrNull<SceneManager>("SceneManager");
             if (sceneManager == null)
             {
                 GameLogger.Log("RPG", $"teleport to '{mapId}': SceneManager not found", LogLevel.Error);
