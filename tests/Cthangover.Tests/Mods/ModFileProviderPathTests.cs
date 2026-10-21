@@ -100,6 +100,52 @@ namespace Engine.Tests.Mods
         }
 
         [Fact]
+        public void Folder_ListedEntries_KeepTheCasePolicyAndSeeNewFiles()
+        {
+            using var folder = CreateFolderProvider();
+
+            Assert.Equal(new[] { "dir/", "shared/" }, folder.ListFiles().OrderBy(e => e));
+            Assert.Equal(new[] { "dir/main.txt" }, folder.ListFiles("dir"));
+            Assert.Equal(MainContent, folder.ReadFileText("dir/main.txt"));
+
+            Assert.Null(folder.ReadFileText("Dir/main.txt"));
+            Assert.Null(folder.ReadFileText("dir/Main.txt"));
+            Assert.Empty(folder.ListFiles("Dir"));
+
+            File.WriteAllText(Path.Combine(folder.RootPath, "dir", "added.txt"), DataContent);
+            Assert.Equal(DataContent, folder.ReadFileText("dir/added.txt"));
+            Assert.Equal(new[] { "dir/added.txt", "dir/main.txt" }, folder.ListFiles("dir").OrderBy(e => e));
+
+            File.Delete(Path.Combine(folder.RootPath, "dir", "main.txt"));
+            Assert.Null(folder.ReadFileText("dir/main.txt"));
+        }
+
+        [Fact]
+        public void FolderAndZip_ListFiles_SkipHiddenEntries()
+        {
+            using var folder = CreateFolderProvider();
+            Directory.CreateDirectory(Path.Combine(folder.RootPath, ".git", "objects"));
+            File.WriteAllText(Path.Combine(folder.RootPath, ".git", "config.json"), "{}");
+            File.WriteAllText(Path.Combine(folder.RootPath, "dir", ".hidden.json"), "{}");
+
+            var zipPath = Path.Combine(_testDir, "hidden_mod.zip");
+            using (var archive = ZipFile.Open(zipPath, ZipArchiveMode.Create))
+            {
+                WriteEntry(archive, "dir/main.txt", MainContent);
+                WriteEntry(archive, "dir/.hidden.json", "{}");
+                WriteEntry(archive, ".git/config.json", "{}");
+            }
+            using var zip = new ZipModFileProvider(zipPath, "hidden_mod");
+
+            Assert.Equal(new[] { "dir/", "shared/" }, folder.ListFiles().OrderBy(e => e));
+            Assert.Equal(new[] { "dir/" }, zip.ListFiles());
+            Assert.Equal(new[] { "dir/main.txt" }, folder.ListFiles("dir"));
+            Assert.Equal(new[] { "dir/main.txt" }, zip.ListFiles("dir"));
+            Assert.Equal("{}", folder.ReadFileText("dir/.hidden.json"));
+            Assert.Equal("{}", zip.ReadFileText("dir/.hidden.json"));
+        }
+
+        [Fact]
         public void FolderAndZip_EscapeAttempt_StaysInsideMod()
         {
             File.WriteAllText(Path.Combine(_testDir, "outside.txt"), "secret");

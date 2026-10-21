@@ -14,7 +14,7 @@ namespace Cthangover.Core.Mods
     /// in-process reload (game switch, hot reload) rediscovers everything and
     /// spent most of its time re-hashing unchanged mods. A cheap stamp of the
     /// mod's files (relative path, size and modification time of every file in
-    /// a folder mod; size and time of a zip) decides whether the cached hash
+    /// a folder mod, hidden entries left out; size and time of a zip) decides whether the cached hash
     /// still applies; any change recomputes it. A provider whose root is not a
     /// file or folder on disk is always hashed.
     /// </summary>
@@ -52,7 +52,7 @@ namespace Cthangover.Core.Mods
             if (!Directory.Exists(root))
                 return null;
 
-            var files = new List<string>(Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories));
+            var files = new List<string>(ModContentFiles.Enumerate(root));
             files.Sort(StringComparer.Ordinal);
             foreach (var file in files)
             {

@@ -80,8 +80,7 @@ namespace Cthangover.Core.Mods
         /// </summary>
         public static string ComputeInstallSha256(string folderPath, List<string> ignorePatterns = null)
         {
-            var files = new List<string>(
-                Directory.GetFiles(folderPath, "*", SearchOption.AllDirectories));
+            var files = new List<string>(ModContentFiles.Enumerate(folderPath));
 
             return ComputeInstallSha256FromFiles(folderPath, files, ignorePatterns);
         }

@@ -28,8 +28,10 @@ namespace Cthangover.Core.Mods
         /// <summary>
         /// Exports a catalog entry for a folder mod. If no zip archive
         /// for this mod exists in <paramref name="outputDir"/>, one is
-        /// created via <c>ZipFile.CreateFromDirectory</c>. The companion
-        /// .json file is then written alongside the zip.
+        /// created from the mod's content files (<see cref="ModContentFiles"/>:
+        /// the folder's <c>.git/</c> and other hidden entries stay out of the
+        /// published archive). The companion .json file is then written
+        /// alongside the zip.
         /// </summary>
         /// <param name="modInfo">Loaded mod info with manifest metadata.</param>
         /// <param name="entry">Populated catalog entry DTO (download URL,
@@ -47,7 +49,11 @@ namespace Cthangover.Core.Mods
             {
                 Directory.CreateDirectory(outputDir);
                 File.Delete(zipPath + ".tmp");
-                ZipFile.CreateFromDirectory(folderPath, zipPath, CompressionLevel.Optimal, false);
+                using (var archive = ZipFile.Open(zipPath, ZipArchiveMode.Create))
+                {
+                    foreach (var file in ModContentFiles.Enumerate(folderPath))
+                        archive.CreateEntryFromFile(file, ModPath.Normalize(Path.GetRelativePath(folderPath, file)), CompressionLevel.Optimal);
+                }
                 GameLogger.Log("MODS_EXPORT", $"Created archive '{zipPath}' from folder mod '{entry.Id}'");
             }
 

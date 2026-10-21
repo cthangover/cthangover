@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Threading;
 using Cthangover.Core.Utils;
 using Godot;
 
@@ -44,15 +46,28 @@ namespace Cthangover.Core.Mods
         [System.Text.Json.Serialization.JsonIgnore]
         public List<string> LoadFailureReasons { get; set; } = new();
 
+        private Lazy<string> installSha256;
+
         /// <summary>
-        /// SHA256 checksum of the mod's installed content, computed during
-        /// discovery by <see cref="ModHasher.ComputeInstallSha256(IModFileProvider, List{string})"/>.
+        /// SHA256 checksum of the mod's installed content
+        /// (<see cref="ModHasher.ComputeInstallSha256(IModFileProvider, List{string})"/>).
         /// Used to detect local modifications by comparing against the
-        /// <c>install_sha256</c> value in the online catalog. Null when
-        /// the mod failed to load or the computation was skipped.
+        /// <c>install_sha256</c> value in the online catalog. Discovery only
+        /// defers it (<see cref="DeferInstallSha256"/>): hashing reads every
+        /// file of the mod, and only the catalog check and the validator report
+        /// need it, so boot does not pay for it. Null when the mod failed to
+        /// load or the computation failed.
         /// </summary>
         [System.Text.Json.Serialization.JsonIgnore]
-        public string InstallSha256 { get; set; }
+        public string InstallSha256
+        {
+            get => installSha256?.Value;
+            set => installSha256 = new Lazy<string>(value);
+        }
+
+        /// <summary>Makes <see cref="InstallSha256"/> run <paramref name="compute"/> once, on its first read (any thread).</summary>
+        public void DeferInstallSha256(Func<string> compute)
+            => installSha256 = new Lazy<string>(compute, LazyThreadSafetyMode.ExecutionAndPublication);
 
         /// <summary>
         /// Safe UI label: attempts translation via <c>mod_{Id}_name</c> key first,

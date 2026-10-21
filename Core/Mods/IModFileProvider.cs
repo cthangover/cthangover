@@ -32,7 +32,10 @@ namespace Cthangover.Core.Mods
         /// <summary>
         /// Enumerates all files and directories immediately under the
         /// given directory. Directories have a trailing <c>/</c> to let
-        /// recursive callers branch without additional stat calls.
+        /// recursive callers branch without additional stat calls. Hidden
+        /// entries (name starting with <c>.</c>: <c>.git/</c>, <c>.godot/</c>)
+        /// are not mod content and are left out — every mod folder is its own
+        /// git repository, and recursive scans used to walk its objects.
         /// </summary>
         IEnumerable<string> ListFiles(string directory = "");
 

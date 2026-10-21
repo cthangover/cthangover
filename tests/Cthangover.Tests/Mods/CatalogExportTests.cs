@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -426,6 +427,24 @@ namespace Engine.Tests.Mods
 		{
 			if (Directory.Exists(_testDir))
 				Directory.Delete(_testDir, recursive: true);
+		}
+
+		[Fact]
+		public void ExportFromFolder_ArchiveLeavesOutHiddenEntries()
+		{
+			var mod = Path.Combine(_testDir, "mod");
+			Directory.CreateDirectory(Path.Combine(mod, "data"));
+			Directory.CreateDirectory(Path.Combine(mod, ".git", "objects"));
+			File.WriteAllText(Path.Combine(mod, "manifest.json"), "{ \"id\": \"mod\" }");
+			File.WriteAllText(Path.Combine(mod, "data", "a.json"), "{}");
+			File.WriteAllText(Path.Combine(mod, "data", ".cache"), "x");
+			File.WriteAllText(Path.Combine(mod, ".git", "objects", "pack"), "x");
+			var info = new ModInfo { Id = "mod", FileProvider = new FolderModFileProvider(mod, "mod") };
+
+			var json = ModCatalogExporter.ExportFromFolder(info, new CatalogExportEntry { Id = "mod", Version = "1.0.0" }, Path.Combine(_testDir, "out"));
+
+			using var zip = ZipFile.OpenRead(Path.ChangeExtension(json, ".zip"));
+			Assert.Equal(new[] { "data/a.json", "manifest.json" }, zip.Entries.Select(e => e.FullName).OrderBy(n => n, StringComparer.Ordinal));
 		}
 
 		[Fact]
