@@ -3,7 +3,7 @@
 Patches let one mod add or override properties of entities defined in another mod — without rewriting their JSON files entirely.
 
 - **`"Id": "EntityName"`** — apply only to the entity with this ID.
-- **`"Id": "*"`** — wildcard: applies to **all** entities of this type, serving as a fallback value. An entity's own JSON-defined properties always take precedence over wildcard values.
+- **`"Id": "*"`** — wildcard: applies to **all** entities of this type. Its values overwrite the entity's own JSON values; a targeted patch (`"Id": "EntityName"`) is applied after the wildcard and wins over it.
 
 Works for every entity kind the game defines — `character`, `item`, `action`, `skill`, `quest`, `recipe`, `status_effect` — keyed by kind, not by directory.
 
@@ -48,8 +48,8 @@ Standard `{"Items": [...]}` wrapper. Each entry contains an `Id` and arbitrary p
       "TestDefault": 100                // Will be layered over wildcard values
     },
     {
-      "Id": "*",                        // Wildcard: applies to ALL entities as a fallback
-      "TestDefault": -20,               // Overridden by entity's own properties or specific patches
+      "Id": "*",                        // Wildcard: applies to ALL entities of the kind
+      "TestDefault": -20,               // Overridden by specific patches (overwrites the entity's own value)
       "TestGlobalPatch": 1              // Global property applied to all entities
     }
   ]
@@ -65,6 +65,8 @@ When creating an entity, its properties are assembled in layers. Each subsequent
 | 1 | Entity's own properties (from its JSON) | Base |
 | 2 | Wildcard patches `"*"` (in mod load order) | Higher |
 | 3 | Targeted patches by `Id` (in mod load order) | Highest |
+
+Property names match in any letter case (`"health"` patches `Health`), the same way entity JSON is read.
 
 ## Patches from Different Mods
 
@@ -105,7 +107,7 @@ Result for all characters: `{ "Test": 0, "Strength": 10 }` — `Test` overridden
 {
   "Items": [
     { "Id": "Hero", "Test": 50, "CritChance": 15 },                    // Specific patch: applies only to Hero
-    { "Id": "*", "Test": -20, "CritChance": 5, "GlobalBuff": 10 }      // Wildcard: fallback for all other characters
+    { "Id": "*", "Test": -20, "CritChance": 5, "GlobalBuff": 10 }      // Wildcard: applies to every character; Hero gets its own values above
   ]
 }
 ```

@@ -112,8 +112,11 @@ namespace Cthangover.Core.Mods.Patches
         {
             writer.WriteStartObject();
 
-            var patchedKeys = new HashSet<string>();
-            var patchedValues = new Dictionary<string, string>();
+            // Entity JSON is read case-insensitively, so a patch key matches its
+            // property in any case; otherwise both spellings were written and
+            // the entity's own value, written last, won over the patch.
+            var patchedKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var patchedValues = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var kvp in patchProps)
             {
@@ -136,7 +139,7 @@ namespace Cthangover.Core.Mods.Patches
 
                 var existingRaw = patchedValues.TryGetValue(baseKey, out var pv)
                     ? pv
-                    : source.TryGetProperty(baseKey, out var ep)
+                    : TryGetPropertyIgnoreCase(source, baseKey, out var ep)
                         && ep.ValueKind == JsonValueKind.Array
                         ? ep.GetRawText()
                         : null;
@@ -196,7 +199,7 @@ namespace Cthangover.Core.Mods.Patches
             if (incomingValue.ValueKind == JsonValueKind.Array)
                 return DetectIdentityKey(incomingValue);
 
-            if (source.TryGetProperty(propertyName, out var existingArr)
+            if (TryGetPropertyIgnoreCase(source, propertyName, out var existingArr)
                 && existingArr.ValueKind == JsonValueKind.Array)
                 return DetectIdentityKey(existingArr);
 
@@ -232,6 +235,20 @@ namespace Cthangover.Core.Mods.Patches
             }
 
             return null;
+        }
+
+        private static bool TryGetPropertyIgnoreCase(JsonElement source, string name, out JsonElement value)
+        {
+            foreach (var prop in source.EnumerateObject())
+            {
+                if (string.Equals(prop.Name, name, StringComparison.OrdinalIgnoreCase))
+                {
+                    value = prop.Value;
+                    return true;
+                }
+            }
+            value = default;
+            return false;
         }
 
         private static Type GetListItemType(Type propertyType)

@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using Cthangover.Core.Mods;
 using Cthangover.Core.Mods.Patches;
@@ -62,6 +65,20 @@ namespace Engine.Tests.Utils
             var result = merger.Merge(json, "Test", patches);
 
             Assert.Contains("\"Value\":200", result);
+        }
+
+        [Fact]
+        public void Merge_KeyInOtherCase_ReplacesTheEntityProperty()
+        {
+            var merger = new JsonPatchMerger();
+            var json = "{\"Id\":\"Test\",\"Health\":50,\"Tags\":[\"a\"]}";
+            var patches = Patches("Test", ("health", ParseJson("999")), ("tags$add", ParseJson("[\"b\"]")));
+
+            var result = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(merger.Merge(json, "Test", patches));
+
+            Assert.Equal(new[] { "Id", "health", "tags" }, result.Keys.OrderBy(k => k, StringComparer.Ordinal));
+            Assert.Equal(999, result["health"].GetInt32());
+            Assert.Equal("[\"a\",\"b\"]", result["tags"].GetRawText());
         }
 
         [Fact]

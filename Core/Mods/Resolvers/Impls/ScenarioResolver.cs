@@ -49,25 +49,22 @@ namespace Cthangover.Core.Mods.Resolvers
             if (_defCache != null)
                 return _defCache;
 
-            var result = new Dictionary<string, List<ScenarioDefinition>>();
+            var collected = new List<ScenarioDefinition>();
 
             foreach (var overlay in ModOverlays.All)
-                CollectScenarioDefsRecursive(overlay.Value, overlay.Key, "scenarios", result, null);
+                CollectScenarioDefsRecursive(overlay.Value, overlay.Key, "scenarios", collected, null);
 
             var overridden = new HashSet<string>();
-            foreach (var list in result.Values)
-            {
-                foreach (var def in list)
-                    overridden.Add(def.Name);
-            }
+            foreach (var def in collected)
+                overridden.Add(def.Name);
 
             foreach (var modId in Context.GetOrderedModIds())
             {
                 var provider = Context.Mods[modId].FileProvider;
-                CollectScenarioDefsRecursive(provider, modId, "scenarios", result, overridden);
+                CollectScenarioDefsRecursive(provider, modId, "scenarios", collected, overridden);
             }
 
-            DropReplaced(result);
+            var result = GroupReplacing(collected);
 
             _defCache = result;
 
@@ -76,35 +73,38 @@ namespace Cthangover.Core.Mods.Resolvers
         }
 
         /// <summary>
-        /// Keeps only the last definition of every scenario name, across all
-        /// scenes: definitions are added in load order, so the last one comes
-        /// from the mod loaded later — the one that depends on (and replaces)
-        /// the earlier one. Scenes left without scenarios are removed.
+        /// Groups definitions by scene, keeping only the last definition of
+        /// every scenario name across all scenes. <paramref name="inLoadOrder"/>
+        /// is flat and in load order, so the last one comes from the mod loaded
+        /// later — the one that depends on (and replaces) the earlier one, even
+        /// when it moves the scenario into another scene. The order has to be
+        /// flat: grouped by scene first, a replacement filed under a scene seen
+        /// earlier lost to the original.
         /// </summary>
-        public static void DropReplaced(Dictionary<string, List<ScenarioDefinition>> result)
+        public static Dictionary<string, List<ScenarioDefinition>> GroupReplacing(IReadOnlyList<ScenarioDefinition> inLoadOrder)
         {
             var winners = new Dictionary<string, ScenarioDefinition>();
-            foreach (var list in result.Values)
-            {
-                foreach (var def in list)
-                    winners[def.Name] = def;
-            }
+            foreach (var def in inLoadOrder)
+                winners[def.Name] = def;
 
-            foreach (var scene in result.Keys.ToList())
+            var result = new Dictionary<string, List<ScenarioDefinition>>();
+            foreach (var def in inLoadOrder)
             {
-                var list = result[scene];
-                for (var i = list.Count - 1; i >= 0; i--)
+                var winner = winners[def.Name];
+                if (winner != def)
                 {
-                    var winner = winners[list[i].Name];
-                    if (winner == list[i])
-                        continue;
-                    GameLogger.Log("MODS", $"scenario '{list[i].Name}' from mod '{list[i].ModId}' is replaced by mod '{winner.ModId}'");
-                    list.RemoveAt(i);
+                    GameLogger.Log("MODS", $"scenario '{def.Name}' from mod '{def.ModId}' is replaced by mod '{winner.ModId}'");
+                    continue;
                 }
 
-                if (list.Count == 0)
-                    result.Remove(scene);
+                if (!result.TryGetValue(def.Scene, out var list))
+                {
+                    list = new List<ScenarioDefinition>();
+                    result[def.Scene] = list;
+                }
+                list.Add(def);
             }
+            return result;
         }
 
         /// <summary>
@@ -227,14 +227,14 @@ namespace Cthangover.Core.Mods.Resolvers
             }
         }
 
-        private void CollectScenarioDefsRecursive(IModFileProvider provider, string modId, string dir, Dictionary<string, List<ScenarioDefinition>> result, HashSet<string> overridden)
+        private void CollectScenarioDefsRecursive(IModFileProvider provider, string modId, string dir, List<ScenarioDefinition> collected, HashSet<string> overridden)
         {
             foreach (var entry in provider.ListFiles(dir))
             {
                 if (entry.EndsWith("/"))
                 {
                     var subDir = entry.TrimEnd('/');
-                    CollectScenarioDefsRecursive(provider, modId, subDir, result, overridden);
+                    CollectScenarioDefsRecursive(provider, modId, subDir, collected, overridden);
                     continue;
                 }
 
@@ -270,12 +270,7 @@ namespace Cthangover.Core.Mods.Resolvers
                     IsOneRun = metadata.TryGetValue("is_one_run", out var ior) && bool.TryParse(ior, out var iorb),
                 };
 
-                if (!result.TryGetValue(sceneName, out var list))
-                {
-                    list = new List<ScenarioDefinition>();
-                    result[sceneName] = list;
-                }
-                list.Add(def);
+                collected.Add(def);
 
                 GameLogger.Log("MODS", $"scenario '{name}' -> scene '{sceneName}' from mod '{modId}' ({entry})");
             }
