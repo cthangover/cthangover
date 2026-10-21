@@ -33,6 +33,8 @@ namespace Cthangover.Mods.ScenarioStudio
         private const long TargetEnd = 0;
         private const long TargetLabelBase = 1000;
         private const long TargetSceneBase = 2000;
+        private const long BackgroundCurrent = 0;
+        private const long BackgroundBase = 1;
         private const int CheckpointSave = 100;
         private const int CheckpointRestore = 101;
 
@@ -50,6 +52,8 @@ namespace Cthangover.Mods.ScenarioStudio
         private StudioCodeLine _promptLine;
         private List<string> _pickLabels = new();
         private List<string> _pickScenes = new();
+        private List<string> _pickBackgrounds = new();
+        private string _newSceneName;
 
         private PanelContainer _runState;
         private Label _runStateText;
@@ -125,6 +129,10 @@ namespace Cthangover.Mods.ScenarioStudio
             _continueButton.Pressed += OnContinuePressed;
             _restartButton = GetNode<MenuButton>(Root + "Transport/Row/RestartButton");
             BuildRestartMenu(_restartButton);
+            var reload = GetNode<Button>(Root + "Transport/Row/ReloadButton");
+            StudioStyles.Transport(reload, Tr("studio/reload_assets"));
+            reload.TooltipText = string.Format(Tr("studio/reload_assets_tip"), System.IO.Path.Combine(Live.Layer.RootPath, "backgrounds"));
+            reload.Pressed += OnReloadAssets;
 
             _crumbs = GetNode<HFlowContainer>(Root + "Context/Column/Crumbs");
             _scope = GetNode<HFlowContainer>(Root + "Context/Column/Scope");
@@ -325,7 +333,7 @@ namespace Cthangover.Mods.ScenarioStudio
                     StudioLogPage.Build(_content, _session);
                     break;
                 case StudioTab.Map:
-                    StudioMapPage.Build(_content, _session, OnGoToScene, OnNewScene, OnLinkScene, OnExport);
+                    StudioMapPage.Build(_content, _session, Live.Layer.RootPath, OnGoToScene, OnNewScene, OnLinkScene, OnExport);
                     break;
             }
         }
@@ -667,7 +675,39 @@ namespace Cthangover.Mods.ScenarioStudio
         private void OnSceneNameEntered(string name)
         {
             _prompt = null;
-            _status = Live.CreateScene(name) ? string.Format(Tr("studio/scene_created"), name.Trim().ToLowerInvariant()) : Tr("studio/bad_name");
+            _newSceneName = StudioLive.ValidName(name);
+            if (_newSceneName == null)
+            {
+                _status = Tr("studio/bad_name");
+                Refresh();
+                return;
+            }
+
+            var menu = StudioPrompt.Pick(this, OnSceneBackgroundPicked);
+            menu.AddItem(Tr("studio/background_current"), (int)BackgroundCurrent);
+            _pickBackgrounds = StudioBackgrounds.Ids();
+            menu.AddSeparator(Tr("studio/backgrounds"));
+            for (var i = 0; i < _pickBackgrounds.Count; i++)
+                menu.AddItem(string.Format(Tr("studio/background_item"), _pickBackgrounds[i], StudioBackgrounds.SourceOf(_pickBackgrounds[i])), (int)(BackgroundBase + i));
+            _prompt = menu;
+            StudioPrompt.Open(menu);
+        }
+
+        private void OnSceneBackgroundPicked(long id)
+        {
+            _prompt = null;
+            var index = (int)(id - BackgroundBase);
+            var background = index >= 0 && index < _pickBackgrounds.Count ? _pickBackgrounds[index] : null;
+            _status = Live.CreateScene(_newSceneName, background) ? string.Format(Tr("studio/scene_created"), _newSceneName) : Tr("studio/bad_name");
+            Refresh();
+        }
+
+        private void OnReloadAssets()
+        {
+            var reload = Live.ReloadAssets();
+            _status = reload.Added.Count == 0
+                ? string.Format(Tr("studio/assets_reloaded"), reload.Total)
+                : string.Format(Tr("studio/assets_reloaded_new"), reload.Total, string.Join(", ", reload.Added));
             Refresh();
         }
 

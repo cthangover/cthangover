@@ -20,6 +20,13 @@ namespace Cthangover.Core.Mods.Resolvers
     /// <see cref="IModFileProvider"/>, which means they work identically
     /// for folder mods and zip mods — the resolver never branches on
     /// storage format.
+    /// <para/>
+    /// The single-file reads also accept the id of a mounted
+    /// <see cref="ModOverlays">overlay</see>: <see cref="FileListResolver"/>
+    /// lists overlay files under the overlay id, so a factory reading a
+    /// collected <see cref="FileEntry"/> (a background dropped into the
+    /// scenario studio's edit layer) reaches the overlay's provider the same
+    /// way it reaches a mod's.
     /// </summary>
     public class ModResolutionContext
     {
@@ -70,8 +77,7 @@ namespace Cthangover.Core.Mods.Resolvers
         /// </summary>
         public bool FileExists(string modId, string path)
         {
-            var mod = GetMod(modId);
-            return mod?.FileProvider?.FileExists(path) ?? false;
+            return ProviderOf(modId)?.FileExists(path) ?? false;
         }
 
         /// <summary>
@@ -89,19 +95,13 @@ namespace Cthangover.Core.Mods.Resolvers
         /// <summary>Reads a text file from the specified mod's provider.</summary>
         public string ReadFileText(string modId, string path)
         {
-            var mod = GetMod(modId);
-            if (mod == null)
-                return null;
-            return mod.FileProvider.ReadFileText(path);
+            return ProviderOf(modId)?.ReadFileText(path);
         }
 
         /// <summary>Reads a binary file from the specified mod's provider.</summary>
         public byte[] ReadFileBinary(string modId, string path)
         {
-            var mod = GetMod(modId);
-            if (mod == null)
-                return null;
-            return mod.FileProvider.ReadFileBinary(path);
+            return ProviderOf(modId)?.ReadFileBinary(path);
         }
 
         /// <summary>
@@ -110,10 +110,7 @@ namespace Cthangover.Core.Mods.Resolvers
         /// </summary>
         public Stream OpenStream(string modId, string path)
         {
-            var mod = GetMod(modId);
-            if (mod == null)
-                return null;
-            return mod.FileProvider.OpenStream(path);
+            return ProviderOf(modId)?.OpenStream(path);
         }
 
         /// <summary>
@@ -122,10 +119,16 @@ namespace Cthangover.Core.Mods.Resolvers
         /// </summary>
         public string GetFileSystemPath(string modId, string path)
         {
+            return ProviderOf(modId)?.GetFileSystemPath(path);
+        }
+
+        /// <summary>File provider of a loaded mod, or of a mounted overlay with that id; null when neither exists.</summary>
+        private IModFileProvider ProviderOf(string modId)
+        {
             var mod = GetMod(modId);
-            if (mod == null)
-                return null;
-            return mod.FileProvider.GetFileSystemPath(path);
+            if (mod != null)
+                return mod.FileProvider;
+            return ModOverlays.TryGet(modId, out var overlay) ? overlay : null;
         }
 
         /// <summary>

@@ -199,6 +199,22 @@ namespace Cthangover.Core.UI
             shellRoot = null;
         }
 
+        /// <summary>
+        /// Hides every cached panel and overlay without freeing it, and forgets
+        /// which ones were open. Panels live on the host layer above every scene,
+        /// so without this a panel open when the player leaves the game (the
+        /// pause menu's "Main menu" button, the studio, the inventory) would stay
+        /// on top of the title screen. Called by the main menu when it opens; the
+        /// next shell shows its start-up overlays again (<see cref="OnShellReady"/>).
+        /// </summary>
+        public void HideAll()
+        {
+            foreach (var instance in instances.Values)
+                SetVisible(instance, false);
+            toggled.Clear();
+            hiddenByScene.Clear();
+        }
+
         private static bool IsHosted(UiEntry entry)
             => UiRegistry.IsPanel(entry) || entry.Once;
 

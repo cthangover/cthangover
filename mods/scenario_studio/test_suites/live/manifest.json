@@ -1,6 +1,6 @@
 {
   "name": "Scenario Studio Live",
-  "description": "GUI test of the scenario studio on the real kitchen scenario: opens the dock like the toolbar button, checks the current line, pause and continue, the novice moment, adds and redirects an answer, inserts a line, applies the edits into a test layer and checks the rollback restart plays them without touching the mod, holds at a breakpoint, walks the other tabs and cleans the layer. --shots=<dir> saves screenshots. Activated by --itest=studio_live.",
+  "description": "GUI test of the scenario studio on the real kitchen scenario: opens the dock like the toolbar button, checks the current line, pause and continue, the novice moment, adds and redirects an answer, inserts a line, applies the edits into a test layer and checks the rollback restart plays them without touching the mod, holds at a breakpoint, walks the other tabs, drops a background into the layer, reloads it and builds a scene on it, and cleans the layer. --shots=<dir> saves screenshots. Activated by --itest=studio_live.",
   "sources": [
     "src/*.cs"
   ],

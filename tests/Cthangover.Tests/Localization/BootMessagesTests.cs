@@ -12,6 +12,15 @@ namespace Engine.Tests.Localization
                 BootMessages.FirstLaunchHint("ru-ru"));
         }
 
+        [Theory]
+        [InlineData("ru")]
+        [InlineData("ru-ru")]
+        [InlineData("RU_ru")]
+        public void FirstLaunchHint_AnyFormOfRussian_ReturnsRussianText(string language)
+        {
+            Assert.Equal(BootMessages.FirstLaunchHint("ru-ru"), BootMessages.FirstLaunchHint(language));
+        }
+
         [Fact]
         public void FirstLaunchHint_English_ReturnsEnglishText()
         {
@@ -34,8 +43,8 @@ namespace Engine.Tests.Localization
         [InlineData(null)]
         [InlineData("")]
         [InlineData("de")]
-        [InlineData("ru")]
         [InlineData("en-us")]
+        [InlineData("en-en")]
         public void FirstLaunchHint_UnknownLanguage_FallsBackToEnglish(string language)
         {
             Assert.Equal(

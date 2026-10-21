@@ -2,6 +2,7 @@ namespace Cthangover.Mods.ScenarioStudio.Tests.Live
 {
     using System.IO;
     using Cthangover.Core.Bootstrap;
+    using Cthangover.Core.Factories.Impls;
     using Cthangover.Core.Mods;
     using Cthangover.Core.Scenes;
     using Cthangover.Core.UI;
@@ -30,9 +31,12 @@ namespace Cthangover.Mods.ScenarioStudio.Tests.Live
     ///   ▶ marker back onto the inserted line, continues from there and is held
     ///   by the breakpoint again, continue;</item>
     /// <item>the Scene, State (a checkpoint is saved there), Log and Map tabs;</item>
-    /// <item>creates a scene in the layer, goes there and sees its scenario run
-    ///   from the layer, exports the layer as a mod, returns to the checkpoint
-    ///   and closes the dock.</item>
+    /// <item>drops a picture into the layer's <c>backgrounds/</c> and reloads
+    ///   the resources: it becomes a layer background;</item>
+    /// <item>creates a scene in the layer on that background, goes there and sees
+    ///   its scenario run from the layer and the picture on screen; replaces the
+    ///   picture, reloads, and the new file is shown; exports the layer as a mod
+    ///   (background included), returns to the checkpoint and closes the dock.</item>
     /// </list>
     /// The test layer is deleted at the end. Ends with
     /// <c>[TEST_RESULT] name=studio_live passed=N failed=M</c>.
@@ -48,6 +52,9 @@ namespace Cthangover.Mods.ScenarioStudio.Tests.Live
         private const float TimeoutSeconds = 150f;
         private const string NewScene = "studio_test_yard";
         private const string ExportId = "studio_test_export";
+        private const string LayerBackground = "studio_test_backdrop";
+        private static readonly Vector2I FirstSize = new(64, 32);
+        private static readonly Vector2I SecondSize = new(48, 48);
 
         private readonly string _shotsDir;
         private StudioPanel _panel;
@@ -239,37 +246,57 @@ namespace Cthangover.Mods.ScenarioStudio.Tests.Live
                     Check(HasNode(_panel.Session, StudioNodeState.Here, "home_kitchen"), "map tab: you are in the kitchen");
                     Check(HasNode(_panel.Session, StudioNodeState.Next, "home_vestibule"), "map tab: the vestibule is an exit");
                     Shot("map");
-                    PressText("studio/map_new_scene");
+                    Check(!StudioBackgrounds.Ids().Contains(LayerBackground), "a picture not dropped yet is no background");
+                    WriteLayerBackground(FirstSize);
+                    Press(Root + "Transport/Row/ReloadButton");
                     break;
                 case 22:
-                    AnswerPrompt(NewScene);
+                    Check(StudioBackgrounds.SourceOf(LayerBackground) == StudioLayer.Id, "picture dropped into the layer is a layer background after the reload");
+                    var dropped = BackgroundFactory.Instance.Get(LayerBackground);
+                    Check(dropped != null && dropped.GetWidth() == FirstSize.X && dropped.GetHeight() == FirstSize.Y, "the layer background loads from the dropped file");
+                    PressText("studio/map_new_scene");
                     break;
                 case 23:
-                    Check(File.Exists(Path.Combine(Live.Layer.RootPath, "scenes", NewScene + ".json")), "new scene written to the layer");
+                    AnswerPrompt(NewScene);
+                    break;
+                case 24:
+                    PickBackground(LayerBackground);
+                    break;
+                case 25:
+                    var sceneFile = Path.Combine(Live.Layer.RootPath, "scenes", NewScene + ".json");
+                    Check(File.Exists(sceneFile), "new scene written to the layer");
+                    Check(File.Exists(sceneFile) && File.ReadAllText(sceneFile).Contains($"\"{LayerBackground}\""), "the new scene uses the picked background");
                     Check(GetNodeOrNull<SceneManager>("/root/SceneManager")?.HasScene(NewScene) == true, "new scene is known to the scene manager");
                     PressPayload(NewScene);
                     break;
-                case 24:
-                    if (SceneManager.GetCurrentSceneName() != NewScene || Box?.Locker is not ScenarioEvent)
+                case 26:
+                    if (SceneManager.GetCurrentSceneName() != NewScene || Box?.Locker is not ScenarioEvent || ShownBackgroundSize() != FirstSize)
                     {
                         _step--;
                         break;
                     }
                     Check(((ScenarioEvent)Box.Locker).SourceModId == StudioLayer.Id, $"the new scene's scenario runs from the layer ('{Box.Locker.ID}')");
+                    Check(true, "the new scene shows the layer background");
                     Shot("new_scene");
+                    WriteLayerBackground(SecondSize);
+                    Press(Root + "Transport/Row/ReloadButton");
+                    break;
+                case 27:
+                    Check(ShownBackgroundSize() == SecondSize, $"a replaced background is shown from the new file after the reload ({ShownBackgroundSize()})");
                     PressText("studio/map_export");
                     break;
-                case 25:
+                case 28:
                     AnswerPrompt(ExportId);
                     break;
-                case 26:
+                case 29:
                     var exported = Path.Combine(ProjectSettings.GlobalizePath("user://mods/"), ExportId);
                     Check(File.Exists(Path.Combine(exported, "manifest.json")) && File.Exists(Path.Combine(exported, "scenes", NewScene + ".json")), "layer exported as a mod with a manifest");
+                    Check(File.Exists(Path.Combine(exported, "backgrounds", LayerBackground + ".png")), "the layer background is exported with the mod");
                     if (Directory.Exists(exported))
                         Directory.Delete(exported, true);
                     MenuPick(101);
                     break;
-                case 27:
+                case 30:
                     if (SceneManager.GetCurrentSceneName() != "home_kitchen")
                     {
                         _step--;
@@ -373,17 +400,27 @@ namespace Cthangover.Mods.ScenarioStudio.Tests.Live
 
         private void PickScene(string scene)
         {
+            PickItem(string.Format(TranslationServer.Translate("studio/target_scene"), scene), $"scene {scene} as a target");
+        }
+
+        private void PickBackground(string background)
+        {
+            PickItem(string.Format(TranslationServer.Translate("studio/background_item"), background, StudioLayer.Id), $"layer background {background}");
+        }
+
+        /// <summary>Picks the item <paramref name="caption"/> in the open studio pick list.</summary>
+        private void PickItem(string caption, string what)
+        {
             PopupMenu menu = null;
             foreach (var child in _panel.GetChildren())
             {
                 if (child is PopupMenu popup && popup.Visible)
                     menu = popup;
             }
-            Check(menu != null, "target menu opened");
+            Check(menu != null, $"pick list opened for {what}");
             if (menu == null)
                 return;
 
-            var caption = string.Format(TranslationServer.Translate("studio/target_scene"), scene);
             for (var i = 0; i < menu.ItemCount; i++)
             {
                 if (menu.GetItemText(i) != caption)
@@ -392,7 +429,22 @@ namespace Cthangover.Mods.ScenarioStudio.Tests.Live
                 menu.Hide();
                 return;
             }
-            Fail($"scene {scene} not offered as a target");
+            Fail($"not offered: {what}");
+        }
+
+        /// <summary>Writes a plain <paramref name="size"/> PNG as background <see cref="LayerBackground"/> of the test layer.</summary>
+        private static void WriteLayerBackground(Vector2I size)
+        {
+            var path = Path.Combine(Live.Layer.RootPath, "backgrounds", LayerBackground + ".png");
+            var image = Image.CreateEmpty(size.X, size.Y, false, Image.Format.Rgb8);
+            image.Fill(new Color(0.2f, 0.4f, 0.3f));
+            image.SavePng(path);
+        }
+
+        private static Vector2I ShownBackgroundSize()
+        {
+            var texture = (SceneContextNode.FindNode<Node>("ViewBox") as IBackgroundView)?.Background?.Texture;
+            return texture == null ? Vector2I.Zero : new Vector2I(texture.GetWidth(), texture.GetHeight());
         }
 
         private void PressPayload(string payload)

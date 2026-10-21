@@ -15,10 +15,12 @@ namespace Cthangover.Mods.ScenarioStudio
     /// <summary>
     /// The studio's edit layer: a folder per game (<c>user://studio/&lt;game&gt;/</c>,
     /// or <c>--studio-layer=&lt;dir&gt;</c>) laid out like a mod (<c>scenarios/</c>,
-    /// <c>scenes/</c>) and mounted as content overlay <see cref="Id"/> through
+    /// <c>scenes/</c>, <c>backgrounds/</c>) and mounted as content overlay <see cref="Id"/> through
     /// <see cref="ModOverlays"/>. Scenarios written here override same-named
     /// scenarios of any mod, so a player can change content of read-only zip
-    /// mods without touching them; new scenes and scenarios live here too.
+    /// mods without touching them; new scenes and scenarios live here too, and
+    /// pictures the author drops into <c>backgrounds/</c> become backgrounds
+    /// after <see cref="StudioBackgrounds.Reload"/>.
     /// <para/>
     /// Edits of folder mods go into the mod itself (the author's workflow)
     /// unless <c>--studio-write=layer</c> forces the layer — tests use it to
@@ -53,11 +55,12 @@ namespace Cthangover.Mods.ScenarioStudio
             RootPath = Path.Combine(ProjectSettings.GlobalizePath(dir), game);
         }
 
-        /// <summary>Creates the folder if needed, mounts it as overlay and refreshes scenario and scene tables.</summary>
+        /// <summary>Creates the folders if needed, mounts it as overlay and refreshes scenario and scene tables.</summary>
         public void Mount()
         {
             Directory.CreateDirectory(Path.Combine(RootPath, "scenarios"));
             Directory.CreateDirectory(Path.Combine(RootPath, "scenes"));
+            Directory.CreateDirectory(Path.Combine(RootPath, "backgrounds"));
             ModOverlays.Mount(Id, new FolderModFileProvider(RootPath, Id));
             RefreshContent();
             GameLogger.Log("UI", $"Scenario studio: layer '{Id}' mounted at {RootPath}");

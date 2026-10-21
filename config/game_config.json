@@ -11,10 +11,10 @@
   "display": {
     "window_mode": 3,
     "resolution_width": 1920,
-    "resolution_height": 1080,
+    "resolution_height": 1024,
     "current_screen": 0,
     "vsync_enabled": false,
-    "scale": 1
+    "max_fps": 0
   },
   "logging": {
     "enabled": true,

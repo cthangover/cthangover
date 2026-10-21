@@ -28,22 +28,22 @@ namespace Cthangover.Core.Settings
         public int    MusicsVolume    { get; set; }
         /// <summary>Ambient volume 0–100.</summary>
         public int    AmbientVolume   { get; set; }
-        /// <summary>Locale code string (e.g. "ru-ru").</summary>
+        /// <summary>Language code in any form (<c>ru</c>, <c>ru-ru</c>, <c>en-en</c>); read through <see cref="Localization.LanguageCode"/>.</summary>
         public string Language        { get; set; }
         /// <summary>Battle animation speed multiplier (1 = normal).</summary>
         public int    BattleSpeed     { get; set; }
-        /// <summary>Godot <c>DisplayServer.WindowMode</c> value.</summary>
+        /// <summary>Godot <c>DisplayServer.WindowMode</c> value; the offered ones are listed in <see cref="DisplayWindowModes"/>.</summary>
         public int    WindowMode      { get; set; }
-        /// <summary>Horizontal resolution override (pixels).</summary>
+        /// <summary>Window width in windowed mode (pixels); fullscreen modes use the monitor's own resolution.</summary>
         public int    ResolutionWidth  { get; set; }
-        /// <summary>Vertical resolution override (pixels).</summary>
+        /// <summary>Window height in windowed mode (pixels).</summary>
         public int    ResolutionHeight { get; set; }
         /// <summary>Zero-based monitor index.</summary>
         public int    CurrentScreen   { get; set; }
         /// <summary>Vertical synchronization toggle.</summary>
         public bool   VsyncEnabled    { get; set; }
-        /// <summary>Viewport stretch multiplier.</summary>
-        public int    Scale           { get; set; }
+        /// <summary>Frame rate cap (<c>Engine.MaxFps</c>); 0 = unlimited.</summary>
+        public int    MaxFps          { get; set; }
         /// <summary><c>true</c> if the launcher window has been shown at least once,
         /// suppressing it on subsequent launches.</summary>
         public bool   LauncherShown   { get; set; }
@@ -79,7 +79,7 @@ namespace Cthangover.Core.Settings
             ResolutionHeight = cfg.Display.ResolutionHeight;
             CurrentScreen   = cfg.Display.CurrentScreen;
             VsyncEnabled    = cfg.Display.VsyncEnabled;
-            Scale           = cfg.Display.Scale;
+            MaxFps          = cfg.Display.MaxFps;
         }
 
         /// <summary>Resolves the settings file path for the current environment.</summary>
@@ -153,7 +153,7 @@ namespace Cthangover.Core.Settings
             ResolutionHeight = other.ResolutionHeight;
             CurrentScreen   = other.CurrentScreen;
             VsyncEnabled    = other.VsyncEnabled;
-            Scale           = other.Scale;
+            MaxFps          = other.MaxFps;
         }
     }
 }

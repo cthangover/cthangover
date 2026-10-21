@@ -126,6 +126,10 @@ layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 
+[node name="ReloadButton" type="Button" parent="Frame/Dock/Column/Transport/Row"]
+layout_mode = 2
+focus_mode = 0
+
 [node name="RestartButton" type="MenuButton" parent="Frame/Dock/Column/Transport/Row"]
 layout_mode = 2
 focus_mode = 0

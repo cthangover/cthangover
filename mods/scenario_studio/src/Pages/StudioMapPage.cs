@@ -12,10 +12,13 @@ namespace Cthangover.Mods.ScenarioStudio
     /// leads there. Exits can be taken directly (a debugging teleport); new
     /// scenes are created in the studio layer, the current scenario can be
     /// linked to any scene, and the layer can be exported as a regular mod.
+    /// The hint under the buttons tells where to drop new backgrounds (a mod or
+    /// the layer's <c>backgrounds/</c>); the "Resources" button of the transport
+    /// bar re-reads them, so a new scene can be built on a new picture.
     /// </summary>
     public static class StudioMapPage
     {
-        public static void Build(VBoxContainer content, StudioSession session, Action<StudioActionButton> go, Action<StudioActionButton> newScene, Action<StudioActionButton> link, Action<StudioActionButton> export)
+        public static void Build(VBoxContainer content, StudioSession session, string layerPath, Action<StudioActionButton> go, Action<StudioActionButton> newScene, Action<StudioActionButton> link, Action<StudioActionButton> export)
         {
             var visited = false;
             foreach (var node in session.Nodes)
@@ -57,6 +60,13 @@ namespace Cthangover.Mods.ScenarioStudio
                 actions.AddChild(StudioActionButton.Create("studio/map_link", link));
             actions.AddChild(StudioActionButton.Create("studio/map_export", export));
             content.AddChild(actions);
+
+            var backgrounds = System.IO.Path.Combine(layerPath, "backgrounds");
+            // Arbitrary wrap: the layer path is one long "word" and must not widen the dock.
+            var hint = UiKit.Hint(string.Format(TranslationServer.Translate("studio/map_assets_hint"), backgrounds), UiTokens.FontSmall);
+            hint.AutowrapMode = TextServer.AutowrapMode.Arbitrary;
+            hint.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+            content.AddChild(hint);
         }
 
         private static Control BuildNode(StudioSceneNode node, Action<StudioActionButton> go)

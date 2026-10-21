@@ -30,7 +30,7 @@ namespace Engine.Tests.Settings
             s2.ResolutionHeight = 720;
             s2.CurrentScreen = 1;
             s2.VsyncEnabled = true;
-            s2.Scale = 2;
+            s2.MaxFps = 144;
 
             s1.Set(s2);
 
@@ -44,7 +44,7 @@ namespace Engine.Tests.Settings
             Assert.Equal(720, s1.ResolutionHeight);
             Assert.Equal(1, s1.CurrentScreen);
             Assert.True(s1.VsyncEnabled);
-            Assert.Equal(2, s1.Scale);
+            Assert.Equal(144, s1.MaxFps);
         }
 
         [Fact]
@@ -95,7 +95,7 @@ namespace Engine.Tests.Settings
             saved.ResolutionHeight = 900;
             saved.CurrentScreen = 1;
             saved.VsyncEnabled = true;
-            saved.Scale = 4;
+            saved.MaxFps = 60;
             saved.LauncherShown = true;
 
             saved.Save();
@@ -116,7 +116,7 @@ namespace Engine.Tests.Settings
             Assert.Equal(saved.ResolutionHeight, loaded.ResolutionHeight);
             Assert.Equal(saved.CurrentScreen, loaded.CurrentScreen);
             Assert.Equal(saved.VsyncEnabled, loaded.VsyncEnabled);
-            Assert.Equal(saved.Scale, loaded.Scale);
+            Assert.Equal(saved.MaxFps, loaded.MaxFps);
             Assert.Equal(saved.LauncherShown, loaded.LauncherShown);
         }
 

@@ -15,6 +15,13 @@ namespace Cthangover.Core.Mods.Resolvers
     /// resolvers — <see cref="ShaderResolver"/> and
     /// <see cref="TextureResolver"/> both delegate to this resolver for
     /// raw file discovery, then apply their own filtering and processing.
+    /// <para/>
+    /// Mounted <see cref="ModOverlays"/> are read after every mod and win
+    /// silently (overriding is what an edit layer is for, not a conflict);
+    /// their entries carry the overlay id, which
+    /// <see cref="ModResolutionContext"/> reads like a mod id. The cache is
+    /// not invalidated by mounting or by new files: whoever changes the
+    /// files calls <see cref="ClearCache"/>.
     /// </summary>
     public class FileListResolver : ModAssetResolver
     {
@@ -36,7 +43,7 @@ namespace Cthangover.Core.Mods.Resolvers
         /// "shaders", "textures/portraits") from every loaded mod.
         /// Files are keyed by their path relative to the group directory.
         /// Later mods in load order override earlier ones with the same
-        /// relative key. Caches the result per group.
+        /// relative key, overlays override every mod. Caches the result per group.
         /// </summary>
         public Dictionary<string, FileEntry> Collect(string group)
         {
@@ -55,13 +62,16 @@ namespace Cthangover.Core.Mods.Resolvers
                 var provider = Context.Mods[modId].FileProvider;
                 var before = result.Count;
 
-                CollectGroupFiles(provider, modId, group, prefix, result);
+                CollectGroupFiles(provider, modId, group, prefix, result, true);
 
                 if (result.Count > before)
                 {
                     GameLogger.Log("MODS", $"mod '{modId}' contributed {result.Count - before} file(s) to group '{group}'");
                 }
             }
+
+            foreach (var overlay in ModOverlays.All)
+                CollectGroupFiles(overlay.Value, overlay.Key, group, prefix, result, false);
 
             _cache[group] = result;
 
@@ -75,7 +85,7 @@ namespace Cthangover.Core.Mods.Resolvers
             _cache.Clear();
         }
 
-        private static void CollectGroupFiles(IModFileProvider provider, string modId, string dir, string prefix, Dictionary<string, FileEntry> result)
+        private static void CollectGroupFiles(IModFileProvider provider, string modId, string dir, string prefix, Dictionary<string, FileEntry> result, bool recordConflicts)
         {
             var entries = provider.ListFiles(dir).ToList();
             GameLogger.Log("MODS", $"[{modId}]  CollectGroupFiles: dir='{dir}', provider entries count={entries.Count}, prefix='{prefix}'", LogLevel.Debug);
@@ -85,12 +95,12 @@ namespace Cthangover.Core.Mods.Resolvers
                 {
                     var subDir = entry.TrimEnd('/');
                     GameLogger.Log("MODS", $"    -> subdir '{subDir}'", LogLevel.Debug);
-                    CollectGroupFiles(provider, modId, subDir, prefix, result);
+                    CollectGroupFiles(provider, modId, subDir, prefix, result, recordConflicts);
                 }
                 else if (entry.StartsWith(prefix))
                 {
                     var key = entry.Substring(prefix.Length);
-                    if (result.ContainsKey(key))
+                    if (recordConflicts && result.ContainsKey(key))
                     {
                         GameLogger.Log("MODS", $"conflict: '{key}' in mod '{modId}' overrides previous entry", LogLevel.Warning);
                         AppServices.Current.Conflicts.RecordConflict("file", key, modId, result[key].ModId, false);

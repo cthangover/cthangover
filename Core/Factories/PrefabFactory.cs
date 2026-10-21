@@ -85,6 +85,29 @@ namespace Cthangover.Core.Factories
         }
 
         /// <summary>
+        /// Drops the cached asset <paramref name="id"/>, so the next <see cref="Get"/>
+        /// reads the file again — for an asset whose file was replaced while the
+        /// game runs. A value still shown by an engine object stays alive there
+        /// (see <see cref="ReleaseResource"/>); only new lookups get the new file.
+        /// </summary>
+        public void Invalidate(string id)
+        {
+            if (!string.IsNullOrEmpty(id))
+                _cache.Invalidate(id);
+        }
+
+        /// <summary>
+        /// Drops every cached asset of this factory (same rules as
+        /// <see cref="Invalidate"/>). Used after files of the group were added
+        /// or replaced in bulk, together with clearing the file list
+        /// (<see cref="FileListResolver.ClearCache"/>) that maps ids to files.
+        /// </summary>
+        public void Clear()
+        {
+            _cache.Clear();
+        }
+
+        /// <summary>
         /// BoundedCache eviction hook: releases the native/GPU memory of an
         /// evicted payload. Godot resources are ref-counted natively and the
         /// cache's managed wrapper owns exactly one of those references, so
