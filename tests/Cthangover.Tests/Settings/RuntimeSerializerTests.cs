@@ -129,6 +129,20 @@ namespace Engine.Tests.Settings
         }
 
         [Fact]
+        public void BuildCoreSlot_ThenRestoreCoreState_RestoresStoryFlags()
+        {
+            var runtime = CreateRuntime();
+            runtime.Flags["door"] = "open";
+            runtime.Flags["visits"] = "3";
+
+            var json = JsonSerializer.Serialize(RuntimeSerializer.BuildCoreSlot(runtime, "1.0.0", "test", new HashSet<string>()));
+            var restored = CreateRuntime();
+            RuntimeSerializer.RestoreCoreState(JsonSerializer.Deserialize<ModSlot>(json), restored);
+
+            Assert.Equal(new Dictionary<string, string> { ["door"] = "open", ["visits"] = "3" }, restored.Flags);
+        }
+
+        [Fact]
         public void BuildCoreSlot_ThenRestoreCoreState_RestoresSkills()
         {
             var runtime = CreateRuntime();

@@ -39,6 +39,7 @@ hljs.registerLanguage("scenario", function (hljs) {
         "show_dialog",
         "hide_dialog",
         "set",
+        "flag",
         "empty",
         "goto",
       ].join(" "),

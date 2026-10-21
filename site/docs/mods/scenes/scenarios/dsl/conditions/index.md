@@ -65,7 +65,7 @@ condition: door_unlocked == "true"
 condition: counter >= 3
 ```
 
-> **Important:** these flags are **not** fed by the DSL `set` command. `set` writes variables into the dialog runtime store, which are consumed by `${var}` substitution and `ctx.GetParam(...)` in actions — a separate mechanism. The flag dictionary used here is populated via `ScenarioCondition.SetFlag`, which currently has no production callers. Do not expect `set my_flag value` to make `condition: my_flag == "value"` pass.
+Flags are story flags of the game, set by the DSL `flag` command (`flag door open`) or `ScenarioCondition.SetFlag` from code. They are saved with the game and cleared by a new game. Dialog variables from `set` are a different, dialog-local store and are not visible here.
 
 ## Operators
 

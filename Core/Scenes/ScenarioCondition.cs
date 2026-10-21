@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Cthangover.Core.Events;
 using Cthangover.Core.Quests;
+using Cthangover.Core.Settings;
 using Cthangover.Core.Utils;
 
 namespace Cthangover.Core.Scenes
@@ -10,10 +11,11 @@ namespace Cthangover.Core.Scenes
     /// Evaluates condition expression strings by parsing them into an AST via
     /// <see cref="ConditionParser"/> and walking the tree polymorphically — each
     /// <see cref="ConditionNode"/> subclass implements its own
-    /// <see cref="ConditionNode.Evaluate"/> method. Maintains a static dictionary
-    /// of named flags settable via <see cref="SetFlag"/> and injects them
-    /// (along with <see cref="QuestFactory"/>) into an <see cref="EvaluationContext"/>
-    /// that is carried through the entire AST walk.
+    /// <see cref="ConditionNode.Evaluate"/> method. Story flags are game state
+    /// (<see cref="RuntimeData.Flags"/>, saved and reset with the game); they are
+    /// set via <see cref="SetFlag"/> and injected (along with the quest service)
+    /// into an <see cref="EvaluationContext"/> carried through the AST walk.
+    /// Outside a running game (tests, tools) a detached flag set stands in.
     ///
     /// The polymorphic design means that a mod assembly can define a custom
     /// <see cref="ConditionNode"/> and it will be evaluated automatically when
@@ -21,22 +23,26 @@ namespace Cthangover.Core.Scenes
     /// </summary>
     public static class ScenarioCondition
     {
-        private static readonly Dictionary<string, string> flags = new();
+        private static readonly Dictionary<string, string> DetachedFlags = new();
+
+        private static Dictionary<string, string> Flags
+            => GameEnvironment.IsRuntime && GameData.Instance is { } data ? data.Runtime.Flags : DetachedFlags;
         private static readonly Dictionary<string, ConditionNode> AstCache = new();
         private static readonly object AstLock = new();
         private static readonly EvaluationContext evalCtx = new();
 
         /// <summary>
-        /// Sets a named flag value in the static flag dictionary. Used by scenario
-        /// scripts to set conditions that can be checked in subsequent
-        /// <see cref="Evaluate"/> calls. Publishes a <see cref="FlagChangedEvent"/>
-        /// only when the value actually changed (setting the same value is a no-op),
-        /// so condition caches invalidate on real change.
+        /// Sets a story flag of the running game (the scenario <c>flag</c> command
+        /// uses it) so later <see cref="Evaluate"/> calls see it. Publishes a
+        /// <see cref="FlagChangedEvent"/> only when the value actually changed
+        /// (setting the same value is a no-op); <see cref="ConditionStateMonitor"/>
+        /// turns it into a condition rescan, so a waiting scenario can start.
         /// </summary>
         /// <param name="key">The flag name.</param>
         /// <param name="value">The flag value, which may be parsed as integer for numeric comparisons.</param>
         public static void SetFlag(string key, string value)
         {
+            var flags = Flags;
             if (flags.TryGetValue(key, out var current) && current == value)
                 return;
             flags[key] = value;
@@ -84,7 +90,7 @@ namespace Cthangover.Core.Scenes
                 }
             }
 
-            evalCtx.Flags = flags;
+            evalCtx.Flags = Flags;
             evalCtx.QuestFactory = QuestServiceRegistry.Provider;
             return ast.Evaluate(evalCtx);
         }

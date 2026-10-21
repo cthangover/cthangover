@@ -405,6 +405,27 @@ set door_locked false
 
 The syntax is **space-separated**: first token is the name, second token is the value. Do not write `set name = value` with spaced equals — the parser stores the literal `"="` as the value. A `name=value` token (no spaces around `=`) is treated as a named argument, which is a different mechanism and not how `set` reads its operands.
 
+`set` variables live only while this dialog runs. For state that scenario conditions read, use `flag`.
+
+### `flag`
+Sets a **story flag** of the game. Unlike `set`, a flag is game state: it is saved, a new game starts
+without it, and scenario `condition:` headers read it. Setting a flag rescans the scene's events, so a
+scenario waiting for it can start as soon as this dialog ends.
+
+```scenario
+flag door open
+flag visits 3
+```
+
+```scenario
+scene: home_kitchen
+condition: door == "open" && visits >= 3
+---
+text "The door stands open now."
+```
+
+Same space-separated syntax as `set`. Numeric values compare as integers in conditions.
+
 ### `empty`
 A no-op command — it queues a placeholder action that does nothing and is skipped instantly.
 

@@ -130,6 +130,14 @@ namespace Cthangover.Mods.Dialog
             return action;
         }
         
+        /// <summary>Sets a story flag of the game (saved, read by scenario conditions) when the queue reaches this point.</summary>
+        public ActionSetFlag Flag(string name, string value)
+        {
+            var action = new ActionSetFlag { Name = name, Value = value };
+            Queue.Add(action);
+            return action;
+        }
+
         /// <summary>Sets a runtime variable by name, using a lazy-evaluated callback for dynamic values not known at script authoring time.</summary>
         public ActionSet Set(string name, Func<string> callback)
         {
