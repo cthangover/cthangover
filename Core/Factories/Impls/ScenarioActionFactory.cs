@@ -14,8 +14,13 @@ namespace Cthangover.Core.Factories.Impls
     /// AppServices composition root in a Lazy&lt;T&gt; slot for thread-safe
     /// initialization via Reflections.FindAndCreate which scans all loaded
     /// assemblies. RegisterAssembly allows mods to inject custom actions at
-    /// runtime — deduplication by Name ensures mods can override core actions
-    /// by registering first. The factory is consumed by ActionScenario (dialog
+    /// runtime. One Name has one winner: the action of the mod loaded later
+    /// (kernel actions rank below every mod), so a mod overrides core actions
+    /// and a dependent mod overrides its dependency's — the same rule as every
+    /// other mod resource. The rank is the mod's load index, not the moment of
+    /// registration: GDScript actions register after all assemblies, yet a
+    /// GDScript action of an earlier mod still loses to a later mod's C# one.
+    /// The factory is consumed by ActionScenario (dialog
     /// action) which bridges the dialog system to these atomic scenario commands.
     /// </summary>
     public class ScenarioActionFactory
@@ -30,6 +35,10 @@ namespace Cthangover.Core.Factories.Impls
         public static ScenarioActionFactory Instance => AppServices.Current.ScenarioActions.Value;
 
         private readonly Dictionary<string, IScenarioAction> actions = new();
+        private readonly Dictionary<string, int> ranks = new();
+
+        /// <summary>Rank of the kernel's own actions: below every mod.</summary>
+        private const int KernelRank = -1;
 
         /// <summary>
         /// Guards <see cref="actions"/>. The factory is a shared singleton reached from
@@ -44,7 +53,7 @@ namespace Cthangover.Core.Factories.Impls
         {
             foreach (var action in Reflections.FindAndCreate<IScenarioAction>())
             {
-                Register(action);
+                Register(action, KernelRank);
             }
 
             lock (actionsLock)
@@ -100,23 +109,52 @@ namespace Cthangover.Core.Factories.Impls
         }
 
         /// <summary>
-        /// Registers an action instance. If an action with the same Name
-        /// is already registered, the new one is silently ignored — this
-        /// allows core actions to take precedence over mod overrides,
-        /// and prevents accidental duplicates from reflection scans.
-        /// Logs the registration for debugging.
+        /// Registers an action of <paramref name="modId"/> (null: no mod, ranked
+        /// with the latest registration so far). It replaces an action of the
+        /// same Name from a mod loaded earlier or from the same mod, and loses to
+        /// one of a mod loaded later; both outcomes are logged when the types differ.
         /// </summary>
-        public void Register(IScenarioAction action)
+        public void Register(IScenarioAction action, string modId = null)
+            => Register(action, RankOf(modId));
+
+        private void Register(IScenarioAction action, int rank)
         {
             lock (actionsLock)
             {
-                if (actions.ContainsKey(action.Name))
-                    return;
+                if (actions.TryGetValue(action.Name, out var previous))
+                {
+                    if (rank < ranks[action.Name])
+                    {
+                        GameLogger.Log("FACTORY", $"scenario action '{action.Name}' of {action.GetType().FullName} ignored: a mod loaded later defines it ({previous.GetType().FullName})", LogLevel.Warning);
+                        return;
+                    }
+                    if (previous.GetType() != action.GetType())
+                        GameLogger.Log("FACTORY", $"scenario action '{action.Name}': {previous.GetType().FullName} replaced by {action.GetType().FullName}", LogLevel.Warning);
+                }
 
-                actions.Add(action.Name, action);
+                actions[action.Name] = action;
+                ranks[action.Name] = rank;
             }
 
             GameLogger.Log("FACTORY", $"registered scenario action '{action.Name}'");
+        }
+
+        private int RankOf(string modId)
+        {
+            if (modId == null)
+            {
+                lock (actionsLock)
+                    return ranks.Count == 0 ? 0 : System.Math.Max(0, ranks.Values.Max());
+            }
+
+            var order = Mods.ModRegistry.Instance.GetOrderedModIds();
+            for (var i = 0; i < order.Count; i++)
+            {
+                if (string.Equals(order[i], modId, System.StringComparison.OrdinalIgnoreCase))
+                    return i;
+            }
+            // A mod outside the ordered set (a test assembly, tooling) ranks after every mod.
+            return order.Count;
         }
 
         /// <summary>
@@ -125,13 +163,13 @@ namespace Cthangover.Core.Factories.Impls
         /// Activator.CreateInstance, and registers them. This is the
         /// extension point for mods — mod assemblies call this at
         /// startup to inject custom scenario actions into the dialog
-        /// engine. Actions with names already registered are skipped.
+        /// engine, ranked by <paramref name="modId"/>'s load order (see <see cref="Register(IScenarioAction, string)"/>).
         /// </summary>
-        public void RegisterAssembly(Assembly assembly)
+        public void RegisterAssembly(Assembly assembly, string modId = null)
         {
             foreach (var action in Reflections.FindAndCreate<IScenarioAction>(assembly))
             {
-                Register(action);
+                Register(action, modId);
             }
         }
 
@@ -145,7 +183,10 @@ namespace Cthangover.Core.Factories.Impls
             lock (actionsLock)
             {
                 foreach (var name in actions.Where(kvp => kvp.Value.GetType().Assembly == assembly).Select(kvp => kvp.Key).ToList())
+                {
                     actions.Remove(name);
+                    ranks.Remove(name);
+                }
             }
         }
 

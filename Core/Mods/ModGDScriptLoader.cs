@@ -90,7 +90,7 @@ public static class ModGDScriptLoader
 						if (!string.IsNullOrEmpty(name))
 						{
 							var action = new GDScriptScenarioAction(name, obj);
-							ScenarioActionFactory.Instance.Register(action);
+							ScenarioActionFactory.Instance.Register(action, modInfo.Id);
 							GameLogger.Log("GDS_MOD",
 								$"Registered GDScript action '{name}' from mod '{modInfo.Id}'");
 						}

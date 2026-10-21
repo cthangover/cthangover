@@ -114,7 +114,7 @@ public class ModGDScriptLoaderTests
     }
 
     [Fact]
-    public void GDScriptScenarioAction_RegisterDuplicateName_Ignored()
+    public void GDScriptScenarioAction_RegisterDuplicateName_LaterReplaces()
     {
         var action1 = new GDScriptScenarioAction("gd.dup.action", null);
         var action2 = new GDScriptScenarioAction("gd.dup.action", null);
@@ -124,7 +124,7 @@ public class ModGDScriptLoaderTests
 
         var found = ScenarioActionFactory.Instance.Get("gd.dup.action");
         Assert.NotNull(found);
-        Assert.Same(action1, found);
+        Assert.Same(action2, found);
     }
 
     [Fact]

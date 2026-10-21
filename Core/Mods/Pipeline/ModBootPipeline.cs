@@ -278,6 +278,11 @@ namespace Cthangover.Core.Mods.Pipeline
                 pipelineRunning = true;
                 try
                 {
+                    // The set is final here: drop any order computed during the
+                    // launcher boot window before registration reads it (the
+                    // scenario action factory ranks actions by load order).
+                    registry.InvalidateOrder();
+
                     foreach (var (modId, assembly) in _precompiledAssemblies)
                         ModAssemblyLoader.RegisterAssembly(assembly, modId);
 
