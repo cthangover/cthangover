@@ -4,6 +4,7 @@ using Cthangover.Core.Factories.Impls;
 using Cthangover.Core.Items;
 using Cthangover.Core.Mods;
 using Cthangover.Core.Settings;
+using Cthangover.Core.Utils;
 
 namespace Cthangover.Mods.Items
 {
@@ -28,8 +29,13 @@ namespace Cthangover.Mods.Items
             if (runtime == null)
                 return;
 
-            slot.Data[InventoryBlob] = new DataBlob(1, runtime.Inventory.Items.Select(o =>
-                new CItem { ID = o.Item.ID, Count = o.Count }).ToList());
+            var items = runtime.Inventory.Items
+                .Where(o => o.Item != null)
+                .Select(o => new CItem { ID = o.Item.ID, Count = o.Count })
+                .ToList();
+            if (runtime.Inventory is Inventory inventory)
+                items.AddRange(inventory.UnresolvedItems);
+            slot.Data[InventoryBlob] = new DataBlob(1, items);
             slot.Data[RecipesBlob] = new DataBlob(1, runtime.RecipeData.Data.ToList());
         }
 
@@ -43,11 +49,21 @@ namespace Cthangover.Mods.Items
 
             if (slot.Data.TryGetValue(InventoryBlob, out var invBlob))
             {
-                var items = invBlob.ReadJson<List<CItem>>();
-                runtime.Inventory.Items = items?.Select(o =>
-                    (IItemContainer)new ItemContainer
-                        { Item = ItemFactory.Instance.Get(o.ID), Count = o.Count }).ToList()
-                    ?? new List<IItemContainer>();
+                var containers = new List<IItemContainer>();
+                var unresolved = (runtime.Inventory as Inventory)?.UnresolvedItems;
+                unresolved?.Clear();
+                foreach (var saved in invBlob.ReadJson<List<CItem>>() ?? new List<CItem>())
+                {
+                    var item = ItemFactory.Instance.Get(saved.ID);
+                    if (item != null)
+                    {
+                        containers.Add(new ItemContainer { Item = item, Count = saved.Count });
+                        continue;
+                    }
+                    GameLogger.Log("INVENTORY", $"saved item '{saved.ID}' x{saved.Count} is not defined by any loaded mod; kept in the save", LogLevel.Warning);
+                    unresolved?.Add(saved);
+                }
+                runtime.Inventory.Items = containers;
             }
 
             if (slot.Data.TryGetValue(RecipesBlob, out var recipeBlob))

@@ -8,6 +8,9 @@
   "sources": [
     "src/**/*.cs"
   ],
+  "test_sources": [
+    "tests/*.cs"
+  ],
   "depends": ["shell2d_base>=1", "ui_base>=1"],
   "test_suites": [
     {"id": "inventory", "activate": ["--itest=inventory"]}
