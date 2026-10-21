@@ -67,8 +67,10 @@ namespace Cthangover.Mods.Map
 
         /// <summary>
         /// Loads the zone list from the given data, replacing the previous list
-        /// but preserving runtime overrides. This is the testable entry point;
-        /// runtime code uses <see cref="ReloadFromMods"/>.
+        /// but preserving runtime overrides. Zones come in mod load order: a
+        /// zone with an id seen before replaces it in place, so a dependent mod
+        /// overrides a zone the way it overrides any other resource. This is the
+        /// testable entry point; runtime code uses <see cref="ReloadFromMods"/>.
         /// </summary>
         public void LoadZones(IEnumerable<MapZone> newZones)
         {
@@ -82,13 +84,13 @@ namespace Cthangover.Mods.Map
                     if (zone == null || string.IsNullOrEmpty(zone.ID))
                         continue;
 
-                    if (byId.ContainsKey(zone.ID))
+                    if (byId.TryGetValue(zone.ID, out var replaced))
                     {
-                        GameLogger.Log("MAP", $"duplicate zone id '{zone.ID}' ignored", LogLevel.Warning);
-                        continue;
+                        GameLogger.Log("MAP", $"zone '{zone.ID}' replaced by a later definition", LogLevel.Warning);
+                        zones[zones.IndexOf(replaced)] = zone;
                     }
-
-                    zones.Add(zone);
+                    else
+                        zones.Add(zone);
                     byId[zone.ID] = zone;
                 }
             }
@@ -114,10 +116,11 @@ namespace Cthangover.Mods.Map
             var result = new List<MapZone>();
             var options = JsonOptionsProvider.ReadOptions;
 
-            foreach (var kvp in ModManager.Instance.Mods)
+            foreach (var modId in ModRegistry.Instance.GetOrderedModIds())
             {
-                var modId = kvp.Key;
-                var provider = kvp.Value.FileProvider;
+                var provider = ModManager.Instance.GetMod(modId)?.FileProvider;
+                if (provider == null)
+                    continue;
 
                 foreach (var entry in provider.ListFiles("map"))
                 {
@@ -157,6 +160,9 @@ namespace Cthangover.Mods.Map
         /// Loads zones on first use and re-reads nothing afterwards; call
         /// <see cref="Reload"/> when the mod set or the map files changed.
         /// </summary>
+        /// <summary>Drops the loaded zones so the next <see cref="EnsureLoaded"/> reads the current mod set (called after every mod set load).</summary>
+        public void MarkStale() => loaded = false;
+
         public void EnsureLoaded()
         {
             if (!loaded)
