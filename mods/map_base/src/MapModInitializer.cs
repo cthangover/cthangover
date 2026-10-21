@@ -22,6 +22,8 @@ namespace Cthangover.Mods.Map
         public void OnModResourcesReady()
         {
             var service = MapZoneService.Instance;
+            // Runs again after every mod reload; the service outlives it when map_base stays loaded.
+            service.MarkStale();
             MapStateBridge.Register(service.ExportState, service.ImportState, service.ResetOverrides);
         }
     }
