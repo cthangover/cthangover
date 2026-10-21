@@ -30,6 +30,14 @@ namespace Cthangover.Core.Items
 	{
 		/// <summary>Ordered slot list; order drives UI layout and empty slots are removed on zero stacks.</summary>
 		public List<IItemContainer> Items { get; set; } = new();
+
+		/// <summary>
+		/// Stacks a loaded save names but no loaded mod defines (the mod was
+		/// removed or the id renamed). They are no usable stacks — every
+		/// container in <see cref="Items"/> has an item — but the items slot
+		/// writes them back, so they return with their mod.
+		/// </summary>
+		public List<Settings.CItem> UnresolvedItems { get; } = new();
 		/// <summary>Fires on every successful add/remove with (itemId, signed delta); also mirrored as <see cref="Events.InventoryChangedEvent"/> on the ModEventBus.</summary>
 		public event Action<string, int> Change;
 
@@ -74,7 +82,7 @@ namespace Cthangover.Core.Items
 		{
 			if (string.IsNullOrWhiteSpace(id))
 				return false;
-			return Items.Any(o => o.Item.ID == id);
+			return Items.Any(o => o.Item != null && o.Item.ID == id);
 		}
 
 		/// <summary>Returns the slot holding the given item, or <c>null</c> (null-safe).</summary>
@@ -124,6 +132,12 @@ namespace Cthangover.Core.Items
 		/// </summary>
 		public void Add(string id, int count = 1)
 		{
+			if (count <= 0)
+			{
+				GameLogger.Log("INVENTORY", $"Add('{id}', {count}): count must be positive, ignored", LogLevel.Warning);
+				return;
+			}
+
 			var container = TryGet(id);
 			if (container != null)
 			{
@@ -161,6 +175,10 @@ namespace Cthangover.Core.Items
 		/// </summary>
 		public bool Remove(string id, int count = 1)
 		{
+			// A negative count would pass the stock check and grow the stack.
+			if (count <= 0)
+				return false;
+
 			var container = TryGet(id);
 			if (container == null)
 				return false;
