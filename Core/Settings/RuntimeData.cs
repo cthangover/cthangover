@@ -64,6 +64,15 @@ namespace Cthangover.Core.Settings
         public HashSet<string> CompletedScenarioIds { get; } = new();
 
         /// <summary>
+        /// Story flags of this game (<c>flag name value</c> in a scenario,
+        /// <c>ScenarioCondition.SetFlag</c> from code), read by scenario
+        /// conditions such as <c>door == "open"</c>. Part of the game state: saved
+        /// with the core slot and gone with a new game, unlike dialog variables,
+        /// which live only while one dialog runs.
+        /// </summary>
+        public Dictionary<string, string> Flags { get; set; } = new();
+
+        /// <summary>
         /// IDs of one-shot scenarios restored from a loaded save.
         /// Populated by <see cref="SaveService.Load"/> and consumed by
         /// the scenario runner to skip re-triggering. When <c>null</c>,

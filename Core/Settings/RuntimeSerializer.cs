@@ -73,6 +73,7 @@ namespace Cthangover.Core.Settings
             slot.Data["Skills"]     = new DataBlob(1, runtime.SkillData.Skills.ToList());
             slot.Data["CompletedScenarios"] = new DataBlob(1, completedScenarioIds.ToList());
             slot.Data["MapZones"]   = new DataBlob(1, Cthangover.Core.Actions.MapStateBridge.ExportState());
+            slot.Data["Flags"]      = new DataBlob(1, runtime.Flags);
 
             var preview = new CoreSlotPreview
             {
@@ -129,6 +130,9 @@ namespace Cthangover.Core.Settings
                     ?? new HashSet<string>();
                 runtime.CompletedScenarioIds.UnionWith(runtime.LoadedCompletedScenarioIds);
             }
+
+            if (coreSlot.Data.TryGetValue("Flags", out var flagsBlob))
+                runtime.Flags = flagsBlob.ReadJson<Dictionary<string, string>>() ?? new Dictionary<string, string>();
 
             if (coreSlot.Data.TryGetValue("MapZones", out var mapBlob))
                 Cthangover.Core.Actions.MapStateBridge.ImportState(
