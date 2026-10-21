@@ -39,16 +39,18 @@ Patches are applied on top of the scene that won the override battle in `TscnSce
 
 Every layer sees the result of the previous ones, so a later mod can override a value set by an earlier patch.
 
-## Cross-mod base scene (shell2d_base + visual novel)
+## Cross-mod base scene (shell2d_base + dialog_base + rpg)
 
-`shell2d_base` owns the 2D shell scene; content mods add their layers to it with a patch instead of shipping their own shell:
+`shell2d_base` owns the 2D shell scene; engine mods add their layers to it with a patch instead of shipping their own shell. Two mods of different genres extend the same shell:
 
 ```filestree
 mods/
 ├── shell2d_base/
 │   └── scenes/ui/base_scene.tscn           ← BaseScene / Scene / ViewBox / TopView / slots / notifications
-└── cthangover_game/
-    └── patches/scenes/ui/base_scene.tscn   ← DialogCanvas on top of the shell
+├── dialog_base/
+│   └── patches/scenes/ui/base_scene.tscn   ← DialogCanvas over the view box
+└── rpg/
+    └── patches/scenes/ui/base_scene.tscn   ← RpgWorldHost (the tile world) between the view box and the dialog
 ```
 
 ```ini
@@ -62,7 +64,7 @@ mods/
 [node name="DialogCanvas" parent="Scene" index="2" instance=ExtResource("2_dialog")]
 ```
 
-The base shell is a single flat scene, so `index="2"` inserts the dialog exactly between `ViewBox` and `TopView`, and later mods can override or delete shell nodes the same way. The shell contract content mods rely on: root `BaseScene` in group `main_event_chain`, `Scene/ViewBox`, `Scene/TopView`, slots `ModFirstPanel` / `ModBeforeUIPanel` / `ModLastPanel`, and `Lastground` inside the view box. Both the target path and the added resource paths may use the editor's `res://mods/<mod>/...` form — it is normalised to the mod-relative key at load time.
+The base shell is a single flat scene, so `index="2"` inserts the dialog exactly between `ViewBox` and `TopView`. Patches cascade in load order: `rpg` depends on `dialog_base`, so its `RpgWorldHost` with the same `index="2"` lands before the `DialogCanvas`, and dialogs stay on top of the map. Later mods can override or delete shell nodes the same way. The shell contract mods rely on: root `BaseScene` in group `main_event_chain`, `Scene/ViewBox`, `Scene/TopView`, slots `ModFirstPanel` / `ModBeforeUIPanel` / `ModLastPanel`, and `Lastground` inside the view box. Both the target path and the added resource paths may use the editor's `res://mods/<mod>/...` form — it is normalised to the mod-relative key at load time.
 
 ## Operations
 

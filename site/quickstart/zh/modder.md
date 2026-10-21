@@ -44,7 +44,7 @@ mods/
   "name": "我的酒吧",                      // 模组菜单中显示的名称
   "description": "为城镇添加酒吧场景",       // 模组菜单中显示的描述
   "author": "modder",                     // 模组作者
-  "depends": ["cthangover_game"]        // 依赖核心游戏（无需手动排列模组加载顺序）
+  "depends": ["cthangover_game"]        // 依赖主游戏的内容（无需手动排列模组加载顺序）
 }
 ```
 

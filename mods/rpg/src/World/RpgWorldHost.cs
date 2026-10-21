@@ -14,7 +14,7 @@ namespace Cthangover.Mods.Rpg
     /// It follows the scene lifecycle: entering a scene whose name is a map id
     /// mounts that map (<see cref="RpgWorldView"/>) and shows the dark backdrop;
     /// any other scene leaves the host empty and invisible, so a game can mix
-    /// novel scenes and map scenes freely. The shell is rebuilt after battles,
+    /// picture-and-dialogue scenes and map scenes freely. The shell is rebuilt after battles,
     /// so the host is too; the position survives in <see cref="RpgState"/>.
     /// <para/>
     /// <see cref="Current"/> is the host of the live shell, used by teleports

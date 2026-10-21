@@ -44,7 +44,7 @@ mods/
   "name": "My Booze Bar",                              // Mod name shown in the mod menu
   "description": "Adds a booze bar scene to the town", // Mod description shown in the mod menu
   "author": "modder",                                  // Mod author
-  "depends": ["cthangover_game"]                     // Dependency on the core game (so manual mod load ordering is not required)
+  "depends": ["cthangover_game"]                     // Dependency on the main game's content (so manual mod load ordering is not required)
 }
 ```
 

@@ -53,7 +53,7 @@ namespace Cthangover.Mods.Map
         /// <summary>
         /// Target scene identifier passed directly to
         /// <c>SceneManager.SwitchScene</c> when the marker is clicked.
-        /// Causes the current visual-novel scene to transition to this zone.
+        /// Causes the current logical scene to transition to this zone.
         /// An empty or unresolved scene marks the zone as closed: the map shows
         /// its marker and polygon dimmed and blocks the transition button, which
         /// lets authors sketch future regions without breaking navigation.

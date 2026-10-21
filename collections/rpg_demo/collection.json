@@ -34,16 +34,16 @@
       "id": "rpg",
       "name": "Tile world",
       "role": "gameplay",
-      "description": "Tile maps in three layers with collision, grid walking, map events, teleports and random encounters on top of the novel engine.",
-      "locale": [ { "lang": "ru", "name": "Тайловый мир", "description": "Тайловые карты в три слоя с коллизиями, ходьба по клеткам, события на карте, телепорты и случайные встречи поверх движка новеллы." } ],
+      "description": "Tile maps in three layers with collision, grid walking, map events, teleports and random encounters on top of the 2D engine mods.",
+      "locale": [ { "lang": "ru", "name": "Тайловый мир", "description": "Тайловые карты в три слоя с коллизиями, ходьба по клеткам, события на карте, телепорты и случайные встречи поверх модов 2D-движка." } ],
       "mods": ["rpg>=1"]
     },
     {
-      "id": "novel_engine",
-      "name": "Novel engine",
+      "id": "engine_2d",
+      "name": "2D engine",
       "role": "engine",
       "description": "2D shell, dialogs and the scenario DSL, characters, audio.",
-      "locale": [ { "lang": "ru", "name": "Движок новеллы", "description": "2D-оболочка, диалоги и сценарный DSL, персонажи, звук." } ],
+      "locale": [ { "lang": "ru", "name": "2D-движок", "description": "2D-оболочка, диалоги и сценарный DSL, персонажи, звук." } ],
       "mods": ["shell2d_base>=1", "dialog_base>=1", "characters_base>=1", "audio_base>=1"]
     },
     {

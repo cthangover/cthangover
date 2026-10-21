@@ -9,7 +9,7 @@ namespace Cthangover.Mods.Rpg
     /// scene that shows it: entering scene <c>X</c> (any <c>switch_scene X</c>, a
     /// teleport, the return from a battle, loading a save) mounts map <c>X</c>
     /// over the shell. Because the scene stays an ordinary scene, everything the
-    /// novel engine attaches to scenes works on a map unchanged — entry
+    /// engine attaches to scenes works on a map unchanged — entry
     /// scenarios, ambience and music from <c>scenes/X.json</c>, the default
     /// background (which also becomes the backdrop of battles started here),
     /// saving rules.

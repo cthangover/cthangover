@@ -34,7 +34,7 @@ Every mod needs a manifest. Create `mods/quickstart_player/manifest.json`:
   "name": "Marao Buff",             // Display name shown in the mod management menu
   "description": "My first mod!",   // Description visible in the mod list and catalog
   "author": "player",               // Mod author (arbitrary string)
-  "depends": ["cthangover_game"]  // Dependency on the core game (so manual mod load ordering is not required)
+  "depends": ["cthangover_game"]  // Dependency on the main game's content (so manual mod load ordering is not required)
 }
 ```
 

@@ -30,11 +30,11 @@
       "mods": ["town_pack>=1"]
     },
     {
-      "id": "novel_engine",
-      "name": "Novel engine",
+      "id": "engine_2d",
+      "name": "2D engine",
       "role": "engine",
       "description": "2D shell, dialogs and the scenario DSL, audio.",
-      "locale": [ { "lang": "ru", "name": "Движок новеллы", "description": "2D-оболочка, диалоги и сценарный DSL, звук." } ],
+      "locale": [ { "lang": "ru", "name": "2D-движок", "description": "2D-оболочка, диалоги и сценарный DSL, звук." } ],
       "mods": ["shell2d_base>=1", "dialog_base>=1", "audio_base>=1"]
     }
   ]

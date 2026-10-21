@@ -71,15 +71,15 @@ is not read.
   ],
   "mechanics": [                                           // Ordered mechanics — drives the scheme layout
     {
-      "id": "vn_core",                                     // Stable id, unique within the collection
-      "name": "Novel Core",                                // Frame title in the scheme
+      "id": "scenes",                                     // Stable id, unique within the collection
+      "name": "Scenes and dialogues",                      // Frame title in the scheme
       "description": "Scenes, scenarios, dialogue.",       // Tooltip
       "role": "story",                                     // Slot role the mechanic fills in the scheme editor
       "mods": ["cthangover_game>=1"],                    // Versioned mod references (same syntax as manifest depends)
       "optional": false,                                   // Marks the mechanic as skippable
       "selected": null,                                    // Player's choice for an optional mechanic (null = on)
       "locale": [                                          // Per-mechanic localized strings, same shape as below
-        { "lang": "ru", "name": "Ядро новеллы", "description": "Сцены, сценарии, диалоги." }
+        { "lang": "ru", "name": "Сцены и диалоги", "description": "Сцены, сценарии, диалоги." }
       ]
     }
   ],
@@ -214,7 +214,7 @@ collection carries its texts with it:
 # en.properties
 collections/my_novel/name = My Novel
 collections/my_novel/description = A visual novel with an optional card-battle layer.
-collections/my_novel/mechanic/vn_core/name = Novel Core
+collections/my_novel/mechanic/scenes/name = Scenes and dialogues
 collections/my_novel/mechanic/cards/name = Card Battle
 
 # ru.properties — same keys, Russian values
@@ -482,11 +482,15 @@ picker.
 - `collections/novel_template/` — the smallest playable
   game: the game's own content (`my_novel_game`: scenes, scenarios, text),
   reusable assets (`town_pack`: town, home and bar backgrounds, bar ambience —
-  the main game uses the same pack) and the novel engine (`shell2d_base`,
+  the main game uses the same pack) and the engine mods it needs (`shell2d_base`,
   `dialog_base`, `audio_base`). See "Start your own game" below.
-- `collections/cthangover/` — the main game: story,
-  novel engine, characters, quests, items, battles with an optional second
-  battle core, Live2D and tools, each as its own mechanic.
+- `collections/cthangover/` — the main game, a visual novel: story, the 2D
+  engine, characters, quests, items, battles with an optional second battle
+  core, Live2D and tools, each as its own mechanic.
+- `collections/rpg_demo/` — an RPG Maker style game on the same engine mods:
+  its content (`rpg_demo_game`), pixel art (`village_pack`), the tile world
+  (`rpg`), the FF battle core with the card core as an option, and the map
+  editor (`rpg_editor`) as an optional tool.
 - `collections/novel_editor/` — a "game" whose entry scene
   is the editor hub instead of a story scene.
 - `collections/dev_tools/` — the developer toolset to add to any game: the

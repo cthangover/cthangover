@@ -12,11 +12,11 @@ namespace Engine.Tests.Arch
     /// </summary>
     internal static class RepoPaths
     {
-        /// <summary>Folders that hold tooling, caches or vendored code rather than project assets.</summary>
+        /// <summary>Folders that hold tooling, caches, build output (releases/) or vendored code rather than project assets.</summary>
         private static readonly HashSet<string> SkippedDirectories = new(StringComparer.Ordinal)
         {
             ".git", ".godot", ".idea", ".opencode", ".omo", ".dsh", "node_modules", "bin", "obj",
-            "sdk", "site", "mockups", "gen", "artifacts", "source_code", "undefined",
+            "sdk", "site", "mockups", "gen", "artifacts", "releases", "source_code", "undefined",
         };
 
         public static string FindRepoRoot()

@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://cthangover.ru/</loc>
-    <lastmod>2026-10-18</lastmod>
+    <lastmod>2026-10-21</lastmod>
   </url>
   <url>
     <loc>https://cthangover.ru/docs.html</loc>
@@ -14,7 +14,7 @@
   </url>
   <url>
     <loc>https://cthangover.ru/docs/index</loc>
-    <lastmod>2026-10-18</lastmod>
+    <lastmod>2026-10-21</lastmod>
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/avatars/index</loc>
@@ -38,11 +38,11 @@
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/collections/index</loc>
-    <lastmod>2026-10-18</lastmod>
+    <lastmod>2026-10-21</lastmod>
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/configs/game_config</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-10-21</lastmod>
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/configs/index</loc>
@@ -50,11 +50,11 @@
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/configs/mod_config</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-10-21</lastmod>
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/editor_tools/index</loc>
-    <lastmod>2026-10-18</lastmod>
+    <lastmod>2026-10-19</lastmod>
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/editor_tools/tutorial</loc>
@@ -62,11 +62,11 @@
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/events/index</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-10-20</lastmod>
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/interactives/index</loc>
-    <lastmod>2026-08-25</lastmod>
+    <lastmod>2026-10-21</lastmod>
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/items/index</loc>
@@ -94,7 +94,7 @@
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/musics/playlists/index</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-10-21</lastmod>
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/patches/arrays-and-identity</loc>
@@ -102,11 +102,11 @@
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/patches/index</loc>
-    <lastmod>2026-10-17</lastmod>
+    <lastmod>2026-10-21</lastmod>
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/patches/scenes</loc>
-    <lastmod>2026-10-18</lastmod>
+    <lastmod>2026-10-21</lastmod>
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/quests/index</loc>
@@ -138,19 +138,19 @@
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/scenes/scenarios/index</loc>
-    <lastmod>2026-10-17</lastmod>
+    <lastmod>2026-10-18</lastmod>
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/scenes/scenarios/actions/index</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-10-21</lastmod>
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/scenes/scenarios/dsl/index</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-10-21</lastmod>
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/scenes/scenarios/dsl/conditions/index</loc>
-    <lastmod>2026-09-27</lastmod>
+    <lastmod>2026-10-21</lastmod>
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/scenes/tscn-runtime/index</loc>
@@ -158,7 +158,7 @@
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/settings/index</loc>
-    <lastmod>2026-09-10</lastmod>
+    <lastmod>2026-10-21</lastmod>
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/shaders/index</loc>
@@ -174,7 +174,7 @@
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/src/index</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-10-21</lastmod>
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/src/gdscript/actions</loc>
@@ -202,11 +202,11 @@
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/status_effects/index</loc>
-    <lastmod>2026-09-28</lastmod>
+    <lastmod>2026-10-21</lastmod>
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/time/index</loc>
-    <lastmod>2026-08-25</lastmod>
+    <lastmod>2026-10-21</lastmod>
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/wrappers/index</loc>
@@ -214,7 +214,7 @@
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/zip/index</loc>
-    <lastmod>2026-09-28</lastmod>
+    <lastmod>2026-10-21</lastmod>
   </url>
   <url>
     <loc>https://cthangover.ru/docs/resources/index</loc>
@@ -238,19 +238,19 @@
   </url>
   <url>
     <loc>https://cthangover.ru/quickstart/en/index</loc>
-    <lastmod>2026-10-18</lastmod>
+    <lastmod>2026-10-21</lastmod>
   </url>
   <url>
     <loc>https://cthangover.ru/quickstart/en/modder</loc>
-    <lastmod>2026-10-18</lastmod>
+    <lastmod>2026-10-21</lastmod>
   </url>
   <url>
     <loc>https://cthangover.ru/quickstart/en/player</loc>
-    <lastmod>2026-10-18</lastmod>
+    <lastmod>2026-10-21</lastmod>
   </url>
   <url>
     <loc>https://cthangover.ru/quickstart/en/programmer</loc>
-    <lastmod>2026-10-18</lastmod>
+    <lastmod>2026-10-21</lastmod>
   </url>
   <url>
     <loc>https://cthangover.ru/quickstart/es/index</loc>
@@ -334,18 +334,18 @@
   </url>
   <url>
     <loc>https://cthangover.ru/quickstart/zh/index</loc>
-    <lastmod>2026-10-18</lastmod>
+    <lastmod>2026-10-21</lastmod>
   </url>
   <url>
     <loc>https://cthangover.ru/quickstart/zh/modder</loc>
-    <lastmod>2026-10-18</lastmod>
+    <lastmod>2026-10-21</lastmod>
   </url>
   <url>
     <loc>https://cthangover.ru/quickstart/zh/player</loc>
-    <lastmod>2026-10-18</lastmod>
+    <lastmod>2026-10-21</lastmod>
   </url>
   <url>
     <loc>https://cthangover.ru/quickstart/zh/programmer</loc>
-    <lastmod>2026-10-18</lastmod>
+    <lastmod>2026-10-21</lastmod>
   </url>
 </urlset>

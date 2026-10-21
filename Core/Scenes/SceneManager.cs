@@ -19,7 +19,7 @@ using Godot;
 namespace Cthangover.Core.Scenes
 {
     /// <summary>
-    /// Central orchestrator for visual novel scene progression. Composes and schedules
+    /// Central orchestrator of logical scene progression. Composes and schedules
     /// executable events from C# attributes and .scenario files, applies scene defaults
     /// (random background, ambient audio), and routes to native Godot scenes for menus
     /// and to mod-registered scene routes (see <see cref="SceneRouteRegistry"/>).
