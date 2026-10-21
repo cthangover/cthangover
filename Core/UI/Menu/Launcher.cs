@@ -15,9 +15,10 @@ namespace Cthangover.Core.UI.Menu
 {
     /// <summary>
     /// Pre-game launcher that lets the player configure display settings
-    /// (window mode, resolution, monitor, V-Sync, scale) before entering
-    /// the main menu. Applies settings via DisplayServer and ProjectSettings,
-    /// then transitions to MainMenu.tscn on Play.
+    /// (window mode, monitor, window size, V-Sync) on the first start before
+    /// entering the main menu; later starts skip it and only restore the saved
+    /// settings. The choices and the window handling are shared with the
+    /// settings menu (<see cref="DisplayOptions"/>, <see cref="DisplaySettingsService"/>).
     ///
     /// Built entirely in code (no TSCN layout) so the scene file is minimal
     /// and settings population is co-located with the logic.
@@ -27,8 +28,8 @@ namespace Cthangover.Core.UI.Menu
         private OptionButton _windowModeSelect;
         private OptionButton _resolutionSelect;
         private OptionButton _monitorSelect;
-        private OptionButton _scaleSelect;
         private CheckButton _vsyncToggle;
+        private System.Collections.Generic.List<Vector2I> _windowSizes = new();
 
         /// <summary>
         /// Cancels the background mod compile if the launcher leaves the tree
@@ -39,18 +40,6 @@ namespace Cthangover.Core.UI.Menu
         /// <see cref="ModManager.DiscoverAndCompile"/>.
         /// </summary>
         private readonly CancellationTokenSource _bootCts = new();
-
-        private static readonly Vector2I[] CommonResolutions =
-        {
-            new(1280, 720),
-            new(1366, 768),
-            new(1600, 900),
-            new(1920, 1080),
-            new(2560, 1440),
-            new(3840, 2160),
-        };
-
-        private static readonly int[] ScaleOptions = { 1, 2, 3, 4 };
 
         /// <summary>Applies the theme, then branches into boot overlay, skip-to-main-menu or the interactive launcher depending on boot state.</summary>
         public override void _Ready()
@@ -328,20 +317,7 @@ namespace Cthangover.Core.UI.Menu
 
         private void SkipToMainMenu()
         {
-            var s = GameData.Instance?.Settings;
-            if (s != null)
-            {
-                var mode = (DisplayServer.WindowMode)s.WindowMode;
-                DisplayServer.WindowSetMode(mode);
-                if (mode == DisplayServer.WindowMode.Windowed)
-                    DisplayServer.WindowSetSize(new Vector2I(s.ResolutionWidth, s.ResolutionHeight));
-                if (s.CurrentScreen >= 0 && s.CurrentScreen < DisplayServer.GetScreenCount())
-                    DisplayServer.WindowSetCurrentScreen(s.CurrentScreen);
-                DisplayServer.WindowSetVsyncMode(s.VsyncEnabled
-                    ? DisplayServer.VSyncMode.Enabled
-                    : DisplayServer.VSyncMode.Disabled);
-                ProjectSettings.SetSetting("display/window/stretch/scale", (float)s.Scale);
-            }
+            DisplaySettingsService.Apply(GameData.Instance?.Settings);
             OpenMainMenu();
         }
 
@@ -382,21 +358,16 @@ namespace Cthangover.Core.UI.Menu
 
             vbox.AddChild(new HSeparator());
 
-            _windowModeSelect = AddDropdownRow(vbox, "settings/window_mode",
-                new[]
-                {
-                    Tr("settings/window_mode_windowed"),
-                    Tr("settings/window_mode_borderless"),
-                    Tr("settings/window_mode_fullscreen"),
-                });
-
-            _resolutionSelect = AddDropdownRow(vbox, "settings/resolution",
-                System.Array.ConvertAll(CommonResolutions, r => $"{r.X}×{r.Y}"));
+            var modes = new string[DisplayOptions.WindowModeKeys.Length];
+            for (var i = 0; i < modes.Length; i++)
+                modes[i] = Tr(DisplayOptions.WindowModeKeys[i]);
+            _windowModeSelect = AddDropdownRow(vbox, "settings/window_mode", modes);
+            _windowModeSelect.ItemSelected += OnWindowModeSelected;
 
             _monitorSelect = AddDropdownRow(vbox, "settings/monitor", BuildMonitorLabels());
+            _monitorSelect.ItemSelected += OnMonitorSelected;
 
-            _scaleSelect = AddDropdownRow(vbox, "settings/scale",
-                System.Array.ConvertAll(ScaleOptions, s => Tr($"settings/scale_{s}x")));
+            _resolutionSelect = AddDropdownRow(vbox, "settings/resolution", System.Array.Empty<string>());
 
             var vsyncRow = new HBoxContainer();
             vsyncRow.AddThemeConstantOverride("separation", 12);
@@ -435,7 +406,7 @@ namespace Cthangover.Core.UI.Menu
             row.AddThemeConstantOverride("separation", 12);
 
             var label = new Label();
-            label.Text = labelKey;
+            label.Text = TranslationServer.Translate(labelKey);
             label.SizeFlagsHorizontal = SizeFlags.ExpandFill;
             row.AddChild(label);
 
@@ -451,48 +422,48 @@ namespace Cthangover.Core.UI.Menu
 
         private string[] BuildMonitorLabels()
         {
-            var count = DisplayServer.GetScreenCount();
-            if (count <= 0)
-                return new[] { "Screen 0" };
-
-            var labels = new string[count];
-            for (var i = 0; i < count; i++)
+            var labels = new string[DisplaySettingsService.ScreenCount];
+            for (var i = 0; i < labels.Length; i++)
             {
                 var size = DisplayServer.ScreenGetSize(i);
-                labels[i] = string.Format(Tr("settings/monitor_screen"), i + 1, size.X, size.Y);
+                var key = i == DisplayServer.GetPrimaryScreen() ? "settings/monitor_screen_primary" : "settings/monitor_screen";
+                labels[i] = string.Format(Tr(key), i + 1, size.X, size.Y);
             }
             return labels;
         }
+
+        /// <summary>Fills the window sizes for the chosen monitor, keeping <paramref name="wanted"/> (or the nearest smaller size) selected.</summary>
+        private void FillWindowSizes(Vector2I wanted)
+        {
+            _windowSizes = DisplayOptions.WindowSizes(DisplayServer.ScreenGetSize(_monitorSelect.Selected), wanted);
+            _resolutionSelect.Clear();
+            foreach (var size in _windowSizes)
+                _resolutionSelect.AddItem($"{size.X}×{size.Y}");
+            _resolutionSelect.Selected = DisplayOptions.WindowSizeIndex(_windowSizes, wanted);
+        }
+
+        private Vector2I SelectedWindowSize()
+        {
+            var index = _resolutionSelect.Selected;
+            return index >= 0 && index < _windowSizes.Count ? _windowSizes[index] : DisplayServer.WindowGetSize();
+        }
+
+        private void OnMonitorSelected(long index) => FillWindowSizes(SelectedWindowSize());
+
+        private void OnWindowModeSelected(long index) =>
+            _resolutionSelect.Disabled = !DisplayOptions.UsesWindowSize((int)DisplayOptions.WindowModes[(int)index]);
 
         private void LoadSettingsToUI()
         {
             var s = GameData.Instance?.Settings;
             if (s == null) return;
 
-            _windowModeSelect.Selected = WindowModeToIndex(s.WindowMode);
+            var modeIndex = DisplayOptions.WindowModeIndex(s.WindowMode);
+            _windowModeSelect.Selected = modeIndex;
+            _monitorSelect.Selected = DisplaySettingsService.ClampScreen(s.CurrentScreen);
+            FillWindowSizes(new Vector2I(s.ResolutionWidth, s.ResolutionHeight));
+            OnWindowModeSelected(modeIndex);
             _vsyncToggle.ButtonPressed = s.VsyncEnabled;
-
-            for (var i = 0; i < CommonResolutions.Length; i++)
-            {
-                if (CommonResolutions[i].X == s.ResolutionWidth && CommonResolutions[i].Y == s.ResolutionHeight)
-                {
-                    _resolutionSelect.Selected = i;
-                    break;
-                }
-            }
-
-            var screenCount = DisplayServer.GetScreenCount();
-            if (s.CurrentScreen >= 0 && s.CurrentScreen < screenCount)
-                _monitorSelect.Selected = s.CurrentScreen;
-
-            for (var i = 0; i < ScaleOptions.Length; i++)
-            {
-                if (ScaleOptions[i] == s.Scale)
-                {
-                    _scaleSelect.Selected = i;
-                    break;
-                }
-            }
         }
 
         private void OnPlayClick()
@@ -511,56 +482,15 @@ namespace Cthangover.Core.UI.Menu
             var s = GameData.Instance?.Settings;
             if (s == null) return;
 
-            var windowMode = IndexToWindowMode(_windowModeSelect.Selected);
-            var resIdx = Mathf.Clamp(_resolutionSelect.Selected, 0, CommonResolutions.Length - 1);
-            var resolution = CommonResolutions[resIdx];
-            var monitorIdx = _monitorSelect.Selected;
-            var scaleIdx = Mathf.Clamp(_scaleSelect.Selected, 0, ScaleOptions.Length - 1);
-            var scale = ScaleOptions[scaleIdx];
-            var vsync = _vsyncToggle.ButtonPressed;
-
-            if (monitorIdx >= 0 && monitorIdx < DisplayServer.GetScreenCount())
-                DisplayServer.WindowSetCurrentScreen(monitorIdx);
-
-            DisplayServer.WindowSetMode(windowMode);
-
-            if (windowMode == DisplayServer.WindowMode.Windowed)
-                DisplayServer.WindowSetSize(resolution);
-
-            DisplayServer.WindowSetVsyncMode(vsync
-                ? DisplayServer.VSyncMode.Enabled
-                : DisplayServer.VSyncMode.Disabled);
-
-            ProjectSettings.SetSetting("display/window/stretch/scale", (float)scale);
-
-            s.WindowMode = (int)windowMode;
-            s.ResolutionWidth = resolution.X;
-            s.ResolutionHeight = resolution.Y;
-            s.CurrentScreen = monitorIdx;
-            s.VsyncEnabled = vsync;
-            s.Scale = scale;
+            var size = SelectedWindowSize();
+            s.WindowMode = (int)DisplayOptions.WindowModes[Mathf.Max(0, _windowModeSelect.Selected)];
+            s.CurrentScreen = _monitorSelect.Selected;
+            s.ResolutionWidth = size.X;
+            s.ResolutionHeight = size.Y;
+            s.VsyncEnabled = _vsyncToggle.ButtonPressed;
             s.LauncherShown = true;
+            DisplaySettingsService.Apply(s);
             s.Save();
-        }
-
-        private static int WindowModeToIndex(int mode)
-        {
-            return mode switch
-            {
-                3 => 1, // Fullscreen → Borderless
-                4 => 2, // ExclusiveFullscreen → Fullscreen
-                _ => 0, // Windowed or anything else
-            };
-        }
-
-        private static DisplayServer.WindowMode IndexToWindowMode(int index)
-        {
-            return index switch
-            {
-                1 => DisplayServer.WindowMode.Fullscreen,           // Borderless
-                2 => DisplayServer.WindowMode.ExclusiveFullscreen,  // Fullscreen
-                _ => DisplayServer.WindowMode.Windowed,             // Windowed
-            };
         }
     }
 }

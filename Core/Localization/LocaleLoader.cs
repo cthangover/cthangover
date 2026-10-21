@@ -28,25 +28,23 @@ namespace Cthangover.Core.Localization
     /// </summary>
     public static class LocaleLoader
     {
-        private static readonly Dictionary<string, string> LangToLocale = new()
-        {
-            { "ru-ru", "ru" },
-            { "en", "en" },
-            { "zh", "zh" },
-        };
-
         private static readonly Dictionary<string, Translation> _translations = new();
 
         /// <summary>
-        /// Reads the language saved in <see cref="GameData.Settings"/>, maps it
-        /// through the fixed <c>LangToLocale</c> table (unsupported values fall
-        /// back to <c>"ru"</c>), and delegates to <see cref="LoadLocale"/>.
+        /// Reads the language saved in <see cref="GameData.Settings"/>, reads it
+        /// through <see cref="LanguageCode.Normalize"/> (<c>en-en</c>, <c>en_US</c>
+        /// and <c>en</c> are all English; an unsupported one falls back to
+        /// <c>"ru"</c> with a warning), and delegates to <see cref="LoadLocale"/>.
         /// </summary>
         public static void LoadCurrentLanguage()
         {
             var settingsLang = GameData.Instance.Settings.Language;
-            if (!LangToLocale.TryGetValue(settingsLang, out var locale))
+            var locale = LanguageCode.Normalize(settingsLang);
+            if (locale == null)
+            {
+                GameLogger.Log("LANG", $"unsupported language '{settingsLang}' in the settings, using 'ru'", LogLevel.Warning);
                 locale = "ru";
+            }
 
             LoadLocale(locale);
         }

@@ -126,6 +126,17 @@
       "timeoutSeconds": 180
     },
     {
+      "name": "display_settings",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "windowed": true,
+      "args": [
+        "--",
+        "--frontend",
+        "--itest=display_settings"
+      ],
+      "timeoutSeconds": 120
+    },
+    {
       "name": "collection_edit",
       "scene": "res://scenes/menu/launcher.tscn",
       "args": [

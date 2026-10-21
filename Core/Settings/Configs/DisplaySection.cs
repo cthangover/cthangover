@@ -7,8 +7,9 @@ namespace Cthangover.Core.Settings.Configs
     /// Serialisable display defaults read from game_config.json.
     /// WindowMode uses Godot's DisplayServer.WindowMode enum values:
     /// 0=Windowed, 1=Minimized, 2=Maximized, 3=Fullscreen, 4=ExclusiveFullscreen.
-    /// Scale is the integer stretch multiplier applied to the base viewport
-    /// resolution (1920×1024) — kept at 1 by default for pixel-art sharpness.
+    /// The resolution is the window size in windowed mode; fullscreen modes
+    /// always run at the monitor's resolution and the canvas_items stretch
+    /// scales the 1920×1024 base viewport into the window.
     /// </summary>
     [Serializable]
     public class DisplaySection
@@ -33,8 +34,8 @@ namespace Cthangover.Core.Settings.Configs
         [JsonPropertyName("vsync_enabled")]
         public bool VsyncEnabled { get; set; } = false;
 
-        /// <summary>Integer viewport stretch multiplier (default 1).</summary>
-        [JsonPropertyName("scale")]
-        public int Scale { get; set; } = 1;
+        /// <summary>Frame rate cap, 0 = unlimited (default 0).</summary>
+        [JsonPropertyName("max_fps")]
+        public int MaxFps { get; set; } = 0;
     }
 }

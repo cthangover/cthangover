@@ -24,8 +24,9 @@ namespace Cthangover.Mods.ScenarioStudio
     /// <see cref="StudioLayer"/>, the per-scenario <see cref="StudioWorkingCopy"/>s
     /// and the rollback <see cref="StudioSnapshot"/> of the running scenario, and
     /// performs every action of the dock: apply edits, the restart modes, run a
-    /// scene candidate, go to a scene, create scenes and scenarios, change
-    /// state values, export the layer.
+    /// scene candidate, go to a scene, create scenes and scenarios, re-read
+    /// backgrounds dropped in while the game runs, change state values, export
+    /// the layer.
     /// <para/>
     /// <see cref="Version"/> grows on every change the dock may want to show;
     /// the dock polls it instead of subscribing, so a burst of dialog actions
@@ -452,18 +453,35 @@ namespace Cthangover.Mods.ScenarioStudio
 
         // ── new content ────────────────────────────────────────────
 
-        /// <summary>Creates a scene in the layer (backgrounds of the current scene) with a first scenario; returns false on a bad name.</summary>
-        public bool CreateScene(string name)
+        /// <summary>The scene or mod id typed by the author, trimmed and lowercased; null when it is not one (latin letters, digits, _).</summary>
+        public static string ValidName(string name)
         {
             name = (name ?? string.Empty).Trim().ToLowerInvariant();
-            if (!ModIdPattern.IsMatch(name))
+            return ModIdPattern.IsMatch(name) ? name : null;
+        }
+
+        /// <summary>
+        /// Creates a scene in the layer with a first scenario; returns false on a bad name.
+        /// The scene shows <paramref name="background"/>, or the backgrounds of the current scene when it is null.
+        /// </summary>
+        public bool CreateScene(string name, string background = null)
+        {
+            name = ValidName(name);
+            if (name == null)
                 return false;
 
-            var current = SceneName;
-            var defs = AppServices.Current.SceneDefs.CollectAll();
             List<string> backgrounds = null;
-            if (current != null && defs != null && defs.TryGetValue(current, out var list) && list.Count > 0)
-                backgrounds = list[0].DefaultBackground;
+            if (background != null)
+            {
+                backgrounds = new List<string> { background };
+            }
+            else
+            {
+                var current = SceneName;
+                var defs = AppServices.Current.SceneDefs.CollectAll();
+                if (current != null && defs != null && defs.TryGetValue(current, out var list) && list.Count > 0)
+                    backgrounds = list[0].DefaultBackground;
+            }
 
             var scenario = Layer.CreateScene(name, backgrounds, StudioScriptEdits.NewLine());
             StudioLayer.RefreshContent();
@@ -484,11 +502,35 @@ namespace Cthangover.Mods.ScenarioStudio
             return name;
         }
 
+        /// <summary>
+        /// Re-reads the backgrounds after the author dropped pictures into a mod or
+        /// the layer (<see cref="StudioBackgrounds.Reload"/>): the current background
+        /// is shown from its file again, new ones can be picked for a scene.
+        /// </summary>
+        public StudioAssetReload ReloadAssets()
+        {
+            var before = new HashSet<string>(StudioBackgrounds.Ids());
+            StudioBackgrounds.Reload();
+
+            var result = new StudioAssetReload();
+            foreach (var id in StudioBackgrounds.Ids())
+            {
+                result.Total++;
+                if (!before.Contains(id))
+                    result.Added.Add(id);
+            }
+
+            Journal.Add(StudioLogCategory.Edit, new StudioText("studio/log_text_assets_reloaded", result.Total, result.Added.Count));
+            GameLogger.Log("UI", $"Scenario studio: backgrounds re-read, {result.Total} in total, new: [{string.Join(", ", result.Added)}]");
+            Touch();
+            return result;
+        }
+
         /// <summary>Exports the layer as mod <paramref name="modId"/>; null on a bad id.</summary>
         public string Export(string modId)
         {
-            modId = (modId ?? string.Empty).Trim().ToLowerInvariant();
-            if (!ModIdPattern.IsMatch(modId))
+            modId = ValidName(modId);
+            if (modId == null)
                 return null;
             var path = Layer.Export(modId);
             Journal.Add(StudioLogCategory.Edit, new StudioText("studio/log_text_exported", modId));

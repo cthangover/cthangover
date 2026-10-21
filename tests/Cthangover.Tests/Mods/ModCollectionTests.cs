@@ -207,6 +207,28 @@ namespace Engine.Tests.Mods
             Assert.Equal("Base description", collection.GetLocalizedDescription("fr"));
         }
 
+        [Theory]
+        [InlineData("en-en")]
+        [InlineData("en_US")]
+        [InlineData("EN")]
+        public void GetLocalizedName_RegionalOrCasedCode_MatchesTheLanguage(string language)
+        {
+            var collection = new ModCollection
+            {
+                Id = "x",
+                Name = "Base",
+                Locale = new List<CatalogLocaleEntry>
+                {
+                    new() { Lang = "ru", Name = "Основа", Description = "Русский" },
+                    new() { Lang = "en", Name = "English", Description = "English text" },
+                },
+            };
+
+            Assert.Equal("English", collection.GetLocalizedName(language));
+            Assert.Equal("English text", collection.GetLocalizedDescription(language));
+            Assert.Equal("Основа", collection.GetLocalizedName("ru-ru"));
+        }
+
         [Fact]
         public void GetLocalizedName_NoFlatName_FallsBackToEnglishThenFirstThenId()
         {

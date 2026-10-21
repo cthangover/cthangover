@@ -202,7 +202,7 @@ namespace Cthangover.Core.Mods
 
             foreach (var entry in Locale)
             {
-                if (string.Equals(entry.Lang, language, System.StringComparison.OrdinalIgnoreCase) && HasText(entry, wantName))
+                if (Localization.LanguageCode.Same(entry.Lang, language) && HasText(entry, wantName))
                     return wantName ? entry.Name : entry.Description;
             }
 
@@ -211,7 +211,7 @@ namespace Cthangover.Core.Mods
 
             foreach (var entry in Locale)
             {
-                if (string.Equals(entry.Lang, "en", System.StringComparison.OrdinalIgnoreCase) && HasText(entry, wantName))
+                if (Localization.LanguageCode.Same(entry.Lang, "en") && HasText(entry, wantName))
                     return wantName ? entry.Name : entry.Description;
             }
 
