@@ -211,6 +211,11 @@
       "timeoutSeconds": 180
     },
     {
+      "name": "event_bus",
+      "scene": "res://tests/Cthangover.Tests.Integration/Scenes/event_bus_test.tscn",
+      "timeoutSeconds": 120
+    },
+    {
       "name": "actioncontext",
       "scene": "res://tests/Cthangover.Tests.Integration/Scenes/gd_action_context_core_test.tscn",
       "timeoutSeconds": 120

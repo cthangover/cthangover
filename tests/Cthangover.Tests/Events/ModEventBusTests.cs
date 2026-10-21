@@ -1,6 +1,8 @@
 namespace Cthangover.Tests.Events
 {
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
     using System.Reflection;
     using Cthangover.Core.Events;
     using Cthangover.Core.Mods;
@@ -40,6 +42,26 @@ namespace BusMod
             ModEventBus.Publish(new BusProbeEvent());
 
             Assert.Equal(1, probeHits);
+        }
+
+        [Fact]
+        public void LifecycleEvent_OrdersByPriority_KeepingSubscriptionOrderForTies()
+        {
+            var log = new List<int>();
+            var probes = new List<BusOrderProbe>();
+            for (var i = 0; i < 40; i++)
+            {
+                var probe = new BusOrderProbe(i, log);
+                probes.Add(probe);
+                ModEventBus.Subscribe<BusLifecycleProbeEvent>(probe.Handle, priority: i % 3);
+            }
+
+            ModEventBus.Publish(new BusLifecycleProbeEvent());
+            foreach (var probe in probes)
+                ModEventBus.Unsubscribe<BusLifecycleProbeEvent>(probe.Handle);
+
+            var expected = Enumerable.Range(0, 40).OrderBy(i => i % 3).ToList();
+            Assert.Equal(expected, log);
         }
 
         [Fact]
