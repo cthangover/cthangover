@@ -115,7 +115,7 @@ namespace Cthangover.Core.Scenes
 			if (data.TryGetValue(groupName, out var value) && value != null)
 			{
 				if (value is GodotObject go && GodotObject.IsInstanceValid(go))
-					return (T)value;
+					return value as T;
 				data.Remove(groupName);
 			}
 
@@ -135,7 +135,11 @@ namespace Cthangover.Core.Scenes
 		/// call for a given name, searches the tree via <see cref="Node.FindChild"/> and
 		/// caches the result. Subsequent calls return the cached reference after validating
 		/// it is still a valid Godot object. Failed lookups are stored in a not-found cache
-		/// to avoid repeated searches within the same scene lifecycle.
+		/// to avoid repeated searches within the same scene lifecycle. A lookup is typed:
+		/// the miss is cached per type and name, and a cached node of another type is a
+		/// miss for <typeparamref name="T"/> — one caller asking for the wrong type must
+		/// not hide the node from the others (the same name is looked up as
+		/// <c>ViewBox</c>, <c>Control</c> and <c>Node</c>).
 		/// </summary>
 		/// <typeparam name="T">The expected Godot <see cref="Node"/> type.</typeparam>
 		/// <param name="nodeName">The name of the node to find.</param>
@@ -145,11 +149,12 @@ namespace Cthangover.Core.Scenes
 			if (data.TryGetValue(nodeName, out var value) && value != null)
 			{
 				if (value is GodotObject go && GodotObject.IsInstanceValid(go))
-					return (T)value;
+					return value as T;
 				data.Remove(nodeName);
 			}
 
-			if (notFoundCache.Contains(nodeName))
+			var missKey = typeof(T).FullName + ":" + nodeName;
+			if (notFoundCache.Contains(missKey))
 				return null;
 
 			var tree = GetTree();
@@ -165,7 +170,7 @@ namespace Cthangover.Core.Scenes
 			T v = root.FindChild(nodeName, true, false) as T;
 			if (v == null)
 			{
-				notFoundCache.Add(nodeName);
+				notFoundCache.Add(missKey);
 				GameLogger.Log("SCENE", $"node '{nodeName}' of type {typeof(T).Name} not found", LogLevel.Error);
 				return null;
 			}

@@ -352,12 +352,13 @@ namespace Cthangover.Core.Scenes
                     eventChain.AddEvent(instance);
                 }
 
-                UpdateSaveIcon();
-
-                GameData.Instance?.Runtime.ClearLoadState();
             }
             finally
             {
+                // Here, not after the queueing: a scene without events returns
+                // early and must refresh the save icon and drop the load state too.
+                UpdateSaveIcon();
+                GameData.Instance?.Runtime.ClearLoadState();
                 UnfreezeActivity();
                 if (!IsTestPlayActive)
                     ModEventBus.Publish(new SceneComposedEvent { SceneName = sceneName, Candidates = reportList });
