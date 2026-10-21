@@ -55,6 +55,26 @@ namespace Engine.Tests.Characters
         }
 
         [Fact]
+        public void AddCharacterToParty_AlreadyInParty_KeepsItsProgress()
+        {
+            data.AddCharacterToParty("hero");
+            var card = data.Characters["hero"];
+            card.Level = 7;
+            card.Exp = 700;
+            card.Attributes.Health.Value = 5;
+            data.BattleSet.Remove("hero");
+
+            var added = data.AddCharacterToParty("hero");
+
+            Assert.True(added);
+            Assert.Same(card, data.Characters["hero"]);
+            Assert.Equal(7, data.Characters["hero"].Level);
+            Assert.Equal(700, data.Characters["hero"].Exp);
+            Assert.Equal(5, data.Characters["hero"].Attributes.Health.Value);
+            Assert.Contains("hero", data.BattleSet);
+        }
+
+        [Fact]
         public void AddCharacterToParty_UnknownId_ReturnsFalse()
         {
             provider.UnknownIds.Add("ghost");
