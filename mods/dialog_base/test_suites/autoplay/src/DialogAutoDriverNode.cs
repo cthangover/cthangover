@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Cthangover.Core.Events;
 using Cthangover.Core.UI.Dialog;
 using Cthangover.Core.Utils;
 using Godot;
@@ -23,6 +24,9 @@ namespace Mods.TestRunner
     /// <c>IsDialogEnded</c> истинно до загрузки первой очереди, поэтому
     /// end-обработка ждёт, пока диалог реально наблюдался запущенным, плюс
     /// стартовая пауза 0.5с на построение сцены.
+    /// With <c>--dialogs=N</c> the run passes after N <see cref="DialogEndedEvent"/>s
+    /// instead: hub games never go idle, because the next scene's dialog starts
+    /// in the same frame the previous one ends.
     /// </summary>
     public partial class DialogAutoDriverNode : Node
     {
@@ -40,6 +44,7 @@ namespace Mods.TestRunner
 
         private readonly List<int> choices;
         private readonly float? timeoutSeconds;
+        private readonly int? dialogsTarget;
 
         private IDialogBox dialogBox;
         private int choiceIndex;
@@ -47,6 +52,7 @@ namespace Mods.TestRunner
         private double dialogFoundAtSeconds;
         private bool hasSeenRunningDialog;
         private bool finished;
+        private int endedDialogs;
 
         /// <summary>
         /// Создаёт драйвер; <paramref name="choices"/> — индексы вариантов по
@@ -56,11 +62,16 @@ namespace Mods.TestRunner
         /// вне source-генератора Godot): WaitTime 0.1с с автостартом
         /// воспроизводит ритм оригинального драйвера, а сигнал
         /// <c>Timer.Timeout</c> — Godot-сигнал и работает из мод-сборок.
+        /// <paramref name="dialogsTarget"/> — number of finished dialogs that passes
+        /// the run (null — pass when the box goes idle).
         /// </summary>
-        public DialogAutoDriverNode(List<int> choices, float? timeoutSeconds)
+        public DialogAutoDriverNode(List<int> choices, float? timeoutSeconds, int? dialogsTarget)
         {
             this.choices = choices ?? new List<int>();
             this.timeoutSeconds = timeoutSeconds;
+            this.dialogsTarget = dialogsTarget;
+            if (dialogsTarget.HasValue)
+                ModEventBus.Subscribe<DialogEndedEvent>(OnDialogEnded);
 
             var timer = new Timer
             {
@@ -112,7 +123,7 @@ namespace Mods.TestRunner
             var waitingForFirstDialog = !hasSeenRunningDialog
                 && elapsedSeconds - dialogFoundAtSeconds < FirstDialogGraceSeconds;
 
-            if (dialogBox.IsDialogEnded && !waitingForFirstDialog)
+            if (!dialogsTarget.HasValue && dialogBox.IsDialogEnded && !waitingForFirstDialog)
             {
                 GameLogger.Log("TEST", "DialogAutoDriverNode: dialog ended, quitting");
                 Finish(1, 0, null);
@@ -126,6 +137,15 @@ namespace Mods.TestRunner
             }
 
             dialogBox.NextAction();
+        }
+
+        /// <summary>Counts finished dialogs and passes the run once the --dialogs= target is reached.</summary>
+        private void OnDialogEnded(DialogEndedEvent evt)
+        {
+            endedDialogs++;
+            GameLogger.Log("TEST", $"DialogAutoDriverNode: dialog #{endedDialogs} ended");
+            if (endedDialogs >= dialogsTarget.Value)
+                Finish(1, 0, $"{endedDialogs} dialog(s) ended, quitting");
         }
 
         /// <summary>Выбирает показанный вариант по индексу из --choices= (вне диапазона — первый).</summary>
@@ -167,6 +187,8 @@ namespace Mods.TestRunner
             if (finished)
                 return;
             finished = true;
+            if (dialogsTarget.HasValue)
+                ModEventBus.Unsubscribe<DialogEndedEvent>(OnDialogEnded);
 
             if (reason != null)
                 GameLogger.Log("TEST", $"DialogAutoDriverNode: {reason}");

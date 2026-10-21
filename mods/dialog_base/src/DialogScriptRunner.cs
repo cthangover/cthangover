@@ -48,8 +48,7 @@ namespace Cthangover.Mods.Dialog
             if (dlg == null || dlg.Queue.Count == 0)
                 return false;
 
-            dialogBox.SetDialogQueueAndRun(dlg, null, 0, null);
-            return true;
+            return dialogBox.SetDialogQueueAndRun(dlg, null, 0, null);
         }
 
         /// <summary>Runs inline DSL commands (hover effects and similar) through a standalone dialog runtime.</summary>

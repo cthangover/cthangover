@@ -1,7 +1,6 @@
 using System.Collections.Generic;
-using Cthangover.Mods.Effects.Animation;
+using Cthangover.Core.Factories.Impls;
 using Cthangover.Mods.Dialog.Action;
-using Cthangover.Core.UI.Event;
 using Cthangover.Mods.Interface.View;
 using Godot;
 using Cthangover.Core.UI;
@@ -15,106 +14,150 @@ namespace Cthangover.Mods.Dialog.Action.Impls
 {
     /// <summary>
     /// Frame-animates the scene foreground by swapping ViewBox textures at a
-    /// configurable speed. Loads frames from SpriteIDs on construction
-    /// (OnStartQueue). Unlike AnimationController which crossfades, this does
-    /// hard cuts — simpler but acceptable for foreground effects. The speed
-    /// switches to NextFrameSpeed after the first frame so first-frame delay
-    /// can differ from subsequent frames. Registers as IOnUpdateEvent for
-    /// per-frame advancement. Non-looping mode auto-stops at last frame.
+    /// configurable speed: the first frame lasts 1/<see cref="Speed"/> seconds,
+    /// every later one 1/<see cref="NextFrameSpeed"/>. Hard cuts, no crossfade.
+    /// Frames come from <see cref="Textures"/> or are resolved from
+    /// <see cref="SpriteIDs"/> through <see cref="BackgroundFactory"/> (the same
+    /// texture names a <c>foreground</c> command takes) on construction
+    /// (OnStartQueue).
+    /// <para/>
+    /// Event-driven: each frame schedules one <see cref="SceneTreeTimer"/> for the
+    /// next cut — no per-frame update. The dialog does not wait (NoWait); the
+    /// animation keeps playing while the dialog goes on and stops when the queue
+    /// ends (OnEndQueue), when another animation starts or when a
+    /// <c>foreground</c> command replaces the picture (<see cref="StopActive"/>).
     /// </summary>
-    public class ActionAnimatedForeground : ActionCommand, IOnUpdateEvent
+    public class ActionAnimatedForeground : ActionCommand
     {
-        /// <summary>Update priority. Runs after higher-priority listeners. Value 0.</summary>
-        public int Priority => 0;
+        private static ActionAnimatedForeground active;
 
-        /// <summary>List of sprite resource paths to display as animation frames. Loaded in <see cref="DoConstruct"/>.</summary>
+        /// <summary>Texture names resolved through <see cref="BackgroundFactory"/>; ignored when <see cref="Textures"/> is set.</summary>
         public List<string> SpriteIDs { get; set; }
-        /// <summary>Initial frame rate multiplier for the first frame.</summary>
+        /// <summary>Ready frames used instead of resolving <see cref="SpriteIDs"/> (bypasses the factory like ActionForeground.Texture).</summary>
+        public List<Texture2D> Textures { get; set; }
+        /// <summary>Frames per second of the first frame.</summary>
         public float Speed { get; set; } = 1f;
-        /// <summary>Frame rate multiplier for subsequent frames after the first. Allows different pacing for the initial frame.</summary>
+        /// <summary>Frames per second of every frame after the first one.</summary>
         public float NextFrameSpeed { get; set; } = 1f;
-        /// <summary>Whether the animation wraps after the last frame. When false, playback stops at the final frame.</summary>
+        /// <summary>Whether playback restarts from the first frame after the last one; otherwise it stops on the last frame.</summary>
         public bool IsLoop { get; set; } = true;
 
-        private int currentFrame;
-        private float elapsed;
-        private bool isAnimating;
-        private List<Texture2D> frames;
+        /// <summary>Whether the animation is still cutting frames.</summary>
+        public bool IsAnimating { get; private set; }
 
-        /// <summary>Preloads frames when the dialog queue is first loaded, so textures are ready before playback.</summary>
+        private int currentFrame;
+        private List<Texture2D> frames;
+        private SceneTreeTimer frameTimer;
+
+        /// <summary>Frames are resolved when the queue starts, so the first cut does not stall on loading.</summary>
         public override ConstructType ConstructType { get; set; } = ConstructType.OnStartQueue;
-        /// <summary>Animation runs in the background — the dialog queue continues immediately.</summary>
+        /// <summary>The animation lives until the dialog ends, not until the next action.</summary>
+        public override DestructType DestructType { get; set; } = DestructType.OnEndQueue;
+        /// <summary>The dialog goes on while the foreground animates.</summary>
         public override WaitType WaitType { get; set; } = WaitType.NoWait;
 
-        /// <summary>Preloads every sprite in <see cref="SpriteIDs"/> into memory so playback never stalls on I/O.</summary>
+        /// <summary>Stops the animation that currently drives the foreground, if any; the shown frame stays.</summary>
+        public static void StopActive()
+        {
+            active?.Stop();
+        }
+
+        /// <summary>Resolves the frames.</summary>
         public override void DoConstruct()
         {
             base.DoConstruct();
             LoadFrames();
         }
 
-        /// <summary>Stops the animation loop; the last shown frame stays on screen.</summary>
+        /// <summary>Stops the frame timer; the last shown frame stays on the ViewBox.</summary>
         public override void DoDestruct()
         {
             base.DoDestruct();
-            isAnimating = false;
+            Stop();
         }
 
         private void LoadFrames()
         {
             frames = new List<Texture2D>();
+            var source = Textures;
+            if (source != null)
+            {
+                foreach (var tex in source)
+                    if (tex != null)
+                        frames.Add(tex);
+                return;
+            }
+
             if (SpriteIDs == null)
                 return;
             foreach (var id in SpriteIDs)
             {
-                var tex = GD.Load<Texture2D>(id);
+                var tex = BackgroundFactory.Instance.Get(id);
                 if (tex != null)
                     frames.Add(tex);
             }
         }
 
-        /// <summary>Resets playback to the first frame and shows it on the ViewBox; per-frame stepping happens through <see cref="IOnUpdateEvent.OnUpdate"/>.</summary>
+        /// <summary>Stops a previous animation, shows the first frame on the ViewBox and schedules the next cut.</summary>
         public override void DoRun(DialogRuntime runtime)
         {
+            StopActive();
             currentFrame = 0;
-            elapsed = 0f;
-            isAnimating = frames != null && frames.Count > 0;
+            IsAnimating = frames != null && frames.Count > 0;
+            if (!IsAnimating)
+                return;
 
-            if (isAnimating)
-            {
-                var viewBox = Scene.Find<ViewBox>("ViewBox");
-                viewBox?.SetForegroundTexture(frames[0]);
-            }
+            active = this;
+            ShowFrame();
+            ScheduleNextFrame(Speed);
         }
 
-        void IOnUpdateEvent.OnUpdate()
+        private void ShowFrame()
         {
-            if (!isAnimating || frames == null || frames.Count == 0)
-                return;
-
             var viewBox = Scene.Find<ViewBox>("ViewBox");
-            if (viewBox == null)
+            viewBox?.SetForegroundTexture(frames[currentFrame]);
+        }
+
+        private void ScheduleNextFrame(float speed)
+        {
+            if (Godot.Engine.GetMainLoop() is not SceneTree tree)
                 return;
 
-            elapsed += 1f / 60f;
-            var frameDuration = 1f / Mathf.Max(Speed, 0.01f);
-            if (elapsed >= frameDuration)
+            frameTimer = tree.CreateTimer(1f / Mathf.Max(speed, 0.01f));
+            frameTimer.Timeout += OnFrameTimeout;
+        }
+
+        private void OnFrameTimeout()
+        {
+            frameTimer = null;
+            if (!IsAnimating)
+                return;
+
+            currentFrame++;
+            if (currentFrame >= frames.Count)
             {
-                elapsed -= frameDuration;
-                currentFrame++;
-                if (currentFrame >= frames.Count)
+                if (!IsLoop)
                 {
-                    if (IsLoop)
-                        currentFrame = 0;
-                    else
-                    {
-                        isAnimating = false;
-                        return;
-                    }
+                    Stop();
+                    return;
                 }
-                viewBox.SetForegroundTexture(frames[currentFrame]);
-                Speed = NextFrameSpeed;
+                currentFrame = 0;
             }
+
+            ShowFrame();
+            ScheduleNextFrame(NextFrameSpeed);
+        }
+
+        private void Stop()
+        {
+            IsAnimating = false;
+            if (frameTimer != null)
+            {
+                frameTimer.Timeout -= OnFrameTimeout;
+                frameTimer = null;
+            }
+            if (active == this)
+                active = null;
         }
     }
 }

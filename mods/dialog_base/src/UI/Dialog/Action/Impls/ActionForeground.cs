@@ -38,9 +38,10 @@ namespace Cthangover.Mods.Dialog.Action.Impls
                 Texture = BackgroundFactory.Instance.Get(SpriteID);
         }
 
-        /// <summary>Applies the preloaded texture to the ViewBox foreground, then nulls it so a reused action cannot re-apply stale data.</summary>
+        /// <summary>Stops a running foreground animation (it would overwrite the picture), applies the preloaded texture to the ViewBox foreground, then nulls it so a reused action cannot re-apply stale data.</summary>
         public override void DoRun(DialogRuntime runtime)
         {
+            ActionAnimatedForeground.StopActive();
             var viewBox = Scene.Find<ViewBox>("ViewBox");
             viewBox?.SetForegroundTexture(Texture);
             Texture = null;

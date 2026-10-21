@@ -63,12 +63,17 @@ namespace Cthangover.Mods.Dialog.Action
             ID = Guid.NewGuid().ToString();
         }
         
-        /// <summary>Idempotent construction: calls <see cref="DoConstruct"/> once and sets <see cref="IsConstructed"/> to true.</summary>
+        /// <summary>
+        /// Idempotent construction: calls <see cref="DoConstruct"/> once and sets <see cref="IsConstructed"/> to true.
+        /// Construction also clears <see cref="IsDestructed"/>: an action reached again through a looping goto is a
+        /// new life of the same object, so its next <see cref="Destruct"/> must release what this construction took.
+        /// </summary>
         public void Construct()
         {
             if(IsConstructed) return;
             DoConstruct();
             IsConstructed = true;
+            IsDestructed  = false;
         }
 
         /// <summary>Idempotent desctruction: calls <see cref="DoDestruct"/> once, then sets <see cref="IsConstructed"/> false and <see cref="IsDestructed"/> true.</summary>
@@ -83,7 +88,7 @@ namespace Cthangover.Mods.Dialog.Action
         /// <summary>Constructs if not already done, records start time, and delegates execution to <see cref="DoRun"/>.</summary>
         public void Run(DialogRuntime runtime)
         {
-            if (!IsConstructed) DoConstruct();
+            Construct();
             StartTime = (float)(Godot.Time.GetTicksUsec() / 1_000_000.0);
             DoRun(runtime);
         }

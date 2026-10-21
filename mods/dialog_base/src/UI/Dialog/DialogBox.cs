@@ -80,7 +80,11 @@ namespace Cthangover.Mods.Dialog
         /// <summary>If false, new dialog queues are rejected. Set externally to prevent dialog during non-dialog scenes.</summary>
         public bool IsActive { get; set; } = true;
 
-        /// <summary>Called by answer items when the player picks a choice. Hides the answer box and jumps the runtime to the variant's GoTo target.</summary>
+        /// <summary>
+        /// Called by answer items when the player picks a choice. Hides the answer box and jumps the runtime to the
+        /// variant's GoTo target; a variant without a target falls through to the action after the choice (re-running
+        /// the choice itself would show the same answers again forever).
+        /// </summary>
         public void SelectVariant(SelectVariant variant)
 		{
 			if (answerBox != null)
@@ -89,7 +93,10 @@ namespace Cthangover.Mods.Dialog
 				answerBox = null;
 			}
 
-			Runtime.TryGoTo(variant.GoTo);
+			if (string.IsNullOrEmpty(variant.GoTo))
+				Runtime.Next();
+			else
+				Runtime.TryGoTo(variant.GoTo);
 			Runtime.Run();
 			ScheduleWaitTimer();
 		}
@@ -172,32 +179,51 @@ namespace Cthangover.Mods.Dialog
 
         /// <summary>
         /// Loads and starts a dialog sequence. Validates that: (1) dialog is not null, (2) this DialogBox is active,
-        /// (3) no existing dialog locker is running. On success, shows the box and delegates to <see cref="DialogRuntime.SetDialogQueueAndRun"/>.
+        /// (3) no dialog is running — neither one with a locker nor a locker-less one (an interactive's click dialog),
+        /// see <see cref="IsRunning"/>. On success, shows the box and delegates to <see cref="DialogRuntime.SetDialogQueueAndRun"/>.
+        /// Returns false when the queue was rejected, so callers (event chains) do not count a run that never happened.
         /// </summary>
-        public void SetDialogQueueAndRun(DialogQueue dialog, IEnumerable<IActionCommand> endDialogQueue, int startIndex, ExecutableEvent locker)
+        public bool SetDialogQueueAndRun(DialogQueue dialog, IEnumerable<IActionCommand> endDialogQueue, int startIndex, ExecutableEvent locker)
 		{
 			if (dialog == null)
 			{
 				GameLogger.Log("DIALOG", $"can't run '{locker?.GetType().FullName}', dialog is null", LogLevel.Error);
-				return;
+				return false;
 			}
 			if (!IsActive)
 			{
 				GameLogger.Log("DIALOG", $"can't run '{locker?.GetType().FullName}', DialogBox is not active", LogLevel.Error);
-				return;
+				return false;
 			}
 
-			if (Locker != null)
+			if (IsRunning)
 			{
-				GameLogger.Log("DIALOG", $"can't run '{locker?.GetType().FullName}', locker already executing!", LogLevel.Error);
-				return;
+				GameLogger.Log("DIALOG", $"can't run '{locker?.GetType().FullName}', another dialog is already running!", LogLevel.Error);
+				return false;
 			}
 
 			GameLogger.Log("DIALOG", $"SetDialogQueueAndRun: locker='{locker?.GetType().Name}', queue size={dialog?.Queue.Count}");
-			Locker = locker;
-			Show();
 			Runtime.SetDialogQueueAndRun(this, dialog.Queue, endDialogQueue, startIndex);
 			Runtime.Dialog = dialog;
+			Locker = locker;
+			Show();
+			Runtime.Run();
+			ScheduleWaitTimer();
+			return true;
+		}
+
+        /// <summary>
+        /// Completion entry point for actions that finish on their own (<see cref="WaitType.WaitEvent"/>): advances
+        /// past <paramref name="action"/> and schedules the wait timer of whatever comes next, exactly like a click
+        /// or an elapsed delay. Ignored when <paramref name="action"/> is no longer the current one (a stale
+        /// completion of an action the dialog already left) or while the debugger holds the runtime.
+        /// </summary>
+        public void CompleteAction(IActionCommand action)
+		{
+			if (Runtime.IsHeld || action == null || Runtime.CurrentAction != action)
+				return;
+
+			Runtime.Next();
 			Runtime.Run();
 			ScheduleWaitTimer();
 		}
@@ -347,8 +373,12 @@ namespace Cthangover.Mods.Dialog
             Locker = null;
         }
 
-        /// <summary>Whether a dialog is currently running (Locker is not null).</summary>
-        public bool IsRunning => Locker != null;
+        /// <summary>
+        /// Whether a dialog occupies the box: one started by an event (Locker is not null) or a locker-less queue
+        /// that has not ended yet (an interactive's click dialog runs without a locker). Event chains and the click
+        /// runner wait for false before starting anything, which keeps one dialog at a time.
+        /// </summary>
+        public bool IsRunning => Locker != null || !Runtime.IsEnd;
 
         /// <summary>Whether the current dialog queue reached its end (also true before the first queue loads).</summary>
         public bool IsDialogEnded => Runtime.IsEnd;
@@ -375,13 +405,15 @@ namespace Cthangover.Mods.Dialog
         /// Schedules a one-shot <see cref="SceneTreeTimer"/> that advances the dialog past the
         /// current <see cref="WaitType.WaitTime"/> action once its <see cref="ActionCommand.WaitTime"/>
         /// elapses. Replaces the former per-frame polling: the runtime now yields until the timer
-        /// fires exactly once, so no Update work happens between delays.
+        /// fires exactly once, so no Update work happens between delays. Nothing is scheduled while the
+        /// debugger holds the runtime: the current action has not run yet, its wait starts on
+        /// <see cref="Resume"/>.
         /// </summary>
         private void ScheduleWaitTimer()
         {
             ClearWaitTimer();
 
-            if (!Runtime.IsWaitTime)
+            if (Runtime.IsHeld || !Runtime.IsWaitTime)
                 return;
 
             var wait = Runtime.CurrentAction?.WaitTime ?? 0f;
@@ -399,13 +431,13 @@ namespace Cthangover.Mods.Dialog
         /// Fires when the delay timer elapses. The timer already guarantees the wait has
         /// elapsed, so the runtime is advanced directly — no wall-clock re-check. The
         /// <see cref="Runtime.IsWaitTime"/> guard skips a stale timer that fired after the
-        /// dialog already moved on.
+        /// dialog already moved on; the hold guard keeps a held, not yet run action in place.
         /// </summary>
         private void OnWaitTimerTimeout()
         {
             waitTimer = null;
 
-            if (!Runtime.IsWaitTime)
+            if (Runtime.IsHeld || !Runtime.IsWaitTime)
                 return;
 
             Runtime.Next();

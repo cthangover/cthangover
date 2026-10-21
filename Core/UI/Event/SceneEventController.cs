@@ -9,11 +9,15 @@ namespace Cthangover.Core.UI.Event
 {
     /// <summary>
     /// Central event bus for the UI subsystem. Maintains priority-sorted subscriber
-    /// lists for Update, TimerTick, and DialogStart events (dialog-end
-    /// notifications are published on the ModEventBus as DialogEndedEvent). When
-    /// subscribers are added or removed, the list is re-sorted by Priority
-    /// (ascending — lower value = earlier execution). Runs at ProcessPriority.MaxValue
-    /// to execute before other nodes. Timer ticks fire at 1-second intervals from
+    /// lists for Update and TimerTick events (dialog-end notifications are published
+    /// on the ModEventBus as DialogEndedEvent). Subscribers are dispatched by
+    /// Priority ascending — lower value = earlier execution; equal priorities keep
+    /// their registration order (a new listener is inserted after the last one of
+    /// its priority, the list is never re-sorted). Dispatch walks a snapshot of the
+    /// list, so a listener may add or remove listeners from its callback: one added
+    /// during a dispatch is first called on the next one, one removed is not called
+    /// any more. Runs at ProcessPriority.MaxValue, i.e. after every other node's
+    /// process callback in the frame. Timer ticks fire at 1-second intervals from
     /// an accumulator to avoid drift — from the first processed frames of the app,
     /// never paused during the launcher boot. Each tick subscriber is wrapped in
     /// try/catch to prevent one faulty handler from breaking all others. IsActive
@@ -29,6 +33,8 @@ namespace Cthangover.Core.UI.Event
         
         private List<IOnUpdateEvent>      OnUpdateEventList      = new();
         private List<IOnTimeEvent>        OnTimerTickEventList   = new();
+        private IOnUpdateEvent[]          updateSnapshot;
+        private IOnTimeEvent[]            tickSnapshot;
 
         /// <summary>
         /// <c>true</c> after <see cref="_ExitTree"/> runs and <see cref="ClearData"/>
@@ -83,14 +89,12 @@ namespace Cthangover.Core.UI.Event
             if (!IsActive)
                 return;
 
-            for (int i = OnUpdateEventList.Count - 1; i > -1; i--)
+            updateSnapshot ??= OnUpdateEventList.ToArray();
+            foreach (var eventSubscriber in updateSnapshot)
             {
-                var eventSubscriber = OnUpdateEventList[i];
-                if (eventSubscriber == null)
-                {
-                    OnUpdateEventList.RemoveAt(i);
+                // Removed by an earlier subscriber of this very dispatch.
+                if (!OnUpdateEventList.Contains(eventSubscriber))
                     continue;
-                }
                 // Same contract as TickTimer: one faulty (e.g. disposed across a
                 // scene switch) handler must not break the remaining subscribers,
                 // so each update is isolated.
@@ -100,7 +104,7 @@ namespace Cthangover.Core.UI.Event
                 }
                 catch (ObjectDisposedException ex)
                 {
-                    OnUpdateEventList.RemoveAt(i);
+                    RemoveUpdateEventListener(eventSubscriber);
                     GameLogger.Log("EVENT", $"Update subscriber {eventSubscriber.GetType().Name} was disposed, unregistered: {ex.Message}", LogLevel.Error);
                 }
                 catch (Exception ex)
@@ -112,14 +116,11 @@ namespace Cthangover.Core.UI.Event
 
 		private void TickTimer()
 		{
-			for (int i = OnTimerTickEventList.Count - 1; i > -1; i--)
+			tickSnapshot ??= OnTimerTickEventList.ToArray();
+			foreach (var eventSubscriber in tickSnapshot)
 			{
-				var eventSubscriber = OnTimerTickEventList[i];
-				if (eventSubscriber == null)
-				{
-					OnTimerTickEventList.RemoveAt(i);
+				if (!OnTimerTickEventList.Contains(eventSubscriber))
 					continue;
-				}
 				try
 				{
 					eventSubscriber.OnTimerTick();
@@ -158,8 +159,11 @@ namespace Cthangover.Core.UI.Event
         {
             if (listener == null || eventList.Contains(listener))
                 return;
-            eventList.Add(listener);
-            eventList.Sort((o1, o2) => o1.Priority - o2.Priority);
+            var at = eventList.Count;
+            while (at > 0 && eventList[at - 1].Priority > listener.Priority)
+                at--;
+            eventList.Insert(at, listener);
+            ResetSnapshots();
         }
 
         private void RemoveListener<T>(T listener, List<T> eventList) where T : class, IEventPriority
@@ -167,7 +171,14 @@ namespace Cthangover.Core.UI.Event
             if (listener == null)
                 return;
             if (eventList.Remove(listener))
-                eventList.Sort((o1, o2) => o1.Priority - o2.Priority);
+                ResetSnapshots();
+        }
+
+        // A dispatch keeps iterating the array it took; the next one takes a fresh copy.
+        private void ResetSnapshots()
+        {
+            updateSnapshot = null;
+            tickSnapshot = null;
         }
 
         /// <summary>
@@ -178,6 +189,7 @@ namespace Cthangover.Core.UI.Event
         {
             OnUpdateEventList.Clear();
             OnTimerTickEventList.Clear();
+            ResetSnapshots();
         }
     }
 }

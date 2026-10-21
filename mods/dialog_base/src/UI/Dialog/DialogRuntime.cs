@@ -25,8 +25,14 @@ namespace Cthangover.Mods.Dialog
     /// GoTo searches the queue linearly by action ID and jumps the index; the
     /// source action's destruct fires on jump. The isLastGoTo flag prevents double
     /// advancement when a GoTo is the last action in its branch. End() processes
-    /// an optional cleanup queue (endDialogQueue) before tearing down, and raises
-    /// the dialog-end event via the SceneEventController for chaining.
+    /// an optional cleanup queue (endDialogQueue) before tearing down, and publishes
+    /// <see cref="DialogEndedEvent"/> on the <see cref="ModEventBus"/> exactly once per
+    /// queue — event chains pick the next scenario from it.
+    /// <para/>
+    /// An action may end the queue (<c>end</c>, a goto to a missing label) or start
+    /// another dialog from inside <see cref="Run"/>. Every load, end and abort bumps
+    /// a generation counter, and <see cref="Run"/> stops as soon as the generation
+    /// changed under it: the rest of the loop belongs to a queue that no longer runs.
     /// Infinite loop protection caps at 100k iterations per Run call.
     /// </summary>
     public class DialogRuntime
@@ -37,6 +43,7 @@ namespace Cthangover.Mods.Dialog
         private int                         goToActionIndex;
         private int                         index;
         private bool                        isLastGoTo;
+        private int                         generation;
         private IDictionary<string, string> variables = new Dictionary<string, string>();
 
         /// <summary>The dialog box instance this runtime drives. Set when a new queue is loaded.</summary>
@@ -131,8 +138,9 @@ namespace Cthangover.Mods.Dialog
         }
 
         /// <summary>
-        /// Loads a new dialog queue and prepares for execution. Resets variables, sets the dialog box reference,
-        /// ends any previous queue (destructing its actions), copies the new queue, and constructs OnStartQueue actions.
+        /// Loads a new dialog queue and prepares for execution. Ends any previous queue first — with its own
+        /// end actions and dialog box, before anything of the new queue is set — then resets variables, sets the
+        /// dialog box reference, copies the new queue, and constructs OnStartQueue actions.
         /// Note: does NOT call Run() — the caller must call Run() separately.
         /// </summary>
         public void SetDialogQueueAndRun(DialogBox dialogBox,
@@ -140,14 +148,16 @@ namespace Cthangover.Mods.Dialog
                                          IEnumerable<IActionCommand> endQueue,
                                          int startIndex = 0)
         {
-            variables = new Dictionary<string, string>();
-            DialogBox = dialogBox;
-            IsHeld = false;
-
-            this.endDialogQueue = endQueue == null ? null : endQueue.ToList();
             if (Lists.IsNotEmpty(this.dialogQueue))
                 End();
 
+            generation++;
+            variables = new Dictionary<string, string>();
+            DialogBox = dialogBox;
+            IsHeld = false;
+            isLastGoTo = false;
+
+            this.endDialogQueue = endQueue == null ? null : endQueue.ToList();
             this.dialogQueue = queue.ToList();
 
             index = startIndex;
@@ -215,12 +225,14 @@ namespace Cthangover.Mods.Dialog
         /// <summary>
         /// Main execution loop. Iterates through actions, calling <see cref="IActionCommand.Run"/> on each and advancing
         /// automatically for <see cref="WaitType.NoWait"/> actions. Stops the loop on any wait-type action (WaitClick, WaitSelect,
-        /// WaitTime, WaitEvent) so the runtime yields control until the condition is satisfied. Protected against infinite loops
+        /// WaitTime, WaitEvent) so the runtime yields control until the condition is satisfied. Returns right after an action
+        /// that ended or replaced the queue (see the generation note on the class). Protected against infinite loops
         /// with a 100,000-iteration cap.
         /// </summary>
         public void Run()
         {
             var iteration = 0;
+            var runGeneration = generation;
             for (;;)
             {
                 var action = CurrentAction;
@@ -241,6 +253,8 @@ namespace Cthangover.Mods.Dialog
                 }
 
                 action.Run(this);
+                if (runGeneration != generation)
+                    return;
 
                 if (iteration++ > 100000)
                 {
@@ -266,7 +280,8 @@ namespace Cthangover.Mods.Dialog
 
         /// <summary>
         /// Advances the queue index by one. Destructs the current action if its <see cref="DestructType"/> is OnEndAction.
-        /// Processes any delayed-destruct targets registered by the current action. Calls <see cref="End"/> if the queue is exhausted.
+        /// Processes any delayed-destruct targets registered by the current action. Calls <see cref="End"/> if the queue is
+        /// already exhausted (nothing to advance to).
         /// Respects <see cref="isLastGoTo"/> — if a GoTo was the final action, the index is not incremented.
         /// </summary>
         public void Next()
@@ -291,6 +306,7 @@ namespace Cthangover.Mods.Dialog
             {
                 GameLogger.Log("DIALOG", "Next: queue exhausted, ending");
                 End();
+                return;
             }
 
             index++;
@@ -298,11 +314,17 @@ namespace Cthangover.Mods.Dialog
 
         /// <summary>
         /// Terminates the dialog queue. Destructs all remaining constructed actions, hides the dialog box, processes the
-        /// end-dialog cleanup queue (if any), and raises the dialog-end event via <see cref="SceneEventController"/>.
+        /// end-dialog cleanup queue (if any), and publishes <see cref="DialogEndedEvent"/> on the <see cref="ModEventBus"/>.
         /// Guards against end-queue actions starting a new dialog mid-cleanup by checking if the queue changed.
+        /// Idempotent: a queue that already ended (or never started) is not ended again, so the event is published
+        /// once per queue however many paths reach the end.
         /// </summary>
         public void End()
         {
+            if (dialogQueue == null)
+                return;
+
+            generation++;
             GameLogger.Log("DIALOG", $"End: {dialogQueue?.Count ?? 0} actions in queue, {(endDialogQueue?.Count ?? 0)} end actions");
 
             if (Lists.IsNotEmpty(dialogQueue))
@@ -369,6 +391,7 @@ namespace Cthangover.Mods.Dialog
                         action.Destruct();
             }
 
+            generation++;
             dialogQueue = null;
             endDialogQueue = null;
             index = 0;

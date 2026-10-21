@@ -8,6 +8,9 @@
   "sources": [
     "src/**/*.cs"
   ],
+  "test_sources": [
+    "tests/*.cs"
+  ],
   "depends": ["shell2d_base>=1", "interactive_base>=1", "effects_base>=1", "time_base>=1", "map_base>=1", "ui_base>=1"],
   "ui": [],
   "test_suites": [

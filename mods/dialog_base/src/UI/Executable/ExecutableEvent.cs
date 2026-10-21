@@ -1,6 +1,6 @@
 using Cthangover.Core.Scenes;
 using Cthangover.Mods.Dialog;
-using Cthangover.Core.UI.Event;
+using Cthangover.Core.Events;
 using Cthangover.Core.Utils;
 using Godot;
 using Cthangover.Core.UI;
@@ -13,21 +13,23 @@ using Cthangover.Core.Interactive;
 namespace Cthangover.Mods.Dialog.Executable
 {
     /// <summary>
-    /// Base for auto-triggering dialog events. A standalone event (not inside an
-    /// IExecutableEventChain) only re-fires when the condition state changes
-    /// (bumped <see cref="ConditionStateMonitor.Version"/>), after its own running
-    /// dialog ends, or on the first run — with a 0.5s debounce. Checks that the
-    /// DialogBox is free (IsRunning == false) before building and executing a
-    /// dialog queue. IsOneRun prevents re-triggering after first execution;
-    /// CanRepeat allows the event to fire again on subsequent scenes/visits.
-    /// CheckConditions is virtual — ScenarioEvent overrides it to evaluate script
-    /// conditions.
+    /// Base for auto-triggering dialog events. Inside an IExecutableEventChain the
+    /// chain decides when the event runs. A standalone event (not inside a chain)
+    /// drives itself, event-driven: it asks for a deferred check when it becomes
+    /// ready, when the condition state changes (<see cref="ConditionStateChangedEvent"/>)
+    /// and when a dialog ends (<see cref="DialogEndedEvent"/>), and runs when the
+    /// state changed since its own last run (or on the first run) and the
+    /// DialogBox is free. Checks that the DialogBox is free (IsRunning == false)
+    /// before building and executing a dialog queue. IsOneRun prevents
+    /// re-triggering after first execution; CanRepeat allows the event to fire
+    /// again on subsequent scenes/visits. CheckConditions is virtual —
+    /// ScenarioEvent overrides it to evaluate script conditions.
     /// </summary>
-    public partial class ExecutableEvent : Node, IOnUpdateEvent, IExecutableEvent
+    public partial class ExecutableEvent : Node, IExecutableEvent
     {
         protected DialogBox dialogBox;
-        private SceneEventController eventController;
-        private float timestamp;
+        private bool isStandalone;
+        private bool checkQueued;
 
         // Version at which the event last ran (MinValue forces the first run).
         private long _lastRunVersion = long.MinValue;
@@ -35,7 +37,7 @@ namespace Cthangover.Mods.Dialog.Executable
         private bool _awaitingOwnEnd;
 
         /// <summary>
-        /// <c>true</c> until <see cref="RunDialog"/> is called for the first time.
+        /// <c>true</c> until <see cref="RunDialog"/> starts the event's dialog for the first time.
         /// Used by chains to determine whether a one-shot event has already fired.
         /// </summary>
 		public bool IsFirstRun { get; private set; } = true;
@@ -66,13 +68,7 @@ namespace Cthangover.Mods.Dialog.Executable
         /// </summary>
 		public virtual string ID => GetType().FullName;
 
-        /// <summary>
-        /// Priority within the event chain — lower values execute first. Default
-        /// is <c>1</c>, placing this after high-priority handlers.
-        /// </summary>
-		public int Priority => 1;
-
-		/// <summary>Finds the shared <see cref="DialogBox"/> and registers with the event controller for update polling unless a parent chain already drives this event.</summary>
+		/// <summary>Finds the shared <see cref="DialogBox"/>; a standalone event (no parent chain) subscribes to its triggers and asks for the first check.</summary>
 		public override void _Ready()
 		{
 			if (dialogBox == null)
@@ -84,30 +80,56 @@ namespace Cthangover.Mods.Dialog.Executable
 				}
 			}
 
-			var isInChain = GetParent() is IExecutableEventChain;
-			if (!isInChain)
+			isStandalone = GetParent() is not IExecutableEventChain;
+			if (isStandalone)
 			{
-				eventController = SceneContextNode.FindNode<SceneEventController>("EventController");
-				eventController?.AddUpdateEventListener(this);
+				ModEventBus.Subscribe<ConditionStateChangedEvent>(OnConditionStateChanged);
+				ModEventBus.Subscribe<DialogEndedEvent>(OnDialogEnded);
+				RequestCheck();
 			}
 
-			GameLogger.Log("EVENT", $"{GetType().Name}._Ready: dialogBox={(dialogBox != null ? "found" : "null")}, chain={isInChain}, registered={!isInChain}", LogLevel.Debug);
+			GameLogger.Log("EVENT", $"{GetType().Name}._Ready: dialogBox={(dialogBox != null ? "found" : "null")}, chain={!isStandalone}, standalone={isStandalone}", LogLevel.Debug);
 		}
 
-		/// <summary>Detaches from the event controller's update polling when the event leaves the tree.</summary>
+		/// <summary>Detaches a standalone event from its triggers when it leaves the tree.</summary>
 		public override void _ExitTree()
 		{
-			if (eventController != null)
-				eventController.RemoveUpdateEventListener(this);
+			if (!isStandalone)
+				return;
+			ModEventBus.Unsubscribe<ConditionStateChangedEvent>(OnConditionStateChanged);
+			ModEventBus.Unsubscribe<DialogEndedEvent>(OnDialogEnded);
+		}
+
+		private void OnConditionStateChanged(ConditionStateChangedEvent evt)
+		{
+			RequestCheck();
+		}
+
+		private void OnDialogEnded(DialogEndedEvent evt)
+		{
+			RequestCheck();
+		}
+
+		// Coalesces triggers of one frame into one deferred check.
+		private void RequestCheck()
+		{
+			if (checkQueued)
+				return;
+			checkQueued = true;
+			Callable.From(Check).CallDeferred();
 		}
 
 		/// <summary>
-		/// Debounced poll (twice per second) that re-checks the repeat guards and
-		/// the <c>ConditionStateMonitor</c> version, then triggers the dialog when
-		/// the scene state changed since the last run.
+		/// Deferred check of a standalone event: re-checks the repeat guards and the
+		/// <c>ConditionStateMonitor</c> version, then triggers the dialog when the
+		/// scene state changed since the last run.
 		/// </summary>
-		public void OnUpdate()
+		private void Check()
 		{
+			checkQueued = false;
+			if (!IsInstanceValid(this) || !IsInsideTree())
+				return;
+
 			if (!IsFirstRun && !CanRepeat)
 				return;
 
@@ -125,11 +147,6 @@ namespace Cthangover.Mods.Dialog.Executable
 			if (ConditionStateMonitor.Version == _lastRunVersion)
 				return;
 
-			var time = Godot.Time.GetTicksUsec() / 1_000_000.0;
-			if (time - timestamp < 0.5f)
-				return;
-			timestamp = (float)time;
-
 			if (dialogBox.IsRunning)
 				return;
 
@@ -140,8 +157,10 @@ namespace Cthangover.Mods.Dialog.Executable
         /// <summary>
         /// Builds a <see cref="DialogQueue"/> via <see cref="CreateDialog"/> and queues
         /// it on the <see cref="DialogBox"/>, passing <c>this</c> as the locker to
-        /// block other dialog attempts. Returns <c>false</c> if the one-shot already
-        /// ran, the dialog box is unavailable, or another locker is active.
+        /// block other dialog attempts. Returns <c>false</c> — and leaves
+        /// <see cref="IsFirstRun"/> untouched — if the one-shot already ran, the dialog
+        /// box is unavailable or busy, or the box rejected the queue (e.g. inactive
+        /// during a scene switch): a run that never happened is not counted.
         /// </summary>
 		public bool RunDialog()
 		{
@@ -151,7 +170,7 @@ namespace Cthangover.Mods.Dialog.Executable
 			if (dialogBox == null)
 				return false;
 
-			if (dialogBox.Locker != null)
+			if (dialogBox.IsRunning)
 				return false;
 
 			GameLogger.Log("EVENT", $"{GetType().Name}.RunDialog: starting dialog...");
@@ -159,7 +178,8 @@ namespace Cthangover.Mods.Dialog.Executable
 			var dlg = new DialogQueue();
 			CreateDialog(dlg);
 
-			dialogBox.SetDialogQueueAndRun(dlg, null, StartIndex(dlg), this);
+			if (!dialogBox.SetDialogQueueAndRun(dlg, null, StartIndex(dlg), this))
+				return false;
 			IsFirstRun = false;
 			return true;
 		}

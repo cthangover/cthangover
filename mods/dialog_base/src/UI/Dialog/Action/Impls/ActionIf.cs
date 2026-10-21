@@ -14,7 +14,10 @@ namespace Cthangover.Mods.Dialog.Action.Impls
     /// <summary>
     /// Conditional branch: evaluates a Func&lt;bool&gt; and jumps to TrueGoTo or
     /// FalseGoTo based on the result. If the chosen target is null/empty, falls
-    /// through to Next(). NoWait so branching is transparent to the player.
+    /// through to the next action. NoWait so branching is transparent to the player:
+    /// the runtime itself advances past a NoWait action, so the branch never calls
+    /// <see cref="DialogRuntime.Next"/> — doing it here as well skipped the action
+    /// after the <c>if</c> without running it.
     /// </summary>
     public class ActionIf : ActionCommand
     {
@@ -34,7 +37,6 @@ namespace Cthangover.Mods.Dialog.Action.Impls
             if (Condition == null)
             {
                 GameLogger.Log("DIALOG", "ActionIf: Condition delegate is null", LogLevel.Error);
-                runtime.Next();
                 return;
             }
 
@@ -43,8 +45,6 @@ namespace Cthangover.Mods.Dialog.Action.Impls
 
             if (!string.IsNullOrEmpty(goTo))
                 runtime.TryGoTo(goTo);
-            else
-                runtime.Next();
         }
     }
 }

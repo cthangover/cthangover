@@ -44,6 +44,7 @@ namespace Mods.TestRunner
 
             var choices = ParseChoices(args);
             var timeout = ParseTimeout(args);
+            var dialogs = ParseDialogs(args);
 
             // Godot. квалифицирован: в dev-компиляции модов (ToolsModCompileTests)
         // в глобальном пространстве имён существует namespace Engine из тестовой сборки,
@@ -57,12 +58,12 @@ namespace Mods.TestRunner
 
             driverQueued = true;
             GameLogger.Log("TEST",
-                $"TestRunnerInitializer: activating dialog auto-driver, choices=[{string.Join(",", choices)}], timeout={timeout?.ToString() ?? "none"}s");
+                $"TestRunnerInitializer: activating dialog auto-driver, choices=[{string.Join(",", choices)}], timeout={timeout?.ToString() ?? "none"}s, dialogs={dialogs?.ToString() ?? "idle"}");
 
             // Deferred: сцена ещё строится; драйвер внутри сам выдерживает
             // стартовую паузу и лениво ищет DialogBox, поэтому порядок с
             // загрузкой сцены не важен.
-            root.CallDeferred("add_child", new DialogAutoDriverNode(choices, timeout));
+            root.CallDeferred("add_child", new DialogAutoDriverNode(choices, timeout, dialogs));
         }
 
         private static List<int> ParseChoices(string[] args)
@@ -78,6 +79,15 @@ namespace Mods.TestRunner
                 .Select(s => int.TryParse(s.Trim(), out var n) ? n : -1)
                 .Where(n => n >= 0)
                 .ToList();
+        }
+
+        private static int? ParseDialogs(string[] args)
+        {
+            var raw = args
+                .Where(a => a.StartsWith("--dialogs=", System.StringComparison.Ordinal))
+                .Select(a => a.Substring("--dialogs=".Length))
+                .FirstOrDefault();
+            return int.TryParse(raw, out var n) && n > 0 ? n : null;
         }
 
         private static float? ParseTimeout(string[] args)
