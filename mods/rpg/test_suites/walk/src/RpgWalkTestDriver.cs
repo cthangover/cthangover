@@ -161,7 +161,7 @@ namespace Cthangover.Mods.Rpg.Tests
                     Check(View.FindEvent("elder_quest")?.Visible == false && View.FindEvent("elder_thanks")?.Visible == true, "a story flag swaps the elder's events at once");
                     ScenarioCondition.SetFlag("rpg_wolf_dead", "0");
                     Check(RpgBattleService.Start("rpg_slime", WinFlag), "a battle starts from the map");
-                    Engine.TimeScale = 4;
+                    Godot.Engine.TimeScale = 4;
                     Next();
                     return;
                 case 13:
@@ -185,7 +185,7 @@ namespace Cthangover.Mods.Rpg.Tests
                 case 15:
                     if (View?.Map?.ID != House || GodotSceneService.IsTransitioning)
                         return;
-                    Engine.TimeScale = 1;
+                    Godot.Engine.TimeScale = 1;
                     Check(View.Player.Cell == new Vector2I(6, 8), $"the battle returns to the same cell, got {View.Player.Cell}");
                     Check(GameData.Instance.Runtime.Flags.TryGetValue(WinFlag, out var won) && won == "1", "the win flag is set after the victory");
                     Finish();
@@ -250,7 +250,7 @@ namespace Cthangover.Mods.Rpg.Tests
         private void Finish()
         {
             step = -1;
-            Engine.TimeScale = 1;
+            Godot.Engine.TimeScale = 1;
             GameLogger.Log("TEST", $"[TEST_RESULT] name=rpg_walk passed={passed} failed={failures.Count}");
             GetTree().Quit(failures.Count == 0 ? 0 : 1);
         }

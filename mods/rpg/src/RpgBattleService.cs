@@ -58,7 +58,7 @@ namespace Cthangover.Mods.Rpg
 
         private static SceneManager FindSceneManager()
         {
-            var tree = Engine.GetMainLoop() as SceneTree;
+            var tree = Godot.Engine.GetMainLoop() as SceneTree;
             return tree?.Root?.GetNodeOrNull<SceneManager>("SceneManager");
         }
     }
