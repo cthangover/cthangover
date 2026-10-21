@@ -11,7 +11,7 @@ namespace Cthangover.Core.Settings
     /// The clock advances one minute per timer tick via
     /// <see cref="AddTick"/>, or can be jumped forward in bulk via
     /// <see cref="AddTime"/>. All arithmetic assumes 30-day months and
-    /// 365-day years — the game does not simulate a real calendar.
+    /// 360-day years (12 months of 30 days) — the game does not simulate a real calendar.
     /// </summary>
     [Serializable]
     public class TimeData
@@ -19,6 +19,14 @@ namespace Cthangover.Core.Settings
         /// <summary>Total elapsed in-game minutes. Incremented by
         /// <c>TimeTickController.OnTimerTick</c> (time_base mod) each timer cycle.</summary>
         public long Tick;
+
+        // A simplified calendar: 30-day months, 12 months a year (360 days).
+        // The year used to be 365 days in SetTime but 12 × 30 in AddTime, so the
+        // tick and the components told different dates near the end of a year.
+        private const long MinutesPerHour  = 60;
+        private const long MinutesPerDay   = 24 * MinutesPerHour;
+        private const long MinutesPerMonth = 30 * MinutesPerDay;
+        private const long MinutesPerYear  = 12 * MinutesPerMonth;
 
         /// <summary>Year component extracted from <see cref="Tick"/>.</summary>
         public int Years   { get; private set; }
@@ -73,25 +81,20 @@ namespace Cthangover.Core.Settings
         /// Sets the absolute time from a minute value. Decomposes
         /// <paramref name="time"/> into years/months/days/hours/minutes
         /// using the game's simplified calendar divisions:
-        /// 60 min/hour, 1440 min/day, 43200 min/month, 525600 min/year.
+        /// 60 min/hour, 1440 min/day, 43200 min/month, 518400 min/year.
         /// </summary>
         public void SetTime(long time)
         {
-            const int minutesPerHour  = 60;
-            const int minutesPerDay   = 1440;
-            const int minutesPerMonth = 43200;
-            const int minutesPerYear  = 525600;
-
             Tick = time;
 
-            Years   =  (int)(time / minutesPerYear);
-            time    %= minutesPerYear;
-            Months  =  (int)(time / minutesPerMonth);
-            time    %= minutesPerMonth;
-            Days    =  (int)(time / minutesPerDay);
-            time    %= minutesPerDay;
-            Hours   =  (int)(time / minutesPerHour);
-            time    %= minutesPerHour;
+            Years   =  (int)(time / MinutesPerYear);
+            time    %= MinutesPerYear;
+            Months  =  (int)(time / MinutesPerMonth);
+            time    %= MinutesPerMonth;
+            Days    =  (int)(time / MinutesPerDay);
+            time    %= MinutesPerDay;
+            Hours   =  (int)(time / MinutesPerHour);
+            time    %= MinutesPerHour;
             Minutes =  (int)time;
         }
 
@@ -132,7 +135,7 @@ namespace Cthangover.Core.Settings
             Years  += Months / 12;
             Months %= 12;
 
-            Tick += years * 525600 + months * 43200 + days * 1440 + hours * 60 + minutes;
+            Tick = Years * MinutesPerYear + Months * MinutesPerMonth + Days * MinutesPerDay + Hours * MinutesPerHour + Minutes;
         }
 
     }
