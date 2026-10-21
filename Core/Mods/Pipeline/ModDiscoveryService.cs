@@ -155,8 +155,8 @@ namespace Cthangover.Core.Mods.Pipeline
 
         /// <summary>
         /// Loads one entry through its loader: creates the provider, reads the
-        /// manifest, builds the <see cref="ModInfo"/> and computes the install
-        /// SHA256 (a hashing failure only logs — the mod stays loadable).
+        /// manifest, builds the <see cref="ModInfo"/> and defers its install
+        /// SHA256 to the first read.
         /// Returns <c>null</c> for entries without a manifest or on any
         /// loader/manifest exception; the provider is disposed on those paths
         /// so a skipped entry never leaks its handle.
@@ -187,17 +187,7 @@ namespace Cthangover.Core.Mods.Pipeline
                     Manifest = manifest,
                 };
 
-                try
-                {
-                    info.InstallSha256 = InstallHashCache.Get(fileProvider,
-                        ModConfig.Instance.CatalogIgnorePatterns);
-                }
-                catch (Exception ex)
-                {
-                    GameLogger.Log("MODS_REGISTRY",
-                        $"Failed to compute install SHA256 for mod '{id}': {ex.Message}",
-                        LogLevel.Warning);
-                }
+                info.DeferInstallSha256(() => ComputeInstallSha256(fileProvider, id));
 
                 return new ModCandidate
                 {
@@ -213,6 +203,22 @@ namespace Cthangover.Core.Mods.Pipeline
                 GameLogger.Log("MODS_REGISTRY",
                     $"Failed to load mod '{entryName}' via {loader.Name}: {ex.Message}",
                     LogLevel.Error);
+                return null;
+            }
+        }
+
+        /// <summary>The install hash of a discovered mod; a hashing failure only logs, the mod stays loadable.</summary>
+        private static string ComputeInstallSha256(IModFileProvider provider, string id)
+        {
+            try
+            {
+                return InstallHashCache.Get(provider, ModConfig.Instance.CatalogIgnorePatterns);
+            }
+            catch (Exception ex)
+            {
+                GameLogger.Log("MODS_REGISTRY",
+                    $"Failed to compute install SHA256 for mod '{id}': {ex.Message}",
+                    LogLevel.Warning);
                 return null;
             }
         }

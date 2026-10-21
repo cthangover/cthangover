@@ -121,7 +121,7 @@ namespace Cthangover.Core.Mods.Providers
                         ? fullName
                         : fullName.Substring(prefix.Length);
 
-                    if (string.IsNullOrEmpty(suffix))
+                    if (string.IsNullOrEmpty(suffix) || ModContentFiles.IsHidden(suffix))
                         continue;
 
                     var idx = suffix.IndexOf('/');

@@ -36,6 +36,19 @@ namespace Cthangover.Tests.Mods
         }
 
         [Fact]
+        public void DeferredInstallHash_RunsOnce_OnFirstRead()
+        {
+            var calls = 0;
+            var info = new ModInfo();
+            info.DeferInstallSha256(() => (++calls).ToString());
+
+            Assert.Equal(0, calls);
+            Assert.Equal("1", info.InstallSha256);
+            Assert.Equal("1", info.InstallSha256);
+            Assert.Equal(1, calls);
+        }
+
+        [Fact]
         public void Stamp_ChangesWithFiles_NullForMissingRoot()
         {
             var before = InstallHashCache.Stamp(root);

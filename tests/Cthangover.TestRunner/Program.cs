@@ -184,6 +184,20 @@ namespace Cthangover.TestRunner
         }
 
         /// <summary>
+        /// Integration runs are automated: the mod hot reload watcher (on for
+        /// any run from the editor binary) only costs a recursive watch of
+        /// every mod root and could reload under a test that writes mod files,
+        /// so it is switched off unless the test opts in with
+        /// <c>--hot-reload</c> (HotReloadSettings.EnableFlag).
+        /// </summary>
+        private static List<string> WithoutHotReload(List<string> args)
+        {
+            if (!args.Contains("--hot-reload"))
+                args.Add("--no-hot-reload");
+            return args;
+        }
+
+        /// <summary>
         /// Runs one integration scene headless and evaluates it from three
         /// sources: process exit code, the scene's <c>[TEST_RESULT]</c> line
         /// (authoritative for check counts) and the timeout flag.
@@ -213,7 +227,7 @@ namespace Cthangover.TestRunner
             args.Add("--path");
             args.Add(root);
             args.Add(test.Scene);
-            args.AddRange(WithModSet(test.Args));
+            args.AddRange(WithoutHotReload(WithModSet(test.Args)));
 
             var run = ProcessRunner.Run(godot, args, root, test.TimeoutSeconds);
             var parsed = ResultParser.Parse(run.Output);

@@ -26,7 +26,11 @@ namespace Cthangover.Core.Mods.Providers
     /// Lookups follow <see cref="ModPathCase"/>: a path must match the
     /// on-disk spelling exactly on every OS, so a wrong-case reference fails
     /// on the author's Windows machine the same way it fails on Linux and in
-    /// zip mods. Verified spellings are cached to keep repeated lookups cheap.
+    /// zip mods. Verified spellings are cached to keep repeated lookups cheap;
+    /// entries returned by <see cref="ListFiles"/> come straight from the
+    /// directory, so they count as verified (a scan that lists and then reads
+    /// does not walk the path again — on slow file systems that walk dominated
+    /// boot).
     /// </summary>
     public class FolderModFileProvider : IModFileProvider
     {
@@ -37,6 +41,7 @@ namespace Cthangover.Core.Mods.Providers
         public string RootPath { get; }
 
         private readonly ConcurrentDictionary<string, byte> verifiedFiles = new(StringComparer.Ordinal);
+        private readonly ConcurrentDictionary<string, byte> verifiedDirs = new(StringComparer.Ordinal);
 
         /// <summary>
         /// Creates a provider rooted at the given directory.
@@ -79,23 +84,37 @@ namespace Cthangover.Core.Mods.Providers
         public IEnumerable<string> ListFiles(string directory = "")
         {
             var relativeDir = ModPath.Normalize(directory);
-            var actualDir = ModPathCase.FindOnDisk(RootPath, relativeDir, directory: true);
-            if (actualDir == null)
-                yield break;
-
-            if (!string.Equals(actualDir, relativeDir, StringComparison.Ordinal))
-            {
-                ModPathCase.ReportMismatch(Mod, relativeDir, actualDir);
-                yield break;
-            }
-
             var dir = Path.Combine(RootPath, relativeDir);
-
-            foreach (var entry in Directory.EnumerateFileSystemEntries(dir, "*", SearchOption.TopDirectoryOnly))
+            if (!verifiedDirs.ContainsKey(relativeDir))
             {
-                var relative = ModPath.Normalize(Path.GetRelativePath(RootPath, entry));
-                if (Directory.Exists(entry))
+                var actualDir = ModPathCase.FindOnDisk(RootPath, relativeDir, directory: true);
+                if (actualDir == null)
+                    yield break;
+
+                if (!string.Equals(actualDir, relativeDir, StringComparison.Ordinal))
+                {
+                    ModPathCase.ReportMismatch(Mod, relativeDir, actualDir);
+                    yield break;
+                }
+
+                verifiedDirs.TryAdd(relativeDir, 0);
+            }
+            else if (!Directory.Exists(dir))
+                yield break;
+
+            foreach (var entry in new DirectoryInfo(dir).EnumerateFileSystemInfos())
+            {
+                if (ModContentFiles.IsHidden(entry.Name))
+                    continue;
+
+                var relative = ModPath.Normalize(Path.GetRelativePath(RootPath, entry.FullName));
+                if (entry is DirectoryInfo)
+                {
+                    verifiedDirs.TryAdd(relative, 0);
                     relative += "/";
+                }
+                else
+                    verifiedFiles.TryAdd(relative, 0);
                 yield return relative;
             }
         }
