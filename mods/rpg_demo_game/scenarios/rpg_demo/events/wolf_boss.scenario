@@ -1,0 +1,4 @@
+ptext "У пещеры сидит волк. Он оглядывает тебя, как старостину козу." key=rpg_demo/wolf/line1
+text "— Р-р-р." key=rpg_demo/wolf/line2
+action rpg.battle enemies=rpg_wolf,rpg_slime win_flag=rpg_wolf_dead
+end

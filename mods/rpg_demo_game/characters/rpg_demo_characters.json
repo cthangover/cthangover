@@ -1,0 +1,52 @@
+{
+  "Kind": "character",
+  "Items": [
+    {
+      "Id": "rpg_hero",
+      "Name": "rpg_demo/character/hero",
+      "Image": "characters/village/hero",
+      "Level": 1,
+      "Point": 1,
+      "Health": 24,
+      "Defence": 0,
+      "Attack": 6,
+      "Actions": [
+        "physics/attack",
+        "physics/defence"
+      ]
+    },
+    {
+      "Id": "rpg_slime",
+      "Name": "rpg_demo/character/slime",
+      "Image": "characters/village/slime",
+      "Behaviour": "base",
+      "Level": 1,
+      "Point": 1,
+      "Health": 8,
+      "Defence": 0,
+      "Attack": 2,
+      "Exp": 3,
+      "RecruitmentChance": 0,
+      "Actions": [
+        "physics/attack"
+      ]
+    },
+    {
+      "Id": "rpg_wolf",
+      "Name": "rpg_demo/character/wolf",
+      "Image": "characters/village/wolf",
+      "Behaviour": "base",
+      "Level": 2,
+      "Point": 1,
+      "Health": 22,
+      "Defence": 0,
+      "Attack": 4,
+      "Exp": 12,
+      "RecruitmentChance": 0,
+      "Actions": [
+        "physics/attack",
+        "physics/defence"
+      ]
+    }
+  ]
+}

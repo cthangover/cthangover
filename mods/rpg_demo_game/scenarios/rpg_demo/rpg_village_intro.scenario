@@ -1,0 +1,11 @@
+scene: rpg_village
+priority: 10
+is_one_run: true
+save_allowed: true
+---
+# A new game: the hero joins the party here, the elder's quest starts in his house.
+action party.add id=rpg_hero
+title "Деревня у Серого леса" key=rpg_demo/intro/title
+ptext "Утро. Петухи охрипли ещё до рассвета, а староста уже трижды присылал за тобой мальчишку." key=rpg_demo/intro/line1
+ptext "Ходить — WASD или стрелки. Говорить, открывать, читать — E или F." key=rpg_demo/intro/controls
+end

@@ -1,0 +1,18 @@
+{
+  "id": "rpg",
+  "name": "RPG World",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Top-down tile world in the spirit of RPG Maker on top of the novel engine: maps of square tiles in three layers (back, main, front) with a collision layer, walking on the grid with WASD or the arrows, events that talk, teleport or start battles with the action key E/F or on touch, random encounters. A map is a logical scene, so entry scenarios, ambience, saving and the dialog box work on maps unchanged; battles run on the turn-based platform with the game's battle core and return to the same cell. Scenario actions: rpg.battle, rpg.teleport.",
+  "category": "gameplay",
+  "sources": [
+    "src/**/*.cs"
+  ],
+  "test_sources": [
+    "tests/*.cs"
+  ],
+  "depends": ["shell2d_base>=1", "ui_base>=1", "dialog_base>=1", "turn_battle_base>=2"],
+  "test_suites": [
+    {"id": "walk", "activate": ["--itest=rpg_walk"]}
+  ]
+}

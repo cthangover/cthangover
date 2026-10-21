@@ -1,0 +1,84 @@
+{
+  "id": "rpg_demo",
+  "kind": "game",
+  "name": "RPG Demo",
+  "author": "ct",
+  "version": "1.0.0",
+  "description": "A small top-down RPG in the spirit of RPG Maker: walk a tile village and a forest with WASD, talk and open chests with E/F, drive the wolf away from the cave. Battles use the Final Fantasy style core; the card core can be switched on instead. Includes the tile map editor.",
+  "cover": "cover.jpg",
+  "entry": { "scene": "rpg_village" },
+  "settings": { "battle.core": "ff_battle", "rpg.player_charset": "village/hero" },
+  "tags": ["rpg", "tiles", "template"],
+  "locale": [
+    { "lang": "en", "name": "RPG Demo", "description": "A small top-down RPG in the spirit of RPG Maker: walk a tile village and a forest with WASD, talk and open chests with E/F, drive the wolf away from the cave. Battles use the Final Fantasy style core; the card core can be switched on instead. Includes the tile map editor." },
+    { "lang": "ru", "name": "RPG-демо", "description": "Небольшая RPG с видом сверху в духе RPG Maker: гуляйте по тайловой деревне и лесу на WASD, говорите и открывайте сундуки на E/F, прогоните волка от пещеры. Бои идут на ядре в стиле Final Fantasy, вместо него можно включить карточное. В комплекте редактор тайловых карт." }
+  ],
+  "mechanics": [
+    {
+      "id": "story",
+      "name": "Story",
+      "role": "story",
+      "description": "The game's own maps, events, scenarios and characters.",
+      "locale": [ { "lang": "ru", "name": "Сюжет", "description": "Собственные карты, события, сценарии и персонажи игры." } ],
+      "mods": ["rpg_demo_game>=1"]
+    },
+    {
+      "id": "assets",
+      "name": "Assets",
+      "role": "content",
+      "description": "Reusable pixel art: the village tileset, charsets, battle portraits and backgrounds.",
+      "locale": [ { "lang": "ru", "name": "Ресурсы", "description": "Общая пиксельная графика: деревенский тайлсет, чарсеты, портреты и фоны для боя." } ],
+      "mods": ["village_pack>=1"]
+    },
+    {
+      "id": "rpg",
+      "name": "Tile world",
+      "role": "gameplay",
+      "description": "Tile maps in three layers with collision, grid walking, map events, teleports and random encounters on top of the novel engine.",
+      "locale": [ { "lang": "ru", "name": "Тайловый мир", "description": "Тайловые карты в три слоя с коллизиями, ходьба по клеткам, события на карте, телепорты и случайные встречи поверх движка новеллы." } ],
+      "mods": ["rpg>=1"]
+    },
+    {
+      "id": "novel_engine",
+      "name": "Novel engine",
+      "role": "engine",
+      "description": "2D shell, dialogs and the scenario DSL, characters, audio.",
+      "locale": [ { "lang": "ru", "name": "Движок новеллы", "description": "2D-оболочка, диалоги и сценарный DSL, персонажи, звук." } ],
+      "mods": ["shell2d_base>=1", "dialog_base>=1", "characters_base>=1", "audio_base>=1"]
+    },
+    {
+      "id": "battle",
+      "name": "FF-style battle",
+      "role": "battle",
+      "description": "Turn-based battle engine with the Final Fantasy style core (the game's default).",
+      "locale": [ { "lang": "ru", "name": "Бой в стиле FF", "description": "Пошаговый боевой движок с ядром в стиле Final Fantasy (основное в игре)." } ],
+      "mods": ["turn_battle_base>=2", "ff_battle>=1"]
+    },
+    {
+      "id": "battle_cards",
+      "name": "Card battle",
+      "role": "battle_alt",
+      "description": "Alternative card battle core; switch the game's battle.core setting to card_battle to use it.",
+      "locale": [ { "lang": "ru", "name": "Карточный бой", "description": "Альтернативное карточное боевое ядро; чтобы играть на нём, переключите настройку игры battle.core на card_battle." } ],
+      "optional": true,
+      "mods": ["card_battle>=1"]
+    },
+    {
+      "id": "interface",
+      "name": "Interface",
+      "role": "ui",
+      "description": "Widget toolkit and HUD, the main menu.",
+      "locale": [ { "lang": "ru", "name": "Интерфейс", "description": "Виджеты и HUD, главное меню." } ],
+      "mods": ["ui_base>=1", "menu_base>=1"]
+    },
+    {
+      "id": "map_editor",
+      "name": "Tile map editor",
+      "role": "tools",
+      "description": "Editor of the tile maps: three tile layers, the collision layer and events, opened from the toolbar.",
+      "locale": [ { "lang": "ru", "name": "Редактор карт", "description": "Редактор тайловых карт: три слоя тайлов, слой коллизий и события; открывается с панели инструментов." } ],
+      "optional": true,
+      "mods": ["rpg_editor>=1"]
+    }
+  ]
+}

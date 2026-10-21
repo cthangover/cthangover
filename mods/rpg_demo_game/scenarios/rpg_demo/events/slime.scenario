@@ -1,0 +1,3 @@
+ptext "Слизень перегородил тропу и булькает с вызовом." key=rpg_demo/slime/line1
+action rpg.battle enemies=rpg_slime win_flag=rpg_path_slime
+end

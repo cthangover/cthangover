@@ -1,0 +1,8 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://mods/shell2d_base/scenes/ui/base_scene.tscn" id="1_target"]
+[ext_resource type="PackedScene" path="res://scenes/ui/rpg_world_host.tscn" id="2_world"]
+
+[node name="BaseScene" instance=ExtResource("1_target")]
+
+[node name="RpgWorldHost" parent="Scene" index="2" instance=ExtResource("2_world")]
