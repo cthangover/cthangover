@@ -11,7 +11,9 @@ namespace Cthangover.Core.Mods.Caches
     /// Godot's <c>GD.Load&lt;Shader&gt;</c> requires a real filesystem
     /// path — it cannot read shader source from a byte array or a zip
     /// stream — so shaders shipped inside zip mods must be extracted to
-    /// <c>user://mod_cache/shaders/</c> before loading.
+    /// <c>user://mod_cache/shaders/&lt;mod&gt;/</c> before loading. The copy
+    /// belongs to the mod that shipped it: a same-named shader of another
+    /// mod lives in its own folder, and the resolver decides which mod wins.
     ///
     /// The extraction step also copies <c>.gdshaderinclude</c> files
     /// alongside their owning <c>.gdshader</c>, because Godot resolves
@@ -19,9 +21,9 @@ namespace Cthangover.Core.Mods.Caches
     /// Without this co-location, any shader using an include directive
     /// would fail to compile.
     ///
-    /// Extraction is idempotent — <c>IsShaderCached</c> checks before
-    /// writing — so repeated calls during development don't overwrite
-    /// unchanged files and trigger unnecessary shader recompilation.
+    /// Extraction follows the content: a file is rewritten only when its bytes
+    /// differ, so an updated mod gets its new shader on the next launch while
+    /// unchanged files are not touched (no needless shader recompilation).
     /// </summary>
     public static class ModCacheManager
     {
@@ -39,21 +41,21 @@ namespace Cthangover.Core.Mods.Caches
         }
 
         /// <summary>Directory path where a specific shader's files are cached.</summary>
-        public static string GetShaderCacheDir(string shaderName)
+        public static string GetShaderCacheDir(string modId, string shaderName)
         {
-            return Path.Combine(GetCacheRoot(), ShaderGroupDir, shaderName);
+            return Path.Combine(GetCacheRoot(), ShaderGroupDir, modId, shaderName);
         }
 
         /// <summary>Full file path where a specific shader is expected to be cached.</summary>
-        public static string GetShaderCachePath(string shaderName)
+        public static string GetShaderCachePath(string modId, string shaderName)
         {
-            return Path.Combine(GetShaderCacheDir(shaderName), shaderName + ".gdshader");
+            return Path.Combine(GetShaderCacheDir(modId, shaderName), shaderName + ".gdshader");
         }
 
         /// <summary>True if the shader already exists in the on-disk cache.</summary>
-        public static bool IsShaderCached(string shaderName)
+        public static bool IsShaderCached(string modId, string shaderName)
         {
-            return File.Exists(GetShaderCachePath(shaderName));
+            return File.Exists(GetShaderCachePath(modId, shaderName));
         }
 
         /// <summary>
@@ -62,6 +64,14 @@ namespace Cthangover.Core.Mods.Caches
         /// copied alongside each shader because Godot resolves include
         /// directives relative to the shader's location.
         /// </summary>
+        private static bool WriteIfChanged(string path, byte[] bytes)
+        {
+            if (bytes == null || (File.Exists(path) && File.ReadAllBytes(path).AsSpan().SequenceEqual(bytes)))
+                return false;
+            File.WriteAllBytes(path, bytes);
+            return true;
+        }
+
         public static void ExtractShaders(string modId, IModFileProvider provider)
         {
             var files = provider.ListFiles(ShaderGroupDir);
@@ -103,29 +113,15 @@ namespace Cthangover.Core.Mods.Caches
                 var relativeName = entry.Substring(ShaderGroupDir.Length + 1);
                 var dotIndex = relativeName.LastIndexOf('.');
                 var shaderName = relativeName.Substring(0, dotIndex);
-                var targetDir = GetShaderCacheDir(shaderName);
+                var targetDir = GetShaderCacheDir(modId, shaderName);
+                Directory.CreateDirectory(targetDir);
 
-                if (IsShaderCached(shaderName))
-                    continue;
-
-                if (!Directory.Exists(targetDir))
-                    Directory.CreateDirectory(targetDir);
-
-                var shaderBytes = provider.ReadFileBinary(entry);
-                if (shaderBytes != null)
-                {
-                    var shaderPath = Path.Combine(targetDir, relativeName);
-                    File.WriteAllBytes(shaderPath, shaderBytes);
-                }
-
+                var changed = WriteIfChanged(Path.Combine(targetDir, relativeName), provider.ReadFileBinary(entry));
                 foreach (var (incName, incBytes) in includeData)
-                {
-                    var incPath = Path.Combine(targetDir, incName);
-                    if (!File.Exists(incPath))
-                        File.WriteAllBytes(incPath, incBytes);
-                }
+                    changed |= WriteIfChanged(Path.Combine(targetDir, incName), incBytes);
 
-                GameLogger.Log("CACHE", $"Cached shader '{shaderName}' from mod '{modId}'");
+                if (changed)
+                    GameLogger.Log("CACHE", $"Cached shader '{shaderName}' from mod '{modId}'");
             }
         }
     }

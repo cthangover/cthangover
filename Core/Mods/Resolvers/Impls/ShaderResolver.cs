@@ -84,16 +84,8 @@ namespace Cthangover.Core.Mods.Resolvers
             if (cached != null)
                 return cached;
 
-            if (ModCacheManager.IsShaderCached(shaderName))
-            {
-                var cachedPath = ModCacheManager.GetShaderCachePath(shaderName);
-                var cachedShader = GD.Load<Shader>(cachedPath);
-                if (cachedShader != null)
-                {
-                    _resolvedCache[shaderName] = cachedShader;
-                    return cachedShader;
-                }
-            }
+            // The owning mod is decided first: an extracted copy on disk says
+            // nothing about which mod serves the name in the running mod set.
 
             var shaders = Collect();
             if (!shaders.TryGetValue(shaderName, out var entry))
@@ -126,9 +118,9 @@ namespace Cthangover.Core.Mods.Resolvers
 
             ModCacheManager.ExtractShaders(entry.ModId, mod.FileProvider);
 
-            if (ModCacheManager.IsShaderCached(shaderName))
+            if (ModCacheManager.IsShaderCached(entry.ModId, shaderName))
             {
-                var extractedPath = ModCacheManager.GetShaderCachePath(shaderName);
+                var extractedPath = ModCacheManager.GetShaderCachePath(entry.ModId, shaderName);
                 var extractedShader = GD.Load<Shader>(extractedPath);
                 if (extractedShader != null)
                     _resolvedCache[shaderName] = extractedShader;
