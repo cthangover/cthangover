@@ -1,0 +1,30 @@
+# Line endings: LF everywhere, on every OS, whatever core.autocrlf says.
+* text=auto eol=lf
+
+# cmd.exe misreads labels and goto in LF batch files, so they stay CRLF.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binaries: never converted, never diffed as text.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.svg text
+*.ogg binary
+*.wav binary
+*.mp3 binary
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+*.dll binary
+*.so binary
+*.dylib binary
+*.pdb binary
+*.exe binary
+*.zip binary
+*.pck binary
+*.moc3 binary
+*.res binary
+*.scn binary

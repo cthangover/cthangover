@@ -1,0 +1,8 @@
+# Rider, IDEA, VS and VS Code read this: new and saved files get LF.
+root = true
+
+[*]
+end_of_line = lf
+
+[*.{bat,cmd}]
+end_of_line = crlf
