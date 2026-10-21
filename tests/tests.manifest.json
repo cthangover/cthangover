@@ -81,6 +81,17 @@
       "timeoutSeconds": 180
     },
     {
+      "name": "rpg_editor_edit",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--game=rpg_demo",
+        "--new",
+        "--itest=rpg_editor_edit"
+      ],
+      "timeoutSeconds": 180
+    },
+    {
       "name": "game_rpg_demo",
       "scene": "res://scenes/menu/launcher.tscn",
       "args": [

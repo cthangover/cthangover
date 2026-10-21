@@ -1,0 +1,10 @@
+{
+  "name": "RPG Map Editor Test",
+  "description": "GUI test of the RPG map editor on the rpg_demo maps: opens the window, picks a tile in the palette, paints it on the main layer with the mouse, undoes with Ctrl+Z, adds an event by double-clicking on the events layer, and closes without saving (the mod's files stay untouched). Activated by --itest=rpg_editor_edit with --game=rpg_demo --new; --shots=<dir> saves screenshots (windowed runs only).",
+  "sources": [
+    "src/*.cs"
+  ],
+  "depends": [
+    "rpg_demo_game>=1"
+  ]
+}
