@@ -211,6 +211,11 @@
       "timeoutSeconds": 180
     },
     {
+      "name": "save_integrity",
+      "scene": "res://tests/Cthangover.Tests.Integration/Scenes/save_integrity_test.tscn",
+      "timeoutSeconds": 120
+    },
+    {
       "name": "scene_context",
       "scene": "res://tests/Cthangover.Tests.Integration/Scenes/scene_context_test.tscn",
       "timeoutSeconds": 120

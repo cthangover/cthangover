@@ -320,8 +320,17 @@ namespace Cthangover.Core.Settings
                 return false;
             }
 
-            var json = file.GetAsText();
-            var pkg = JsonSerializer.Deserialize<SavePackage>(json, JsonOptionsProvider.ReadOptions);
+            SavePackage pkg;
+            try
+            {
+                pkg = JsonSerializer.Deserialize<SavePackage>(file.GetAsText(), JsonOptionsProvider.ReadOptions);
+            }
+            catch (JsonException ex)
+            {
+                // A slot cut short by a crash or a full disk: report it, the menu stays usable.
+                GameLogger.Log("SAVE", $"Save file '{fileName}' is damaged: {ex.Message}", LogLevel.Error);
+                return false;
+            }
 
             if (pkg == null)
             {
