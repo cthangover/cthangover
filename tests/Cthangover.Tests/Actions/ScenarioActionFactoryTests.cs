@@ -1,3 +1,4 @@
+using Cthangover.Core.Actions.Atomic;
 using Cthangover.Core.Actions;
 using Cthangover.Core.Factories.Impls;
 
@@ -12,6 +13,24 @@ namespace Engine.Tests.Actions
             var second = ScenarioActionFactory.Instance;
 
             Assert.Same(first, second);
+        }
+
+        [Fact]
+        public void Factory_Register_ModActionOverridesKernelAction()
+        {
+            var factory = ScenarioActionFactory.Instance;
+            var kernel = factory.Get(new TogglePanelAction().Name);
+            var probe = new NamedProbeAction(kernel.Name);
+            try
+            {
+                factory.Register(probe, "some_mod");
+
+                Assert.Same(probe, factory.Get(kernel.Name));
+            }
+            finally
+            {
+                factory.Register(kernel, "some_mod");
+            }
         }
 
         [Fact]

@@ -17,7 +17,7 @@ namespace Cthangover.Core.Mods.Consumers
 
         /// <inheritdoc />
         public void OnAssemblyLoaded(Assembly assembly, string modId)
-            => ScenarioActionFactory.Instance.RegisterAssembly(assembly);
+            => ScenarioActionFactory.Instance.RegisterAssembly(assembly, modId);
 
         /// <inheritdoc />
         public void OnAssemblyUnloading(Assembly assembly, string modId)
