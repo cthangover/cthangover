@@ -4,15 +4,17 @@ using Cthangover.Core.Events;
 namespace Cthangover.Core.Scenes
 {
     /// <summary>
-    /// Единый «флаг актуальности» результатов вычисления сценарных условий.
-    /// Подписывается на все события изменения состояния, влияющие на кондишины
-    /// (теги/статусы квестов, флаги, восстановление сейва, интерактивы), и
-    /// инкрементирует монотонный Version. Потребители (ScenarioEvent, цепочки)
-    /// считают закешированный результат актуальным, пока Version не изменился.
-    /// MarkStateChanged() — публичный ручной инвалидатор для модов с кастомным
-    /// состоянием вне квестов. Notify&lt;T&gt; — публичен для юнит-тестов без Godot.
-    /// Внимание: ModEventBus.ClearAll() сбрасывает подписки; в игре он не
-    /// вызывается, но при вызове нужно заново дёрнуть EnsureSubscribed().
+    /// Single "freshness flag" of scenario condition results. Subscribes to every
+    /// state-change event conditions depend on (quest tags/statuses, flags, save
+    /// restore, interactives, map zones) and increments the monotonic Version.
+    /// Consumers (ScenarioEvent caches its condition result) treat a cached result
+    /// as valid while Version stays the same. Every increment is also published as
+    /// <see cref="ConditionStateChangedEvent"/>, so event chains react to changes
+    /// instead of polling Version. MarkStateChanged() is the public manual
+    /// invalidator for mods with custom state outside quests; Notify&lt;T&gt; is
+    /// public for unit tests without Godot.
+    /// Caution: ModEventBus.ClearAll() drops the subscriptions; the game never calls
+    /// it, but after such a call EnsureSubscribed() must be called again.
     /// </summary>
     public static class ConditionStateMonitor
     {
@@ -21,32 +23,35 @@ namespace Cthangover.Core.Scenes
         private static bool _subscribed;
 
         /// <summary>
-        /// Монотонно растущий счётчик изменений состояния. Любое событие,
-        /// подписанное монитором, увеличивает его на 1; равенство значений
-        /// означает «состояние не менялось с прошлого чтения».
+        /// Monotonically growing counter of state changes. Every event the monitor
+        /// subscribes to increments it by 1; equal values mean "the state did not
+        /// change since the last read".
         /// </summary>
         public static long Version => Interlocked.Read(ref _version);
 
         /// <summary>
-        /// Ручной инвалидатор: форсирует рост Version вне штатных событий
-        /// (для модов с кастомным состоянием, влияющим на кондишины).
+        /// Manual invalidator: forces Version to grow outside the regular events
+        /// (for mods with custom state that conditions read). Publishes the new
+        /// version as <see cref="ConditionStateChangedEvent"/> — event chains
+        /// subscribe to it instead of polling Version.
         /// </summary>
         public static void MarkStateChanged()
         {
-            Interlocked.Increment(ref _version);
+            var version = Interlocked.Increment(ref _version);
+            ModEventBus.Publish(new ConditionStateChangedEvent { Version = version });
         }
 
-        /// <summary>Обработчик любого события монитора — бампает версию.</summary>
+        /// <summary>Handler of every monitored event — bumps the version.</summary>
         public static void Notify<T>(T evt) where T : ModEvent
         {
             MarkStateChanged();
         }
 
         /// <summary>
-        /// Гарантирует подписку монитора на все события изменения состояния.
-        /// Идемпотентна — повторные вызовы ничего не делают. Вызывается из
-        /// статического конструктора; повторный вызов нужен только если
-        /// <c>ModEventBus.ClearAll()</c> сбросил статические подписки.
+        /// Ensures the monitor is subscribed to every state-change event.
+        /// Idempotent — repeated calls do nothing. Called from the static
+        /// constructor; calling it again is only needed after
+        /// <c>ModEventBus.ClearAll()</c> dropped the static subscriptions.
         /// </summary>
         public static void EnsureSubscribed()
         {

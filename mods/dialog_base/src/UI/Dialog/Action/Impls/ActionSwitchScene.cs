@@ -35,7 +35,7 @@ namespace Cthangover.Mods.Dialog.Action.Impls
         /// <summary>Scene switch is deferred — the dialog ends immediately with no return.</summary>
         public override WaitType WaitType { get; set; } = WaitType.NoWait;
 
-        /// <summary>Marks the dialog locker as OneRun and defers <c>SceneManager.SwitchScene</c> so the tree is not mutated mid-queue.</summary>
+        /// <summary>Defers <c>SceneManager.SwitchScene</c> so the tree is not mutated mid-queue; the owning scenario is not forced into OneRun.</summary>
         public override void DoRun(DialogRuntime runtime)
         {
             if (string.IsNullOrEmpty(SceneName))

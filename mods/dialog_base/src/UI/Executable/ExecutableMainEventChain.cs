@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using Cthangover.Core.Events;
 using Cthangover.Mods.Dialog;
-using Cthangover.Core.UI.Event;
 using Cthangover.Core.Scenes;
 using Cthangover.Core.Utils;
 using Godot;
@@ -15,35 +14,41 @@ using Cthangover.Core.Interactive;
 namespace Cthangover.Mods.Dialog.Executable
 {
     /// <summary>
-    /// The primary event chain for a scene. Registers as IOnUpdateEvent and
-    /// rescans registered ExecutableEvents only when the condition state changes
-    /// (bumped <see cref="ConditionStateMonitor.Version"/>), on dialog end, or on
-    /// the first scan — with a 0.5s debounce. On _Ready, auto-collects child
-    /// ExecutableEvent nodes and handles deferred scene switches (pending scene
-    /// name from SceneManager). Exposes LastBackgroundID so action commands can
-    /// remember which background was active for scene restore on revisit.
-    /// AddEvent/RemoveEvent/ClearEvents allow dynamic event management via code.
-    /// Events are checked in insertion order; the first satisfying both IsOneRun
-    /// and CheckConditions gets executed. A skip-guard prevents re-running the
-    /// same event at the same state version, breaking self-trigger loops while
-    /// preserving A→B chaining.
+    /// The primary event chain for a scene: picks the next ExecutableEvent to run
+    /// in the dialog box. Event-driven — there is no per-frame work. A scan is
+    /// requested when the condition state changes (<see cref="ConditionStateChangedEvent"/>),
+    /// when a dialog ends (<see cref="DialogEndedEvent"/>), when an event is added,
+    /// when the chain becomes ready and when it is re-activated. Requests are
+    /// coalesced into one deferred scan at the end of the frame: a burst of flag
+    /// changes costs one pass, the state is read after the change completed (some
+    /// publishers raise their event before storing the value), and a scan never
+    /// runs inside the dialog runtime that ended a queue.
+    /// <para/>
+    /// On _Ready the chain collects child ExecutableEvent nodes and replays a
+    /// pending scene switch (pending scene name from SceneManager). Exposes
+    /// LastBackgroundID so action commands can remember which background was
+    /// active for scene restore on revisit. AddEvent/RemoveEvent/ClearEvents allow
+    /// dynamic event management via code. Events are checked in insertion order;
+    /// the first satisfying both IsOneRun and CheckConditions gets executed.
+    /// <para/>
+    /// Self-loop guard: the chain remembers, per event, the condition version at
+    /// the moment its dialog ended, and does not run that event again until the
+    /// state changed after it. An event's own state changes (made during its
+    /// dialog) therefore never re-trigger it, A→B chaining still works, and two
+    /// repeatable events cannot ping-pong A→B→A while nothing changes.
     /// </summary>
-    public partial class ExecutableMainEventChain : Control, IExecutableEventChain, IOnUpdateEvent
+    public partial class ExecutableMainEventChain : Control, IExecutableEventChain
 	{
 		private bool isActive = true;
 		private List<ExecutableEvent> allEvents = new();
 		private DialogBox dialogBox;
-		private SceneEventController eventController;
-		private float timestamp;
 
-        // Version of the last event scan (MinValue forces the first scan).
-        private long _lastScanVersion = long.MinValue;
-        // Version at the moment the chain's own last-run event finished its dialog.
-        private long _lastRunEndVersion = long.MinValue;
-        // The last event the chain actually started.
-        private ExecutableEvent _lastRunEvent;
-        // "Wake up and rescan" flag, set on dialog end or new event added.
-        private bool _wakeup;
+        // Condition version at the end of each event's last dialog run by this chain.
+        private readonly Dictionary<ExecutableEvent, long> endVersions = new();
+        // The event whose dialog the chain started and is waiting to end.
+        private ExecutableEvent running;
+        // A deferred scan is already queued for this frame.
+        private bool scanQueued;
 
         /// <summary>
         /// Stores the last background ID set by action commands (e.g. "bg_home").
@@ -52,20 +57,18 @@ namespace Cthangover.Mods.Dialog.Executable
 		public string LastBackgroundID { get; set; }
 
         /// <summary>
-        /// Event priority for <see cref="SceneEventController"/> sorting. Value
-        /// <c>1</c> places this chain after high-priority handlers but before
-        /// general subscribers.
-        /// </summary>
-		public int Priority => 1;
-
-        /// <summary>
-        /// Enables or disables event polling. When <c>false</c>,
-        /// <see cref="OnUpdate"/> returns immediately without dispatching events.
+        /// Enables or disables event dispatch. While <c>false</c>, scans do nothing;
+        /// switching back to <c>true</c> requests a scan.
         /// </summary>
 		public bool IsActive
 		{
 			get => isActive;
-			set { isActive = value; }
+			set
+			{
+				isActive = value;
+				if (value)
+					RequestScan();
+			}
 		}
 
         /// <summary>
@@ -83,11 +86,14 @@ namespace Cthangover.Mods.Dialog.Executable
 				evt.QueueFree();
 			}
 			allEvents.Clear();
+			endVersions.Clear();
+			running = null;
 		}
 
         /// <summary>
         /// Adds an <see cref="ExecutableEvent"/> to the chain and reparents it via
-        /// <c>AddChild</c>. Events are dispatched in insertion order.
+        /// <c>AddChild</c>. Events are dispatched in insertion order; adding one
+        /// requests a scan.
         /// </summary>
         /// <param name="evt">The event to register and parent to this chain.</param>
 		public void AddEvent(IExecutableEvent evt)
@@ -97,7 +103,7 @@ namespace Cthangover.Mods.Dialog.Executable
 			GameLogger.Log("CHAIN", $"AddEvent: {typed.GetType().Name} [condition={id}] — calling AddChild");
 			AddChild(typed);
 			allEvents.Add(typed);
-			_wakeup = true;
+			RequestScan();
 			GameLogger.Log("CHAIN", $"  AddEvent: done, allEvents.Count={allEvents.Count}");
 		}
 
@@ -110,21 +116,23 @@ namespace Cthangover.Mods.Dialog.Executable
 		{
 			if (allEvents.Remove(evt))
 			{
+				endVersions.Remove(evt);
+				if (running == evt)
+					running = null;
 				evt.QueueFree();
 				GameLogger.Log("CHAIN", $"removed event '{evt.GetType().Name}'");
 			}
 		}
 
-		/// <summary>Finds the shared <see cref="DialogBox"/> and event controller, collects child events, publishes the shell-ready event and replays any pending scene switch.</summary>
+		/// <summary>Finds the shared <see cref="DialogBox"/>, subscribes to the scan triggers, collects child events, publishes the shell-ready event, replays any pending scene switch and requests the first scan.</summary>
 		public override void _Ready()
 		{
 			GameLogger.Log("CHAIN", $"_Ready: starting, tree scene='{GetTree()?.CurrentScene?.Name}'");
 
 			dialogBox = SceneContextNode.FindNode<DialogBox>("DialogBox");
 
-			eventController = SceneContextNode.FindNode<SceneEventController>("EventController");
-			eventController?.AddUpdateEventListener(this);
 			ModEventBus.Subscribe<DialogEndedEvent>(OnDialogEnded);
+			ModEventBus.Subscribe<ConditionStateChangedEvent>(OnConditionStateChanged);
 
 			foreach (var child in GetChildren())
 			{
@@ -146,56 +154,66 @@ namespace Cthangover.Mods.Dialog.Executable
 				Callable.From(() => sceneManager.SwitchScene(pending)).CallDeferred();
 			}
 
+			RequestScan();
 			GameLogger.Log("CHAIN", $"_Ready: done, allEvents={allEvents.Count}");
 		}
 
-		/// <summary>Detaches the update and dialog-end listeners from the event controller when the chain leaves the tree.</summary>
+		/// <summary>Detaches the scan triggers when the chain leaves the tree.</summary>
 		public override void _ExitTree()
 		{
-			eventController?.RemoveUpdateEventListener(this);
 			ModEventBus.Unsubscribe<DialogEndedEvent>(OnDialogEnded);
+			ModEventBus.Unsubscribe<ConditionStateChangedEvent>(OnConditionStateChanged);
 		}
 
 		/// <summary>
-		/// Called when any dialog queue finishes. Wakes the chain so the next event
-		/// can be picked up without waiting for a state change, and — for the chain's
-		/// own last-run event — records the version at its dialog end so that the
-		/// state bumps it produced are considered accounted for (breaks self-loops).
+		/// Called when any dialog queue finishes. For the chain's own running event
+		/// records the version at its dialog end, so the state changes it produced
+		/// are accounted for (self-loop guard); then requests a scan so the next
+		/// event starts right away.
 		/// </summary>
 		private void OnDialogEnded(DialogEndedEvent evt)
 		{
-			_wakeup = true;
-			if (_lastRunEvent != null && evt.LockerId == _lastRunEvent.ID)
-				_lastRunEndVersion = ConditionStateMonitor.Version;
+			if (running != null && evt.LockerId == running.ID)
+			{
+				endVersions[running] = ConditionStateMonitor.Version;
+				running = null;
+			}
+			RequestScan();
 		}
 
-		/// <summary>Debounced scan that starts the next runnable event when the condition state changed since the last completed run.</summary>
-		public void OnUpdate()
+		private void OnConditionStateChanged(ConditionStateChangedEvent evt)
 		{
-			if (!isActive)
+			RequestScan();
+		}
+
+		/// <summary>
+		/// Asks for a scan at the end of the frame. Any number of requests within
+		/// one frame result in a single scan.
+		/// </summary>
+		public void RequestScan()
+		{
+			if (scanQueued)
+				return;
+			scanQueued = true;
+			Callable.From(Scan).CallDeferred();
+		}
+
+		/// <summary>Starts the first runnable event, unless the chain is inactive or the dialog box is busy or frozen (a dialog end or a state change asks again).</summary>
+		private void Scan()
+		{
+			scanQueued = false;
+			if (!IsInstanceValid(this) || !IsInsideTree() || !isActive)
 				return;
 
-			var time = Godot.Time.GetTicksUsec() / 1_000_000.0;
-			if (time - timestamp < 0.5f)
-				return;
-			timestamp = (float)time;
-
-			if (dialogBox == null || dialogBox.IsRunning)
+			if (dialogBox == null || !IsInstanceValid(dialogBox) || !dialogBox.IsActive || dialogBox.IsRunning)
 				return;
 
-			var version = ConditionStateMonitor.Version;
-			if (version == _lastScanVersion && !_wakeup)
-				return;
-
-			_wakeup = false;
-			_lastScanVersion = version;
-
-			var dialog = FindEvent(allEvents, _lastRunEvent, _lastRunEndVersion);
+			var dialog = FindEvent();
 			if (dialog == null)
 				return;
 
 			if (dialog.RunDialog())
-				_lastRunEvent = dialog;
+				running = dialog;
 		}
 
         /// <summary>
@@ -213,13 +231,14 @@ namespace Cthangover.Mods.Dialog.Executable
 			isActive = false;
 		}
 
-		private ExecutableEvent FindEvent(List<ExecutableEvent> list, ExecutableEvent skipEvent, long skipEndVersion)
+		private ExecutableEvent FindEvent()
 		{
-			if (Lists.IsEmpty(list))
+			if (Lists.IsEmpty(allEvents))
 				return null;
-			foreach (var nextEvent in list)
+			var version = ConditionStateMonitor.Version;
+			foreach (var nextEvent in allEvents)
 			{
-				if (nextEvent == skipEvent && ConditionStateMonitor.Version <= skipEndVersion)
+				if (endVersions.TryGetValue(nextEvent, out var endVersion) && version <= endVersion)
 					continue;
 				if (nextEvent.IsOneRun && !nextEvent.IsFirstRun)
 					continue;

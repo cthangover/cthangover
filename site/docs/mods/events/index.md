@@ -45,6 +45,7 @@ Note that scenario event composition (`ComposeEvents`) is **not** a bus subscrib
 | `FlagChangedEvent` | `"flag_changed"` | `key`, `value` — a scenario condition flag changed (`ScenarioCondition.SetFlag`) |
 | `InteractiveStateChangedEvent` | `"interactive_state_changed"` | `id` — an interactive object was removed (not published on add, so `interactive_add` re-runs stay idempotent) |
 | `MapZoneChangedEvent` | `"map_zone_changed"` | `zone_id` (empty for bulk changes), `change` — a map zone's open/visible state changed |
+| `ConditionStateChangedEvent` | `"condition_state_changed"` | `version` — something scenario conditions read changed (any of the quest/flag/interactive/map events above, or `ConditionStateMonitor.MarkStateChanged`); event chains start the next scenario from it. May arrive mid-change: read state in a deferred call, not in the handler |
 | `InventoryChangedEvent` | `"inventory_changed"` | `item_id`, `delta`, `new_count` |
 | `TimeTickEvent` | `"time_tick"` | `time_tick`, `normalized_time` |
 | `NewGameStartedEvent` | `"new_game_started"` | (empty) — published by `GameData.StartNewGame` after runtime state is wiped; mods re-seed per-session data here |
@@ -56,7 +57,7 @@ Note that scenario event composition (`ComposeEvents`) is **not** a bus subscrib
 | Event | Key | Payload |
 |-------|-----|---------|
 | `DialogStartedEvent` | `"dialog_started"` | `dialog_id`, `speaker` *(declared, not yet published by the engine)* |
-| `DialogEndedEvent` | `"dialog_ended"` | `dialog_id` *(the class declares it, but the engine currently publishes an empty instance)* |
+| `DialogEndedEvent` | `"dialog_ended"` | `locker_id` — id of the event (scenario) that ran the dialog, empty for an interactive's click dialog; published exactly once per finished dialog (not on a studio restart). `dialog_id` is declared but not filled yet |
 | `NotificationRequestedEvent` | `"notification_requested"` | `text`, `category` |
 | `ShellReadyEvent` | `"shell_ready"` | `root` — the UI shell finished building; `UiHost` attaches mod panels on this event |
 

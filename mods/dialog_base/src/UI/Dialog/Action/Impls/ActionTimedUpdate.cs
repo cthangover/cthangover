@@ -14,10 +14,12 @@ namespace Cthangover.Mods.Dialog.Action.Impls
     /// subscriber and fires OnUpdateCallback(float t) each frame with a normalized
     /// progress value (0→1) over WaitTime seconds. WaitType is WaitEvent so the
     /// dialog runtime pauses until elapsed >= WaitTime, at which point the action
-    /// advances the runtime directly (event-driven — no DialogBox poll) and
-    /// destructs itself. OnStartCallback/OnFinishCallback bracket the animation
-    /// for setup/teardown. Fixed 60fps step for deterministic progress regardless
-    /// of actual frame rate.
+    /// completes itself through <see cref="DialogBox.CompleteAction"/> (event-driven —
+    /// no DialogBox poll) and the box advances the queue, scheduling the timer of a
+    /// following <c>delay</c> like any other advance. OnStartCallback/OnFinishCallback
+    /// bracket the animation for setup/teardown. Progress follows the controller's
+    /// process delta, so the timeline lasts WaitTime seconds of game time at any frame
+    /// rate (and scales with <c>Engine.TimeScale</c> exactly like <c>delay</c> timers).
     /// </summary>
     public class ActionTimedUpdate : ActionCommand, IOnUpdateEvent
     {
@@ -31,7 +33,7 @@ namespace Cthangover.Mods.Dialog.Action.Impls
         /// <summary>Fires once when the elapsed time exceeds <see cref="WaitTime"/> or when destructed.</summary>
         public System.Action OnFinishCallback { get; set; }
 
-        /// <summary>Pauses the dialog until the elapsed time meets WaitTime — the action then advances the runtime itself.</summary>
+        /// <summary>Pauses the dialog until the elapsed time meets WaitTime — the action then completes itself.</summary>
         public override WaitType WaitType { get; set; } = WaitType.WaitEvent;
         /// <summary>Total duration in seconds over which <see cref="OnUpdateCallback"/> receives normalized progress.</summary>
         public override float WaitTime { get; set; } = 1f;
@@ -39,12 +41,13 @@ namespace Cthangover.Mods.Dialog.Action.Impls
         private float elapsed;
         private bool isRunning;
         private DialogRuntime runtime;
+        private SceneEventController controller;
 
         /// <summary>Registers this action as an <see cref="IOnUpdateEvent"/> listener on the scene's event controller.</summary>
         public override void DoConstruct()
         {
             base.DoConstruct();
-            var controller = Scene.Find<SceneEventController>("EventController");
+            controller = Scene.Find<SceneEventController>("EventController");
             controller?.AddUpdateEventListener(this);
         }
 
@@ -63,8 +66,8 @@ namespace Cthangover.Mods.Dialog.Action.Impls
             base.DoDestruct();
             isRunning = false;
             runtime = null;
-            var controller = Scene.Find<SceneEventController>("EventController");
             controller?.RemoveUpdateEventListener(this);
+            controller = null;
             OnFinishCallback?.Invoke();
         }
 
@@ -73,19 +76,26 @@ namespace Cthangover.Mods.Dialog.Action.Impls
             if (!isRunning)
                 return;
 
-            elapsed += 1f / 60f;
+            elapsed += (float)(controller?.GetProcessDeltaTime() ?? 0d);
 
             var t = WaitTime > 0f ? Mathf.Min(elapsed / WaitTime, 1f) : 1f;
             OnUpdateCallback?.Invoke(t);
 
-            if (elapsed >= WaitTime)
+            if (elapsed < WaitTime)
+                return;
+
+            // Advancing destructs this action, which clears the runtime field:
+            // keep the runtime in a local for the whole completion.
+            isRunning = false;
+            var owner = runtime;
+            if (owner?.DialogBox != null)
             {
-                // Advances the runtime directly instead of relying on a DialogBox poll.
-                // Next() destructs this action (firing OnFinishCallback and detaching the
-                // update listener), then Run() continues the queue past the WaitEvent point.
-                isRunning = false;
-                runtime?.Next();
-                runtime?.Run();
+                owner.DialogBox.CompleteAction(this);
+            }
+            else if (owner != null)
+            {
+                owner.Next();
+                owner.Run();
             }
         }
     }

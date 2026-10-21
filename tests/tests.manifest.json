@@ -52,7 +52,8 @@
         "--",
         "--game=novel_template",
         "--new",
-        "--timeout=60"
+        "--timeout=60",
+        "--dialogs=3"
       ],
       "timeoutSeconds": 180
     },
