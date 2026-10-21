@@ -23,11 +23,11 @@
       "mods": ["cthangover_game>=2", "cthangover_murakami>=1", "cthangover_party>=1", "town_pack>=1"]
     },
     {
-      "id": "novel_engine",
-      "name": "Novel engine",
+      "id": "engine_2d",
+      "name": "2D engine",
       "role": "engine",
       "description": "2D shell, dialogs and scenario DSL, interactive objects, effects, in-game time and lighting, the world map.",
-      "locale": [ { "lang": "ru", "name": "Движок новеллы", "description": "2D-оболочка, диалоги и сценарный DSL, интерактивные объекты, эффекты, игровое время и свет, карта мира." } ],
+      "locale": [ { "lang": "ru", "name": "2D-движок", "description": "2D-оболочка, диалоги и сценарный DSL, интерактивные объекты, эффекты, игровое время и свет, карта мира." } ],
       "mods": ["shell2d_base>=1", "dialog_base>=1", "interactive_base>=1", "effects_base>=1", "time_base>=1", "map_base>=1"]
     },
     {

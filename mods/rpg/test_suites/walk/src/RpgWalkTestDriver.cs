@@ -1,6 +1,9 @@
 using System.Collections.Generic;
 using Cthangover.Core.Battle;
 using Cthangover.Core.Bootstrap;
+using Cthangover.Core.Characters;
+using Cthangover.Core.Factories.Impls;
+using Cthangover.Core.Games;
 using Cthangover.Core.Scenes;
 using Cthangover.Core.Settings;
 using Cthangover.Core.Utils;
@@ -26,6 +29,7 @@ namespace Cthangover.Mods.Rpg.Tests
         private const string Village = "rpg_village";
         private const string House = "rpg_elder_house";
         private const string WinFlag = "rpg_test_win";
+        private const string SaveSlot = "slot_9901";
 
         private readonly string shotsDir;
         private readonly List<string> failures = new();
@@ -83,6 +87,7 @@ namespace Cthangover.Mods.Rpg.Tests
                         return;
                     Check(GameData.Instance.Runtime.CharacterData.Characters.ContainsKey("rpg_hero"), "party.add put the hero into the party");
                     Check(View.Player.Cell == new Vector2I(15, 14), $"player at the spawn (15,14), got {View.Player.Cell}");
+                    CheckActionTexts();
                     Shot("village");
                     Press(Key.W, true);
                     Next();
@@ -188,8 +193,43 @@ namespace Cthangover.Mods.Rpg.Tests
                     Godot.Engine.TimeScale = 1;
                     Check(View.Player.Cell == new Vector2I(6, 8), $"the battle returns to the same cell, got {View.Player.Cell}");
                     Check(GameData.Instance.Runtime.Flags.TryGetValue(WinFlag, out var won) && won == "1", "the win flag is set after the victory");
+                    // The menu's path: save in the game, go to the main menu, load.
+                    SaveService.Save(SaveSlot);
+                    GameSession.OpenMainMenu(GetTree());
+                    Next();
+                    return;
+                case 16:
+                    if (RpgWorldHost.Current != null || ++waitTicks < 5)
+                        return;
+                    Check(GameSession.LoadAndEnter(this, SaveSlot), "the save loads");
+                    Next();
+                    return;
+                case 17:
+                    if (View?.Map?.ID != House || GodotSceneService.IsTransitioning || ++waitTicks < 5)
+                        return;
+                    Shot("loaded");
+                    var dialog = RpgInput.FindDialogBox();
+                    Check(dialog != null && !dialog.IsRunning && !dialog.IsVisibleInTree(), $"no dialog box after loading (running={dialog?.IsRunning}, visible={dialog?.IsVisibleInTree()})");
+                    Check(View.Player.Cell == new Vector2I(6, 8), $"the loaded game puts the player on the saved cell, got {View.Player.Cell}");
+                    SaveService.DeleteSave(SaveSlot);
                     Finish();
                     return;
+            }
+        }
+
+        /// <summary>
+        /// The battle shows the names and descriptions of the hero's action cards:
+        /// their keys must be translated by a mod of this game, not only by
+        /// another game's content mod.
+        /// </summary>
+        private void CheckActionTexts()
+        {
+            var hero = CharacterFactory.Instance.Get("rpg_hero");
+            Check(hero?.Actions?.Count > 0, "the hero has action cards");
+            foreach (var action in hero?.Actions ?? new List<ActionCharacter>())
+            {
+                foreach (var key in new[] { action.Name, action.Description })
+                    Check(!string.IsNullOrEmpty(key) && TranslationServer.Translate(key) != key, $"action text '{key}' is translated");
             }
         }
 

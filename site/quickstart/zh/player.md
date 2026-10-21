@@ -34,7 +34,7 @@ mods/
   "name": "Marao Buff",            // 在模组管理菜单中显示的名称
   "description": "我的第一个模组！",  // 在模组列表和目录中显示的描述
   "author": "player",              // 模组作者（任意字符串）
-  "depends": ["cthangover_game"] // 依赖核心游戏（无需手动排列模组加载顺序）
+  "depends": ["cthangover_game"] // 依赖主游戏的内容（无需手动排列模组加载顺序）
 }
 ```
 

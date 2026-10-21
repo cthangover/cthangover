@@ -4,12 +4,12 @@
   "name": "Novel Editor",
   "author": "ct",
   "version": "1.0.0",
-  "description": "Authoring workspace instead of a game: opens a screen with every installed editor — scenarios, scenes, maps, interactive objects, lighting, catalog export — over the novel engine and the story content they edit.",
+  "description": "Authoring workspace instead of a game: opens a screen with every installed editor — scenarios, scenes, maps, interactive objects, lighting, catalog export — over the 2D engine mods and the story content they edit.",
   "entry": { "scene": "novel_editor" },
   "tags": ["tools", "editor"],
   "locale": [
-    { "lang": "en", "name": "Novel Editor", "description": "Authoring workspace instead of a game: opens a screen with every installed editor — scenarios, scenes, maps, interactive objects, lighting, catalog export — over the novel engine and the story content they edit." },
-    { "lang": "ru", "name": "Редактор новелл", "description": "Рабочее место автора вместо игры: открывает экран со всеми установленными редакторами — сценариев, сцен, карт, интерактива, света, экспорта каталога — поверх движка новеллы и сюжета, который они правят." }
+    { "lang": "en", "name": "Novel Editor", "description": "Authoring workspace instead of a game: opens a screen with every installed editor — scenarios, scenes, maps, interactive objects, lighting, catalog export — over the 2D engine mods and the story content they edit." },
+    { "lang": "ru", "name": "Редактор новелл", "description": "Рабочее место автора вместо игры: открывает экран со всеми установленными редакторами — сценариев, сцен, карт, интерактива, света, экспорта каталога — поверх модов 2D-движка и сюжета, который они правят." }
   ],
   "mechanics": [
     {
@@ -21,11 +21,11 @@
       "mods": ["editor_tools>=1"]
     },
     {
-      "id": "novel_engine",
-      "name": "Novel engine",
+      "id": "engine_2d",
+      "name": "2D engine",
       "role": "engine",
       "description": "Scenes, scenarios, dialogs, interactive objects, effects, time and lighting, the world map: what the editors preview and play.",
-      "locale": [ { "lang": "ru", "name": "Движок новеллы", "description": "Сцены, сценарии, диалоги, интерактив, эффекты, время и свет, карта мира: то, что редакторы показывают и проигрывают." } ],
+      "locale": [ { "lang": "ru", "name": "2D-движок", "description": "Сцены, сценарии, диалоги, интерактив, эффекты, время и свет, карта мира: то, что редакторы показывают и проигрывают." } ],
       "mods": ["cthangover_game>=1", "shell2d_base>=1", "dialog_base>=1", "interactive_base>=1", "effects_base>=1", "time_base>=1", "map_base>=1"]
     },
     {

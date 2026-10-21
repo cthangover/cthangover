@@ -40,7 +40,7 @@ mods/
   "description": "新动作和模组设置",         // 模组列表中显示的描述
   "sources": ["src/*.cs"],                // 收集源文件的模式（所有 ".cs" 文件）
   "author": "programmer",                 // 作者
-  "depends": ["cthangover_game"]        // 依赖核心游戏（无需手动排列模组加载顺序）
+  "depends": ["cthangover_game"]        // 依赖主游戏的内容（无需手动排列模组加载顺序）
 }
 ```
 

@@ -5,7 +5,7 @@ using Cthangover.Core.Utils;
 namespace Cthangover.Core.Scenes
 {
     /// <summary>
-    /// Defines a visual novel scene's default configuration as loaded from mod JSON
+    /// Defines a logical scene's default configuration as loaded from mod JSON
     /// manifests. Specifies fallback visuals (background images with optional randomization),
     /// ambient audio, and a default scenario script that executes when no other events
     /// are registered for the scene. Instantiated by <see cref="ModManager"/> during
@@ -40,7 +40,7 @@ namespace Cthangover.Core.Scenes
 
         /// <summary>
         /// The file path to a .scenario file that executes when no registered events
-        /// exist for the scene. Acts as the visual novel fallback script.
+        /// exist for the scene. Acts as the scene's fallback script.
         /// </summary>
         public string DefaultScenario { get; set; }
     }

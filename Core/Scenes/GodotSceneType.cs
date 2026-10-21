@@ -12,7 +12,7 @@
     {
         /// <summary>The main menu scene.</summary>
         MainMenu,
-        /// <summary>The base visual novel scene used for all scenario-driven content.</summary>
+        /// <summary>The 2D shell scene that shows every logical scene (scenario-driven content, RPG maps).</summary>
         BaseScene,
     };
 
