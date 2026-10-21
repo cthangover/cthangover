@@ -482,13 +482,18 @@ namespace Cthangover.Core.Mods
                 if (!localMods.TryGetValue(node.ModId, out var info) || info is not ModInfo modInfo)
                     continue;
 
-                var dependencies = modInfo.Manifest?.DependencyIds;
+                var dependencies = modInfo.Manifest?.Depends;
                 if (dependencies == null)
                     continue;
 
-                foreach (var dependencyId in dependencies)
+                foreach (var dependency in dependencies)
                 {
-                    if (string.IsNullOrEmpty(dependencyId))
+                    var dependencyId = dependency.ModId;
+                    if (!dependency.IsValid || string.IsNullOrEmpty(dependencyId))
+                        continue;
+                    // An optional dependency that is not installed is no
+                    // requirement: it must not show up as a missing mod.
+                    if (dependency.IsOptional && !localMods.ContainsKey(dependencyId))
                         continue;
 
                     edges.Add((dependencyId, node.ModId));

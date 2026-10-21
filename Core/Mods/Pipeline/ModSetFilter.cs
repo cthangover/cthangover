@@ -57,8 +57,8 @@ namespace Cthangover.Core.Mods.Pipeline
                     if (toRemove.Contains(kvp.Key))
                         continue;
 
-                    var manifest = ((ModInfo)kvp.Value).Manifest;
-                    var depIds = manifest?.DependencyIds;
+                    // A disabled optional dependency is simply absent: the mod still loads without it.
+                    var depIds = ((ModInfo)kvp.Value).Manifest?.RequiredDependencyIds;
                     if (depIds == null || depIds.Count == 0)
                         continue;
 

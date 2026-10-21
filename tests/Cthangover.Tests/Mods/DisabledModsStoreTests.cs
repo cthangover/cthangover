@@ -6,6 +6,7 @@ using Cthangover.Core.Mods;
 
 namespace Engine.Tests.Mods
 {
+    [Collection("disabled-mods-store")]
     public class DisabledModsStoreTests : IDisposable
     {
         private const string TestFile = "disabled_mods.json";

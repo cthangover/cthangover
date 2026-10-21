@@ -102,7 +102,7 @@ namespace Mods.ModManager
             {
                 disabled.Remove(modId);
                 var info = ModRegistry.Instance.GetMod(modId) as ModInfo;
-                var dependencies = info?.Manifest?.DependencyIds;
+                var dependencies = info?.Manifest?.RequiredDependencyIds;
                 if (dependencies != null)
                 {
                     foreach (var dependency in dependencies)
@@ -252,7 +252,7 @@ namespace Mods.ModManager
                 if (disabled.Contains(pair.Key) || pair.Value is not ModInfo info)
                     continue;
 
-                var dependencies = info.Manifest?.DependencyIds;
+                var dependencies = info.Manifest?.RequiredDependencyIds;
                 if (dependencies != null && dependencies.Contains(modId))
                 {
                     disabled.Add(pair.Key);

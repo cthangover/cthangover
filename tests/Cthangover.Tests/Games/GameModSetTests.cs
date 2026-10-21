@@ -70,6 +70,18 @@ namespace Engine.Tests.Games
         }
 
         [Fact]
+        public void Compute_OptionalDependencyNotInstalled_IsNotMissing()
+        {
+            var mods = Mods(Local("story", "voice?"), Local("extras", "lore>=1?"), Local("engine"));
+            var collections = Collections(Game("novel", Mechanic("core", "story", "engine")));
+
+            var set = GameModSet.Compute("novel", collections, mods, Array.Empty<string>(), new[] { "extras" });
+
+            Assert.Equal(new HashSet<string> { "story", "engine", "extras" }, set.ModIds);
+            Assert.Empty(set.MissingMods);
+        }
+
+        [Fact]
         public void Compute_UnknownOrNonGameCollection_ReturnsNull()
         {
             var collections = Collections(Frontend("frontend", Mechanic("menu", "menu")));
