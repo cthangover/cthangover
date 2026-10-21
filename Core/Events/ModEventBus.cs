@@ -58,17 +58,24 @@ namespace Cthangover.Core.Events
                     _typedSubs[type] = list;
                 }
 
-                list.Add(new TypedSubscription
+                var subscription = new TypedSubscription
                 {
                     Handler = e => handler((T)e),
                     Original = handler,
                     ModId = modId,
                     Priority = priority,
-                });
+                };
 
-                var isLifecycle = type.GetCustomAttribute<LifecycleEventAttribute>() != null;
-                if (isLifecycle)
-                    list.Sort((a, b) => a.Priority.CompareTo(b.Priority));
+                // Lifecycle subscribers go after the last one with a priority
+                // not above theirs: ties keep subscription order (List.Sort is
+                // unstable and reshuffled them once a list outgrew 16 entries).
+                var index = list.Count;
+                if (type.GetCustomAttribute<LifecycleEventAttribute>() != null)
+                {
+                    while (index > 0 && list[index - 1].Priority > priority)
+                        index--;
+                }
+                list.Insert(index, subscription);
             }
         }
 
@@ -299,18 +306,17 @@ namespace Cthangover.Core.Events
                 snapshot = new List<CallableSubscription>(list);
             }
 
-            var data = new Godot.Collections.Dictionary();
-            foreach (var prop in type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+            Godot.Collections.Dictionary data;
+            try
             {
-                var key = SnakeCase(prop.Name);
-                var value = prop.GetValue(evt);
-
-                if (value is Node node)
-                    data[key] = node;
-                else if (value is string[] arr)
-                    data[key] = new Godot.Collections.Array<string>(arr);
-                else if (value != null)
-                    data[key] = Variant.From(value);
+                data = ModEventPayload.ToDictionary(evt);
+            }
+            catch (Exception ex)
+            {
+                GameLogger.Log("EVENT_BUS",
+                    $"GDScript bridge cannot convert {type.Name} for '{eventKey}': {ex.Message}",
+                    LogLevel.Error);
+                return;
             }
 
             foreach (var sub in snapshot)
@@ -328,27 +334,6 @@ namespace Cthangover.Core.Events
                         LogLevel.Error);
                 }
             }
-        }
-
-        private static string SnakeCase(string pascal)
-        {
-            if (string.IsNullOrEmpty(pascal))
-                return pascal;
-
-            var chars = new List<char> { char.ToLowerInvariant(pascal[0]) };
-            for (int i = 1; i < pascal.Length; i++)
-            {
-                if (char.IsUpper(pascal[i]))
-                {
-                    chars.Add('_');
-                    chars.Add(char.ToLowerInvariant(pascal[i]));
-                }
-                else
-                {
-                    chars.Add(pascal[i]);
-                }
-            }
-            return new string(chars.ToArray());
         }
 
         private sealed class TypedSubscription
