@@ -1,0 +1,7 @@
+scene: rpg_forest
+priority: 10
+is_one_run: true
+save_allowed: true
+---
+ptext "Серый лес. Здесь тихо так, как бывает тихо только там, где кого-то едят." key=rpg_demo/forest/enter
+end

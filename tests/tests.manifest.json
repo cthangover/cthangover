@@ -70,6 +70,41 @@
       "timeoutSeconds": 240
     },
     {
+      "name": "rpg_walk",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--game=rpg_demo",
+        "--new",
+        "--itest=rpg_walk"
+      ],
+      "timeoutSeconds": 180
+    },
+    {
+      "name": "game_rpg_demo",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--game=rpg_demo",
+        "--new",
+        "--timeout=60",
+        "--dialogs=1"
+      ],
+      "timeoutSeconds": 180
+    },
+    {
+      "name": "resource_atlas_rpg_demo",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--game=rpg_demo",
+        "--with-mods=resource_atlas",
+        "--resource-atlas",
+        "--atlas-out=res://tests/artifacts/resource_atlas/rpg_demo"
+      ],
+      "timeoutSeconds": 240
+    },
+    {
       "name": "menu_flow",
       "scene": "res://scenes/menu/launcher.tscn",
       "args": [

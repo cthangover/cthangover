@@ -1,0 +1,3 @@
+ptext "В сундуке — старые носки и записка: «Не трогай». Поздно." key=rpg_demo/chest/house
+flag rpg_house_chest 1
+end

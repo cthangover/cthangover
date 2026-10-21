@@ -183,8 +183,8 @@ namespace Cthangover.Core.Scenes.TscnBuild
 
         private void ApplyConnection(ParsedConnection conn)
         {
-            Node fromNode = conn.From == "." ? _rootNode : (_builtNodes.TryGetValue(conn.From, out var fn) ? fn : null);
-            Node toNode = conn.To == "." ? _rootNode : (_builtNodes.TryGetValue(conn.To, out var tn) ? tn : null);
+            var fromNode = ResolveConnectionEnd(conn.From);
+            var toNode = ResolveConnectionEnd(conn.To);
             if (fromNode == null || toNode == null || !GodotObject.IsInstanceValid(fromNode) || !GodotObject.IsInstanceValid(toNode))
             {
                 GameLogger.Log("TSCN_BUILD", $"SceneBuilder: cannot apply connection '{conn.Signal}' from '{conn.From}' to '{conn.To}'", LogLevel.Warning);
@@ -192,7 +192,23 @@ namespace Cthangover.Core.Scenes.TscnBuild
             }
             if (!fromNode.HasSignal(conn.Signal)) { GameLogger.Log("TSCN_BUILD", $"SceneBuilder: signal '{conn.Signal}' not found on '{fromNode.Name}'", LogLevel.Warning); return; }
             if (!toNode.HasMethod(conn.Method)) { GameLogger.Log("TSCN_BUILD", $"SceneBuilder: method '{conn.Method}' not found on '{toNode.Name}'", LogLevel.Warning); return; }
-            fromNode.Connect(conn.Signal, new Callable(toNode, conn.Method), (uint)conn.Flags);
+            // Connections of a scene file are persistent, as when Godot instantiates a
+            // PackedScene: the resolver caches built scenes and hands out Duplicate()
+            // copies, and Duplicate copies only persistent connections.
+            fromNode.Connect(conn.Signal, new Callable(toNode, conn.Method), (uint)conn.Flags | (uint)GodotObject.ConnectFlags.Persist);
+        }
+
+        /// <summary>
+        /// Resolves a connection's <c>from</c>/<c>to</c>: a node path relative to the
+        /// scene root, as Godot writes it (<c>Content/Panel/Button</c>). Looking the
+        /// path up among built node names only found direct children of the root,
+        /// so every signal of a nested node (a dialog's buttons) stayed unconnected.
+        /// </summary>
+        private Node ResolveConnectionEnd(string path)
+        {
+            if (string.IsNullOrEmpty(path) || path == ".")
+                return _rootNode;
+            return _rootNode?.GetNodeOrNull(path) ?? (_builtNodes.TryGetValue(path, out var node) ? node : null);
         }
 
         private static string ExtractResourceId(string refString)

@@ -1,0 +1,45 @@
+{
+  "Kind": "rpg_tileset",
+  "Items": [
+    {
+      "Id": "village",
+      "Image": "village/village",
+      "TileSize": 32,
+      "Columns": 8,
+      "Tiles": [
+        { "Index": 0, "Solid": false, "Tag": "grass" },
+        { "Index": 1, "Solid": false, "Tag": "grass_tufts" },
+        { "Index": 2, "Solid": false, "Tag": "flowers" },
+        { "Index": 3, "Solid": false, "Tag": "path" },
+        { "Index": 4, "Solid": false, "Tag": "sand" },
+        { "Index": 5, "Solid": true, "Tag": "water" },
+        { "Index": 6, "Solid": false, "Tag": "stone_floor" },
+        { "Index": 7, "Solid": false, "Tag": "wood_floor" },
+        { "Index": 8, "Solid": true, "Tag": "tree_trunk" },
+        { "Index": 9, "Solid": false, "Tag": "tree_crown" },
+        { "Index": 10, "Solid": true, "Tag": "bush" },
+        { "Index": 11, "Solid": true, "Tag": "rock" },
+        { "Index": 12, "Solid": true, "Tag": "fence" },
+        { "Index": 13, "Solid": true, "Tag": "sign" },
+        { "Index": 14, "Solid": true, "Tag": "chest" },
+        { "Index": 15, "Solid": true, "Tag": "chest_open" },
+        { "Index": 16, "Solid": true, "Tag": "wall" },
+        { "Index": 17, "Solid": true, "Tag": "wall_window" },
+        { "Index": 18, "Solid": false, "Tag": "door" },
+        { "Index": 19, "Solid": true, "Tag": "roof" },
+        { "Index": 20, "Solid": true, "Tag": "roof_eave" },
+        { "Index": 21, "Solid": false, "Tag": "bridge" },
+        { "Index": 22, "Solid": false, "Tag": "tall_grass" },
+        { "Index": 23, "Solid": true, "Tag": "well" },
+        { "Index": 24, "Solid": false, "Tag": "dark_grass" },
+        { "Index": 25, "Solid": true, "Tag": "stump" },
+        { "Index": 26, "Solid": false, "Tag": "mushrooms" },
+        { "Index": 27, "Solid": false, "Tag": "cave" },
+        { "Index": 28, "Solid": true, "Tag": "lamp_post" },
+        { "Index": 29, "Solid": false, "Tag": "lamp_top" },
+        { "Index": 30, "Solid": true, "Tag": "shore" },
+        { "Index": 31, "Solid": true, "Tag": "barrel" }
+      ]
+    }
+  ]
+}

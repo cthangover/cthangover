@@ -1,0 +1,7 @@
+scene: rpg_elder_house
+priority: 10
+is_one_run: true
+save_allowed: true
+---
+ptext "В доме пахнет травами, воском и немного — старостой." key=rpg_demo/house/enter
+end

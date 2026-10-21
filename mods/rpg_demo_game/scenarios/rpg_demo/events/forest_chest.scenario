@@ -1,0 +1,3 @@
+ptext "Сундук в лесу. Внутри — сухие грибы и чья-то потерянная надежда. Грибы ты берёшь." key=rpg_demo/chest/forest
+flag rpg_forest_chest 1
+end
