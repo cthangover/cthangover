@@ -360,6 +360,11 @@
       "timeoutSeconds": 120
     },
     {
+      "name": "coverage_audio",
+      "scene": "res://tests/Cthangover.Tests.Integration/Scenes/audio_coverage_test.tscn",
+      "timeoutSeconds": 120
+    },
+    {
       "name": "coverage_map",
       "scene": "res://tests/Cthangover.Tests.Integration/Scenes/map_coverage_test.tscn",
       "timeoutSeconds": 120

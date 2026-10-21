@@ -55,6 +55,7 @@ namespace Cthangover.Core.Autotest
             GameLogger.Log(Category, $"registered subsystems: {registrations.Count}");
             GameLogger.Log(Category, $"declared tests: {DeclaredTests.Count}");
 
+            var manifestTests = TestManifestNames.Load();
             var migrated = new HashSet<string>();
             foreach (var registration in registrations)
             {
@@ -74,6 +75,12 @@ namespace Cthangover.Core.Autotest
                 {
                     Fail($"subsystem='{registration.SubsystemId}' (mod '{registration.AssemblyName}') is registered but has no declared integration test — " +
                          "add it to DeclaredTests and tests/tests.manifest.json");
+                    continue;
+                }
+
+                if (!manifestTests.Contains(testName))
+                {
+                    Fail($"subsystem='{registration.SubsystemId}' declares test '{testName}', which tests/tests.manifest.json does not run");
                     continue;
                 }
 
