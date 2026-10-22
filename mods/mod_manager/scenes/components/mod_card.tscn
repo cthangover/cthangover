@@ -83,7 +83,7 @@ mouse_filter = 2
 [node name="MetaRow" type="HBoxContainer" parent="VBox/Body/Box"]
 custom_minimum_size = Vector2(0, 28)
 layout_mode = 2
-theme_override_constants/separation = 6
+theme_override_constants/separation = 4
 
 [node name="Status" type="Label" parent="VBox/Body/Box/MetaRow"]
 layout_mode = 2
@@ -96,7 +96,7 @@ theme_override_font_sizes/font_size = 11
 vertical_alignment = 1
 
 [node name="VersionHost" type="Control" parent="VBox/Body/Box/MetaRow"]
-custom_minimum_size = Vector2(102, 28)
+custom_minimum_size = Vector2(94, 28)
 layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 4

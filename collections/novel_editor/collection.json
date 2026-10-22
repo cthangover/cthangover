@@ -26,14 +26,22 @@
       "role": "engine",
       "description": "Scenes, scenarios, dialogs, interactive objects, effects, time and lighting, the world map: what the editors preview and play.",
       "locale": [ { "lang": "ru", "name": "2D-движок", "description": "Сцены, сценарии, диалоги, интерактив, эффекты, время и свет, карта мира: то, что редакторы показывают и проигрывают." } ],
-      "mods": ["cthangover_game>=1", "shell2d_base>=1", "dialog_base>=1", "interactive_base>=1", "effects_base>=1", "time_base>=1", "map_base>=1"]
+      "mods": ["shell2d_base>=1", "dialog_base>=1", "interactive_base>=1", "effects_base>=1", "time_base>=1", "map_base>=1"]
+    },
+    {
+      "id": "game",
+      "name": "Main game",
+      "role": "story",
+      "description": "The main game's content the editors open: its scenes, scenarios, characters and items.",
+      "locale": [ { "lang": "ru", "name": "Основная игра", "description": "Содержимое основной игры, которое открывают редакторы: её сцены, сценарии, персонажи и предметы." } ],
+      "mods": ["cthangover_game>=1"]
     },
     {
       "id": "story",
       "name": "Story",
       "role": "content",
-      "description": "The bundled story content to edit: Murakami's line and the starter party.",
-      "locale": [ { "lang": "ru", "name": "Сюжет", "description": "Встроенный сюжет для правки: линия Мураками и стартовая партия." } ],
+      "description": "More of the main game to edit: Murakami's line and the starter party.",
+      "locale": [ { "lang": "ru", "name": "Сюжет", "description": "Ещё части основной игры для правки: линия Мураками и стартовая партия." } ],
       "optional": true,
       "mods": ["cthangover_murakami>=1", "cthangover_party>=1"]
     },

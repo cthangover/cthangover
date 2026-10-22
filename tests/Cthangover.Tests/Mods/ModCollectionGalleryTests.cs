@@ -46,6 +46,25 @@ namespace Engine.Tests.Mods
         }
 
         [Fact]
+        public void Build_Language_PicksTheCollectionsOwnLocaleEntry()
+        {
+            var game = Game("vn", Mechanic("core", "app"));
+            game.Description = "A novel";
+            game.Locale = new List<CatalogLocaleEntry>
+            {
+                new() { Lang = "ru", Name = "Новелла", Description = "Новелла о городе" },
+            };
+            var store = Collections(game);
+
+            var english = Assert.Single(ModCollectionGallery.Build(store, Mods(), Disabled(), Catalog(), Session()));
+            var russian = Assert.Single(ModCollectionGallery.Build(store, Mods(), Disabled(), Catalog(), Session(), null, "ru_RU"));
+
+            Assert.Equal("A novel", english.Description);
+            Assert.Equal("Новелла", russian.Name);
+            Assert.Equal("Новелла о городе", russian.Description);
+        }
+
+        [Fact]
         public void Build_MissingAndCatalogMods_NotReadyWithInstallPlan()
         {
             var store = Collections(Game("broken", Mechanic("core", "gone", "remote")));

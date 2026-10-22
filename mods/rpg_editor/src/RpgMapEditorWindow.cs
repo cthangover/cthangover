@@ -28,7 +28,7 @@ namespace Cthangover.Tools.RpgEditor
     /// first tile of the first tileset, and the first save also writes
     /// <c>scenes/&lt;id&gt;.json</c> when the mod has no such scene, because the
     /// map id is the scene name; the game re-reads its scenes right away
-    /// (<see cref="SceneFileService.RefreshGame"/>), so "Play" works on a new map
+    /// (<see cref="SceneManager.ReloadContent"/>), so "Play" works on a new map
     /// without a mod reload.
     /// <para/>
     /// After a save the map is put into the running game's map cache, and a
@@ -38,7 +38,6 @@ namespace Cthangover.Tools.RpgEditor
     public partial class RpgMapEditorWindow : ToolWindow
     {
         private const string MapDir = "maps";
-        private const string SceneDir = "scenes";
 
         private readonly RpgTextures textures = new();
         private readonly Dictionary<RpgEditLayer, Button> layerButtons = new();
@@ -257,7 +256,7 @@ namespace Cthangover.Tools.RpgEditor
 
             var sceneNote = isNew ? EnsureScene() : null;
             if (sceneNote != null)
-                SceneFileService.RefreshGame();
+                SceneManager.ReloadContent();
             isNew = false;
             MarkClean();
             PublishToGame(json);
@@ -268,12 +267,11 @@ namespace Cthangover.Tools.RpgEditor
         /// <summary>Writes <c>scenes/&lt;id&gt;.json</c> for a new map when the mod has none; returns a status suffix.</summary>
         private string EnsureScene()
         {
-            var scenePath = SceneDir + "/" + document.Map.ID + ".json";
-            if (!string.IsNullOrEmpty(ModFileService.ReadText(modId, scenePath)))
+            var scene = new SceneFileEntry { ModId = modId, Name = document.Map.ID, RelativePath = SceneFileEntry.PathFor(document.Map.ID) };
+            if (!string.IsNullOrEmpty(ModFileService.ReadText(modId, scene.RelativePath)))
                 return null;
-            var json = "{\n  \"name\": \"" + document.Map.ID + "\",\n  \"defaultAmbient\": \"\"\n}\n";
-            return ModFileService.WriteText(modId, scenePath, json)
-                ? " · " + string.Format(ToolUi.Tr("tools/rpg_editor/scene_created"), scenePath)
+            return SceneFileService.Write(scene)
+                ? " · " + string.Format(ToolUi.Tr("tools/rpg_editor/scene_created"), scene.RelativePath)
                 : null;
         }
 

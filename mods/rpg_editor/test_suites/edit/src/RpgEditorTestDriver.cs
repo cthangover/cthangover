@@ -156,7 +156,7 @@ namespace Cthangover.Tools.RpgEditor.Tests
                     {
                         window.QueueFree();
                         DeleteNewMapFiles();
-                        SceneFileService.RefreshGame();
+                        SceneManager.ReloadContent();
                     }
                     Finish();
                     return;

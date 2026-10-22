@@ -395,7 +395,7 @@ namespace Cthangover.Validator
         /// Collects content references hidden in the named arguments of an
         /// <c>action</c> command. The scenario DSL treats action arguments as
         /// opaque dialog variables, so without this pass a typo like
-        /// <c>action character.add_to_party type=Murakamiy</c> would only surface
+        /// <c>action party.add id=Murakamiy</c> would only surface
         /// at runtime as a factory error log. Values from
         /// <see cref="ActionArgumentReferences"/> become graph references and are
         /// reconciled by <see cref="ReferenceStrategy"/>, which reports the

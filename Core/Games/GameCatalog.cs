@@ -35,7 +35,8 @@ namespace Cthangover.Core.Games
                 DisabledModsStore.Load(),
                 CatalogService.CachedEntries ?? new List<CatalogExportEntry>(),
                 sessionInstalled ?? Array.Empty<string>(),
-                CollectionText.Resolve);
+                CollectionText.Resolve,
+                TranslationServer.GetLocale());
 
         /// <summary>
         /// Mods (with versions) <paramref name="gameId"/> runs with now: the

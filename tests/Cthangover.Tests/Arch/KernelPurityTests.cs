@@ -209,6 +209,7 @@ namespace Engine.Tests.Arch
             "Cthangover.Core.UI.Messages.NotificationBuffer",
             "Cthangover.Core.UI.Theming.CthangoverTheme",
             "Cthangover.Core.UI.Theming.UiTokens",
+            "Cthangover.Core.UI.Theming.ToggleSwitchTextures",
 
 // Godot source generators emit these nested classes for the
             // kernel-side [Signal] partial Node scripts above (and LogLine is

@@ -184,6 +184,9 @@ namespace Cthangover.Core.UI.Theming
             theme.SetColor("font_pressed_color", "CheckButton", UiTokens.AccentBright);
             theme.SetColor("font_disabled_color", "CheckButton", UiTokens.Faint);
             theme.SetFontSize("font_size", "CheckButton", UiTokens.FontBodyLarge);
+            theme.SetColor("font_focus_color", "CheckButton", UiTokens.InkBright);
+            theme.SetColor("font_hover_pressed_color", "CheckButton", UiTokens.AccentBright);
+            ToggleSwitchTextures.Apply(theme);
 
             BuildPrimaryVariation(theme);
             BuildDangerVariation(theme);

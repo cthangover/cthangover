@@ -117,7 +117,8 @@ namespace Mods.ModManager
                 DisabledModsStore.Load(),
                 catalog,
                 _sessionInstalled,
-                CollectionText.Resolve);
+                CollectionText.Resolve,
+                TranslationServer.GetLocale());
 
             _summaries.Clear();
             _plans.Clear();
@@ -436,7 +437,7 @@ namespace Mods.ModManager
                 DisabledModsStore.Load(),
                 catalog,
                 _sessionInstalled,
-                null,
+                TranslationServer.GetLocale(),
                 CollectionText.Resolve);
             return ModCollectionPlan.Build(graph, catalog);
         }

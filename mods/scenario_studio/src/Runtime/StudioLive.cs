@@ -270,7 +270,7 @@ namespace Cthangover.Mods.ScenarioStudio
                 File.WriteAllText(ModManager.Instance.GetFileSystemPath(evt.SourceModId, evt.SourcePath), copy.Text);
 
             _copies.Remove(evt.ID);
-            StudioLayer.RefreshContent();
+            SceneManager.ReloadContent();
             Journal.Add(StudioLogCategory.Edit, new StudioText("studio/log_text_applied", evt.ID, pending, target.ModId));
             GameLogger.Log("UI", $"Scenario studio: applied {pending} change(s) of '{evt.ID}' to '{target.ModId}'");
             Restart(StudioRestartMode.Rollback);
@@ -484,7 +484,7 @@ namespace Cthangover.Mods.ScenarioStudio
             }
 
             var scenario = Layer.CreateScene(name, backgrounds, StudioScriptEdits.NewLine());
-            StudioLayer.RefreshContent();
+            SceneManager.ReloadContent();
             Journal.Add(StudioLogCategory.Edit, new StudioText("studio/log_text_scene_created", name, scenario));
             Touch();
             return true;

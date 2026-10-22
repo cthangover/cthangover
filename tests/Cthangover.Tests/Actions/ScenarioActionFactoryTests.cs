@@ -107,7 +107,6 @@ namespace Engine.Tests.Actions
             var charActions = all.Where(a =>
                 a.Name.StartsWith("character."));
 
-            Assert.Contains(charActions, a => a.Name == "character.add_to_party");
             Assert.Contains(charActions, a => a.Name == "character.send_notification");
             Assert.Contains(charActions, a => a.Name == "character.add_skill");
         }

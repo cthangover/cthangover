@@ -196,10 +196,10 @@ On load the roster is replaced wholesale without re-firing `ConfigureRecruit`: p
 
 ## Scenario integration
 
-Use `character.add_to_party` to recruit directly from a scenario:
+Use `party.add` (mod `characters_base`) to recruit directly from a scenario:
 
 ```scenario
-action character.add_to_party type=Murakami
+action party.add id=Murakami
 ```
 
 Show a notification without roster changes:

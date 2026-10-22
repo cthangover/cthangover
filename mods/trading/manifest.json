@@ -11,7 +11,7 @@
   "test_sources": [
     "tests/*.cs"
   ],
-  "depends": ["shell2d_base>=1", "ui_base>=1", "items_base>=1"],
+  "depends": ["ui_base>=1", "items_base>=1"],
   "test_suites": [
     {"id": "trade", "activate": ["--itest=trade"]}
   ],

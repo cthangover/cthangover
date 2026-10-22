@@ -62,7 +62,7 @@ namespace Cthangover.Mods.ScenarioStudio
             Directory.CreateDirectory(Path.Combine(RootPath, "scenes"));
             Directory.CreateDirectory(Path.Combine(RootPath, "backgrounds"));
             ModOverlays.Mount(Id, new FolderModFileProvider(RootPath, Id));
-            RefreshContent();
+            SceneManager.ReloadContent();
             GameLogger.Log("UI", $"Scenario studio: layer '{Id}' mounted at {RootPath}");
         }
 
@@ -102,7 +102,7 @@ namespace Cthangover.Mods.ScenarioStudio
                 name = $"{scene}_studio_{n}";
 
             Write($"scenarios/{name}.scenario", $"scene: {scene}\npriority: 50\n---\n{firstLine}\nend\n");
-            RefreshContent();
+            SceneManager.ReloadContent();
             return name;
         }
 
@@ -139,15 +139,6 @@ namespace Cthangover.Mods.ScenarioStudio
             File.WriteAllText(Path.Combine(target, "manifest.json"), manifest);
             GameLogger.Log("UI", $"Scenario studio: layer exported as mod '{modId}' to {target}");
             return target;
-        }
-
-        /// <summary>Makes the next scene composition and the scene table see changed scenario and scene files.</summary>
-        public static void RefreshContent()
-        {
-            ScenarioDefs.Invalidate();
-            ModManager.Instance.GetResolver<SceneDefinitionResolver>()?.ClearCache();
-            AppServices.Current.SceneDefs.Clear();
-            SceneManager.RescanScenes();
         }
 
         private string ScenarioFile(string name) => Path.Combine(RootPath, "scenarios", name + ".scenario");
