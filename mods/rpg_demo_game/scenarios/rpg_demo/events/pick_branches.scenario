@@ -1,0 +1,2 @@
+ptext "Охапка сухого хвороста. Торговцу в деревне сгодится — он всё берёт." key=rpg_demo/pickup/branches
+action item.add id=rpg_demo/branches count=2

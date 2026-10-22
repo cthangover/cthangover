@@ -1,9 +1,13 @@
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Cthangover.Core.Bootstrap;
+using Cthangover.Core.Scenes;
 using Cthangover.Core.Utils;
 using Cthangover.Mods.Interface.Tool;
 using Cthangover.Mods.Rpg;
+using Cthangover.Tools.Common;
+using Cthangover.Tools.Services;
 using Godot;
 
 namespace Cthangover.Tools.RpgEditor.Tests
@@ -11,8 +15,10 @@ namespace Cthangover.Tools.RpgEditor.Tests
     /// <summary>
     /// Drives the RPG map editor through its controls like an author: layer
     /// buttons are pressed, the palette and the canvas get mouse events through
-    /// their <c>gui_input</c> signal, Ctrl+Z goes into the window. The window is
-    /// freed at the end without saving, so the demo maps never change.
+    /// their <c>gui_input</c> signal, Ctrl+Z goes into the window. That window is
+    /// freed without saving, so the demo maps never change. A second window then
+    /// creates a new map through the file selector's "+" and saves it: the game must
+    /// know the map's scene at once (no mod reload); its files are deleted again.
     /// Result line: <c>[TEST_RESULT] name=rpg_editor_edit passed=N failed=M</c>.
     /// </summary>
     public partial class RpgEditorTestDriver : Node
@@ -20,6 +26,7 @@ namespace Cthangover.Tools.RpgEditor.Tests
         private const float TickSeconds = 0.15f;
         private const float TimeoutSeconds = 60f;
         private const int RockTile = 11;
+        private const string NewMap = "zz_editor_test_map";
 
         private static readonly Vector2I PaintCell = new(3, 5);
         private static readonly Vector2I EventCell = new(2, 6);
@@ -32,6 +39,7 @@ namespace Cthangover.Tools.RpgEditor.Tests
         private RpgMapEditorWindow window;
         private RpgMapEditorCanvas canvas;
         private int eventsBefore;
+        private string newMapMod;
 
         /// <summary>Creates the driver; <paramref name="shotsDir"/> null disables screenshots.</summary>
         public RpgEditorTestDriver(string shotsDir)
@@ -115,8 +123,55 @@ namespace Cthangover.Tools.RpgEditor.Tests
                 case 4:
                     Shot("collision");
                     window.QueueFree();
+                    window = ToolWindow.Open<RpgMapEditorWindow>();
+                    step++;
+                    return;
+                case 5:
+                    canvas = window.FindChildren("*", "", true, false).OfType<RpgMapEditorCanvas>().FirstOrDefault();
+                    if (canvas?.Document == null)
+                        return;
+                    newMapMod = Selector().CurrentMod;
+                    DeleteNewMapFiles();
+                    Selector().FindChildren("*", "", true, false).OfType<Button>().First(b => b.Text == "+").EmitSignal(BaseButton.SignalName.Pressed);
+                    step++;
+                    return;
+                case 6:
+                    var dialog = window.FindChildren("*", "", true, false).OfType<ConfirmationDialog>().FirstOrDefault();
+                    if (dialog == null)
+                        return;
+                    dialog.FindChildren("*", "", true, false).OfType<LineEdit>().First().Text = NewMap;
+                    dialog.EmitSignal(AcceptDialog.SignalName.Confirmed);
+                    step++;
+                    return;
+                case 7:
+                    if (canvas.Document?.Map?.ID != NewMap)
+                        return;
+                    try
+                    {
+                        Press("tools/common/save");
+                        Check(File.Exists(ModFileService.GetWritablePath(newMapMod, "scenes/" + NewMap + ".json")), "the first save of a new map writes its scene");
+                        Check(GetTree().Root.GetNodeOrNull<SceneManager>("SceneManager")?.HasScene(NewMap) == true, "the game knows the new map's scene without a mod reload");
+                    }
+                    finally
+                    {
+                        window.QueueFree();
+                        DeleteNewMapFiles();
+                        SceneFileService.RefreshGame();
+                    }
                     Finish();
                     return;
+            }
+        }
+
+        private ModFileSelector Selector() => window.FindChildren("*", "", true, false).OfType<ModFileSelector>().First();
+
+        private void DeleteNewMapFiles()
+        {
+            foreach (var file in new[] { "maps/" + NewMap + ".json", "scenes/" + NewMap + ".json" })
+            {
+                var path = ModFileService.GetWritablePath(newMapMod, file);
+                if (path != null && File.Exists(path))
+                    File.Delete(path);
             }
         }
 

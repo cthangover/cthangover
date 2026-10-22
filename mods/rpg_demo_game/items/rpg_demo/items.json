@@ -1,0 +1,44 @@
+{
+  "Kind": "item",
+  "Items": [
+    {
+      "Id": "rpg_demo/branches",
+      "Name": "rpg_demo/item/branches/name",
+      "Description": "rpg_demo/item/branches/desc",
+      "Cost": 1,
+      "Sprite": "rpg_demo/branch_bundle",
+      "ItemType": "Resource",
+      "ItemAction": "null"
+    },
+    {
+      "Id": "rpg_demo/stones",
+      "Name": "rpg_demo/item/stones/name",
+      "Description": "rpg_demo/item/stones/desc",
+      "Cost": 2,
+      "Sprite": "rpg_demo/stone_pile",
+      "ItemType": "Resource",
+      "ItemAction": "null"
+    },
+    {
+      "Id": "rpg_demo/mushroom",
+      "Name": "rpg_demo/item/mushroom/name",
+      "Description": "rpg_demo/item/mushroom/desc",
+      "Cost": 2,
+      "Sprite": "rpg_demo/forest_mushroom",
+      "ItemType": "Food,TargetUsed",
+      "ItemAction": "action/heal",
+      "heal": 5,
+      "verb": "ui/inventory/verb_eat"
+    },
+    {
+      "Id": "rpg_demo/elixir",
+      "Name": "rpg_demo/item/elixir/name",
+      "Description": "rpg_demo/item/elixir/desc",
+      "Cost": 10,
+      "Sprite": "rpg_demo/healing_elixir",
+      "ItemType": "TargetUsed",
+      "ItemAction": "action/heal",
+      "heal": 20
+    }
+  ]
+}

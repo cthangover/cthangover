@@ -1,0 +1,16 @@
+{
+  "Kind": "shop",
+  "Items": [
+    {
+      "Id": "rpg_demo/village_merchant",
+      "Name": "rpg_demo/shop/village_merchant",
+      "Sells": [
+        { "Item": "rpg_demo/elixir", "Price": 10 }
+      ],
+      "Buys": [
+        { "Item": "rpg_demo/branches", "Price": 1 },
+        { "Item": "rpg_demo/stones", "Price": 2 }
+      ]
+    }
+  ]
+}

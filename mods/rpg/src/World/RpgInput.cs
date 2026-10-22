@@ -11,7 +11,8 @@ namespace Cthangover.Mods.Rpg
     /// they are on a Russian or any other layout; the arrows work too.
     /// <para/>
     /// The world must not walk while something else owns the keyboard or the
-    /// player's attention: a dialog, a toolbar panel (inventory, journal), a
+    /// player's attention: a dialog, a toolbar panel (inventory, journal) or a
+    /// window-like overlay opened by a scenario (a trade window, a workbench), a
     /// focused editor window or text field, a paused tree, a scene transition.
     /// <see cref="IsWalkBlocked"/> collects those checks in one place.
     /// </summary>
@@ -61,13 +62,17 @@ namespace Cthangover.Mods.Rpg
             return IsPanelOpen();
         }
 
+        // Panels and "once" overlays opened on demand are window-like entries on the
+        // host layer. Overlays shown from the start (a HUD strip) do not block walking.
         private static bool IsPanelOpen()
         {
             var host = UiHost.Instance;
             if (host == null)
                 return false;
-            foreach (var entry in UiRegistry.PanelEntries)
+            foreach (var entry in UiRegistry.Entries)
             {
+                if (!UiRegistry.IsPanel(entry) && !(entry.Once && !entry.ShowOnStart))
+                    continue;
                 if (host.TryGetInstance(entry.Id, out var panel) && panel.IsVisibleInTree())
                     return true;
             }

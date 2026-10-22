@@ -3,7 +3,7 @@
   "name": "RPG Demo",
   "version": "1.0.0",
   "author": "ct",
-  "description": "Content of the RPG demo (collection rpg_demo): a village, the elder's house and a forest with a wolf at the cave, made of rpg_map files over the village_pack tileset. Shows teleports, talking NPCs, events that change with story flags, chests, a map monster with a win flag and random encounters in the forest. Only data and scenarios, no C#.",
+  "description": "Content of the RPG demo (collection rpg_demo): a village, the elder's house and a forest with a wolf at the cave, made of rpg_map files over the village_pack tileset. Shows teleports, talking NPCs, events that change with story flags, chests, things to gather in the forest (brushwood, stones, mushrooms that heal), a merchant who sells elixirs and buys the junk, a map monster with a win flag and random encounters in the forest. Only data and scenarios, no C#.",
   "category": "story",
-  "depends": ["rpg>=1", "village_pack>=1", "characters_base>=1", "dialog_base>=1"]
+  "depends": ["rpg>=1", "village_pack>=1", "characters_base>=1", "dialog_base>=1", "items_base>=1", "trading>=1"]
 }

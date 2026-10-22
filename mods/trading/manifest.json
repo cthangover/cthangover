@@ -1,0 +1,29 @@
+{
+  "id": "trading",
+  "name": "Trading",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Shops: merchants defined as data (\"Kind\": \"shop\": what they sell, what they buy back and at which price) and a trade window of two inventories side by side, the merchant's goods and the player's bag, with a deal card between them. Money is an ordinary inventory item, the gold coin money/coin by default. Scenario action: trade.open shop=<id>.",
+  "category": "gameplay",
+  "sources": [
+    "src/**/*.cs"
+  ],
+  "test_sources": [
+    "tests/*.cs"
+  ],
+  "depends": ["shell2d_base>=1", "ui_base>=1", "items_base>=1"],
+  "test_suites": [
+    {"id": "trade", "activate": ["--itest=trade"]}
+  ],
+  "ui": [
+    {
+      "id": "trade",
+      "kind": "overlay",
+      "slot": "ModLastPanel",
+      "scene_path": "scenes/trade_panel.tscn",
+      "once": true,
+      "show_on_start": false,
+      "priority": 10
+    }
+  ]
+}

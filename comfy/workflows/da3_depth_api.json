@@ -1,0 +1,8 @@
+{
+  "_comment": "Depth map (near = white) of an image from ComfyUI/input via Depth Anything 3 small. Patch 1.inputs.image.",
+  "1": { "class_type": "LoadImage", "inputs": { "image": "input.png" } },
+  "2": { "class_type": "LoadDA3Model", "inputs": { "model_name": "depth_anything_3_small.safetensors", "weight_dtype": "default" } },
+  "3": { "class_type": "DA3Inference", "inputs": { "da3_model": ["2", 0], "image": ["1", 0], "resolution": 938, "resize_method": "upper_bound_resize", "mode": "mono" } },
+  "4": { "class_type": "DA3Render", "inputs": { "da3_geometry": ["3", 0], "output": "depth", "output.normalization": "v2_style", "output.apply_sky_clip": false } },
+  "5": { "class_type": "SaveImage", "inputs": { "images": ["4", 0], "filename_prefix": "da3_depth" } }
+}

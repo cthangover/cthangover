@@ -1,0 +1,153 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://mods/trading/src/TradePanel.cs" id="1_script"]
+
+[node name="TradePanel" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+script = ExtResource("1_script")
+
+[node name="Backdrop" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 40.0
+offset_top = 78.0
+offset_right = -40.0
+offset_bottom = -30.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+
+[node name="Margin" type="MarginContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 14
+mouse_filter = 1
+
+[node name="Root" type="VBoxContainer" parent="Panel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+mouse_filter = 1
+
+[node name="Header" type="HBoxContainer" parent="Panel/Margin/Root"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="Title" type="Label" parent="Panel/Margin/Root/Header"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+
+[node name="HeaderSpacer" type="Control" parent="Panel/Margin/Root/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="Wallet" type="HBoxContainer" parent="Panel/Margin/Root/Header"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="WalletIcon" type="TextureRect" parent="Panel/Margin/Root/Header/Wallet"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 4
+expand_mode = 1
+stretch_mode = 5
+mouse_filter = 2
+
+[node name="WalletLabel" type="Label" parent="Panel/Margin/Root/Header/Wallet"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+
+[node name="CloseButton" type="Button" parent="Panel/Margin/Root/Header"]
+custom_minimum_size = Vector2(38, 38)
+layout_mode = 2
+focus_mode = 0
+text = "✕"
+
+[node name="Rule" type="Panel" parent="Panel/Margin/Root"]
+custom_minimum_size = Vector2(0, 1)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Body" type="HBoxContainer" parent="Panel/Margin/Root"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 14
+
+[node name="Merchant" type="VBoxContainer" parent="Panel/Margin/Root/Body"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="MerchantTitle" type="Label" parent="Panel/Margin/Root/Body/Merchant"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+
+[node name="MerchantScroll" type="ScrollContainer" parent="Panel/Margin/Root/Body/Merchant"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="MerchantGrid" type="Control" parent="Panel/Margin/Root/Body/Merchant/MerchantScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 0
+
+[node name="Deal" type="PanelContainer" parent="Panel/Margin/Root/Body"]
+custom_minimum_size = Vector2(400, 0)
+layout_mode = 2
+
+[node name="DealScroll" type="ScrollContainer" parent="Panel/Margin/Root/Body/Deal"]
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="DealCard" type="VBoxContainer" parent="Panel/Margin/Root/Body/Deal/DealScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 14
+
+[node name="Player" type="VBoxContainer" parent="Panel/Margin/Root/Body"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="PlayerTitle" type="Label" parent="Panel/Margin/Root/Body/Player"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+
+[node name="PlayerScroll" type="ScrollContainer" parent="Panel/Margin/Root/Body/Player"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="PlayerGrid" type="Control" parent="Panel/Margin/Root/Body/Player/PlayerScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 0
+
+[node name="Footer" type="Label" parent="Panel/Margin/Root"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12

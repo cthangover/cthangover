@@ -1,3 +1,4 @@
 ptext "Сундук в лесу. Внутри — сухие грибы и чья-то потерянная надежда. Грибы ты берёшь." key=rpg_demo/chest/forest
+action item.add id=rpg_demo/mushroom count=3
 flag rpg_forest_chest 1
 end
