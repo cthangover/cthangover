@@ -15,7 +15,7 @@ namespace Cthangover.Validator
     /// runtime factories can only log.
     /// <para/>
     /// The table intentionally covers only actions with literal content ids
-    /// today (character.add_to_party / character.send_notification /
+    /// today (party.add / character.send_notification /
     /// character.add_skill / battle.init). Extend it when a new action starts
     /// accepting content references; the mechanics need no code changes.
     /// Comma-separated lists (battle.init enemies=) and runtime-computed values
@@ -26,6 +26,11 @@ namespace Cthangover.Validator
         private static readonly Dictionary<string, string> CharacterType = new Dictionary<string, string>
         {
             ["type"] = ValidationKind.Character,
+        };
+
+        private static readonly Dictionary<string, string> PartyAdd = new Dictionary<string, string>
+        {
+            ["id"] = ValidationKind.Character,
         };
 
         private static readonly Dictionary<string, string> BattleInit = new Dictionary<string, string>
@@ -43,7 +48,7 @@ namespace Cthangover.Validator
         private static readonly Dictionary<string, IReadOnlyDictionary<string, string>> Table =
             new Dictionary<string, IReadOnlyDictionary<string, string>>(System.StringComparer.OrdinalIgnoreCase)
         {
-            ["character.add_to_party"] = CharacterType,
+            ["party.add"] = PartyAdd,
             ["character.send_notification"] = CharacterType,
             ["character.add_skill"] = AddSkill,
             ["battle.init"] = BattleInit,

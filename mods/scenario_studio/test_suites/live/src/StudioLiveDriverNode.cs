@@ -582,7 +582,7 @@ namespace Cthangover.Mods.ScenarioStudio.Tests.Live
             if (string.IsNullOrEmpty(root) || !Directory.Exists(root))
                 return;
             ModOverlays.Unmount(StudioLayer.Id);
-            StudioLayer.RefreshContent();
+            SceneManager.ReloadContent();
             Directory.Delete(root, true);
             var parent = Path.GetDirectoryName(root);
             if (parent != null && Directory.GetFileSystemEntries(parent).Length == 0)

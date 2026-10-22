@@ -196,6 +196,21 @@ namespace Cthangover.Core.Scenes
             SceneContextNode.FindNode<SceneManager>("SceneManager")?.RescanSceneTable();
         }
 
+        /// <summary>
+        /// Makes the running game see scene and scenario files written while it runs (an
+        /// editor's save, the studio's layer): drops the cached scenario definitions and
+        /// scene files and rescans the scene table, so the next entry into a scene uses
+        /// them — no mod reload. Events already running keep the text they were built with.
+        /// The one place for this: the studio, the scene, scenario and RPG map editors call it.
+        /// </summary>
+        public static void ReloadContent()
+        {
+            ScenarioDefs.Invalidate();
+            ModManager.Instance.GetResolver<SceneDefinitionResolver>()?.ClearCache();
+            AppServices.Current.SceneDefs.Clear();
+            RescanScenes();
+        }
+
         private void RescanSceneTable()
         {
             allScenes = AppServices.Current.SceneDefs.CollectAll();

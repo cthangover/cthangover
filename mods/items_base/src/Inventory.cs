@@ -41,34 +41,6 @@ namespace Cthangover.Core.Items
 		/// <summary>Fires on every successful add/remove with (itemId, signed delta); also mirrored as <see cref="Events.InventoryChangedEvent"/> on the ModEventBus.</summary>
 		public event Action<string, int> Change;
 
-		/// <summary>
-		/// Creates an inventory pre-seeded with the starter kit (10 wolf meat,
-		/// 10 branches) so a new game always has basic supplies.
-		/// </summary>
-		public Inventory()
-		{
-			AddStarterItem("food/wolf_meat", 10);
-			AddStarterItem("resource/branches", 10);
-		}
-
-		/// <summary>
-		/// Seeds one starter stack, skipping the entry when the item definition
-		/// cannot be resolved. This can legitimately happen when the inventory is
-		/// constructed while the launcher has not finished loading mods; adding a
-		/// container with a <c>null</c> item would otherwise crash every later
-		/// <see cref="HasItem(string)"/> call.
-		/// </summary>
-		private void AddStarterItem(string id, int count)
-		{
-			var item = ItemFactory.Instance.Get(id);
-			if (item == null)
-			{
-				GameLogger.Log("INVENTORY", $"starter item '{id}' not found, skipping seed", LogLevel.Warning);
-				return;
-			}
-			Items.Add(new ItemContainer { Item = item, Count = count });
-		}
-
 		/// <summary>True when any slot holds the given item (null-safe).</summary>
 		public bool HasItem(IItem item)
 		{

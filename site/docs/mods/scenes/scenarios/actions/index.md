@@ -15,7 +15,7 @@ Parameters use `key=value` syntax (no spaces around `=`).
 ### Character actions
 
 ```scenario
-action character.add_to_party type=Murakami
+action party.add id=Murakami
 ```
 
 Adds the character `Murakami` to the player's party. `type=` matches the character's `Id` field in their JSON definition.
@@ -62,7 +62,7 @@ action ui.toggle_panel name=cooking_workbench
 
 | Action | Parameters | Description |
 |---|---|---|
-| `character.add_to_party` | `type=CharId` | Add character to player's party |
+| `party.add` | `id=CharId` | Add character to player's party (mod `characters_base`) |
 | `character.send_notification` | `type=CharId` | Show "new member" notification |
 | `character.add_skill` | `skill_id=SkillId` | Grant a skill and its action card |
 

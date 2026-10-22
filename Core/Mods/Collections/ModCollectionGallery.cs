@@ -84,7 +84,9 @@ namespace Cthangover.Core.Mods
         /// are skipped. Entries are ordered by display name, then id, so the
         /// gallery renders deterministically regardless of store order; the
         /// <paramref name="translator"/> (e.g. <see cref="CollectionText.Resolve"/>)
-        /// resolves '@key' display text, and null keeps raw keys for tests.
+        /// resolves '@key' display text, and null keeps raw keys for tests;
+        /// <paramref name="language"/> (the UI locale) picks the collections'
+        /// own locale entries, null keeps the flat (English) text.
         /// </summary>
         public static List<ModCollectionGameSummary> Build(
             IReadOnlyDictionary<string, ModCollection> collections,
@@ -92,7 +94,8 @@ namespace Cthangover.Core.Mods
             IReadOnlyCollection<string> disabledIds,
             IReadOnlyList<CatalogExportEntry> catalogEntries,
             IReadOnlyCollection<string> sessionInstalled,
-            Func<string, string> translator = null)
+            Func<string, string> translator = null,
+            string language = null)
         {
             var result = new List<ModCollectionGameSummary>();
             if (collections == null)
@@ -114,15 +117,15 @@ namespace Cthangover.Core.Mods
                     disabledIds,
                     catalogEntries,
                     sessionInstalled,
-                    null,
+                    language,
                     translator);
                 var plan = ModCollectionPlan.Build(graph, catalogEntries);
 
                 var summary = new ModCollectionGameSummary
                 {
                     Collection = collection,
-                    Name = Translate(collection.GetLocalizedName(null), translator),
-                    Description = Translate(collection.GetLocalizedDescription(null), translator),
+                    Name = Translate(collection.GetLocalizedName(language), translator),
+                    Description = Translate(collection.GetLocalizedDescription(language), translator),
                     TotalMods = graph.TotalCount,
                     InstalledCount = graph.InstalledCount,
                     ProblemsCount = graph.Problems.Count,
