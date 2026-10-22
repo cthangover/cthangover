@@ -29,7 +29,7 @@ namespace Mods.ModManager
         private OptionButton _versions;
         private Button _action;
         private CheckButton _enabled;
-        private HBoxContainer _metaRow;
+        private HBoxContainer _linkRow;
         private Button _collectionsLink;
         private bool _updatingEnabled;
         private bool _initialized;
@@ -68,7 +68,7 @@ namespace Mods.ModManager
             _versions = GetNode<OptionButton>("VBox/Body/Box/MetaRow/VersionHost/Versions");
             _action = GetNode<Button>("VBox/Body/Box/ActionRow/ActionHost/Action");
             _enabled = GetNode<CheckButton>("VBox/Body/Box/ActionRow/EnabledHost/Enabled");
-            _metaRow = GetNode<HBoxContainer>("VBox/Body/Box/MetaRow");
+            _linkRow = GetNode<HBoxContainer>("VBox/Body/Box/LinkRow");
 
             _author.AddThemeColorOverride("font_color", UiTokens.Muted);
             _source.AddThemeColorOverride("font_color", UiTokens.Muted);
@@ -106,7 +106,8 @@ namespace Mods.ModManager
             {
                 _status.Text = ModStatusNames.Translate(_data.Status);
                 _status.AddThemeColorOverride("font_color", ModStatusNames.Color(_data.Status));
-                _status.TooltipText = string.Empty;
+                // A long status next to the version combo may end in an ellipsis.
+                _status.TooltipText = _status.Text;
             }
 
             UpdateActionButton();
@@ -160,13 +161,18 @@ namespace Mods.ModManager
             }
 
             _versions.Selected = selectedIndex;
+            // "v1.2.0 · latest · installed" does not fit the narrow combo: it ends in an
+            // ellipsis (clip_text in the scene), the full label is in the tooltip.
+            _versions.TooltipText = _versions.GetItemText(selectedIndex);
         }
 
         /// <summary>
-        /// Builds the flat "in N collections" cross-link shown between the
-        /// status label and the version combo. The link is part of the hub
-        /// mockup: pressing it jumps to the collections tab. Hidden entirely
-        /// for mods that no playable game references.
+        /// Builds the flat "in N collections" cross-link in its own row above the
+        /// status. The link is part of the hub mockup: pressing it jumps to the
+        /// collections tab. It used to share the status row, where its text took the
+        /// width the status needed ("Installed" was cut off); the row is reserved on
+        /// every card, empty for mods no playable game references, so all tiles keep
+        /// one size.
         /// </summary>
         private void BuildCollectionsLink()
         {
@@ -183,8 +189,7 @@ namespace Mods.ModManager
             foreach (var state in new[] { "normal", "hover", "pressed", "disabled", "focus" })
                 _collectionsLink.AddThemeStyleboxOverride(state, new StyleBoxEmpty());
             _collectionsLink.Pressed += () => CollectionsLinkRequested?.Invoke();
-            _metaRow.AddChild(_collectionsLink);
-            _metaRow.MoveChild(_collectionsLink, 1);
+            _linkRow.AddChild(_collectionsLink);
         }
 
         private void UpdateCollectionsLink()
@@ -282,6 +287,7 @@ namespace Mods.ModManager
                 return;
 
             _data.SelectedDownload = _data.Downloads[(int)index];
+            _versions.TooltipText = _versions.GetItemText((int)index);
             _data.RecomputeStatus();
             RefreshState();
             VersionChanged?.Invoke(_data);

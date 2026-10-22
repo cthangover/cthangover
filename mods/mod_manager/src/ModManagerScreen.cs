@@ -52,6 +52,12 @@ namespace Mods.ModManager
         /// </summary>
         public bool Embedded { get; set; }
 
+        /// <summary>Whether a mod card is open over the grid.</summary>
+        public bool IsDetailOpen => _detail != null && _detail.Visible;
+
+        /// <summary>Raised when a mod card opens or closes (the hub relabels its back button).</summary>
+        public event Action DetailToggled;
+
         /// <summary>Raised when a tile or the detail page asks to jump to the collections tab.</summary>
         public event Action CollectionsLinkRequested;
 
@@ -153,7 +159,6 @@ namespace Mods.ModManager
             _grid.EnabledToggled += OnEnabledToggled;
             _grid.VersionChanged += OnVersionChanged;
             _grid.CollectionsLinkRequested += OnCollectionsLinkRequested;
-            _detail.BackRequested += OnDetailBackRequested;
             _detail.ActionPressed += OnActionPressed;
             _detail.DeleteRequested += OnDeleteRequested;
             _detail.EnabledToggled += OnEnabledToggled;
@@ -172,7 +177,6 @@ namespace Mods.ModManager
             _grid.EnabledToggled -= OnEnabledToggled;
             _grid.VersionChanged -= OnVersionChanged;
             _grid.CollectionsLinkRequested -= OnCollectionsLinkRequested;
-            _detail.BackRequested -= OnDetailBackRequested;
             _detail.ActionPressed -= OnActionPressed;
             _detail.DeleteRequested -= OnDeleteRequested;
             _detail.EnabledToggled -= OnEnabledToggled;
@@ -315,10 +319,17 @@ namespace Mods.ModManager
             QueueFree();
         }
 
-        private void OnDetailBackRequested()
+        /// <summary>
+        /// Closes an open mod card and shows the grid again. The hub's back button and
+        /// Escape call it first, so "back" from a mod returns to the mods, not to the menu.
+        /// </summary>
+        public void CloseDetail()
         {
+            if (!_detail.Visible)
+                return;
             _detail.Visible = false;
             _grid.Visible = true;
+            DetailToggled?.Invoke();
         }
 
         private void OnCardClicked(ModCardData data)
@@ -326,6 +337,7 @@ namespace Mods.ModManager
             _detail.Open(data);
             _detail.Visible = true;
             _grid.Visible = false;
+            DetailToggled?.Invoke();
         }
 
         private void OnSearchChanged(string text)
@@ -388,7 +400,7 @@ namespace Mods.ModManager
                 if (updated != null)
                     _detail.Open(updated);
                 else
-                    OnDetailBackRequested();
+                    CloseDetail();
             }
         }
 
@@ -486,12 +498,7 @@ namespace Mods.ModManager
             _restartRequired = true;
             _statusMessage = null;
 
-            if (_detail.Visible)
-            {
-                _detail.Visible = false;
-                _grid.Visible = true;
-            }
-
+            CloseDetail();
             RefreshAll();
         }
 

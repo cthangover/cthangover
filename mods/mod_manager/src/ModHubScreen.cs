@@ -25,8 +25,9 @@ namespace Mods.ModManager
     /// The hub also carries the mockup's cross links: a collection link on a
     /// mod card switches to the collections tab, a "not found" problem in the
     /// editor jumps back to the mods tab with the id filled into the search
-    /// box (<see cref="ModManagerScreen.SetSearch"/>), and Escape walks back
-    /// editor → gallery → mods tab.
+    /// box (<see cref="ModManagerScreen.SetSearch"/>). The back button and Escape
+    /// walk back one level at a time — editor → gallery, an open mod card → the
+    /// mods grid — and only then leave to the menu.
     /// </summary>
     public partial class ModHubScreen : ModWidget
     {
@@ -223,7 +224,7 @@ namespace Mods.ModManager
                 return;
             }
 
-            _back.Text = TranslationServer.Translate("mod_manager/hub_back_to_menu");
+            _back.Text = TranslationServer.Translate(ModOpen ? "mod_manager/hub_back_to_mods" : "mod_manager/hub_back_to_menu");
             _back.TooltipText = _back.Text;
             _title.Text = TranslationServer.Translate("mod_manager/menu_title");
             _segment.Visible = true;
@@ -235,10 +236,13 @@ namespace Mods.ModManager
             _galleryRefresh.Visible = collections;
         }
 
+        /// <summary>Back walks one level up: scheme editor → games gallery, mod card → mods, then the menu.</summary>
         private void OnBackPressed()
         {
             if (_editorOpen)
                 ShowGallery();
+            else if (ModOpen)
+                _mods.CloseDetail();
             else
                 QueueFree();
         }
@@ -262,7 +266,10 @@ namespace Mods.ModManager
             _mods.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
             _mods.EnsureConstructed();
             _mods.CollectionsLinkRequested += () => ShowTab(TabCollections);
+            _mods.DetailToggled += UpdateHeader;
         }
+
+        private bool ModOpen => _activeTab == TabMods && _mods != null && _mods.IsDetailOpen;
 
         private void EnsureGallery()
         {
@@ -350,7 +357,7 @@ namespace Mods.ModManager
 
         /* ═══════════════ Escape chain ═══════════════ */
 
-        /// <summary>Escape walks back one level: editor → gallery → mods tab.</summary>
+        /// <summary>Escape walks back one level: editor → gallery → mods tab, mod card → mods grid.</summary>
         public override void _UnhandledInput(InputEvent @event)
         {
             if (!@event.IsActionPressed("ui_cancel"))
@@ -359,6 +366,11 @@ namespace Mods.ModManager
             if (_editorOpen)
             {
                 ShowGallery();
+                GetViewport().SetInputAsHandled();
+            }
+            else if (ModOpen)
+            {
+                _mods.CloseDetail();
                 GetViewport().SetInputAsHandled();
             }
             else if (_activeTab == TabCollections)

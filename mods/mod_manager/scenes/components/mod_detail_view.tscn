@@ -63,10 +63,6 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 6
 
-[node name="Back" type="Button" parent="Scroll/Content/Hero/HeroMargin/HeroRow/Info"]
-layout_mode = 2
-size_flags_horizontal = 0
-
 [node name="Title" type="Label" parent="Scroll/Content/Hero/HeroMargin/HeroRow/Info"]
 layout_mode = 2
 autowrap_mode = 3
