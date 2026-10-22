@@ -16,8 +16,11 @@ namespace Cthangover.Core.Autotest
 	/// ends (exit code 0).</item>
 	/// <item><c>--test=mod_manager</c> — clicks the single hub button from the
 	/// mod <c>main_menu</c> registry, then verifies the hub opened on the mods
-	/// tab with the embedded manager: its grid exists and at least one mod card
-	/// was created (exit code 0).</item>
+	/// tab with the embedded manager: its grid exists, the tiles have one size and
+	/// every status label shows its whole text; a tile opens the mod's card, the
+	/// hub's back button returns from it to the grid (not to the menu) and only a
+	/// second press leaves the hub (exit code 0). <c>--shots=&lt;dir&gt;</c> saves the
+	/// grid and the card (windowed runs only).</item>
 	/// <item><c>--test=mod_collections</c> — opens the same hub, switches to the
 	/// collections tab, verifies the games gallery, opens the scheme editor from
 	/// the first game card and checks the game picker is populated and the
@@ -40,6 +43,8 @@ namespace Cthangover.Core.Autotest
 		private float _timer = ClickDelaySeconds;
 		private float _timeoutSeconds = DefaultTimeoutSeconds;
 		private string _testName;
+		private string _shotsDir;
+		private Node _screen;
 		private bool _enabled;
 		private bool _started;
 
@@ -56,6 +61,10 @@ namespace Cthangover.Core.Autotest
 						_enabled = true;
 						GameLogger.Log("TEST", $"MainMenuTestSetup: auto-test enabled via --test={testName}");
 					}
+				}
+				else if (arg.StartsWith("--shots="))
+				{
+					_shotsDir = arg.Substring("--shots=".Length);
 				}
 				else if (arg.StartsWith("--timeout=") && float.TryParse(arg.Substring("--timeout=".Length), out var t) && t > 0)
 				{
@@ -237,6 +246,24 @@ namespace Cthangover.Core.Autotest
 
 			GameLogger.Log("TEST", $"MainMenuTestSetup: all {cards.Count} tiles are {expected.X}x{expected.Y}");
 
+			// The status ("Installed", "Modified locally") must not be squeezed out by its
+			// neighbours in the row (it once shared the row with "in N collections").
+			foreach (var card in cards)
+			{
+				var status = card.GetNodeOrNull<Label>("VBox/Body/Box/MetaRow/Status");
+				if (status == null || string.IsNullOrEmpty(status.Text))
+					continue;
+				var width = status.GetThemeFont("font").GetStringSize(status.Text, HorizontalAlignment.Left, -1, status.GetThemeFontSize("font_size")).X;
+				if (width <= status.Size.X + 0.5f)
+					continue;
+				GameLogger.Log("TEST",
+					$"MainMenuTestSetup: status '{status.Text}' of {card.Name} is cut ({width:0} px text in a {status.Size.X:0} px label)",
+					LogLevel.Error);
+				Fail("mod_manager");
+				return;
+			}
+			SaveShot("mod_grid");
+
 			// The cover art must be shifted 1px up and 1px wider than the card body
 			// (negative content margins of the panel style), per the design spec.
 			var panelStyle = cards[0].GetThemeStylebox("panel") as StyleBoxFlat;
@@ -277,8 +304,78 @@ namespace Cthangover.Core.Autotest
 			}
 
 			GameLogger.Log("TEST", "MainMenuTestSetup: mod detail page opened");
+			SaveShot("mod_detail");
+
+			var back = FindButtonByText(FindHub(), TranslationServer.Translate("mod_manager/hub_back_to_mods"));
+			if (back == null)
+			{
+				GameLogger.Log("TEST", "MainMenuTestSetup: with a mod open the hub's back button does not lead to the mods", LogLevel.Error);
+				Fail("mod_manager");
+				return;
+			}
+
+			_screen = screen;
+			back.EmitSignal("pressed");
+			GetTree().CreateTimer(ModManagerSettleSeconds).Timeout += VerifyBackToMods;
+		}
+
+		/// <summary>Back from a mod's card shows the grid again inside the still open hub.</summary>
+		private void VerifyBackToMods()
+		{
+			if (!GodotObject.IsInstanceValid(this))
+				return;
+
+			var hub = FindHub();
+			var detail = GodotObject.IsInstanceValid(_screen) ? FindFirstDescendantByTypeName(_screen, "ModDetailView") as Control : null;
+			var grid = GodotObject.IsInstanceValid(_screen) ? FindFirstDescendantByTypeName(_screen, "ModGridView") as Control : null;
+			if (hub == null || hub.IsQueuedForDeletion() || detail == null || detail.Visible || grid == null || !grid.Visible)
+			{
+				GameLogger.Log("TEST",
+					$"MainMenuTestSetup: back from a mod did not return to the grid (hub={hub != null}, detail visible={detail?.Visible}, grid visible={grid?.Visible})",
+					LogLevel.Error);
+				Fail("mod_manager");
+				return;
+			}
+
+			var back = FindButtonByText(hub, TranslationServer.Translate("mod_manager/hub_back_to_menu"));
+			if (back == null)
+			{
+				GameLogger.Log("TEST", "MainMenuTestSetup: on the grid the back button does not lead to the menu", LogLevel.Error);
+				Fail("mod_manager");
+				return;
+			}
+
+			GameLogger.Log("TEST", "MainMenuTestSetup: back from the mod card returned to the mods grid");
+			back.EmitSignal("pressed");
+			GetTree().CreateTimer(ModManagerSettleSeconds).Timeout += VerifyBackToMenu;
+		}
+
+		/// <summary>The second back leaves the hub to the menu.</summary>
+		private void VerifyBackToMenu()
+		{
+			if (!GodotObject.IsInstanceValid(this))
+				return;
+
+			var hub = FindHub();
+			if (hub != null && !hub.IsQueuedForDeletion())
+			{
+				GameLogger.Log("TEST", "MainMenuTestSetup: back on the mods grid did not leave the hub", LogLevel.Error);
+				Fail("mod_manager");
+				return;
+			}
+
+			GameLogger.Log("TEST", "MainMenuTestSetup: the second back returned to the menu");
 			GameLogger.Log("TEST", "[TEST_RESULT] name=mod_manager passed=1 failed=0");
 			GetTree().Quit(0);
+		}
+
+		/// <summary>With <c>--shots=&lt;dir&gt;</c> saves the window as <c>&lt;name&gt;.png</c> (windowed runs only).</summary>
+		private void SaveShot(string name)
+		{
+			if (string.IsNullOrEmpty(_shotsDir) || DisplayServer.GetName() == "headless")
+				return;
+			DirAccess.MakeDirRecursiveAbsolute(_shotsDir);
+			GetViewport().GetTexture().GetImage()?.SavePng(_shotsDir.TrimEnd('/', '\\') + "/" + name + ".png");
 		}
 
 		private void RunModCollectionsTest()

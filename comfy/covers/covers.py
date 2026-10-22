@@ -2,10 +2,10 @@
 
 Usage (project root):
     python3 comfy/covers/covers.py jobs [mod ...] [--seed=N]  # queue jobs/pending/cover_<mod>.json
-    python  comfy/covers/covers.py build [--install]  # HOST (Pillow): gen/covers/<mod>.jpg, --install -> mods/<mod>/mod.jpg
+    python  comfy/covers/covers.py build [--install] [mod ...]  # HOST (Pillow): gen/covers/<mod>.jpg, --install -> mods/<mod>/mod.jpg
 
-Every cover carries the mod's title. The cthangover game's own mods are not covered here. Mods whose author made a cover
-(KEEP) only get a candidate in gen/covers; --install leaves their files alone.
+Every cover carries the mod's title. The cthangover game's own mods are not covered here. --install keeps the
+replaced cover in gen/covers/<mod>_old_mod.<ext>.
 """
 import glob
 import json
@@ -47,15 +47,14 @@ COVERS = {
     "ui_base": ("UI Kit", "floating game interface panels, buttons, sliders and icons in a dark and gold theme"),
     "validator": ("Validator", "a big classic magnifying glass with a round clear glass lens, a brass rim and a wooden handle, lying over a paper checklist with green checkmarks and a few red crosses"),
     "village_pack": ("Village Pack", "pixel art game assets laid out: little houses, trees, fences, chests and villagers"),
-    # the author's own covers: candidates only
+    # these mods had the author's earlier covers; replaced on request too
     "card_battle": ("Card Battle", "magic trading cards fanned out on a glowing golden table"),
     "rpg": ("RPG World", "a top-down pixel art tile world with a hero walking on a grid"),
-    "shell2d_base": ("2D Engine", "a cute chibi anime girl line drawing on a light grey background"),
+    "shell2d_base": ("2D Engine", "a cute chibi anime girl line drawing standing on the right side of a light grey background, the left side free for the title"),
     "my_novel_game": ("My Novel", "a visual novel scene: a small town street, a bar and a home at dusk"),
     "live2d_base": ("Live2D", "an anime girl portrait with a visible mesh of deformation points, animated"),
     "mod_manager": ("Mod Manager", "a grid of colorful mod cards being installed with progress bars"),
 }
-KEEP = {"card_battle", "rpg", "shell2d_base", "my_novel_game", "live2d_base", "mod_manager"}
 
 
 def jobs(names, seed_base):
@@ -79,7 +78,7 @@ def jobs(names, seed_base):
         print("queued", mod)
 
 
-def build(install):
+def build(install, names):
     from PIL import Image
     os.makedirs("gen/covers", exist_ok=True)
     mods = sorted(COVERS)
@@ -93,11 +92,12 @@ def build(install):
         sheet.paste(img.resize((320, 170), Image.LANCZOS), (index % 6 * 320, index // 6 * 170))
         out = f"gen/covers/{mod}.jpg"
         img.save(out, quality=88)
-        if install and mod not in KEEP:
+        if install and (not names or mod in names):
+            for ext in ("png", "jpg"):  # mod.png would win over mod.jpg in ModPreviewLoader
+                old = f"mods/{mod}/mod.{ext}"
+                if os.path.exists(old):
+                    os.replace(old, f"gen/covers/{mod}_old_mod.{ext}")
             img.save(f"mods/{mod}/mod.jpg", quality=88)
-            png = f"mods/{mod}/mod.png"
-            if os.path.exists(png):  # mod.png would win over mod.jpg in ModPreviewLoader
-                os.replace(png, f"gen/covers/{mod}_old_mod.png")
             print("installed", mod)
     sheet.save("gen/covers/_sheet.jpg", quality=85)
 
@@ -108,4 +108,4 @@ if __name__ == "__main__":
         seed = next((int(a[7:]) for a in sys.argv[2:] if a.startswith("--seed=")), 900)
         jobs({a for a in sys.argv[2:] if not a.startswith("--")}, seed)
     else:
-        build("--install" in sys.argv)
+        build("--install" in sys.argv, {a for a in sys.argv[2:] if not a.startswith("--")})

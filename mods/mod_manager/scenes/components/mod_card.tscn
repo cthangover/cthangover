@@ -75,6 +75,11 @@ clip_text = true
 text_overrun_behavior = 3
 theme_override_font_sizes/font_size = 11
 
+[node name="LinkRow" type="HBoxContainer" parent="VBox/Body/Box"]
+custom_minimum_size = Vector2(0, 16)
+layout_mode = 2
+mouse_filter = 2
+
 [node name="MetaRow" type="HBoxContainer" parent="VBox/Body/Box"]
 custom_minimum_size = Vector2(0, 28)
 layout_mode = 2
@@ -84,7 +89,7 @@ theme_override_constants/separation = 6
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
-mouse_filter = 2
+mouse_filter = 1
 clip_text = true
 text_overrun_behavior = 3
 theme_override_font_sizes/font_size = 11
@@ -105,6 +110,8 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+clip_text = true
+text_overrun_behavior = 3
 theme_override_font_sizes/font_size = 11
 
 [node name="ActionRow" type="HBoxContainer" parent="VBox/Body/Box"]

@@ -21,7 +21,6 @@ namespace Mods.ModManager
         private bool _nodesReady;
 
         private TextureRect _coverImage;
-        private Button _back;
         private Label _title;
         private Label _author;
         private Label _meta;
@@ -39,9 +38,6 @@ namespace Mods.ModManager
         private Label _usedByText;
         private VBoxContainer _conflictsBox;
         private Label _conflictsText;
-
-        /// <summary>Raised by the back button.</summary>
-        public event Action BackRequested;
 
         /// <summary>Raised when the primary contextual action is pressed.</summary>
         public event Action<ModCardData> ActionPressed;
@@ -72,7 +68,6 @@ namespace Mods.ModManager
             _nodesReady = true;
 
             _coverImage = GetNode<TextureRect>("Scroll/Content/Hero/HeroMargin/HeroRow/Cover/Image");
-            _back = GetNode<Button>("Scroll/Content/Hero/HeroMargin/HeroRow/Info/Back");
             _title = GetNode<Label>("Scroll/Content/Hero/HeroMargin/HeroRow/Info/Title");
             _author = GetNode<Label>("Scroll/Content/Hero/HeroMargin/HeroRow/Info/Author");
             _meta = GetNode<Label>("Scroll/Content/Hero/HeroMargin/HeroRow/Info/Meta");
@@ -91,8 +86,6 @@ namespace Mods.ModManager
             _conflictsBox = GetNode<VBoxContainer>("Scroll/Content/ConflictsBox");
             _conflictsText = GetNode<Label>("Scroll/Content/ConflictsBox/Text");
 
-            _back.Text = TranslationServer.Translate("mod_manager/back_to_list");
-            _back.Pressed += OnBackPressed;
             _versions.ItemSelected += OnVersionSelected;
 
             _author.AddThemeColorOverride("font_color", UiTokens.Muted);
@@ -297,8 +290,6 @@ namespace Mods.ModManager
             if (texture != null && GodotObject.IsInstanceValid(_coverImage))
                 _coverImage.Texture = texture;
         }
-
-        private void OnBackPressed() => BackRequested?.Invoke();
 
         private void OnPrimaryPressed() => ActionPressed?.Invoke(_data);
 
