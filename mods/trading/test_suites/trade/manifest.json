@@ -1,0 +1,10 @@
+{
+  "name": "Trade Test",
+  "description": "Integration test of trading on the rpg_demo game: gathers brushwood, stones and a mushroom in the forest by walking onto them, heals the hero with the mushroom, talks to the village merchant whose dialog opens the trade window, sells the junk and buys an elixir by clicking the two inventories, checks that walking is blocked while the window is open and that Esc closes it. Activated by --itest=trade with --game=rpg_demo --new; --shots=<dir> saves screenshots (windowed runs only).",
+  "sources": [
+    "src/*.cs"
+  ],
+  "depends": [
+    "rpg_demo_game>=1"
+  ]
+}

@@ -10,6 +10,7 @@ using Cthangover.Core.UI.Theming;
 using Godot;
 
 using Cthangover.Mods.Interface.Base.Lists;
+using Cthangover.Mods.Items;
 using Cthangover.Mods.Interface.Theming;
 namespace Cthangover.Core.UI.Inventory
 {
@@ -978,7 +979,10 @@ namespace Cthangover.Core.UI.Inventory
             if (!HasActionPoint())
                 return;
 
-            if (!item.ItemAction.UseAction(item))
+            var applied = item.ItemAction is ITargetedItemAction targeted
+                ? targeted.UseOn(item, info)
+                : item.ItemAction.UseAction(item);
+            if (!applied)
             {
                 SetMessage(MessageKind.Error, InventoryItemUi.Translate("ui/inventory/applied_failed"));
                 _targetOpen = false;

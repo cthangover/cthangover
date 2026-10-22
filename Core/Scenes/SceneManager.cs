@@ -595,9 +595,10 @@ namespace Cthangover.Core.Scenes
                 return;
 
             var path = defs[0].DefaultScenario;
+            // A scene without scenarios is a normal place (e.g. only interactives), not an error.
             if (string.IsNullOrEmpty(path))
             {
-                GameLogger.Log("SCENE", $"SwitchScene: no events and no defaultScenario for '{currentSceneName}'", LogLevel.Error);
+                GameLogger.Log("SCENE", $"SwitchScene: no scenario to start in '{currentSceneName}' (no events, no defaultScenario)");
                 return;
             }
 

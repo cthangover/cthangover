@@ -94,8 +94,9 @@ namespace Cthangover.Core.Mods
         {
             var id = ModIdOf(host.Id, suite.Id);
             var folder = suite.Folder;
+            // Folder is a mod path ('/'-separated); a disk path gets the OS separators, or Windows ends up with "…\test_suites/walk".
             IModFileProvider provider = host.FileProvider?.RootPath != null && Directory.Exists(host.FileProvider.RootPath)
-                ? new FolderModFileProvider(Path.Combine(host.FileProvider.RootPath, folder), id)
+                ? new FolderModFileProvider(Path.Combine(host.FileProvider.RootPath, folder.Replace('/', Path.DirectorySeparatorChar)), id)
                 : new SubdirModFileProvider(host.FileProvider, folder, id);
 
             if (!provider.FileExists("manifest.json"))

@@ -1,3 +1,4 @@
-ptext "В сундуке — старые носки и записка: «Не трогай». Поздно." key=rpg_demo/chest/house
+ptext "В сундуке — старые носки и записка: «Не трогай». Поздно. Под носками — три монеты." key=rpg_demo/chest/house
+action item.add id=money/coin count=3
 flag rpg_house_chest 1
 end

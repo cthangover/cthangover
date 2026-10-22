@@ -92,6 +92,17 @@
       "timeoutSeconds": 180
     },
     {
+      "name": "trade",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--game=rpg_demo",
+        "--new",
+        "--itest=trade"
+      ],
+      "timeoutSeconds": 180
+    },
+    {
       "name": "game_rpg_demo",
       "scene": "res://scenes/menu/launcher.tscn",
       "args": [
@@ -368,6 +379,19 @@
         "--new",
         "--with-mods=editor_tools",
         "--itest=ingame_play"
+      ],
+      "timeoutSeconds": 240
+    },
+    {
+      "name": "novel_flow",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "windowed": true,
+      "args": [
+        "--",
+        "--game=novel_template",
+        "--new",
+        "--with-mods=editor_tools",
+        "--itest=novel_flow"
       ],
       "timeoutSeconds": 240
     },

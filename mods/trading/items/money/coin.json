@@ -1,0 +1,14 @@
+{
+  "Kind": "item",
+  "Items": [
+    {
+      "Id": "money/coin",
+      "Name": "trading/item/coin/name",
+      "Description": "trading/item/coin/desc",
+      "Cost": 1,
+      "Sprite": "money/gold_coin",
+      "ItemType": "Resource,CantDrop",
+      "ItemAction": "null"
+    }
+  ]
+}

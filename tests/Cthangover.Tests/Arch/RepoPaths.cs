@@ -12,10 +12,14 @@ namespace Engine.Tests.Arch
     /// </summary>
     internal static class RepoPaths
     {
-        /// <summary>Folders that hold tooling, caches, build output (releases/) or vendored code rather than project assets.</summary>
+        /// <summary>
+        /// Folders that hold tooling, caches, build output (releases/) or vendored code rather than project assets.
+        /// Agent folders (.claude, .dsh) also hold symlinks made in WSL, which Windows cannot open; jobs/ is the
+        /// host job bridge, whose results carry the host's absolute paths.
+        /// </summary>
         private static readonly HashSet<string> SkippedDirectories = new(StringComparer.Ordinal)
         {
-            ".git", ".godot", ".idea", ".opencode", ".omo", ".dsh", "node_modules", "bin", "obj",
+            ".git", ".godot", ".idea", ".opencode", ".omo", ".dsh", ".claude", "jobs", "node_modules", "bin", "obj",
             "sdk", "site", "mockups", "gen", "artifacts", "releases", "source_code", "undefined",
         };
 

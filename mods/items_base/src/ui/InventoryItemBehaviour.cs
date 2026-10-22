@@ -88,6 +88,23 @@ namespace Cthangover.Core.UI.Inventory
             _count.Modulate = dimmed ? IconDimmed : Colors.White;
         }
 
+        /// <summary>
+        /// Overrides what <see cref="UpdateInfo"/> derived from the item's action,
+        /// for grids where the action is not the point — the trade window shows a
+        /// price in the corner tag (<paramref name="tag"/>, <c>null</c> hides it) and
+        /// dims what cannot be traded. Call after <see cref="Construct"/>.
+        /// </summary>
+        public void Decorate(string tag, bool dimmed)
+        {
+            if (!_built)
+                return;
+            _tag.Visible = tag != null;
+            if (tag != null)
+                _tagLabel.Text = tag;
+            _icon.Modulate = dimmed ? IconDimmed : Colors.White;
+            _count.Modulate = dimmed ? IconDimmed : Colors.White;
+        }
+
         /// <summary>Switches the frame to the gold selected state; the panel owns this flag.</summary>
         public void SetSelected(bool selected)
         {

@@ -3,7 +3,7 @@
   "name": "Village Pack",
   "version": "1.0.0",
   "author": "ct",
-  "description": "Reusable pixel-art content for RPG maps: the 'village' tileset (grass, paths, water, trees with crowns for the front layer, houses, fences, chests, a forest floor and a cave mouth, with solid flags), charsets of a hero, an elder, a villager, a merchant, a slime and a wolf, battle portraits of the hero, the slime and the wolf, and two battle backgrounds (meadow, forest) with depth maps. Art only: no maps, no stories.",
+  "description": "Reusable pixel-art content for RPG maps: the 'village' tileset (grass, paths, water, trees with crowns for the front layer, houses, fences, chests, a forest floor and a cave mouth, things lying on the ground to pick up — brushwood, stones, a mushroom — with solid flags), charsets of a hero, an elder, a villager, a merchant, a slime and a wolf, battle portraits of the hero, the slime and the wolf, and two battle backgrounds (meadow, forest) with depth maps. Art only: no maps, no stories.",
   "category": "visual, characters",
   "depends": ["rpg>=1"]
 }

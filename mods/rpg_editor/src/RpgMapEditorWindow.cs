@@ -27,7 +27,9 @@ namespace Cthangover.Tools.RpgEditor
     /// (Ctrl+Z / Ctrl+Y); Ctrl+S saves. A new file becomes a map filled with the
     /// first tile of the first tileset, and the first save also writes
     /// <c>scenes/&lt;id&gt;.json</c> when the mod has no such scene, because the
-    /// map id is the scene name.
+    /// map id is the scene name; the game re-reads its scenes right away
+    /// (<see cref="SceneFileService.RefreshGame"/>), so "Play" works on a new map
+    /// without a mod reload.
     /// <para/>
     /// After a save the map is put into the running game's map cache, and a
     /// world showing it is remounted, so the edit is visible at once; "Play"
@@ -254,6 +256,8 @@ namespace Cthangover.Tools.RpgEditor
             }
 
             var sceneNote = isNew ? EnsureScene() : null;
+            if (sceneNote != null)
+                SceneFileService.RefreshGame();
             isNew = false;
             MarkClean();
             PublishToGame(json);

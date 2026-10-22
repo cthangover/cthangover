@@ -1,0 +1,2 @@
+ptext "Крепкий лесной гриб. Съешь — и полегчает." key=rpg_demo/pickup/mushroom
+action item.add id=rpg_demo/mushroom

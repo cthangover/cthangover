@@ -38,7 +38,10 @@
         { "Index": 28, "Solid": true, "Tag": "lamp_post" },
         { "Index": 29, "Solid": false, "Tag": "lamp_top" },
         { "Index": 30, "Solid": true, "Tag": "shore" },
-        { "Index": 31, "Solid": true, "Tag": "barrel" }
+        { "Index": 31, "Solid": true, "Tag": "barrel" },
+        { "Index": 32, "Solid": false, "Tag": "branches" },
+        { "Index": 33, "Solid": false, "Tag": "stones" },
+        { "Index": 34, "Solid": false, "Tag": "mushroom" }
       ]
     }
   ]

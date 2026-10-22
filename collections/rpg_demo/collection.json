@@ -39,6 +39,14 @@
       "mods": ["rpg>=1"]
     },
     {
+      "id": "items",
+      "name": "Items and trade",
+      "role": "gameplay",
+      "description": "Inventory with items that can be eaten or applied, and shops: merchants sell goods and buy back what the player gathers.",
+      "locale": [ { "lang": "ru", "name": "Предметы и торговля", "description": "Инвентарь с предметами, которые можно съесть или применить, и лавки: торговцы продают товары и скупают то, что собрал игрок." } ],
+      "mods": ["items_base>=1", "trading>=1"]
+    },
+    {
       "id": "engine_2d",
       "name": "2D engine",
       "role": "engine",

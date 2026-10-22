@@ -1,0 +1,118 @@
+{
+  "8": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "qwen_image_2.1_vae_bf16.safetensors"
+    }
+  },
+  "16": {
+    "class_type": "KSampler",
+    "inputs": {
+      "seed": 1,
+      "steps": 25,
+      "cfg": 1,
+      "sampler_name": "euler_ancestral",
+      "scheduler": "simple",
+      "denoise": 1,
+      "model": [
+        "184",
+        0
+      ],
+      "positive": [
+        "159",
+        0
+      ],
+      "negative": [
+        "159",
+        1
+      ],
+      "latent_image": [
+        "193",
+        0
+      ]
+    }
+  },
+  "17": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": [
+        "16",
+        0
+      ],
+      "vae": [
+        "8",
+        0
+      ]
+    }
+  },
+  "20": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "filename_prefix": "cthangover/qwen",
+      "images": [
+        "17",
+        0
+      ]
+    }
+  },
+  "159": {
+    "class_type": "TextEncodeQwenImage21",
+    "inputs": {
+      "clip": [
+        "194",
+        0
+      ],
+      "prompt": "anime background, city street at dusk, painterly",
+      "negative_prompt": "blurry, low quality, deformed, watermark, text, jpeg artifacts, photo, realistic",
+      "resolution": 1024
+    }
+  },
+  "184": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+      "model": [
+        "192",
+        0
+      ],
+      "lora_name": "FlatAnime_Qwen_2.1.safetensors",
+      "strength_model": 1
+    }
+  },
+  "191": {
+    "class_type": "UnetLoaderGGUF",
+    "inputs": {
+      "unet_name": "qwen-image-2.1-UC-Q5_K_M.gguf"
+    }
+  },
+  "192": {
+    "class_type": "QwenImage21Cache",
+    "inputs": {
+      "model": [
+        "191",
+        0
+      ],
+      "device": "auto",
+      "dtype": "default"
+    }
+  },
+  "193": {
+    "class_type": "EmptyLatentImage",
+    "inputs": {
+      "width": 1920,
+      "height": 1024,
+      "batch_size": 1
+    }
+  },
+  "194": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+      "clip_name": "qwen3vl_8b_int8_convrot.safetensors",
+      "type": "qwen_image",
+      "device": "default"
+    }
+  },
+  "_meta": {
+    "title": "godotcthangover qwen-image-2.1 txt2img (API format)"
+  },
+  "_doc": "Патчатся job-файлом: 159.inputs.prompt / 159.inputs.negative_prompt / 193.inputs.width,height / 16.inputs.seed,steps,cfg"
+}
