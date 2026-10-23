@@ -1,6 +1,6 @@
 {
   "name": "RPG Walk Test",
-  "description": "Integration test of the rpg mod on the rpg_demo game: real WASD/E key events walk the hero, collide, read a sign, turn an NPC, go through a door teleport, flip events by a story flag, fight a battle that returns to the same cell with the win flag set. Activated by --itest=rpg_walk with --game=rpg_demo --new; --shots=<dir> saves screenshots (windowed runs only).",
+  "description": "Integration test of the rpg mod on the rpg_demo game: real WASD/E key events walk the hero, collide, read a sign, turn an NPC, go through a door teleport, flip events by a story flag, fight a battle that returns to the same cell with the win flag set. A pickup the suite adds to the village through its own map_events file is picked up and must stay gone after leaving the map and coming back, and after a save is loaded. Activated by --itest=rpg_walk with --game=rpg_demo --new; --shots=<dir> saves screenshots (windowed runs only).",
   "sources": [
     "src/*.cs"
   ],

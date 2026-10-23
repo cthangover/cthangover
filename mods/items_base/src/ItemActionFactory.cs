@@ -31,6 +31,9 @@ namespace Cthangover.Core.Factories.Impls
         {
         }
 
+        /// <summary>Ids of the registered actions, for editors that offer them (<c>"null"</c>, no effect, is not among them).</summary>
+        public IEnumerable<string> Ids => data.Keys;
+
         /// <summary>Registers a single action under its <see cref="IItemAction.ID"/>; the first action of an id wins, null/empty ids are ignored.</summary>
         public void Register(IItemAction action)
         {

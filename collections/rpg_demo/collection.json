@@ -87,6 +87,15 @@
       "locale": [ { "lang": "ru", "name": "Редактор карт", "description": "Редактор тайловых карт: три слоя тайлов, слой коллизий и события; открывается с панели инструментов." } ],
       "optional": true,
       "mods": ["rpg_editor>=1"]
+    },
+    {
+      "id": "data_editors",
+      "name": "Item and character editors",
+      "role": "tools",
+      "description": "Editors of the game's items and characters (heroes, NPCs, enemies): names in every language, pictures, stats; opened from the toolbar, a save shows in the game at once.",
+      "locale": [ { "lang": "ru", "name": "Редакторы предметов и персонажей", "description": "Редакторы предметов и персонажей игры (герои, NPC, враги): названия на всех языках, картинки, параметры; открываются с панели инструментов, сохранение сразу видно в игре." } ],
+      "optional": true,
+      "mods": ["items_editor>=1", "characters_editor>=1"]
     }
   ]
 }

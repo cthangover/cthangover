@@ -307,6 +307,9 @@ recipe/wolf_meat_to_ration/desc = A recipe for cooking wolf meat safely
 
 ## Adding a new item
 
+The quickest way is the **Items** editor (`items_editor`, see [Developer Tools](../editor_tools/)):
+**New**, type the name, pick the icon, Save. By hand:
+
 1. Create a JSON file anywhere in your mod with the `{ "Kind": "item", "Items": [ ... ] }` envelope and all fields
 2. Add locale keys for name and description
 3. Optionally add a sprite icon

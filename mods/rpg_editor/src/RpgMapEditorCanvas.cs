@@ -16,7 +16,12 @@ namespace Cthangover.Tools.RpgEditor
     /// a drag paints a stroke, RMB erases, Alt+LMB picks the tile under the
     /// pointer. On the events layer: LMB selects the top event of a cell and drags
     /// it, a double click on an empty cell adds an event, RMB clears the selection.
-    /// Ctrl+wheel zooms.
+    /// Locked events (other mods' and other files') are drawn faded with a dashed
+    /// frame and ignore the mouse.
+    /// While <see cref="Placing"/>, a click only chooses a cell for the window.
+    /// Ctrl+wheel zooms. The plain wheel (Shift+wheel horizontally) is left to
+    /// the surrounding ScrollContainer, and a middle-button drag pans it, so a
+    /// map larger than the view is reachable on any layer and with any tool.
     /// <para/>
     /// The canvas owns no data. It edits the window's
     /// <see cref="RpgMapDocument"/> and reports through events; every stroke or
@@ -29,12 +34,16 @@ namespace Cthangover.Tools.RpgEditor
         private static readonly Color OpenColor = new(0.2f, 0.85f, 0.35f, 0.4f);
         private static readonly Color GridColor = new(1f, 1f, 1f, 0.12f);
         private static readonly Color MarkerColor = new(0.35f, 0.55f, 1f, 0.55f);
+        private static readonly Color LockedModulate = new(1f, 1f, 1f, 0.55f);
 
         private readonly RpgTextures textures = new();
         private Vector2I? hover;
         private bool stroking;
         private RpgMapEvent dragged;
         private bool dragMoved;
+        private bool panning;
+        private Vector2 panStartMouse;
+        private Vector2 panStartScroll;
 
         /// <summary>The edited map; null shows an empty canvas.</summary>
         public RpgMapDocument Document { get; set; }
@@ -77,6 +86,15 @@ namespace Cthangover.Tools.RpgEditor
 
         /// <summary>Alt+click picked a tile.</summary>
         public event Action<int> TilePicked;
+
+        /// <summary>
+        /// The next LMB on a cell is not an edit but a choice reported through
+        /// <see cref="CellChosen"/> (placing a character); RMB cancels. Either ends it.
+        /// </summary>
+        public bool Placing { get; set; }
+
+        /// <summary>The cell chosen while <see cref="Placing"/>, or null when cancelled.</summary>
+        public event Action<Vector2I?> CellChosen;
 
         /// <summary>Creates the canvas; input comes through the GuiInput event.</summary>
         public RpgMapEditorCanvas()
@@ -147,30 +165,55 @@ namespace Cthangover.Tools.RpgEditor
 
         private void DrawEvents()
         {
-            foreach (var mapEvent in Document.Map.Events)
-            {
-                var rect = CellRect(mapEvent.X, mapEvent.Y);
-                var charset = string.IsNullOrEmpty(mapEvent.Sprite) ? null : textures.Charset(mapEvent.Sprite);
-                if (charset != null)
-                {
-                    var frame = new Vector2(charset.GetWidth() / 3f, charset.GetHeight() / 4f);
-                    var source = new Rect2(new Vector2(frame.X, frame.Y * (int)mapEvent.Dir), frame);
-                    var size = frame * Zoom;
-                    var target = new Rect2(rect.Position + new Vector2((rect.Size.X - size.X) / 2f, rect.Size.Y - size.Y), size);
-                    DrawTextureRectRegion(charset, target, source);
-                }
-                else if (mapEvent.Tile >= 0 && Atlas != null && Tileset != null)
-                {
-                    DrawTextureRectRegion(Atlas, rect, TileRegion(mapEvent.Tile));
-                }
-                else
-                {
-                    DrawRect(rect.Grow(-CellSize * 0.15f), MarkerColor);
-                }
+            foreach (var mapEvent in Document.LockedEvents)
+                DrawEvent(mapEvent, true);
+            foreach (var mapEvent in Document.Events)
+                DrawEvent(mapEvent, false);
+        }
 
-                if (ActiveLayer == RpgEditLayer.Events)
-                    DrawRect(rect, mapEvent == SelectedEvent ? UiTokens.AccentBright : UiTokens.Alpha(UiTokens.White, 0.5f), false, mapEvent == SelectedEvent ? 3f : 1f);
+        /// <summary>One event: its look, then on the events layer a frame (dashed grey for a locked one).</summary>
+        private void DrawEvent(RpgMapEvent mapEvent, bool locked)
+        {
+            var modulate = locked ? LockedModulate : Colors.White;
+            var rect = CellRect(mapEvent.X, mapEvent.Y);
+            var charset = string.IsNullOrEmpty(mapEvent.Sprite) ? null : textures.Charset(mapEvent.Sprite);
+            if (charset != null)
+            {
+                var frame = new Vector2(charset.GetWidth() / 3f, charset.GetHeight() / 4f);
+                var source = new Rect2(new Vector2(frame.X, frame.Y * (int)mapEvent.Dir), frame);
+                var size = frame * Zoom;
+                var target = new Rect2(rect.Position + new Vector2((rect.Size.X - size.X) / 2f, rect.Size.Y - size.Y), size);
+                DrawTextureRectRegion(charset, target, source, modulate);
             }
+            else if (mapEvent.Tile >= 0 && Atlas != null && Tileset != null)
+            {
+                DrawTextureRectRegion(Atlas, rect, TileRegion(mapEvent.Tile), modulate);
+            }
+            else if (!string.IsNullOrEmpty(mapEvent.Icon) && textures.Icon(mapEvent.Icon) is { } icon)
+            {
+                // Fitted like RpgActor.UseIcon: three quarters of the cell, centred.
+                var fit = CellSize * 0.75f / Mathf.Max(1, Mathf.Max(icon.GetWidth(), icon.GetHeight()));
+                var size = icon.GetSize() * fit;
+                DrawTextureRect(icon, new Rect2(rect.GetCenter() - size / 2f, size), false, modulate);
+            }
+            else
+            {
+                DrawRect(rect.Grow(-CellSize * 0.15f), MarkerColor * modulate);
+            }
+
+            if (ActiveLayer == RpgEditLayer.Events && locked)
+                DrawDashedRect(rect.Grow(-1f));
+            else if (ActiveLayer == RpgEditLayer.Events)
+                DrawRect(rect, mapEvent == SelectedEvent ? UiTokens.AccentBright : UiTokens.Alpha(UiTokens.White, 0.5f), false, mapEvent == SelectedEvent ? 3f : 1f);
+        }
+
+        private void DrawDashedRect(Rect2 rect)
+        {
+            var color = UiTokens.Alpha(UiTokens.White, 0.6f);
+            DrawDashedLine(rect.Position, new Vector2(rect.End.X, rect.Position.Y), color, 1f, 4f);
+            DrawDashedLine(new Vector2(rect.End.X, rect.Position.Y), rect.End, color, 1f, 4f);
+            DrawDashedLine(rect.End, new Vector2(rect.Position.X, rect.End.Y), color, 1f, 4f);
+            DrawDashedLine(new Vector2(rect.Position.X, rect.End.Y), rect.Position, color, 1f, 4f);
         }
 
         private void DrawSpawn()
@@ -228,6 +271,12 @@ namespace Cthangover.Tools.RpgEditor
 
             if (@event is InputEventMouseMotion motion)
             {
+                if (panning)
+                {
+                    Pan(motion);
+                    AcceptEvent();
+                    return;
+                }
                 hover = CellAt(motion.Position);
                 if (stroking && (motion.ButtonMask & (MouseButtonMask.Left | MouseButtonMask.Right)) != 0)
                     Apply(hover.Value, (motion.ButtonMask & MouseButtonMask.Right) != 0);
@@ -246,6 +295,15 @@ namespace Cthangover.Tools.RpgEditor
                 AcceptEvent();
                 return;
             }
+            // Not accepted: the event bubbles up and the ScrollContainer scrolls.
+            if (button.ButtonIndex is MouseButton.WheelUp or MouseButton.WheelDown or MouseButton.WheelLeft or MouseButton.WheelRight)
+                return;
+            if (button.ButtonIndex == MouseButton.Middle)
+            {
+                StartOrEndPan(button);
+                AcceptEvent();
+                return;
+            }
 
             var cell = CellAt(button.Position);
             if (!button.Pressed)
@@ -255,6 +313,15 @@ namespace Cthangover.Tools.RpgEditor
                 stroking = false;
                 dragged = null;
                 dragMoved = false;
+                return;
+            }
+
+            if (Placing && (button.ButtonIndex == MouseButton.Left || button.ButtonIndex == MouseButton.Right))
+            {
+                Placing = false;
+                var chosen = button.ButtonIndex == MouseButton.Left && Document.Grid.InBounds(cell.X, cell.Y);
+                CellChosen?.Invoke(chosen ? cell : null);
+                AcceptEvent();
                 return;
             }
 
@@ -341,6 +408,36 @@ namespace Cthangover.Tools.RpgEditor
             SelectedEvent = mapEvent;
             EventSelected?.Invoke(mapEvent);
             QueueRedraw();
+        }
+
+        /// <summary>
+        /// Middle button down starts panning the parent ScrollContainer, up ends
+        /// it. The scroll offset is anchored to the press point rather than
+        /// accumulated from deltas, so hitting a scroll edge builds no drift.
+        /// </summary>
+        private void StartOrEndPan(InputEventMouseButton button)
+        {
+            var scroll = GetParentOrNull<ScrollContainer>();
+            panning = button.Pressed && scroll != null;
+            MouseDefaultCursorShape = panning ? CursorShape.Drag : CursorShape.Arrow;
+            if (!panning)
+                return;
+            panStartMouse = button.GlobalPosition;
+            panStartScroll = new Vector2(scroll.ScrollHorizontal, scroll.ScrollVertical);
+        }
+
+        private void Pan(InputEventMouseMotion motion)
+        {
+            var scroll = GetParentOrNull<ScrollContainer>();
+            if (scroll == null || (motion.ButtonMask & MouseButtonMask.Middle) == 0)
+            {
+                panning = false;
+                MouseDefaultCursorShape = CursorShape.Arrow;
+                return;
+            }
+            var delta = motion.GlobalPosition - panStartMouse;
+            scroll.ScrollHorizontal = Mathf.RoundToInt(panStartScroll.X - delta.X);
+            scroll.ScrollVertical = Mathf.RoundToInt(panStartScroll.Y - delta.Y);
         }
 
         private void OnMouseExited()

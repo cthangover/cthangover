@@ -1,0 +1,19 @@
+{
+  "Events": [
+    {
+      "Id": "rpg_walk_mushroom",
+      "X": 18,
+      "Y": 14,
+      "Icon": "rpg_demo/forest_mushroom",
+      "Trigger": "Touch",
+      "Solid": false,
+      "Commands": [
+        "ptext \"Found: a mushroom\"",
+        "action item.add id=rpg_demo/mushroom count=1",
+        "flag rpg_village_rpg_walk_mushroom_taken 1",
+        "end"
+      ],
+      "Condition": "rpg_village_rpg_walk_mushroom_taken != 1"
+    }
+  ]
+}

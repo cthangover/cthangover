@@ -1,0 +1,10 @@
+{
+  "name": "Item Editor Test",
+  "description": "GUI test of the item editor in rpg_demo: opens rpg_demo_game's items, shows a demo item's localized name, adds an item with the New button, types its name, price and a type into the form, copies it and undoes the copy with Ctrl+Z, saves; the game must know the item and its name at once and the other item files stay unchanged. The new file and the locale edits are removed again. Activated by --itest=items_editor_edit with --game=rpg_demo --new.",
+  "sources": [
+    "src/*.cs"
+  ],
+  "depends": [
+    "rpg_demo_game>=1"
+  ]
+}

@@ -123,6 +123,14 @@ Be honest with yourself about what this gives you:
   attributes and take no part in battle math, hunger, or recruiting unless you
   implement that logic yourself (e.g. in a scenario action or behaviour class).
 
+### `Charset` (RPG maps)
+
+A character has no map look of its own. The RPG map editor puts a character on a map with the
+charset (a 3×4 frame sheet in `charsets/`) named by the optional `"Charset"` key, e.g.
+`"Charset": "village/slime"`; without it, a charset with the portrait's path
+(`characters/village/slime` → `village/slime`) is used when one exists. The **Characters** editor
+(`characters_editor`, see [Developer Tools](../editor_tools/)) has a field for it.
+
 ## Real examples
 
 ### Player character — `cthangover_game/characters/player/marao.json`
