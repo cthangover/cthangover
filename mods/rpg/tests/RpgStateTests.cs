@@ -91,6 +91,7 @@ namespace Cthangover.Mods.Rpg.Tests
             ModAssert.Equal("herb != 1", again.Events[1].Condition, "condition");
             ModAssert.Equal("end", again.Events[1].Commands[0], "commands");
             ModAssert.False(text.Contains("some_mod"), "where an event came from is not written");
+            ModAssert.False(text.Contains("IsSolid"), "the computed solidity is not written");
         }
 
         [ModTest("state/event_merge_adds_and_replaces")]

@@ -1,16 +1,21 @@
 {
   "id": "novel_template",
   "kind": "game",
-  "name": "Novel Template",
+  "name": "My Novel",
   "author": "ct",
   "version": "1.0.0",
   "description": "The smallest playable novel: a town, a bar and a home connected by scene switches. Made to show a modder how scenes, scenarios and transitions fit together.",
-  "cover": "cover.png",
+  "cover": "cover.jpg",
   "entry": { "scene": "my_novel_town" },
   "tags": ["novel", "template"],
   "locale": [
-    { "lang": "en", "name": "Novel Template", "description": "The smallest playable novel: a town, a bar and a home connected by scene switches. Made to show a modder how scenes, scenarios and transitions fit together." },
-    { "lang": "ru", "name": "Шаблон новеллы", "description": "Самая маленькая играбельная новелла: город, бар и дом, связанные переходами между сценами. Сделана, чтобы показать моддеру, как устроены сцены, сценарии и переходы." }
+    { "lang": "en", "name": "My Novel", "description": "The smallest playable novel: a town, a bar and a home connected by scene switches. Made to show a modder how scenes, scenarios and transitions fit together." },
+    { "lang": "ru", "name": "Моя новелла", "description": "Самая маленькая играбельная новелла: город, бар и дом, связанные переходами между сценами. Сделана, чтобы показать моддеру, как устроены сцены, сценарии и переходы." },
+    { "lang": "es", "name": "Mi novela", "description": "La novela jugable más pequeña: una ciudad, un bar y una casa unidos por cambios de escena. Hecha para mostrar a un modder cómo encajan escenas, escenarios y transiciones." },
+    { "lang": "zh", "name": "我的小说", "description": "最小的可玩小说：由场景切换连接起来的城镇、酒吧和住宅。用来向模组作者展示场景、剧本和转场是如何组合的。" },
+    { "lang": "ja", "name": "マイノベル", "description": "最小のプレイ可能なノベル：シーン切り替えでつながった町、バー、家。シーン、シナリオ、遷移がどう組み合わさるかを MOD 作者に見せるためのもの。" },
+    { "lang": "ko", "name": "마이 노벨", "description": "가장 작은 플레이 가능한 노벨: 장면 전환으로 이어진 마을, 바, 집. 장면, 시나리오, 전환이 어떻게 맞물리는지 모더에게 보여 주려고 만들었습니다." },
+    { "lang": "vi", "name": "Tiểu thuyết của tôi", "description": "Tiểu thuyết chơi được nhỏ nhất: một thị trấn, một quán bar và một ngôi nhà nối với nhau bằng chuyển cảnh. Được làm để cho modder thấy cảnh, kịch bản và chuyển cảnh khớp với nhau thế nào." }
   ],
   "mechanics": [
     {
@@ -18,7 +23,14 @@
       "name": "Story",
       "role": "story",
       "description": "The game's own scenes and scenarios — rename my_novel_game after your game.",
-      "locale": [ { "lang": "ru", "name": "Сюжет", "description": "Собственные сцены и сценарии игры — переименуйте my_novel_game под свою игру." } ],
+      "locale": [
+        { "lang": "ru", "name": "Сюжет", "description": "Собственные сцены и сценарии игры — переименуйте my_novel_game под свою игру." },
+        { "lang": "es", "name": "Historia", "description": "Las escenas y escenarios propios del juego: renombra my_novel_game con el nombre de tu juego." },
+        { "lang": "zh", "name": "故事", "description": "游戏自己的场景和剧本——把 my_novel_game 改成你的游戏名。" },
+        { "lang": "ja", "name": "ストーリー", "description": "ゲーム独自のシーンとシナリオ——my_novel_game を自分のゲームの名前に変えてください。" },
+        { "lang": "ko", "name": "스토리", "description": "게임 자체의 장면과 시나리오 — my_novel_game을 당신 게임의 이름으로 바꾸세요." },
+        { "lang": "vi", "name": "Câu chuyện", "description": "Các cảnh và kịch bản riêng của game — hãy đổi tên my_novel_game theo game của bạn." }
+      ],
       "mods": ["my_novel_game>=1"]
     },
     {
@@ -26,7 +38,14 @@
       "name": "Assets",
       "role": "content",
       "description": "Reusable backgrounds and sound shared with other games: town, home, bar.",
-      "locale": [ { "lang": "ru", "name": "Ресурсы", "description": "Общие с другими играми фоны и звук: город, дом, бар." } ],
+      "locale": [
+        { "lang": "ru", "name": "Ресурсы", "description": "Общие с другими играми фоны и звук: город, дом, бар." },
+        { "lang": "es", "name": "Recursos", "description": "Fondos y sonido reutilizables compartidos con otros juegos: ciudad, casa, bar." },
+        { "lang": "zh", "name": "素材", "description": "与其他游戏共用的可复用背景和声音：城镇、住宅、酒吧。" },
+        { "lang": "ja", "name": "素材", "description": "他のゲームと共有する再利用可能な背景と音：町、家、バー。" },
+        { "lang": "ko", "name": "에셋", "description": "다른 게임과 함께 쓰는 재사용 가능한 배경과 소리: 마을, 집, 바." },
+        { "lang": "vi", "name": "Tài nguyên", "description": "Phông nền và âm thanh dùng lại được, chung với các game khác: thị trấn, nhà, quán bar." }
+      ],
       "mods": ["town_pack>=1"]
     },
     {
@@ -34,7 +53,14 @@
       "name": "2D engine",
       "role": "engine",
       "description": "2D shell, dialogs and the scenario DSL, audio.",
-      "locale": [ { "lang": "ru", "name": "2D-движок", "description": "2D-оболочка, диалоги и сценарный DSL, звук." } ],
+      "locale": [
+        { "lang": "ru", "name": "2D-движок", "description": "2D-оболочка, диалоги и сценарный DSL, звук." },
+        { "lang": "es", "name": "Motor 2D", "description": "Carcasa 2D, diálogos y el DSL de escenarios, audio." },
+        { "lang": "zh", "name": "2D 引擎", "description": "2D 外壳、对话和剧本 DSL、音频。" },
+        { "lang": "ja", "name": "2D エンジン", "description": "2D シェル、会話とシナリオ DSL、オーディオ。" },
+        { "lang": "ko", "name": "2D 엔진", "description": "2D 셸, 대화와 시나리오 DSL, 오디오." },
+        { "lang": "vi", "name": "Engine 2D", "description": "Vỏ 2D, hội thoại và DSL kịch bản, âm thanh." }
+      ],
       "mods": ["shell2d_base>=1", "dialog_base>=1", "audio_base>=1"]
     }
   ]

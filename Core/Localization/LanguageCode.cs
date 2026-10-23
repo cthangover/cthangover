@@ -13,8 +13,8 @@ namespace Cthangover.Core.Localization
     /// </summary>
     public static class LanguageCode
     {
-        /// <summary>Languages the game ships locale files for, in settings menu order.</summary>
-        public static readonly string[] Supported = { "ru", "en", "zh" };
+        /// <summary>Languages the game ships locale files for, in settings menu order (the site's languages).</summary>
+        public static readonly string[] Supported = { "ru", "en", "es", "zh", "ja", "ko", "vi" };
 
         /// <summary>Lowercase primary subtag (<c>"en-US"</c> → <c>"en"</c>); null for an empty code.</summary>
         public static string Primary(string code)

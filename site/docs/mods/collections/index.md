@@ -492,8 +492,6 @@ picker.
   (`rpg`), the FF battle core with the card core as an option, the map
   editor (`rpg_editor`) and the item and character editors (`items_editor`,
   `characters_editor`) as optional tools.
-- `collections/novel_editor/` — a "game" whose entry scene
-  is the editor hub instead of a story scene.
 - `collections/dev_tools/` — the developer toolset to add to any game: the
   editors (`editor_tools`), the in-game scenario studio (`scenario_studio`,
   opened by the **Studio** button on the game's toolbar), validators and the

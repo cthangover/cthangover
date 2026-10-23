@@ -125,23 +125,31 @@ every gap. A `select ""` with no prompt is written without `key=`.
 
 ## Supported languages
 
-The set of languages is fixed in code (`LocaleLoader.LangToLocale`) and the
-settings dropdown lists exactly these three:
+The set of languages is fixed in code (`LanguageCode.Supported`), the same seven as
+the site, and the settings dropdown lists exactly these, in this order:
 
 | Settings language | Locale code |
 |---|---|
-| Russian | `ru-ru` |
+| Russian | `ru` |
 | English | `en` |
+| Spanish | `es` |
 | Chinese | `zh` |
+| Japanese | `ja` |
+| Korean | `ko` |
+| Vietnamese | `vi` |
 
-An unsupported settings value silently falls back to the `ru` locale.
+Only the primary subtag counts (`en-US`, `en_us` and `EN` are English). An
+unsupported settings value falls back to `ru` with a warning. Every built-in
+mod ships all seven; a mod may ship fewer, and its keys then show as raw keys in
+the missing languages — the locale atlas reports such gaps as errors. The names
+of the languages in the settings come from `menu_base/locale/languages_<lang>.properties`.
 
 ### Loader API
 
 Two static methods on `LocaleLoader` drive loading:
 
-- `LoadCurrentLanguage()` — reads the language from the saved settings, maps it
-  through `LangToLocale` (falling back to `ru`), and delegates to `LoadLocale`
+- `LoadCurrentLanguage()` — reads the language from the saved settings, reads it
+  through `LanguageCode.Normalize` (falling back to `ru`), and delegates to `LoadLocale`
 - `LoadLocale(string locale)` — merges the `.properties` files for that locale
   across **all** loaded mods into one Godot `Translation`, replaces any previous
   translation for that locale on `TranslationServer`, and sets it as the active

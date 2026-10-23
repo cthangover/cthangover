@@ -19,6 +19,10 @@ namespace Engine.Tests.Localization
         [InlineData("RU_RU", "ru")]
         [InlineData("zh", "zh")]
         [InlineData("zh-CN", "zh")]
+        [InlineData("es-ES", "es")]
+        [InlineData("ja_JP", "ja")]
+        [InlineData("ko", "ko")]
+        [InlineData("vi-VN", "vi")]
         public void Normalize_SupportedLanguageInAnyForm_ReturnsItsCode(string code, string expected)
         {
             Assert.Equal(expected, LanguageCode.Normalize(code));

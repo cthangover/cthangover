@@ -22,7 +22,11 @@ namespace Cthangover.Core.Localization
             return LanguageCode.Normalize(language) switch
             {
                 "ru" => "Первый запуск может быть долгим, выполняется компиляция и кеширование...",
+                "es" => "El primer arranque puede tardar: se están compilando y guardando en caché los mods...",
                 "zh" => "首次启动可能需要较长时间：正在编译和缓存模组...",
+                "ja" => "初回起動には時間がかかることがあります：MOD をコンパイルしてキャッシュしています...",
+                "ko" => "첫 실행은 오래 걸릴 수 있습니다: 모드를 컴파일하고 캐시하는 중입니다...",
+                "vi" => "Lần chạy đầu có thể lâu: đang biên dịch và lưu bộ nhớ đệm các mod...",
                 _ => "The first launch may take a while: mods are being compiled and cached...",
             };
         }
@@ -37,7 +41,11 @@ namespace Cthangover.Core.Localization
             return LanguageCode.Normalize(language) switch
             {
                 "ru" => "Загрузка модов...",
+                "es" => "Cargando mods...",
                 "zh" => "正在加载模组...",
+                "ja" => "MOD を読み込んでいます...",
+                "ko" => "모드를 불러오는 중...",
+                "vi" => "Đang tải mod...",
                 _ => "Loading mods...",
             };
         }
@@ -48,7 +56,11 @@ namespace Cthangover.Core.Localization
             return LanguageCode.Normalize(language) switch
             {
                 "ru" => "Не удалось загрузить моды — ошибки компиляции:",
+                "es" => "No se pudieron cargar los mods: errores de compilación:",
                 "zh" => "无法加载模组 — 编译错误：",
+                "ja" => "MOD を読み込めませんでした — コンパイルエラー：",
+                "ko" => "모드를 불러오지 못했습니다 — 컴파일 오류:",
+                "vi" => "Không tải được mod — lỗi biên dịch:",
                 _ => "Could not load the mods — compile errors:",
             };
         }
@@ -59,7 +71,11 @@ namespace Cthangover.Core.Localization
             return LanguageCode.Normalize(language) switch
             {
                 "ru" => "Назад",
+                "es" => "Atrás",
                 "zh" => "返回",
+                "ja" => "戻る",
+                "ko" => "뒤로",
+                "vi" => "Quay lại",
                 _ => "Back",
             };
         }

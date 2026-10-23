@@ -36,7 +36,7 @@ namespace Cthangover.Core.Scenes
 
 		/// <summary>
 		/// Logical name of the Godot scene last switched to (a mod route such as
-		/// <c>novel_editor</c>, or <c>mainmenu</c>). Lets a tool that temporarily
+		/// <c>mods_hub</c>, or <c>mainmenu</c>). Lets a tool that temporarily
 		/// leaves the screen (the scenario editor's play-test) come back to it.
 		/// </summary>
 		public string CurrentGodotSceneName => currentGodotSceneName;

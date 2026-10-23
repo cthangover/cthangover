@@ -73,6 +73,7 @@ namespace Cthangover.Mods.Rpg
         public string File { get; set; }
 
         /// <summary>Effective solidity: explicit value, else whether the event is drawn.</summary>
+        [JsonIgnore]
         public bool IsSolid => Solid ?? (!string.IsNullOrEmpty(Sprite) || Tile >= 0 || !string.IsNullOrEmpty(Icon));
     }
 }

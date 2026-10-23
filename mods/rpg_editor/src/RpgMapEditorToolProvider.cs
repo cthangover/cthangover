@@ -7,7 +7,7 @@ namespace Cthangover.Tools.RpgEditor
     /// <summary>
     /// Registers the RPG map editor as a tool: the kernel's tool factory finds
     /// every <see cref="IToolProvider"/>, so the editor appears in the main
-    /// menu's tool block, the novel editor hub and (with
+    /// menu's tool block and (with
     /// <see cref="RpgMapEditorToolBoxButton"/>) the in-game toolbar.
     /// </summary>
     public class RpgMapEditorToolProvider : IToolProvider

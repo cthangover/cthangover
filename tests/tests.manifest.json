@@ -391,18 +391,6 @@
       "timeoutSeconds": 180
     },
     {
-      "name": "tools_hub",
-      "scene": "res://scenes/menu/launcher.tscn",
-      "windowed": true,
-      "args": [
-        "--",
-        "--game=novel_editor",
-        "--new",
-        "--itest=tools_windows"
-      ],
-      "timeoutSeconds": 180
-    },
-    {
       "name": "ingame_play",
       "scene": "res://scenes/menu/launcher.tscn",
       "windowed": true,

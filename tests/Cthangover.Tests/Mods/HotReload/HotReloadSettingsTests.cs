@@ -43,7 +43,7 @@ namespace Cthangover.Tests.Mods.HotReload
         [InlineData(@"C:\game\mods\cooking\manifest.json")]
         [InlineData("/game/mods/cthangover_game/scenarios/start.scenario")]
         [InlineData("/game/mods/menu_base/locale/ru.properties")]
-        [InlineData("/game/mods/editor_tools/scenes/novel_editor_hub.tscn")]
+        [InlineData("/game/mods/editor_tools/scenes/scenario_info_panel.tscn")]
         public void IsRelevantChange_ModContent(string path)
         {
             Assert.True(HotReloadSettings.IsRelevantChange(path));
