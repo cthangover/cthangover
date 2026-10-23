@@ -167,8 +167,8 @@ the data it edits, so a game takes the ones it needs:
 | `items_editor` | `items_editor` | items (`"Kind": "item"`): name and description, price, icon, types, use action | `tools/items_editor/title` |
 | `characters_editor` | `characters_editor` | characters (`"Kind": "character"`): name, portrait, RPG charset, stats, battle actions | `tools/characters_editor/title` |
 
-Both open from the main menu tools, the novel editor hub and the in-game toolbar, and are part of
-`novel_editor`, the `cthangover` developer tools and an optional `rpg_demo` mechanic.
+Both open from the main menu tools and the in-game toolbar, and are part of the `cthangover`
+developer tools and an optional `rpg_demo` mechanic.
 
 - **Pick a mod** (any writable one) — its entities of the kind are listed with a search and their
   pictures, wherever their files are in the mod.

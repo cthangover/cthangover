@@ -223,6 +223,8 @@ namespace Cthangover.Tools.RpgEditor.Tests
             ModAssert.True(json.Contains("\"Kind\": \"rpg_map\""), "the file declares its kind");
             ModAssert.False(json.Contains("\"Events\""), "the map file holds no events");
             ModAssert.True(eventsJson.Contains("\"Events\""), "the events file holds them");
+            ModAssert.False(eventsJson.Contains("IsSolid"), "the computed solidity is not written");
+            ModAssert.True(json.EndsWith("}\n") && eventsJson.EndsWith("}\n"), "both files end with a line break");
             ModAssert.False(eventsJson.Contains("\"Scenario\""), "empty fields are left out");
             ModAssert.Equal("map_events/test_map/events.json", RpgMapDocument.EventsPath("test_map"), "the editor's events file of the map");
             ModAssert.Equal(0, RpgMapDocument.Load(json).Events.Count, "a map without an events file has no events");

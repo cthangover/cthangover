@@ -11,7 +11,12 @@
   "tags": ["rpg", "tiles", "template"],
   "locale": [
     { "lang": "en", "name": "RPG Demo", "description": "A small top-down RPG in the spirit of RPG Maker: walk a tile village and a forest with WASD, talk and open chests with E/F, drive the wolf away from the cave. Battles use the Final Fantasy style core; the card core can be switched on instead. Includes the tile map editor." },
-    { "lang": "ru", "name": "RPG-демо", "description": "Небольшая RPG с видом сверху в духе RPG Maker: гуляйте по тайловой деревне и лесу на WASD, говорите и открывайте сундуки на E/F, прогоните волка от пещеры. Бои идут на ядре в стиле Final Fantasy, вместо него можно включить карточное. В комплекте редактор тайловых карт." }
+    { "lang": "ru", "name": "RPG-демо", "description": "Небольшая RPG с видом сверху в духе RPG Maker: гуляйте по тайловой деревне и лесу на WASD, говорите и открывайте сундуки на E/F, прогоните волка от пещеры. Бои идут на ядре в стиле Final Fantasy, вместо него можно включить карточное. В комплекте редактор тайловых карт." },
+    { "lang": "es", "name": "RPG Demo", "description": "Un pequeño RPG visto desde arriba al estilo de RPG Maker: recorre con WASD una aldea y un bosque de casillas, habla y abre cofres con E/F, echa al lobo de la cueva. Los combates usan el núcleo al estilo Final Fantasy; en su lugar se puede activar el núcleo de cartas. Incluye el editor de mapas de casillas." },
+    { "lang": "zh", "name": "RPG Demo", "description": "一款 RPG Maker 风格的小型俯视角 RPG：用 WASD 走遍瓦片村庄和森林，用 E/F 交谈和开箱，把狼从洞穴赶走。战斗使用 Final Fantasy 风格核心；也可以改用卡牌核心。包含瓦片地图编辑器。" },
+    { "lang": "ja", "name": "RPG Demo", "description": "RPG Maker 風の小さな見下ろし型 RPG：タイルの村と森を WASD で歩き、E/F で話したり宝箱を開けたりして、洞窟の狼を追い払う。バトルは Final Fantasy 風のコアを使い、代わりにカードのコアにも切り替えられる。タイルマップエディター付き。" },
+    { "lang": "ko", "name": "RPG Demo", "description": "RPG Maker 스타일의 작은 탑다운 RPG: WASD로 타일 마을과 숲을 걷고, E/F로 대화하고 상자를 열고, 동굴의 늑대를 쫓아냅니다. 전투는 Final Fantasy 스타일 코어를 쓰며, 대신 카드 코어로 바꿀 수도 있습니다. 타일 맵 에디터 포함." },
+    { "lang": "vi", "name": "RPG Demo", "description": "Một game RPG nhìn từ trên xuống nhỏ theo phong cách RPG Maker: đi khắp ngôi làng và khu rừng dạng ô bằng WASD, nói chuyện và mở rương bằng E/F, đuổi con sói khỏi hang. Trận đấu dùng lõi phong cách Final Fantasy; có thể bật lõi thẻ bài thay thế. Có kèm trình sửa bản đồ ô." }
   ],
   "mechanics": [
     {
@@ -19,7 +24,14 @@
       "name": "Story",
       "role": "story",
       "description": "The game's own maps, events, scenarios and characters.",
-      "locale": [ { "lang": "ru", "name": "Сюжет", "description": "Собственные карты, события, сценарии и персонажи игры." } ],
+      "locale": [
+        { "lang": "ru", "name": "Сюжет", "description": "Собственные карты, события, сценарии и персонажи игры." },
+        { "lang": "es", "name": "Historia", "description": "Los mapas, eventos, escenarios y personajes propios del juego." },
+        { "lang": "zh", "name": "故事", "description": "游戏自己的地图、事件、剧本和角色。" },
+        { "lang": "ja", "name": "ストーリー", "description": "ゲーム独自のマップ、イベント、シナリオ、キャラクター。" },
+        { "lang": "ko", "name": "스토리", "description": "게임 자체의 맵, 이벤트, 시나리오, 캐릭터." },
+        { "lang": "vi", "name": "Câu chuyện", "description": "Bản đồ, sự kiện, kịch bản và nhân vật riêng của game." }
+      ],
       "mods": ["rpg_demo_game>=1"]
     },
     {
@@ -27,7 +39,14 @@
       "name": "Assets",
       "role": "content",
       "description": "Reusable pixel art: the village tileset, charsets, battle portraits and backgrounds.",
-      "locale": [ { "lang": "ru", "name": "Ресурсы", "description": "Общая пиксельная графика: деревенский тайлсет, чарсеты, портреты и фоны для боя." } ],
+      "locale": [
+        { "lang": "ru", "name": "Ресурсы", "description": "Общая пиксельная графика: деревенский тайлсет, чарсеты, портреты и фоны для боя." },
+        { "lang": "es", "name": "Recursos", "description": "Pixel art reutilizable: el tileset de la aldea, charsets, retratos y fondos de combate." },
+        { "lang": "zh", "name": "素材", "description": "可复用的像素美术：村庄瓦片集、行走图、战斗立绘和背景。" },
+        { "lang": "ja", "name": "素材", "description": "再利用できるドット絵：村のタイルセット、キャラチップ、バトルの肖像と背景。" },
+        { "lang": "ko", "name": "에셋", "description": "재사용 가능한 픽셀 아트: 마을 타일셋, 캐릭터 시트, 전투 초상화와 배경." },
+        { "lang": "vi", "name": "Tài nguyên", "description": "Pixel art dùng lại được: tileset làng, charset, chân dung và phông nền chiến đấu." }
+      ],
       "mods": ["village_pack>=1"]
     },
     {
@@ -35,7 +54,14 @@
       "name": "Tile world",
       "role": "gameplay",
       "description": "Tile maps in three layers with collision, grid walking, map events, teleports and random encounters on top of the 2D engine mods.",
-      "locale": [ { "lang": "ru", "name": "Тайловый мир", "description": "Тайловые карты в три слоя с коллизиями, ходьба по клеткам, события на карте, телепорты и случайные встречи поверх модов 2D-движка." } ],
+      "locale": [
+        { "lang": "ru", "name": "Тайловый мир", "description": "Тайловые карты в три слоя с коллизиями, ходьба по клеткам, события на карте, телепорты и случайные встречи поверх модов 2D-движка." },
+        { "lang": "es", "name": "Mundo de casillas", "description": "Mapas de casillas en tres capas con colisiones, movimiento por cuadrícula, eventos del mapa, teletransportes y encuentros aleatorios sobre los mods del motor 2D." },
+        { "lang": "zh", "name": "瓦片世界", "description": "基于 2D 引擎模组的三层瓦片地图：碰撞、网格行走、地图事件、传送和随机遇敌。" },
+        { "lang": "ja", "name": "タイルワールド", "description": "2D エンジンの MOD の上に作られた、衝突付きの 3 層タイルマップ、マス目移動、マップのイベント、テレポート、ランダムエンカウント。" },
+        { "lang": "ko", "name": "타일 월드", "description": "2D 엔진 모드 위의 충돌이 있는 3층 타일 맵, 격자 이동, 맵 이벤트, 순간 이동, 랜덤 인카운터." },
+        { "lang": "vi", "name": "Thế giới ô", "description": "Bản đồ ô ba lớp có va chạm, di chuyển theo lưới, sự kiện trên bản đồ, dịch chuyển và chạm trán ngẫu nhiên trên nền các mod engine 2D." }
+      ],
       "mods": ["rpg>=1"]
     },
     {
@@ -43,7 +69,14 @@
       "name": "Items and trade",
       "role": "gameplay",
       "description": "Inventory with items that can be eaten or applied, and shops: merchants sell goods and buy back what the player gathers.",
-      "locale": [ { "lang": "ru", "name": "Предметы и торговля", "description": "Инвентарь с предметами, которые можно съесть или применить, и лавки: торговцы продают товары и скупают то, что собрал игрок." } ],
+      "locale": [
+        { "lang": "ru", "name": "Предметы и торговля", "description": "Инвентарь с предметами, которые можно съесть или применить, и лавки: торговцы продают товары и скупают то, что собрал игрок." },
+        { "lang": "es", "name": "Objetos y comercio", "description": "Inventario con objetos que se pueden comer o aplicar, y tiendas: los mercaderes venden artículos y compran lo que recoge el jugador." },
+        { "lang": "zh", "name": "物品与交易", "description": "装有可食用或可使用物品的背包，以及商店：商人出售货物并收购玩家采集的东西。" },
+        { "lang": "ja", "name": "アイテムと交易", "description": "食べたり使ったりできるアイテムの入ったインベントリと店：商人は品物を売り、プレイヤーが集めたものを買い取る。" },
+        { "lang": "ko", "name": "아이템과 거래", "description": "먹거나 사용할 수 있는 아이템이 든 인벤토리와 상점: 상인이 물건을 팔고 플레이어가 모은 것을 사들입니다." },
+        { "lang": "vi", "name": "Vật phẩm và giao dịch", "description": "Túi đồ với các vật phẩm có thể ăn hoặc dùng, và cửa hàng: thương nhân bán hàng và mua lại những gì người chơi thu thập." }
+      ],
       "mods": ["items_base>=1", "trading>=1"]
     },
     {
@@ -51,7 +84,14 @@
       "name": "2D engine",
       "role": "engine",
       "description": "2D shell, dialogs and the scenario DSL, characters, audio.",
-      "locale": [ { "lang": "ru", "name": "2D-движок", "description": "2D-оболочка, диалоги и сценарный DSL, персонажи, звук." } ],
+      "locale": [
+        { "lang": "ru", "name": "2D-движок", "description": "2D-оболочка, диалоги и сценарный DSL, персонажи, звук." },
+        { "lang": "es", "name": "Motor 2D", "description": "Carcasa 2D, diálogos y el DSL de escenarios, personajes, audio." },
+        { "lang": "zh", "name": "2D 引擎", "description": "2D 外壳、对话和剧本 DSL、角色、音频。" },
+        { "lang": "ja", "name": "2D エンジン", "description": "2D シェル、会話とシナリオ DSL、キャラクター、オーディオ。" },
+        { "lang": "ko", "name": "2D 엔진", "description": "2D 셸, 대화와 시나리오 DSL, 캐릭터, 오디오." },
+        { "lang": "vi", "name": "Engine 2D", "description": "Vỏ 2D, hội thoại và DSL kịch bản, nhân vật, âm thanh." }
+      ],
       "mods": ["shell2d_base>=1", "dialog_base>=1", "characters_base>=1", "audio_base>=1"]
     },
     {
@@ -59,7 +99,14 @@
       "name": "FF-style battle",
       "role": "battle",
       "description": "Turn-based battle engine with the Final Fantasy style core (the game's default).",
-      "locale": [ { "lang": "ru", "name": "Бой в стиле FF", "description": "Пошаговый боевой движок с ядром в стиле Final Fantasy (основное в игре)." } ],
+      "locale": [
+        { "lang": "ru", "name": "Бой в стиле FF", "description": "Пошаговый боевой движок с ядром в стиле Final Fantasy (основное в игре)." },
+        { "lang": "es", "name": "Combate estilo FF", "description": "Motor de combate por turnos con el núcleo al estilo Final Fantasy (el predeterminado del juego)." },
+        { "lang": "zh", "name": "FF 风格战斗", "description": "带 Final Fantasy 风格核心的回合制战斗引擎（游戏默认）。" },
+        { "lang": "ja", "name": "FF 風バトル", "description": "Final Fantasy 風のコアを使うターン制バトルエンジン（ゲームの既定）。" },
+        { "lang": "ko", "name": "FF 스타일 전투", "description": "Final Fantasy 스타일 코어를 쓰는 턴제 전투 엔진(게임 기본값)." },
+        { "lang": "vi", "name": "Chiến đấu kiểu FF", "description": "Engine chiến đấu theo lượt với lõi phong cách Final Fantasy (mặc định của game)." }
+      ],
       "mods": ["turn_battle_base>=2", "ff_battle>=1"]
     },
     {
@@ -67,7 +114,14 @@
       "name": "Card battle",
       "role": "battle_alt",
       "description": "Alternative card battle core; switch the game's battle.core setting to card_battle to use it.",
-      "locale": [ { "lang": "ru", "name": "Карточный бой", "description": "Альтернативное карточное боевое ядро; чтобы играть на нём, переключите настройку игры battle.core на card_battle." } ],
+      "locale": [
+        { "lang": "ru", "name": "Карточный бой", "description": "Альтернативное карточное боевое ядро; чтобы играть на нём, переключите настройку игры battle.core на card_battle." },
+        { "lang": "es", "name": "Combate de cartas", "description": "Núcleo alternativo de combate de cartas; cambia el ajuste battle.core del juego a card_battle para usarlo." },
+        { "lang": "zh", "name": "卡牌战斗", "description": "另一种卡牌战斗核心；把游戏的 battle.core 设置改为 card_battle 即可使用。" },
+        { "lang": "ja", "name": "カードバトル", "description": "別のカードバトルのコア。使うにはゲームの battle.core 設定を card_battle にする。" },
+        { "lang": "ko", "name": "카드 전투", "description": "다른 카드 전투 코어. 쓰려면 게임의 battle.core 설정을 card_battle로 바꾸세요." },
+        { "lang": "vi", "name": "Chiến đấu thẻ bài", "description": "Lõi chiến đấu thẻ bài thay thế; đổi cài đặt battle.core của game thành card_battle để dùng." }
+      ],
       "optional": true,
       "mods": ["card_battle>=1"]
     },
@@ -76,7 +130,14 @@
       "name": "Interface",
       "role": "ui",
       "description": "Widget toolkit and HUD, the main menu.",
-      "locale": [ { "lang": "ru", "name": "Интерфейс", "description": "Виджеты и HUD, главное меню." } ],
+      "locale": [
+        { "lang": "ru", "name": "Интерфейс", "description": "Виджеты и HUD, главное меню." },
+        { "lang": "es", "name": "Interfaz", "description": "Kit de widgets y HUD, el menú principal." },
+        { "lang": "zh", "name": "界面", "description": "组件工具包和 HUD、主菜单。" },
+        { "lang": "ja", "name": "インターフェース", "description": "ウィジェットキットと HUD、メインメニュー。" },
+        { "lang": "ko", "name": "인터페이스", "description": "위젯 키트와 HUD, 메인 메뉴." },
+        { "lang": "vi", "name": "Giao diện", "description": "Bộ widget và HUD, menu chính." }
+      ],
       "mods": ["ui_base>=1", "menu_base>=1"]
     },
     {
@@ -84,7 +145,14 @@
       "name": "Tile map editor",
       "role": "tools",
       "description": "Editor of the tile maps: three tile layers, the collision layer and events, opened from the toolbar.",
-      "locale": [ { "lang": "ru", "name": "Редактор карт", "description": "Редактор тайловых карт: три слоя тайлов, слой коллизий и события; открывается с панели инструментов." } ],
+      "locale": [
+        { "lang": "ru", "name": "Редактор карт", "description": "Редактор тайловых карт: три слоя тайлов, слой коллизий и события; открывается с панели инструментов." },
+        { "lang": "es", "name": "Editor de mapas de casillas", "description": "Editor de los mapas de casillas: tres capas de casillas, la capa de colisiones y los eventos; se abre desde la barra de herramientas." },
+        { "lang": "zh", "name": "瓦片地图编辑器", "description": "瓦片地图的编辑器：三层瓦片、碰撞层和事件，从工具栏打开。" },
+        { "lang": "ja", "name": "タイルマップエディター", "description": "タイルマップのエディター：3 つのタイルレイヤー、衝突レイヤー、イベント。ツールバーから開く。" },
+        { "lang": "ko", "name": "타일 맵 에디터", "description": "타일 맵 에디터: 타일 레이어 3개, 충돌 레이어, 이벤트. 툴바에서 엽니다." },
+        { "lang": "vi", "name": "Trình sửa bản đồ ô", "description": "Trình sửa bản đồ ô: ba lớp ô, lớp va chạm và sự kiện, mở từ thanh công cụ." }
+      ],
       "optional": true,
       "mods": ["rpg_editor>=1"]
     },
@@ -93,7 +161,14 @@
       "name": "Item and character editors",
       "role": "tools",
       "description": "Editors of the game's items and characters (heroes, NPCs, enemies): names in every language, pictures, stats; opened from the toolbar, a save shows in the game at once.",
-      "locale": [ { "lang": "ru", "name": "Редакторы предметов и персонажей", "description": "Редакторы предметов и персонажей игры (герои, NPC, враги): названия на всех языках, картинки, параметры; открываются с панели инструментов, сохранение сразу видно в игре." } ],
+      "locale": [
+        { "lang": "ru", "name": "Редакторы предметов и персонажей", "description": "Редакторы предметов и персонажей игры (герои, NPC, враги): названия на всех языках, картинки, параметры; открываются с панели инструментов, сохранение сразу видно в игре." },
+        { "lang": "es", "name": "Editores de objetos y personajes", "description": "Editores de los objetos y personajes del juego (héroes, PNJ, enemigos): nombres en cada idioma, imágenes, estadísticas; se abren desde la barra de herramientas y al guardar se ve en el juego al momento." },
+        { "lang": "zh", "name": "物品与角色编辑器", "description": "游戏物品和角色（英雄、NPC、敌人）的编辑器：各语言的名称、图片、属性；从工具栏打开，保存后游戏中立即可见。" },
+        { "lang": "ja", "name": "アイテムとキャラクターのエディター", "description": "ゲームのアイテムとキャラクター（主人公、NPC、敵）のエディター：各言語の名前、画像、能力値。ツールバーから開き、保存するとすぐにゲームに反映される。" },
+        { "lang": "ko", "name": "아이템과 캐릭터 에디터", "description": "게임의 아이템과 캐릭터(영웅, NPC, 적) 에디터: 모든 언어의 이름, 그림, 능력치. 툴바에서 열며, 저장하면 게임에 바로 보입니다." },
+        { "lang": "vi", "name": "Trình sửa vật phẩm và nhân vật", "description": "Trình sửa vật phẩm và nhân vật của game (anh hùng, NPC, kẻ địch): tên bằng mọi ngôn ngữ, hình ảnh, chỉ số; mở từ thanh công cụ, lưu xong là thấy ngay trong game." }
+      ],
       "optional": true,
       "mods": ["items_editor>=1", "characters_editor>=1"]
     }

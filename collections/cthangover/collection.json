@@ -11,7 +11,12 @@
   "tags": ["novel", "rpg", "cards", "full"],
   "locale": [
     { "lang": "en", "name": "Cthangover", "description": "The full game: the visual novel story with characters, quests, items and cooking, turn-based battles with card and Final Fantasy style cores, recruitment, Live2D avatars and the developer tools." },
-    { "lang": "ru", "name": "Cthangover", "description": "Полная игра: сюжет визуальной новеллы с персонажами, квестами, предметами и готовкой, пошаговые бои с карточным и FF-ядром, найм, Live2D-аватары и инструменты разработчика." }
+    { "lang": "ru", "name": "Cthangover", "description": "Полная игра: сюжет визуальной новеллы с персонажами, квестами, предметами и готовкой, пошаговые бои с карточным и FF-ядром, найм, Live2D-аватары и инструменты разработчика." },
+    { "lang": "es", "name": "Cthangover", "description": "El juego completo: la historia de la novela visual con personajes, misiones, objetos y cocina, combates por turnos con núcleos de cartas y al estilo Final Fantasy, reclutamiento, avatares Live2D y las herramientas de desarrollo." },
+    { "lang": "zh", "name": "Cthangover", "description": "完整的游戏：带角色、任务、物品和烹饪的视觉小说剧情，使用卡牌和 Final Fantasy 风格核心的回合制战斗，招募，Live2D 头像以及开发者工具。" },
+    { "lang": "ja", "name": "Cthangover", "description": "フルゲーム：キャラクター、クエスト、アイテム、料理のあるビジュアルノベルのストーリー、カードと Final Fantasy 風のコアによるターン制バトル、勧誘、Live2D アバター、開発者ツール。" },
+    { "lang": "ko", "name": "Cthangover", "description": "완전한 게임: 캐릭터, 퀘스트, 아이템, 요리가 있는 비주얼 노벨 이야기, 카드와 Final Fantasy 스타일 코어의 턴제 전투, 영입, Live2D 아바타, 개발자 도구." },
+    { "lang": "vi", "name": "Cthangover", "description": "Bản game đầy đủ: câu chuyện tiểu thuyết hình ảnh với nhân vật, nhiệm vụ, vật phẩm và nấu ăn, chiến đấu theo lượt với lõi thẻ bài và lõi phong cách Final Fantasy, chiêu mộ, avatar Live2D và công cụ phát triển." }
   ],
   "mechanics": [
     {
@@ -19,7 +24,14 @@
       "name": "Story",
       "role": "story",
       "description": "Scenes, scenarios, the prologue, Murakami's story line and the starter party.",
-      "locale": [ { "lang": "ru", "name": "Сюжет", "description": "Сцены, сценарии, пролог, линия Мураками и стартовая партия." } ],
+      "locale": [
+        { "lang": "ru", "name": "Сюжет", "description": "Сцены, сценарии, пролог, линия Мураками и стартовая партия." },
+        { "lang": "es", "name": "Historia", "description": "Escenas, escenarios, el prólogo, la línea argumental de Murakami y el grupo inicial." },
+        { "lang": "zh", "name": "故事", "description": "场景、剧本、序章、村上的故事线以及初始队伍。" },
+        { "lang": "ja", "name": "ストーリー", "description": "シーン、シナリオ、プロローグ、村上のストーリー、初期パーティ。" },
+        { "lang": "ko", "name": "스토리", "description": "장면, 시나리오, 프롤로그, 무라카미 스토리 라인, 시작 파티." },
+        { "lang": "vi", "name": "Câu chuyện", "description": "Cảnh, kịch bản, phần mở đầu, tuyến truyện Murakami và tổ đội khởi đầu." }
+      ],
       "mods": ["cthangover_game>=2", "cthangover_murakami>=1", "cthangover_party>=1", "town_pack>=1"]
     },
     {
@@ -27,7 +39,14 @@
       "name": "2D engine",
       "role": "engine",
       "description": "2D shell, dialogs and scenario DSL, interactive objects, effects, in-game time and lighting, the world map.",
-      "locale": [ { "lang": "ru", "name": "2D-движок", "description": "2D-оболочка, диалоги и сценарный DSL, интерактивные объекты, эффекты, игровое время и свет, карта мира." } ],
+      "locale": [
+        { "lang": "ru", "name": "2D-движок", "description": "2D-оболочка, диалоги и сценарный DSL, интерактивные объекты, эффекты, игровое время и свет, карта мира." },
+        { "lang": "es", "name": "Motor 2D", "description": "Carcasa 2D, diálogos y el DSL de escenarios, objetos interactivos, efectos, el tiempo del juego y la iluminación, el mapa del mundo." },
+        { "lang": "zh", "name": "2D 引擎", "description": "2D 外壳、对话和剧本 DSL、交互对象、特效、游戏内时间与光照、世界地图。" },
+        { "lang": "ja", "name": "2D エンジン", "description": "2D シェル、会話とシナリオ DSL、インタラクティブオブジェクト、エフェクト、ゲーム内の時間とライティング、ワールドマップ。" },
+        { "lang": "ko", "name": "2D 엔진", "description": "2D 셸, 대화와 시나리오 DSL, 상호작용 오브젝트, 효과, 게임 내 시간과 조명, 월드 맵." },
+        { "lang": "vi", "name": "Engine 2D", "description": "Vỏ 2D, hội thoại và DSL kịch bản, đối tượng tương tác, hiệu ứng, thời gian và ánh sáng trong game, bản đồ thế giới." }
+      ],
       "mods": ["shell2d_base>=1", "dialog_base>=1", "interactive_base>=1", "effects_base>=1", "time_base>=1", "map_base>=1"]
     },
     {
@@ -35,7 +54,14 @@
       "name": "Characters and skills",
       "role": "characters",
       "description": "Characters, action cards, avatars, the character panel and skills.",
-      "locale": [ { "lang": "ru", "name": "Персонажи и навыки", "description": "Персонажи, карты действий, аватары, панель персонажей и навыки." } ],
+      "locale": [
+        { "lang": "ru", "name": "Персонажи и навыки", "description": "Персонажи, карты действий, аватары, панель персонажей и навыки." },
+        { "lang": "es", "name": "Personajes y habilidades", "description": "Personajes, cartas de acción, avatares, el panel de personajes y las habilidades." },
+        { "lang": "zh", "name": "角色与技能", "description": "角色、行动卡、头像、角色面板和技能。" },
+        { "lang": "ja", "name": "キャラクターとスキル", "description": "キャラクター、アクションカード、アバター、キャラクターパネル、スキル。" },
+        { "lang": "ko", "name": "캐릭터와 스킬", "description": "캐릭터, 액션 카드, 아바타, 캐릭터 패널, 스킬." },
+        { "lang": "vi", "name": "Nhân vật và kỹ năng", "description": "Nhân vật, thẻ hành động, avatar, bảng nhân vật và kỹ năng." }
+      ],
       "mods": ["characters_base>=1", "skills_base>=1"]
     },
     {
@@ -43,7 +69,14 @@
       "name": "Quests",
       "role": "quests",
       "description": "Quest state, scenario quest actions and the journal.",
-      "locale": [ { "lang": "ru", "name": "Квесты", "description": "Состояние квестов, квестовые действия сценариев и журнал." } ],
+      "locale": [
+        { "lang": "ru", "name": "Квесты", "description": "Состояние квестов, квестовые действия сценариев и журнал." },
+        { "lang": "es", "name": "Misiones", "description": "Estado de las misiones, acciones de misión en los escenarios y el diario." },
+        { "lang": "zh", "name": "任务", "description": "任务状态、剧本中的任务动作以及任务日志。" },
+        { "lang": "ja", "name": "クエスト", "description": "クエストの状態、シナリオのクエストアクション、日誌。" },
+        { "lang": "ko", "name": "퀘스트", "description": "퀘스트 상태, 시나리오의 퀘스트 액션, 일지." },
+        { "lang": "vi", "name": "Nhiệm vụ", "description": "Trạng thái nhiệm vụ, hành động nhiệm vụ trong kịch bản và nhật ký." }
+      ],
       "mods": ["quests_base>=1"]
     },
     {
@@ -51,7 +84,14 @@
       "name": "Items and cooking",
       "role": "items",
       "description": "Inventory, items and recipes, the kitchen workbench and rations.",
-      "locale": [ { "lang": "ru", "name": "Предметы и готовка", "description": "Инвентарь, предметы и рецепты, кухонный верстак и пайки." } ],
+      "locale": [
+        { "lang": "ru", "name": "Предметы и готовка", "description": "Инвентарь, предметы и рецепты, кухонный верстак и пайки." },
+        { "lang": "es", "name": "Objetos y cocina", "description": "Inventario, objetos y recetas, el banco de cocina y las raciones." },
+        { "lang": "zh", "name": "物品与烹饪", "description": "背包、物品和配方、厨房工作台以及口粮。" },
+        { "lang": "ja", "name": "アイテムと料理", "description": "インベントリ、アイテムとレシピ、調理台と糧食。" },
+        { "lang": "ko", "name": "아이템과 요리", "description": "인벤토리, 아이템과 레시피, 부엌 작업대와 식량." },
+        { "lang": "vi", "name": "Vật phẩm và nấu ăn", "description": "Túi đồ, vật phẩm và công thức, bàn bếp và khẩu phần." }
+      ],
       "mods": ["items_base>=1", "cooking>=1"]
     },
     {
@@ -59,7 +99,14 @@
       "name": "Card battle",
       "role": "battle",
       "description": "Turn-based battle engine with the card battle core (the game's default).",
-      "locale": [ { "lang": "ru", "name": "Карточный бой", "description": "Пошаговый боевой движок с карточным ядром (основное в игре)." } ],
+      "locale": [
+        { "lang": "ru", "name": "Карточный бой", "description": "Пошаговый боевой движок с карточным ядром (основное в игре)." },
+        { "lang": "es", "name": "Combate de cartas", "description": "Motor de combate por turnos con el núcleo de cartas (el predeterminado del juego)." },
+        { "lang": "zh", "name": "卡牌战斗", "description": "带卡牌战斗核心的回合制战斗引擎（游戏默认）。" },
+        { "lang": "ja", "name": "カードバトル", "description": "カードバトルのコアを使うターン制バトルエンジン（ゲームの既定）。" },
+        { "lang": "ko", "name": "카드 전투", "description": "카드 전투 코어를 쓰는 턴제 전투 엔진(게임 기본값)." },
+        { "lang": "vi", "name": "Chiến đấu thẻ bài", "description": "Engine chiến đấu theo lượt với lõi chiến đấu thẻ bài (mặc định của game)." }
+      ],
       "mods": ["turn_battle_base>=2", "card_battle>=1"]
     },
     {
@@ -67,7 +114,14 @@
       "name": "FF-style battle",
       "role": "battle_alt",
       "description": "Alternative Final Fantasy style battle core, switchable with battle.set_core.",
-      "locale": [ { "lang": "ru", "name": "Бой в стиле FF", "description": "Альтернативное боевое ядро в стиле Final Fantasy, включается через battle.set_core." } ],
+      "locale": [
+        { "lang": "ru", "name": "Бой в стиле FF", "description": "Альтернативное боевое ядро в стиле Final Fantasy, включается через battle.set_core." },
+        { "lang": "es", "name": "Combate estilo FF", "description": "Núcleo de combate alternativo al estilo Final Fantasy, se cambia con battle.set_core." },
+        { "lang": "zh", "name": "FF 风格战斗", "description": "另一种 Final Fantasy 风格的战斗核心，可用 battle.set_core 切换。" },
+        { "lang": "ja", "name": "FF 風バトル", "description": "Final Fantasy 風の別のバトルコア。battle.set_core で切り替えます。" },
+        { "lang": "ko", "name": "FF 스타일 전투", "description": "다른 Final Fantasy 스타일 전투 코어. battle.set_core로 바꿉니다." },
+        { "lang": "vi", "name": "Chiến đấu kiểu FF", "description": "Lõi chiến đấu thay thế theo phong cách Final Fantasy, chuyển bằng battle.set_core." }
+      ],
       "optional": true,
       "mods": ["ff_battle>=1"]
     },
@@ -76,7 +130,14 @@
       "name": "Recruitment",
       "role": "gameplay",
       "description": "Recruiting defeated characters: roster, join conditions and recruit upkeep.",
-      "locale": [ { "lang": "ru", "name": "Найм", "description": "Вербовка побеждённых: состав, условия присоединения и содержание рекрутов." } ],
+      "locale": [
+        { "lang": "ru", "name": "Найм", "description": "Вербовка побеждённых: состав, условия присоединения и содержание рекрутов." },
+        { "lang": "es", "name": "Reclutamiento", "description": "Reclutar personajes derrotados: plantilla, condiciones para unirse y manutención de los reclutas." },
+        { "lang": "zh", "name": "招募", "description": "招募被击败的角色：名册、加入条件以及招募者的供养。" },
+        { "lang": "ja", "name": "勧誘", "description": "倒したキャラクターの勧誘：名簿、加入条件、仲間の扶養。" },
+        { "lang": "ko", "name": "영입", "description": "쓰러뜨린 캐릭터 영입: 명단, 합류 조건, 영입자 부양." },
+        { "lang": "vi", "name": "Chiêu mộ", "description": "Chiêu mộ nhân vật bị đánh bại: danh sách, điều kiện gia nhập và chi phí nuôi người được chiêu mộ." }
+      ],
       "optional": true,
       "mods": ["recruiting>=1"]
     },
@@ -85,7 +146,14 @@
       "name": "Live2D",
       "role": "visual",
       "description": "Live2D Cubism runtime for animated avatars.",
-      "locale": [ { "lang": "ru", "name": "Live2D", "description": "Среда Live2D Cubism для анимированных аватаров." } ],
+      "locale": [
+        { "lang": "ru", "name": "Live2D", "description": "Среда Live2D Cubism для анимированных аватаров." },
+        { "lang": "es", "name": "Live2D", "description": "Runtime de Live2D Cubism para avatares animados." },
+        { "lang": "zh", "name": "Live2D", "description": "用于动画头像的 Live2D Cubism 运行时。" },
+        { "lang": "ja", "name": "Live2D", "description": "アニメーションするアバターのための Live2D Cubism ランタイム。" },
+        { "lang": "ko", "name": "Live2D", "description": "움직이는 아바타를 위한 Live2D Cubism 런타임." },
+        { "lang": "vi", "name": "Live2D", "description": "Runtime Live2D Cubism cho avatar có hoạt ảnh." }
+      ],
       "optional": true,
       "mods": ["live2d_base>=1"]
     },
@@ -94,7 +162,14 @@
       "name": "Interface and sound",
       "role": "ui",
       "description": "Widget toolkit and HUD, the main menu, music and sounds.",
-      "locale": [ { "lang": "ru", "name": "Интерфейс и звук", "description": "Виджеты и HUD, главное меню, музыка и звуки." } ],
+      "locale": [
+        { "lang": "ru", "name": "Интерфейс и звук", "description": "Виджеты и HUD, главное меню, музыка и звуки." },
+        { "lang": "es", "name": "Interfaz y sonido", "description": "Kit de widgets y HUD, el menú principal, la música y los sonidos." },
+        { "lang": "zh", "name": "界面与声音", "description": "组件工具包和 HUD、主菜单、音乐和音效。" },
+        { "lang": "ja", "name": "インターフェースとサウンド", "description": "ウィジェットキットと HUD、メインメニュー、音楽と効果音。" },
+        { "lang": "ko", "name": "인터페이스와 사운드", "description": "위젯 키트와 HUD, 메인 메뉴, 음악과 효과음." },
+        { "lang": "vi", "name": "Giao diện và âm thanh", "description": "Bộ widget và HUD, menu chính, nhạc và âm thanh." }
+      ],
       "mods": ["ui_base>=1", "menu_base>=1", "audio_base>=1"]
     },
     {
@@ -102,7 +177,14 @@
       "name": "Developer tools",
       "role": "tools",
       "description": "Scenario, map, item and character editors, the validator, the resource atlas, the locale key map and the mod manager.",
-      "locale": [ { "lang": "ru", "name": "Инструменты разработчика", "description": "Редакторы сценариев, карт, предметов и персонажей, валидатор, карта ресурсов, карта локализации и менеджер модов." } ],
+      "locale": [
+        { "lang": "ru", "name": "Инструменты разработчика", "description": "Редакторы сценариев, карт, предметов и персонажей, валидатор, карта ресурсов, карта локализации и менеджер модов." },
+        { "lang": "es", "name": "Herramientas de desarrollo", "description": "Editores de escenarios, mapas, objetos y personajes, el validador, el atlas de recursos, el mapa de claves de localización y el gestor de mods." },
+        { "lang": "zh", "name": "开发者工具", "description": "剧本、地图、物品和角色编辑器，验证器，资源图谱，本地化键图以及模组管理器。" },
+        { "lang": "ja", "name": "開発者ツール", "description": "シナリオ、マップ、アイテム、キャラクターのエディター、バリデーター、リソースアトラス、ローカライズキーの地図、MOD マネージャー。" },
+        { "lang": "ko", "name": "개발자 도구", "description": "시나리오, 맵, 아이템, 캐릭터 에디터, 검증기, 리소스 아틀라스, 로컬라이즈 키 지도, 모드 관리자." },
+        { "lang": "vi", "name": "Công cụ phát triển", "description": "Trình sửa kịch bản, bản đồ, vật phẩm và nhân vật, trình kiểm tra, bản đồ tài nguyên, bản đồ khóa bản địa hóa và trình quản lý mod." }
+      ],
       "optional": true,
       "mods": ["editor_tools>=1", "items_editor>=1", "characters_editor>=1", "validator>=0.1", "resource_atlas>=0.1", "locale_atlas>=0.1", "mod_manager>=1"]
     }

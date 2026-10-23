@@ -6,7 +6,12 @@
   "version": "1.0.0",
   "description": "Mod authoring toolset: the scenario graph editor, the in-game scenario studio, content validators and the mod manager.",
   "locale": [
-    { "lang": "ru", "name": "Инструменты разработчика", "description": "Набор для авторов модов: графовый редактор сценариев, студия сценариев в игре, валидаторы контента и менеджер модов." }
+    { "lang": "ru", "name": "Инструменты разработчика", "description": "Набор для авторов модов: графовый редактор сценариев, студия сценариев в игре, валидаторы контента и менеджер модов." },
+    { "lang": "es", "name": "Herramientas de desarrollo", "description": "Herramientas para autores de mods: el editor de grafos de escenarios, el estudio de escenarios dentro del juego, validadores de contenido y el gestor de mods." },
+    { "lang": "zh", "name": "开发者工具", "description": "模组作者工具集：剧本图编辑器、游戏内剧本工作室、内容验证器以及模组管理器。" },
+    { "lang": "ja", "name": "開発者ツール", "description": "MOD 作者向けツールセット：シナリオのグラフエディター、ゲーム内のシナリオスタジオ、コンテンツのバリデーター、MOD マネージャー。" },
+    { "lang": "ko", "name": "개발자 도구", "description": "모드 제작자용 도구 모음: 시나리오 그래프 에디터, 게임 내 시나리오 스튜디오, 콘텐츠 검증기, 모드 관리자." },
+    { "lang": "vi", "name": "Công cụ phát triển", "description": "Bộ công cụ cho tác giả mod: trình sửa đồ thị kịch bản, xưởng kịch bản trong game, các trình kiểm tra nội dung và trình quản lý mod." }
   ],
   "mechanics": [
     {
@@ -14,7 +19,12 @@
       "name": "Scenario Editor",
       "description": "Graph-based scenario and scene authoring tools.",
       "locale": [
-        { "lang": "ru", "name": "Редактор сценариев", "description": "Графовые инструменты для создания сценариев и сцен." }
+        { "lang": "ru", "name": "Редактор сценариев", "description": "Графовые инструменты для создания сценариев и сцен." },
+        { "lang": "es", "name": "Editor de escenarios", "description": "Herramientas de creación de escenarios y escenas basadas en grafos." },
+        { "lang": "zh", "name": "剧本编辑器", "description": "基于图的剧本和场景制作工具。" },
+        { "lang": "ja", "name": "シナリオエディター", "description": "グラフでシナリオとシーンを作るツール。" },
+        { "lang": "ko", "name": "시나리오 에디터", "description": "그래프 기반 시나리오와 장면 제작 도구." },
+        { "lang": "vi", "name": "Trình sửa kịch bản", "description": "Công cụ soạn kịch bản và cảnh dựa trên đồ thị." }
       ],
       "mods": ["editor_tools>=1"]
     },
@@ -23,7 +33,12 @@
       "name": "Scenario Studio",
       "description": "In-game scenario debugger and live editor: the Studio button on the game's toolbar opens a dock with pause, step, restarts, the current line and edits.",
       "locale": [
-        { "lang": "ru", "name": "Студия сценариев", "description": "Отладчик и живой редактор сценариев в игре: кнопка «Студия» на панели игры открывает док с паузой, шагом, перезапуском, текущей строкой и правками." }
+        { "lang": "ru", "name": "Студия сценариев", "description": "Отладчик и живой редактор сценариев в игре: кнопка «Студия» на панели игры открывает док с паузой, шагом, перезапуском, текущей строкой и правками." },
+        { "lang": "es", "name": "Estudio de escenarios", "description": "Depurador y editor en vivo de escenarios dentro del juego: el botón Estudio de la barra del juego abre un panel con pausa, paso a paso, reinicios, la línea actual y la edición." },
+        { "lang": "zh", "name": "剧本工作室", "description": "游戏内的剧本调试器和实时编辑器：游戏工具栏上的\"工作室\"按钮会打开一个停靠面板，提供暂停、单步、重启、当前行和编辑。" },
+        { "lang": "ja", "name": "シナリオスタジオ", "description": "ゲーム内のシナリオデバッガー兼ライブエディター：ゲームのツールバーの「スタジオ」ボタンで、一時停止、ステップ、再開始、現在の行、編集を備えたドックが開きます。" },
+        { "lang": "ko", "name": "시나리오 스튜디오", "description": "게임 내 시나리오 디버거이자 실시간 에디터: 게임 툴바의 \"스튜디오\" 버튼으로 일시 정지, 한 단계씩, 다시 시작, 현재 줄, 편집이 있는 도크를 엽니다." },
+        { "lang": "vi", "name": "Xưởng kịch bản", "description": "Trình gỡ lỗi và sửa kịch bản trực tiếp trong game: nút Xưởng trên thanh công cụ của game mở một bảng có tạm dừng, từng bước, khởi động lại, dòng hiện tại và chỉnh sửa." }
       ],
       "mods": ["scenario_studio>=0.1"]
     },
@@ -32,7 +47,12 @@
       "name": "Validation",
       "description": "Optional content validation suite, the cross-mod resource atlas and the localization key map.",
       "locale": [
-        { "lang": "ru", "name": "Проверки", "description": "Необязательный набор проверок контента, карта ресурсов между модами и карта ключей локализации." }
+        { "lang": "ru", "name": "Проверки", "description": "Необязательный набор проверок контента, карта ресурсов между модами и карта ключей локализации." },
+        { "lang": "es", "name": "Validación", "description": "Conjunto opcional de validación de contenido, el atlas de recursos entre mods y el mapa de claves de localización." },
+        { "lang": "zh", "name": "验证", "description": "可选的内容验证套件、跨模组资源图谱以及本地化键图。" },
+        { "lang": "ja", "name": "検証", "description": "任意のコンテンツ検証セット、MOD 間のリソースアトラス、ローカライズキーの地図。" },
+        { "lang": "ko", "name": "검증", "description": "선택 사항인 콘텐츠 검증 모음, 모드 간 리소스 아틀라스, 로컬라이즈 키 지도." },
+        { "lang": "vi", "name": "Kiểm tra", "description": "Bộ kiểm tra nội dung tùy chọn, bản đồ tài nguyên giữa các mod và bản đồ khóa bản địa hóa." }
       ],
       "mods": ["validator>=0.1", "resource_atlas>=0.1", "locale_atlas>=0.1"],
       "optional": true
@@ -42,7 +62,12 @@
       "name": "Mod Manager",
       "description": "Catalog browser and installer.",
       "locale": [
-        { "lang": "ru", "name": "Менеджер модов", "description": "Обзор каталога и установка модов." }
+        { "lang": "ru", "name": "Менеджер модов", "description": "Обзор каталога и установка модов." },
+        { "lang": "es", "name": "Gestor de mods", "description": "Explorador e instalador del catálogo." },
+        { "lang": "zh", "name": "模组管理器", "description": "目录浏览与安装。" },
+        { "lang": "ja", "name": "MOD マネージャー", "description": "カタログの閲覧とインストール。" },
+        { "lang": "ko", "name": "모드 관리자", "description": "카탈로그 탐색과 설치." },
+        { "lang": "vi", "name": "Trình quản lý mod", "description": "Duyệt và cài đặt từ danh mục." }
       ],
       "mods": ["mod_manager>=1"]
     }

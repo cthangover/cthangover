@@ -6,7 +6,7 @@ namespace Cthangover.Tools.CharactersEditor
 {
     /// <summary>
     /// Registers the character editor as a tool: it appears in the main menu's tool
-    /// block, the novel editor hub and (with <see cref="CharacterEditorToolBoxButton"/>)
+    /// block and (with <see cref="CharacterEditorToolBoxButton"/>)
     /// the in-game toolbar.
     /// </summary>
     public class CharacterEditorToolProvider : IToolProvider

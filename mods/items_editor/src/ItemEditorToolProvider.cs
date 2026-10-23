@@ -6,7 +6,7 @@ namespace Cthangover.Tools.ItemsEditor
 {
     /// <summary>
     /// Registers the item editor as a tool: it appears in the main menu's tool
-    /// block, the novel editor hub and (with <see cref="ItemEditorToolBoxButton"/>)
+    /// block and (with <see cref="ItemEditorToolBoxButton"/>)
     /// the in-game toolbar.
     /// </summary>
     public class ItemEditorToolProvider : IToolProvider

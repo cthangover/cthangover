@@ -3,7 +3,7 @@
   "name": "Character Editor",
   "version": "1.0.0",
   "author": "ct",
-  "description": "Editor of the game's characters (characters_base, \"Kind\": \"character\") in the style of the other editor windows: heroes, NPCs and enemies of a writable mod in a searchable list with their portraits, a form with the name in every language of the mod, portrait, the RPG map charset, battle stats and the battle actions picked from the loaded ones; loot and fields of other mods stay editable as JSON. New characters, copies, deletion, undo, and a save the running game sees at once. Opens from the main menu tools, the novel editor hub and the in-game toolbar.",
+  "description": "Editor of the game's characters (characters_base, \"Kind\": \"character\") in the style of the other editor windows: heroes, NPCs and enemies of a writable mod in a searchable list with their portraits, a form with the name in every language of the mod, portrait, the RPG map charset, battle stats and the battle actions picked from the loaded ones; loot and fields of other mods stay editable as JSON. New characters, copies, deletion, undo, and a save the running game sees at once. Opens from the main menu tools and the in-game toolbar.",
   "category": "tools, editor",
   "sources": [
     "src/**/*.cs"

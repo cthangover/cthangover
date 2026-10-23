@@ -98,19 +98,19 @@ namespace Cthangover.Tools.RpgEditor
         /// <summary>Mod-relative path of the editor's events file of a map: <c>map_events/&lt;id&gt;/events.json</c>.</summary>
         public static string EventsPath(string mapId) => $"{RpgMapEventResolver.Directory}/{mapId}/events.json";
 
-        /// <summary>The map file text: cells written into rows, nulls left out, indented, LF line breaks on every OS.</summary>
+        /// <summary>The map file text: cells written into rows, nulls left out, indented, LF line breaks on every OS, a final one.</summary>
         public string ToJson()
         {
             Grid.WriteTo(Map);
             var data = new FileData<RpgMap> { Kind = "rpg_map", Items = new List<RpgMap> { Map } };
-            return JsonSerializer.Serialize(data, JsonOptionsProvider.WriteIndentedIgnoreNullOptions).Replace("\r\n", "\n");
+            return JsonSerializer.Serialize(data, JsonOptionsProvider.WriteIndentedIgnoreNullOptions).Replace("\r\n", "\n") + "\n";
         }
 
         /// <summary>The events file text (<see cref="EventsPath"/>): the own events, nulls left out, indented.</summary>
         public string EventsToJson()
         {
             var data = new RpgMapEventFile { Events = Events };
-            return JsonSerializer.Serialize(data, JsonOptionsProvider.WriteIndentedIgnoreNullOptions).Replace("\r\n", "\n");
+            return JsonSerializer.Serialize(data, JsonOptionsProvider.WriteIndentedIgnoreNullOptions).Replace("\r\n", "\n") + "\n";
         }
 
         /// <summary>Remembers the current state as one undo step and forgets the redo branch.</summary>
