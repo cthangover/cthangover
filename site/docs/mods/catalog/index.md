@@ -11,7 +11,7 @@ locally-installed mods.
 {
   "catalog": {                                             // Catalog metadata envelope
     "version": 1,                                          // Schema version of this catalog file
-    "updated_at": "2026-07-22T12:00:00Z"                   // ISO-8601 timestamp of last server update
+    "updated_at": "2026-10-23T07:10:38Z"                   // ISO-8601 timestamp of last server update
   },
   "mods": [                                                // List of mod entries in this catalog
     {
@@ -19,37 +19,37 @@ locally-installed mods.
       "name": "Live2D Cubism",                             // Fallback display name (used when no locale matches)
       "author": "ct",                                      // Author credit string
       "version": "1.0.0",                                  // Latest release version (semver)
-      "description": "Live2D Cubism C# runtime",           // Fallback short description (used when no locale matches)
+      "description": "Live2D Cubism C# runtime: model loading, rendering, physics, animation, effects", // Fallback short description
       "locale": [                                          // Localized name and description entries
         {
           "lang": "en",                                    // Language code (ISO 639-1)
           "name": "Live2D Cubism",                         // Localized display name
-          "description": "Live2D Cubism C# runtime: model loading, rendering, physics, animation, effects"
+          "description": "Live2D Cubism C# runtime: model loading, rendering, physics, animation, effects."
         },
         {
           "lang": "ru",
           "name": "Live2D Cubism",
-          "description": "Live2D Cubism C# рантайм: загрузка моделей, отрисовка, физика, анимации, эффекты"
+          "description": "C#-рантайм Live2D Cubism: загрузка и отрисовка моделей, физика, анимации и эффекты."
         }
       ],
-      "category": "library",                               // Category slug or comma-separated combination (e.g. "library, gameplay"): story, characters, gameplay, visual, audio, ui, locale, library, engine, overhaul, tools, editor, debug, other
-      "tags": ["live2d", "ui", "graphics", "2d"],          // Search/filter tags
-      "icon_url": "https://git.cthangover.ru/cthangover/mod_live2d/raw/branch/master/mod.png", // Full URL to preview icon (PNG or JPEG)
-      "depends": ["cthangover_game>=1"],                              // Versioned dependency strings
+      "category": "library, visual",                       // Category slugs: story, characters, gameplay, visual, audio, ui, locale, library, engine, overhaul, tools, editor, debug, other
+      "tags": ["live2d", "base", "library", "visual"],     // Search/filter tags
+      "icon_url": "https://git.cthangover.ru/cthangover/mod_live2d_base/raw/branch/master/mod.jpg", // Full URL to preview icon (PNG or JPEG)
+      "depends": ["ui_base>=1"],                           // Versioned dependency strings
       "conflicts_with": [],                                // Mutually exclusive mod IDs
       "downloads": [                                       // Version-specific download entries with mirrors
         {
           "version": "1.0.0",                              // Semver version of this download entry
           "urls": [                                        // Mirror URLs tried in order
-            "https://git.cthangover.ru/cthangover/mod_live2d/releases/download/mod/live2d-v1.0.0.zip"
+            "https://git.cthangover.ru/cthangover/mod_live2d_base/releases/download/v1.0.0/mod_live2d_base-v1.0.0.zip"
           ],
-          "size_bytes": 1831899,                           // File size of the zip for progress display
-          "archive_sha256": "075a3f582919b26b39afc1fd66d1e4a91cab0e521d6ca36f746c248e1ee82c9a", // SHA256 of the .zip file (integrity check after download)
-          "install_sha256": "db738a14cda17a358d3a0132b97a382978bf9db7b7ea3db750b346b943ba57e6",  // SHA256 of extracted mod content (modification detection)
+          "size_bytes": 48031383,                          // File size of the zip for progress display
+          "archive_sha256": "9d20f4eda7a3ba7b380fefa5964098dc696b3c8399049614e4cd4a03cc6bb1d6", // SHA256 of the .zip file (integrity check after download)
+          "install_sha256": "abece6c284f36c35e1b975025dc7b465009f67ce42870c9ad896c5816bb01df4",  // SHA256 of extracted mod content (modification detection)
           "changelog": null                                // Optional changelog for this specific version
         }
       ],
-      "status": "beta",                                    // stable, beta, deprecated, or archived
+      "status": "stable",                                  // stable, beta, deprecated, or archived
       "min_game_version": null,                            // Minimum compatible game version (semver)
       "max_game_version": null                             // Maximum compatible game version, or null for no upper bound
     }
