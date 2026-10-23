@@ -4,7 +4,8 @@ Sources (read-only, live next to the site folder):
     ../mods/*/manifest.json          - mod catalog
     ../Core/**/*.cs                  - kernel size stats
     ../mods/dialog_base/src/Scenarios/Impls/*.cs - DSL command strategies (count)
-    ../mods/**/ *.scenario           - a real DSL sample
+    ../mods/**/ *.scenario           - a real DSL sample, its literals shown in English
+                                       (locale/scenarios_en.properties of the same mod)
 
 Output:
     data/mods.json
@@ -33,6 +34,9 @@ BATTLE_IDS = ["turn_battle_base", "card_battle", "ff_battle"]
 TEST_RE = re.compile(r"^(gdscript_test|live2d_test|test_)")
 SKIP_DIRS = {"obj", "bin", ".godot"}
 DSL_MAX_LINES = 30
+DSL_MAX_LINE_LEN = 140
+# "literal" key=<key> — the Russian literal of a scenario line and its locale key
+DSL_LITERAL_RE = re.compile(r'"((?:[^"\\]|\\.)*)"(\s+key=(\S+))')
 
 
 def load_mods():
@@ -85,8 +89,37 @@ def dsl_commands():
     return len([n for n in os.listdir(impls) if n.endswith("CommandStrategy.cs")])
 
 
+def read_properties(path):
+    """key = value lines of a .properties file (# comments, no continuations)."""
+    out = {}
+    if not os.path.isfile(path):
+        return out
+    with open(path, encoding="utf-8-sig", errors="ignore") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            out[key.strip()] = value.strip()
+    return out
+
+
+def english_line(line, english):
+    """Swaps the literal of a `"..." key=K` line for the English text of K."""
+    def repl(m):
+        text = english.get(m.group(3))
+        if text is None:
+            return m.group(0)
+        return '"' + text.replace('"', '\\"') + '"' + m.group(2)
+    line = DSL_LITERAL_RE.sub(repl, line)
+    if len(line) > DSL_MAX_LINE_LEN:
+        line = line[:DSL_MAX_LINE_LEN - 1] + "\u2026"
+    return line
+
+
 def dsl_sample():
-    """First short .scenario of a content mod (murakami preferred)."""
+    """First short .scenario of a content mod (murakami preferred). Scenario literals are
+    Russian; the site is English, so each literal is replaced by the mod's English text."""
     candidates = []
     for root, dirs, names in os.walk(MODS_DIR):
         dirs[:] = [d for d in dirs if d not in SKIP_DIRS]
@@ -97,10 +130,12 @@ def dsl_sample():
         return None
     candidates.sort(key=lambda p: (0 if "murakami" in p else 1, p))
     path = candidates[0]
+    mod_dir = os.path.join(MODS_DIR, os.path.relpath(path, MODS_DIR).split(os.sep)[0])
+    english = read_properties(os.path.join(mod_dir, "locale", "scenarios_en.properties"))
     with open(path, encoding="utf-8", errors="ignore") as f:
         lines = []
         for line in f:
-            lines.append(line.rstrip("\n"))
+            lines.append(english_line(line.rstrip("\n"), english))
             if len(lines) >= DSL_MAX_LINES:
                 break
     rel = os.path.relpath(path, ROOT).replace("\\", "/")

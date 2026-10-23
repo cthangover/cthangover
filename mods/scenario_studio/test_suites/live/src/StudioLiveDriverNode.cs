@@ -10,6 +10,7 @@ namespace Cthangover.Mods.ScenarioStudio.Tests.Live
     using Cthangover.Mods.Dialog;
     using Cthangover.Mods.Dialog.Action.Impls;
     using Cthangover.Mods.Dialog.Executable;
+    using Cthangover.Mods.Interface.View;
     using Godot;
 
     /// <summary>
@@ -598,7 +599,7 @@ namespace Cthangover.Mods.ScenarioStudio.Tests.Live
             var dir = ProjectSettings.GlobalizePath(_shotsDir);
             Directory.CreateDirectory(dir);
             var path = Path.Combine(dir, id + ".png");
-            GetViewport().GetTexture().GetImage().SavePng(path);
+            ViewportCapture.SavePng(GetViewport(), path);
             Log($"screenshot {path}");
         }
 

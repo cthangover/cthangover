@@ -1,0 +1,11 @@
+{
+  "_comment": "Pixelization by AI Pixel Art Enhancer (settings of the user's pixelite workflow) of an image from ComfyUI/input. Patch 1.inputs.image; 2.inputs.pixel_size = grain in px (output keeps the input size, made of pixel_size blocks).",
+  "1": {"class_type": "LoadImage", "inputs": {"image": "input.png"}},
+  "2": {"class_type": "AIPixelArtEnhancer", "inputs": {
+    "image": ["1", 0], "pixel_size": 16, "conversion_method": "most_frequent", "color_similarity_threshold": 40.0,
+    "enable_ai_enhancement": true, "noise_reduction": 0.4, "edge_enhancement": 0.0, "color_quantization": 40,
+    "dithering_strength": 0.0, "palette_extraction": "median_cut", "color_matching_space": "rgb",
+    "contrast_boost": 1.0, "saturation_boost": 1.0, "preserve_details": true, "anti_aliasing": false,
+    "batch_processing": true}},
+  "3": {"class_type": "SaveImage", "inputs": {"images": ["2", 0], "filename_prefix": "pixelart"}}
+}

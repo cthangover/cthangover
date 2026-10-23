@@ -3,13 +3,11 @@ priority: 10
 ---
 # The town is the hub: every visit shows the same choice.
 text "Evening town. The street lamps are already lit and a cool draught runs along the cobbles." key=my_novel/town/intro
-text "Тест"
 select "Where to go?" key=my_novel/town/prompt
 option "Go into the bar" key=my_novel/town/opt_bar -> :bar
 option "Go back home" key=my_novel/town/opt_home -> :home
 
 :bar
-text "Новая реплика"
 switch_scene my_novel_bar
 end
 
