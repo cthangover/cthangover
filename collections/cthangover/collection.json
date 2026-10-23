@@ -101,10 +101,10 @@
       "id": "dev_tools",
       "name": "Developer tools",
       "role": "tools",
-      "description": "Scenario and map editors, the validator, the resource atlas, the locale key map and the mod manager.",
-      "locale": [ { "lang": "ru", "name": "Инструменты разработчика", "description": "Редакторы сценариев и карт, валидатор, карта ресурсов, карта локализации и менеджер модов." } ],
+      "description": "Scenario, map, item and character editors, the validator, the resource atlas, the locale key map and the mod manager.",
+      "locale": [ { "lang": "ru", "name": "Инструменты разработчика", "description": "Редакторы сценариев, карт, предметов и персонажей, валидатор, карта ресурсов, карта локализации и менеджер модов." } ],
       "optional": true,
-      "mods": ["editor_tools>=1", "validator>=0.1", "resource_atlas>=0.1", "locale_atlas>=0.1", "mod_manager>=1"]
+      "mods": ["editor_tools>=1", "items_editor>=1", "characters_editor>=1", "validator>=0.1", "resource_atlas>=0.1", "locale_atlas>=0.1", "mod_manager>=1"]
     }
   ]
 }

@@ -92,6 +92,28 @@
       "timeoutSeconds": 180
     },
     {
+      "name": "items_editor_edit",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--game=rpg_demo",
+        "--new",
+        "--itest=items_editor_edit"
+      ],
+      "timeoutSeconds": 180
+    },
+    {
+      "name": "characters_editor_edit",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--game=rpg_demo",
+        "--new",
+        "--itest=characters_editor_edit"
+      ],
+      "timeoutSeconds": 180
+    },
+    {
       "name": "trade",
       "scene": "res://scenes/menu/launcher.tscn",
       "args": [

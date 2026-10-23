@@ -8,8 +8,8 @@ using Godot;
 namespace Cthangover.Tools.RpgEditor
 {
     /// <summary>
-    /// Properties of the selected map event: id, cell, look (charset path or
-    /// tileset index), facing, trigger, solidity, what it runs (scenario path,
+    /// Properties of the selected map event: id, cell, look (charset path, tileset index
+    /// or item picture), facing, trigger, solidity, what it runs (scenario path,
     /// inline DSL lines, or a teleport) and the condition that shows it.
     /// <para/>
     /// A teleport is on when its map or cell is filled in; clearing the teleport
@@ -29,6 +29,7 @@ namespace Cthangover.Tools.RpgEditor
         private readonly SpinBox ySpin;
         private readonly LineEdit spriteEdit;
         private readonly SpinBox tileSpin;
+        private readonly LineEdit iconEdit;
         private readonly OptionButton dirPicker;
         private readonly OptionButton triggerPicker;
         private readonly OptionButton solidPicker;
@@ -66,6 +67,7 @@ namespace Cthangover.Tools.RpgEditor
             ySpin = ToolUi.Field(body, "tools/rpg_editor/y", ToolUi.Number(0, 255, 1, OnNumberChanged));
             spriteEdit = ToolUi.Field(body, "tools/rpg_editor/sprite", ToolUi.Text("village/elder", OnTextChanged), "tools/rpg_editor/sprite_tip");
             tileSpin = ToolUi.Field(body, "tools/rpg_editor/tile", ToolUi.Number(-1, 4095, 1, OnNumberChanged), "tools/rpg_editor/tile_tip");
+            iconEdit = ToolUi.Field(body, "tools/rpg_editor/icon", ToolUi.Text("rpg_demo/branch_bundle", OnTextChanged), "tools/rpg_editor/icon_tip");
             dirPicker = ToolUi.Field(body, "tools/rpg_editor/dir", RpgEditorFields.Direction(OnDirectionPicked));
             triggerPicker = ToolUi.Field(body, "tools/rpg_editor/trigger", RpgEditorFields.Choice(TriggerKeys, OnChoicePicked));
             solidPicker = ToolUi.Field(body, "tools/rpg_editor/solid", RpgEditorFields.Choice(SolidKeys, OnChoicePicked));
@@ -106,6 +108,7 @@ namespace Cthangover.Tools.RpgEditor
             ySpin.Value = value.Y;
             spriteEdit.Text = value.Sprite ?? string.Empty;
             tileSpin.Value = value.Tile;
+            iconEdit.Text = value.Icon ?? string.Empty;
             dirPicker.Select((int)value.Dir);
             triggerPicker.Select((int)value.Trigger);
             solidPicker.Select(value.Solid == null ? 0 : value.Solid.Value ? 1 : 2);
@@ -161,6 +164,7 @@ namespace Cthangover.Tools.RpgEditor
             mapEvent.Y = (int)ySpin.Value;
             mapEvent.Sprite = NullIfEmpty(spriteEdit.Text);
             mapEvent.Tile = (int)tileSpin.Value;
+            mapEvent.Icon = NullIfEmpty(iconEdit.Text);
             mapEvent.Dir = (RpgDirection)dirPicker.Selected;
             mapEvent.Trigger = (RpgEventTrigger)triggerPicker.Selected;
             mapEvent.Solid = solidPicker.Selected switch { 1 => true, 2 => false, _ => null };

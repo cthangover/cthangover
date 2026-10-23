@@ -13,6 +13,8 @@
   ],
   "depends": [
     "rpg>=1",
+    "characters_base>=1",
+    "items_base>=1",
     "editor_tools>=1",
     "ui_base>=1"
   ],

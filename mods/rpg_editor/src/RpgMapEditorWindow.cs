@@ -19,8 +19,11 @@ namespace Cthangover.Tools.RpgEditor
     /// <summary>
     /// Editor of RPG tile maps (<c>maps/*.json</c>, kind <c>rpg_map</c>).
     /// Layout: toolbar (file, save, layer, brush, grid, zoom, undo/redo, play),
-    /// the tile palette on the left, the map in the middle, the map's and the
-    /// selected event's properties on the right.
+    /// the tile palette, the game's characters and items as tabs on the left, the
+    /// map in the middle, the map's and the selected event's properties on the right.
+    /// A character is put on the map as an NPC or an enemy, an item as a pickup:
+    /// pick it, press the button, click a cell (<see cref="RpgMapDocument.AddCharacter"/>,
+    /// <see cref="RpgMapDocument.AddItem"/>).
     /// <para/>
     /// Layers are the game's: back, main, front, the collision layer (codes
     /// over the tiles' own solidity) and events. Every edit is undoable
@@ -30,6 +33,10 @@ namespace Cthangover.Tools.RpgEditor
     /// map id is the scene name; the game re-reads its scenes right away
     /// (<see cref="SceneManager.ReloadContent"/>), so "Play" works on a new map
     /// without a mod reload.
+    /// <para/>
+    /// Saving writes the map file and the mod's events file of the map,
+    /// <c>map_events/&lt;id&gt;/events.json</c> (<see cref="RpgMapDocument"/> explains
+    /// own and locked events).
     /// <para/>
     /// After a save the map is put into the running game's map cache, and a
     /// world showing it is remounted, so the edit is visible at once; "Play"
@@ -44,7 +51,12 @@ namespace Cthangover.Tools.RpgEditor
         private readonly Dictionary<RpgEditTool, Button> toolButtons = new();
 
         private ModFileSelector fileSelector;
+        private TabContainer sideTabs;
         private RpgTilePalette palette;
+        private SpinBox itemCount;
+        private Func<Vector2I, RpgMapEvent> placeAt;
+        private string placedKey;
+        private string placedName;
         private RpgMapEditorCanvas canvas;
         private RpgMapPropertiesPanel mapPanel;
         private RpgEventPropertiesPanel eventPanel;
@@ -78,13 +90,38 @@ namespace Cthangover.Tools.RpgEditor
             var main = new HSplitContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill, SizeFlagsVertical = Control.SizeFlags.ExpandFill };
             outer.AddChild(main);
 
+            var leftColumn = new VBoxContainer();
+            sideTabs = new TabContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+            leftColumn.AddChild(sideTabs);
+
             var paletteColumn = new VBoxContainer();
             paletteColumn.AddChild(ToolUi.Section("tools/rpg_editor/section_palette"));
             palette = new RpgTilePalette();
             palette.TileSelected += OnPaletteTile;
             palette.CollisionSelected += OnPaletteCollision;
             paletteColumn.AddChild(palette);
-            main.AddChild(CreateSidebar(paletteColumn, 400));
+            sideTabs.AddChild(paletteColumn);
+            sideTabs.SetTabTitle(0, ToolUi.Tr("tools/rpg_editor/tab_tiles"));
+
+            var characters = new RpgEntityPicker("tools/rpg_editor/character_search", "tools/rpg_editor/characters_hint") { Name = "Characters" };
+            characters.Source = LoadCharacters;
+            characters.AddAction("tools/rpg_editor/place_npc", "tools/rpg_editor/place_npc_tip", PlaceNpc);
+            characters.AddAction("tools/rpg_editor/place_enemy", "tools/rpg_editor/place_enemy_tip", PlaceEnemy);
+            sideTabs.AddChild(characters);
+            sideTabs.SetTabTitle(1, ToolUi.Tr("tools/rpg_editor/tab_characters"));
+
+            var items = new RpgEntityPicker("tools/rpg_editor/item_search", "tools/rpg_editor/items_hint") { Name = "Items" };
+            items.Source = LoadItems;
+            itemCount = ToolUi.Number(1, 999, 1, null);
+            itemCount.Value = 1;
+            itemCount.TooltipText = ToolUi.Tr("tools/rpg_editor/item_count_tip");
+            items.AddOption(new Label { Text = ToolUi.Tr("tools/rpg_editor/item_count") });
+            items.AddOption(itemCount);
+            items.AddAction("tools/rpg_editor/place_item", "tools/rpg_editor/place_item_tip", PlaceItem);
+            sideTabs.AddChild(items);
+            sideTabs.SetTabTitle(2, ToolUi.Tr("tools/rpg_editor/tab_items"));
+            sideTabs.TabChanged += OnSideTabChanged;
+            main.AddChild(CreateSidebar(leftColumn, 400));
 
             var center = new HSplitContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
             main.AddChild(center);
@@ -94,6 +131,7 @@ namespace Cthangover.Tools.RpgEditor
             canvas.Changed += OnDocumentChanged;
             canvas.EventSelected += OnEventSelected;
             canvas.TilePicked += OnTilePicked;
+            canvas.CellChosen += OnCellChosen;
             center.AddChild(Scroll(canvas));
 
             var properties = new VBoxContainer();
@@ -206,7 +244,7 @@ namespace Cthangover.Tools.RpgEditor
                 {
                     var text = ModFileService.ReadText(mod, file);
                     isNew = string.IsNullOrEmpty(text);
-                    document = isNew ? CreateDocument(file) : RpgMapDocument.Load(text);
+                    document = isNew ? CreateDocument(file) : LoadDocument(mod, text);
                     SetStatus(string.Format(ToolUi.Tr(isNew ? "tools/common/new_file_status" : "tools/common/loaded"), mod + "/" + file));
                 }
                 catch (Exception ex)
@@ -219,6 +257,23 @@ namespace Cthangover.Tools.RpgEditor
             fileSelector.Show(modId, path);
             canvas.SelectedEvent = null;
             BindDocument();
+        }
+
+        /// <summary>
+        /// The map with the editor's events file of the same mod; every other event
+        /// the game shows on the map is locked. An own event hides a locked one of the
+        /// same id (another mod replacing it), so the author sees and edits their own.
+        /// </summary>
+        private static RpgMapDocument LoadDocument(string mod, string text)
+        {
+            var id = RpgMapDocument.Load(text).Map.ID;
+            var eventsPath = RpgMapDocument.EventsPath(id);
+            var document = RpgMapDocument.Load(text, ModFileService.ReadText(mod, eventsPath));
+            var own = new HashSet<string>(document.Events.Select(e => e.Id), StringComparer.OrdinalIgnoreCase);
+            document.SetLockedEvents(RpgMapEvents.Of(id)
+                .Where(e => !(e.ModId == mod && e.File == eventsPath) && !own.Contains(e.Id))
+                .ToList());
+            return document;
         }
 
         private static RpgMapDocument CreateDocument(string file)
@@ -248,11 +303,15 @@ namespace Cthangover.Tools.RpgEditor
             }
 
             var json = document.ToJson();
-            if (!ModFileService.WriteText(modId, path, json))
+            var eventsPath = RpgMapDocument.EventsPath(document.Map.ID);
+            var writeEvents = document.Events.Count > 0 || !string.IsNullOrEmpty(ModFileService.ReadText(modId, eventsPath));
+            if (!ModFileService.WriteText(modId, path, json)
+                || (writeEvents && !ModFileService.WriteText(modId, eventsPath, document.EventsToJson())))
             {
                 SetStatus(ToolUi.Tr("tools/common/readonly"), ToolStatusKind.Error);
                 return false;
             }
+            RpgMapEvents.Invalidate();
 
             var sceneNote = isNew ? EnsureScene() : null;
             if (sceneNote != null)
@@ -342,7 +401,7 @@ namespace Cthangover.Tools.RpgEditor
                 return;
             // The document holds a new map object now: find the selection again by id.
             var selectedId = canvas.SelectedEvent?.Id;
-            canvas.SelectedEvent = document.Map.Events.FirstOrDefault(e => e.Id == selectedId);
+            canvas.SelectedEvent = document.Events.FirstOrDefault(e => e.Id == selectedId);
             SetDirty();
             BindDocument();
         }
@@ -379,6 +438,57 @@ namespace Cthangover.Tools.RpgEditor
 
         private void OnPaletteCollision(char code) => canvas.SelectedCollision = code;
 
+        private void OnSideTabChanged(long tab)
+        {
+            if (sideTabs.GetCurrentTabControl() is RpgEntityPicker picker)
+                picker.Reload();
+        }
+
+        private List<RpgPickerEntry> LoadCharacters() => RpgCharacterCatalog.Load(textures);
+
+        private List<RpgPickerEntry> LoadItems() => RpgItemCatalog.Load(textures);
+
+        private void PlaceNpc(RpgPickerEntry entry)
+            => BeginPlacing(entry, "tools/rpg_editor/placed_npc", cell => document.AddCharacter(cell.X, cell.Y, entry.Id, entry.Look, false));
+
+        private void PlaceEnemy(RpgPickerEntry entry)
+            => BeginPlacing(entry, "tools/rpg_editor/placed_enemy", cell => document.AddCharacter(cell.X, cell.Y, entry.Id, entry.Look, true));
+
+        private void PlaceItem(RpgPickerEntry entry)
+        {
+            var count = (int)itemCount.Value;
+            var line = string.Format(ToolUi.Tr("tools/rpg_editor/item_found_line"), entry.Name, count);
+            BeginPlacing(entry, "tools/rpg_editor/placed_item", cell => document.AddItem(cell.X, cell.Y, entry.Id, entry.Look, count, line));
+        }
+
+        /// <summary>Something is to be placed: switch to the events layer and wait for a cell; <paramref name="place"/> makes the event.</summary>
+        private void BeginPlacing(RpgPickerEntry entry, string doneKey, Func<Vector2I, RpgMapEvent> place)
+        {
+            if (document == null)
+                return;
+            placeAt = place;
+            placedKey = doneKey;
+            placedName = entry.Name;
+            SelectLayer(RpgEditLayer.Events);
+            canvas.Placing = true;
+            SetStatus(string.Format(ToolUi.Tr("tools/rpg_editor/place_status"), entry.Name));
+        }
+
+        private void OnCellChosen(Vector2I? cell)
+        {
+            if (cell == null || placeAt == null || document == null)
+            {
+                SetStatus(ToolUi.Tr("tools/rpg_editor/place_cancelled"));
+                return;
+            }
+            RecordUndo();
+            var mapEvent = placeAt(cell.Value);
+            canvas.SelectedEvent = mapEvent;
+            eventPanel.Bind(mapEvent);
+            OnDocumentChanged();
+            SetStatus(string.Format(ToolUi.Tr(placedKey), placedName, mapEvent.Id), ToolStatusKind.Ok);
+        }
+
         private void OnTilePicked(int index)
         {
             canvas.SelectedTile = index;
@@ -388,6 +498,8 @@ namespace Cthangover.Tools.RpgEditor
         private void SelectLayer(RpgEditLayer layer)
         {
             canvas.ActiveLayer = layer;
+            if (layer != RpgEditLayer.Events)
+                canvas.Placing = false;
             foreach (var pair in layerButtons)
                 pair.Value.SetPressedNoSignal(pair.Key == layer);
             palette.SetCollisionMode(layer == RpgEditLayer.Collision);

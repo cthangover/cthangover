@@ -157,6 +157,31 @@ Three tools also provide `IToolBoxButton` implementations for quick access from 
 - `InteractiveEditorToolBoxButton` — always visible
 - `MapEditorToolBoxButton` — always visible (map authoring is part of the normal dev workflow)
 
+## Data editors: items and characters
+
+Two tool mods build on the editor_tools base window `EntityEditorWindow`, each depending only on
+the data it edits, so a game takes the ones it needs:
+
+| Mod | Tool ID | Edits | Locale Key |
+|---|---|---|---|
+| `items_editor` | `items_editor` | items (`"Kind": "item"`): name and description, price, icon, types, use action | `tools/items_editor/title` |
+| `characters_editor` | `characters_editor` | characters (`"Kind": "character"`): name, portrait, RPG charset, stats, battle actions | `tools/characters_editor/title` |
+
+Both open from the main menu tools, the novel editor hub and the in-game toolbar, and are part of
+`novel_editor`, the `cthangover` developer tools and an optional `rpg_demo` mechanic.
+
+- **Pick a mod** (any writable one) — its entities of the kind are listed with a search and their
+  pictures, wherever their files are in the mod.
+- **The form** shows the name in every language the mod has (`locale/*.properties`; a new entity's
+  key is made from its id), pictures are picked from a grid of the mod folders, types and actions
+  are check boxes. **New** (Ctrl+N), **Copy** (Ctrl+D), **Delete**, Ctrl+Z / Ctrl+Y.
+- **Other fields** shows every property the form does not know (another mod's `heal` or `verb`, a
+  character's `Loot`) as JSON; it is edited there and written back as it is, so the editor never
+  drops data.
+- **Save** (Ctrl+S) writes only the files that changed — new entities go to
+  `items/<mod>.json` / `characters/<mod>.json` — and the running game re-reads its data and texts
+  at once.
+
 ## Pages
 
 - [Creating a Custom Tool](tutorial.md) — step-by-step guide with code examples and locale keys

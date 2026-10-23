@@ -16,7 +16,10 @@ namespace Cthangover.Mods.Rpg
     /// <para/>
     /// Files declare <c>"Kind": "rpg_map"</c>. Layers are parsed by
     /// <see cref="RpgMapGrid"/>; a dependent mod replaces a whole map by id, the
-    /// usual entity override.
+    /// usual entity override. The map file holds only the ground: what stands on it
+    /// (NPCs, doors, chests, pickups) are events in <c>map_events/&lt;id&gt;/</c> of any
+    /// mod, merged by <see cref="RpgMapEventResolver"/>, so a mod adds to another
+    /// mod's map without replacing it.
     /// </summary>
     [EntityKind("rpg_map")]
     public class RpgMap : IIdentifiable
@@ -49,8 +52,6 @@ namespace Cthangover.Mods.Rpg
         /// <summary>Where the player appears when entering the map without a teleport target.</summary>
         public RpgTeleport Spawn { get; set; } = new();
 
-        /// <summary>Events placed on the map.</summary>
-        public List<RpgMapEvent> Events { get; set; } = new();
 
         /// <summary>Random battles; null for a safe map.</summary>
         public RpgEncounterTable Encounters { get; set; }

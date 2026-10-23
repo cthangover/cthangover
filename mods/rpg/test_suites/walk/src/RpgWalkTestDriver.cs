@@ -6,6 +6,7 @@ using Cthangover.Core.Factories.Impls;
 using Cthangover.Core.Games;
 using Cthangover.Core.Scenes;
 using Cthangover.Core.Settings;
+using Cthangover.Core.Items;
 using Cthangover.Core.Utils;
 using Cthangover.Mods.Interface.View;
 using Godot;
@@ -16,6 +17,13 @@ namespace Cthangover.Mods.Rpg.Tests
     /// Plays the rpg_demo village like a player: key events go through
     /// <see cref="Input.ParseInputEvent"/>, so the world reads them exactly as
     /// it reads a keyboard (physical keys, held state, unhandled action key).
+    /// <para/>
+    /// A pickup is checked across map rebuilds: the suite's own
+    /// <c>map_events/rpg_village/rpg_walk_test.json</c> lays a mushroom on the demo's
+    /// village (an event added by another mod, shaped like the map editor's
+    /// pickups); it is picked up, the player leaves the map and comes back, then
+    /// saves, loads and comes back again — it must never reappear nor give a
+    /// second item.
     /// <para/>
     /// One step per timer tick; a step either waits (returns without
     /// advancing) or checks and moves on. A failed check is recorded and the
@@ -31,12 +39,18 @@ namespace Cthangover.Mods.Rpg.Tests
         private const string House = "rpg_elder_house";
         private const string WinFlag = "rpg_test_win";
         private const string SaveSlot = "slot_9901";
+        private const string PickupId = "rpg_walk_mushroom";
+        private const string PickupFlag = "rpg_village_rpg_walk_mushroom_taken";
+        private const string Mushroom = "rpg_demo/mushroom";
+
+        private static readonly Vector2I PickupCell = new(18, 14);
 
         private readonly string shotsDir;
         private readonly List<string> failures = new();
         private int passed;
         private int step;
         private int waitTicks;
+        private int mushroomsBefore;
         private double elapsed;
 
         /// <summary>Creates the driver; <paramref name="shotsDir"/> null disables screenshots.</summary>
@@ -50,6 +64,10 @@ namespace Cthangover.Mods.Rpg.Tests
         }
 
         private static RpgWorldView View => RpgWorldHost.Current?.View;
+
+        private static IInventory Inventory => GameData.Instance.Runtime.Inventory;
+
+        private static string Flag(string name) => GameData.Instance.Runtime.Flags.TryGetValue(name, out var value) ? value : null;
 
         private void Tick()
         {
@@ -142,17 +160,63 @@ namespace Cthangover.Mods.Rpg.Tests
                 case 9:
                     if (AdvanceDialog())
                         return;
+                    // A pickup this suite adds to the demo's village (map_events of another mod).
+                    mushroomsBefore = Inventory.CheckCount(Mushroom);
+                    Check(View.FindEvent(PickupId)?.Visible == true, "a test mod's map_events file adds a pickup to the demo's village");
+                    View.PlacePlayer(PickupCell.X - 1, PickupCell.Y, RpgDirection.Right);
+                    Press(Key.D, true);
+                    Next();
+                    return;
+                case 10:
+                    if (View.Player.Cell.X < PickupCell.X)
+                        return;
+                    Press(Key.D, false);
+                    Next();
+                    return;
+                case 11:
+                    // Stepping on the pickup starts its dialog; the flag is set when it ends.
+                    if (AdvanceDialog() || Flag(PickupFlag) != "1")
+                        return;
+                    Check(Inventory.CheckCount(Mushroom) == mushroomsBefore + 1, $"stepping on the pickup adds the item, {Inventory.CheckCount(Mushroom)} now");
+                    Check(View.FindEvent(PickupId)?.Visible == false, "the picked item leaves the map");
+                    RpgWorldHost.Teleport(new RpgTeleport { Map = House, X = 6, Y = 8, Dir = RpgDirection.Up });
+                    Next();
+                    return;
+                case 12:
+                    if (View?.Map?.ID != House || GodotSceneService.IsTransitioning || AdvanceDialog())
+                        return;
+                    RpgWorldHost.Teleport(new RpgTeleport { Map = Village, X = PickupCell.X - 1, Y = PickupCell.Y, Dir = RpgDirection.Right });
+                    Next();
+                    return;
+                case 13:
+                    if (View?.Map?.ID != Village || GodotSceneService.IsTransitioning || AdvanceDialog())
+                        return;
+                    CheckPickupGone("after leaving the map and coming back");
+                    Press(Key.D, true);
+                    Next();
+                    return;
+                case 14:
+                    if (View.Player.Cell.X < PickupCell.X)
+                        return;
+                    Press(Key.D, false);
+                    Next();
+                    return;
+                case 15:
+                    if (View.Player.IsMoving || ++waitTicks < 5)
+                        return;
+                    Check(RpgInput.FindDialogBox()?.IsRunning != true && Inventory.CheckCount(Mushroom) == mushroomsBefore + 1,
+                        "stepping on the empty cell again gives nothing");
                     View.PlacePlayer(6, 7, RpgDirection.Up);
                     Press(Key.W, true);
                     Next();
                     return;
-                case 10:
+                case 16:
                     if (!View.Player.IsMoving && View.Map.ID == Village)
                         return;
                     Press(Key.W, false);
                     Next();
                     return;
-                case 11:
+                case 17:
                     if (View?.Map?.ID != House)
                         return;
                     if (AdvanceDialog())
@@ -163,14 +227,14 @@ namespace Cthangover.Mods.Rpg.Tests
                     ScenarioCondition.SetFlag("rpg_wolf_dead", "1");
                     Next();
                     return;
-                case 12:
+                case 18:
                     Check(View.FindEvent("elder_quest")?.Visible == false && View.FindEvent("elder_thanks")?.Visible == true, "a story flag swaps the elder's events at once");
                     ScenarioCondition.SetFlag("rpg_wolf_dead", "0");
                     Check(RpgBattleService.Start("rpg_slime", WinFlag), "a battle starts from the map");
                     Godot.Engine.TimeScale = 4;
                     Next();
                     return;
-                case 13:
+                case 19:
                     if (GetTree().CurrentScene is not BattleSceneContext battle)
                         return;
                     // The core's auto turn only passes, so the hero would lose: once the
@@ -184,14 +248,14 @@ namespace Cthangover.Mods.Rpg.Tests
                     battle.ShowWinground();
                     Next();
                     return;
-                case 14:
+                case 20:
                     if (GetTree().Root.FindChild("ContinueButton", true, false) is not Button button || !button.IsVisibleInTree())
                         return;
                     Shot("victory");
                     button.EmitSignal(BaseButton.SignalName.Pressed);
                     Next();
                     return;
-                case 15:
+                case 21:
                     if (View?.Map?.ID != House || GodotSceneService.IsTransitioning)
                         return;
                     Godot.Engine.TimeScale = 1;
@@ -202,19 +266,27 @@ namespace Cthangover.Mods.Rpg.Tests
                     GameSession.OpenMainMenu(GetTree());
                     Next();
                     return;
-                case 16:
+                case 22:
                     if (RpgWorldHost.Current != null || ++waitTicks < 5)
                         return;
                     Check(GameSession.LoadAndEnter(this, SaveSlot), "the save loads");
                     Next();
                     return;
-                case 17:
+                case 23:
                     if (View?.Map?.ID != House || GodotSceneService.IsTransitioning || ++waitTicks < 5)
                         return;
                     Shot("loaded");
                     var dialog = RpgInput.FindDialogBox();
                     Check(dialog != null && !dialog.IsRunning && !dialog.IsVisibleInTree(), $"no dialog box after loading (running={dialog?.IsRunning}, visible={dialog?.IsVisibleInTree()})");
                     Check(View.Player.Cell == new Vector2I(6, 8), $"the loaded game puts the player on the saved cell, got {View.Player.Cell}");
+                    Check(Flag(PickupFlag) == "1" && Inventory.CheckCount(Mushroom) == mushroomsBefore + 1, "the save keeps the pickup's flag and the picked item");
+                    RpgWorldHost.Teleport(new RpgTeleport { Map = Village, X = PickupCell.X - 1, Y = PickupCell.Y, Dir = RpgDirection.Right });
+                    Next();
+                    return;
+                case 24:
+                    if (View?.Map?.ID != Village || GodotSceneService.IsTransitioning || AdvanceDialog())
+                        return;
+                    CheckPickupGone("after loading the save");
                     SaveService.DeleteSave(SaveSlot);
                     Finish();
                     return;
@@ -235,6 +307,15 @@ namespace Cthangover.Mods.Rpg.Tests
                 foreach (var key in new[] { action.Name, action.Description })
                     Check(!string.IsNullOrEmpty(key) && TranslationServer.Translate(key) != key, $"action text '{key}' is translated");
             }
+        }
+
+        /// <summary>The map was built again (a teleport or a load): the picked item must stay gone and give nothing.</summary>
+        private void CheckPickupGone(string when)
+        {
+            var pickup = View.FindEvent(PickupId);
+            Check(pickup != null && !pickup.Visible, $"the picked item does not come back {when}");
+            Check(View.EventAt(PickupCell, RpgEventTrigger.Touch) == null, $"its cell has no pickup to step on {when}");
+            Check(Inventory.CheckCount(Mushroom) == mushroomsBefore + 1, $"the inventory still holds exactly the one picked item {when}");
         }
 
         /// <summary>Advances a running dialog with the action key; true while it is still running.</summary>

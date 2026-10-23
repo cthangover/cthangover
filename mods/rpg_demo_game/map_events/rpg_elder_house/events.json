@@ -1,0 +1,50 @@
+{
+  "Events": [
+    {
+      "Id": "exit",
+      "X": 6,
+      "Y": 9,
+      "Trigger": "Touch",
+      "Teleport": {
+        "Map": "rpg_village",
+        "X": 6,
+        "Y": 7,
+        "Dir": "Down"
+      }
+    },
+    {
+      "Id": "elder_quest",
+      "X": 6,
+      "Y": 3,
+      "Sprite": "village/elder",
+      "Dir": "Down",
+      "Scenario": "rpg_demo/events/elder_quest",
+      "Condition": "rpg_wolf_dead != 1"
+    },
+    {
+      "Id": "elder_thanks",
+      "X": 6,
+      "Y": 3,
+      "Sprite": "village/elder",
+      "Dir": "Down",
+      "Scenario": "rpg_demo/events/elder_thanks",
+      "Condition": "rpg_wolf_dead == 1"
+    },
+    {
+      "Id": "chest",
+      "X": 9,
+      "Y": 7,
+      "Tile": 14,
+      "Scenario": "rpg_demo/events/house_chest",
+      "Condition": "rpg_house_chest != 1"
+    },
+    {
+      "Id": "chest_open",
+      "X": 9,
+      "Y": 7,
+      "Tile": 15,
+      "Scenario": "rpg_demo/events/chest_empty",
+      "Condition": "rpg_house_chest == 1"
+    }
+  ]
+}

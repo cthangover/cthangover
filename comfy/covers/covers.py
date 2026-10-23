@@ -27,6 +27,8 @@ COVERS = {
     "editor_tools": ("Editor Tools", "a game developer desk with several monitors showing node graphs, maps and scripts"),
     "effects_base": ("Effects", "swirling magical particles, sparkles, smoke and bursts of light"),
     "ff_battle": ("FF Battle", "a classic JRPG side-view battle, a party of heroes facing monsters, a blue command menu window"),
+    "items_editor": ("Item Editor", "an item catalogue being edited on a desk: cards with potions, swords and herbs, each card showing a picture, a price tag and a quill"),
+    "characters_editor": ("Character Editor", "character sheets being edited: cards with anime hero and monster portraits, health and attack bars and a quill"),
     "interactive_base": ("Interactives", "a cozy room with glowing highlighted clickable objects: a door, a chest, a lamp"),
     "items_base": ("Items", "an open adventurer's backpack with potions, coins, herbs and a dagger laid out on a table"),
     "locale_atlas": ("Locale Atlas", "a globe surrounded by speech bubbles with letters of many alphabets"),

@@ -66,7 +66,7 @@ namespace Cthangover.Mods.Rpg
             AddChild(actorLayer);
             AddChild(BuildLayer(RpgLayer.Front, tileSet));
 
-            foreach (var mapEvent in map.Events ?? new List<RpgMapEvent>())
+            foreach (var mapEvent in RpgMapEvents.Of(map.ID))
                 AddEventActor(mapEvent);
             RefreshEvents();
 
@@ -227,6 +227,8 @@ namespace Cthangover.Mods.Rpg
                 actor.UseCharset(textures.Charset(mapEvent.Sprite));
             else if (mapEvent.Tile >= 0 && Tileset != null)
                 actor.UseTile(atlas, RpgTileSetBuilder.AtlasCoords(Tileset, mapEvent.Tile));
+            else if (!string.IsNullOrEmpty(mapEvent.Icon))
+                actor.UseIcon(textures.Icon(mapEvent.Icon));
             actor.Place(new Vector2I(mapEvent.X, mapEvent.Y), mapEvent.Dir);
             actorLayer.AddChild(actor);
             eventActors[mapEvent.Id] = actor;

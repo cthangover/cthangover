@@ -1,12 +1,12 @@
 {
  "generated": "2026-10-23",
  "stats": {
-  "mods": 36,
+  "mods": 38,
   "dslCommands": 30,
   "coreFiles": 488,
   "coreLoc": 44988,
-  "modFiles": 767,
-  "modLoc": 91226
+  "modFiles": 795,
+  "modLoc": 94362
  },
  "battle": [
   {
@@ -78,6 +78,22 @@
    ],
    "deps": [
     "shell2d_base",
+    "ui_base"
+   ],
+   "test": false
+  },
+  {
+   "id": "characters_editor",
+   "name": "Character Editor",
+   "version": "1.0.0",
+   "desc": "Editor of the game's characters (characters_base, \"Kind\": \"character\") in the style of the other editor windows: heroes, NPCs and enemies of a writable mod in a searchable list with their portraits, a form with the name in every language of the mod, portrait, the RPG map charset, battle stats and the battle actions picked from the loaded ones; loot and fields of other mods stay editable as JSON. New characters, copies, deletion, undo, and a save the running game sees at once. Opens from the main menu tools, the novel editor hub and the in-game toolbar.",
+   "cat": [
+    "tools",
+    "editor"
+   ],
+   "deps": [
+    "editor_tools",
+    "characters_base",
     "ui_base"
    ],
    "test": false
@@ -176,7 +192,7 @@
    "id": "editor_tools",
    "name": "Editor Tools",
    "version": "1.0.0",
-   "desc": "Developer toolbox of ToolBox windows: scenario graph editor, scene editor (create and change the places of a novel: backgrounds, ambient sound, default scenario, the scene's scenarios), map editor with zones, scene builder with inspector, interactive and light editors, and the mod catalog export window.",
+   "desc": "Developer toolbox of ToolBox windows: scenario graph editor, scene editor (create and change the places of a novel: backgrounds, ambient sound, default scenario, the scene's scenarios), map editor with zones, scene builder with inspector, interactive and light editors, the base of the data editors (items, characters: a searchable list and a form over JSON entities with texts in every language of the mod) and the mod catalog export window.",
    "cat": [
     "tools",
     "editor"
@@ -241,6 +257,22 @@
    ],
    "deps": [
     "shell2d_base",
+    "ui_base"
+   ],
+   "test": false
+  },
+  {
+   "id": "items_editor",
+   "name": "Item Editor",
+   "version": "1.0.0",
+   "desc": "Editor of the game's items (items_base, \"Kind\": \"item\") in the style of the other editor windows: the items of a writable mod in a searchable list with their pictures, a form with the name and the description in every language of the mod, price, picture picked from the items folders, item types and the use action; fields of other mods stay editable as JSON. New items, copies, deletion, undo, and a save the running game sees at once. Opens from the main menu tools, the novel editor hub and the in-game toolbar.",
+   "cat": [
+    "tools",
+    "editor"
+   ],
+   "deps": [
+    "editor_tools",
+    "items_base",
     "ui_base"
    ],
    "test": false
@@ -417,6 +449,8 @@
    ],
    "deps": [
     "rpg",
+    "characters_base",
+    "items_base",
     "editor_tools",
     "ui_base"
    ],

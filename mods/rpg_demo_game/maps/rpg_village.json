@@ -94,64 +94,7 @@
         "X": 15,
         "Y": 14,
         "Dir": "Up"
-      },
-      "Events": [
-        {
-          "Id": "door_elder",
-          "X": 6,
-          "Y": 6,
-          "Trigger": "Touch",
-          "Teleport": {
-            "Map": "rpg_elder_house",
-            "X": 6,
-            "Y": 8,
-            "Dir": "Up"
-          }
-        },
-        {
-          "Id": "door_merchant",
-          "X": 21,
-          "Y": 6,
-          "Trigger": "Action",
-          "Solid": true,
-          "Scenario": "rpg_demo/events/locked_door"
-        },
-        {
-          "Id": "to_forest",
-          "X": 31,
-          "Y": 9,
-          "Trigger": "Touch",
-          "Teleport": {
-            "Map": "rpg_forest",
-            "X": 1,
-            "Y": 8,
-            "Dir": "Right"
-          }
-        },
-        {
-          "Id": "sign",
-          "X": 16,
-          "Y": 11,
-          "Tile": 13,
-          "Scenario": "rpg_demo/events/village_sign"
-        },
-        {
-          "Id": "villager",
-          "X": 9,
-          "Y": 10,
-          "Sprite": "village/villager",
-          "Dir": "Down",
-          "Scenario": "rpg_demo/events/villager"
-        },
-        {
-          "Id": "merchant",
-          "X": 22,
-          "Y": 8,
-          "Sprite": "village/merchant",
-          "Dir": "Left",
-          "Scenario": "rpg_demo/events/merchant"
-        }
-      ]
+      }
     }
   ]
 }

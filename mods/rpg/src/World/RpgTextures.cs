@@ -8,7 +8,8 @@ namespace Cthangover.Mods.Rpg
     /// Image lookup of the RPG world: tileset atlases in the <c>tilesets</c> file
     /// group, charsets in <c>charsets</c>. Both are file groups (last mod wins),
     /// not texture groups, so their names never collide with backgrounds or
-    /// icons. Decoded textures are kept for the life of one world, which builds
+    /// icons; item pictures for <see cref="RpgMapEvent.Icon"/> come from the
+    /// <c>items</c> group the inventory uses. Decoded textures are kept for the life of one world, which builds
     /// and owns an instance; the editor keeps its own.
     /// </summary>
     public class RpgTextures
@@ -19,6 +20,9 @@ namespace Cthangover.Mods.Rpg
         /// <summary>File group of charset images.</summary>
         public const string CharsetGroup = "charsets";
 
+        /// <summary>File group of item pictures (an item's <c>Sprite</c>).</summary>
+        public const string IconGroup = "items";
+
         private readonly Dictionary<string, Texture2D> cache = new();
 
         /// <summary>Tileset atlas image, or null (logged by the loader).</summary>
@@ -26,6 +30,9 @@ namespace Cthangover.Mods.Rpg
 
         /// <summary>Charset image, or null.</summary>
         public Texture2D Charset(string path) => Load(CharsetGroup, path);
+
+        /// <summary>Item picture, or null.</summary>
+        public Texture2D Icon(string path) => Load(IconGroup, path);
 
         private Texture2D Load(string group, string path)
         {

@@ -79,6 +79,25 @@ namespace Cthangover.Mods.Rpg
             AddChild(sprite);
         }
 
+        /// <summary>
+        /// Shows an item picture fitted into three quarters of the cell and centred on it,
+        /// so an icon of any size lies on the ground like a tile-sized object.
+        /// </summary>
+        public void UseIcon(Texture2D texture)
+        {
+            if (texture == null)
+                return;
+            var fit = tileSize * 0.75f / Mathf.Max(1, Mathf.Max(texture.GetWidth(), texture.GetHeight()));
+            sprite = new Sprite2D
+            {
+                Texture = texture,
+                Position = new Vector2(tileSize, tileSize) / 2f,
+                Scale = new Vector2(fit, fit),
+                TextureFilter = TextureFilterEnum.Linear,
+            };
+            AddChild(sprite);
+        }
+
         /// <summary>Puts the actor on a cell at once, stopping any step.</summary>
         public void Place(Vector2I cell, RpgDirection facing)
         {

@@ -4,12 +4,12 @@
   "name": "Novel Editor",
   "author": "ct",
   "version": "1.0.0",
-  "description": "Authoring workspace instead of a game: opens a screen with every installed editor — scenarios, scenes, maps, interactive objects, lighting, catalog export — over the 2D engine mods and the story content they edit.",
+  "description": "Authoring workspace instead of a game: opens a screen with every installed editor — scenarios, scenes, maps, interactive objects, lighting, items, characters, catalog export — over the 2D engine mods and the story content they edit.",
   "entry": { "scene": "novel_editor" },
   "tags": ["tools", "editor"],
   "locale": [
-    { "lang": "en", "name": "Novel Editor", "description": "Authoring workspace instead of a game: opens a screen with every installed editor — scenarios, scenes, maps, interactive objects, lighting, catalog export — over the 2D engine mods and the story content they edit." },
-    { "lang": "ru", "name": "Редактор новелл", "description": "Рабочее место автора вместо игры: открывает экран со всеми установленными редакторами — сценариев, сцен, карт, интерактива, света, экспорта каталога — поверх модов 2D-движка и сюжета, который они правят." }
+    { "lang": "en", "name": "Novel Editor", "description": "Authoring workspace instead of a game: opens a screen with every installed editor — scenarios, scenes, maps, interactive objects, lighting, items, characters, catalog export — over the 2D engine mods and the story content they edit." },
+    { "lang": "ru", "name": "Редактор новелл", "description": "Рабочее место автора вместо игры: открывает экран со всеми установленными редакторами — сценариев, сцен, карт, интерактива, света, предметов, персонажей, экспорта каталога — поверх модов 2D-движка и сюжета, который они правят." }
   ],
   "mechanics": [
     {
@@ -18,7 +18,7 @@
       "role": "tools",
       "description": "Editor windows and the launcher screen that lists them.",
       "locale": [ { "lang": "ru", "name": "Редакторы", "description": "Окна редакторов и стартовый экран со списком." } ],
-      "mods": ["editor_tools>=1"]
+      "mods": ["editor_tools>=1", "items_editor>=1", "characters_editor>=1"]
     },
     {
       "id": "engine_2d",
