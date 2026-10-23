@@ -49,3 +49,7 @@ tests/artifacts/
 
 # job channel (ai)
 jobs/
+
+# generated GitHub Pages copy of site/
+/site_github/
+build_site.*

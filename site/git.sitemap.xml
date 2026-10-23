@@ -2,30 +2,30 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://git.cthangover.ru/</loc>
-    <lastmod>2026-09-10</lastmod>
+    <lastmod>2026-10-23</lastmod>
   </url>
   <url>
     <loc>https://git.cthangover.ru/cthangover</loc>
-    <lastmod>2026-08-10</lastmod>
+    <lastmod>2026-10-23</lastmod>
   </url>
   <url>
-    <loc>https://git.cthangover.ru/cthangover/mod_visual_novel_core</loc>
-    <lastmod>2026-08-25</lastmod>
+    <loc>https://git.cthangover.ru/cthangover/mod_cthangover_game</loc>
+    <lastmod>2026-10-23</lastmod>
   </url>
   <url>
     <loc>https://git.cthangover.ru/cthangover/catalog</loc>
-    <lastmod>2026-07-24</lastmod>
+    <lastmod>2026-10-23</lastmod>
   </url>
   <url>
     <loc>https://git.cthangover.ru/cthangover/cthangover</loc>
-    <lastmod>2026-08-25</lastmod>
+    <lastmod>2026-10-23</lastmod>
   </url>
   <url>
-    <loc>https://git.cthangover.ru/cthangover/mod_interface</loc>
-    <lastmod>2026-09-10</lastmod>
+    <loc>https://git.cthangover.ru/cthangover/mod_ui_base</loc>
+    <lastmod>2026-10-23</lastmod>
   </url>
   <url>
-    <loc>https://git.cthangover.ru/cthangover/mod_tools</loc>
-    <lastmod>2026-08-25</lastmod>
+    <loc>https://git.cthangover.ru/cthangover/mod_editor_tools</loc>
+    <lastmod>2026-10-23</lastmod>
   </url>
 </urlset>

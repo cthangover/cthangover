@@ -132,7 +132,7 @@ if "%PLATFORM%"=="linux" (
 if "%ARCHIVE%"=="0" exit /b 0
 if "%PLATFORM%"=="windows" (
     if exist "releases\%NAME%.zip" del /q "releases\%NAME%.zip"
-    tar -a -c -f "releases\%NAME%.zip" -C releases -s "|^windows|%NAME%|" windows
+    call :pack_windows
     if errorlevel 1 exit /b 1
     echo archive: releases\%NAME%.zip
     exit /b 0
@@ -155,14 +155,36 @@ exit /b 0
 
 
 rem ---------------------------------------------------------------------------
+rem :pack_windows — releases\<NAME>.zip.
+rem Windows tar.exe (bsdtar) has no -s, so the build folder is renamed to the
+rem archive root name, packed, and renamed back.
+rem ---------------------------------------------------------------------------
+:pack_windows
+if exist "releases\%NAME%" rmdir /s /q "releases\%NAME%"
+ren "releases\windows" "%NAME%"
+if errorlevel 1 (
+    echo Cannot rename releases\windows to %NAME%.
+    exit /b 1
+)
+tar -a -c -f "releases\%NAME%.zip" -C releases "%NAME%"
+set PACK_ERR=%ERRORLEVEL%
+ren "releases\%NAME%" "windows"
+if not "%PACK_ERR%"=="0" (
+    echo Packing releases\%NAME%.zip failed.
+    exit /b 1
+)
+exit /b 0
+
+rem ---------------------------------------------------------------------------
 rem :pack_linux — releases\<NAME>.tar.gz, through WSL when possible.
 rem ---------------------------------------------------------------------------
 :pack_linux
 if exist "releases\%NAME%.tar.gz" del /q "releases\%NAME%.tar.gz"
 set WSL_RELEASES=
+set RELEASES_FWD=%CD:\=/%
 where wsl >nul 2>nul
 if not errorlevel 1 (
-    for /f "delims=" %%p in ('wsl wslpath -a "%CD%\releases" 2^>nul') do set WSL_RELEASES=%%p
+    for /f "delims=" %%p in ('wsl wslpath -a "%RELEASES_FWD%/releases" 2^>nul') do set WSL_RELEASES=%%p
 )
 if not "%WSL_RELEASES%"=="" (
     wsl chmod +x "%WSL_RELEASES%/linux/cthangover.x86_64"
@@ -171,8 +193,19 @@ if not "%WSL_RELEASES%"=="" (
     echo archive: releases\%NAME%.tar.gz
     exit /b 0
 )
-tar -c -z -f "releases\%NAME%.tar.gz" -C releases -s "|^linux|%NAME%|" linux
-if errorlevel 1 exit /b 1
+if exist "releases\%NAME%" rmdir /s /q "releases\%NAME%"
+ren "releases\linux" "%NAME%"
+if errorlevel 1 (
+    echo Cannot rename releases\linux to %NAME%.
+    exit /b 1
+)
+tar -c -z -f "releases\%NAME%.tar.gz" -C releases "%NAME%"
+set PACK_ERR=%ERRORLEVEL%
+ren "releases\%NAME%" "linux"
+if not "%PACK_ERR%"=="0" (
+    echo Packing releases\%NAME%.tar.gz failed.
+    exit /b 1
+)
 echo archive: releases\%NAME%.tar.gz
 echo WARNING: packed without WSL - after unpacking run: chmod +x cthangover.x86_64
 exit /b 0
