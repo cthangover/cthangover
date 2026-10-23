@@ -9,17 +9,22 @@
 <link rel="canonical" href="https://cthangover.ru/">
 <meta property="og:type" content="website">
 <meta property="og:title" content="cthangover — a game engine assembled from mods">
-<meta property="og:description" content="A resource-free C# kernel assembles the game from mods at runtime. 29 DSL commands, 3 battle rulesets, in-game mod manager.">
+<meta property="og:description" content="A resource-free C# kernel assembles the game from mods at runtime: a visual novel, an RPG on tile maps, card and FF battles, in-game mod manager.">
 <meta property="og:url" content="https://cthangover.ru/">
-<meta property="og:image" content="https://cthangover.ru/img/logo.png">
+<meta property="og:image" content="https://cthangover.ru/img/shots/site_shots__battle_later.jpg">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" href="/img/favicon-32.png" sizes="32x32">
 <link rel="icon" type="image/png" href="/img/favicon-16.png" sizes="16x16">
 <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="/css/style.css">
+<script>document.documentElement.classList.add("js");</script>
 </head>
 
-<body>
+<body class="home">
 
 <header class="top">
   <div class="wrap hbar">
@@ -29,6 +34,7 @@
     </a>
     <nav class="main">
       <a href="/" data-nav="home" data-i18n="nav_home">Home</a>
+      <a href="/#gallery" data-i18n="nav_gallery">Gallery</a>
       <a href="/docs.html" data-nav="docs" data-i18n="nav_docs">Documentation</a>
       <a href="/quickstart.html" data-nav="quickstart" data-i18n="nav_quickstart">Quick Starts</a>
     </nav>
@@ -46,65 +52,138 @@
   </div>
   <nav class="mobile-nav" id="mobileNav">
     <a href="/" data-nav="home" data-i18n="nav_home">Home</a>
+    <a href="/#gallery" data-i18n="nav_gallery">Gallery</a>
     <a href="/docs.html" data-nav="docs" data-i18n="nav_docs">Documentation</a>
     <a href="/quickstart.html" data-nav="quickstart" data-i18n="nav_quickstart">Quick Starts</a>
   </nav>
 </header>
 
 <section class="hero">
-  <div class="wrap">
-    <div class="kicker" data-i18n="kicker">mod-oriented engine · Godot 4.6 · C# / .NET 8 · MIT</div>
-    <h1 class="title"><span data-i18n="hero_h1a">A game engine</span> <span class="amp" data-i18n="hero_h1b">assembled from mods</span></h1>
-    <p class="tagline" data-i18n="hero_tag">The Core/ kernel ships no game scene at all…</p>
-    <div class="ctarow">
-      <a class="btn btn-gold" href="/quickstart.html" data-i18n="cta_start">Start in 5 minutes</a>
-      <a class="btn btn-ghost" href="/docs.html" data-i18n="cta_docs">Documentation</a>
+  <div class="hero-bg" aria-hidden="true"></div>
+  <div class="wrap hero-grid">
+    <div class="hero-text reveal">
+      <div class="pill"><span class="dot"></span><span data-i18n="kicker">mod-oriented engine · Godot 4.6 · C# / .NET 8 · MIT</span></div>
+      <h1 class="title"><span data-i18n="hero_h1a">A game engine</span> <span class="amp" data-i18n="hero_h1b">assembled from mods</span></h1>
+      <p class="tagline" data-i18n="hero_tag">The Core/ kernel ships no game at all…</p>
+      <div class="ctarow">
+        <a class="btn btn-gold" href="/quickstart.html"><span data-i18n="cta_start">Start in 5 minutes</span><span class="arr">→</span></a>
+        <a class="btn btn-ghost" href="#gallery" data-i18n="cta_gallery">See the game</a>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="n" id="statDsl">29</div><div class="l" data-i18n="st_dsl_l">DSL commands</div></div>
+        <div class="stat"><div class="n" id="statMods">28</div><div class="l" data-i18n="st_mods_l">mods in the repository</div></div>
+        <div class="stat"><div class="n" id="statLoc">119K</div><div class="l" data-i18n="st_loc_l">lines of C#, kernel and mods</div></div>
+        <div class="stat"><div class="n" id="statBattle">3</div><div class="l" data-i18n="st_battle_l">battle rulesets</div></div>
+      </div>
     </div>
-    <div class="stats">
-      <div class="stat"><div class="n" id="statDsl">29</div><div class="l" data-i18n="st_dsl_l">DSL commands</div></div>
-      <div class="stat"><div class="n" id="statMods">28</div><div class="l" data-i18n="st_mods_l">mods in the repository</div></div>
-      <div class="stat"><div class="n" id="statLoc">119K</div><div class="l" data-i18n="st_loc_l">lines of C#, kernel and mods</div></div>
-      <div class="stat"><div class="n" id="statBattle">3</div><div class="l" data-i18n="st_battle_l">battle rulesets</div></div>
+    <div class="hero-shots reveal" aria-hidden="true">
+      <figure class="hs hs-main"><img src="/img/shots/rpg_walk__rpg_village.jpg" alt=""></figure>
+      <figure class="hs hs-a"><img src="/img/shots/site_shots__battle_later.thumb.jpg" alt=""></figure>
+      <figure class="hs hs-b"><img src="/img/shots/site_shots__panel_inventory.thumb.jpg" alt=""></figure>
+    </div>
+  </div>
+</section>
+
+<section id="gallery">
+  <div class="wrap">
+    <div class="sechead reveal">
+      <div class="cap" data-i18n="gal_cap">In the game</div>
+      <h2 class="sec" data-i18n="gal_title">See it running</h2>
+      <p class="sub" data-i18n="gal_sub">Every frame here is taken by the game itself…</p>
+    </div>
+    <div class="gtabs" id="galTabs" role="tablist"></div>
+    <div class="gallery" id="gallery-grid"></div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sechead reveal">
+      <div class="cap" data-i18n="story_cap">Games</div>
+      <h2 class="sec" data-i18n="story_title">One engine, different games</h2>
+      <p class="sub" data-i18n="story_p2">A new game is a new collection…</p>
+    </div>
+    <div class="games">
+      <article class="game reveal">
+        <div class="gimg"><img src="/img/shots/site_shots__novel_wolf.thumb.jpg" alt="Cthangover" loading="lazy"></div>
+        <div class="gbody">
+          <div class="gtags"><span>novel</span><span>cards</span><span>ff</span></div>
+          <h3>Cthangover</h3>
+          <p data-i18n="g_cth_d">A visual novel with turn-based battles…</p>
+          <code>--game=cthangover</code>
+        </div>
+      </article>
+      <article class="game reveal">
+        <div class="gimg"><img src="/img/shots/trade__trade_forest.thumb.jpg" alt="RPG Demo" loading="lazy"></div>
+        <div class="gbody">
+          <div class="gtags"><span>rpg</span><span>tiles</span><span>trade</span></div>
+          <h3>RPG Demo</h3>
+          <p data-i18n="g_rpg_d">A pixel village and forest walked with WASD…</p>
+          <code>--game=rpg_demo</code>
+        </div>
+      </article>
+      <article class="game reveal">
+        <div class="gimg"><img src="/img/shots/site_shots__location_home_outside.thumb.jpg" alt="Novel Template" loading="lazy"></div>
+        <div class="gbody">
+          <div class="gtags"><span>template</span><span>novel</span></div>
+          <h3>Novel Template</h3>
+          <p data-i18n="g_nov_d">The smallest playable novel…</p>
+          <code>--game=novel_template</code>
+        </div>
+      </article>
     </div>
   </div>
 </section>
 
 <section>
   <div class="wrap">
-    <div class="cap" data-i18n="arch_cap">Assembly line</div>
-    <h2 class="sec" data-i18n="arch_title">The game is built in layers</h2>
+    <div class="sechead reveal">
+      <div class="cap" data-i18n="arch_cap">Assembly line</div>
+      <h2 class="sec" data-i18n="arch_title">The game is built in layers</h2>
+    </div>
     <div class="layers" id="layers"></div>
   </div>
 </section>
 
 <section>
   <div class="wrap">
-    <div class="cap" data-i18n="feat_cap">Features</div>
-    <h2 class="sec" data-i18n="feat_title">Already in the kernel</h2>
+    <div class="sechead reveal">
+      <div class="cap" data-i18n="feat_cap">Features</div>
+      <h2 class="sec" data-i18n="feat_title">Already in the kernel</h2>
+    </div>
     <div class="tiles" id="tiles"></div>
   </div>
 </section>
 
 <section>
   <div class="wrap">
-    <div class="cap" data-i18n="battle_cap">Battle rules</div>
-    <h2 class="sec" data-i18n="battle_title">Combat is a pluggable module too</h2>
-    <p class="sub" data-i18n="battle_desc">turn_battle_base defines the ruleset contracts…</p>
+    <div class="sechead reveal">
+      <div class="cap" data-i18n="battle_cap">Battle rules</div>
+      <h2 class="sec" data-i18n="battle_title">Combat is a pluggable module too</h2>
+      <p class="sub" data-i18n="battle_desc">turn_battle_base defines the ruleset contracts…</p>
+    </div>
+    <div class="battleshots reveal">
+      <figure><img src="/img/shots/site_shots__battle.thumb.jpg" alt="card_battle" loading="lazy"><figcaption>card_battle · Cthangover</figcaption></figure>
+      <figure><img src="/img/shots/rpg_walk__rpg_battle.thumb.jpg" alt="ff_battle" loading="lazy"><figcaption>ff_battle · RPG Demo</figcaption></figure>
+    </div>
     <div class="bgrid" id="battleGrid"></div>
   </div>
 </section>
 
 <section>
   <div class="wrap">
-    <div class="cap" data-i18n="dsl_cap">DSL · .scenario</div>
-    <h2 class="sec" data-i18n="dsl_title">A scenario is a text file</h2>
+    <div class="sechead reveal">
+      <div class="cap" data-i18n="dsl_cap">DSL · .scenario</div>
+      <h2 class="sec" data-i18n="dsl_title">A scenario is a text file</h2>
+    </div>
     <div class="dslgrid">
-      <div>
+      <div class="reveal">
         <p data-i18n="dsl_p1">A scene is plain text…</p>
         <p data-i18n="dsl_p2">No editor required…</p>
+        <p class="dsl-note" data-i18n="dsl_p3">Shown with the English translation…</p>
       </div>
-      <div class="codebox">
-        <div class="cbar">📄 <span class="fn" id="dslFile">mods/cthangover_murakami/scenarios/…</span><span>mods/</span></div>
+      <div class="codebox reveal">
+        <div class="cbar"><span class="dots"><i></i><i></i><i></i></span><span class="fn" id="dslFile">mods/cthangover_murakami/scenarios/…</span></div>
         <pre id="dslCode"></pre>
       </div>
     </div>
@@ -113,50 +192,26 @@
 
 <section>
   <div class="wrap">
-    <div class="cap" data-i18n="mods_cap">Catalog</div>
-    <h2 class="sec" id="modsTitle">28 mods already in the repository</h2>
+    <div class="sechead reveal">
+      <div class="cap" data-i18n="mods_cap">Catalog</div>
+      <h2 class="sec" id="modsTitle">28 mods already in the repository</h2>
+    </div>
+    <div class="gtabs small" id="modTabs"></div>
     <div class="modgrid" id="modGrid"></div>
     <div class="mods-note" data-i18n="mods_note">Names and descriptions exactly as in manifest.json (english). Test mods are tagged.</div>
   </div>
 </section>
 
-<section>
-  <div class="wrap">
-    <div class="cap" data-i18n="story_cap">Games</div>
-    <h2 class="sec" data-i18n="story_title">One engine, different games</h2>
-    <div class="storygrid">
-      <div>
-        <p data-i18n="story_p1">Cthangover, RPG Demo, Novel Template…</p>
-        <p data-i18n="story_p2">A new game is a new collection…</p>
-      </div>
-      <figure class="shot">
-        <img src="/img/screen3.jpg" alt="Murakami line">
-        <figcaption>mods/cthangover_murakami · quest: meeting_murakami</figcaption>
-      </figure>
-    </div>
-  </div>
-</section>
-
-<section>
-  <div class="wrap">
-    <div class="cap" data-i18n="shots_cap">Frames</div>
-    <h2 class="sec" data-i18n="shots_title">Screenshots</h2>
-    <div class="shots">
-      <figure><img src="/img/screen1.jpg" alt="Screenshot 1" loading="lazy"></figure>
-      <figure><img src="/img/screen2.jpg" alt="Screenshot 2" loading="lazy"></figure>
-      <figure><img src="/img/screen4.jpg" alt="Screenshot 4" loading="lazy"></figure>
-      <figure><img src="/img/logo.png" style="object-fit:contain;background:#15110d" alt="cthangover logo" loading="lazy"></figure>
-    </div>
-  </div>
-</section>
-
 <section class="cta">
   <div class="wrap">
-    <h2 data-i18n="cta_title">Open code, open pipeline</h2>
-    <p data-i18n="cta_p">The project is MIT-licensed…</p>
-    <div class="row">
-      <a class="btn btn-gold" href="https://git.cthangover.ru/cthangover/cthangover" target="_blank" rel="noopener" data-i18n="cta_repo">Open repository</a>
-      <a class="btn btn-ghost" href="https://git.cthangover.ru/cthangover/cthangover/src/branch/master/LICENSE" target="_blank" rel="noopener" data-i18n="cta_license">MIT License</a>
+    <div class="cta-card reveal">
+      <h2 data-i18n="cta_title">Open code, open pipeline</h2>
+      <p data-i18n="cta_p">The project is MIT-licensed…</p>
+      <div class="row">
+        <a class="btn btn-gold" href="https://git.cthangover.ru/cthangover/cthangover" target="_blank" rel="noopener" data-i18n="cta_repo">Open repository</a>
+        <a class="btn btn-ghost" href="/docs.html" data-i18n="cta_docs">Documentation</a>
+        <a class="btn btn-ghost" href="https://git.cthangover.ru/cthangover/cthangover/src/branch/master/LICENSE" target="_blank" rel="noopener" data-i18n="cta_license">MIT License</a>
+      </div>
     </div>
   </div>
 </section>
@@ -167,6 +222,13 @@
     <span class="build"><b>▮</b> <span data-i18n="built_by">assembled from</span> 84 <span data-i18n="md_files">Markdown files</span> · build-*.py</span>
   </div>
 </footer>
+
+<div class="lightbox" id="lightbox" hidden>
+  <button class="lb-close" id="lbClose" aria-label="Close">✕</button>
+  <button class="lb-nav lb-prev" id="lbPrev" aria-label="Previous">‹</button>
+  <figure><img id="lbImg" alt=""><figcaption id="lbCap"></figcaption></figure>
+  <button class="lb-nav lb-next" id="lbNext" aria-label="Next">›</button>
+</div>
 
 <script src="/js/i18n.js"></script>
 <script src="/js/main.js"></script>

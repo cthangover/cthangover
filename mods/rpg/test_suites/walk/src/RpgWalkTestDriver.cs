@@ -7,6 +7,7 @@ using Cthangover.Core.Games;
 using Cthangover.Core.Scenes;
 using Cthangover.Core.Settings;
 using Cthangover.Core.Utils;
+using Cthangover.Mods.Interface.View;
 using Godot;
 
 namespace Cthangover.Mods.Rpg.Tests
@@ -176,6 +177,9 @@ namespace Cthangover.Mods.Rpg.Tests
                     // core waits for the player, take the platform's victory path.
                     if (battle.ActiveBattleCore is not IBattleAutoPlayable auto || !auto.IsWaitingForPlayerInput)
                         return;
+                    // The shot waits for the fade-in too, otherwise it catches the blank transition.
+                    if (GodotSceneService.IsTransitioning)
+                        return;
                     Shot("battle");
                     battle.ShowWinground();
                     Next();
@@ -284,7 +288,7 @@ namespace Cthangover.Mods.Rpg.Tests
             if (string.IsNullOrEmpty(shotsDir) || DisplayServer.GetName() == "headless")
                 return;
             DirAccess.MakeDirRecursiveAbsolute(shotsDir);
-            GetViewport().GetTexture().GetImage()?.SavePng(shotsDir.TrimEnd('/') + "/rpg_" + name + ".png");
+            ViewportCapture.SavePng(GetViewport(), shotsDir.TrimEnd('/') + "/rpg_" + name + ".png");
         }
 
         private void Finish()

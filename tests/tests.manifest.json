@@ -103,6 +103,17 @@
       "timeoutSeconds": 180
     },
     {
+      "name": "site_shots",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--game=cthangover",
+        "--new",
+        "--itest=site_shots"
+      ],
+      "timeoutSeconds": 300
+    },
+    {
       "name": "game_rpg_demo",
       "scene": "res://scenes/menu/launcher.tscn",
       "args": [

@@ -10,6 +10,7 @@ using Cthangover.Core.UI.Inventory;
 using Cthangover.Core.Utils;
 using Cthangover.Mods.Items;
 using Cthangover.Mods.Rpg;
+using Cthangover.Mods.Interface.View;
 using Godot;
 
 namespace Cthangover.Mods.Trading.Tests
@@ -341,7 +342,7 @@ namespace Cthangover.Mods.Trading.Tests
             if (string.IsNullOrEmpty(shotsDir) || DisplayServer.GetName() == "headless")
                 return;
             DirAccess.MakeDirRecursiveAbsolute(shotsDir);
-            GetViewport().GetTexture().GetImage()?.SavePng(shotsDir.TrimEnd('/') + "/trade_" + name + ".png");
+            ViewportCapture.SavePng(GetViewport(), shotsDir.TrimEnd('/') + "/trade_" + name + ".png");
         }
 
         private void Finish()

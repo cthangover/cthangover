@@ -8,6 +8,7 @@ using Cthangover.Mods.Interface.Tool;
 using Cthangover.Mods.Rpg;
 using Cthangover.Tools.Common;
 using Cthangover.Tools.Services;
+using Cthangover.Mods.Interface.View;
 using Godot;
 
 namespace Cthangover.Tools.RpgEditor.Tests
@@ -228,7 +229,7 @@ namespace Cthangover.Tools.RpgEditor.Tests
             if (string.IsNullOrEmpty(shotsDir) || DisplayServer.GetName() == "headless")
                 return;
             DirAccess.MakeDirRecursiveAbsolute(shotsDir);
-            GetViewport().GetTexture().GetImage()?.SavePng(shotsDir.TrimEnd('/') + "/rpg_editor_" + name + ".png");
+            ViewportCapture.SavePng(GetViewport(), shotsDir.TrimEnd('/') + "/rpg_editor_" + name + ".png");
         }
 
         private void Finish()
