@@ -292,6 +292,28 @@ def build_mod(folder, out, patterns, hosts):
     return entry
 
 
+def build_all(out, mods, hosts):
+    """Archive and entry of every mod folder in `mods`; the entries in that order."""
+    out.mkdir(parents=True, exist_ok=True)
+    patterns = load_patterns()
+    print("Building %d mods into %s" % (len(mods), out))
+    return [build_mod(folder, out, patterns, hosts) for folder in mods]
+
+
+def archive_path(out, entry):
+    """The local archive of a built entry: the file name of its first download URL."""
+    return out / entry["downloads"][0]["urls"][0].rsplit("/", 1)[-1]
+
+
+def catalog_document(entries, collections=None):
+    """The CatalogRoot envelope; `collections` is kept when a catalog already serves some."""
+    updated = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    document = {"catalog": {"version": CATALOG_VERSION, "updated_at": updated}, "mods": entries}
+    if collections:
+        document["collections"] = collections
+    return document
+
+
 def write_json(path, data):
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", encoding="utf-8", newline="\n") as stream:
@@ -317,18 +339,13 @@ def main():
         raise ScriptError("--hosts takes gitea and/or github, got: " + args.hosts)
 
     out = Path(args.out).resolve()
-    out.mkdir(parents=True, exist_ok=True)
-    patterns = load_patterns()
     mods = select_mods(set(split_list(args.only)), set(split_list(args.skip)))
     if not mods:
         raise ScriptError("no mods to build")
 
-    print("Building %d mods into %s" % (len(mods), out))
-    entries = [build_mod(folder, out, patterns, hosts) for folder in mods]
-
-    updated = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    entries = build_all(out, mods, hosts)
     path = out / "catalog.json"
-    write_json(path, {"catalog": {"version": CATALOG_VERSION, "updated_at": updated}, "mods": entries})
+    write_json(path, catalog_document(entries))
     print("Catalog: %d mods, mirrors %s -> %s" % (len(entries), ", ".join(hosts), path))
     return 0
 

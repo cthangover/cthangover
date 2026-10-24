@@ -173,10 +173,21 @@ Ignore patterns for the SHA256 computation can be customized in
 excludes all dot-prefixed entries; the shipped `config/mod_config.json`
 adds `"bin"` and `"obj"`.
 
-## Building releases of all mods
+## Publishing all mods and the game: `sync_mods`
 
-`build_mod_releases.py` in the repository root (wrappers `build_mod_releases.bat`, `build_mod_releases.sh`)
-does the same as **Export to Catalog** for every folder mod at once and writes to `releases/`:
+`sync_mods.bat` / `sync_mods.sh` (`sync_mods.py`) in the repository root is the one script for a release. It
+builds every mod (below), reads both hosts (git.cthangover.ru and github.com, owner and token from the `origin`
+and `github` remotes), prints every difference — missing `mod_<id>` repositories, unpushed commits, missing or
+differing release archives, release texts, catalog entries, the game's packages — asks once and then fixes
+them: creates repositories (GitHub allows about 8 at a time, so it creates them in batches and waits half an
+hour between them), pushes fast-forward only, keeps one release per version (an existing one gets its archive
+and text replaced, copies are removed, a later version on a host is never overwritten), and pushes the
+catalog to both `cthangover/catalog` repositories. The game's packages from `build_release` go to the release
+`v<config/version>` of `cthangover/cthangover`. Running it again is safe; the rules are in the script's header.
+
+### Building only
+
+`build_mod_releases.py` (used by `sync_mods`, also runnable alone) does the same as **Export to Catalog** for every folder mod at once and writes to `releases/`:
 
 - `mod_<id>-v<version>.zip` — the mod's content files at the archive root, hidden entries (`.git/`, …) left out;
   entries are sorted and dated 1980-01-01, so an unchanged mod rebuilds with the same `archive_sha256`;
@@ -188,8 +199,7 @@ does the same as **Export to Catalog** for every folder mod at once and writes t
 Entries come from `manifest.json` (name, author, version, description, category, depends, conflicts_with) and
 the mod's `mod_<id>_name` / `mod_<id>_desc` keys in every language; tags are the id's words plus the categories;
 `install_sha256` uses `catalog_ignore_patterns` from `config/mod_config.json`. Options: `--only=a,b`,
-`--skip=a,b`, `--hosts=gitea,github` (mirrors and their order), `--out=<dir>`. Upload each archive to the
-release `v<version>` of the mod repository on both hosts and the catalog file to both catalog repositories.
+`--skip=a,b`, `--hosts=gitea,github` (mirrors and their order), `--out=<dir>`.
 
 ## Mod status display
 
