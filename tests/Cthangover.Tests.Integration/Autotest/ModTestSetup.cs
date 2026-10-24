@@ -18,7 +18,7 @@ namespace Cthangover.Core.Autotest
 		private int passed;
 		private int failed;
 
-		public override void _Ready()
+		public override async void _Ready()
 		{
 			GameLogger.Log("TEST", "ModTestSetup: starting mod integration tests");
 
@@ -26,9 +26,11 @@ namespace Cthangover.Core.Autotest
 
 			TestFolderMod();
 
+			await SettleFrames();
+
 			try
 			{
-				TestZipMod();
+				await TestZipMod();
 			}
 			catch (System.Exception ex)
 			{
@@ -55,9 +57,15 @@ namespace Cthangover.Core.Autotest
 		/// </summary>
 		private async void QuitAfterFrames(int exitCode)
 		{
+			await SettleFrames();
+			GetTree().Quit(exitCode);
+		}
+
+		/// <summary>TEMPORARY (see <see cref="QuitAfterFrames"/>): lets the deferred calls a reload queued (initializers adding their nodes to the root) run before the next reload.</summary>
+		private async System.Threading.Tasks.Task SettleFrames()
+		{
 			for (var frame = 0; frame < 3; frame++)
 				await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-			GetTree().Quit(exitCode);
 		}
 
 		/// <summary>
@@ -114,7 +122,7 @@ namespace Cthangover.Core.Autotest
 		TestBinaryAndFsPath("test_mod", ModManager.Instance.GetMod("test_mod"));
 		}
 
-		private void TestZipMod()
+		private async System.Threading.Tasks.Task TestZipMod()
 		{
 			var modsRoot = ModRegistry.ModsPath;
 			var zipPath = Path.Combine(modsRoot, "test_zip_mod.zip").Replace('\\', '/');
@@ -161,6 +169,7 @@ namespace Cthangover.Core.Autotest
 			}
 
 				ModManager.Instance.Reload();
+				await SettleFrames();
 
 				var mod = ModManager.Instance.GetMod("test_zip_mod");
 				if (mod == null)
@@ -186,6 +195,7 @@ namespace Cthangover.Core.Autotest
 				if (File.Exists(zipPath))
 					File.Delete(zipPath);
 				ModManager.Instance.Reload();
+				await SettleFrames();
 			}
 		}
 

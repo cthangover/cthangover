@@ -67,11 +67,12 @@ text = ""badge""
         private int _passed;
         private int _failed;
 
-        public override void _Ready()
+        public override async void _Ready()
         {
             GameLogger.Log("TEST", "ScenePatchTestSetup: starting scene patch integration test");
 
-            TestResolverPatching();
+            await SettleFrames();
+            await TestResolverPatching();
             TestHasPatches();
             TestApplierOnSyntheticScene();
             TestRealShellIsPatched();
@@ -88,12 +89,18 @@ text = ""badge""
         /// </summary>
         private async void QuitAfterFrames(int exitCode)
         {
-            for (var frame = 0; frame < 3; frame++)
-                await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+            await SettleFrames();
             GetTree().Quit(exitCode);
         }
 
-        private void TestResolverPatching()
+        /// <summary>TEMPORARY (see <see cref="QuitAfterFrames"/>): lets the deferred calls a reload queued (initializers adding their nodes to the root) run before the next reload.</summary>
+        private async System.Threading.Tasks.Task SettleFrames()
+        {
+            for (var frame = 0; frame < 3; frame++)
+                await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        }
+
+        private async System.Threading.Tasks.Task TestResolverPatching()
         {
             var modDirectory = Path.Combine(ModRegistry.ModsPath, TestModId).Replace('\\', '/');
 
@@ -101,6 +108,7 @@ text = ""badge""
             {
                 CreateMod(modDirectory);
                 ModManager.Instance.Reload();
+                await SettleFrames();
 
                 var root = TscnScenes.LoadAndBuild(TargetScene);
                 Assert(root != null, "resolver: patched scene loads");
@@ -140,6 +148,7 @@ text = ""badge""
                 }
 
                 ModManager.Instance.Reload();
+                await SettleFrames();
             }
         }
 
