@@ -38,7 +38,7 @@ namespace Cthangover.ResourceAtlas
             queued = true;
             var directory = ProjectSettings.GlobalizePath(output);
             GameLogger.Log("RESOURCE_ATLAS", $"resource atlas requested, report directory '{directory}'");
-            (Godot.Engine.GetMainLoop() as SceneTree)?.Root?.CallDeferred("add_child", new ResourceAtlasDriverNode(directory, ParseTimeout(args)));
+            ModRoot.AddDeferred(new ResourceAtlasDriverNode(directory, ParseTimeout(args)));
         }
 
         private static float ParseTimeout(string[] args)

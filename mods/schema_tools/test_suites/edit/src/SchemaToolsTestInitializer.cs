@@ -22,7 +22,7 @@ namespace Cthangover.Tools.Schemas.Tests
                 return;
             driverQueued = true;
             GameLogger.Log("TEST", "SchemaToolsTestInitializer: activating schema_tools_edit");
-            (Godot.Engine.GetMainLoop() as SceneTree)?.Root?.CallDeferred("add_child", new SchemaToolsTestDriver());
+            ModRoot.AddDeferred(new SchemaToolsTestDriver());
         }
     }
 }

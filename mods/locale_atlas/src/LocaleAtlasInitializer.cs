@@ -38,7 +38,7 @@ namespace Cthangover.LocaleAtlas
             queued = true;
             var directory = ProjectSettings.GlobalizePath(output);
             GameLogger.Log("LOCALE_ATLAS", $"locale atlas requested, report directory '{directory}'");
-            (Godot.Engine.GetMainLoop() as SceneTree)?.Root?.CallDeferred("add_child", new LocaleAtlasDriverNode(directory, ParseTimeout(args)));
+            ModRoot.AddDeferred(new LocaleAtlasDriverNode(directory, ParseTimeout(args)));
         }
 
         private static float ParseTimeout(string[] args)

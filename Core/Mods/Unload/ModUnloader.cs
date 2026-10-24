@@ -56,6 +56,10 @@ namespace Cthangover.Core.Mods.Unload
                 Unregister(record);
 
             var report = new List<string>();
+            // Before the sweep frees them: a waiting node must not reach the root afterwards.
+            var waiting = ModRoot.RemoveOwned(ownership);
+            if (waiting > 0)
+                report.Add($"dropped {waiting} node(s) of mod code waiting to join the root");
             report.AddRange(GodotObjectSweeper.Release(tree, ownership));
 
             var subscriptions = ModEventBus.RemoveOwned(ownership);

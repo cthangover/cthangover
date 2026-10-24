@@ -49,8 +49,8 @@ namespace Cthangover.Mods.Audio
             // setting up autoload children, so a direct AddChild is rejected.
             // Deferred calls run in FIFO order, which keeps AudioService ahead
             // of MusicPlayerBehaviour — its OnReady resolves AudioService.
-            root.CallDeferred("add_child", new AudioService { Name = "AudioService" });
-            root.CallDeferred("add_child", new MusicPlayerBehaviour { Name = "MusicPlayer" });
+            ModRoot.AddDeferred(new AudioService { Name = "AudioService" });
+            ModRoot.AddDeferred(new MusicPlayerBehaviour { Name = "MusicPlayer" });
         }
 
         private static void EnsureEventSubscriptions()

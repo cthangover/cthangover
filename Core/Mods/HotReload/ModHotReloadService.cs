@@ -56,7 +56,7 @@ namespace Cthangover.Core.Mods.HotReload
             if (!HotReloadSettings.IsEnabled(OS.HasFeature("editor"), OS.GetCmdlineUserArgs()))
                 return;
             var service = new ModHotReloadService { Name = "ModHotReload" };
-            tree.Root.CallDeferred(Node.MethodName.AddChild, service);
+            ModRoot.AddDeferred(service);
         }
 
         /// <summary>Registers the instance and starts one recursive watcher per mod root resolved at boot.</summary>

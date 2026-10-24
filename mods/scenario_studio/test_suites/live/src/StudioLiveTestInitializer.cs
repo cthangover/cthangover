@@ -35,7 +35,7 @@ namespace Cthangover.Mods.ScenarioStudio.Tests.Live
 
             driverQueued = true;
             GameLogger.Log("TEST", $"StudioLiveTestInitializer: activating studio live test, shots='{shots ?? ""}'");
-            (Godot.Engine.GetMainLoop() as SceneTree)?.Root?.CallDeferred("add_child", new StudioLiveDriverNode(shots));
+            ModRoot.AddDeferred(new StudioLiveDriverNode(shots));
         }
     }
 }
