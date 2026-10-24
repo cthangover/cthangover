@@ -32,6 +32,9 @@ namespace Cthangover.Mods.RpgPlus.Tests
     public partial class RpgPlusTestDriver : Node
     {
         private const float TickSeconds = 0.1f;
+
+        // The battle opens with an intro animation (the backdrop zooms in): shots wait it out.
+        private const int BattleIntroTicks = 20;
         private const float TimeoutSeconds = 150f;
         private const string Hero = "rpg_hero";
         private const string Crossroads = "rpg_plus_crossroads";
@@ -54,6 +57,8 @@ namespace Cthangover.Mods.RpgPlus.Tests
         private int step;
         private int waitTicks;
         private int pagesPhase;
+        private int nightPhase;
+        private long savedTime;
         private double pagesWait;
         private bool slimeMoved;
         private int coinsBeforeChest;
@@ -138,7 +143,7 @@ namespace Cthangover.Mods.RpgPlus.Tests
                 case 3:
                     if (GetTree().CurrentScene is not BattleSceneContext battle)
                         return;
-                    if (battle.ActiveBattleCore is not IBattleAutoPlayable auto || !auto.IsWaitingForPlayerInput || GodotSceneService.IsTransitioning)
+                    if (battle.ActiveBattleCore is not IBattleAutoPlayable auto || !auto.IsWaitingForPlayerInput || GodotSceneService.IsTransitioning || ++waitTicks < BattleIntroTicks)
                         return;
                     Shot("battle");
                     CheckBattle();
@@ -157,7 +162,7 @@ namespace Cthangover.Mods.RpgPlus.Tests
                     Godot.Engine.TimeScale = 1;
                     // The victory is taken by the platform's shortcut (the wolf is not killed), so it
                     // awards no exp; the exp path is the training yard below.
-                    if (!CheckPagesAndRoute())
+                    if (!CheckPagesAndRoute() || !CheckNight())
                         return;
                     Check(Flag(WinFlag) == "1", "the win flag is set after the victory");
                     // To the trainer, added to the demo's village by this mod's own map events file.
@@ -391,6 +396,38 @@ namespace Cthangover.Mods.RpgPlus.Tests
                     Check(chest?.PageIndex == 1 && chest.Current.Tile == 15, "the flag switched the chest to its open page");
                     Check(chest?.Current?.Commands?.Count == 1, "the open page has its own commands");
                     pagesPhase++;
+                    return true;
+                default:
+                    return true;
+            }
+        }
+
+        /// <summary>
+        /// Light of the map (rpg): at 23:00 the layers and actors share one lit material with
+        /// night weights, and the player's glow, the lamp and the windows of the village tileset
+        /// are lit. Shot "night" next to the lamp; the clock is put back afterwards.
+        /// </summary>
+        private bool CheckNight()
+        {
+            var time = GameData.Instance.Runtime.Time;
+            switch (nightPhase)
+            {
+                case 0:
+                    savedTime = time.Tick;
+                    time.SetTime(savedTime - savedTime % (24 * 60) + 23 * 60);
+                    View.PlacePlayer(12, 9, RpgDirection.Up);
+                    nightPhase++;
+                    return false;
+                case 1:
+                    var material = View.GetNodeOrNull<TileMapLayer>("Main")?.Material as ShaderMaterial;
+                    Check(material != null, "the tiles have the map's light material");
+                    Check(material != null && View.Player.Material == material, "the player shares it");
+                    var weights = material?.GetShaderParameter("time_weights").AsVector4() ?? Vector4.Zero;
+                    Check(Mathf.IsEqualApprox(weights.W, 1f), "23:00 lights the map as night");
+                    Check((material?.GetShaderParameter("light_count").AsInt32() ?? 0) >= 4, "the player, the lamp and windows give light");
+                    Shot("night");
+                    time.SetTime(savedTime);
+                    nightPhase++;
                     return true;
                 default:
                     return true;

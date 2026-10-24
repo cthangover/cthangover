@@ -15,6 +15,7 @@ namespace Cthangover.Mods.Rpg
     /// <see cref="StepFinished"/>. The actor's <see cref="Cell"/> changes at the
     /// start of a step, so two actors never walk into the same cell. The actor
     /// layer sorts children by Y, which keeps whoever is lower in front.
+    /// The sprite uses the actor's material (the map's light, set by the view).
     /// </summary>
     public partial class RpgActor : Node2D
     {
@@ -78,7 +79,7 @@ namespace Cthangover.Mods.Rpg
         {
             if (texture == null)
                 return;
-            sprite = new Sprite2D { Texture = texture, Hframes = 3, Vframes = 4, Centered = false };
+            sprite = new Sprite2D { Texture = texture, Hframes = 3, Vframes = 4, Centered = false, UseParentMaterial = true };
             var frame = new Vector2(texture.GetWidth() / 3f, texture.GetHeight() / 4f);
             sprite.Position = new Vector2((tileSize - frame.X) / 2f, tileSize - frame.Y);
             AddChild(sprite);
@@ -94,6 +95,7 @@ namespace Cthangover.Mods.Rpg
             {
                 Texture = atlas,
                 Centered = false,
+                UseParentMaterial = true,
                 RegionEnabled = true,
                 RegionRect = new Rect2(atlasCoords * tileSize, new Vector2(tileSize, tileSize)),
             };
@@ -115,6 +117,7 @@ namespace Cthangover.Mods.Rpg
                 Position = new Vector2(tileSize, tileSize) / 2f,
                 Scale = new Vector2(fit, fit),
                 TextureFilter = TextureFilterEnum.Linear,
+                UseParentMaterial = true,
             };
             AddChild(sprite);
         }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Cthangover.Mods.Rpg;
 using Cthangover.Tools.Common;
+using Cthangover.Tools.Services;
 using Godot;
 
 namespace Cthangover.Tools.RpgEditor
@@ -10,7 +11,8 @@ namespace Cthangover.Tools.RpgEditor
     /// <summary>
     /// Properties of the selected map event: id, cell, look (charset path, tileset index
     /// or item picture), facing, trigger, solidity, what it runs (scenario path,
-    /// inline DSL lines, or a teleport) and the condition that shows it.
+    /// inline DSL lines with highlighting, or a teleport), the light it gives off (radius 0 = none)
+    /// and the condition that shows it.
     /// <para/>
     /// A teleport is on when its map or cell is filled in; clearing the teleport
     /// map and both coordinates turns it off again. Solidity has a third state,
@@ -40,6 +42,8 @@ namespace Cthangover.Tools.RpgEditor
         private readonly SpinBox teleportX;
         private readonly SpinBox teleportY;
         private readonly OptionButton teleportDir;
+        private readonly SpinBox lightRadius;
+        private readonly LineEdit lightColor;
         private RpgMapEvent mapEvent;
         private bool suppress;
         private bool editing;
@@ -78,9 +82,14 @@ namespace Cthangover.Tools.RpgEditor
             body.AddChild(ToolUi.Hint(ToolUi.Tr("tools/rpg_editor/commands")));
             commandsEdit = ToolUi.Code();
             commandsEdit.CustomMinimumSize = new Vector2(0, 90);
+            commandsEdit.SyntaxHighlighter = ScenarioSyntaxService.CreateHighlighter();
             commandsEdit.SizeFlagsVertical = SizeFlags.Fill;
             commandsEdit.TextChanged += OnCommandsChanged;
             body.AddChild(commandsEdit);
+
+            body.AddChild(ToolUi.Section("tools/rpg_editor/section_light"));
+            lightRadius = ToolUi.Field(body, "tools/rpg_editor/light_radius", ToolUi.Number(0, 16, 0.5, OnNumberChanged), "tools/rpg_editor/light_radius_tip");
+            lightColor = ToolUi.Field(body, "tools/rpg_editor/light_color", ToolUi.Text("#ffd8a0", OnTextChanged), "tools/rpg_editor/light_color_tip");
 
             body.AddChild(ToolUi.Section("tools/rpg_editor/section_teleport"));
             teleportMap = ToolUi.Field(body, "tools/rpg_editor/teleport_map", ToolUi.Text("", OnTextChanged), "tools/rpg_editor/teleport_map_tip");
@@ -119,6 +128,8 @@ namespace Cthangover.Tools.RpgEditor
             teleportX.Value = value.Teleport?.X ?? -1;
             teleportY.Value = value.Teleport?.Y ?? -1;
             teleportDir.Select((int)(value.Teleport?.Dir ?? RpgDirection.Down));
+            lightRadius.Value = value.Light?.Radius ?? 0;
+            lightColor.Text = value.Light?.Color ?? string.Empty;
             suppress = false;
         }
 
@@ -182,6 +193,11 @@ namespace Cthangover.Tools.RpgEditor
                     Y = Math.Max(0, (int)teleportY.Value),
                     Dir = (RpgDirection)teleportDir.Selected,
                 }
+                : null;
+
+            // A radius of 0 means no light; an empty colour keeps the warm default.
+            mapEvent.Light = lightRadius.Value > 0
+                ? new RpgLight { Radius = (float)lightRadius.Value, Color = NullIfEmpty(lightColor.Text) ?? new RpgLight().Color }
                 : null;
             Changed?.Invoke();
         }

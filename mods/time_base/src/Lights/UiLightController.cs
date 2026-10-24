@@ -459,13 +459,12 @@ namespace Cthangover.Mods.Time
             return SceneContextNode.FindNode<LampBehaviour>("Lamp");
         }
 
-        //
-        // 06:00-10:00 - Morning
-        // 10:00-18:00 - Day
-        // 18:00-22:00 - Evening
-        // 22:00-06:00 - Night
-        //
-        private static Vector4 CalculateTimeWeights(float hour)
+        /// <summary>
+        /// Blend weights of the four phases (morning, day, evening, night) for an hour 0–24, with
+        /// two-hour cross-fades between them — the <c>time_weights</c> uniform of the time shaders.
+        /// Public so other lit views (the RPG map) follow the same day as the backgrounds.
+        /// </summary>
+        public static Vector4 CalculateTimeWeights(float hour)
         {
             float night   = 0.0f;
             float morning = 0.0f;

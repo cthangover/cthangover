@@ -7,7 +7,7 @@ namespace Cthangover.Mods.Rpg.Tests
     using Cthangover.Core.Utils;
     using Godot;
 
-    /// <summary>Event pages pick the last page whose condition holds; routes resolve their steps.</summary>
+    /// <summary>Event pages pick the last page whose condition holds; routes resolve their steps; a page light replaces the event's.</summary>
     public class RpgEventPagesTests
     {
         private static RpgMapEvent Chest() => JsonSerializer.Deserialize<RpgMapEvent>(@"{
@@ -86,6 +86,28 @@ namespace Cthangover.Mods.Rpg.Tests
             ModAssert.CloseTo(1.0, mapEvent.Route.Every, what: "a step a second by default");
             ModAssert.True(mapEvent.Route.Repeat, "repeats by default");
             ModAssert.Null(mapEvent.Pages, "no pages");
+        }
+
+        [ModTest("lights/page_light_over_event_light_round_trip")]
+        static void PageLightOverEventLight(ModTestContext ctx)
+        {
+            var lamp = JsonSerializer.Deserialize<RpgMapEvent>(@"{
+                ""Id"": ""lamp"", ""Tile"": 12, ""Light"": { ""Radius"": 2.5, ""Color"": ""#ff8040"" },
+                ""Pages"": [ { ""Condition"": ""lamp_out == 1"", ""Tile"": 13, ""Light"": { ""Radius"": 1 } }, { ""Condition"": ""door == 1"" } ]
+            }", JsonOptionsProvider.ReadOptions);
+            ModAssert.CloseTo(2.5, lamp.Light.Radius, what: "the event's light");
+            ModAssert.Equal("#ff8040", lamp.Light.Color, "the event's colour");
+
+            var dim = RpgEventPages.Effective(lamp, 1);
+            ModAssert.CloseTo(1, dim.Light.Radius, what: "the page's light replaces it");
+            ModAssert.Equal("#ffd8a0", dim.Light.Color, "a page light without a colour is warm by default");
+            ModAssert.CloseTo(2.5, RpgEventPages.Effective(lamp, 2).Light.Radius, what: "a page without a light keeps the event's");
+
+            var again = JsonSerializer.Deserialize<RpgMapEvent>(JsonSerializer.Serialize(lamp), JsonOptionsProvider.ReadOptions);
+            ModAssert.CloseTo(2.5, again.Light.Radius, what: "radius survives the round trip");
+            ModAssert.Equal("#ff8040", again.Light.Color, "colour survives the round trip");
+            ModAssert.CloseTo(1, again.Pages[0].Light.Radius, what: "the page light survives the round trip");
+            ModAssert.Null(JsonSerializer.Deserialize<RpgMapEvent>(@"{ ""Id"": ""dark"" }", JsonOptionsProvider.ReadOptions).Light, "no light by default");
         }
     }
 }

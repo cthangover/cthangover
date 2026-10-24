@@ -60,6 +60,7 @@ namespace Cthangover.Mods.Rpg
                 Commands = page.Commands ?? mapEvent.Commands,
                 Teleport = page.Teleport ?? mapEvent.Teleport,
                 Route = page.Route ?? mapEvent.Route,
+                Light = page.Light ?? mapEvent.Light,
                 Condition = page.Condition,
                 ModId = mapEvent.ModId,
                 File = mapEvent.File,

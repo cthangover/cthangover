@@ -34,6 +34,9 @@ namespace Cthangover.Mods.Rpg.Tests
     public partial class RpgWalkTestDriver : Node
     {
         private const float TickSeconds = 0.1f;
+
+        // The battle opens with an intro animation (the backdrop zooms in): shots wait it out.
+        private const int BattleIntroTicks = 20;
         private const float TimeoutSeconds = 90f;
         private const string Village = "rpg_village";
         private const string House = "rpg_elder_house";
@@ -243,8 +246,8 @@ namespace Cthangover.Mods.Rpg.Tests
                     // core waits for the player, take the platform's victory path.
                     if (battle.ActiveBattleCore is not IBattleAutoPlayable auto || !auto.IsWaitingForPlayerInput)
                         return;
-                    // The shot waits for the fade-in too, otherwise it catches the blank transition.
-                    if (GodotSceneService.IsTransitioning)
+                    // The shot waits for the fade-in and the intro animation, otherwise it catches the zoomed backdrop.
+                    if (GodotSceneService.IsTransitioning || ++waitTicks < BattleIntroTicks)
                         return;
                     Shot("battle");
                     battle.ShowWinground();

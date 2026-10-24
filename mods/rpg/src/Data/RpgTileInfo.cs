@@ -21,5 +21,14 @@ namespace Cthangover.Mods.Rpg
         /// "tree_crown"). Not a locale key: players never see it.
         /// </summary>
         public string Tag { get; set; }
+
+        /// <summary>Light the tile gives off wherever it lies on a map (a lamp, a lit window); null = none.</summary>
+        public RpgLight Light { get; set; }
+
+        /// <summary>
+        /// Picture of an autotile block (RPG Maker A2 layout, see <see cref="RpgAutotiles"/>) in the
+        /// tilesets group; set, the entry is an autotile and <see cref="Index"/> should lie outside the atlas.
+        /// </summary>
+        public string Autotile { get; set; }
     }
 }

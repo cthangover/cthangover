@@ -24,7 +24,7 @@
         { "Index": 14, "Solid": true, "Tag": "chest" },
         { "Index": 15, "Solid": true, "Tag": "chest_open" },
         { "Index": 16, "Solid": true, "Tag": "wall" },
-        { "Index": 17, "Solid": true, "Tag": "wall_window" },
+        { "Index": 17, "Solid": true, "Tag": "wall_window", "Light": { "Radius": 1.8, "Color": "#ffd27acc" } },
         { "Index": 18, "Solid": false, "Tag": "door" },
         { "Index": 19, "Solid": true, "Tag": "roof" },
         { "Index": 20, "Solid": true, "Tag": "roof_eave" },
@@ -36,12 +36,13 @@
         { "Index": 26, "Solid": false, "Tag": "mushrooms" },
         { "Index": 27, "Solid": false, "Tag": "cave" },
         { "Index": 28, "Solid": true, "Tag": "lamp_post" },
-        { "Index": 29, "Solid": false, "Tag": "lamp_top" },
+        { "Index": 29, "Solid": false, "Tag": "lamp_top", "Light": { "Radius": 4, "Color": "#ffcf80" } },
         { "Index": 30, "Solid": true, "Tag": "shore" },
         { "Index": 31, "Solid": true, "Tag": "barrel" },
         { "Index": 32, "Solid": false, "Tag": "branches" },
         { "Index": 33, "Solid": false, "Tag": "stones" },
-        { "Index": 34, "Solid": false, "Tag": "mushroom" }
+        { "Index": 34, "Solid": false, "Tag": "mushroom" },
+        { "Index": 40, "Solid": true, "Tag": "water", "Autotile": "village/water_auto" }
       ]
     }
   ]

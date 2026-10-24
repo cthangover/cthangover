@@ -53,6 +53,26 @@ namespace Cthangover.Mods.Rpg.Tests
             ModAssert.False(tileset.IsSolid(-1), "empty cell");
         }
 
+        [ModTest("rules/tileset_light_and_autotile_lookup_round_trip")]
+        static void TilesetLightAndAutotileLookup(ModTestContext ctx)
+        {
+            var tileset = System.Text.Json.JsonSerializer.Deserialize<RpgTileset>(@"{
+                ""Id"": ""lit"", ""Tiles"": [
+                  { ""Index"": 29, ""Tag"": ""lamp_top"", ""Light"": { ""Radius"": 4, ""Color"": ""#ffcf80"" } },
+                  { ""Index"": 40, ""Solid"": true, ""Tag"": ""water"", ""Autotile"": ""village/water_auto"" }
+                ] }", Cthangover.Core.Utils.JsonOptionsProvider.ReadOptions);
+            tileset = System.Text.Json.JsonSerializer.Deserialize<RpgTileset>(System.Text.Json.JsonSerializer.Serialize(tileset), Cthangover.Core.Utils.JsonOptionsProvider.ReadOptions);
+
+            ModAssert.CloseTo(4, tileset.LightOf(29).Radius, what: "the lamp's light survives the round trip");
+            ModAssert.Equal("#ffcf80", tileset.LightOf(29).Color, "with its colour");
+            ModAssert.Null(tileset.LightOf(40), "the water gives no light");
+            ModAssert.Null(tileset.LightOf(-1), "an empty cell gives no light");
+            ModAssert.Equal("village/water_auto", tileset.AutotileOf(40)?.Autotile, "the autotile entry and its block");
+            ModAssert.Null(tileset.AutotileOf(29), "a plain tile is no autotile");
+            ModAssert.Null(tileset.AutotileOf(-1), "nor an empty cell");
+            ModAssert.True(tileset.IsSolid(40), "an autotile is solid like any tile");
+        }
+
         [ModTest("rules/encounter_off_without_table")]
         static void EncounterOffWithoutTable(ModTestContext ctx)
         {

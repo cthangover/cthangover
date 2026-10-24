@@ -74,6 +74,9 @@ namespace Cthangover.Mods.Rpg
         /// <summary>Autonomous movement (<see cref="RpgMoveRoute"/>); null = the event stands still.</summary>
         public RpgMoveRoute Route { get; set; }
 
+        /// <summary>Light the event gives off (<see cref="RpgLight"/>); null = none.</summary>
+        public RpgLight Light { get; set; }
+
         /// <summary>Mod the event was read from (set by the event resolver, not stored).</summary>
         [JsonIgnore]
         public string ModId { get; set; }

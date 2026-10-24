@@ -11,7 +11,7 @@
   "test_sources": [
     "tests/*.cs"
   ],
-  "depends": ["shell2d_base>=1", "ui_base>=1", "dialog_base>=1", "turn_battle_base>=2"],
+  "depends": ["shell2d_base>=1", "ui_base>=1", "time_base>=1", "dialog_base>=1", "turn_battle_base>=2"],
   "test_suites": [
     {"id": "walk", "activate": ["--itest=rpg_walk"]}
   ]

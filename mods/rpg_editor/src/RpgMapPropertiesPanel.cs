@@ -10,7 +10,8 @@ namespace Cthangover.Tools.RpgEditor
 {
     /// <summary>
     /// The map's own properties in the right column: id (the scene name, read
-    /// only — it is the file name), display name key, tileset, size, zoom, spawn
+    /// only — it is the file name), display name key, tileset, size, zoom, fixed
+    /// ambient light (empty: the time of day lights the map), spawn
     /// and random encounters. The size is applied with a button, because a
     /// smaller size cuts cells off. Encounter groups are written as
     /// <c>slime; wolf,slime</c> — groups split by semicolons.
@@ -27,6 +28,7 @@ namespace Cthangover.Tools.RpgEditor
         private readonly SpinBox widthSpin;
         private readonly SpinBox heightSpin;
         private readonly SpinBox zoomSpin;
+        private readonly LineEdit ambientEdit;
         private readonly SpinBox spawnX;
         private readonly SpinBox spawnY;
         private readonly OptionButton spawnDir;
@@ -61,6 +63,7 @@ namespace Cthangover.Tools.RpgEditor
             heightSpin = ToolUi.Field(this, "tools/rpg_editor/height", ToolUi.Number(1, 256, 1, null));
             AddChild(ToolUi.Button("tools/rpg_editor/resize", OnResizePressed));
             zoomSpin = ToolUi.Field(this, "tools/rpg_editor/zoom", ToolUi.Number(1, 4, 1, OnZoomChanged), "tools/rpg_editor/zoom_tip");
+            ambientEdit = ToolUi.Field(this, "tools/rpg_editor/ambient", ToolUi.Text("#e0d2b8", OnAmbientChanged), "tools/rpg_editor/ambient_tip");
 
             AddChild(ToolUi.Section("tools/rpg_editor/section_spawn"));
             spawnX = ToolUi.Field(this, "tools/rpg_editor/x", ToolUi.Number(0, 255, 1, OnSpawnChanged));
@@ -94,6 +97,7 @@ namespace Cthangover.Tools.RpgEditor
                 widthSpin.Value = value.Grid.Width;
                 heightSpin.Value = value.Grid.Height;
                 zoomSpin.Value = map.Zoom;
+                ambientEdit.Text = map.Ambient ?? string.Empty;
                 spawnX.Value = map.Spawn.X;
                 spawnY.Value = map.Spawn.Y;
                 spawnDir.Select((int)map.Spawn.Dir);
@@ -120,6 +124,14 @@ namespace Cthangover.Tools.RpgEditor
             if (!Begin())
                 return;
             document.Map.Name = string.IsNullOrWhiteSpace(text) ? null : text.Trim();
+            Changed?.Invoke();
+        }
+
+        private void OnAmbientChanged(string text)
+        {
+            if (!Begin())
+                return;
+            document.Map.Ambient = string.IsNullOrWhiteSpace(text) ? null : text.Trim();
             Changed?.Invoke();
         }
 
