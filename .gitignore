@@ -54,3 +54,4 @@ jobs/
 /site_github/
 build_site.*
 sync_mod_repos*
+__pycache__/
