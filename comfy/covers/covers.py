@@ -56,6 +56,15 @@ COVERS = {
     "my_novel_game": ("My Novel", "a visual novel scene: a small town street, a bar and a home at dusk"),
     "live2d_base": ("Live2D", "an anime girl portrait with a visible mesh of deformation points, animated"),
     "mod_manager": ("Mod Manager", "a grid of colorful mod cards being installed with progress bars"),
+    # the rpg_plus sample (2026-10-23); first renders were queued with seeds 950.. by the session's job script
+    "stats_base": ("Stats", "a glowing fantasy character sheet with strength, agility and intelligence bars floating beside a hero silhouette, rune circles"),
+    "stat_checks": ("Stat Checks", "a glowing twenty-sided die rolling above an open storybook whose pages split into branching paths"),
+    "equipment": ("Equipment", "a knight's armor stand with a sword, a shield, a helmet and a ring hanging in glowing equipment slots"),
+    "battle_formulas": ("Battle Formulas", "a young mage casting a fireball at a monster, glowing arcane math formulas floating in the air"),
+    "classic_rpg_pack": ("Classic RPG Pack", "a warrior, a mage and a rogue posing together with sword, staff and dagger"),
+    "rpg_plus_game": ("RPG Plus", "a pixel art village crossroads at dawn where a warrior, a mage and a rogue choose their paths"),
+    "schema_base": ("Schemas", "an enchanted blueprint table where glowing annotated diagrams of swords, potions and heroes unfold into labelled forms"),
+    "schema_tools": ("Schema Tools", "a magical library where floating cards of heroes, items and spells are sorted into glowing forms and tables"),
 }
 
 

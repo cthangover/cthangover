@@ -1,0 +1,61 @@
+{
+  "Actions": [
+    {
+      "Id": "rpg.battle",
+      "Name": "rpg/schema/builtin/rpg_battle",
+      "Description": "rpg/schema/builtin/rpg_battle_desc",
+      "Category": "battle",
+      "Params": [
+        {
+          "Key": "enemies",
+          "Type": "ref_list",
+          "Kind": "character",
+          "Required": true,
+          "Name": "rpg/schema/field/enemies"
+        },
+        {
+          "Key": "win_flag",
+          "Type": "flag",
+          "Name": "rpg/schema/field/win_flag"
+        }
+      ]
+    },
+    {
+      "Id": "rpg.teleport",
+      "Name": "rpg/schema/builtin/rpg_teleport",
+      "Description": "rpg/schema/builtin/rpg_teleport_desc",
+      "Category": "world",
+      "Params": [
+        {
+          "Key": "map",
+          "Type": "ref",
+          "Kind": "rpg_map",
+          "Name": "rpg/schema/field/map"
+        },
+        {
+          "Key": "x",
+          "Type": "int",
+          "Required": true,
+          "Name": "rpg/schema/field/x"
+        },
+        {
+          "Key": "y",
+          "Type": "int",
+          "Required": true,
+          "Name": "rpg/schema/field/y"
+        },
+        {
+          "Key": "dir",
+          "Type": "choice",
+          "Options": [
+            "Up",
+            "Down",
+            "Left",
+            "Right"
+          ],
+          "Name": "rpg/schema/field/dir"
+        }
+      ]
+    }
+  ]
+}

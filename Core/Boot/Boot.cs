@@ -121,6 +121,7 @@ namespace Cthangover.Core.Bootstrap
                 Phase = BootPhase.Ready;
                 Mods.HotReload.ModHotReloadService.InstallIfEnabled(sceneManager?.GetTree());
                 GameLogger.Log("BOOT", "Boot (sync) complete");
+                Mods.Testing.ItestCompileGuard.FailIfBroken(sceneManager?.GetTree());
             }
             catch (OperationCanceledException)
             {
@@ -183,6 +184,7 @@ namespace Cthangover.Core.Bootstrap
                 BootProgress.EnterPhase(BootPhase.Ready);
                 Mods.HotReload.ModHotReloadService.InstallIfEnabled(context.GetTree());
                 GameLogger.Log("BOOT", "Boot (launcher) complete");
+                Mods.Testing.ItestCompileGuard.FailIfBroken(context.GetTree());
             }
             finally
             {

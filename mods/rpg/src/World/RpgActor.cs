@@ -42,14 +42,35 @@ namespace Cthangover.Mods.Rpg
         /// <summary>True while a step is in progress.</summary>
         public bool IsMoving => progress < 1f;
 
-        /// <summary>The map event this actor shows; null for the player.</summary>
+        /// <summary>The map event this actor shows (its definition, all pages); null for the player.</summary>
         public RpgMapEvent Event { get; }
+
+        /// <summary>The event as its active page shows it (<see cref="RpgEventPages.Effective"/>); null while no page is active.</summary>
+        public RpgMapEvent Current { get; set; }
+
+        /// <summary>Index of the active page (<see cref="RpgEventPages.ActiveIndex"/>); -2 before the first refresh.</summary>
+        public int PageIndex { get; set; } = -2;
+
+        /// <summary>Next step of the active page's route.</summary>
+        public int RouteIndex { get; set; }
+
+        /// <summary>Seconds until the next route step.</summary>
+        public double RouteTimer { get; set; }
 
         /// <summary>Creates an actor for a cell grid of <paramref name="tileSize"/> pixels.</summary>
         public RpgActor(int tileSize, RpgMapEvent mapEvent = null)
         {
             this.tileSize = tileSize;
             Event = mapEvent;
+        }
+
+        /// <summary>Removes the shown charset, tile or icon (a page change shows another one).</summary>
+        public void ClearLook()
+        {
+            if (sprite == null)
+                return;
+            sprite.QueueFree();
+            sprite = null;
         }
 
         /// <summary>Shows a charset; a null texture leaves the actor invisible (an invisible trigger).</summary>

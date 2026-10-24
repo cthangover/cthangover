@@ -1,0 +1,19 @@
+{
+  "Actions": [
+    {
+      "Id": "character.add_skill",
+      "Name": "skills/schema/builtin/add_skill",
+      "Description": "skills/schema/builtin/add_skill_desc",
+      "Category": "characters",
+      "Params": [
+        {
+          "Key": "skill_id",
+          "Type": "ref",
+          "Kind": "skill",
+          "Required": true,
+          "Name": "skills/schema/field/skill"
+        }
+      ]
+    }
+  ]
+}

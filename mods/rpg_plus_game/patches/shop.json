@@ -1,0 +1,16 @@
+{
+  "Items": [
+    {
+      "Id": "rpg_demo/village_merchant",
+      "Sells$add": [
+        { "Item": "classic/iron_sword", "Price": 30 },
+        { "Item": "classic/dagger", "Price": 18 },
+        { "Item": "classic/oak_staff", "Price": 24 },
+        { "Item": "classic/leather_armor", "Price": 20 },
+        { "Item": "classic/robe", "Price": 16 },
+        { "Item": "classic/silver_ring", "Price": 22 },
+        { "Item": "classic/strength_tonic", "Price": 40 }
+      ]
+    }
+  ]
+}

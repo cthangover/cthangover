@@ -1,0 +1,64 @@
+scene: rpg_plus_crossroads
+priority: 10
+is_one_run: true
+save_allowed: true
+---
+# The prologue is a visual novel scene: a background, lines and choices. The choice gives the hero an
+# archetype (stats_base: stat.archetype), starting gear (equipment: equip.put) and a first stat check
+# (stat_checks: check, when) — the same mechanics then work on the tile map, in battles and in the sheet.
+title "Перекрёсток" key=rpg_plus/prologue/title
+ptext "Указатель честно показывает в три стороны сразу. Идти не хочется ни в одну." key=rpg_plus/prologue/line1
+ptext "Внизу — деревня у Серого леса. Говорят, там нужен кто-нибудь, кто не боится волков. Или боится, но молча. В кошельке звенят двадцать пять монет — всё, что осталось от прошлой жизни." key=rpg_plus/prologue/line2
+action item.add id=money/coin count=25
+select "Кем ты был, пока не пришёл сюда?" key=rpg_plus/prologue/ask
+option "Солдатом. Меч — это просто." key=rpg_plus/prologue/opt_warrior -> :warrior
+option "Учеником мага. Огонь меня слушается." key=rpg_plus/prologue/opt_mage -> :mage
+option "Бродягой. Договориться можно с кем угодно." key=rpg_plus/prologue/opt_rogue -> :rogue
+
+:warrior
+action stat.archetype who=rpg_hero id=classic/warrior
+action equip.put who=rpg_hero item=classic/wood_sword give=1
+ptext "Деревянный меч за спиной — всё, что тебе оставили в казарме. Кроме привычки бить первым." key=rpg_plus/prologue/warrior
+goto -> :road
+
+:mage
+action stat.archetype who=rpg_hero id=classic/mage
+action equip.put who=rpg_hero item=classic/oak_staff give=1
+ptext "Посох тёплый, кристалл гудит. Учитель говорил, что огонь слушается умных. Про остальных он не успел рассказать." key=rpg_plus/prologue/mage
+goto -> :road
+
+:rogue
+action stat.archetype who=rpg_hero id=classic/rogue
+action equip.put who=rpg_hero item=classic/dagger give=1
+ptext "Кинжал в рукаве, улыбка наготове. Двери открываются от улыбки. Те, что не открываются, — от кинжала." key=rpg_plus/prologue/rogue
+
+:road
+ptext "У указателя сидит странница в лиловом плаще. Смотрит так, будто уже знает, чем всё кончится, и ей заранее скучно." key=rpg_plus/prologue/seer
+select "Что скажешь ей?" key=rpg_plus/prologue/seer_ask
+option "Вежливо спросить дорогу [Харизма 10]" key=rpg_plus/prologue/opt_ask_way -> :ask_way
+option "Молча пройти мимо" key=rpg_plus/prologue/opt_pass -> :leave
+
+:ask_way
+# A charisma check: d20 + charisma against 10. The roll is shown as one line, then the story branches.
+check cha 10 who=rpg_hero else=snub -> :gift
+
+:gift
+text "— Вежливый. Надо же. — Она бросает тебе оберег из клевера. — Держи. Удача любит тех, кто спрашивает. Недолго, но любит." key=rpg_plus/prologue/gift
+action item.add id=classic/clover_charm
+goto -> :leave
+
+:snub
+text "— Найдёшь сам, — она отворачивается. — Все находят. Некоторые даже живыми." key=rpg_plus/prologue/snub
+
+:leave
+when "archetype(rpg_hero, 'classic/mage')" -> :mage_hint
+ptext "Тропа сбегает к деревне. Туман расступается неохотно — будто знает, куда ты идёшь." key=rpg_plus/prologue/path
+goto -> :go
+
+:mage_hint
+ptext "Посох тихо щёлкает искрой. Волки, говорят, огня не любят. Посох, похоже, не любит волков." key=rpg_plus/prologue/mage_hint
+
+:go
+ptext "Твой лист — кнопка с книгой на панели сверху: статы, уровень, снаряжение. Надеть вещь можно из сумки." key=rpg_plus/prologue/sheet_hint
+switch_scene rpg_village
+end

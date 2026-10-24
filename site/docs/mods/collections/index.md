@@ -487,11 +487,14 @@ picker.
 - `collections/cthangover/` — the main game, a visual novel: story, the 2D
   engine, characters, quests, items, battles with an optional second battle
   core, Live2D and tools, each as its own mechanic.
-- `collections/rpg_demo/` — an RPG Maker style game on the same engine mods:
-  its content (`rpg_demo_game`), pixel art (`village_pack`), the tile world
-  (`rpg`), the FF battle core with the card core as an option, the map
-  editor (`rpg_editor`) and the item and character editors (`items_editor`,
-  `characters_editor`) as optional tools.
+- `collections/rpg_plus/` — an RPG Maker style game on the same engine mods:
+  its story (`rpg_plus_game`: a novel prologue, a training yard, patches),
+  the tile world it extends (`rpg_demo_game`), pixel art (`village_pack`),
+  classic rules as data (`classic_rpg_pack`), the stats mods (`stats_base`,
+  `stat_checks`, `equipment`, `battle_formulas`), the FF battle core with the
+  card core as an option, and as optional tools the map editor (`rpg_editor`)
+  and the Data Editor with the item and character editors (`schema_tools`,
+  `items_editor`, `characters_editor`).
 - `collections/dev_tools/` — the developer toolset to add to any game: the
   editors (`editor_tools`), the in-game scenario studio (`scenario_studio`,
   opened by the **Studio** button on the game's toolbar), validators and the

@@ -64,6 +64,16 @@ namespace Cthangover.Mods.Rpg
         /// <summary>Scenario condition; the event exists only while it is true.</summary>
         public string Condition { get; set; }
 
+        /// <summary>
+        /// Further pages (RPG Maker's event pages): the last one whose condition holds replaces
+        /// the event's look and effect; with pages, a false own <see cref="Condition"/> only
+        /// turns off page 0 (<see cref="RpgEventPages"/>).
+        /// </summary>
+        public List<RpgEventPage> Pages { get; set; }
+
+        /// <summary>Autonomous movement (<see cref="RpgMoveRoute"/>); null = the event stands still.</summary>
+        public RpgMoveRoute Route { get; set; }
+
         /// <summary>Mod the event was read from (set by the event resolver, not stored).</summary>
         [JsonIgnore]
         public string ModId { get; set; }

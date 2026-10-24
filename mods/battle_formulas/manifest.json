@@ -1,0 +1,15 @@
+{
+  "id": "battle_formulas",
+  "name": "Battle Formulas",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Battle actions as data for every battle core: an action entity with Formula= (a.mag * 3 - b.mdf + rand(0, 4)) needs no C# — Effect=damage|heal, Cost=mp:5 spends a stat pool, Pierce=1 ignores shields, State=basic/stun with StateTurns and StateChance puts a status on the target. a.* is the one acting, b.* the target: their stat sheets plus live hp, hp_max, attack, defence, point. Registered as global executors, so the same skill works in the FF core and in the card core. Enemies with stats data get their battle attributes from their sheets when the battle starts.",
+  "category": "gameplay",
+  "sources": [
+    "src/**/*.cs"
+  ],
+  "test_sources": [
+    "tests/*.cs"
+  ],
+  "depends": ["stats_base>=1", "turn_battle_base>=2", "characters_base>=1"]
+}

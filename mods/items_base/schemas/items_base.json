@@ -1,0 +1,75 @@
+{
+  "Actions": [
+    {
+      "Id": "item.add",
+      "Name": "items/schema/builtin/item_add",
+      "Description": "items/schema/builtin/item_add_desc",
+      "Category": "items",
+      "Params": [
+        {
+          "Key": "id",
+          "Type": "ref",
+          "Kind": "item",
+          "Required": true,
+          "Name": "items/schema/field/item"
+        },
+        {
+          "Key": "count",
+          "Type": "int",
+          "Default": "1",
+          "Name": "items/schema/field/count"
+        }
+      ]
+    }
+  ],
+  "Kinds": [
+    {
+      "Kind": "item",
+      "Name": "items/schema/kind/item",
+      "Description": "items/schema/kind/item_desc",
+      "Folder": "items",
+      "NewId": "{mod}/new_item",
+      "Order": 10,
+      "Fields": [
+        {
+          "Key": "Name",
+          "Type": "locale",
+          "KeyPattern": "{mod}/item/{id}/name",
+          "Name": "items/schema/field/name"
+        },
+        {
+          "Key": "Description",
+          "Type": "locale",
+          "KeyPattern": "{mod}/item/{id}/desc",
+          "Name": "items/schema/field/description"
+        },
+        {
+          "Key": "Cost",
+          "Type": "int",
+          "Default": "1",
+          "Name": "items/schema/field/cost"
+        },
+        {
+          "Key": "Sprite",
+          "Type": "picture",
+          "Group": "items",
+          "Name": "items/schema/field/picture"
+        },
+        {
+          "Key": "ItemType",
+          "Type": "text",
+          "Default": "Resource",
+          "Name": "items/schema/field/item_type",
+          "Description": "items/schema/field/item_type_desc"
+        },
+        {
+          "Key": "ItemAction",
+          "Type": "text",
+          "Default": "null",
+          "Name": "items/schema/field/item_action",
+          "Description": "items/schema/field/item_action_desc"
+        }
+      ]
+    }
+  ]
+}

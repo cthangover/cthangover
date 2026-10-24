@@ -84,14 +84,20 @@ namespace Cthangover.Tools.RpgEditor.Tests
             switch (step)
             {
                 case 0:
-                    if (!Boot.IsReady || RpgWorldHost.Current?.View == null)
+                    if (!Boot.IsReady || string.IsNullOrEmpty(GetTree().Root.GetNodeOrNull<SceneManager>("SceneManager")?.CurrentSceneName))
                         return;
+                    // Dialogs first: the rpg_plus prologue runs before any map is shown.
                     var box = RpgInput.FindDialogBox();
                     if (box != null && box.IsRunning)
                     {
-                        box.NextAction();
+                        if (box.IsWaitingAnswer)
+                            box.TrySelectVariant(0);
+                        else
+                            box.NextAction();
                         return;
                     }
+                    if (RpgWorldHost.Current?.View == null)
+                        return;
                     window = ToolWindow.Open<RpgMapEditorWindow>();
                     step++;
                     return;

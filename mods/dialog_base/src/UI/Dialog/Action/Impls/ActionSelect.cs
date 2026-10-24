@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Linq;
+using Cthangover.Core.Utils;
 using Cthangover.Mods.Dialog.Action;
 using Godot;
 using Cthangover.Core.UI;
@@ -35,16 +37,29 @@ namespace Cthangover.Mods.Dialog.Action.Impls
         public override WaitType WaitType { get; set; } = WaitType.WaitSelect;
 
         /// <summary>Substitutes variables in the variants and context text, then shows the answer box; the runtime stays paused until a variant is picked.</summary>
+        /// <summary>
+        /// Offers the options whose conditions hold now. When none does, the choice is
+        /// skipped and the dialog goes on with the next line, so a choice of only gated
+        /// options never leaves the player stuck.
+        /// </summary>
         public override void DoRun(DialogRuntime runtime)
         {
             var dialogBox = runtime.DialogBox;
             if (dialogBox == null)
                 return;
 
-            foreach (var variant in Variants)
+            var shown = Variants.Where(v => v.IsShown()).ToList();
+            WaitType = shown.Count == 0 ? WaitType.NoWait : WaitType.WaitSelect;
+            if (shown.Count == 0)
+            {
+                GameLogger.Log("DIALOG", "select: no option is shown (all conditions false), going on", LogLevel.Debug);
+                return;
+            }
+
+            foreach (var variant in shown)
                 variant.Text = runtime.ProcessText(variant.Text);
 
-            dialogBox.SetVariants(Variants);
+            dialogBox.SetVariants(shown);
             dialogBox.SetText(runtime.ProcessText(Text));
         }
     }

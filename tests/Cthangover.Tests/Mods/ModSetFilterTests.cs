@@ -25,6 +25,18 @@ namespace Cthangover.Tests.Mods
         }
 
         [Fact]
+        public void FilterDisabledMods_ExplicitModAndItsRequiredDependenciesStayEnabled()
+        {
+            DisabledModsStore.Save(new HashSet<string> { "fixture", "base", "voice" });
+            var mods = Set(Mod("base"), Mod("fixture", "base>=1"), Mod("voice"), Mod("menu"));
+
+            ModSetFilter.FilterDisabledMods(mods, new[] { "fixture" });
+
+            Assert.Equal(new[] { "base", "fixture", "menu" }, mods.Keys.OrderBy(k => k));
+            Assert.Equal(new[] { "base", "fixture", "voice" }, DisabledModsStore.Load().OrderBy(k => k));
+        }
+
+        [Fact]
         public void ValidateDependencies_DropsDependentsOfARemovedMod_Transitively()
         {
             var mods = Set(

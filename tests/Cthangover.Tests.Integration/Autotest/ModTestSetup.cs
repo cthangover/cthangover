@@ -45,7 +45,19 @@ namespace Cthangover.Core.Autotest
 			}
 
 			GameLogger.Log("TEST", $"[TEST_RESULT] name=mod passed={passed} failed={failed}");
-			GetTree().Quit(failed == 0 ? 0 : 1);
+			QuitAfterFrames(failed == 0 ? 0 : 1);
+		}
+
+		/// <summary>
+		/// TEMPORARY (2026-10-24, checking the native exit crash 0xC0000005/0xC0000374): quits a few
+		/// frames after the last <c>ModManager.Reload</c> instead of in the same frame, so the
+		/// unloaded mod contexts and freed nodes settle first. Remove once the crash is understood.
+		/// </summary>
+		private async void QuitAfterFrames(int exitCode)
+		{
+			for (var frame = 0; frame < 3; frame++)
+				await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+			GetTree().Quit(exitCode);
 		}
 
 		/// <summary>

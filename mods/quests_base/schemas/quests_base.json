@@ -1,0 +1,108 @@
+{
+  "Actions": [
+    {
+      "Id": "quest.set_status",
+      "Name": "quests/schema/builtin/quest_status",
+      "Description": "quests/schema/builtin/quest_status_desc",
+      "Category": "quests",
+      "Params": [
+        {
+          "Key": "quest_id",
+          "Type": "ref",
+          "Kind": "quest",
+          "Required": true,
+          "Name": "quests/schema/field/quest"
+        },
+        {
+          "Key": "status",
+          "Type": "choice",
+          "Options": [
+            "NotStarted",
+            "Progress",
+            "End"
+          ],
+          "Required": true,
+          "Name": "quests/schema/field/status"
+        }
+      ]
+    },
+    {
+      "Id": "quest.add_tag",
+      "Name": "quests/schema/builtin/quest_tag",
+      "Description": "quests/schema/builtin/quest_tag_desc",
+      "Category": "quests",
+      "Params": [
+        {
+          "Key": "quest_id",
+          "Type": "ref",
+          "Kind": "quest",
+          "Required": true,
+          "Name": "quests/schema/field/quest"
+        },
+        {
+          "Key": "tag",
+          "Type": "text",
+          "Required": true,
+          "Name": "quests/schema/field/tag"
+        }
+      ]
+    },
+    {
+      "Id": "quest.remove_tag",
+      "Name": "quests/schema/builtin/quest_remove_tag",
+      "Description": "quests/schema/builtin/quest_remove_tag_desc",
+      "Category": "quests",
+      "Params": [
+        {
+          "Key": "quest_id",
+          "Type": "ref",
+          "Kind": "quest",
+          "Required": true,
+          "Name": "quests/schema/field/quest"
+        },
+        {
+          "Key": "tag",
+          "Type": "text",
+          "Required": true,
+          "Name": "quests/schema/field/tag"
+        }
+      ]
+    },
+    {
+      "Id": "quest.set_data_status",
+      "Name": "quests/schema/builtin/quest_data_status",
+      "Description": "quests/schema/builtin/quest_data_status_desc",
+      "Category": "quests",
+      "Params": [
+        {
+          "Key": "quest_id",
+          "Type": "ref",
+          "Kind": "quest",
+          "Required": true,
+          "Name": "quests/schema/field/quest"
+        },
+        {
+          "Key": "level",
+          "Type": "int",
+          "Required": true,
+          "Name": "quests/schema/field/stage"
+        }
+      ]
+    },
+    {
+      "Id": "quest.send_notification",
+      "Name": "quests/schema/builtin/quest_notify",
+      "Description": "quests/schema/builtin/quest_notify_desc",
+      "Category": "quests",
+      "Params": [
+        {
+          "Key": "quest_id",
+          "Type": "ref",
+          "Kind": "quest",
+          "Required": true,
+          "Name": "quests/schema/field/quest"
+        }
+      ]
+    }
+  ]
+}

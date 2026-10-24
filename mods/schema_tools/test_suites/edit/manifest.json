@@ -1,0 +1,10 @@
+{
+  "name": "Schema Tools Test",
+  "description": "GUI test of the schema tools in rpg_plus: the Data Editor window lists the described kinds, a new item in rpg_plus_game gets an equip type and a trait through the form (a list card with a stat picker), is saved and is gear the game knows at once; the command palette builds 'action stat.add stat=str value=2', reports an unknown stat as an error, and inserts the line into an open scenario editor. The new file and the locale edits are removed again. Activated by --itest=schema_tools_edit with --game=rpg_plus --new.",
+  "sources": [
+    "src/*.cs"
+  ],
+  "depends": [
+    "rpg_plus_game>=1"
+  ]
+}

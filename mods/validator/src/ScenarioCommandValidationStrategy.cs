@@ -25,15 +25,16 @@ namespace Cthangover.Validator
     /// <item>references collected by <see cref="ICommandReferenceMetadata"/> are added to the
     /// shared graph (backgrounds, scenes, music, sounds, effects, avatars) and checked by
     /// <see cref="ReferenceStrategy"/>; scenario actions are checked against the action registry.</item>
-    /// <item>content references inside action arguments (<see cref="ActionArgumentReferences"/>:
-    /// character ids, skills, quest ids, battle enemy lists) are added to the same graph, so a
-    /// typo is reported against the declaring mods with file and line.</item>
+    /// <item>content references inside action arguments (character ids, skills, quest ids,
+    /// battle enemy lists) come from the actions' schemas (<see cref="SchemaValidationStrategy"/>)
+    /// and go into the same graph, so a typo is reported against the declaring mods with file
+    /// and line.</item>
     /// </list>
     /// </summary>
     public class ScenarioCommandValidationStrategy : IValidationStrategy
     {
         private static readonly string[] SelectAllowedNamed = { "key", "first", "second" };
-        private static readonly string[] OptionAllowedNamed = { "key", "goto" };
+        private static readonly string[] OptionAllowedNamed = { "key", "goto", "if" };
 
         private static readonly object actionLock = new();
         private static HashSet<string> actionNames;
@@ -144,6 +145,8 @@ namespace Cthangover.Validator
 
                     CheckEmptyNamed(context, mod, file, lineNumber, command, named);
                     CheckAllowedNamed(context, mod, file, lineNumber, command, named, OptionAllowedNamed);
+                    if (named.TryGetValue("if", out var optionCondition))
+                        CheckCondition(context, mod, file, lineNumber, command, optionCondition);
 
                     var target = arrowTarget;
                     if (string.IsNullOrEmpty(target) && named.TryGetValue("goto", out var goTo))
@@ -166,6 +169,9 @@ namespace Cthangover.Validator
                         "check the command name or make sure the mod that defines it is enabled");
                     continue;
                 }
+
+                if (command == "when")
+                    CheckCondition(context, mod, file, lineNumber, command, string.Join(" ", positional));
 
                 var spec = strategy as IScenarioCommandSpec;
                 if (spec != null)
@@ -190,11 +196,32 @@ namespace Cthangover.Validator
                         AddReference(context, mod, file, lineNumber, referenceMetadata.Positional0Kind, positional[0]);
                 }
 
-                if (command == "action" && positional.Count > 0)
-                    AddActionArgumentReferences(context, mod, file, lineNumber, positional[0], named);
             }
 
             FinalizeSelect(context, mod, file, ref pendingSelectLine, ref pendingSelectHasOptions);
+        }
+
+        /// <summary>
+        /// Parses a condition of an <c>option if=</c> or a <c>when</c> line with the game's own
+        /// condition parser (every leaf parser the loaded mods registered), so a broken
+        /// condition is an error here and not a silently hidden option at play time.
+        /// </summary>
+        private static void CheckCondition(ValidationContext context, IModInfo mod, string file, int line, string command, string condition)
+        {
+            if (string.IsNullOrWhiteSpace(condition))
+            {
+                context.AddError("SCENARIO_EMPTY_ARGUMENT", $"'{command}' needs a condition", mod.Id, file, line);
+                return;
+            }
+            try
+            {
+                ConditionParser.Parse(condition);
+            }
+            catch (FormatException ex)
+            {
+                context.AddError("SCENARIO_BAD_CONDITION", $"'{command}': {ex.Message.Split('\n')[0]}", mod.Id, file, line,
+                    "quote a condition with spaces whole (\"if=a && b\") and check names and parentheses");
+            }
         }
 
         private static HashSet<string> CollectLabels(ValidationContext context, IModInfo mod, string file, string[] lines, int lineOffset)
@@ -389,52 +416,6 @@ namespace Cthangover.Validator
                 return;
 
             context.Graph.AddReference(ValidationKind.Avatar, value, mod.Id, file, line);
-        }
-
-        /// <summary>
-        /// Collects content references hidden in the named arguments of an
-        /// <c>action</c> command. The scenario DSL treats action arguments as
-        /// opaque dialog variables, so without this pass a typo like
-        /// <c>action party.add id=Murakamiy</c> would only surface
-        /// at runtime as a factory error log. Values from
-        /// <see cref="ActionArgumentReferences"/> become graph references and are
-        /// reconciled by <see cref="ReferenceStrategy"/>, which reports the
-        /// offending scenario file and line. Comma-separated values (e.g.
-        /// battle.init enemies=) produce one reference per entry; values with the
-        /// ${name} marker are computed at play time and cannot be resolved
-        /// statically, so they are skipped instead of misreported.
-        /// </summary>
-        private static void AddActionArgumentReferences(
-            ValidationContext context,
-            IModInfo mod,
-            string file,
-            int line,
-            string actionName,
-            Dictionary<string, string> named)
-        {
-            if (!ActionArgumentReferences.TryGetKinds(actionName, out var kinds))
-                return;
-
-            foreach (var pair in kinds)
-            {
-                if (!named.TryGetValue(pair.Key, out var value) || string.IsNullOrWhiteSpace(value))
-                    continue;
-
-                if (value.Contains("$" + "{"))
-                    continue;
-
-                foreach (var part in value.Split(','))
-                {
-                    var target = part.Trim();
-                    if (target.Length == 0)
-                        continue;
-
-                    if (pair.Value == ValidationKind.Scene && SceneManager.IsNativeSceneName(target))
-                        continue;
-
-                    context.Graph.AddReference(pair.Value, target, mod.Id, file, line);
-                }
-            }
         }
 
         private static void AddReference(ValidationContext context, IModInfo mod, string file, int line, PositionalReferenceKind kind, string target)

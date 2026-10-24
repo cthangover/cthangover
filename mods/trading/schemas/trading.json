@@ -1,0 +1,83 @@
+{
+  "Actions": [
+    {
+      "Id": "trade.open",
+      "Name": "trading/schema/builtin/trade_open",
+      "Description": "trading/schema/builtin/trade_open_desc",
+      "Category": "items",
+      "Params": [
+        {
+          "Key": "shop",
+          "Type": "ref",
+          "Kind": "shop",
+          "Required": true,
+          "Name": "trading/schema/field/shop"
+        }
+      ]
+    }
+  ],
+  "Kinds": [
+    {
+      "Kind": "shop",
+      "Name": "trading/schema/kind/shop",
+      "Description": "trading/schema/kind/shop_desc",
+      "Folder": "shops",
+      "NewId": "{mod}/new_shop",
+      "Order": 13,
+      "Fields": [
+        {
+          "Key": "Name",
+          "Type": "locale",
+          "KeyPattern": "{mod}/shop/{id}",
+          "Name": "trading/schema/field/name"
+        },
+        {
+          "Key": "Currency",
+          "Type": "ref",
+          "Kind": "item",
+          "Name": "trading/schema/field/currency"
+        },
+        {
+          "Key": "Sells",
+          "Type": "list",
+          "Name": "trading/schema/field/sells",
+          "Of": [
+            {
+              "Key": "Item",
+              "Type": "ref",
+              "Kind": "item",
+              "Required": true,
+              "Name": "trading/schema/field/item"
+            },
+            {
+              "Key": "Price",
+              "Type": "int",
+              "Required": true,
+              "Name": "trading/schema/field/price"
+            }
+          ]
+        },
+        {
+          "Key": "Buys",
+          "Type": "list",
+          "Name": "trading/schema/field/buys",
+          "Of": [
+            {
+              "Key": "Item",
+              "Type": "ref",
+              "Kind": "item",
+              "Required": true,
+              "Name": "trading/schema/field/item"
+            },
+            {
+              "Key": "Price",
+              "Type": "int",
+              "Required": true,
+              "Name": "trading/schema/field/price"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

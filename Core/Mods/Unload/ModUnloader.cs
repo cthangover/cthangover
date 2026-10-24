@@ -9,6 +9,7 @@ namespace Cthangover.Core.Mods.Unload
     using Cthangover.Core.Mods.Consumers;
     using Cthangover.Core.Utils;
     using Godot;
+    using Cthangover.Core.Scenes.Parsing;
 
     /// <summary>
     /// The unload protocol for a set of mods, run as one pass so references
@@ -62,6 +63,10 @@ namespace Cthangover.Core.Mods.Unload
                 ModEventBus.Instance?.ClearForMod(record.ModId);
             if (subscriptions > 0)
                 report.Add($"removed {subscriptions} event bus subscription(s) of mod code");
+
+            var parsers = LeafParserRegistry.RemoveOwned(ownership, records.Select(r => r.ModId));
+            if (parsers > 0)
+                report.Add($"removed {parsers} condition parser(s) of mod code");
 
             var consumers = AssemblyConsumerRegistry.RemoveOwned(ownership);
             if (consumers > 0)

@@ -1,0 +1,70 @@
+{
+  "Events": [
+    {
+      "Id": "rpg_plus_trainer",
+      "X": 27,
+      "Y": 10,
+      "Sprite": "rpg_plus/trainer",
+      "Tile": -1,
+      "Dir": "Left",
+      "Trigger": "Action",
+      "Scenario": "rpg_plus/events/trainer",
+      "IsSolid": true
+    },
+    {
+      "Id": "rpg_plus_seer",
+      "X": 4,
+      "Y": 11,
+      "Sprite": "rpg_plus/seer",
+      "Tile": -1,
+      "Dir": "Down",
+      "Trigger": "Action",
+      "Scenario": "rpg_plus/events/seer",
+      "IsSolid": true
+    },
+    {
+      "Id": "rpg_plus_chest",
+      "X": 29,
+      "Y": 3,
+      "Tile": 14,
+      "Trigger": "Action",
+      "Commands": [
+        "ptext \"Сундук не заперт. Хозяин либо доверчив, либо хранит в нём только надежды.\" key=rpg_plus/chest/closed",
+        "action item.add id=money/coin count=10",
+        "ptext \"Десять монет. Хозяин был доверчив. Был.\" key=rpg_plus/chest/coins",
+        "flag rpg_plus_chest_open 1"
+      ],
+      "Pages": [
+        {
+          "Condition": "rpg_plus_chest_open == 1",
+          "Tile": 15,
+          "Commands": [
+            "ptext \"Пусто. Доверие кончилось вместе с монетами.\" key=rpg_plus/chest/empty"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "rpg_plus_pet_slime",
+      "X": 6,
+      "Y": 15,
+      "Sprite": "village/slime",
+      "Dir": "Left",
+      "Trigger": "Action",
+      "Commands": [
+        "ptext \"Ручной слизень. Его кормят с руки. Руки пока целы.\" key=rpg_plus/slime/pet"
+      ],
+      "Route": {
+        "Steps": [
+          "left",
+          "wait",
+          "right",
+          "right",
+          "wait",
+          "left"
+        ],
+        "Every": 0.9
+      }
+    }
+  ]
+}

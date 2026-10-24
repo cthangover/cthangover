@@ -1,0 +1,60 @@
+{
+  "Actions": [
+    {
+      "Id": "map.open_zone",
+      "Name": "map/schema/builtin/map_open_zone",
+      "Description": "map/schema/builtin/map_open_zone_desc",
+      "Category": "world",
+      "Params": [
+        {
+          "Key": "zone_id",
+          "Type": "text",
+          "Required": true,
+          "Name": "map/schema/field/zone"
+        }
+      ]
+    },
+    {
+      "Id": "map.close_zone",
+      "Name": "map/schema/builtin/map_close_zone",
+      "Description": "map/schema/builtin/map_close_zone_desc",
+      "Category": "world",
+      "Params": [
+        {
+          "Key": "zone_id",
+          "Type": "text",
+          "Required": true,
+          "Name": "map/schema/field/zone"
+        }
+      ]
+    },
+    {
+      "Id": "map.show_zone",
+      "Name": "map/schema/builtin/map_show_zone",
+      "Description": "map/schema/builtin/map_show_zone_desc",
+      "Category": "world",
+      "Params": [
+        {
+          "Key": "zone_id",
+          "Type": "text",
+          "Required": true,
+          "Name": "map/schema/field/zone"
+        }
+      ]
+    },
+    {
+      "Id": "map.hide_zone",
+      "Name": "map/schema/builtin/map_hide_zone",
+      "Description": "map/schema/builtin/map_hide_zone_desc",
+      "Category": "world",
+      "Params": [
+        {
+          "Key": "zone_id",
+          "Type": "text",
+          "Required": true,
+          "Name": "map/schema/field/zone"
+        }
+      ]
+    }
+  ]
+}

@@ -74,18 +74,29 @@
       "scene": "res://scenes/menu/launcher.tscn",
       "args": [
         "--",
-        "--game=rpg_demo",
+        "--game=rpg_plus",
         "--new",
         "--itest=rpg_walk"
       ],
       "timeoutSeconds": 180
     },
     {
+      "name": "rpg_plus",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--game=rpg_plus",
+        "--new",
+        "--itest=rpg_plus"
+      ],
+      "timeoutSeconds": 240
+    },
+    {
       "name": "rpg_editor_edit",
       "scene": "res://scenes/menu/launcher.tscn",
       "args": [
         "--",
-        "--game=rpg_demo",
+        "--game=rpg_plus",
         "--new",
         "--itest=rpg_editor_edit"
       ],
@@ -96,9 +107,20 @@
       "scene": "res://scenes/menu/launcher.tscn",
       "args": [
         "--",
-        "--game=rpg_demo",
+        "--game=rpg_plus",
         "--new",
         "--itest=items_editor_edit"
+      ],
+      "timeoutSeconds": 180
+    },
+    {
+      "name": "schema_tools_edit",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--game=rpg_plus",
+        "--new",
+        "--itest=schema_tools_edit"
       ],
       "timeoutSeconds": 180
     },
@@ -107,7 +129,7 @@
       "scene": "res://scenes/menu/launcher.tscn",
       "args": [
         "--",
-        "--game=rpg_demo",
+        "--game=rpg_plus",
         "--new",
         "--itest=characters_editor_edit"
       ],
@@ -118,7 +140,7 @@
       "scene": "res://scenes/menu/launcher.tscn",
       "args": [
         "--",
-        "--game=rpg_demo",
+        "--game=rpg_plus",
         "--new",
         "--itest=trade"
       ],
@@ -136,11 +158,11 @@
       "timeoutSeconds": 300
     },
     {
-      "name": "game_rpg_demo",
+      "name": "game_rpg_plus",
       "scene": "res://scenes/menu/launcher.tscn",
       "args": [
         "--",
-        "--game=rpg_demo",
+        "--game=rpg_plus",
         "--new",
         "--timeout=60",
         "--dialogs=1"
@@ -148,14 +170,14 @@
       "timeoutSeconds": 180
     },
     {
-      "name": "resource_atlas_rpg_demo",
+      "name": "resource_atlas_rpg_plus",
       "scene": "res://scenes/menu/launcher.tscn",
       "args": [
         "--",
-        "--game=rpg_demo",
+        "--game=rpg_plus",
         "--with-mods=resource_atlas",
         "--resource-atlas",
-        "--atlas-out=res://tests/artifacts/resource_atlas/rpg_demo"
+        "--atlas-out=res://tests/artifacts/resource_atlas/rpg_plus"
       ],
       "timeoutSeconds": 240
     },

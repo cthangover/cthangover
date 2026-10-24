@@ -1,0 +1,47 @@
+scene: rpg_plus_training_yard
+priority: 10
+save_allowed: true
+---
+# A visual novel scene reached from the tile map (the trainer's dialog switches to it) and left by
+# switch_scene back to the map: the hero comes back to the cell he left. Exp, a strength check and a
+# reward that is given only once (story flags).
+text "— Ну, — наставник скрещивает руки. — Показывай. Только не убейся: я за тебя не отвечаю." key=rpg_plus/yard/intro
+
+:menu
+select "Чем займёмся?" key=rpg_plus/yard/ask
+option "Отработать удары (+20 опыта, один раз)" key=rpg_plus/yard/opt_drill -> :drill
+option "Поднять бревно над головой [Сила 12]" key=rpg_plus/yard/opt_log -> :log
+option "Вернуться в деревню" key=rpg_plus/yard/opt_back -> :back
+
+:drill
+when "rpg_plus_drilled == 1" -> :drilled
+action stat.exp who=rpg_hero value=20
+flag rpg_plus_drilled 1
+text "— Неплохо. Ещё сотня таких — и сойдёшь за бойца. Издалека." key=rpg_plus/yard/drill_done
+goto -> :menu
+
+:drilled
+text "— На сегодня хватит. Мышцы растут, пока спишь. Иди спи." key=rpg_plus/yard/drilled
+goto -> :menu
+
+:log
+check str 12 who=rpg_hero else=log_fail -> :log_ok
+
+:log_ok
+when "rpg_plus_tonic == 1" -> :log_again
+action item.add id=classic/strength_tonic
+flag rpg_plus_tonic 1
+text "— Ха! Поднял. — Наставник бросает тебе склянку. — Тоник силы. Не благодари. И не пей натощак." key=rpg_plus/yard/log_ok
+goto -> :menu
+
+:log_again
+text "— Опять? Хвастун. Тоника больше нет. Есть уважение. Немного." key=rpg_plus/yard/log_again
+goto -> :menu
+
+:log_fail
+text "— Бревно победило. Бывает. Подрасти — или купи у торговца тоник силы. Говорят, помогает. Торговец говорит." key=rpg_plus/yard/log_fail
+goto -> :menu
+
+:back
+switch_scene rpg_village
+end

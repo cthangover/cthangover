@@ -1,0 +1,15 @@
+{
+  "id": "equipment",
+  "name": "Equipment",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Gear for any game with stats: slots as data (\"Kind\": \"equip_slot\": weapon, body, accessory — or outfit and jewellery in a novel), items become gear by two keys of their own JSON (\"Equip\": the equip type, \"Traits\": what they do while worn), optional \"Archetypes\" limits. Worn items feed the stats as a trait source, so battle attributes, checks and conditions follow at once. The item action action/equip uses the inventory's own target picker; scenario actions equip.put and equip.remove; condition equipped(who, item); the Equipment block of the character sheet.",
+  "category": "gameplay",
+  "sources": [
+    "src/**/*.cs"
+  ],
+  "test_sources": [
+    "tests/*.cs"
+  ],
+  "depends": ["stats_base>=1", "items_base>=1", "characters_base>=1", "ui_base>=1"]
+}

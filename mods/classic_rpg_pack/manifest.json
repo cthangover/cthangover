@@ -1,0 +1,9 @@
+{
+  "id": "classic_rpg_pack",
+  "name": "Classic RPG Pack",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Reusable classic fantasy rules any game may take, data only: six attributes (STR, AGI, INT, VIT, CHA, LUK) and derived combat stats (HP bound to health, MP as a pool, ATK bound to attack, DEF bound to the shield, MAG), three archetypes (warrior, mage, rogue) with growth formulas and skills learned by level, equipment slots (weapon, body, accessory), eight pieces of gear and a strength tonic, four formula skills (power strike, fireball, heal, guard break). A novel can take it for charisma checks, a tile RPG for everything.",
+  "category": "gameplay, characters, visual",
+  "depends": ["stats_base>=1", "equipment>=1", "items_base>=1", "characters_base>=1"]
+}

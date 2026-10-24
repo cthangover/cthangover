@@ -1,0 +1,61 @@
+{
+  "Actions": [
+    { "Id": "stat.add", "Name": "stats/schema/stats/add", "Description": "stats/schema/stats/add_desc", "Category": "stats",
+      "Params": [
+        { "Key": "stat", "Type": "ref", "Kind": "stat", "Required": true, "Name": "stats/schema/field/stat" },
+        { "Key": "value", "Type": "number", "Default": "1", "Name": "stats/schema/field/value" },
+        { "Key": "who", "Type": "who", "Name": "stats/schema/field/who" } ] },
+    { "Id": "stat.archetype", "Name": "stats/schema/stats/archetype", "Description": "stats/schema/stats/archetype_desc", "Category": "stats",
+      "Params": [
+        { "Key": "id", "Type": "ref", "Kind": "archetype", "Name": "stats/schema/field/archetype" },
+        { "Key": "who", "Type": "who", "Name": "stats/schema/field/who" } ] },
+    { "Id": "stat.exp", "Name": "stats/schema/stats/exp", "Description": "stats/schema/stats/exp_desc", "Category": "stats",
+      "Params": [
+        { "Key": "value", "Type": "int", "Required": true, "Name": "stats/schema/field/value" },
+        { "Key": "who", "Type": "who", "Default": "party", "Name": "stats/schema/field/who" } ] },
+    { "Id": "stat.restore", "Name": "stats/schema/stats/restore", "Description": "stats/schema/stats/restore_desc", "Category": "stats",
+      "Params": [
+        { "Key": "who", "Type": "who", "Default": "party", "Name": "stats/schema/field/who" },
+        { "Key": "stat", "Type": "text", "Name": "stats/schema/field/stat", "Description": "stats/schema/stats/restore_stat" } ] }
+  ],
+  "Kinds": [
+    { "Kind": "stat", "Name": "stats/schema/kind/stat", "Description": "stats/schema/kind/stat_desc", "Folder": "stats", "NewId": "new_stat", "Order": 1,
+      "Fields": [
+        { "Key": "Name", "Type": "locale", "KeyPattern": "{mod}/stat/{id}", "Name": "stats/schema/field/name" },
+        { "Key": "Short", "Type": "locale", "KeyPattern": "{mod}/stat/{id}_short", "Name": "stats/schema/field/short" },
+        { "Key": "Description", "Type": "locale", "KeyPattern": "{mod}/stat/{id}_desc", "Name": "stats/schema/field/description" },
+        { "Key": "Group", "Type": "text", "Name": "stats/schema/field/group" },
+        { "Key": "Order", "Type": "int", "Name": "stats/schema/field/order" },
+        { "Key": "Default", "Type": "number", "Name": "stats/schema/field/default" },
+        { "Key": "Formula", "Type": "formula", "Name": "stats/schema/field/formula", "Description": "stats/schema/field/formula_desc" },
+        { "Key": "Min", "Type": "number", "Name": "stats/schema/field/min" },
+        { "Key": "Max", "Type": "number", "Name": "stats/schema/field/max" },
+        { "Key": "Pool", "Type": "bool", "Name": "stats/schema/field/pool", "Description": "stats/schema/field/pool_desc" },
+        { "Key": "Binds", "Type": "choice", "Options": ["health", "attack", "defence", "point"], "Name": "stats/schema/field/binds", "Description": "stats/schema/field/binds_desc" },
+        { "Key": "Hidden", "Type": "bool", "Name": "stats/schema/field/hidden" } ] },
+    { "Kind": "archetype", "Name": "stats/schema/kind/archetype", "Description": "stats/schema/kind/archetype_desc", "Folder": "archetypes", "NewId": "{mod}/new_archetype", "Order": 2,
+      "Fields": [
+        { "Key": "Name", "Type": "locale", "KeyPattern": "{mod}/archetype/{id}", "Name": "stats/schema/field/name" },
+        { "Key": "Description", "Type": "locale", "KeyPattern": "{mod}/archetype/{id}_desc", "Name": "stats/schema/field/description" },
+        { "Key": "Stats", "Type": "map", "Kind": "stat", "Name": "stats/schema/field/stats", "Description": "stats/schema/field/stats_desc" },
+        { "Key": "Traits", "Type": "list", "Name": "stats/schema/field/traits", "Description": "stats/schema/field/traits_desc", "Of": [
+          { "Key": "Stat", "Type": "ref", "Kind": "stat", "Required": true, "Name": "stats/schema/field/stat" },
+          { "Key": "Add", "Type": "number", "Name": "stats/schema/field/add" },
+          { "Key": "Percent", "Type": "number", "Name": "stats/schema/field/percent" },
+          { "Key": "Formula", "Type": "formula", "Name": "stats/schema/field/formula" } ] },
+        { "Key": "Learnings", "Type": "list", "Name": "stats/schema/field/learnings", "Of": [
+          { "Key": "Level", "Type": "int", "Default": "1", "Name": "stats/schema/field/level" },
+          { "Key": "Action", "Type": "ref", "Kind": "action", "Required": true, "Name": "stats/schema/field/action" } ] },
+        { "Key": "ExpCurve", "Type": "formula", "Name": "stats/schema/field/exp_curve", "Description": "stats/schema/field/exp_curve_desc" },
+        { "Key": "MaxLevel", "Type": "int", "Name": "stats/schema/field/max_level" } ] },
+    { "Kind": "character",
+      "Fields": [
+        { "Key": "Archetype", "Type": "ref", "Kind": "archetype", "Name": "stats/schema/field/archetype" },
+        { "Key": "Stats", "Type": "map", "Kind": "stat", "Name": "stats/schema/field/stats", "Description": "stats/schema/field/stats_desc" },
+        { "Key": "Traits", "Type": "list", "Name": "stats/schema/field/traits", "Description": "stats/schema/field/traits_desc", "Of": [
+          { "Key": "Stat", "Type": "ref", "Kind": "stat", "Required": true, "Name": "stats/schema/field/stat" },
+          { "Key": "Add", "Type": "number", "Name": "stats/schema/field/add" },
+          { "Key": "Percent", "Type": "number", "Name": "stats/schema/field/percent" },
+          { "Key": "Formula", "Type": "formula", "Name": "stats/schema/field/formula" } ] } ] }
+  ]
+}

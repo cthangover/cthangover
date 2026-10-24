@@ -1,0 +1,23 @@
+{
+  "Kind": "item",
+  "Items": [
+    { "Id": "classic/wood_sword", "Name": "classic/item/wood_sword/name", "Description": "classic/item/wood_sword/desc", "Cost": 6, "Sprite": "classic/wood_sword", "ItemType": "TargetUsed", "ItemAction": "action/equip", "verb": "equipment/verb_equip",
+      "Equip": "sword", "Traits": [ { "Stat": "atk", "Add": 2 } ] },
+    { "Id": "classic/iron_sword", "Name": "classic/item/iron_sword/name", "Description": "classic/item/iron_sword/desc", "Cost": 30, "Sprite": "classic/iron_sword", "ItemType": "TargetUsed", "ItemAction": "action/equip", "verb": "equipment/verb_equip",
+      "Equip": "sword", "Archetypes": ["classic/warrior", "classic/rogue"], "Traits": [ { "Stat": "atk", "Add": 5 } ] },
+    { "Id": "classic/oak_staff", "Name": "classic/item/oak_staff/name", "Description": "classic/item/oak_staff/desc", "Cost": 24, "Sprite": "classic/oak_staff", "ItemType": "TargetUsed", "ItemAction": "action/equip", "verb": "equipment/verb_equip",
+      "Equip": "staff", "Archetypes": ["classic/mage"], "Traits": [ { "Stat": "mag", "Add": 4 }, { "Stat": "mp", "Add": 5 } ] },
+    { "Id": "classic/dagger", "Name": "classic/item/dagger/name", "Description": "classic/item/dagger/desc", "Cost": 18, "Sprite": "classic/dagger", "ItemType": "TargetUsed", "ItemAction": "action/equip", "verb": "equipment/verb_equip",
+      "Equip": "dagger", "Traits": [ { "Stat": "atk", "Add": 3 }, { "Stat": "agi", "Add": 2 } ] },
+    { "Id": "classic/leather_armor", "Name": "classic/item/leather_armor/name", "Description": "classic/item/leather_armor/desc", "Cost": 20, "Sprite": "classic/leather_armor", "ItemType": "TargetUsed", "ItemAction": "action/equip", "verb": "equipment/verb_equip",
+      "Equip": "armor", "Traits": [ { "Stat": "def", "Add": 2 }, { "Stat": "hp", "Add": 6 } ] },
+    { "Id": "classic/robe", "Name": "classic/item/robe/name", "Description": "classic/item/robe/desc", "Cost": 16, "Sprite": "classic/robe", "ItemType": "TargetUsed", "ItemAction": "action/equip", "verb": "equipment/verb_equip",
+      "Equip": "robe", "Traits": [ { "Stat": "mp", "Add": 6 }, { "Stat": "int", "Add": 1 } ] },
+    { "Id": "classic/clover_charm", "Name": "classic/item/clover_charm/name", "Description": "classic/item/clover_charm/desc", "Cost": 14, "Sprite": "classic/clover_charm", "ItemType": "TargetUsed", "ItemAction": "action/equip", "verb": "equipment/verb_equip",
+      "Equip": "charm", "Traits": [ { "Stat": "luk", "Add": 3 } ] },
+    { "Id": "classic/silver_ring", "Name": "classic/item/silver_ring/name", "Description": "classic/item/silver_ring/desc", "Cost": 22, "Sprite": "classic/silver_ring", "ItemType": "TargetUsed", "ItemAction": "action/equip", "verb": "equipment/verb_equip",
+      "Equip": "ring", "Traits": [ { "Stat": "cha", "Add": 2 } ] },
+    { "Id": "classic/strength_tonic", "Name": "classic/item/strength_tonic/name", "Description": "classic/item/strength_tonic/desc", "Cost": 40, "Sprite": "classic/strength_tonic", "ItemType": "TargetUsed", "ItemAction": "action/stat_up",
+      "StatUp": { "str": 1 } }
+  ]
+}

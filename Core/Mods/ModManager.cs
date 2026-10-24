@@ -118,7 +118,13 @@ namespace Cthangover.Core.Mods
         {
             var tree = GameEnvironment.IsRuntime ? Engine.GetMainLoop() as SceneTree : null;
             var prep = registry.Reloader.Prepare(Games.GameLaunchArgs.Current, new[] { "*" });
+            var refused = IsReloading;
             ApplyPrepared(prep, tree, requireSuccess: false);
+
+            // Nobody awaits VerifyReloadAsync on this synchronous path, so the flag it
+            // would clear stayed set and every later reload was refused.
+            if (!refused)
+                IsReloading = false;
         }
 
         /// <summary>

@@ -1,0 +1,18 @@
+{
+  "id": "stat_checks",
+  "name": "Stat Checks",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Stat checks for any scenario: `check cha 12 [dice=d20] [bonus=2] [else=label] -> :success` rolls a stat plus dice against a difficulty, shows the outcome line and branches (a novel's persuasion, a tile RPG's locked door). The roll is left in dialog variables (check_total, check_roll, …) for ptext lines. Dice default to the game setting checks.dice, else d20; dice=none makes a plain threshold. The conditional jump `when` and option conditions live in dialog_base.",
+  "category": "gameplay",
+  "sources": [
+    "src/**/*.cs"
+  ],
+  "test_sources": [
+    "tests/*.cs"
+  ],
+  "depends": [
+    "stats_base>=1",
+    "dialog_base>=1"
+  ]
+}

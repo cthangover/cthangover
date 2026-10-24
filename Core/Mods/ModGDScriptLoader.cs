@@ -102,7 +102,7 @@ public static class ModGDScriptLoader
 						if (!string.IsNullOrEmpty(condName))
 						{
 							var leafParser = new GDLeafParser(condName, obj);
-							LeafParserRegistry.RegisterFirst(leafParser);
+							LeafParserRegistry.RegisterFirst(leafParser, modInfo.Id);
 							GameLogger.Log("GDS_MOD",
 								$"Registered GDScript condition '{condName}' from mod '{modInfo.Id}'");
 						}

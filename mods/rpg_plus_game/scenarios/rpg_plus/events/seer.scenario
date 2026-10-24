@@ -1,0 +1,15 @@
+text "— Хочешь знать, что тебя ждёт? Дай руку. Не эту — ту, которой не воруешь." key=rpg_plus/seer/hello
+check luk 14 who=rpg_hero else=fail -> :ok
+
+:ok
+text "— Волк у пещеры боится огня больше, чем стали. И бей туда, где у него нет щита. Это бесплатно. Остальное — нет." key=rpg_plus/seer/fortune
+when "!equipped(rpg_hero, 'classic/clover_charm')" -> :charm
+end
+
+:charm
+text "— И найди себе оберег. Удача не держится за пустые руки. За полные, впрочем, тоже недолго." key=rpg_plus/seer/charm
+end
+
+:fail
+text "— Туман... Ничего не вижу. Либо у тебя нет будущего, либо звёзды сегодня злые. Приходи завтра. Если будет завтра." key=rpg_plus/seer/fog
+end

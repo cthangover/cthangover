@@ -1,0 +1,56 @@
+{
+  "Commands": [
+    {
+      "Id": "check",
+      "Name": "checks/schema/checks/check",
+      "Description": "checks/schema/checks/check_desc",
+      "Category": "flow",
+      "Arrow": "checks/schema/checks/arrow_success",
+      "Positional": [
+        {
+          "Key": "stat",
+          "Type": "ref",
+          "Kind": "stat",
+          "Required": true,
+          "Name": "checks/schema/field/stat"
+        },
+        {
+          "Key": "difficulty",
+          "Type": "int",
+          "Required": true,
+          "Name": "checks/schema/field/difficulty"
+        }
+      ],
+      "Params": [
+        {
+          "Key": "who",
+          "Type": "who",
+          "Name": "checks/schema/field/who"
+        },
+        {
+          "Key": "dice",
+          "Type": "text",
+          "Default": "d20",
+          "Name": "checks/schema/field/dice",
+          "Description": "checks/schema/checks/dice_desc"
+        },
+        {
+          "Key": "bonus",
+          "Type": "int",
+          "Name": "checks/schema/field/bonus"
+        },
+        {
+          "Key": "else",
+          "Type": "label",
+          "Name": "checks/schema/field/else"
+        },
+        {
+          "Key": "quiet",
+          "Type": "bool",
+          "Name": "checks/schema/field/quiet",
+          "Description": "checks/schema/checks/quiet_desc"
+        }
+      ]
+    }
+  ]
+}

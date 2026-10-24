@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://cthangover.ru/</loc>
-    <lastmod>2026-10-23</lastmod>
+    <lastmod>2026-10-24</lastmod>
   </url>
   <url>
     <loc>https://cthangover.ru/docs.html</loc>
@@ -14,7 +14,7 @@
   </url>
   <url>
     <loc>https://cthangover.ru/docs/index</loc>
-    <lastmod>2026-10-21</lastmod>
+    <lastmod>2026-10-24</lastmod>
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/avatars/index</loc>
@@ -38,7 +38,7 @@
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/collections/index</loc>
-    <lastmod>2026-10-23</lastmod>
+    <lastmod>2026-10-24</lastmod>
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/configs/game_config</loc>
@@ -54,7 +54,7 @@
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/editor_tools/index</loc>
-    <lastmod>2026-10-23</lastmod>
+    <lastmod>2026-10-24</lastmod>
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/editor_tools/tutorial</loc>
@@ -157,6 +157,10 @@
     <lastmod>2026-10-05</lastmod>
   </url>
   <url>
+    <loc>https://cthangover.ru/docs/mods/schemas/index</loc>
+    <lastmod>2026-10-24</lastmod>
+  </url>
+  <url>
     <loc>https://cthangover.ru/docs/mods/settings/index</loc>
     <lastmod>2026-10-21</lastmod>
   </url>
@@ -199,6 +203,10 @@
   <url>
     <loc>https://cthangover.ru/docs/mods/src/gdscript/lifecycle</loc>
     <lastmod>2026-07-24</lastmod>
+  </url>
+  <url>
+    <loc>https://cthangover.ru/docs/mods/stats/index</loc>
+    <lastmod>2026-10-24</lastmod>
   </url>
   <url>
     <loc>https://cthangover.ru/docs/mods/status_effects/index</loc>

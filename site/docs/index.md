@@ -20,7 +20,7 @@ ships three of them, all running on the same engine mods and switching inside on
 | Game | Content | Built from |
 |---|---|---|
 | `cthangover` | `cthangover_game`, `cthangover_murakami` | a visual novel with characters, quests, items, cooking and turn-based battles |
-| `rpg_demo` | `rpg_demo_game`, `village_pack` | an RPG Maker style game: tile maps walked with WASD, events on E/F, battles, the map editor |
+| `rpg_plus` | `rpg_plus_game`, `rpg_demo_game`, `village_pack`, `classic_rpg_pack` | an RPG Maker style game: a novel prologue picks the class, tile maps walked with WASD, events on E/F, [stats, checks and gear](mods/stats/), formula skills, the map editor and the [Data Editor](mods/schemas/) |
 | `novel_template` | `my_novel_game`, `town_pack` | the smallest playable novel, a starting point for a new story |
 
 | Layer | Location | Responsibility |

@@ -1,0 +1,139 @@
+{
+  "Actions": [
+    {
+      "Id": "party.add",
+      "Name": "characters/schema/builtin/party_add",
+      "Description": "characters/schema/builtin/party_add_desc",
+      "Category": "characters",
+      "Params": [
+        {
+          "Key": "id",
+          "Type": "ref",
+          "Kind": "character",
+          "Required": true,
+          "Name": "characters/schema/field/character"
+        }
+      ]
+    },
+    {
+      "Id": "character.send_notification",
+      "Name": "characters/schema/builtin/send_notification",
+      "Description": "characters/schema/builtin/send_notification_desc",
+      "Category": "characters",
+      "Params": [
+        {
+          "Key": "type",
+          "Type": "ref",
+          "Kind": "character",
+          "Required": true,
+          "Name": "characters/schema/field/character"
+        }
+      ]
+    }
+  ],
+  "Kinds": [
+    {
+      "Kind": "character",
+      "Name": "characters/schema/kind/character",
+      "Description": "characters/schema/kind/character_desc",
+      "Folder": "characters",
+      "NewId": "{mod}/new_character",
+      "Order": 11,
+      "Fields": [
+        {
+          "Key": "Name",
+          "Type": "locale",
+          "KeyPattern": "{mod}/character/{id}",
+          "Name": "characters/schema/field/name"
+        },
+        {
+          "Key": "Image",
+          "Type": "picture",
+          "Group": "characters",
+          "Name": "characters/schema/field/picture"
+        },
+        {
+          "Key": "Level",
+          "Type": "int",
+          "Default": "1",
+          "Name": "characters/schema/field/level"
+        },
+        {
+          "Key": "Health",
+          "Type": "int",
+          "Default": "10",
+          "Name": "characters/schema/field/health"
+        },
+        {
+          "Key": "Attack",
+          "Type": "int",
+          "Default": "2",
+          "Name": "characters/schema/field/attack"
+        },
+        {
+          "Key": "Defence",
+          "Type": "int",
+          "Name": "characters/schema/field/defence"
+        },
+        {
+          "Key": "Point",
+          "Type": "int",
+          "Default": "1",
+          "Name": "characters/schema/field/points"
+        },
+        {
+          "Key": "Exp",
+          "Type": "int",
+          "Name": "characters/schema/field/exp"
+        },
+        {
+          "Key": "Actions",
+          "Type": "ref_list",
+          "Kind": "action",
+          "Name": "characters/schema/field/actions"
+        }
+      ]
+    },
+    {
+      "Kind": "action",
+      "Name": "characters/schema/kind/action",
+      "Description": "characters/schema/kind/action_desc",
+      "Folder": "characters/actions",
+      "NewId": "{mod}/new_action",
+      "Order": 12,
+      "Fields": [
+        {
+          "Key": "Name",
+          "Type": "locale",
+          "KeyPattern": "{mod}/action/{id}/name",
+          "Name": "characters/schema/field/name"
+        },
+        {
+          "Key": "Description",
+          "Type": "locale",
+          "KeyPattern": "{mod}/action/{id}/desc",
+          "Name": "characters/schema/field/description"
+        },
+        {
+          "Key": "Image",
+          "Type": "picture",
+          "Group": "characters",
+          "Name": "characters/schema/field/picture"
+        },
+        {
+          "Key": "Type",
+          "Type": "choice",
+          "Options": [
+            "ToEnemy",
+            "ToSelf",
+            "ToAlias",
+            "Passive",
+            "Active"
+          ],
+          "Default": "ToEnemy",
+          "Name": "characters/schema/field/target"
+        }
+      ]
+    }
+  ]
+}
