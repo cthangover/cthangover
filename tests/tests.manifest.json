@@ -192,6 +192,16 @@
       "timeoutSeconds": 180
     },
     {
+      "name": "mod_help",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--frontend",
+        "--itest=mod_help"
+      ],
+      "timeoutSeconds": 180
+    },
+    {
       "name": "display_settings",
       "scene": "res://scenes/menu/launcher.tscn",
       "windowed": true,
