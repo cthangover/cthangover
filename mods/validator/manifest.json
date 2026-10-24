@@ -6,5 +6,5 @@
   "description": "Static validation of mods without running the game: manifest schema, entity strategies (characters, items, quests, skills, recipes, actions), cross references, depends, scenario commands and scene patches, with an optional text report.",
   "category": "debug",
   "sources": ["src/**/*.cs"],
-  "depends": ["dialog_base>=1", "interactive_base>=1"]
+  "depends": ["dialog_base>=1", "interactive_base>=1", "schema_base>=1"]
 }

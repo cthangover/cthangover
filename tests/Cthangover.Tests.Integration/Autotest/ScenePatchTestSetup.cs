@@ -78,7 +78,19 @@ text = ""badge""
 
             GameLogger.Log("TEST", $"ScenePatchTestSetup: {_passed} passed, {_failed} failed");
             GameLogger.Log("TEST", $"[TEST_RESULT] name=scene_patch passed={_passed} failed={_failed}");
-            GetTree().Quit(_failed == 0 ? 0 : 1);
+            QuitAfterFrames(_failed == 0 ? 0 : 1);
+        }
+
+        /// <summary>
+        /// TEMPORARY (2026-10-24, checking the native exit crash 0xC0000005/0xC0000374): quits a few
+        /// frames after the last <c>ModManager.Reload</c> instead of in the same frame, so the
+        /// unloaded mod contexts and freed nodes settle first. Remove once the crash is understood.
+        /// </summary>
+        private async void QuitAfterFrames(int exitCode)
+        {
+            for (var frame = 0; frame < 3; frame++)
+                await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+            GetTree().Quit(exitCode);
         }
 
         private void TestResolverPatching()

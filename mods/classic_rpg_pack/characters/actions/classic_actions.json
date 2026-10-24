@@ -1,0 +1,13 @@
+{
+  "Kind": "action",
+  "Items": [
+    { "Id": "classic/power_strike", "Name": "classic/action/power_strike/name", "Description": "classic/action/power_strike/desc", "Image": "characters/actions/classic_power_strike", "Type": "ToEnemy",
+      "Values": [ "RequiredPoint=1", "Formula=a.atk * 1.5 + rand(0, a.str / 2)" ] },
+    { "Id": "classic/fireball", "Name": "classic/action/fireball/name", "Description": "classic/action/fireball/desc", "Image": "characters/actions/classic_fireball", "Type": "ToEnemy",
+      "Values": [ "RequiredPoint=1", "Cost=mp:4", "Pierce=1", "Formula=a.mag * 2 + rand(1, 6)" ] },
+    { "Id": "classic/heal", "Name": "classic/action/heal/name", "Description": "classic/action/heal/desc", "Image": "characters/actions/classic_heal", "Type": "ToSelf",
+      "Values": [ "RequiredPoint=1", "Cost=mp:3", "Effect=heal", "Formula=a.mag * 2 + 4" ] },
+    { "Id": "classic/guard_break", "Name": "classic/action/guard_break/name", "Description": "classic/action/guard_break/desc", "Image": "characters/actions/classic_guard_break", "Type": "ToEnemy",
+      "Values": [ "RequiredPoint=1", "Pierce=1", "Formula=a.atk + b.defence * 2", "State=effect/physics/stun", "StateTurns=1", "StateChance=35" ] }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "schema_base",
+  "name": "Schemas",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Annotations as data: schemas/*.json files any mod ships describe scenario actions, DSL commands (parameters, types, entity references) and the fields of entity kinds — its own or another mod's. The catalog merges them in load order (an action or command is replaced whole, a kind is merged field by field), the checker validates values, the line writer builds DSL lines, the entity index knows the ids of any kind. The validator, the data editors and the Data Editor window build on it.",
+  "category": "engine, library",
+  "sources": [
+    "src/**/*.cs"
+  ],
+  "test_sources": [
+    "tests/*.cs"
+  ],
+  "depends": []
+}

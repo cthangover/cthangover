@@ -103,7 +103,10 @@ namespace Cthangover.Mods.Dialog.Scenarios
 
                     if (pendingSelect.Variants == null)
                         pendingSelect.Variants = new List<SelectVariant>();
-                    pendingSelect.Variants.Add(SelectVariant.New(optText, goTo));
+                    var variant = SelectVariant.New(optText, goTo);
+                    if (named.TryGetValue("if", out var condition))
+                        variant.Condition = condition;
+                    pendingSelect.Variants.Add(variant);
                     continue;
                 }
 

@@ -1,0 +1,16 @@
+{
+  "Kind": "stat",
+  "Items": [
+    { "Id": "str", "Name": "classic/stat/str", "Short": "classic/stat/str_short", "Description": "classic/stat/str_desc", "Group": "attributes", "Order": 1, "Default": 5, "Min": 1 },
+    { "Id": "agi", "Name": "classic/stat/agi", "Short": "classic/stat/agi_short", "Description": "classic/stat/agi_desc", "Group": "attributes", "Order": 2, "Default": 5, "Min": 1 },
+    { "Id": "int", "Name": "classic/stat/int", "Short": "classic/stat/int_short", "Description": "classic/stat/int_desc", "Group": "attributes", "Order": 3, "Default": 5, "Min": 1 },
+    { "Id": "vit", "Name": "classic/stat/vit", "Short": "classic/stat/vit_short", "Description": "classic/stat/vit_desc", "Group": "attributes", "Order": 4, "Default": 5, "Min": 1 },
+    { "Id": "cha", "Name": "classic/stat/cha", "Short": "classic/stat/cha_short", "Description": "classic/stat/cha_desc", "Group": "attributes", "Order": 5, "Default": 5, "Min": 1 },
+    { "Id": "luk", "Name": "classic/stat/luk", "Short": "classic/stat/luk_short", "Description": "classic/stat/luk_desc", "Group": "attributes", "Order": 6, "Default": 5, "Min": 1 },
+    { "Id": "hp", "Name": "classic/stat/hp", "Short": "classic/stat/hp_short", "Description": "classic/stat/hp_desc", "Group": "combat", "Order": 10, "Formula": "12 + vit * 3 + level * 2", "Min": 1, "Binds": "health" },
+    { "Id": "mp", "Name": "classic/stat/mp", "Short": "classic/stat/mp_short", "Description": "classic/stat/mp_desc", "Group": "combat", "Order": 11, "Formula": "int * 2 + level * 2", "Min": 0, "Pool": true },
+    { "Id": "atk", "Name": "classic/stat/atk", "Short": "classic/stat/atk_short", "Description": "classic/stat/atk_desc", "Group": "combat", "Order": 12, "Formula": "str + level", "Min": 0, "Binds": "attack" },
+    { "Id": "def", "Name": "classic/stat/def", "Short": "classic/stat/def_short", "Description": "classic/stat/def_desc", "Group": "combat", "Order": 13, "Formula": "floor(vit / 2)", "Min": 0, "Binds": "defence" },
+    { "Id": "mag", "Name": "classic/stat/mag", "Short": "classic/stat/mag_short", "Description": "classic/stat/mag_desc", "Group": "combat", "Order": 14, "Formula": "int + level", "Min": 0 }
+  ]
+}

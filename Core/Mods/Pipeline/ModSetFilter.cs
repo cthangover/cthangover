@@ -32,8 +32,16 @@ namespace Cthangover.Core.Mods.Pipeline
         /// new mod is marked, so chains of arbitrary depth collapse.
         /// </summary>
         public static void FilterDisabledMods(IDictionary<string, IModInfo> mods)
+            => FilterDisabledMods(mods, Games.GameLaunchArgs.Current.WithMods);
+
+        /// <summary>
+        /// <see cref="FilterDisabledMods(IDictionary{string, IModInfo})"/> where the mods named
+        /// in <paramref name="explicitIds"/> (<c>--with-mods</c>) stay enabled for this run,
+        /// see <see cref="DisabledFor"/>.
+        /// </summary>
+        public static void FilterDisabledMods(IDictionary<string, IModInfo> mods, IReadOnlyCollection<string> explicitIds)
         {
-            var disabled = DisabledModsStore.Load();
+            var disabled = DisabledFor(mods, explicitIds, log: true);
             if (disabled.Count == 0)
                 return;
 
@@ -84,6 +92,47 @@ namespace Cthangover.Core.Mods.Pipeline
                 mods.Remove(id);
                 GameLogger.Log("MODS_REGISTRY", $"Mod '{id}' filtered out (disabled)", LogLevel.Message);
             }
+        }
+
+        /// <summary>
+        /// The user's disabled mods (<see cref="DisabledModsStore"/>) minus the mods named
+        /// explicitly for this run (<c>--with-mods</c>) and their required dependencies,
+        /// transitively: naming a mod on the command line is a stronger wish than the
+        /// mod manager's switch, and only for this launch — the stored list is not changed.
+        /// </summary>
+        public static HashSet<string> DisabledFor(
+            IDictionary<string, IModInfo> mods, IReadOnlyCollection<string> explicitIds, bool log = false)
+        {
+            var disabled = DisabledModsStore.Load();
+            if (disabled.Count == 0 || explicitIds == null || explicitIds.Count == 0)
+                return disabled;
+
+            var lookup = new Dictionary<string, IModInfo>(mods, System.StringComparer.OrdinalIgnoreCase);
+            var wanted = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
+            var pending = new Stack<string>(explicitIds);
+            while (pending.Count > 0)
+            {
+                var id = pending.Pop();
+                if (!wanted.Add(id) || !lookup.TryGetValue(id, out var info))
+                    continue;
+                foreach (var depId in ((ModInfo)info).Manifest?.RequiredDependencyIds ?? new List<string>())
+                    pending.Push(depId);
+            }
+
+            var result = new HashSet<string>();
+            foreach (var id in disabled)
+            {
+                if (!wanted.Contains(id))
+                {
+                    result.Add(id);
+                    continue;
+                }
+
+                if (log)
+                    GameLogger.Log("MODS_REGISTRY", $"Mod '{id}' is disabled but named in --with-mods; enabled for this run");
+            }
+
+            return result;
         }
 
         /// <summary>
@@ -205,7 +254,7 @@ namespace Cthangover.Core.Mods.Pipeline
 
             if (args.Mode == Games.GameLaunchMode.Frontend)
             {
-                var frontend = Games.GameModSet.ComputeFrontend(collections, discovered, DisabledModsStore.Load(), extras);
+                var frontend = Games.GameModSet.ComputeFrontend(collections, discovered, DisabledFor(mods, args.WithMods), extras);
                 if (frontend == null)
                 {
                     GameLogger.Log("MODS_REGISTRY", "No front-end collection installed; loading every mod", LogLevel.Error);
@@ -216,7 +265,7 @@ namespace Cthangover.Core.Mods.Pipeline
                 return new Games.ActiveGameChoice(frontend, frontend: true);
             }
 
-            var set = Games.GameModSet.Compute(args.GameId, collections, discovered, DisabledModsStore.Load(), extras);
+            var set = Games.GameModSet.Compute(args.GameId, collections, discovered, DisabledFor(mods, args.WithMods), extras);
             if (set == null)
             {
                 GameLogger.Log("MODS_REGISTRY", $"Game '{args.GameId}' is not a known game collection; loading every mod", LogLevel.Error);

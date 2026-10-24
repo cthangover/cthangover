@@ -1,0 +1,29 @@
+{
+  "Kind": "archetype",
+  "Items": [
+    {
+      "Id": "classic/warrior",
+      "Name": "classic/archetype/warrior",
+      "Description": "classic/archetype/warrior_desc",
+      "Stats": { "str": "7 + level * 2", "agi": "4 + level", "int": "2 + floor(level / 2)", "vit": "6 + level * 2", "cha": "4 + floor(level / 2)", "luk": "4 + floor(level / 2)" },
+      "Traits": [ { "Stat": "hp", "Percent": 10 } ],
+      "Learnings": [ { "Level": 1, "Action": "classic/power_strike" }, { "Level": 3, "Action": "classic/guard_break" } ]
+    },
+    {
+      "Id": "classic/mage",
+      "Name": "classic/archetype/mage",
+      "Description": "classic/archetype/mage_desc",
+      "Stats": { "str": "3 + floor(level / 2)", "agi": "4 + level", "int": "8 + level * 2", "vit": "4 + level", "cha": "5 + floor(level / 2)", "luk": "5 + floor(level / 2)" },
+      "Traits": [ { "Stat": "mp", "Percent": 25 } ],
+      "Learnings": [ { "Level": 1, "Action": "classic/fireball" }, { "Level": 2, "Action": "classic/heal" } ]
+    },
+    {
+      "Id": "classic/rogue",
+      "Name": "classic/archetype/rogue",
+      "Description": "classic/archetype/rogue_desc",
+      "Stats": { "str": "5 + level", "agi": "8 + level * 2", "int": "4 + floor(level / 2)", "vit": "4 + level", "cha": "7 + level", "luk": "7 + level" },
+      "Traits": [ { "Stat": "atk", "Formula": "floor(agi / 4)" } ],
+      "Learnings": [ { "Level": 1, "Action": "classic/power_strike" }, { "Level": 2, "Action": "classic/guard_break" } ]
+    }
+  ]
+}

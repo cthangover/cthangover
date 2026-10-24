@@ -1,6 +1,6 @@
 {
   "name": "Character Editor Test",
-  "description": "GUI test of the character editor in rpg_demo: opens rpg_demo_game's characters, shows the slime's localized name, adds a character with the New button, types its name, health and RPG charset into the form, saves; the game must know the character with its stats and name at once, and the RPG map editor's characters tab must offer it with its charset. The new file and the locale edits are removed again. Activated by --itest=characters_editor_edit with --game=rpg_demo --new.",
+  "description": "GUI test of the character editor in rpg_plus: opens rpg_demo_game's characters, shows the slime's localized name, adds a character with the New button, types its name, health and RPG charset into the form, saves; the game must know the character with its stats and name at once, and the RPG map editor's characters tab must offer it with its charset. The new file and the locale edits are removed again. Activated by --itest=characters_editor_edit with --game=rpg_plus --new (the prologue is clicked through first).",
   "sources": [
     "src/*.cs"
   ],

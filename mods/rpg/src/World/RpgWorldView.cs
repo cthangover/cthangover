@@ -92,7 +92,22 @@ namespace Cthangover.Mods.Rpg
         public void RefreshEvents()
         {
             foreach (var actor in eventActors.Values)
-                actor.Visible = string.IsNullOrWhiteSpace(actor.Event.Condition) || ScenarioCondition.Evaluate(actor.Event.Condition);
+            {
+                var index = RpgEventPages.ActiveIndex(actor.Event, ScenarioCondition.Evaluate);
+                actor.Visible = index >= 0;
+                if (index < 0 || index == actor.PageIndex)
+                    continue;
+                var first = actor.PageIndex == -2;
+                actor.PageIndex = index;
+                actor.Current = RpgEventPages.Effective(actor.Event, index);
+                actor.RouteIndex = 0;
+                actor.RouteTimer = actor.Current.Route?.Every ?? 0;
+                ApplyLook(actor);
+                if (first)
+                    actor.Place(new Vector2I(actor.Event.X, actor.Event.Y), actor.Current.Dir);
+                else if (index > 0 && actor.Event.Pages[index - 1].Dir.HasValue)
+                    actor.Face(actor.Current.Dir);
+            }
         }
 
         /// <summary>True when the cell lies on the map (a saved position may be stale after a map edit).</summary>
@@ -105,7 +120,7 @@ namespace Cthangover.Mods.Rpg
                 return false;
             foreach (var actor in eventActors.Values)
             {
-                if (actor.Visible && actor.Event.IsSolid && actor.Cell == cell)
+                if (actor.Visible && actor.Current?.IsSolid == true && actor.Cell == cell)
                     return false;
             }
             return true;
@@ -119,7 +134,7 @@ namespace Cthangover.Mods.Rpg
         {
             foreach (var actor in eventActors.Values)
             {
-                if (actor.Visible && actor.Cell == cell && actor.Event.Trigger == trigger)
+                if (actor.Visible && actor.Cell == cell && actor.Current?.Trigger == trigger)
                     return actor;
             }
             return null;
@@ -141,13 +156,16 @@ namespace Cthangover.Mods.Rpg
 
             if (target.Cell != Player.Cell)
                 target.Face(RpgDirections.Opposite(Player.Facing));
-            return RpgEventRunner.Run(target.Event, Map.ID);
+            return RpgEventRunner.Run(target.Current, Map.ID);
         }
 
         /// <summary>Walking: one decision per frame while the player stands still.</summary>
         public override void _Process(double delta)
         {
-            if (Player != null && !Player.IsMoving && !RpgInput.IsWalkBlocked(this))
+            var blocked = RpgInput.IsWalkBlocked(this);
+            if (!blocked)
+                WalkRoutes(delta);
+            if (Player != null && !Player.IsMoving && !blocked)
             {
                 var held = RpgInput.HeldDirection();
                 if (held.HasValue)
@@ -188,7 +206,7 @@ namespace Cthangover.Mods.Rpg
             var touch = EventAt(player.Cell, RpgEventTrigger.Touch);
             if (touch != null)
             {
-                RpgEventRunner.Run(touch.Event, Map.ID);
+                RpgEventRunner.Run(touch.Current, Map.ID);
                 return;
             }
 
@@ -222,16 +240,56 @@ namespace Cthangover.Mods.Rpg
                 return;
             }
 
+            // The look and the cell come with the first page (RefreshEvents).
             var actor = new RpgActor(TileSize, mapEvent) { Name = "Event_" + mapEvent.Id };
-            if (!string.IsNullOrEmpty(mapEvent.Sprite))
-                actor.UseCharset(textures.Charset(mapEvent.Sprite));
-            else if (mapEvent.Tile >= 0 && Tileset != null)
-                actor.UseTile(atlas, RpgTileSetBuilder.AtlasCoords(Tileset, mapEvent.Tile));
-            else if (!string.IsNullOrEmpty(mapEvent.Icon))
-                actor.UseIcon(textures.Icon(mapEvent.Icon));
-            actor.Place(new Vector2I(mapEvent.X, mapEvent.Y), mapEvent.Dir);
             actorLayer.AddChild(actor);
             eventActors[mapEvent.Id] = actor;
+        }
+
+        /// <summary>Shows the active page's charset, tile or icon (nothing for an invisible trigger).</summary>
+        private void ApplyLook(RpgActor actor)
+        {
+            var page = actor.Current;
+            actor.ClearLook();
+            if (!string.IsNullOrEmpty(page.Sprite))
+                actor.UseCharset(textures.Charset(page.Sprite));
+            else if (page.Tile >= 0 && Tileset != null)
+                actor.UseTile(atlas, RpgTileSetBuilder.AtlasCoords(Tileset, page.Tile));
+            else if (!string.IsNullOrEmpty(page.Icon))
+                actor.UseIcon(textures.Icon(page.Icon));
+        }
+
+        /// <summary>
+        /// Advances the routes of the shown events (<see cref="RpgMoveRoute"/>): one step per
+        /// <c>Every</c> seconds; a walk into a blocked cell or onto the player only turns.
+        /// </summary>
+        private void WalkRoutes(double delta)
+        {
+            foreach (var actor in eventActors.Values)
+            {
+                var route = actor.Current?.Route;
+                if (!actor.Visible || route?.Steps == null || route.Steps.Count == 0 || actor.IsMoving)
+                    continue;
+                actor.RouteTimer -= delta;
+                if (actor.RouteTimer > 0)
+                    continue;
+                actor.RouteTimer = Math.Max(0.1, route.Every);
+                if (actor.RouteIndex >= route.Steps.Count)
+                {
+                    if (!route.Repeat)
+                        continue;
+                    actor.RouteIndex = 0;
+                }
+
+                var step = RpgRouteStep.Resolve(route.Steps[actor.RouteIndex++], actor.Cell, Player?.Cell ?? actor.Cell, random);
+                if (!step.Direction.HasValue)
+                    continue;
+                var next = actor.Cell + RpgDirections.Delta(step.Direction.Value);
+                if (step.Moves && CanEnter(next) && next != Player?.Cell)
+                    actor.StepTo(step.Direction.Value);
+                else
+                    actor.Face(step.Direction.Value);
+            }
         }
 
         private void UpdateCamera()

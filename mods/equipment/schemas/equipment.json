@@ -1,0 +1,31 @@
+{
+  "Actions": [
+    { "Id": "equip.put", "Name": "equipment/schema/equip/put", "Description": "equipment/schema/equip/put_desc", "Category": "items",
+      "Params": [
+        { "Key": "item", "Type": "ref", "Kind": "item", "Required": true, "Name": "equipment/schema/field/item" },
+        { "Key": "who", "Type": "who", "Name": "equipment/schema/field/who" },
+        { "Key": "slot", "Type": "ref", "Kind": "equip_slot", "Name": "equipment/schema/field/slot" },
+        { "Key": "give", "Type": "bool", "Name": "equipment/schema/field/give", "Description": "equipment/schema/equip/give_desc" } ] },
+    { "Id": "equip.remove", "Name": "equipment/schema/equip/remove", "Description": "equipment/schema/equip/remove_desc", "Category": "items",
+      "Params": [
+        { "Key": "slot", "Type": "ref", "Kind": "equip_slot", "Required": true, "Name": "equipment/schema/field/slot" },
+        { "Key": "who", "Type": "who", "Name": "equipment/schema/field/who" } ] }
+  ],
+  "Kinds": [
+    { "Kind": "equip_slot", "Name": "equipment/schema/kind/equip_slot", "Description": "equipment/schema/kind/equip_slot_desc", "Folder": "equipment", "NewId": "new_slot", "Order": 5,
+      "Fields": [
+        { "Key": "Name", "Type": "locale", "KeyPattern": "{mod}/slot/{id}", "Name": "equipment/schema/field/name" },
+        { "Key": "Order", "Type": "int", "Name": "equipment/schema/field/order" },
+        { "Key": "Accepts", "Type": "ref_list", "Name": "equipment/schema/field/accepts", "Description": "equipment/schema/field/accepts_desc" } ] },
+    { "Kind": "item",
+      "Fields": [
+        { "Key": "Equip", "Type": "text", "Name": "equipment/schema/field/equip", "Description": "equipment/schema/field/equip_desc" },
+        { "Key": "Traits", "Type": "list", "Name": "equipment/schema/field/traits", "Description": "equipment/schema/field/traits_desc", "Of": [
+          { "Key": "Stat", "Type": "ref", "Kind": "stat", "Required": true, "Name": "equipment/schema/field/stat" },
+          { "Key": "Add", "Type": "number", "Name": "equipment/schema/field/add" },
+          { "Key": "Percent", "Type": "number", "Name": "equipment/schema/field/percent" },
+          { "Key": "Formula", "Type": "formula", "Name": "equipment/schema/field/formula" } ] },
+        { "Key": "Archetypes", "Type": "ref_list", "Kind": "archetype", "Name": "equipment/schema/field/archetypes", "Description": "equipment/schema/field/archetypes_desc" },
+        { "Key": "StatUp", "Type": "map", "Kind": "stat", "Name": "equipment/schema/field/stat_up", "Description": "equipment/schema/field/stat_up_desc" } ] }
+  ]
+}

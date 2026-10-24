@@ -1,0 +1,8 @@
+{
+  "Items": [
+    {
+      "Id": "rpg_wolf",
+      "Stats": { "str": 5, "vit": 5, "agi": 7 }
+    }
+  ]
+}

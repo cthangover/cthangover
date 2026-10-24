@@ -23,6 +23,16 @@ namespace Cthangover.Mods.Dialog.Action.Impls
         /// <summary>Target action ID to jump to via <see cref="DialogRuntime.TryGoTo"/> when this variant is selected.</summary>
         public string GoTo { get; set; }
 
+        /// <summary>
+        /// Condition of the shared condition language (<c>option "…" if=… -> :label</c>); the
+        /// option is shown only while it holds. Null = always shown. Evaluated each time the
+        /// choice appears, so a stat, a flag or an item gained a moment ago counts.
+        /// </summary>
+        public string Condition { get; set; }
+
+        /// <summary>Whether the option is offered now.</summary>
+        public bool IsShown() => string.IsNullOrWhiteSpace(Condition) || ScenarioCondition.Evaluate(Condition);
+
         /// <summary>Generates a new unique action ID for use as a GoTo target (e.g. with <see cref="DialogQueue.Point"/>).</summary>
         public static string Point => Guid.NewGuid().ToString();
 

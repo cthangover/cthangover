@@ -1,0 +1,18 @@
+{
+  "Kinds": [
+    { "Kind": "action",
+      "Fields": [
+        { "Key": "Values", "Type": "values", "Name": "battle_formulas/schema/field/values", "Description": "battle_formulas/schema/field/values_desc", "Of": [
+          { "Key": "RequiredPoint", "Type": "int", "Name": "battle_formulas/schema/field/required_point" },
+          { "Key": "Formula", "Type": "formula", "Name": "battle_formulas/schema/field/formula", "Description": "battle_formulas/schema/battle/formula_desc" },
+          { "Key": "Effect", "Type": "choice", "Options": ["damage", "heal"], "Name": "battle_formulas/schema/field/effect" },
+          { "Key": "Cost", "Type": "text", "Name": "battle_formulas/schema/field/cost", "Description": "battle_formulas/schema/battle/cost_desc" },
+          { "Key": "Pierce", "Type": "bool", "Name": "battle_formulas/schema/field/pierce", "Description": "battle_formulas/schema/battle/pierce_desc" },
+          { "Key": "State", "Type": "ref", "Kind": "status_effect", "Name": "battle_formulas/schema/field/state" },
+          { "Key": "StateTurns", "Type": "int", "Name": "battle_formulas/schema/field/state_turns" },
+          { "Key": "StateChance", "Type": "int", "Name": "battle_formulas/schema/field/state_chance" },
+          { "Key": "Attack", "Type": "number", "Name": "battle_formulas/schema/field/attack_factor", "Description": "battle_formulas/schema/battle/attack_desc" },
+          { "Key": "AttackType", "Type": "text", "Name": "battle_formulas/schema/field/attack_type" },
+          { "Key": "Turn", "Type": "int", "Name": "battle_formulas/schema/field/turn" } ] } ] }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "id": "rpg_plus_game",
+  "name": "RPG Plus",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Content of the RPG Plus sample (collection rpg_plus), built on top of the RPG demo instead of beside it: a visual-novel prologue at a crossroads where the player picks the hero's class (warrior, mage, rogue: stats_base archetypes) and starting gear, and makes a first charisma check; then the whole rpg_demo village and forest, untouched, with a trainer and a fortune teller added through this mod's own map_events file, a training yard novel scene with exp and a strength check, the merchant selling the classic pack's gear (a shop patch), the wolf given stats (a character patch). Only data and scenarios, no C#.",
+  "category": "story",
+  "depends": [
+    "rpg_demo_game>=1",
+    "classic_rpg_pack>=1",
+    "stat_checks>=1",
+    "equipment>=1",
+    "battle_formulas>=1",
+    "rpg>=1",
+    "trading>=1",
+    "dialog_base>=1",
+    "characters_base>=1",
+    "items_base>=1"
+  ],
+  "test_suites": [
+    {
+      "id": "play",
+      "activate": [
+        "--itest=rpg_plus"
+      ]
+    }
+  ]
+}

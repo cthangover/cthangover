@@ -92,6 +92,9 @@ namespace Cthangover.Validator
                         continue;
 
                     var strategy = EntityKindStrategyRegistry.Resolve(kind);
+                    // A kind some mod describes in a schema is known without a strategy of its own.
+                    if (strategy == null && ValidationSchemas.Of(context).Kinds.ContainsKey(kind))
+                        continue;
                     if (strategy == null)
                     {
                         context.AddWarning("UNKNOWN_ENTITY_KIND",

@@ -1,0 +1,565 @@
+{
+  "id": "rpg_plus",
+  "kind": "game",
+  "name": "RPG Plus",
+  "author": "ct",
+  "version": "1.0.0",
+  "description": "An RPG Maker style game that grows past RPG Maker: a visual-novel prologue where you pick a class, then a tile village and forest walked with WASD, events on E/F, gathering, a merchant and battles on the FF core — with stats and classes as data, gear that changes battles, stat checks in dialogs, skills defined by formulas, the character sheet, the tile map editor and the data editor.",
+  "cover": "cover.jpg",
+  "entry": {
+    "scene": "rpg_plus_crossroads"
+  },
+  "settings": {
+    "battle.core": "ff_battle",
+    "rpg.player_charset": "village/hero",
+    "stats.player": "rpg_hero",
+    "checks.dice": "d20"
+  },
+  "tags": [
+    "rpg",
+    "tiles",
+    "stats",
+    "template"
+  ],
+  "locale": [
+    {
+      "lang": "ru",
+      "name": "RPG Plus",
+      "description": "Игра в духе RPG Maker, которая выросла из него: пролог-новелла с выбором класса, затем тайловые деревня и лес на WASD, события на E/F, сбор предметов, торговец и бои на FF-ядре — со статами и классами как данными, снаряжением, которое меняет бой, проверками характеристик в диалогах, навыками на формулах, листом персонажа, редактором тайловых карт и редактором данных."
+    },
+    {
+      "lang": "es",
+      "name": "RPG Plus",
+      "description": "Un juego al estilo RPG Maker que va más allá de RPG Maker: un prólogo estilo novela donde eliges clase y después una aldea y un bosque de casillas recorridos con WASD, eventos con E/F, recolección, un mercader y combates con el núcleo FF — con estadísticas y clases como datos, equipo que cambia los combates, tiradas en los diálogos, habilidades con fórmulas, la hoja de personaje, el editor de mapas de casillas y el editor de la editor de datos."
+    },
+    {
+      "lang": "zh",
+      "name": "RPG Plus",
+      "description": "一款超越 RPG Maker 的 RPG Maker 风格游戏：先是选择职业的小说式序章，然后用 WASD 走遍瓦片村庄和森林，E/F 触发事件，采集物品、与商人交易，用 FF 核心战斗——还有数据化的属性和职业、能改变战斗的装备、对话中的属性检定、由公式定义的技能、角色面板、瓦片地图编辑器和数据编辑器。"
+    },
+    {
+      "lang": "ja",
+      "name": "RPG Plus",
+      "description": "RPG Maker を超えていく RPG Maker 風のゲーム：クラスを選ぶノベル風のプロローグのあと、WASD で歩くタイルの村と森、E/F のイベント、採集、商人、FF コアのバトル。ステータスとクラスはデータ、戦闘を変える装備、会話の能力値判定、数式で定義するスキル、キャラクターシート、タイルマップエディター、データエディター付き。"
+    },
+    {
+      "lang": "ko",
+      "name": "RPG Plus",
+      "description": "RPG Maker를 넘어서는 RPG Maker 스타일 게임: 직업을 고르는 노벨식 프롤로그, 그다음 WASD로 걷는 타일 마을과 숲, E/F 이벤트, 채집, 상인, FF 코어 전투 — 데이터로 된 능력치와 직업, 전투를 바꾸는 장비, 대화 속 능력치 판정, 공식으로 정의한 스킬, 캐릭터 시트, 타일 맵 에디터와 데이터 에디터까지."
+    },
+    {
+      "lang": "vi",
+      "name": "RPG Plus",
+      "description": "Một game phong cách RPG Maker vượt ra ngoài RPG Maker: phần mở đầu kiểu tiểu thuyết để chọn lớp nhân vật, rồi ngôi làng và khu rừng dạng ô đi bằng WASD, sự kiện bằng E/F, thu thập, thương nhân và chiến đấu trên lõi FF — với chỉ số và lớp nhân vật là dữ liệu, trang bị thay đổi trận đấu, kiểm tra chỉ số trong hội thoại, kỹ năng bằng công thức, bảng nhân vật, trình sửa bản đồ ô và trình sửa dữ liệu."
+    }
+  ],
+  "mechanics": [
+    {
+      "id": "story",
+      "name": "Story",
+      "role": "story",
+      "description": "The prologue, the trainer and the fortune teller, the training yard, the patches of the demo's merchant and wolf.",
+      "locale": [
+        {
+          "lang": "ru",
+          "name": "Сюжет",
+          "description": "Пролог, наставник и гадалка, тренировочная площадка, патчи торговца и волка из демо."
+        },
+        {
+          "lang": "es",
+          "name": "Historia",
+          "description": "El prólogo, el maestro y la adivina, el patio de entrenamiento, los parches del mercader y el lobo de la demo."
+        },
+        {
+          "lang": "zh",
+          "name": "故事",
+          "description": "序章、导师和占卜师、练武场，以及对演示中商人和狼的补丁。"
+        },
+        {
+          "lang": "ja",
+          "name": "ストーリー",
+          "description": "プロローグ、師匠と占い師、稽古場、デモの商人と狼へのパッチ。"
+        },
+        {
+          "lang": "ko",
+          "name": "스토리",
+          "description": "프롤로그, 스승과 점쟁이, 수련장, 데모의 상인과 늑대 패치."
+        },
+        {
+          "lang": "vi",
+          "name": "Câu chuyện",
+          "description": "Phần mở đầu, sư phụ và bà thầy bói, bãi tập, các bản vá cho thương nhân và con sói của demo."
+        }
+      ],
+      "mods": [
+        "rpg_plus_game>=1"
+      ]
+    },
+    {
+      "id": "world",
+      "name": "Village and forest",
+      "role": "content",
+      "description": "The tile maps, events, characters and items of rpg_demo_game: the world this game extends.",
+      "locale": [
+        {
+          "lang": "ru",
+          "name": "Деревня и лес",
+          "description": "Тайловые карты, события, персонажи и предметы rpg_demo_game — мир, который игра расширяет."
+        },
+        {
+          "lang": "es",
+          "name": "Aldea y bosque",
+          "description": "Los mapas de casillas, eventos, personajes y objetos de rpg_demo_game: el mundo que este juego amplía."
+        },
+        {
+          "lang": "zh",
+          "name": "村庄与森林",
+          "description": "rpg_demo_game 的瓦片地图、事件、角色和物品：本游戏所扩展的世界。"
+        },
+        {
+          "lang": "ja",
+          "name": "村と森",
+          "description": "rpg_demo_game のタイルマップ、イベント、キャラクター、アイテム：このゲームが広げる世界。"
+        },
+        {
+          "lang": "ko",
+          "name": "마을과 숲",
+          "description": "rpg_demo_game의 타일 맵, 이벤트, 캐릭터, 아이템: 이 게임이 확장하는 세계."
+        },
+        {
+          "lang": "vi",
+          "name": "Làng và rừng",
+          "description": "Bản đồ ô, sự kiện, nhân vật và vật phẩm của rpg_demo_game: thế giới mà game này mở rộng."
+        }
+      ],
+      "mods": [
+        "rpg_demo_game>=1"
+      ]
+    },
+    {
+      "id": "assets",
+      "name": "Assets and rules",
+      "role": "content",
+      "description": "Village pixel art and the classic RPG pack: stats, classes, gear and skills as data.",
+      "locale": [
+        {
+          "lang": "ru",
+          "name": "Ресурсы и правила",
+          "description": "Деревенская пиксельная графика и классический RPG-пак: статы, классы, снаряжение и навыки как данные."
+        },
+        {
+          "lang": "es",
+          "name": "Recursos y reglas",
+          "description": "Pixel art de la aldea y el paquete RPG clásico: estadísticas, clases, equipo y habilidades como datos."
+        },
+        {
+          "lang": "zh",
+          "name": "素材与规则",
+          "description": "村庄像素美术与经典 RPG 包：数据化的属性、职业、装备和技能。"
+        },
+        {
+          "lang": "ja",
+          "name": "素材とルール",
+          "description": "村のドット絵とクラシック RPG パック：データとしてのステータス、職業、装備、スキル。"
+        },
+        {
+          "lang": "ko",
+          "name": "에셋과 규칙",
+          "description": "마을 픽셀 아트와 클래식 RPG 팩: 데이터로 된 능력치, 직업, 장비, 스킬."
+        },
+        {
+          "lang": "vi",
+          "name": "Tài nguyên và luật",
+          "description": "Pixel art làng quê và gói RPG cổ điển: chỉ số, lớp, trang bị và kỹ năng là dữ liệu."
+        }
+      ],
+      "mods": [
+        "village_pack>=1",
+        "classic_rpg_pack>=1"
+      ]
+    },
+    {
+      "id": "stats",
+      "name": "Stats and checks",
+      "role": "gameplay",
+      "description": "Stats, archetypes, levels and the character sheet; stat checks and conditional jumps in scenarios.",
+      "locale": [
+        {
+          "lang": "ru",
+          "name": "Статы и проверки",
+          "description": "Статы, архетипы, уровни и лист персонажа; проверки характеристик и условные переходы в сценариях."
+        },
+        {
+          "lang": "es",
+          "name": "Estadísticas y tiradas",
+          "description": "Estadísticas, arquetipos, niveles y la hoja de personaje; tiradas y saltos condicionales en los escenarios."
+        },
+        {
+          "lang": "zh",
+          "name": "属性与检定",
+          "description": "属性、原型、等级和角色面板；剧本中的属性检定与条件跳转。"
+        },
+        {
+          "lang": "ja",
+          "name": "ステータスと判定",
+          "description": "ステータス、アーキタイプ、レベル、キャラクターシート。シナリオの能力値判定と条件ジャンプ。"
+        },
+        {
+          "lang": "ko",
+          "name": "능력치와 판정",
+          "description": "능력치, 원형, 레벨, 캐릭터 시트. 시나리오의 능력치 판정과 조건 이동."
+        },
+        {
+          "lang": "vi",
+          "name": "Chỉ số và kiểm tra",
+          "description": "Chỉ số, nguyên mẫu, cấp độ và bảng nhân vật; kiểm tra chỉ số và bước nhảy có điều kiện trong kịch bản."
+        }
+      ],
+      "mods": [
+        "stats_base>=1",
+        "stat_checks>=1"
+      ]
+    },
+    {
+      "id": "rpg",
+      "name": "Tile world",
+      "role": "gameplay",
+      "description": "Tile maps with collision, grid walking, map events, teleports and random encounters.",
+      "locale": [
+        {
+          "lang": "ru",
+          "name": "Тайловый мир",
+          "description": "Тайловые карты с коллизиями, ходьба по клеткам, события на карте, телепорты и случайные встречи."
+        },
+        {
+          "lang": "es",
+          "name": "Mundo de casillas",
+          "description": "Mapas de casillas con colisiones, movimiento por cuadrícula, eventos, teletransportes y encuentros aleatorios."
+        },
+        {
+          "lang": "zh",
+          "name": "瓦片世界",
+          "description": "带碰撞的瓦片地图、网格行走、地图事件、传送和随机遇敌。"
+        },
+        {
+          "lang": "ja",
+          "name": "タイルワールド",
+          "description": "衝突付きのタイルマップ、マス目移動、マップイベント、テレポート、ランダムエンカウント。"
+        },
+        {
+          "lang": "ko",
+          "name": "타일 월드",
+          "description": "충돌이 있는 타일 맵, 격자 이동, 맵 이벤트, 순간 이동, 랜덤 인카운터."
+        },
+        {
+          "lang": "vi",
+          "name": "Thế giới ô",
+          "description": "Bản đồ ô có va chạm, di chuyển theo lưới, sự kiện bản đồ, dịch chuyển và chạm trán ngẫu nhiên."
+        }
+      ],
+      "mods": [
+        "rpg>=1"
+      ]
+    },
+    {
+      "id": "items",
+      "name": "Items, gear and trade",
+      "role": "gameplay",
+      "description": "Inventory, equipment slots that feed the stats, shops.",
+      "locale": [
+        {
+          "lang": "ru",
+          "name": "Предметы, снаряжение и торговля",
+          "description": "Инвентарь, слоты снаряжения, которые питают статы, лавки."
+        },
+        {
+          "lang": "es",
+          "name": "Objetos, equipo y comercio",
+          "description": "Inventario, ranuras de equipo que alimentan las estadísticas, tiendas."
+        },
+        {
+          "lang": "zh",
+          "name": "物品、装备与交易",
+          "description": "背包、影响属性的装备栏、商店。"
+        },
+        {
+          "lang": "ja",
+          "name": "アイテム、装備、交易",
+          "description": "インベントリ、ステータスに効く装備スロット、店。"
+        },
+        {
+          "lang": "ko",
+          "name": "아이템, 장비, 거래",
+          "description": "인벤토리, 능력치에 반영되는 장비 슬롯, 상점."
+        },
+        {
+          "lang": "vi",
+          "name": "Vật phẩm, trang bị và giao dịch",
+          "description": "Túi đồ, ô trang bị nuôi chỉ số, cửa hàng."
+        }
+      ],
+      "mods": [
+        "items_base>=1",
+        "equipment>=1",
+        "trading>=1"
+      ]
+    },
+    {
+      "id": "engine_2d",
+      "name": "2D engine",
+      "role": "engine",
+      "description": "2D shell, dialogs and the scenario DSL, characters, audio.",
+      "locale": [
+        {
+          "lang": "ru",
+          "name": "2D-движок",
+          "description": "2D-оболочка, диалоги и сценарный DSL, персонажи, звук."
+        },
+        {
+          "lang": "es",
+          "name": "Motor 2D",
+          "description": "Carcasa 2D, diálogos y el DSL de escenarios, personajes, audio."
+        },
+        {
+          "lang": "zh",
+          "name": "2D 引擎",
+          "description": "2D 外壳、对话和剧本 DSL、角色、音频。"
+        },
+        {
+          "lang": "ja",
+          "name": "2D エンジン",
+          "description": "2D シェル、会話とシナリオ DSL、キャラクター、オーディオ。"
+        },
+        {
+          "lang": "ko",
+          "name": "2D 엔진",
+          "description": "2D 셸, 대화와 시나리오 DSL, 캐릭터, 오디오."
+        },
+        {
+          "lang": "vi",
+          "name": "Engine 2D",
+          "description": "Vỏ 2D, hội thoại và DSL kịch bản, nhân vật, âm thanh."
+        }
+      ],
+      "mods": [
+        "shell2d_base>=1",
+        "dialog_base>=1",
+        "characters_base>=1",
+        "audio_base>=1"
+      ]
+    },
+    {
+      "id": "battle",
+      "name": "FF-style battle with formulas",
+      "role": "battle",
+      "description": "Turn-based battle on the FF-style core; skills whose numbers are formulas in data.",
+      "locale": [
+        {
+          "lang": "ru",
+          "name": "Бой в стиле FF с формулами",
+          "description": "Пошаговый бой на ядре в стиле FF; навыки, чьи числа — формулы в данных."
+        },
+        {
+          "lang": "es",
+          "name": "Combate estilo FF con fórmulas",
+          "description": "Combate por turnos con el núcleo estilo FF; habilidades cuyos números son fórmulas en datos."
+        },
+        {
+          "lang": "zh",
+          "name": "带公式的 FF 风格战斗",
+          "description": "FF 风格核心的回合制战斗；数值为数据中公式的技能。"
+        },
+        {
+          "lang": "ja",
+          "name": "式付きの FF 風バトル",
+          "description": "FF 風コアのターン制バトル。数値がデータの式であるスキル。"
+        },
+        {
+          "lang": "ko",
+          "name": "공식이 있는 FF 스타일 전투",
+          "description": "FF 스타일 코어의 턴제 전투. 수치가 데이터 속 공식인 스킬."
+        },
+        {
+          "lang": "vi",
+          "name": "Chiến đấu kiểu FF có công thức",
+          "description": "Chiến đấu theo lượt trên lõi kiểu FF; kỹ năng có con số là công thức trong dữ liệu."
+        }
+      ],
+      "mods": [
+        "turn_battle_base>=2",
+        "ff_battle>=1",
+        "battle_formulas>=1"
+      ]
+    },
+    {
+      "id": "battle_cards",
+      "name": "Card battle",
+      "role": "battle_alt",
+      "description": "Alternative card core; the formula skills work in it too. Switch battle.core to card_battle.",
+      "locale": [
+        {
+          "lang": "ru",
+          "name": "Карточный бой",
+          "description": "Альтернативное карточное ядро; навыки на формулах работают и в нём. Переключите battle.core на card_battle."
+        },
+        {
+          "lang": "es",
+          "name": "Combate de cartas",
+          "description": "Núcleo alternativo de cartas; las habilidades con fórmulas también funcionan. Cambia battle.core a card_battle."
+        },
+        {
+          "lang": "zh",
+          "name": "卡牌战斗",
+          "description": "另一种卡牌核心，公式技能同样可用。把 battle.core 改为 card_battle。"
+        },
+        {
+          "lang": "ja",
+          "name": "カードバトル",
+          "description": "別のカードのコア。式のスキルもそこで動く。battle.core を card_battle に。"
+        },
+        {
+          "lang": "ko",
+          "name": "카드 전투",
+          "description": "대체 카드 코어. 공식 스킬도 작동합니다. battle.core를 card_battle로."
+        },
+        {
+          "lang": "vi",
+          "name": "Chiến đấu thẻ bài",
+          "description": "Lõi bài thay thế; kỹ năng công thức cũng chạy được. Đổi battle.core thành card_battle."
+        }
+      ],
+      "optional": true,
+      "mods": [
+        "card_battle>=1"
+      ]
+    },
+    {
+      "id": "interface",
+      "name": "Interface",
+      "role": "ui",
+      "description": "Widget toolkit and HUD, the main menu.",
+      "locale": [
+        {
+          "lang": "ru",
+          "name": "Интерфейс",
+          "description": "Виджеты и HUD, главное меню."
+        },
+        {
+          "lang": "es",
+          "name": "Interfaz",
+          "description": "Kit de widgets y HUD, el menú principal."
+        },
+        {
+          "lang": "zh",
+          "name": "界面",
+          "description": "组件工具包和 HUD、主菜单。"
+        },
+        {
+          "lang": "ja",
+          "name": "インターフェース",
+          "description": "ウィジェットキットと HUD、メインメニュー。"
+        },
+        {
+          "lang": "ko",
+          "name": "인터페이스",
+          "description": "위젯 키트와 HUD, 메인 메뉴."
+        },
+        {
+          "lang": "vi",
+          "name": "Giao diện",
+          "description": "Bộ widget và HUD, menu chính."
+        }
+      ],
+      "mods": [
+        "ui_base>=1",
+        "menu_base>=1"
+      ]
+    },
+    {
+      "id": "map_editor",
+      "name": "Tile map editor",
+      "role": "tools",
+      "description": "Editor of the tile maps, opened from the toolbar.",
+      "locale": [
+        {
+          "lang": "ru",
+          "name": "Редактор карт",
+          "description": "Редактор тайловых карт, открывается с панели инструментов."
+        },
+        {
+          "lang": "es",
+          "name": "Editor de mapas de casillas",
+          "description": "Editor de los mapas de casillas, se abre desde la barra de herramientas."
+        },
+        {
+          "lang": "zh",
+          "name": "瓦片地图编辑器",
+          "description": "瓦片地图编辑器，从工具栏打开。"
+        },
+        {
+          "lang": "ja",
+          "name": "タイルマップエディター",
+          "description": "タイルマップのエディター。ツールバーから開く。"
+        },
+        {
+          "lang": "ko",
+          "name": "타일 맵 에디터",
+          "description": "타일 맵 에디터. 툴바에서 엽니다."
+        },
+        {
+          "lang": "vi",
+          "name": "Trình sửa bản đồ ô",
+          "description": "Trình sửa bản đồ ô, mở từ thanh công cụ."
+        }
+      ],
+      "optional": true,
+      "mods": [
+        "rpg_editor>=1"
+      ]
+    },
+    {
+      "id": "data_editor",
+      "name": "Data editors",
+      "role": "tools",
+      "description": "The data editor window built from schemas (stats, classes, gear, skills — any kind a mod describes), the command palette for scenarios and the item and character editors.",
+      "locale": [
+        {
+          "lang": "ru",
+          "name": "Редакторы данных",
+          "description": "Окно редактора данных, построенное по схемам (статы, классы, снаряжение, навыки — любой вид, который описал мод), палитра команд для сценариев и редакторы предметов и персонажей."
+        },
+        {
+          "lang": "es",
+          "name": "Editores de datos",
+          "description": "La ventana de editor de datos construida con esquemas (estadísticas, clases, equipo, habilidades: cualquier tipo que describa un mod), la paleta de comandos para escenarios y los editores de objetos y personajes."
+        },
+        {
+          "lang": "zh",
+          "name": "数据编辑器",
+          "description": "按模式生成的数据编辑器窗口（属性、职业、装备、技能——任何模组描述的类型）、剧本命令面板，以及物品和角色编辑器。"
+        },
+        {
+          "lang": "ja",
+          "name": "データエディター",
+          "description": "スキーマから作られるデータエディターウィンドウ（ステータス、職業、装備、スキル——MOD が記述したどの種類でも）、シナリオのコマンドパレット、アイテムとキャラクターのエディター。"
+        },
+        {
+          "lang": "ko",
+          "name": "데이터 에디터",
+          "description": "스키마로 만든 데이터 에디터 창(능력치, 직업, 장비, 스킬 — 모드가 설명한 어떤 종류든), 시나리오용 명령 팔레트, 아이템과 캐릭터 에디터."
+        },
+        {
+          "lang": "vi",
+          "name": "Trình sửa dữ liệu",
+          "description": "Cửa sổ trình sửa dữ liệu dựng từ lược đồ (chỉ số, lớp, trang bị, kỹ năng — mọi loại mà mod mô tả), bảng lệnh cho kịch bản, cùng trình sửa vật phẩm và nhân vật."
+        }
+      ],
+      "optional": true,
+      "mods": [
+        "schema_tools>=1",
+        "items_editor>=1",
+        "characters_editor>=1"
+      ]
+    }
+  ]
+}

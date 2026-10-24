@@ -1,0 +1,19 @@
+text "— Новенький? Руки покажи. Ага... С этим можно работать. Если очень захотеть." key=rpg_plus/trainer/hello
+when "level(rpg_hero) >= 3" -> :veteran
+select ""
+option "Пойти на тренировочную площадку" key=rpg_plus/trainer/opt_yard -> :yard
+option "Не сейчас" key=rpg_plus/trainer/opt_later -> :bye
+
+:veteran
+text "— А ты окреп. Третий уровень. Скоро меня учить начнёшь. Не начинай." key=rpg_plus/trainer/veteran
+select ""
+option "Пойти на тренировочную площадку" key=rpg_plus/trainer/opt_yard -> :yard
+option "Не сейчас" key=rpg_plus/trainer/opt_later -> :bye
+
+:yard
+switch_scene rpg_plus_training_yard
+end
+
+:bye
+text "— Приходи, когда руки зачешутся. Если волк загрызёт — можешь не приходить." key=rpg_plus/trainer/bye
+end

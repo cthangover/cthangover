@@ -1,12 +1,12 @@
 {
- "generated": "2026-10-23",
+ "generated": "2026-10-24",
  "stats": {
-  "mods": 38,
-  "dslCommands": 30,
+  "mods": 46,
+  "dslCommands": 31,
   "coreFiles": 488,
-  "coreLoc": 45004,
-  "modFiles": 792,
-  "modLoc": 94187
+  "coreLoc": 45051,
+  "modFiles": 921,
+  "modLoc": 103217
  },
  "battle": [
   {
@@ -54,6 +54,21 @@
    "test": false
   },
   {
+   "id": "battle_formulas",
+   "name": "Battle Formulas",
+   "version": "1.0.0",
+   "desc": "Battle actions as data for every battle core: an action entity with Formula= (a.mag * 3 - b.mdf + rand(0, 4)) needs no C# — Effect=damage|heal, Cost=mp:5 spends a stat pool, Pierce=1 ignores shields, State=basic/stun with StateTurns and StateChance puts a status on the target. a.* is the one acting, b.* the target: their stat sheets plus live hp, hp_max, attack, defence, point. Registered as global executors, so the same skill works in the FF core and in the card core. Enemies with stats data get their battle attributes from their sheets when the battle starts.",
+   "cat": [
+    "gameplay"
+   ],
+   "deps": [
+    "stats_base",
+    "turn_battle_base",
+    "characters_base"
+   ],
+   "test": false
+  },
+  {
    "id": "card_battle",
    "name": "CardBattle",
    "version": "1.0.0",
@@ -95,6 +110,24 @@
     "editor_tools",
     "characters_base",
     "ui_base"
+   ],
+   "test": false
+  },
+  {
+   "id": "classic_rpg_pack",
+   "name": "Classic RPG Pack",
+   "version": "1.0.0",
+   "desc": "Reusable classic fantasy rules any game may take, data only: six attributes (STR, AGI, INT, VIT, CHA, LUK) and derived combat stats (HP bound to health, MP as a pool, ATK bound to attack, DEF bound to the shield, MAG), three archetypes (warrior, mage, rogue) with growth formulas and skills learned by level, equipment slots (weapon, body, accessory), eight pieces of gear and a strength tonic, four formula skills (power strike, fireball, heal, guard break). A novel can take it for charisma checks, a tile RPG for everything.",
+   "cat": [
+    "gameplay",
+    "characters",
+    "visual"
+   ],
+   "deps": [
+    "stats_base",
+    "equipment",
+    "items_base",
+    "characters_base"
    ],
    "test": false
   },
@@ -202,7 +235,8 @@
     "interactive_base",
     "time_base",
     "map_base",
-    "ui_base"
+    "ui_base",
+    "schema_base"
    ],
    "test": false
   },
@@ -216,6 +250,22 @@
     "library"
    ],
    "deps": [],
+   "test": false
+  },
+  {
+   "id": "equipment",
+   "name": "Equipment",
+   "version": "1.0.0",
+   "desc": "Gear for any game with stats: slots as data (\"Kind\": \"equip_slot\": weapon, body, accessory — or outfit and jewellery in a novel), items become gear by two keys of their own JSON (\"Equip\": the equip type, \"Traits\": what they do while worn), optional \"Archetypes\" limits. Worn items feed the stats as a trait source, so battle attributes, checks and conditions follow at once. The item action action/equip uses the inventory's own target picker; scenario actions equip.put and equip.remove; condition equipped(who, item); the Equipment block of the character sheet.",
+   "cat": [
+    "gameplay"
+   ],
+   "deps": [
+    "stats_base",
+    "items_base",
+    "characters_base",
+    "ui_base"
+   ],
    "test": false
   },
   {
@@ -457,6 +507,28 @@
    "test": false
   },
   {
+   "id": "rpg_plus_game",
+   "name": "RPG Plus",
+   "version": "1.0.0",
+   "desc": "Content of the RPG Plus sample (collection rpg_plus), built on top of the RPG demo instead of beside it: a visual-novel prologue at a crossroads where the player picks the hero's class (warrior, mage, rogue: stats_base archetypes) and starting gear, and makes a first charisma check; then the whole rpg_demo village and forest, untouched, with a trainer and a fortune teller added through this mod's own map_events file, a training yard novel scene with exp and a strength check, the merchant selling the classic pack's gear (a shop patch), the wolf given stats (a character patch). Only data and scenarios, no C#.",
+   "cat": [
+    "story"
+   ],
+   "deps": [
+    "rpg_demo_game",
+    "classic_rpg_pack",
+    "stat_checks",
+    "equipment",
+    "battle_formulas",
+    "rpg",
+    "trading",
+    "dialog_base",
+    "characters_base",
+    "items_base"
+   ],
+   "test": false
+  },
+  {
    "id": "scenario_studio",
    "name": "Scenario Studio",
    "version": "0.1.0",
@@ -468,6 +540,35 @@
    "deps": [
     "ui_base",
     "dialog_base"
+   ],
+   "test": false
+  },
+  {
+   "id": "schema_base",
+   "name": "Schemas",
+   "version": "1.0.0",
+   "desc": "Annotations as data: schemas/*.json files any mod ships describe scenario actions, DSL commands (parameters, types, entity references) and the fields of entity kinds — its own or another mod's. The catalog merges them in load order (an action or command is replaced whole, a kind is merged field by field), the checker validates values, the line writer builds DSL lines, the entity index knows the ids of any kind. The validator, the data editors and the Data Editor window build on it.",
+   "cat": [
+    "engine",
+    "library"
+   ],
+   "deps": [],
+   "test": false
+  },
+  {
+   "id": "schema_tools",
+   "name": "Schema Tools",
+   "version": "1.0.0",
+   "desc": "The authoring tools over the schemas of schema_base: the Data Editor window edits any described entity kind with forms built from the merged fields of all mods (entity pickers, formula fields, lists of traits, stat maps, texts in every language), and the command palette builds scenario lines from action and command schemas, checks them and inserts them into the scenario editor. The schemas themselves live with the mods that own the actions and kinds.",
+   "cat": [
+    "tools",
+    "editor"
+   ],
+   "deps": [
+    "editor_tools",
+    "dialog_base",
+    "ui_base",
+    "schema_base"
    ],
    "test": false
   },
@@ -496,6 +597,36 @@
     "library"
    ],
    "deps": [
+    "ui_base"
+   ],
+   "test": false
+  },
+  {
+   "id": "stat_checks",
+   "name": "Stat Checks",
+   "version": "1.0.0",
+   "desc": "Stat checks for any scenario: `check cha 12 [dice=d20] [bonus=2] [else=label] -> :success` rolls a stat plus dice against a difficulty, shows the outcome line and branches (a novel's persuasion, a tile RPG's locked door). The roll is left in dialog variables (check_total, check_roll, …) for ptext lines. Dice default to the game setting checks.dice, else d20; dice=none makes a plain threshold. The conditional jump `when` and option conditions live in dialog_base.",
+   "cat": [
+    "gameplay"
+   ],
+   "deps": [
+    "stats_base",
+    "dialog_base"
+   ],
+   "test": false
+  },
+  {
+   "id": "stats_base",
+   "name": "Stats",
+   "version": "1.0.0",
+   "desc": "Genre-neutral stats engine: stats as data (\"Kind\": \"stat\": strength, charisma, max health, sanity — no built-in list), archetypes (\"Kind\": \"archetype\": RPG classes or a novel's temperaments) with stat formulas per level and exp curves, traits (stat modifiers any entity may carry in a \"Traits\" key: items, characters, statuses) and trait sources other mods plug in. A formula language for derived stats and battle numbers, sheets per character, permanent bonuses, pools, levels from exp. Bound stats are written into the battle attributes, so every battle core uses them unchanged. Conditions stat(who, stat), level(who), archetype(who, id); actions stat.add, stat.archetype, stat.exp, stat.restore; a character sheet panel.",
+   "cat": [
+    "engine",
+    "library"
+   ],
+   "deps": [
+    "characters_base",
+    "shell2d_base",
     "ui_base"
    ],
    "test": false
@@ -596,7 +727,8 @@
    ],
    "deps": [
     "dialog_base",
-    "interactive_base"
+    "interactive_base",
+    "schema_base"
    ],
    "test": false
   },

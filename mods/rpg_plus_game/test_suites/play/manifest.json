@@ -1,0 +1,10 @@
+{
+  "name": "RPG Plus Play Test",
+  "description": "Integration test of the RPG Plus sample played like a player: the novel-style prologue (rogue class, the charisma check with its rolled line), the village of rpg_demo with this mod's trainer, the hero's sheet (archetype stats, dagger traits, bound battle attributes, the class skill in an action slot), gear put on through the inventory's item action and a strength tonic, conditions over stats and equipment, the merchant's patched stock, a battle with the stat-patched wolf and a formula skill, the training yard (exp, level-up, a skill learned at level 2), taking gear off in the character sheet panel, and a save/load round trip of stats and equipment. Activated by --itest=rpg_plus with --game=rpg_plus --new.",
+  "sources": [
+    "src/*.cs"
+  ],
+  "depends": [
+    "rpg_plus_game>=1"
+  ]
+}

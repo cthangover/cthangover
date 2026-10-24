@@ -3,7 +3,7 @@
 #   powershell -NoProfile -ExecutionPolicy Bypass -File site\make-shots.ps1 [-Python <python with Pillow>]
 #
 # The game runs windowed through the test suites that take --shots=<dir>: site_shots (novel, locations,
-# panels, card battle of the main game), rpg_walk and trade (RPG world, FF battle, trade window), menu_flow
+# panels, card battle of the main game), rpg_walk, trade and rpg_plus (RPG world, FF battle, trade window, prologue, sheet), menu_flow
 # (game picker) and tools_windows (editors). The player's settings.json gets "Language": "en" for the run
 # and is restored afterwards. PNGs land in gen/shots/site; site/shots-to-img.py turns the ones the page uses (and deletes the rest)
 # into site/img/shots/*.jpg.
@@ -32,8 +32,9 @@ try {
 
   $runs = @(
     @("site_shots", "--game=cthangover", "--new", "--itest=site_shots"),
-    @("rpg_walk", "--game=rpg_demo", "--new", "--itest=rpg_walk"),
-    @("trade", "--game=rpg_demo", "--new", "--itest=trade"),
+    @("rpg_walk", "--game=rpg_plus", "--new", "--itest=rpg_walk"),
+    @("trade", "--game=rpg_plus", "--new", "--itest=trade"),
+    @("rpg_plus", "--game=rpg_plus", "--new", "--itest=rpg_plus"),
     @("menu_flow", "--frontend", "--itest=menu_flow"),
     @("tools_windows", "--scene=home_kitchen", "--itest=tools_windows")
   )

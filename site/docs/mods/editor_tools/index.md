@@ -168,7 +168,8 @@ the data it edits, so a game takes the ones it needs:
 | `characters_editor` | `characters_editor` | characters (`"Kind": "character"`): name, portrait, RPG charset, stats, battle actions | `tools/characters_editor/title` |
 
 Both open from the main menu tools and the in-game toolbar, and are part of the `cthangover`
-developer tools and an optional `rpg_demo` mechanic.
+developer tools and the optional `data_editor` mechanic of `rpg_plus`. Fields other mods' schemas add to
+the kind appear in a "Fields of other mods" section ([schemas](../schemas/)).
 
 - **Pick a mod** (any writable one) — its entities of the kind are listed with a search and their
   pictures, wherever their files are in the mod.

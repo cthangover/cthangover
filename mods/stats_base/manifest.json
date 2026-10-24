@@ -1,0 +1,33 @@
+{
+  "id": "stats_base",
+  "name": "Stats",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Genre-neutral stats engine: stats as data (\"Kind\": \"stat\": strength, charisma, max health, sanity — no built-in list), archetypes (\"Kind\": \"archetype\": RPG classes or a novel's temperaments) with stat formulas per level and exp curves, traits (stat modifiers any entity may carry in a \"Traits\" key: items, characters, statuses) and trait sources other mods plug in. A formula language for derived stats and battle numbers, sheets per character, permanent bonuses, pools, levels from exp. Bound stats are written into the battle attributes, so every battle core uses them unchanged. Conditions stat(who, stat), level(who), archetype(who, id); actions stat.add, stat.archetype, stat.exp, stat.restore; a character sheet panel.",
+  "category": "engine, library",
+  "sources": [
+    "src/**/*.cs"
+  ],
+  "test_sources": [
+    "tests/*.cs"
+  ],
+  "depends": [
+    "characters_base>=1",
+    "shell2d_base>=1",
+    "ui_base>=1"
+  ],
+  "ui": [
+    {
+      "id": "sheet",
+      "kind": "panel",
+      "slot": "ModBeforeUIPanel",
+      "scene_path": "scenes/ui/sheet_panel.tscn",
+      "button": {
+        "icon": "sheet",
+        "locale": "stats/sheet/title",
+        "index": 25
+      },
+      "priority": 10
+    }
+  ]
+}

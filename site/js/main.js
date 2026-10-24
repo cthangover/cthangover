@@ -60,6 +60,9 @@
     { f: "trade__trade_trade", c: "ui", k: "s_trade" },
     { f: "site_shots__panel_map", c: "ui", k: "s_map" },
     { f: "rpg_walk__rpg_village", c: "rpg", k: "s_rpg_village", big: true },
+    { f: "rpg_plus__rpg_plus_prologue", c: "story", k: "s_rp_prologue" },
+    { f: "rpg_plus__rpg_plus_sheet", c: "rpg", k: "s_rp_sheet" },
+    { f: "rpg_plus__rpg_plus_battle", c: "battle", k: "s_rp_battle" },
     { f: "site_shots__novel_menu", c: "story", k: "s_novel_menu" },
     { f: "site_shots__panel_characters", c: "ui", k: "s_characters" },
     { f: "tools_windows__scenario_editor", c: "tools", k: "s_scenario_editor" },
@@ -74,7 +77,8 @@
     { f: "tools_windows__scene_editor", c: "tools", k: "s_scene_editor" },
     { f: "tools_windows__rpg_map_editor", c: "tools", k: "s_rpg_editor" },
     { f: "tools_windows__map_editor", c: "tools", k: "s_map_editor" },
-    { f: "tools_windows__light_editor", c: "tools", k: "s_light_editor" }
+    { f: "tools_windows__light_editor", c: "tools", k: "s_light_editor" },
+    { f: "tools_windows__schema_data_editor", c: "tools", k: "s_data_editor" }
   ];
   var galCat = "all";
   var galVisible = [];

@@ -97,6 +97,8 @@ namespace Cthangover.Mods.Rpg.Tests
             switch (step)
             {
                 case 0:
+                    if (Boot.IsReady && SkipPrologue())
+                        return;
                     if (Boot.IsReady && View?.Map?.ID == Village)
                         Next();
                     return;
@@ -319,6 +321,26 @@ namespace Cthangover.Mods.Rpg.Tests
         }
 
         /// <summary>Advances a running dialog with the action key; true while it is still running.</summary>
+        /// <summary>
+        /// The game opens with a novel-style prologue (no map yet): its lines are clicked
+        /// through and every choice takes the first answer. True while it runs.
+        /// </summary>
+        private static bool SkipPrologue()
+        {
+            // Asking for the dialog box before the first scene is up caches the wrong node.
+            var scene = ((SceneTree)Engine.GetMainLoop()).Root.GetNodeOrNull<SceneManager>("SceneManager")?.CurrentSceneName;
+            if (string.IsNullOrEmpty(scene) || RpgWorldHost.Current?.View?.Map != null)
+                return false;
+            var box = RpgInput.FindDialogBox();
+            if (box == null || !box.IsRunning)
+                return false;
+            if (box.IsWaitingAnswer)
+                box.TrySelectVariant(0);
+            else
+                box.NextAction();
+            return true;
+        }
+
         private bool AdvanceDialog()
         {
             var box = RpgInput.FindDialogBox();

@@ -88,13 +88,18 @@ namespace Cthangover.Mods.Trading.Tests
             switch (step)
             {
                 case 0:
+                    if (Boot.IsReady && SkipPrologue())
+                        return;
                     if (Boot.IsReady && View?.Map?.ID == Village)
                         Next();
                     return;
                 case 1:
                     if (AdvanceDialog())
                         return;
-                    Check(Inventory.CheckCount(Coin) == 0, "a new game starts without money");
+                    // The prologue gives a purse; the deals below count from an empty one.
+                    if (Inventory.CheckCount(Coin) > 0)
+                        Inventory.Remove(Coin, Inventory.CheckCount(Coin));
+                    Check(Inventory.CheckCount(Coin) == 0, "the purse is emptied for the test");
                     RpgWorldHost.Teleport(new RpgTeleport { Map = Forest, X = 6, Y = 4, Dir = RpgDirection.Down });
                     Next();
                     return;
@@ -292,6 +297,26 @@ namespace Cthangover.Mods.Trading.Tests
         }
 
         /// <summary>Advances a running dialog with the action key; true while it is still running.</summary>
+        /// <summary>
+        /// The game opens with a novel-style prologue (no map yet): its lines are clicked
+        /// through and every choice takes the first answer. True while it runs.
+        /// </summary>
+        private static bool SkipPrologue()
+        {
+            // Asking for the dialog box before the first scene is up caches the wrong node.
+            var scene = ((SceneTree)Engine.GetMainLoop()).Root.GetNodeOrNull<SceneManager>("SceneManager")?.CurrentSceneName;
+            if (string.IsNullOrEmpty(scene) || RpgWorldHost.Current?.View?.Map != null)
+                return false;
+            var box = RpgInput.FindDialogBox();
+            if (box == null || !box.IsRunning)
+                return false;
+            if (box.IsWaitingAnswer)
+                box.TrySelectVariant(0);
+            else
+                box.NextAction();
+            return true;
+        }
+
         private static bool AdvanceDialog()
         {
             var box = RpgInput.FindDialogBox();

@@ -1,0 +1,164 @@
+{
+  "Commands": [
+    {
+      "Id": "text",
+      "Name": "dialog/schema/builtin/text",
+      "Description": "dialog/schema/builtin/text_desc",
+      "Category": "dialog",
+      "Positional": [
+        {
+          "Key": "text",
+          "Type": "text",
+          "Required": true,
+          "Name": "dialog/schema/field/text"
+        }
+      ],
+      "Params": [
+        {
+          "Key": "key",
+          "Type": "text",
+          "Name": "dialog/schema/field/locale_key"
+        }
+      ]
+    },
+    {
+      "Id": "ptext",
+      "Name": "dialog/schema/builtin/ptext",
+      "Description": "dialog/schema/builtin/ptext_desc",
+      "Category": "dialog",
+      "Positional": [
+        {
+          "Key": "text",
+          "Type": "text",
+          "Required": true,
+          "Name": "dialog/schema/field/text"
+        }
+      ],
+      "Params": [
+        {
+          "Key": "key",
+          "Type": "text",
+          "Name": "dialog/schema/field/locale_key"
+        }
+      ]
+    },
+    {
+      "Id": "flag",
+      "Name": "dialog/schema/builtin/flag",
+      "Description": "dialog/schema/builtin/flag_desc",
+      "Category": "flow",
+      "Positional": [
+        {
+          "Key": "name",
+          "Type": "flag",
+          "Required": true,
+          "Name": "dialog/schema/field/flag"
+        },
+        {
+          "Key": "value",
+          "Type": "text",
+          "Required": true,
+          "Default": "1",
+          "Name": "dialog/schema/field/value"
+        }
+      ]
+    },
+    {
+      "Id": "switch_scene",
+      "Name": "dialog/schema/builtin/switch_scene",
+      "Description": "dialog/schema/builtin/switch_scene_desc",
+      "Category": "flow",
+      "Positional": [
+        {
+          "Key": "scene",
+          "Type": "scene",
+          "Required": true,
+          "Name": "dialog/schema/field/scene"
+        }
+      ]
+    },
+    {
+      "Id": "goto",
+      "Name": "dialog/schema/builtin/goto",
+      "Description": "dialog/schema/builtin/goto_desc",
+      "Category": "flow",
+      "Arrow": "dialog/schema/field/label"
+    },
+    {
+      "Id": "end",
+      "Name": "dialog/schema/builtin/end",
+      "Description": "dialog/schema/builtin/end_desc",
+      "Category": "flow"
+    },
+    {
+      "Id": "when",
+      "Name": "dialog/schema/checks/when",
+      "Description": "dialog/schema/checks/when_desc",
+      "Category": "flow",
+      "Arrow": "dialog/schema/checks/arrow_true",
+      "Positional": [
+        {
+          "Key": "condition",
+          "Type": "condition",
+          "Required": true,
+          "Name": "dialog/schema/field/condition"
+        }
+      ],
+      "Params": [
+        {
+          "Key": "else",
+          "Type": "label",
+          "Name": "dialog/schema/field/else"
+        }
+      ]
+    },
+    {
+      "Id": "select",
+      "Name": "dialog/schema/builtin/select",
+      "Description": "dialog/schema/builtin/select_desc",
+      "Category": "dialog",
+      "Positional": [
+        {
+          "Key": "text",
+          "Type": "text",
+          "Name": "dialog/schema/field/text"
+        }
+      ],
+      "Params": [
+        {
+          "Key": "key",
+          "Type": "text",
+          "Name": "dialog/schema/field/locale_key"
+        }
+      ]
+    },
+    {
+      "Id": "option",
+      "Name": "dialog/schema/builtin/option",
+      "Description": "dialog/schema/builtin/option_desc",
+      "Category": "dialog",
+      "Arrow": "dialog/schema/field/label",
+      "Positional": [
+        {
+          "Key": "text",
+          "Type": "text",
+          "Required": true,
+          "Name": "dialog/schema/field/text"
+        }
+      ],
+      "Params": [
+        {
+          "Key": "key",
+          "Type": "text",
+          "Name": "dialog/schema/field/locale_key"
+        },
+        {
+          "Key": "if",
+          "Type": "condition",
+          "Name": "dialog/schema/field/option_if",
+          "Description": "dialog/schema/builtin/option_if_desc"
+        }
+      ]
+    }
+  ]
+}
