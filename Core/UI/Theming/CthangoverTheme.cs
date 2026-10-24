@@ -98,8 +98,37 @@ namespace Cthangover.Core.UI.Theming
             ConfigureLists(theme);
             ConfigureWindows(theme);
             ConfigureMisc(theme);
+            CompleteButtonStates(theme);
 
             return theme;
+        }
+
+        /// <summary>
+        /// A state a button type leaves out is looked up elsewhere: <c>hover_pressed</c> (a checked
+        /// CheckBox or toggle under the mouse) in Godot's default theme, a variation's
+        /// <c>disabled</c> in the plain Button. Their margins differ (CheckBox: 4 px instead of 18,
+        /// a tab: 18 instead of 13), so the label jumped right after a click. Every type that styles
+        /// <c>normal</c> gets each missing state from its nearest own one.
+        /// </summary>
+        private static void CompleteButtonStates(Theme theme)
+        {
+            var fallbacks = new[]
+            {
+                ("hover", "normal"),
+                ("pressed", "hover"),
+                ("hover_pressed", "pressed"),
+                ("disabled", "normal"),
+            };
+            foreach (var type in theme.GetStyleboxTypeList())
+            {
+                if (!theme.HasStylebox("normal", type))
+                    continue;
+                foreach (var (state, from) in fallbacks)
+                {
+                    if (!theme.HasStylebox(state, type))
+                        theme.SetStylebox(state, type, theme.GetStylebox(from, type));
+                }
+            }
         }
 
         // ── Globals ─────────────────────────────────────────────────────
