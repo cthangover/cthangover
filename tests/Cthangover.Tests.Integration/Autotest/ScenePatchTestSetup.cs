@@ -67,40 +67,21 @@ text = ""badge""
         private int _passed;
         private int _failed;
 
-        public override async void _Ready()
+        public override void _Ready()
         {
             GameLogger.Log("TEST", "ScenePatchTestSetup: starting scene patch integration test");
 
-            await SettleFrames();
-            await TestResolverPatching();
+            TestResolverPatching();
             TestHasPatches();
             TestApplierOnSyntheticScene();
             TestRealShellIsPatched();
 
             GameLogger.Log("TEST", $"ScenePatchTestSetup: {_passed} passed, {_failed} failed");
             GameLogger.Log("TEST", $"[TEST_RESULT] name=scene_patch passed={_passed} failed={_failed}");
-            QuitAfterFrames(_failed == 0 ? 0 : 1);
+            GetTree().Quit(_failed == 0 ? 0 : 1);
         }
 
-        /// <summary>
-        /// TEMPORARY (2026-10-24, checking the native exit crash 0xC0000005/0xC0000374): quits a few
-        /// frames after the last <c>ModManager.Reload</c> instead of in the same frame, so the
-        /// unloaded mod contexts and freed nodes settle first. Remove once the crash is understood.
-        /// </summary>
-        private async void QuitAfterFrames(int exitCode)
-        {
-            await SettleFrames();
-            GetTree().Quit(exitCode);
-        }
-
-        /// <summary>TEMPORARY (see <see cref="QuitAfterFrames"/>): lets the deferred calls a reload queued (initializers adding their nodes to the root) run before the next reload.</summary>
-        private async System.Threading.Tasks.Task SettleFrames()
-        {
-            for (var frame = 0; frame < 3; frame++)
-                await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-        }
-
-        private async System.Threading.Tasks.Task TestResolverPatching()
+        private void TestResolverPatching()
         {
             var modDirectory = Path.Combine(ModRegistry.ModsPath, TestModId).Replace('\\', '/');
 
@@ -108,7 +89,6 @@ text = ""badge""
             {
                 CreateMod(modDirectory);
                 ModManager.Instance.Reload();
-                await SettleFrames();
 
                 var root = TscnScenes.LoadAndBuild(TargetScene);
                 Assert(root != null, "resolver: patched scene loads");
@@ -148,7 +128,6 @@ text = ""badge""
                 }
 
                 ModManager.Instance.Reload();
-                await SettleFrames();
             }
         }
 

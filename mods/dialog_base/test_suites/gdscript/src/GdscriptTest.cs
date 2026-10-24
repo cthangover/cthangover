@@ -24,7 +24,7 @@ namespace Mods.DialogBase.Tests
                 return;
             queued = true;
             GameLogger.Log("TEST", "GdscriptTest: activating");
-            (Godot.Engine.GetMainLoop() as SceneTree)?.Root?.CallDeferred("add_child", new GdscriptTestDriverNode());
+            ModRoot.AddDeferred(new GdscriptTestDriverNode());
         }
     }
 

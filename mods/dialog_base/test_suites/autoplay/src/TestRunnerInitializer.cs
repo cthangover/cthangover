@@ -63,7 +63,7 @@ namespace Mods.TestRunner
             // Deferred: сцена ещё строится; драйвер внутри сам выдерживает
             // стартовую паузу и лениво ищет DialogBox, поэтому порядок с
             // загрузкой сцены не важен.
-            root.CallDeferred("add_child", new DialogAutoDriverNode(choices, timeout, dialogs));
+            ModRoot.AddDeferred(new DialogAutoDriverNode(choices, timeout, dialogs));
         }
 
         private static List<int> ParseChoices(string[] args)

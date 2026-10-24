@@ -18,7 +18,7 @@ namespace Cthangover.Core.Autotest
 		private int passed;
 		private int failed;
 
-		public override async void _Ready()
+		public override void _Ready()
 		{
 			GameLogger.Log("TEST", "ModTestSetup: starting mod integration tests");
 
@@ -26,11 +26,9 @@ namespace Cthangover.Core.Autotest
 
 			TestFolderMod();
 
-			await SettleFrames();
-
 			try
 			{
-				await TestZipMod();
+				TestZipMod();
 			}
 			catch (System.Exception ex)
 			{
@@ -47,25 +45,7 @@ namespace Cthangover.Core.Autotest
 			}
 
 			GameLogger.Log("TEST", $"[TEST_RESULT] name=mod passed={passed} failed={failed}");
-			QuitAfterFrames(failed == 0 ? 0 : 1);
-		}
-
-		/// <summary>
-		/// TEMPORARY (2026-10-24, checking the native exit crash 0xC0000005/0xC0000374): quits a few
-		/// frames after the last <c>ModManager.Reload</c> instead of in the same frame, so the
-		/// unloaded mod contexts and freed nodes settle first. Remove once the crash is understood.
-		/// </summary>
-		private async void QuitAfterFrames(int exitCode)
-		{
-			await SettleFrames();
-			GetTree().Quit(exitCode);
-		}
-
-		/// <summary>TEMPORARY (see <see cref="QuitAfterFrames"/>): lets the deferred calls a reload queued (initializers adding their nodes to the root) run before the next reload.</summary>
-		private async System.Threading.Tasks.Task SettleFrames()
-		{
-			for (var frame = 0; frame < 3; frame++)
-				await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+			GetTree().Quit(failed == 0 ? 0 : 1);
 		}
 
 		/// <summary>
@@ -122,7 +102,7 @@ namespace Cthangover.Core.Autotest
 		TestBinaryAndFsPath("test_mod", ModManager.Instance.GetMod("test_mod"));
 		}
 
-		private async System.Threading.Tasks.Task TestZipMod()
+		private void TestZipMod()
 		{
 			var modsRoot = ModRegistry.ModsPath;
 			var zipPath = Path.Combine(modsRoot, "test_zip_mod.zip").Replace('\\', '/');
@@ -169,7 +149,6 @@ namespace Cthangover.Core.Autotest
 			}
 
 				ModManager.Instance.Reload();
-				await SettleFrames();
 
 				var mod = ModManager.Instance.GetMod("test_zip_mod");
 				if (mod == null)
@@ -195,7 +174,6 @@ namespace Cthangover.Core.Autotest
 				if (File.Exists(zipPath))
 					File.Delete(zipPath);
 				ModManager.Instance.Reload();
-				await SettleFrames();
 			}
 		}
 

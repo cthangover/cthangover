@@ -32,7 +32,7 @@ namespace Cthangover.Mods.Rpg.Tests
                 .Select(a => a.Substring("--shots=".Length))
                 .FirstOrDefault();
             GameLogger.Log("TEST", $"RpgWalkTestInitializer: activating rpg_walk, shots={shots ?? "off"}");
-            (Godot.Engine.GetMainLoop() as SceneTree)?.Root?.CallDeferred("add_child", new RpgWalkTestDriver(shots));
+            ModRoot.AddDeferred(new RpgWalkTestDriver(shots));
         }
     }
 }

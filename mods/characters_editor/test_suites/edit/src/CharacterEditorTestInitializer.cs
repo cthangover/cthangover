@@ -27,7 +27,7 @@ namespace Cthangover.Tools.CharactersEditor.Tests
                 .Select(a => a.Substring("--shots=".Length))
                 .FirstOrDefault();
             GameLogger.Log("TEST", $"CharacterEditorTestInitializer: activating characters_editor_edit, shots={shots ?? "off"}");
-            (Godot.Engine.GetMainLoop() as SceneTree)?.Root?.CallDeferred("add_child", new CharacterEditorTestDriver(shots));
+            ModRoot.AddDeferred(new CharacterEditorTestDriver(shots));
         }
     }
 }

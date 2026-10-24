@@ -45,7 +45,7 @@ namespace Mods.InventoryTest
 
             // Deferred: сцена ещё не готова; драйвер сам ждёт Boot.IsReady и
             // появления CurrentScene, поэтому порядок с загрузкой сцены не важен.
-            (Godot.Engine.GetMainLoop() as SceneTree)?.Root?.CallDeferred("add_child", new InventoryTestDriverNode(timeout));
+            ModRoot.AddDeferred(new InventoryTestDriverNode(timeout));
         }
 
         private static float? ParseTimeout(string[] args)

@@ -32,7 +32,7 @@ namespace Cthangover.Mods.Trading.Tests
                 .Select(a => a.Substring("--shots=".Length))
                 .FirstOrDefault();
             GameLogger.Log("TEST", $"TradeTestInitializer: activating trade, shots={shots ?? "off"}");
-            (Godot.Engine.GetMainLoop() as SceneTree)?.Root?.CallDeferred("add_child", new TradeTestDriver(shots));
+            ModRoot.AddDeferred(new TradeTestDriver(shots));
         }
     }
 }

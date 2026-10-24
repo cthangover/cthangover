@@ -29,7 +29,7 @@ namespace Mods.InteractiveBase.Tests
                 return;
             queued = true;
             GameLogger.Log("TEST", "InteractivesTest: activating");
-            (Godot.Engine.GetMainLoop() as SceneTree)?.Root?.CallDeferred("add_child", new InteractivesTestDriverNode());
+            ModRoot.AddDeferred(new InteractivesTestDriverNode());
         }
     }
 

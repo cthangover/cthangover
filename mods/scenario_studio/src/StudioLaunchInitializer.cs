@@ -29,13 +29,12 @@ namespace Cthangover.Mods.ScenarioStudio
             var layer = new StudioLayer(args);
             layer.Mount();
 
-            var root = (Godot.Engine.GetMainLoop() as SceneTree)?.Root;
-            root?.CallDeferred("add_child", new StudioLive(layer));
+            ModRoot.AddDeferred(new StudioLive(layer));
 
             if (!args.Contains(Flag))
                 return;
             GameLogger.Log("UI", "Scenario studio: --studio given, the dock opens with the first scene");
-            root?.CallDeferred("add_child", new StudioAutoOpenNode());
+            ModRoot.AddDeferred(new StudioAutoOpenNode());
         }
     }
 }

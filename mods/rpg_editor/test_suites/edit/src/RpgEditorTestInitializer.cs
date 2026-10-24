@@ -27,7 +27,7 @@ namespace Cthangover.Tools.RpgEditor.Tests
                 .Select(a => a.Substring("--shots=".Length))
                 .FirstOrDefault();
             GameLogger.Log("TEST", $"RpgEditorTestInitializer: activating rpg_editor_edit, shots={shots ?? "off"}");
-            (Godot.Engine.GetMainLoop() as SceneTree)?.Root?.CallDeferred("add_child", new RpgEditorTestDriver(shots));
+            ModRoot.AddDeferred(new RpgEditorTestDriver(shots));
         }
     }
 }

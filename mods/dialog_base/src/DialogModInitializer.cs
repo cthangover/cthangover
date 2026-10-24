@@ -57,7 +57,7 @@ namespace Cthangover.Mods.Dialog
 
             // Deferred: OnModResourcesReady fires while the root is still
             // setting up autoload children, so a direct AddChild is rejected.
-            root.CallDeferred("add_child", new DialogScriptRunner { Name = "DialogRunner" });
+            ModRoot.AddDeferred(new DialogScriptRunner { Name = "DialogRunner" });
         }
     }
 }

@@ -26,7 +26,7 @@ namespace Cthangover.Mods.RpgPlus.Tests
                 .Select(a => a.Substring("--shots=".Length))
                 .FirstOrDefault();
             GameLogger.Log("TEST", $"RpgPlusTestInitializer: activating rpg_plus, shots={shots ?? "off"}");
-            (Godot.Engine.GetMainLoop() as SceneTree)?.Root?.CallDeferred("add_child", new RpgPlusTestDriver(shots));
+            ModRoot.AddDeferred(new RpgPlusTestDriver(shots));
         }
     }
 }
