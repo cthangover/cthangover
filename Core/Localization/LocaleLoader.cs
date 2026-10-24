@@ -14,7 +14,8 @@ namespace Cthangover.Core.Localization
     /// CSV translation format because it requires no editor round-trip
     /// and is trivially editable by mod authors in any text editor.
     ///
-    /// Merges entries from <b>all</b> loaded mods into a single
+    /// Merges entries from <b>all</b> loaded mods (plus the names and descriptions
+    /// of installed but not loaded mods, for the mod manager) into a single
     /// <c>Translation</c> — later values overwrite earlier ones via
     /// <c>Dictionary</c> assignment — so mods can selectively override
     /// base game strings without copying the entire locale file.
@@ -61,6 +62,7 @@ namespace Cthangover.Core.Localization
 
             MergeCollectionLocales(locale, master);
             MergeModLocales(locale, master);
+            MergeInstalledModTitles(locale, master);
 
             if (_translations.TryGetValue(locale, out var old))
             {
@@ -120,6 +122,33 @@ namespace Cthangover.Core.Localization
                 if (!ModManager.Instance.Mods.TryGetValue(modId, out var modInfo))
                     continue;
                 MergeLocaleFiles(modInfo.FileProvider, locale, master);
+            }
+        }
+
+        /// <summary>
+        /// The <c>mod_&lt;id&gt;_name</c> / <c>_desc</c> texts of installed mods that are
+        /// not loaded (the shell loads only the menu and the mod manager, which still
+        /// lists every mod). Only those two keys are taken, and a loaded mod's own
+        /// value is never replaced.
+        /// </summary>
+        private static void MergeInstalledModTitles(string locale, Dictionary<string, string> master)
+        {
+            foreach (var (modId, modInfo) in ModRegistry.Instance.AllDiscoveredMods)
+            {
+                if (ModManager.Instance.Mods.ContainsKey(modId) || modInfo.FileProvider == null)
+                    continue;
+
+                var keys = new[] { $"mod_{modId}_name", $"mod_{modId}_desc" };
+                if (keys.All(master.ContainsKey))
+                    continue;
+
+                var texts = new Dictionary<string, string>();
+                MergeLocaleFiles(modInfo.FileProvider, locale, texts);
+                foreach (var key in keys)
+                {
+                    if (!master.ContainsKey(key) && texts.TryGetValue(key, out var text))
+                        master[key] = text;
+                }
             }
         }
 
