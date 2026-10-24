@@ -181,14 +181,15 @@ does the same as **Export to Catalog** for every folder mod at once and writes t
 - `mod_<id>-v<version>.zip` — the mod's content files at the archive root, hidden entries (`.git/`, …) left out;
   entries are sorted and dated 1980-01-01, so an unchanged mod rebuilds with the same `archive_sha256`;
 - `mod_<id>-v<version>.json` — its catalog entry;
-- `gitea/catalog.json` and `github/catalog.json` — the whole catalog for each catalog repository, with that
-  host's release download URL and raw `mod.jpg` icon URL.
+- `catalog.json` — the whole catalog; every download lists both mirrors (the Gitea release, then the GitHub
+  release; the game tries them in order), so the same file goes into both catalog repositories. The icon is
+  the Gitea raw `mod.jpg`.
 
 Entries come from `manifest.json` (name, author, version, description, category, depends, conflicts_with) and
 the mod's `mod_<id>_name` / `mod_<id>_desc` keys in every language; tags are the id's words plus the categories;
 `install_sha256` uses `catalog_ignore_patterns` from `config/mod_config.json`. Options: `--only=a,b`,
-`--skip=a,b`, `--hosts=gitea,github`, `--out=<dir>`. Upload each archive to the mod repository's release
-`v<version>` and the catalog file to its catalog repository.
+`--skip=a,b`, `--hosts=gitea,github` (mirrors and their order), `--out=<dir>`. Upload each archive to the
+release `v<version>` of the mod repository on both hosts and the catalog file to both catalog repositories.
 
 ## Mod status display
 

@@ -53,3 +53,4 @@ jobs/
 # generated GitHub Pages copy of site/
 /site_github/
 build_site.*
+sync_mod_repos*

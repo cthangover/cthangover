@@ -8,9 +8,11 @@ Does for all mods at once what the game's "Export to Catalog" does for one
     archive root, hidden entries (.git/, .gitignore, ...) left out
     (Core/Mods/ModContentFiles.cs);
   * releases/mod_<id>-v<version>.json - the mod's catalog entry next to it;
-  * releases/<host>/catalog.json - the catalog envelope with every entry, one per
-    host whose catalog repository serves it (git.cthangover.ru/cthangover/catalog,
-    github.com/cthangover/catalog), each with that host's download and icon URLs.
+  * releases/catalog.json - the catalog envelope with every entry. Each download
+    lists a mirror per host (Gitea, then GitHub: the game tries the urls in order),
+    so the same file serves both catalog repositories
+    (git.cthangover.ru/cthangover/catalog, github.com/cthangover/catalog); the
+    icon URL is the first host's.
 
 Entries take id, name, author, version, description, category, depends and
 conflicts_with from manifest.json; locale from the mod's own
@@ -22,9 +24,9 @@ catalog_ignore_patterns of config/mod_config.json. Archives are reproducible:
 entries are sorted and carry a fixed date, so an unchanged mod keeps its hash.
 
     python build_mod_releases.py                     all mods in mods/
-    python build_mod_releases.py --only=rpg,trading  only these mods (the catalogs list only them)
+    python build_mod_releases.py --only=rpg,trading  only these mods (the catalog lists only them)
     python build_mod_releases.py --skip=test_defaults_and_patches
-    python build_mod_releases.py --hosts=gitea       one catalog only
+    python build_mod_releases.py --hosts=gitea       download from one host only
     python build_mod_releases.py --out=D:/releases   another output folder
 
 Only files the script writes are replaced; nothing else in the output folder is
@@ -281,15 +283,13 @@ def build_mod(folder, out, patterns, hosts):
         "install_sha256": install_sha256(folder, files, patterns),
     }
 
-    entries = {}
-    for host in hosts:
-        download_url, icon_url = HOSTS[host](repo, version, archive_name, branch, icon)
-        download = {"version": version, "urls": [download_url], **hashes}
-        entries[host] = entry_for(manifest, mod_id, locale, cats, download, icon_url)
+    mirrors = [HOSTS[host](repo, version, archive_name, branch, icon) for host in hosts]
+    download = {"version": version, "urls": [url for url, _ in mirrors], **hashes}
+    entry = entry_for(manifest, mod_id, locale, cats, download, mirrors[0][1])
 
-    write_json(archive.with_suffix(".json"), entries[hosts[0]])
+    write_json(archive.with_suffix(".json"), entry)
     print("  %-28s %-10s %4d files %10d bytes" % (mod_id, version, len(files), hashes["size_bytes"]))
-    return entries
+    return entry
 
 
 def write_json(path, data):
@@ -308,7 +308,7 @@ def main():
     parser.add_argument("--out", default=str(ROOT / "releases"), help="output folder (default: releases/)")
     parser.add_argument("--only", help="comma-separated mod ids to build")
     parser.add_argument("--skip", help="comma-separated mod ids to leave out")
-    parser.add_argument("--hosts", default="gitea,github", help="catalogs to write: gitea, github")
+    parser.add_argument("--hosts", default="gitea,github", help="download mirrors in order: gitea, github")
     args = parser.parse_args()
 
     hosts = split_list(args.hosts)
@@ -324,16 +324,12 @@ def main():
         raise ScriptError("no mods to build")
 
     print("Building %d mods into %s" % (len(mods), out))
-    catalogs = {host: [] for host in hosts}
-    for folder in mods:
-        for host, entry in build_mod(folder, out, patterns, hosts).items():
-            catalogs[host].append(entry)
+    entries = [build_mod(folder, out, patterns, hosts) for folder in mods]
 
     updated = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    for host, entries in catalogs.items():
-        path = out / host / "catalog.json"
-        write_json(path, {"catalog": {"version": CATALOG_VERSION, "updated_at": updated}, "mods": entries})
-        print("Catalog %s: %d mods -> %s" % (host, len(entries), path))
+    path = out / "catalog.json"
+    write_json(path, {"catalog": {"version": CATALOG_VERSION, "updated_at": updated}, "mods": entries})
+    print("Catalog: %d mods, mirrors %s -> %s" % (len(entries), ", ".join(hosts), path))
     return 0
 
 
