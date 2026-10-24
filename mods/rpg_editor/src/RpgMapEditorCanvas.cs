@@ -157,8 +157,14 @@ namespace Cthangover.Tools.RpgEditor
                 for (var x = 0; x < grid.Width; x++)
                 {
                     var index = grid.GetTile(layer, x, y);
-                    if (index >= 0)
+                    if (index < 0)
+                        continue;
+                    // Autotiles are assembled from their neighbours exactly like in the game.
+                    var autotile = Tileset.AutotileOf(index);
+                    if (autotile == null)
                         DrawTextureRectRegion(Atlas, CellRect(x, y), TileRegion(index), modulate);
+                    else if (textures.Tileset(autotile.Autotile) is { } block)
+                        RpgAutotiles.Draw(this, block, CellRect(x, y), RpgAutotiles.QuartersAt(grid, layer, x, y, index), Tileset.TileSize, modulate);
                 }
             }
         }

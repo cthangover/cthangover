@@ -8,6 +8,7 @@ using Cthangover.Core.Mods;
 using Cthangover.Core.Mods.Resolvers;
 using Cthangover.Core.Utils;
 using Cthangover.Mods.Interface.Tool;
+using Cthangover.Mods.Interface.View;
 using Cthangover.Mods.Rpg;
 using Cthangover.Tools.RpgEditor;
 using Cthangover.Tools.Services;
@@ -40,11 +41,13 @@ namespace Cthangover.Tools.CharactersEditor.Tests
         private int passed;
         private int step;
         private double elapsed;
+        private readonly string shotsDir;
         private CharacterEditorWindow window;
 
-        /// <summary>Creates the driver; <paramref name="shotsDir"/> is unused (no screenshots).</summary>
+        /// <summary>Creates the driver; with <paramref name="shotsDir"/> it saves a shot of the list and form.</summary>
         public CharacterEditorTestDriver(string shotsDir)
         {
+            this.shotsDir = shotsDir;
             Name = "CharacterEditorTestDriver";
             var timer = new Timer { WaitTime = TickSeconds, Autostart = true };
             AddChild(timer);
@@ -110,6 +113,8 @@ namespace Cthangover.Tools.CharactersEditor.Tests
                     step++;
                     return;
                 case 2:
+                    // The list's portraits are fitted into the panel (FilteredList.FitIcons).
+                    Shot("editor");
                     try
                     {
                         Press("tools/common/save");
@@ -196,6 +201,14 @@ namespace Cthangover.Tools.CharactersEditor.Tests
         {
             failures.Add(what);
             GameLogger.Log("TEST", $"[FAIL] {what}", LogLevel.Error);
+        }
+
+        private void Shot(string name)
+        {
+            if (string.IsNullOrEmpty(shotsDir) || DisplayServer.GetName() == "headless")
+                return;
+            DirAccess.MakeDirRecursiveAbsolute(shotsDir);
+            ViewportCapture.SavePng(GetViewport(), shotsDir.TrimEnd('/') + "/characters_editor_" + name + ".png");
         }
 
         private void Finish()

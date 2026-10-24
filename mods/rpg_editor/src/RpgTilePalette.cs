@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Cthangover.Core.UI.Theming;
 using Cthangover.Mods.Rpg;
@@ -10,16 +11,20 @@ namespace Cthangover.Tools.RpgEditor
     /// Brush picker of the editor's left column. For a tile layer it shows the
     /// tileset atlas at one and a half times the tile size with the selected tile framed and the
     /// solid tiles marked by a red corner; a click picks a tile, the tooltip
-    /// names it (index, tag, solid). For the collision layer it shows the three
-    /// collision codes instead.
+    /// names it (index, tag, solid). The tileset's autotiles follow in a row under the
+    /// atlas, each shown by its block's preview tile (<see cref="RpgAutotiles"/>). For the
+    /// collision layer it shows the three collision codes instead.
     /// </summary>
     public partial class RpgTilePalette : Control
     {
         private const float Scale = 1.5f;
         private const float CodeHeight = 44f;
+        private const float AutotileGap = 8f;
 
         private static readonly char[] Codes = { RpgCollision.Block, RpgCollision.Open, RpgCollision.Auto };
 
+        private readonly RpgTextures textures = new();
+        private readonly List<RpgTileInfo> autotiles = new();
         private RpgTileset tileset;
         private Texture2D atlas;
         private bool collisionMode;
@@ -49,6 +54,9 @@ namespace Cthangover.Tools.RpgEditor
         {
             tileset = value;
             atlas = image;
+            autotiles.Clear();
+            if (value != null)
+                autotiles.AddRange(value.Tiles.Where(t => !string.IsNullOrEmpty(t.Autotile)));
             Relayout();
         }
 
@@ -80,14 +88,22 @@ namespace Cthangover.Tools.RpgEditor
 
             var cell = tileset.TileSize * Scale;
             DrawTextureRect(atlas, new Rect2(Vector2.Zero, atlas.GetSize() * Scale), false);
-            foreach (var tile in tileset.Tiles.Where(t => t.Solid))
+            foreach (var tile in tileset.Tiles.Where(t => t.Solid && string.IsNullOrEmpty(t.Autotile)))
+                DrawSolidMark((Vector2)RpgTileSetBuilder.AtlasCoords(tileset, tile.Index) * cell, cell);
+            for (var i = 0; i < autotiles.Count; i++)
             {
-                var position = (Vector2)RpgTileSetBuilder.AtlasCoords(tileset, tile.Index) * cell;
-                DrawColoredPolygon(new[] { position, position + new Vector2(cell * 0.25f, 0f), position + new Vector2(0f, cell * 0.25f) }, new Color(0.9f, 0.2f, 0.2f, 0.9f));
+                if (textures.Tileset(autotiles[i].Autotile) is { } block)
+                    DrawTextureRectRegion(block, new Rect2(Slot(i), new Vector2(cell, cell)), RpgAutotiles.PreviewRect(tileset.TileSize));
+                if (autotiles[i].Solid)
+                    DrawSolidMark(Slot(i), cell);
             }
-            var selected = (Vector2)RpgTileSetBuilder.AtlasCoords(tileset, SelectedTile) * cell;
+            var slot = autotiles.FindIndex(t => t.Index == SelectedTile);
+            var selected = slot >= 0 ? Slot(slot) : (Vector2)RpgTileSetBuilder.AtlasCoords(tileset, SelectedTile) * cell;
             DrawRect(new Rect2(selected, new Vector2(cell, cell)), UiTokens.AccentBright, false, 3f);
         }
+
+        private void DrawSolidMark(Vector2 position, float cell)
+            => DrawColoredPolygon(new[] { position, position + new Vector2(cell * 0.25f, 0f), position + new Vector2(0f, cell * 0.25f) }, new Color(0.9f, 0.2f, 0.2f, 0.9f));
 
         private void DrawCode(int i)
         {
@@ -110,7 +126,7 @@ namespace Cthangover.Tools.RpgEditor
             if (collisionMode)
                 CustomMinimumSize = new Vector2(200f, Codes.Length * (CodeHeight + 6f));
             else
-                CustomMinimumSize = atlas != null ? atlas.GetSize() * Scale : Vector2.Zero;
+                CustomMinimumSize = atlas != null && tileset != null ? new Vector2(atlas.GetWidth() * Scale, AutotileTop + AutotileRows * tileset.TileSize * Scale) : Vector2.Zero;
             TooltipText = string.Empty;
             QueueRedraw();
         }
@@ -137,7 +153,7 @@ namespace Cthangover.Tools.RpgEditor
             else if (tileset != null && atlas != null)
             {
                 var index = IndexAt(button.Position);
-                if (index >= 0 && index < RpgTileSetBuilder.TileCount(tileset, atlas))
+                if (index >= 0 && (index < RpgTileSetBuilder.TileCount(tileset, atlas) || tileset.AutotileOf(index) != null))
                 {
                     SelectedTile = index;
                     TileSelected?.Invoke(index);
@@ -147,9 +163,25 @@ namespace Cthangover.Tools.RpgEditor
             AcceptEvent();
         }
 
+        private float AutotileTop => atlas == null ? 0f : atlas.GetHeight() * Scale + (autotiles.Count > 0 ? AutotileGap : 0f);
+
+        private int AutotileRows => (autotiles.Count + Math.Max(1, tileset.Columns) - 1) / Math.Max(1, tileset.Columns);
+
+        private Vector2 Slot(int i)
+        {
+            var cell = tileset.TileSize * Scale;
+            var columns = Math.Max(1, tileset.Columns);
+            return new Vector2(i % columns * cell, AutotileTop + i / columns * cell);
+        }
+
         private int IndexAt(Vector2 position)
         {
             var cell = tileset.TileSize * Scale;
+            if (autotiles.Count > 0 && position.Y >= AutotileTop)
+            {
+                var slot = (int)((position.Y - AutotileTop) / cell) * Math.Max(1, tileset.Columns) + (int)(position.X / cell);
+                return slot >= 0 && slot < autotiles.Count && position.X < tileset.Columns * cell ? autotiles[slot].Index : -1;
+            }
             var column = (int)(position.X / cell);
             var row = (int)(position.Y / cell);
             return column < 0 || column >= tileset.Columns || row < 0 ? -1 : row * tileset.Columns + column;
@@ -159,7 +191,8 @@ namespace Cthangover.Tools.RpgEditor
         {
             var info = tileset.Tiles.FirstOrDefault(t => t.Index == index);
             var solid = info?.Solid == true ? " · " + TranslationServer.Translate("tools/rpg_editor/solid_tile") : string.Empty;
-            return $"#{index} {info?.Tag}{solid}";
+            var auto = string.IsNullOrEmpty(info?.Autotile) ? string.Empty : " · " + TranslationServer.Translate("tools/rpg_editor/autotile");
+            return $"#{index} {info?.Tag}{solid}{auto}";
         }
     }
 }

@@ -12,7 +12,8 @@ namespace Cthangover.Mods.Rpg
     /// scene is entered and freed when the scene is left.
     /// <para/>
     /// Draw order (children, bottom to top): back tiles, main tiles, the actor
-    /// layer (Y-sorted: events and the player), front tiles. The whole node is
+    /// layer (Y-sorted: events and the player), front tiles; each tile layer draws its
+    /// autotile cells over its plain tiles (<see cref="RpgAutotileLayer"/>). The whole node is
     /// scaled by the map's zoom with nearest filtering and follows the player
     /// like a camera, clamped to the map edges; a map smaller than the screen is
     /// centred.
@@ -23,6 +24,9 @@ namespace Cthangover.Mods.Rpg
     /// event on the cell fires, else the encounter table rolls. The action key
     /// fires the action event in front of the player (or under them); during a
     /// dialog it advances the dialog instead.
+    /// <para/>
+    /// Layers and actors share the material of <see cref="RpgLighting"/> (time of day, the
+    /// player's glow, lit events), updated after the camera each frame.
     /// </summary>
     public partial class RpgWorldView : Node2D
     {
@@ -32,6 +36,7 @@ namespace Cthangover.Mods.Rpg
         private RpgMapGrid grid;
         private Node2D actorLayer;
         private Texture2D atlas;
+        private RpgLighting lighting;
 
         /// <summary>The mounted map.</summary>
         public RpgMap Map { get; private set; }
@@ -59,6 +64,7 @@ namespace Cthangover.Mods.Rpg
                 GameLogger.Log("RPG", $"map '{map.ID}': tileset '{map.Tileset}' not found", LogLevel.Error);
             atlas = Tileset != null ? textures.Tileset(Tileset.Image) : null;
             var tileSet = Tileset != null && atlas != null ? RpgTileSetBuilder.Build(Tileset, atlas) : null;
+            lighting = new RpgLighting(map, grid, Tileset);
 
             AddChild(BuildLayer(RpgLayer.Back, tileSet));
             AddChild(BuildLayer(RpgLayer.Main, tileSet));
@@ -70,7 +76,7 @@ namespace Cthangover.Mods.Rpg
                 AddEventActor(mapEvent);
             RefreshEvents();
 
-            Player = new RpgActor(TileSize) { Name = "Player" };
+            Player = new RpgActor(TileSize) { Name = "Player", Material = lighting.Material };
             Player.UseCharset(textures.Charset(RpgPlayerLook.Charset()));
             Player.StepFinished += OnPlayerStepFinished;
             actorLayer.AddChild(Player);
@@ -178,6 +184,7 @@ namespace Cthangover.Mods.Rpg
                 }
             }
             UpdateCamera();
+            lighting.Update(this, eventActors.Values);
         }
 
         /// <summary>The action key: advances a running dialog, otherwise interacts.</summary>
@@ -217,7 +224,7 @@ namespace Cthangover.Mods.Rpg
 
         private TileMapLayer BuildLayer(RpgLayer layer, TileSet tileSet)
         {
-            var node = new TileMapLayer { Name = layer.ToString(), TileSet = tileSet };
+            var node = new TileMapLayer { Name = layer.ToString(), TileSet = tileSet, Material = lighting.Material };
             if (tileSet == null)
                 return node;
             for (var y = 0; y < grid.Height; y++)
@@ -225,10 +232,15 @@ namespace Cthangover.Mods.Rpg
                 for (var x = 0; x < grid.Width; x++)
                 {
                     var index = grid.GetTile(layer, x, y);
-                    if (index >= 0)
+                    if (index >= 0 && Tileset.AutotileOf(index) == null)
                         node.SetCell(new Vector2I(x, y), RpgTileSetBuilder.SourceId, RpgTileSetBuilder.AtlasCoords(Tileset, index));
                 }
             }
+            var autotiles = new RpgAutotileLayer(grid, layer, Tileset, textures);
+            if (autotiles.Count > 0)
+                node.AddChild(autotiles);
+            else
+                autotiles.Free();
             return node;
         }
 
@@ -241,7 +253,7 @@ namespace Cthangover.Mods.Rpg
             }
 
             // The look and the cell come with the first page (RefreshEvents).
-            var actor = new RpgActor(TileSize, mapEvent) { Name = "Event_" + mapEvent.Id };
+            var actor = new RpgActor(TileSize, mapEvent) { Name = "Event_" + mapEvent.Id, Material = lighting.Material };
             actorLayer.AddChild(actor);
             eventActors[mapEvent.Id] = actor;
         }

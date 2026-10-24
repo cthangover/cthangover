@@ -34,6 +34,30 @@ namespace Cthangover.Mods.Rpg
         /// <summary>Per-cell properties; cells without an entry are walkable.</summary>
         public List<RpgTileInfo> Tiles { get; set; } = new();
 
+        /// <summary>The autotile entry with this index (<see cref="RpgTileInfo.Autotile"/> set), or null.</summary>
+        public RpgTileInfo AutotileOf(int index)
+        {
+            if (index < 0)
+                return null;
+            foreach (var tile in Tiles ?? new List<RpgTileInfo>())
+            {
+                if (tile.Index == index && !string.IsNullOrEmpty(tile.Autotile))
+                    return tile;
+            }
+            return null;
+        }
+
+        /// <summary>Light of the atlas cell (<see cref="RpgTileInfo.Light"/>), or null.</summary>
+        public RpgLight LightOf(int index)
+        {
+            foreach (var tile in Tiles ?? new List<RpgTileInfo>())
+            {
+                if (tile.Index == index && tile.Light != null)
+                    return tile.Light;
+            }
+            return null;
+        }
+
         /// <summary>True when the atlas cell blocks walking. Built once from <see cref="Tiles"/>.</summary>
         public bool IsSolid(int index)
         {

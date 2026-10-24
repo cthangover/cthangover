@@ -8,6 +8,7 @@
       "Width": 12,
       "Height": 10,
       "Zoom": 2,
+      "Ambient": "#e0d2b8",
       "Layers": {
         "Back": [
           "7 7 7 7 7 7 7 7 7 7 7 7",

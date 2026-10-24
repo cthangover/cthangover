@@ -43,5 +43,8 @@ namespace Cthangover.Mods.Rpg
 
         /// <summary>Autonomous movement of the page.</summary>
         public RpgMoveRoute Route { get; set; }
+
+        /// <summary>Light of the page (a lamp lit by a page).</summary>
+        public RpgLight Light { get; set; }
     }
 }

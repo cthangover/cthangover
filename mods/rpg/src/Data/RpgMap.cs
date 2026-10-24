@@ -55,5 +55,11 @@ namespace Cthangover.Mods.Rpg
 
         /// <summary>Random battles; null for a safe map.</summary>
         public RpgEncounterTable Encounters { get; set; }
+
+        /// <summary>
+        /// Fixed light colour of the map (<c>#rrggbb</c>), e.g. a lit room; null = the time of day
+        /// lights the map (<see cref="RpgLighting"/>).
+        /// </summary>
+        public string Ambient { get; set; }
     }
 }

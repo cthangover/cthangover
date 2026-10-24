@@ -28,9 +28,19 @@ namespace Cthangover.Tools.RpgEditor
         private readonly HBoxContainer buttons;
         private List<RpgPickerEntry> all = new();
 
-        /// <summary>Builds the search field, the list, the option and button rows and the hint.</summary>
+        /// <summary>
+        /// Builds the option and button rows with their hint on top — the list grows with the
+        /// entries (<c>AutoHeight</c>), so buttons below it would scroll out of sight — then the
+        /// search field and the list.
+        /// </summary>
         public RpgEntityPicker(string searchKey, string hintKey)
         {
+            options = new HBoxContainer();
+            AddChild(options);
+            buttons = new HBoxContainer();
+            AddChild(buttons);
+            AddChild(ToolUi.Hint(ToolUi.Tr(hintKey)));
+
             search = ToolUi.Text(ToolUi.Tr(searchKey), OnSearchChanged);
             AddChild(search);
 
@@ -43,12 +53,6 @@ namespace Cthangover.Tools.RpgEditor
             };
             list.ItemSelected += OnItemSelected;
             AddChild(list);
-
-            options = new HBoxContainer();
-            AddChild(options);
-            buttons = new HBoxContainer();
-            AddChild(buttons);
-            AddChild(ToolUi.Hint(ToolUi.Tr(hintKey)));
         }
 
         /// <summary>Reads the entries; called by <see cref="Reload"/>.</summary>
