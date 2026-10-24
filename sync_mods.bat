@@ -1,7 +1,7 @@
 @echo off
-rem Builds a release archive of every mod and the catalog (Gitea + GitHub mirrors) into releases\.
-rem Usage: build_mod_releases.bat [--only=a,b] [--skip=a,b] [--hosts=gitea,github] [--out=dir]
-rem No arguments: all mods, then wait for a key (double-click friendly).
+rem Full sync of the mods with Gitea and GitHub: repositories, code, releases, catalogs.
+rem Usage: sync_mods.bat [--yes] [--only=a,b] [--skip=a,b] [--delete] [--github-batch=8] [--github-pause=30]
+rem No arguments: report, ask once, apply; then wait for a key (double-click friendly).
 setlocal EnableExtensions
 pushd "%~dp0"
 set "PY="
@@ -16,7 +16,7 @@ if not defined PY (
     popd
     exit /b 1
 )
-%PY% "%~dp0build_mod_releases.py" %*
+%PY% "%~dp0sync_mods.py" %*
 set "RC=%ERRORLEVEL%"
 popd
 if "%~1"=="" pause
