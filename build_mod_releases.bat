@@ -1,5 +1,5 @@
 @echo off
-rem Builds a release archive of every mod and the Gitea/GitHub catalogs into releases\.
+rem Builds a release archive of every mod and the catalog (Gitea + GitHub mirrors) into releases\.
 rem Usage: build_mod_releases.bat [--only=a,b] [--skip=a,b] [--hosts=gitea,github] [--out=dir]
 rem No arguments: all mods, then wait for a key (double-click friendly).
 setlocal EnableExtensions

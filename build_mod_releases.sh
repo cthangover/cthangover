@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds a release archive of every mod and the Gitea/GitHub catalogs into releases/.
+# Builds a release archive of every mod and the catalog (Gitea + GitHub mirrors) into releases/.
 # Usage: ./build_mod_releases.sh [--only=a,b] [--skip=a,b] [--hosts=gitea,github] [--out=dir]
 set -euo pipefail
 cd "$(dirname "$0")"
