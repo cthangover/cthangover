@@ -328,7 +328,8 @@ namespace Cthangover.LocaleAtlas
                     {
                         result.Findings.Add(new LocaleFinding
                         {
-                            Severity = LocaleSeverity.Error, Code = "collection_text_missing", ModId = modId, Key = $"{id}", Language = language,
+                            // A gap to fill like a missing key: the base language is shown meanwhile.
+                            Severity = LocaleSeverity.Warning, Code = "collection_text_missing", ModId = modId, Key = $"{id}", Language = language,
                             File = file, Message = $"'{name}' ({path.TrimStart('/').OrEmpty("root")}) has no locale entry for '{language}'",
                             Fix = $"add {{ \"lang\": \"{language}\", \"name\": \"…\", \"description\": \"…\" }} to \"locale\"",
                         });
@@ -414,7 +415,8 @@ namespace Cthangover.LocaleAtlas
                         var other = row.Declarations.TryGetValue(language, out var others) ? others.Select(e => e.ModId).Distinct().ToList() : null;
                         result.Findings.Add(new LocaleFinding
                         {
-                            Severity = global ? LocaleSeverity.Error : LocaleSeverity.Warning,
+                            // A translation gap, not a breakage: the game shows the language that has the key.
+                            Severity = LocaleSeverity.Warning,
                             Code = global ? "key_missing_language" : "key_partial_override",
                             ModId = mod, Key = row.Key, Language = language, File = own.File, Line = own.Line,
                             Message = global
