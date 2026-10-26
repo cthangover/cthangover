@@ -15,6 +15,32 @@ namespace Engine.Tests.Mods
     public class ModCollectionPlanTests
     {
         [Fact]
+        public void Build_SharedMod_SelectsDownloadSatisfyingEveryDeclaredRequirement()
+        {
+            var collection = Collection(Mechanic("first", "app>=1"), Mechanic("second", "app<2"));
+            var catalog = new List<CatalogExportEntry> { Catalog("app", "2.0", "1.5", "1.0") };
+            var graph = Resolve(collection, catalog);
+
+            var plan = ModCollectionPlan.Build(graph, catalog);
+
+            Assert.Equal("1.5", Assert.Single(plan.Install).Version);
+            Assert.False(plan.HasProblems);
+        }
+
+        [Fact]
+        public void Build_ConflictingGroupRequirements_DoesNotOfferAnInvalidDownload()
+        {
+            var collection = Collection(Mechanic("first", "app=1"), Mechanic("second", "app>=2"));
+            var catalog = new List<CatalogExportEntry> { Catalog("app", "2", "1") };
+            var graph = Resolve(collection, catalog);
+
+            var plan = ModCollectionPlan.Build(graph, catalog);
+
+            Assert.Empty(plan.Install);
+            Assert.Equal(new[] { "app" }, plan.Mismatches);
+        }
+
+        [Fact]
         public void Build_NullGraph_ReturnsEmptyPlan()
         {
             var plan = ModCollectionPlan.Build(null, new List<CatalogExportEntry>());

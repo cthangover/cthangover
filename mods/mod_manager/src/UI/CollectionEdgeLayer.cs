@@ -60,7 +60,7 @@ namespace Mods.ModManager
             if (_canvas == null || !GodotObject.IsInstanceValid(_canvas))
                 return;
 
-            var origin = _canvas.GetGlobalRect().Position;
+            var inverse = _canvas.GetGlobalTransform().AffineInverse();
 
             foreach (var edge in _edges)
             {
@@ -69,13 +69,16 @@ namespace Mods.ModManager
                 if (!_chips.TryGetValue(edge.ToModId, out var to) || !GodotObject.IsInstanceValid(to))
                     continue;
 
-                var a = from.GetGlobalRect().GetCenter() - origin;
-                var b = to.GetGlobalRect().GetCenter() - origin;
+                var fromRect = from.GetGlobalRect();
+                var toRect = to.GetGlobalRect();
+                var a = inverse * BorderPoint(fromRect, toRect.GetCenter());
+                var b = inverse * BorderPoint(toRect, fromRect.GetCenter());
                 var points = BuildCurve(a, b);
-                var color = edge.Cross ? (edge.Active ? UiTokens.Danger : UiTokens.Warning) : (edge.Active ? UiTokens.Accent : UiTokens.LineStrong);
-                var width = edge.Cross ? (edge.Active ? 3f : 2f) : (edge.Active ? 2.5f : 1.5f);
+                var color = edge.Problem ? UiTokens.DangerText
+                    : edge.Active ? UiTokens.Accent : new Color(UiTokens.LineStrong, 0.45f);
+                var width = edge.Active || edge.Problem ? 2f : 1.2f;
 
-                if (edge.Cross)
+                if (edge.Problem)
                 {
                     for (var i = 0; i < points.Count - 1; i++)
                         DrawDashedLine(points[i], points[i + 1], color, width, 5f);
@@ -85,7 +88,21 @@ namespace Mods.ModManager
                 {
                     DrawPolyline(points.ToArray(), color, width, true);
                 }
+                DrawCircle(a, 2.5f, color);
+                var direction = (points[^1] - points[^2]).Normalized();
+                var normal = new Vector2(-direction.Y, direction.X);
+                DrawLine(b, b - direction * 8f + normal * 3.5f, color, width, true);
+                DrawLine(b, b - direction * 8f - normal * 3.5f, color, width, true);
             }
+        }
+
+        private static Vector2 BorderPoint(Rect2 rect, Vector2 target)
+        {
+            var center = rect.GetCenter();
+            var delta = target - center;
+            if (Mathf.Abs(delta.X) >= Mathf.Abs(delta.Y))
+                return new Vector2(delta.X >= 0 ? rect.End.X : rect.Position.X, center.Y);
+            return new Vector2(center.X, delta.Y >= 0 ? rect.End.Y : rect.Position.Y);
         }
 
         private static List<Vector2> BuildCurve(Vector2 a, Vector2 b)

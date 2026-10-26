@@ -14,6 +14,71 @@ namespace Engine.Tests.Mods
     public class ModCollectionResolverTests
     {
         [Fact]
+        public void Resolve_RepeatedModWithinOneGroup_RetainsEveryVersionConstraint()
+        {
+            var collection = Collection(Mechanic("game", "shared>=1", "shared>=2"));
+            var mods = Mods(Local("shared", "1.5"));
+
+            var graph = ModCollectionResolver.Resolve(collection, mods, new HashSet<string>(), new List<CatalogExportEntry>());
+
+            Assert.Single(graph.Nodes);
+            Assert.Single(graph.Groups[0].Mods);
+            Assert.Equal(ModCollectionNodeState.VersionMismatch, Node(graph, "shared").State);
+            Assert.True(Node(graph, "shared").AcceptsVersion("2"));
+        }
+
+        [Fact]
+        public void Resolve_SharedMod_MustSatisfyBothMechanicsRequirements()
+        {
+            var collection = Collection(Mechanic("first", "shared>=1"), Mechanic("second", "shared>=2"));
+            var mods = Mods(Local("shared", "1.5"));
+
+            var graph = ModCollectionResolver.Resolve(collection, mods, new HashSet<string>(), new List<CatalogExportEntry>());
+
+            Assert.Single(graph.Nodes);
+            Assert.Equal("first", Node(graph, "shared").MechanicId);
+            Assert.Equal(ModCollectionNodeState.VersionMismatch, Node(graph, "shared").State);
+            Assert.False(Node(graph, "shared").AcceptsVersion("1.5"));
+            Assert.True(Node(graph, "shared").AcceptsVersion("2.0"));
+        }
+
+        [Fact]
+        public void Resolve_ExplicitPin_DoesNotDiscardConsumersStricterDependency()
+        {
+            var collection = Collection(Mechanic("game", "base>=1", "app"));
+            var mods = Mods(Local("base", "1.5"), Local("app", "1", "base>=2"));
+
+            var graph = ModCollectionResolver.Resolve(collection, mods, new HashSet<string>(), new List<CatalogExportEntry>());
+
+            Assert.Equal(ModCollectionNodeState.VersionMismatch, Node(graph, "base").State);
+            Assert.True(Node(graph, "base").AcceptsVersion("2.1"));
+        }
+
+        [Fact]
+        public void Resolve_ExternalDependency_ValidatesTheRequiredVersion()
+        {
+            var collection = Collection(Mechanic("game", "app"));
+            var mods = Mods(Local("app", "1", "base>=2"), Local("base", "1.5"));
+
+            var graph = ModCollectionResolver.Resolve(collection, mods, new HashSet<string>(), new List<CatalogExportEntry>());
+
+            Assert.True(Node(graph, "base").IsExternal);
+            Assert.Equal(">=2", Node(graph, "base").RequiredVersion);
+            Assert.Equal(ModCollectionNodeState.VersionMismatch, Node(graph, "base").State);
+        }
+
+        [Fact]
+        public void Resolve_DisabledIncompatibleMod_CannotBeFixedByOnlyEnablingIt()
+        {
+            var collection = Collection(Mechanic("game", "app>=2"));
+            var mods = Mods(Local("app", "1"));
+
+            var graph = ModCollectionResolver.Resolve(collection, mods, new HashSet<string> { "app" }, new List<CatalogExportEntry>());
+
+            Assert.Equal(ModCollectionNodeState.VersionMismatch, Node(graph, "app").State);
+        }
+
+        [Fact]
         public void Resolve_NullCollection_ReturnsEmptyGraph()
         {
             var graph = ModCollectionResolver.Resolve(

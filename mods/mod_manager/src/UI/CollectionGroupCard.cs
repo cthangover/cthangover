@@ -158,7 +158,7 @@ namespace Mods.ModManager
             MouseFilter = MouseFilterEnum.Ignore;
             _baseBorder = UiTokens.LineCard;
 
-            _style = UiKit.Frame(12, new Color(UiTokens.Surface1, 0.92f), _baseBorder);
+            _style = UiKit.Frame(UiTokens.RadiusLg, new Color(UiTokens.Surface1, 0.92f), _baseBorder);
             _panel = new PanelContainer { MouseFilter = MouseFilterEnum.Stop };
             _panel.AddThemeStyleboxOverride("panel", _style);
             _panel.GuiInput += OnPanelGuiInput;
@@ -217,7 +217,7 @@ namespace Mods.ModManager
 
             _desc = UiKit.Label(string.Empty, UiTokens.FontSmall, UiTokens.Muted);
             _desc.AutowrapMode = TextServer.AutowrapMode.WordSmart;
-            _desc.MaxLinesVisible = 3;
+            _desc.MaxLinesVisible = 1;
             _content.AddChild(_desc);
 
             _watermark = UiKit.Label(string.Empty, 42, new Color(1f, 1f, 1f, 0.04f));

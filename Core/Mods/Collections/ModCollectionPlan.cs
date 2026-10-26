@@ -87,7 +87,7 @@ namespace Cthangover.Core.Mods
                 return;
             }
 
-            var download = SelectDownload(entry, node.Dependency);
+            var download = SelectDownload(entry, node);
             if (download == null)
             {
                 plan.Mismatches.Add(node.ModId);
@@ -108,18 +108,15 @@ namespace Cthangover.Core.Mods
         /// the first satisfying one is the best choice; without a pin the newest
         /// download is used as-is.
         /// </summary>
-        private static CatalogEntryDownload SelectDownload(CatalogExportEntry entry, ModDependency dependency)
+        private static CatalogEntryDownload SelectDownload(CatalogExportEntry entry, ModCollectionNode node)
         {
             if (entry?.Downloads == null || entry.Downloads.Count == 0)
                 return null;
 
-            if (!dependency.IsValid || string.IsNullOrEmpty(dependency.VersionRaw))
-                return entry.Downloads[0];
-
             foreach (var download in entry.Downloads)
             {
                 if (!string.IsNullOrEmpty(download.Version)
-                    && dependency.IsSatisfiedBy(download.Version))
+                    && node.AcceptsVersion(download.Version))
                 {
                     return download;
                 }

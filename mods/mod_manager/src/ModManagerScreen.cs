@@ -133,6 +133,10 @@ namespace Mods.ModManager
             _sort.AddItem(TranslationServer.Translate("mod_manager/sort_author"));
             _sort.AddItem(TranslationServer.Translate("mod_manager/sort_status"));
             _sort.Selected = (int)_filter.Sort;
+            _sort.TooltipText = TranslationServer.Translate("mod_manager/sort_tooltip");
+            ModHelpPanel.Attach(_search, "mod_search");
+            ModHelpPanel.Attach(_sort, "mod_sort");
+            ModHelpPanel.Attach(_refreshButton, "refresh");
 
             _bannerPanel.AddThemeStyleboxOverride("panel", ModManagerTheme.MakeBox(
                 UiTokens.Alpha(UiTokens.Warning, 0.15f),

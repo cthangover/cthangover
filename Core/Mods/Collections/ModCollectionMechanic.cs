@@ -66,6 +66,45 @@ namespace Cthangover.Core.Mods
         public bool IsSelected => !(Optional && Selected == false);
 
         /// <summary>
+        /// Replaces this group's explicit requirement for a mod, leaving other
+        /// groups untouched. Rejects malformed operators/versions before any
+        /// mutation; an empty operator removes the pin. Repeated references in
+        /// the same group receive the same rule, preserving each optional suffix.
+        /// </summary>
+        public bool TrySetModVersion(string modId, string versionOperator, string version)
+        {
+            if (string.IsNullOrWhiteSpace(modId) || Mods == null)
+                return false;
+
+            var op = versionOperator?.Trim() ?? string.Empty;
+            if (op != string.Empty && op != ">=" && op != "<=" && op != ">"
+                && op != "<" && op != "=" && op != "^")
+                return false;
+
+            var value = version?.Trim() ?? string.Empty;
+            if (op.Length > 0 && value.Length == 0)
+                return false;
+
+            var candidate = ModDependency.Parse(modId + op + (op.Length > 0 ? value : string.Empty));
+            if (!candidate.IsValid || candidate.IsOptional
+                || !string.Equals(candidate.ModId, modId, System.StringComparison.OrdinalIgnoreCase)
+                || (op.Length > 0 && candidate.VersionRaw != value))
+                return false;
+
+            var changed = false;
+            for (var i = 0; i < Mods.Count; i++)
+            {
+                var current = ModDependency.Parse(Mods[i]);
+                if (!current.IsValid || !string.Equals(current.ModId, modId, System.StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                Mods[i] = candidate.ToString() + (current.IsOptional ? "?" : string.Empty);
+                changed = true;
+            }
+            return changed;
+        }
+
+        /// <summary>
         /// Localized name/description entries, same shape as catalog mod
         /// entries; the scheme editor shows the match for the player's language
         /// and falls back to <see cref="Name"/> and <see cref="Description"/>.
