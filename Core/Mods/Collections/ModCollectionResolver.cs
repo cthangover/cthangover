@@ -369,7 +369,11 @@ namespace Cthangover.Core.Mods
                 return;
 
             if (group.Mods.Exists(r => string.Equals(r.ModId, modId, StringComparison.OrdinalIgnoreCase)))
+            {
+                if (context.Nodes.TryGetValue(modId, out var declared))
+                    AddRequirement(declared, dependency);
                 return;
+            }
 
             group.Mods.Add(new ModCollectionModRef
             {
@@ -377,10 +381,12 @@ namespace Cthangover.Core.Mods
                 Role = mechanic.Role,
                 CollectionId = collectionId,
                 MechanicId = mechanic.Id,
+                Requirement = raw,
             });
 
             if (context.Nodes.TryGetValue(modId, out var existing))
             {
+                AddRequirement(existing, dependency);
                 if (existing.IsExternal)
                 {
                     existing.MechanicId = mechanic.Id;
@@ -498,10 +504,13 @@ namespace Cthangover.Core.Mods
 
                     edges.Add((dependencyId, node.ModId));
 
-                    if (nodes.ContainsKey(dependencyId))
+                    if (nodes.TryGetValue(dependencyId, out var existing))
+                    {
+                        AddRequirement(existing, dependency);
                         continue;
+                    }
 
-                    var external = CreateNode(dependencyId, null, default, true,
+                    var external = CreateNode(dependencyId, null, dependency, true,
                         localMods, disabledIds, sessionInstalled, catalogById);
                     nodes[dependencyId] = external;
                     graph.Nodes.Add(external);
@@ -527,6 +536,7 @@ namespace Cthangover.Core.Mods
                 IsExternal = external,
                 Dependency = dependency,
             };
+            AddRequirement(node, dependency);
 
             if (localMods.TryGetValue(modId, out var info))
             {
@@ -535,15 +545,13 @@ namespace Cthangover.Core.Mods
 
                 node.InstalledVersion = info.Version;
 
-                if (disabledIds.Contains(modId))
-                {
-                    node.State = ModCollectionNodeState.Disabled;
-                }
-                else if (dependency.IsValid
-                         && !string.IsNullOrEmpty(dependency.VersionRaw)
-                         && !dependency.IsSatisfiedBy(info.Version ?? "0.0.0.0"))
+                if (!node.AcceptsVersion(info.Version ?? "0.0.0.0"))
                 {
                     node.State = ModCollectionNodeState.VersionMismatch;
+                }
+                else if (disabledIds.Contains(modId))
+                {
+                    node.State = ModCollectionNodeState.Disabled;
                 }
                 else
                 {
@@ -571,6 +579,21 @@ namespace Cthangover.Core.Mods
 
             node.State = ModCollectionNodeState.Missing;
             return node;
+        }
+
+        private static void AddRequirement(ModCollectionNode node, ModDependency requirement)
+        {
+            if (!requirement.IsValid)
+                return;
+
+            foreach (var current in node.Requirements)
+            {
+                if (string.Equals(current.ToString(), requirement.ToString(), StringComparison.Ordinal))
+                    return;
+            }
+            node.Requirements.Add(requirement);
+            if (node.InstalledVersion != null && !node.AcceptsVersion(node.InstalledVersion))
+                node.State = ModCollectionNodeState.VersionMismatch;
         }
 
         private static Dictionary<string, CatalogExportEntry> IndexCatalog(

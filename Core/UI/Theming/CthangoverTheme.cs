@@ -601,14 +601,31 @@ namespace Cthangover.Core.UI.Theming
 
         private static void ConfigureWindows(Theme theme)
         {
-            theme.SetStylebox("panel", "Window", WindowBox());
-            theme.SetStylebox("embedded_border", "Window", WindowBox());
-            theme.SetStylebox("embedded_unfocused_border", "Window", WindowBox());
+            // Embedded chrome is drawn behind the rectangular content viewport.
+            // Keep its rounded corners outside that viewport and reserve the
+            // whole title bar above it, including the close icon's hit area.
+            var border = WindowBox();
+            border.ExpandMarginLeft = UiTokens.RadiusLg;
+            border.ExpandMarginRight = UiTokens.RadiusLg;
+            border.ExpandMarginBottom = UiTokens.RadiusLg;
+            border.ExpandMarginTop = 36;
+            theme.SetStylebox("embedded_border", "Window", border);
+            theme.SetStylebox("embedded_unfocused_border", "Window", border);
+
+            // The content fills the viewport; rounding it would expose the
+            // viewport's opaque clear colour at the corners.
+            var panel = Flat(0, UiTokens.Surface0);
+            panel.ContentMarginLeft = 16;
+            panel.ContentMarginRight = 16;
+            panel.ContentMarginTop = 16;
+            panel.ContentMarginBottom = 16;
+            theme.SetStylebox("panel", "Window", panel);
+            theme.SetStylebox("panel", "AcceptDialog", panel);
             theme.SetColor("title_color", "Window", UiTokens.InkBright);
             theme.SetFontSize("title_font_size", "Window", UiTokens.FontLead);
             theme.SetConstant("title_height", "Window", 36);
-            theme.SetConstant("close_h_offset", "Window", 16);
-            theme.SetConstant("close_v_offset", "Window", 8);
+            theme.SetConstant("close_h_offset", "Window", 18);
+            theme.SetConstant("close_v_offset", "Window", 24);
 
             var tooltip = Flat(UiTokens.RadiusSm, UiTokens.TooltipBg, UiTokens.Line);
             tooltip.ContentMarginLeft = 10;

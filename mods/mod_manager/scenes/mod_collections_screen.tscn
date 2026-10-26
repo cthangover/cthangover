@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="src/ModCollectionsScreen.cs" id="1_screen"]
 [ext_resource type="Script" path="src/UI/CollectionSchemeCanvas.cs" id="2_canvas"]
+[ext_resource type="Script" path="src/UI/CollectionMiniMap.cs" id="3_map"]
 
 [node name="ModCollectionsScreen" type="Control"]
 layout_mode = 3
@@ -70,10 +71,9 @@ layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 
-[node name="EdgesToggle" type="CheckBox" parent="Margin/Root/Header"]
+[node name="EdgesToggle" type="OptionButton" parent="Margin/Root/Header"]
 layout_mode = 2
 size_flags_vertical = 4
-button_pressed = true
 
 [node name="Problems" type="Button" parent="Margin/Root/Header"]
 layout_mode = 2
@@ -112,25 +112,101 @@ size_flags_vertical = 4
 layout_mode = 2
 theme_override_constants/separation = 8
 
+[node name="Tools" type="HBoxContainer" parent="Margin/Root"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="AddMod" type="Button" parent="Margin/Root/Tools"]
+layout_mode = 2
+text = "mod_manager/collection_add_mod"
+
+[node name="Search" type="LineEdit" parent="Margin/Root/Tools"]
+custom_minimum_size = Vector2(170, 0)
+layout_mode = 2
+placeholder_text = "mod_manager/collection_canvas_search"
+
+[node name="Spacer" type="Control" parent="Margin/Root/Tools"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="ZoomOut" type="Button" parent="Margin/Root/Tools"]
+layout_mode = 2
+text = "−"
+
+[node name="Zoom" type="Label" parent="Margin/Root/Tools"]
+custom_minimum_size = Vector2(42, 0)
+layout_mode = 2
+horizontal_alignment = 1
+vertical_alignment = 1
+text = "100%"
+
+[node name="ZoomIn" type="Button" parent="Margin/Root/Tools"]
+layout_mode = 2
+text = "+"
+
+[node name="Fit" type="Button" parent="Margin/Root/Tools"]
+layout_mode = 2
+text = "mod_manager/collection_canvas_fit"
+
+[node name="Arrange" type="Button" parent="Margin/Root/Tools"]
+layout_mode = 2
+text = "mod_manager/collection_canvas_arrange"
+
+[node name="Focus" type="Button" parent="Margin/Root/Tools"]
+layout_mode = 2
+text = "mod_manager/collection_canvas_focus"
+
+[node name="OrderLegend" type="Label" parent="Margin/Root"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+mouse_filter = 0
+
 [node name="Body" type="HSplitContainer" parent="Margin/Root"]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="CanvasScroll" type="ScrollContainer" parent="Margin/Root/Body"]
+[node name="CanvasHost" type="Control" parent="Margin/Root/Body"]
+custom_minimum_size = Vector2(440, 240)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="CanvasScroll" type="ScrollContainer" parent="Margin/Root/Body/CanvasHost"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 horizontal_scroll_mode = 1
 vertical_scroll_mode = 1
 
-[node name="SchemeCanvas" type="Control" parent="Margin/Root/Body/CanvasScroll"]
+[node name="SchemeCanvas" type="Control" parent="Margin/Root/Body/CanvasHost/CanvasScroll"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 script = ExtResource("2_canvas")
 
+[node name="MiniMap" type="Control" parent="Margin/Root/Body/CanvasHost"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -170.0
+offset_top = -124.0
+offset_right = -18.0
+offset_bottom = -24.0
+grow_horizontal = 0
+grow_vertical = 0
+mouse_filter = 0
+script = ExtResource("3_map")
+
 [node name="Details" type="PanelContainer" parent="Margin/Root/Body"]
-custom_minimum_size = Vector2(380, 0)
+custom_minimum_size = Vector2(330, 0)
 layout_mode = 2
 
 [node name="DetailScroll" type="ScrollContainer" parent="Margin/Root/Body/Details"]
@@ -173,6 +249,46 @@ autowrap_mode = 3
 [node name="DetailDescription" type="Label" parent="Margin/Root/Body/Details/DetailScroll/Detail"]
 layout_mode = 2
 autowrap_mode = 3
+
+[node name="VersionEditor" type="VBoxContainer" parent="Margin/Root/Body/Details/DetailScroll/Detail"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 7
+
+[node name="Caption" type="Label" parent="Margin/Root/Body/Details/DetailScroll/Detail/VersionEditor"]
+layout_mode = 2
+text = "mod_manager/collection_version_caption"
+autowrap_mode = 3
+
+[node name="Fields" type="HBoxContainer" parent="Margin/Root/Body/Details/DetailScroll/Detail/VersionEditor"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Policy" type="OptionButton" parent="Margin/Root/Body/Details/DetailScroll/Detail/VersionEditor/Fields"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Value" type="LineEdit" parent="Margin/Root/Body/Details/DetailScroll/Detail/VersionEditor/Fields"]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Rule" type="Label" parent="Margin/Root/Body/Details/DetailScroll/Detail/VersionEditor"]
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="Hint" type="Label" parent="Margin/Root/Body/Details/DetailScroll/Detail/VersionEditor"]
+layout_mode = 2
+text = "mod_manager/collection_version_hint"
+autowrap_mode = 3
+
+[node name="Feedback" type="Label" parent="Margin/Root/Body/Details/DetailScroll/Detail/VersionEditor"]
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="SaveRule" type="Button" parent="Margin/Root/Body/Details/DetailScroll/Detail/VersionEditor"]
+layout_mode = 2
+text = "mod_manager/collection_version_edit"
 
 [node name="DetailExtra" type="VBoxContainer" parent="Margin/Root/Body/Details/DetailScroll/Detail"]
 layout_mode = 2

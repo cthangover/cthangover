@@ -11,6 +11,7 @@ using Godot;
 
 using Cthangover.Mods.Interface.Base.Lists;
 using Cthangover.Mods.Interface.Theming;
+using Cthangover.Mods.Interface.Tool;
 namespace Mods.ModManager
 {
     /// <summary>
@@ -39,7 +40,7 @@ namespace Mods.ModManager
         private Button _newGame;
         private Button _apply;
         private OptionButton _gameSelect;
-        private CheckBox _edgesToggle;
+        private OptionButton _edgesToggle;
         private Button _pillProblems;
         private Button _pillPlan;
         private Label _modsCount;
@@ -86,6 +87,17 @@ namespace Mods.ModManager
         private Button _revert;
         private Button _delete;
         private Label _savesInfo;
+        private Button _addMod;
+        private LineEdit _canvasSearch;
+        private Label _zoomLabel;
+        private VBoxContainer _versionEditor;
+        private OptionButton _versionPolicy;
+        private LineEdit _versionValue;
+        private Label _versionRule;
+        private Label _versionFeedback;
+        private ModCollectionModRef _versionReference;
+        private bool _fitAfterBuild = true;
+        private bool _fitQueued;
 
         /// <summary>Drafts created by "Duplicate", mapped to the game they were copied from (offer to copy its saves).</summary>
         private readonly Dictionary<string, string> _duplicatedFrom = new(StringComparer.OrdinalIgnoreCase);
@@ -134,6 +146,7 @@ namespace Mods.ModManager
         public void OpenCollection(string collectionId)
         {
             _currentId = collectionId;
+            _fitAfterBuild = true;
             _selectedGroupKey = null;
             _selectedModId = null;
             // The gallery re-reads the store on every refresh; re-read it here
@@ -163,6 +176,254 @@ namespace Mods.ModManager
             UnsubscribeEvents();
         }
 
+        private void BindGraphiteControls()
+        {
+            var tools = "Margin/Root/Tools/";
+            _addMod = GetNode<Button>(tools + "AddMod");
+            _addMod.Text = TranslationServer.Translate("mod_manager/collection_add_mod");
+            _addMod.Pressed += OnAddModPressed;
+            _canvasSearch = GetNode<LineEdit>(tools + "Search");
+            _canvasSearch.PlaceholderText = TranslationServer.Translate("mod_manager/collection_canvas_search");
+            _canvasSearch.TextChanged += _canvas.SetSearch;
+            _zoomLabel = GetNode<Label>(tools + "Zoom");
+            GetNode<Button>(tools + "ZoomOut").Pressed += _canvas.ZoomOut;
+            GetNode<Button>(tools + "ZoomIn").Pressed += _canvas.ZoomIn;
+            var fit = GetNode<Button>(tools + "Fit");
+            fit.Text = TranslationServer.Translate("mod_manager/collection_canvas_fit");
+            fit.Pressed += _canvas.FitWidth;
+            var arrange = GetNode<Button>(tools + "Arrange");
+            arrange.Text = TranslationServer.Translate("mod_manager/collection_canvas_arrange");
+            arrange.Pressed += _canvas.ArrangeGroups;
+            var focus = GetNode<Button>(tools + "Focus");
+            focus.Text = TranslationServer.Translate("mod_manager/collection_canvas_focus");
+            focus.Pressed += _canvas.ShowSelection;
+            _canvas.SetMiniMap(GetNode<CollectionMiniMap>("Margin/Root/Body/CanvasHost/MiniMap"));
+
+            var path = "Margin/Root/Body/Details/DetailScroll/Detail/VersionEditor";
+            _versionEditor = GetNode<VBoxContainer>(path);
+            _versionPolicy = GetNode<OptionButton>(path + "/Fields/Policy");
+            _versionValue = GetNode<LineEdit>(path + "/Fields/Value");
+            _versionRule = GetNode<Label>(path + "/Rule");
+            _versionFeedback = GetNode<Label>(path + "/Feedback");
+            GetNode<Label>(path + "/Caption").Text = TranslationServer.Translate("mod_manager/collection_version_caption");
+            GetNode<Label>(path + "/Hint").Text = TranslationServer.Translate("mod_manager/collection_version_hint");
+            var save = GetNode<Button>(path + "/SaveRule");
+            save.Text = TranslationServer.Translate("mod_manager/collection_version_edit");
+            save.Pressed += OnSaveVersionPressed;
+            _versionPolicy.ItemSelected += OnVersionPolicySelected;
+            _versionValue.TextChanged += OnVersionValueChanged;
+            _versionRule.AddThemeColorOverride("font_color", UiTokens.Accent);
+            _versionFeedback.AddThemeColorOverride("font_color", UiTokens.DangerText);
+            var policies = new[]
+            {
+                "mod_manager/collection_version_any", "mod_manager/collection_version_minimum",
+                "mod_manager/collection_version_exact", "mod_manager/collection_version_branch",
+                "mod_manager/collection_version_maximum", "mod_manager/collection_version_greater",
+                "mod_manager/collection_version_less",
+            };
+            var operators = new[] { "", ">=", "=", "^", "<=", ">", "<" };
+            for (var i = 0; i < policies.Length; i++)
+            {
+                _versionPolicy.AddItem(TranslationServer.Translate(policies[i]));
+                _versionPolicy.SetItemMetadata(i, operators[i]);
+            }
+        }
+
+        private void OnGalleryPressed() => GalleryRequested?.Invoke();
+
+        private void OnBuildManagerPressed() => SelectTab("plan");
+
+        private void OnAddModPressed()
+        {
+            var group = _selectedGroupKey == null ? null : FindGroup(_selectedGroupKey);
+            if (group != null)
+                OpenModPicker(group);
+        }
+
+        private void OnCanvasViewChanged()
+        {
+            if (_zoomLabel != null)
+                _zoomLabel.Text = Mathf.RoundToInt(_canvas.Zoom * 100f) + "%";
+        }
+
+        private void OnCanvasFirstFrame()
+        {
+            GetTree().ProcessFrame -= OnCanvasFirstFrame;
+            _fitQueued = false;
+            _fitAfterBuild = false;
+            _canvas.FitWidth();
+            while (_canvas.Zoom < 0.75f)
+                _canvas.ZoomIn();
+            _canvas.ShowSelection();
+        }
+
+        private void BindVersionRule(ModCollectionGroup group, string modId)
+        {
+            foreach (var reference in group.Mods)
+            {
+                if (string.Equals(reference.ModId, modId, StringComparison.OrdinalIgnoreCase))
+                {
+                    _versionReference = reference;
+                    break;
+                }
+            }
+            if (_versionReference == null)
+                return;
+
+            var owner = EffectiveCollection(_versionReference.CollectionId);
+            foreach (var mechanic in owner?.Mechanics ?? new List<ModCollectionMechanic>())
+            {
+                if (!string.Equals(mechanic.Id, _versionReference.MechanicId, StringComparison.OrdinalIgnoreCase))
+                    continue;
+                foreach (var raw in mechanic.Mods ?? new List<string>())
+                {
+                    var requirement = ModDependency.Parse(raw);
+                    if (!requirement.IsValid || !string.Equals(requirement.ModId, modId, StringComparison.OrdinalIgnoreCase))
+                        continue;
+                    for (var i = 0; i < _versionPolicy.ItemCount; i++)
+                    {
+                        if (_versionPolicy.GetItemMetadata(i).AsString() == requirement.Operator)
+                            _versionPolicy.Selected = i;
+                    }
+                    _versionValue.Text = requirement.VersionRaw ?? string.Empty;
+                    if (requirement.VersionRaw == null
+                        && ModRegistry.Instance.AllDiscoveredMods.TryGetValue(modId, out var installed))
+                        _versionValue.Text = installed.Version ?? string.Empty;
+                    _versionEditor.Visible = true;
+                    _versionEditor.GetNode<Label>("Caption").Text = TranslationServer.Translate("mod_manager/collection_version_caption")
+                        + " · " + group.Name;
+                    OnVersionPolicySelected(_versionPolicy.Selected);
+                    return;
+                }
+            }
+        }
+
+        private void OnVersionPolicySelected(long index)
+        {
+            var op = _versionPolicy.GetItemMetadata((int)index).AsString();
+            _versionValue.Editable = op.Length > 0;
+            OnVersionValueChanged(_versionValue.Text);
+        }
+
+        private void OnVersionValueChanged(string value)
+        {
+            if (_versionReference == null || _versionPolicy.Selected < 0)
+                return;
+            var op = _versionPolicy.GetItemMetadata(_versionPolicy.Selected).AsString();
+            _versionRule.Text = _versionReference.ModId + op + (op.Length > 0 ? value.Trim() : string.Empty);
+            _versionFeedback.Text = op == "^"
+                ? TranslationServer.Translate("mod_manager/collection_version_branch_hint") : string.Empty;
+            _versionFeedback.AddThemeColorOverride("font_color", UiTokens.Muted);
+            foreach (var node in _graph?.Nodes ?? new List<ModCollectionNode>())
+            {
+                if (node.ModId != _versionReference.ModId || node.State != ModCollectionNodeState.VersionMismatch)
+                    continue;
+                var requirements = new List<string>();
+                foreach (var requirement in node.Requirements)
+                {
+                    if (!string.IsNullOrEmpty(requirement.Operator))
+                        requirements.Add(requirement.Operator + requirement.VersionRaw);
+                }
+                _versionFeedback.Text = string.Format(TranslationServer.Translate("mod_manager/installed_version"), node.InstalledVersion)
+                    + "\n" + string.Format(TranslationServer.Translate("mod_manager/collection_requires"), string.Join(", ", requirements));
+                _versionFeedback.AddThemeColorOverride("font_color", UiTokens.DangerText);
+                break;
+            }
+        }
+
+        private void OnSaveVersionPressed()
+        {
+            if (_versionReference == null || _versionPolicy.Selected < 0)
+                return;
+            var group = FindGroup(_selectedGroupKey);
+            if (group == null)
+                return;
+            var reference = _versionReference;
+            var op = _versionPolicy.GetItemMetadata(_versionPolicy.Selected).AsString();
+            var owner = EffectiveCollection(reference.CollectionId);
+            var valid = false;
+            var changed = false;
+            foreach (var mechanic in owner?.Mechanics ?? new List<ModCollectionMechanic>())
+            {
+                if (!string.Equals(mechanic.Id, reference.MechanicId, StringComparison.OrdinalIgnoreCase))
+                    continue;
+                var preview = new ModCollectionMechanic { Mods = new List<string>(mechanic.Mods ?? new List<string>()) };
+                valid = preview.TrySetModVersion(reference.ModId, op, _versionValue.Text);
+                for (var i = 0; i < preview.Mods.Count; i++)
+                {
+                    if (preview.Mods[i] != mechanic.Mods[i])
+                        changed = true;
+                }
+                break;
+            }
+            if (!valid)
+            {
+                _versionFeedback.Text = TranslationServer.Translate("mod_manager/collection_version_invalid");
+                _versionFeedback.AddThemeColorOverride("font_color", UiTokens.DangerText);
+                return;
+            }
+            if (!changed)
+                return;
+            var collection = DraftForEdit(group, reference.CollectionId);
+            if (collection == null)
+                return;
+            foreach (var mechanic in collection.Mechanics ?? new List<ModCollectionMechanic>())
+            {
+                if (!string.Equals(mechanic.Id, reference.MechanicId, StringComparison.OrdinalIgnoreCase))
+                    continue;
+                if (!mechanic.TrySetModVersion(reference.ModId, op, _versionValue.Text))
+                {
+                    _versionFeedback.Text = TranslationServer.Translate("mod_manager/collection_version_invalid");
+                    _versionFeedback.AddThemeColorOverride("font_color", UiTokens.DangerText);
+                    return;
+                }
+                Rebuild();
+                return;
+            }
+        }
+
+        private void AddModRelationships(string modId)
+        {
+            AddInfoLine(TranslationServer.Translate("mod_manager/collection_role_hint"));
+            foreach (var edge in _graph.Edges)
+            {
+                if (string.Equals(edge.FromModId, modId, StringComparison.OrdinalIgnoreCase))
+                {
+                    var consumer = LookupModTitle(edge.ToModId);
+                    AddInfoLine(string.Format(TranslationServer.Translate("mod_manager/collection_used_by"), consumer));
+                }
+            }
+            foreach (var collection in _collections)
+            {
+                if (string.Equals(collection.Id, _currentId, StringComparison.OrdinalIgnoreCase)
+                    || collection.Kind != ModCollectionKind.Game)
+                    continue;
+                var effective = EffectiveCollection(collection.Id);
+                foreach (var mechanic in effective?.Mechanics ?? new List<ModCollectionMechanic>())
+                {
+                    foreach (var raw in mechanic.Mods ?? new List<string>())
+                    {
+                        if (!string.Equals(ParseModId(raw), modId, StringComparison.OrdinalIgnoreCase))
+                            continue;
+                        AddInfoLine(string.Format(TranslationServer.Translate("mod_manager/collection_other_role"),
+                            CollectionText.Resolve(effective.GetLocalizedName(TranslationServer.GetLocale())),
+                            CollectionText.Resolve(mechanic.GetLocalizedName(TranslationServer.GetLocale()))));
+                        break;
+                    }
+                }
+            }
+        }
+
+        private string LookupModTitle(string modId)
+        {
+            foreach (var node in _graph.Nodes)
+            {
+                if (string.Equals(node.ModId, modId, StringComparison.OrdinalIgnoreCase))
+                    return node.Title;
+            }
+            return modId;
+        }
+
         private void BindSceneNodes()
         {
             _close = GetNode<Button>("Margin/Root/Header/Close");
@@ -170,7 +431,7 @@ namespace Mods.ModManager
             _addMechanic = GetNode<Button>("Margin/Root/Header/AddMechanic");
             _newGame = GetNode<Button>("Margin/Root/Header/NewGame");
             _gameSelect = GetNode<OptionButton>("Margin/Root/Header/GameSelect");
-            _edgesToggle = GetNode<CheckBox>("Margin/Root/Header/EdgesToggle");
+            _edgesToggle = GetNode<OptionButton>("Margin/Root/Header/EdgesToggle");
             _pillProblems = GetNode<Button>("Margin/Root/Header/Problems");
             _pillPlan = GetNode<Button>("Margin/Root/Header/Plan");
             _modsCount = GetNode<Label>("Margin/Root/Header/ModsCount");
@@ -180,7 +441,7 @@ namespace Mods.ModManager
             _save = GetNode<Button>("Margin/Root/Header/Save");
             _bannerPanel = GetNode<PanelContainer>("Margin/Root/Banner");
             _bannerLabel = GetNode<Label>("Margin/Root/Banner/BannerLabel");
-            _canvas = GetNode<CollectionSchemeCanvas>("Margin/Root/Body/CanvasScroll/SchemeCanvas");
+            _canvas = GetNode<CollectionSchemeCanvas>("Margin/Root/Body/CanvasHost/CanvasScroll/SchemeCanvas");
 
             var detail = "Margin/Root/Body/Details/DetailScroll/Detail/";
             _detailTitle = GetNode<Label>(detail + "DetailTitle");
@@ -199,6 +460,9 @@ namespace Mods.ModManager
             _newGame.Text = TranslationServer.Translate("mod_manager/collection_new_game");
             _pillProblems.Text = TranslationServer.Translate("mod_manager/collection_problems");
             _pillPlan.Text = TranslationServer.Translate("mod_manager/collection_plan");
+            _gameSelect.TooltipText = TranslationServer.Translate("mod_manager/collection_game_tooltip");
+            _pillProblems.TooltipText = TranslationServer.Translate("mod_manager/collection_problems_tooltip");
+            _pillPlan.TooltipText = TranslationServer.Translate("mod_manager/collection_plan_tooltip");
             _dirty.Text = TranslationServer.Translate("mod_manager/collection_unsaved");
             _json.Text = TranslationServer.Translate("mod_manager/collection_json");
             _reset.Text = TranslationServer.Translate("mod_manager/collection_reset");
@@ -206,8 +470,28 @@ namespace Mods.ModManager
             _tabInspector.Text = TranslationServer.Translate("mod_manager/collection_tab_inspector");
             _tabProblems.Text = TranslationServer.Translate("mod_manager/collection_tab_problems");
             _tabPlan.Text = TranslationServer.Translate("mod_manager/collection_tab_plan");
+            _json.TooltipText = TranslationServer.Translate("mod_manager/collection_json_tooltip");
+            _reset.TooltipText = TranslationServer.Translate("mod_manager/collection_reset_tooltip");
             _apply.Text = TranslationServer.Translate("mod_manager/collection_apply");
-            _edgesToggle.Text = TranslationServer.Translate("mod_manager/collection_links");
+            _edgesToggle.AddItem(TranslationServer.Translate("mod_manager/collection_links_selected"));
+            _edgesToggle.AddItem(TranslationServer.Translate("mod_manager/collection_links_all"));
+            _edgesToggle.AddItem(TranslationServer.Translate("mod_manager/collection_links_none"));
+            var orderLegend = GetNode<Label>("Margin/Root/OrderLegend");
+            orderLegend.Text = TranslationServer.Translate("mod_manager/collection_order_legend");
+            orderLegend.AddThemeColorOverride("font_color", UiTokens.Faint);
+            orderLegend.SetMeta(ModHelpPanel.HintTranslationMetadata, "collection_dependencies");
+
+            ModHelpPanel.Attach(_refresh, "refresh");
+            ModHelpPanel.Attach(_addMechanic, "collection_add_mechanic");
+            ModHelpPanel.Attach(_newGame, "collection_new");
+            ModHelpPanel.Attach(_gameSelect, "collection_game");
+            ModHelpPanel.Attach(_pillProblems, "collection_problems");
+            ModHelpPanel.Attach(_pillPlan, "collection_plan");
+            ModHelpPanel.Attach(_json, "collection_json");
+            ModHelpPanel.Attach(_reset, "collection_reset");
+            ModHelpPanel.Attach(_apply, "collection_apply");
+            ModHelpPanel.Attach(_edgesToggle, "collection_links");
+            ModHelpPanel.Attach(GetNode<Label>("Margin/Root/OrderLegend"), "load_order");
 
             var header = _json.GetParent();
             _savesInfo = new Label { VerticalAlignment = VerticalAlignment.Center };
@@ -215,6 +499,7 @@ namespace Mods.ModManager
             _duplicate = new Button { Text = TranslationServer.Translate("mod_manager/collection_duplicate") };
             _revert = new Button { Text = TranslationServer.Translate("mod_manager/collection_revert") };
             _delete = new Button { Text = TranslationServer.Translate("mod_manager/collection_delete") };
+            ModHelpPanel.Attach(_delete, "collection_delete");
             foreach (var control in new Control[] { _savesInfo, _duplicate, _revert, _delete })
             {
                 header.AddChild(control);
@@ -237,6 +522,7 @@ namespace Mods.ModManager
             _bannerLabel.AddThemeColorOverride("font_color", UiTokens.Warning);
             _bannerPanel.Visible = false;
 
+            BindGraphiteControls();
             BuildCrumbs();
             BuildBuildBar();
             if (Embedded)
@@ -256,7 +542,7 @@ namespace Mods.ModManager
 
             _crumbCollections = UiKit.Button(TranslationServer.Translate("mod_manager/hub_tab_collections"));
             _crumbCollections.AddThemeFontSizeOverride("font_size", UiTokens.FontBodySmall);
-            _crumbCollections.Pressed += () => GalleryRequested?.Invoke();
+            _crumbCollections.Pressed += OnGalleryPressed;
             _crumbCollections.TooltipText = TranslationServer.Translate("mod_manager/gallery_crumb");
             _crumbs.AddChild(_crumbCollections);
             _crumbs.AddChild(UiKit.Label("›", UiTokens.FontBodySmall, UiTokens.Faint));
@@ -266,10 +552,19 @@ namespace Mods.ModManager
             _crumbs.AddChild(UiKit.Label(TranslationServer.Translate("mod_manager/collection_crumb_scheme"), UiTokens.FontBodySmall, UiTokens.Body));
 
             _crumbs.AddChild(UiKit.Spacer());
-            GetNode("Margin/Root/Header/AddMechanic").Reparent(_crumbs);
-            GetNode("Margin/Root/Header/EdgesToggle").Reparent(_crumbs);
-            GetNode("Margin/Root/Header/Problems").Reparent(_crumbs);
             GetNode("Margin/Root/Header/ModsCount").Reparent(_crumbs);
+            var header = GetNode<HBoxContainer>("Margin/Root/Header");
+            _crumbs.Reparent(header);
+            header.MoveChild(_crumbs, 0);
+            _crumbs.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+            GetNode<Control>("Margin/Root/Header/Spacer").Visible = false;
+            var tools = GetNode<HBoxContainer>("Margin/Root/Tools");
+            _addMechanic.Reparent(tools);
+            tools.MoveChild(_addMechanic, 0);
+            _edgesToggle.Reparent(tools);
+            tools.MoveChild(_edgesToggle, 2);
+            _pillProblems.Reparent(tools);
+            tools.MoveChild(_pillProblems, 3);
         }
 
         /// <summary>
@@ -302,11 +597,13 @@ namespace Mods.ModManager
             row.AddChild(_buildHint);
             row.AddChild(UiKit.Spacer());
 
-            _buildManager = UiKit.Button(TranslationServer.Translate("mod_manager/build_open_manager"));
-            _buildManager.Pressed += () => OpenManagerRequested?.Invoke(null);
+            _buildManager = UiKit.Button(TranslationServer.Translate("mod_manager/collection_tab_problems"));
+            ModHelpPanel.Attach(_buildManager, "collection_plan");
+            _buildManager.Pressed += OnBuildManagerPressed;
             row.AddChild(_buildManager);
 
             _buildApply = UiKit.Button(TranslationServer.Translate("mod_manager/collection_apply"), ButtonKind.Primary);
+            ModHelpPanel.Attach(_buildApply, "collection_apply");
             _buildApply.Pressed += OnApplyPressed;
             row.AddChild(_buildApply);
         }
@@ -328,6 +625,7 @@ namespace Mods.ModManager
             _close.Visible = false;
             _refresh.Visible = false;
             _newGame.Visible = false;
+            _pillPlan.Visible = false;
         }
 
         private void SubscribeEvents()
@@ -336,7 +634,7 @@ namespace Mods.ModManager
             _refresh.Pressed += OnRefreshPressed;
             _addMechanic.Pressed += OnAddMechanicPressed;
             _newGame.Pressed += OnNewGamePressed;
-            _edgesToggle.Toggled += _canvas.SetEdgesVisible;
+            _edgesToggle.ItemSelected += _canvas.SetEdgeMode;
             _pillProblems.Pressed += () => SelectTab("problems");
             _pillPlan.Pressed += () => SelectTab("plan");
             _json.Pressed += OpenJsonDialog;
@@ -352,6 +650,7 @@ namespace Mods.ModManager
             _canvas.ModSelected += OnModSelected;
             _canvas.GroupCommand += OnGroupCommand;
             _canvas.LayoutChanged += OnLayoutChanged;
+            _canvas.ViewChanged += OnCanvasViewChanged;
 
             ModDownloader.OnProgress += OnInstallProgress;
             CatalogService.OnRefreshed += OnCatalogRefreshed;
@@ -361,6 +660,8 @@ namespace Mods.ModManager
         {
             ModDownloader.OnProgress -= OnInstallProgress;
             CatalogService.OnRefreshed -= OnCatalogRefreshed;
+            if (_fitQueued)
+                GetTree().ProcessFrame -= OnCanvasFirstFrame;
         }
 
         /* ═══════════════ Data flow ═══════════════ */
@@ -379,12 +680,37 @@ namespace Mods.ModManager
         private void Rebuild()
         {
             _graph = Resolve();
+            foreach (var node in _graph.Nodes)
+            {
+                if (ModRegistry.Instance.AllDiscoveredMods.TryGetValue(node.ModId, out var info))
+                    node.Title = info.DisplayTitle;
+            }
             _layout = _currentId == null ? new ModCollectionLayout() : CollectionLayoutStore.Load(_currentId);
             _plan = ModCollectionPlan.Build(_graph, CatalogService.CachedEntries ?? new List<CatalogExportEntry>());
 
+            if (_selectedGroupKey == null && _graph.Groups.Count > 0)
+            {
+                var initial = _graph.Groups[0];
+                foreach (var group in _graph.Groups)
+                {
+                    if (group.Role == "battle" && group.Selected && group.Mods.Count > 0)
+                    {
+                        initial = group;
+                        break;
+                    }
+                }
+                _selectedGroupKey = initial.Key;
+                _selectedModId = initial.Mods.Count > 0 ? initial.Mods[0].ModId : null;
+            }
+
             _canvas.Build(_graph, _layout);
             _canvas.SetSelection(_selectedGroupKey, _selectedModId);
-            _canvas.SetEdgesVisible(_edgesToggle.ButtonPressed);
+            _canvas.SetEdgeMode(_edgesToggle.Selected);
+            if (_fitAfterBuild && !_fitQueued)
+            {
+                _fitQueued = true;
+                GetTree().ProcessFrame += OnCanvasFirstFrame;
+            }
 
             UpdateHeader();
             UpdateInspector();
@@ -513,7 +839,7 @@ namespace Mods.ModManager
 
             var current = EffectiveCollection(_currentId);
             var isGame = current?.Kind == ModCollectionKind.Game;
-            _savesInfo.Visible = isGame;
+            _savesInfo.Visible = isGame && !Embedded;
             if (isGame)
                 _savesInfo.Text = string.Format(TranslationServer.Translate("mod_manager/collection_saves"), SaveService.ListSaves(_currentId).Count);
             _duplicate.Disabled = current == null;
@@ -542,6 +868,11 @@ namespace Mods.ModManager
                 _pillPlan.Text = TranslationServer.Translate("mod_manager/collection_plan");
                 return;
             }
+            if (errors > 0)
+            {
+                _pillPlan.Text = $"{TranslationServer.Translate("mod_manager/collection_problems")}: {errors}";
+                return;
+            }
 
             var parts = new List<string>();
             if (_plan.Install.Count > 0)
@@ -554,7 +885,7 @@ namespace Mods.ModManager
         }
 
         private int CountErrors()
-            => _graph?.Problems?.Count ?? 0;
+            => (_graph?.Problems?.Count ?? 0) + (_plan?.Missing.Count ?? 0) + (_plan?.Mismatches.Count ?? 0);
 
         private void OnGameSelected(long index)
         {
@@ -563,6 +894,7 @@ namespace Mods.ModManager
                 return;
 
             _currentId = id;
+            _fitAfterBuild = true;
             _selectedGroupKey = null;
             _selectedModId = null;
             Rebuild();
@@ -570,6 +902,7 @@ namespace Mods.ModManager
 
         private void OnNewGamePressed()
         {
+            _fitAfterBuild = true;
             var id = UniqueGameId();
             var draft = new ModCollection
             {
@@ -736,6 +1069,8 @@ namespace Mods.ModManager
             _tabPlan.ButtonPressed = _tab == "plan";
 
             ClearChildren(_detailExtra);
+            _versionEditor.Visible = false;
+            _versionReference = null;
             _apply.Visible = !Embedded && _tab == "plan";
 
             if (_tab == "problems")
@@ -784,6 +1119,7 @@ namespace Mods.ModManager
             _detailMeta.Text = string.Join(" · ", metaParts);
 
             _detailDescription.Text = string.IsNullOrEmpty(group.Description) ? "—" : group.Description;
+            AddInfoLine(TranslationServer.Translate("mod_manager/collection_role_hint"));
 
             var collection = EffectiveCollection(group.CollectionId);
             if (collection != null)
@@ -819,18 +1155,23 @@ namespace Mods.ModManager
         {
             var node = _graph?.Nodes?.FirstOrDefault(n => string.Equals(n.ModId, modId, StringComparison.OrdinalIgnoreCase));
             _detailTitle.Text = node?.Title ?? modId;
-            _detailMeta.Text = $"{modId} · {CollectionStateNames.Translate(node?.State ?? ModCollectionNodeState.Missing)}";
+            _detailMeta.Text = $"{modId} · {node?.InstalledVersion ?? "—"} · {CollectionStateNames.Translate(node?.State ?? ModCollectionNodeState.Missing)}";
             _detailDescription.Text = LookupModDescription(modId);
 
-            if (node != null && !string.IsNullOrEmpty(node.RequiredVersion))
-                AddInfoLine($"{TranslationServer.Translate("mod_manager/collection_requires")}: {node.RequiredVersion}");
-            if (node != null && !string.IsNullOrEmpty(node.InstalledVersion))
-                AddInfoLine($"{TranslationServer.Translate("mod_manager/installed_version")}: {node.InstalledVersion}");
-
             var group = _selectedGroupKey == null ? null : FindGroup(_selectedGroupKey);
+            if (group == null && node != null)
+            {
+                foreach (var requirement in node.Requirements)
+                {
+                    if (!string.IsNullOrEmpty(requirement.Operator))
+                        AddInfoLine(string.Format(TranslationServer.Translate("mod_manager/collection_requires"), requirement.ToString()));
+                }
+            }
             if (group != null)
             {
                 AddInfoLine($"{TranslationServer.Translate("mod_manager/collection_in_group")}: {group.Name}");
+                BindVersionRule(group, modId);
+                AddModRelationships(modId);
 
                 var remove = MakeInspectorButton(TranslationServer.Translate("mod_manager/collection_remove_mod"),
                     () => RemoveModFromGroup(group, modId), true);
@@ -871,12 +1212,15 @@ namespace Mods.ModManager
             _detailMeta.Text = string.Empty;
             _detailDescription.Text = string.Empty;
 
-            if (_graph == null || _graph.Problems.Count == 0)
+            if (_graph == null || CountErrors() == 0)
             {
                 _detailExtra.AddChild(UiKit.Label(TranslationServer.Translate("mod_manager/collection_problems_none"), UiTokens.FontBody, UiTokens.SuccessText));
                 UpdateApplyButton();
                 return;
             }
+
+            AddPlanSection("mod_manager/collection_missing", _plan?.Missing, UiTokens.DangerText, findInCatalog: true);
+            AddPlanSection("mod_manager/collection_mismatch", _plan?.Mismatches, UiTokens.DangerText, findInCatalog: true);
 
             foreach (var problem in _graph.Problems)
             {
@@ -958,7 +1302,7 @@ namespace Mods.ModManager
             AddPlanSection("mod_manager/collection_install_count", _plan.Install.Select(i => i.ModId), UiTokens.Info);
             AddPlanSection("mod_manager/collection_enable_count", _plan.Enable, UiTokens.Warning);
             AddPlanSection("mod_manager/collection_missing", _plan.Missing, UiTokens.Danger, findInCatalog: true);
-            AddPlanSection("mod_manager/collection_mismatch", _plan.Mismatches, UiTokens.Warning);
+            AddPlanSection("mod_manager/collection_mismatch", _plan.Mismatches, UiTokens.Warning, findInCatalog: true);
             UpdateApplyButton();
         }
 
@@ -996,7 +1340,7 @@ namespace Mods.ModManager
             var canApply = !_installing
                 && _plan != null
                 && !_plan.IsEmpty
-                && _plan.Missing.Count == 0
+                && !_plan.HasProblems
                 && CountErrors() == 0;
             _apply.Disabled = !canApply;
             if (_buildApply != null)
@@ -1031,7 +1375,7 @@ namespace Mods.ModManager
 
             _buildHint.Text = TranslationServer.Translate(blocked
                 ? "mod_manager/build_hint_problems"
-                : "mod_manager/collection_plan_ready");
+                : _overrides.Count > 0 ? "mod_manager/collection_unsaved" : "mod_manager/collection_plan_ready");
             _buildHint.AddThemeColorOverride("font_color", blocked ? UiTokens.Warning : UiTokens.SuccessText);
         }
 
@@ -1588,12 +1932,17 @@ namespace Mods.ModManager
             if (collection == null)
                 return;
 
-            var view = new TextEdit
+            var view = new CodeEdit
             {
                 Text = JsonSerializer.Serialize(collection, JsonOptionsProvider.WriteIndentedOptions),
                 Editable = true,
+                GuttersDrawLineNumbers = true,
+                SyntaxHighlighter = SourceSyntax.CreateJsonHighlighter(),
+                IndentUseSpaces = true,
+                IndentSize = 2,
                 CustomMinimumSize = new Vector2(620, 420),
             };
+            view.AddThemeFontOverride("font", ToolWindow.GetMonospaceFont());
 
             var dialog = new ConfirmationDialog
             {
@@ -1780,6 +2129,8 @@ namespace Mods.ModManager
             }
 
             include.Ref = forkId;
+            if (string.Equals(_selectedGroupKey, group.Key, StringComparison.OrdinalIgnoreCase))
+                _selectedGroupKey = $"i:{group.ParentCollectionId}:{forkId}";
             return Draft(forkId);
         }
 
@@ -1831,7 +2182,7 @@ namespace Mods.ModManager
         private async void OnApplyPressed()
         {
             if (_installing || _plan == null || _plan.IsEmpty
-                || _plan.Missing.Count > 0 || CountErrors() > 0)
+                || _plan.HasProblems || CountErrors() > 0)
                 return;
 
             var plan = _plan;

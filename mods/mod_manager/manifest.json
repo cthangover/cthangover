@@ -15,5 +15,8 @@
       "scene_path": "scenes/mods_hub_screen.tscn",
       "button": { "icon": "mod_manager", "locale": "mod_manager/menu_title", "index": 100 }
     }
+  ],
+  "test_suites": [
+    { "id": "help", "activate": ["--itest=mod_help"] }
   ]
 }

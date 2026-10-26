@@ -1,0 +1,7 @@
+{
+  "name": "Mod Manager Help Test",
+  "description": "Integration test of the mod manager's help: opens the Mods & Collections hub on every level (mods grid, a mod's page, games gallery, scheme editor with a selected mechanic and mod, help panels) and checks that every visible button, toggle, list and input explains itself with a tooltip. Activated only by --itest=mod_help (with --frontend); --shots=<dir> saves every level.",
+  "sources": [
+    "src/*.cs"
+  ]
+}

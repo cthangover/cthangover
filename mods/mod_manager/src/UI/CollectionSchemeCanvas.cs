@@ -59,6 +59,9 @@ namespace Mods.ModManager
         /// <summary>Raised after any drag or resize ends, so the layout can be flushed to the store.</summary>
         public event Action LayoutChanged;
 
+        /// <summary>Scale or scroll changed; the toolbar and overview may refresh their presentation.</summary>
+        public event Action ViewChanged;
+
         /// <summary>Whether dependency lines are painted; toggled from the header.</summary>
         public bool ShowEdges { get; set; } = true;
 
@@ -74,6 +77,116 @@ namespace Mods.ModManager
         private readonly Dictionary<string, CollectionGroupCard> _cards = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, CollectionModChip> _chips = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, string> _chipGroups = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, CollectionModChip> _instances = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, ModCollectionLayoutRect> _visibleFrames = new(StringComparer.OrdinalIgnoreCase);
+        private Control _content;
+        private CollectionMiniMap _miniMap;
+        private long _edgeMode;
+        private float _zoom = 1f;
+        private string _search = string.Empty;
+
+        /// <summary>Scale of the canvas contents, independent of persisted logical coordinates.</summary>
+        public float Zoom => _zoom;
+
+        /// <summary>Occupied logical bounds, excluding the empty scrollable workspace floor.</summary>
+        public Vector2 ContentBounds { get; private set; } = new(460f, 240f);
+
+        /// <summary>Current visible rectangle in logical coordinates, used by the overview map.</summary>
+        public Rect2 VisibleBounds
+        {
+            get
+            {
+                var scroll = GetParent<ScrollContainer>();
+                return scroll == null ? new Rect2() : new Rect2(
+                    new Vector2(scroll.ScrollHorizontal, scroll.ScrollVertical) / _zoom,
+                    scroll.Size / _zoom);
+            }
+        }
+
+        /// <summary>Overview rectangles use the same logical geometry as the group frames.</summary>
+        public IReadOnlyDictionary<string, ModCollectionLayoutRect> GroupFrames => _visibleFrames;
+
+        /// <summary>Connects the scene-defined overview control after both controls entered the tree.</summary>
+        public void SetMiniMap(CollectionMiniMap miniMap)
+        {
+            _miniMap = miniMap;
+            _miniMap.Bind(this);
+        }
+
+        /// <summary>0: selected mod only, 1: all dependencies, 2: hidden; group boundaries never change severity.</summary>
+        public void SetEdgeMode(long mode)
+        {
+            _edgeMode = mode;
+            SetEdgesVisible(mode != 2);
+            RebuildEdges();
+        }
+
+        /// <summary>Filters presentation only; hidden search matches do not leave the game's composition.</summary>
+        public void SetSearch(string query)
+        {
+            _search = query?.Trim() ?? string.Empty;
+            foreach (var chip in _instances.Values)
+            {
+                var node = FindNode(chip.ModId);
+                var match = _search.Length == 0 || chip.ModId.Contains(_search, StringComparison.OrdinalIgnoreCase)
+                    || (node?.Title?.Contains(_search, StringComparison.OrdinalIgnoreCase) ?? false);
+                chip.Modulate = new Color(1, 1, 1, match ? 1f : 0.2f);
+            }
+        }
+
+        /// <summary>Increases scale without rewriting any stored group or chip positions.</summary>
+        public void ZoomIn() => SetZoom(_zoom * 1.15f);
+
+        /// <summary>Decreases scale without rewriting any stored group or chip positions.</summary>
+        public void ZoomOut() => SetZoom(_zoom / 1.15f);
+
+        /// <summary>Fits occupied group bounds horizontally; the empty scroll floor does not shrink the scheme.</summary>
+        public void FitWidth()
+        {
+            var scroll = GetParent<ScrollContainer>();
+            if (scroll == null || scroll.Size.X <= 0f)
+                return;
+            SetZoom(Mathf.Min(1f, (scroll.Size.X - 24f) / Mathf.Max(1f, ContentBounds.X)));
+            scroll.ScrollHorizontal = 0;
+            scroll.ScrollVertical = 0;
+            RefreshViewport();
+        }
+
+        /// <summary>Re-packs the current groups; composition and individual chip locations stay unchanged.</summary>
+        public void ArrangeGroups()
+        {
+            var defaults = ComputeDefaultLayout();
+            foreach (var pair in defaults)
+            {
+                var rect = Rect(pair.Key);
+                rect.X = pair.Value.X;
+                rect.Y = pair.Value.Y;
+                _cards[pair.Key].SetFrame(new Rect2(pair.Value, new Vector2(rect.W, rect.H)));
+            }
+            UpdateCanvasSize();
+            RebuildEdges();
+            LayoutChanged?.Invoke();
+        }
+
+        /// <summary>Centers the scroll view on a logical canvas position (selection or overview click).</summary>
+        public void CenterOn(Vector2 position)
+        {
+            var scroll = GetParent<ScrollContainer>();
+            if (scroll == null)
+                return;
+            scroll.ScrollHorizontal = Mathf.RoundToInt(position.X * _zoom - scroll.Size.X / 2f);
+            scroll.ScrollVertical = Mathf.RoundToInt(position.Y * _zoom - scroll.Size.Y / 2f);
+            RefreshViewport();
+        }
+
+        /// <summary>Reveals the selected occurrence, keeping another group's copy from stealing focus.</summary>
+        public void ShowSelection()
+        {
+            if (SelectedModId != null && _instances.TryGetValue(SelectedGroupKey + "|" + SelectedModId, out var chip))
+                CenterOn(chip.Position + _cards[chip.GroupKey].Position + chip.Size / 2f);
+            else if (SelectedGroupKey != null && _cards.TryGetValue(SelectedGroupKey, out var card))
+                CenterOn(card.Position + card.Size / 2f);
+        }
 
         private bool _panning;
         private Vector2 _panStartMouse;
@@ -94,7 +207,7 @@ namespace Mods.ModManager
             _layout.Groups ??= new Dictionary<string, ModCollectionLayoutRect>();
             _layout.Mods ??= new Dictionary<string, ModCollectionLayoutPoint>();
 
-            foreach (var child in GetChildren())
+            foreach (var child in _content.GetChildren())
             {
                 if (child != _edges)
                     child.QueueFree();
@@ -103,6 +216,8 @@ namespace Mods.ModManager
             _cards.Clear();
             _chips.Clear();
             _chipGroups.Clear();
+            _instances.Clear();
+            _visibleFrames.Clear();
 
             if (graph != null && graph.Groups.Count > 0)
             {
@@ -110,11 +225,12 @@ namespace Mods.ModManager
                 BuildCards();
             }
 
-            _edges.SetEdges(null, _chips, this);
-            MoveChild(_edges, GetChildCount() - 1);
+            _edges.SetEdges(null, _chips, _content);
+            _content.MoveChild(_edges, _content.GetChildCount() - 1);
             _edges.Visible = ShowEdges;
             UpdateCanvasSize();
             RebuildEdges();
+            SetSearch(_search);
         }
 
         /// <summary>Highlights one group and/or one mod; pass nulls to clear.</summary>
@@ -127,8 +243,20 @@ namespace Mods.ModManager
             foreach (var pair in _cards)
                 pair.Value.SetSelected(string.Equals(pair.Key, groupKey, StringComparison.OrdinalIgnoreCase));
 
-            foreach (var pair in _chips)
-                pair.Value.SetSelected(string.Equals(pair.Key, modId, StringComparison.OrdinalIgnoreCase));
+            foreach (var pair in _chipGroups)
+            {
+                if (_instances.TryGetValue(pair.Value + "|" + pair.Key, out var primary))
+                    _chips[pair.Key] = primary;
+            }
+
+            foreach (var chip in _instances.Values)
+            {
+                var selected = string.Equals(chip.GroupKey, groupKey, StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(chip.ModId, modId, StringComparison.OrdinalIgnoreCase);
+                chip.SetSelected(selected);
+                if (selected)
+                    _chips[chip.ModId] = chip;
+            }
 
             RebuildEdges();
         }
@@ -145,15 +273,42 @@ namespace Mods.ModManager
 
         /// <summary>Finds the group key owning a rendered mod chip, for inspector navigation.</summary>
         public string GetGroupKeyOfMod(string modId)
-            => modId != null && _chipGroups.TryGetValue(modId, out var key) ? key : null;
+        {
+            if (modId != null && string.Equals(modId, SelectedModId, StringComparison.OrdinalIgnoreCase)
+                && SelectedGroupKey != null)
+                return SelectedGroupKey;
+            return modId != null && _chipGroups.TryGetValue(modId, out var key) ? key : null;
+        }
 
         protected override void Construct()
         {
             MouseFilter = MouseFilterEnum.Stop;
             GuiInput += OnCanvasGuiInput;
+            _content = new Control { MouseFilter = MouseFilterEnum.Ignore };
+            AddChild(_content);
+            _content.Connect("draw", Callable.From((Action)DrawGrid));
             _edges = new CollectionEdgeLayer();
-            AddChild(_edges);
+            _content.AddChild(_edges);
             _edges.EnsureConstructed();
+            var scroll = GetParent<ScrollContainer>();
+            if (scroll != null)
+            {
+                scroll.GetHScrollBar().ValueChanged += OnScrollChanged;
+                scroll.GetVScrollBar().ValueChanged += OnScrollChanged;
+                scroll.Resized += RefreshViewport;
+            }
+        }
+
+        protected override void Destruct()
+        {
+            GuiInput -= OnCanvasGuiInput;
+            var scroll = GetParent<ScrollContainer>();
+            if (scroll != null && GodotObject.IsInstanceValid(scroll))
+            {
+                scroll.GetHScrollBar().ValueChanged -= OnScrollChanged;
+                scroll.GetVScrollBar().ValueChanged -= OnScrollChanged;
+                scroll.Resized -= RefreshViewport;
+            }
         }
 
         private void BuildCards()
@@ -162,7 +317,7 @@ namespace Mods.ModManager
             {
                 var rect = _layout.Groups[group.Key];
                 var card = new CollectionGroupCard();
-                AddChild(card);
+                _content.AddChild(card);
 
                 var summary = Summarize(group);
                 card.Init(group, summary.Label, summary.Color, string.Equals(group.Key, SelectedGroupKey, StringComparison.OrdinalIgnoreCase));
@@ -174,6 +329,7 @@ namespace Mods.ModManager
                 card.Resized += OnCardResized;
                 card.DragFinished += OnDragFinished;
                 _cards[group.Key] = card;
+                _visibleFrames[group.Key] = rect;
 
                 foreach (var mod in group.Mods)
                 {
@@ -183,11 +339,14 @@ namespace Mods.ModManager
                     card.ModsLayer.AddChild(chip);
 
                     var node = FindNode(mod.ModId);
+                    var requirement = ModDependency.Parse(mod.Requirement);
                     chip.Init(
+                        group.Key,
                         mod.ModId,
                         mod.Role,
                         node?.Title ?? mod.ModId,
                         VersionOf(node),
+                        requirement.IsValid && requirement.VersionRaw != null ? requirement.Operator + requirement.VersionRaw : null,
                         StateLabel(node),
                         StateColor(node),
                         BuildModTooltip(mod, node));
@@ -195,6 +354,7 @@ namespace Mods.ModManager
                     chip.Selected += OnChipSelected;
                     chip.Moved += OnChipMoved;
                     chip.DragFinished += OnDragFinished;
+                    _instances[key] = chip;
 
                     if (!_chips.ContainsKey(mod.ModId))
                     {
@@ -396,11 +556,11 @@ namespace Mods.ModManager
             GroupSelected?.Invoke(groupKey);
         }
 
-        private void OnChipSelected(string modId)
+        private void OnChipSelected(CollectionModChip chip)
         {
-            SelectedModId = modId;
-            SelectedGroupKey = null;
-            ModSelected?.Invoke(modId);
+            SelectedModId = chip.ModId;
+            SelectedGroupKey = chip.GroupKey;
+            ModSelected?.Invoke(chip.ModId);
         }
 
         private void OnCardCommand(string groupKey, string command)
@@ -427,12 +587,9 @@ namespace Mods.ModManager
             RebuildEdges();
         }
 
-        private void OnChipMoved(string modId, Vector2 position)
+        private void OnChipMoved(CollectionModChip chip, Vector2 position)
         {
-            if (!_chipGroups.TryGetValue(modId, out var groupKey))
-                return;
-
-            var key = groupKey + "|" + modId;
+            var key = chip.GroupKey + "|" + chip.ModId;
             if (!_layout.Mods.TryGetValue(key, out var point) || point == null)
             {
                 point = new ModCollectionLayoutPoint();
@@ -472,11 +629,15 @@ namespace Mods.ModManager
             var size = new Vector2(
                 Mathf.Max(maxX + GapX + 160f, MinCanvasWidth),
                 Mathf.Max(maxY + GapY + 120f, MinCanvasHeight));
+            ContentBounds = new Vector2(Mathf.Max(460f, maxX + GapX), Mathf.Max(240f, maxY + GapY));
             // Drives the canvas rect through the surrounding ScrollContainer.
             // _edges carries FullRect anchors (CollectionEdgeLayer.Construct),
             // so it follows this resize automatically; assigning its Size
             // directly would be overridden and logs an anchors warning.
-            CustomMinimumSize = size;
+            _content.Size = size;
+            _content.Scale = Vector2.One * _zoom;
+            CustomMinimumSize = size * _zoom;
+            RefreshViewport();
         }
 
         private void RebuildEdges()
@@ -491,18 +652,60 @@ namespace Mods.ModManager
 
                     var fromGroup = GetGroupKeyOfMod(edge.FromModId);
                     var toGroup = GetGroupKeyOfMod(edge.ToModId);
+                    var active = string.Equals(edge.FromModId, SelectedModId, StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(edge.ToModId, SelectedModId, StringComparison.OrdinalIgnoreCase);
+                    if (_edgeMode == 0 && !active)
+                        continue;
                     edges.Add(new CollectionEdge
                     {
                         FromModId = edge.FromModId,
                         ToModId = edge.ToModId,
                         Cross = !string.Equals(fromGroup, toGroup, StringComparison.OrdinalIgnoreCase),
-                        Active = string.Equals(edge.FromModId, SelectedModId, StringComparison.OrdinalIgnoreCase)
-                                 || string.Equals(edge.ToModId, SelectedModId, StringComparison.OrdinalIgnoreCase),
+                        Active = active,
+                        Problem = HasProblem(edge.FromModId) || HasProblem(edge.ToModId),
                     });
                 }
             }
 
-            _edges.SetEdges(edges, _chips, this);
+            _edges.SetEdges(edges, _chips, _content);
+            RefreshViewport();
+        }
+
+        private bool HasProblem(string modId)
+        {
+            var node = FindNode(modId);
+            return node == null || node.State == ModCollectionNodeState.Missing
+                || node.State == ModCollectionNodeState.VersionMismatch;
+        }
+
+        private void SetZoom(float value)
+        {
+            var scroll = GetParent<ScrollContainer>();
+            var center = scroll == null ? Vector2.Zero : VisibleBounds.GetCenter();
+            _zoom = Mathf.Clamp(value, 0.3f, 1.5f);
+            UpdateCanvasSize();
+            CenterOn(center);
+        }
+
+        private void OnScrollChanged(double value) => RefreshViewport();
+
+        private void RefreshViewport()
+        {
+            _content?.QueueRedraw();
+            _miniMap?.QueueRedraw();
+            ViewChanged?.Invoke();
+        }
+
+        private void DrawGrid()
+        {
+            var visible = VisibleBounds;
+            var start = visible.Position.Snapped(new Vector2(20f, 20f));
+            var color = new Color(UiTokens.LineCard, 0.55f);
+            for (var x = start.X; x <= visible.End.X + 20f; x += 20f)
+            {
+                for (var y = start.Y; y <= visible.End.Y + 20f; y += 20f)
+                    _content.DrawCircle(new Vector2(x, y), 0.8f, color);
+            }
         }
 
         /// <summary>
@@ -516,6 +719,17 @@ namespace Mods.ModManager
         /// </summary>
         private void OnCanvasGuiInput(InputEvent @event)
         {
+            if (@event is InputEventMouseButton wheel && wheel.Pressed && wheel.CtrlPressed)
+            {
+                if (wheel.ButtonIndex == MouseButton.WheelUp)
+                    ZoomIn();
+                else if (wheel.ButtonIndex == MouseButton.WheelDown)
+                    ZoomOut();
+                else
+                    return;
+                AcceptEvent();
+                return;
+            }
             if (@event is InputEventMouseButton button && button.ButtonIndex == MouseButton.Left)
             {
                 if (button.Pressed)

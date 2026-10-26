@@ -9,10 +9,9 @@ namespace Mods.ModManager
     /// live global rectangles, so dragging a chip or a whole group keeps the
     /// lines attached without recomputing them.
     /// <para/>
-    /// <see cref="Cross"/> is the "dangerous layout" flag: the dependency's two
-    /// mods live in different mechanics, which means the player separated what
-    /// belongs together. Cross edges are painted amber (red when the selection
-    /// touches them) so the mistake is visible across the whole canvas.
+    /// A dependency may cross group boundaries normally: groups describe its
+    /// purpose in one game, not compatibility. Only <see cref="Problem"/> carries
+    /// an actual availability/version failure and receives warning styling.
     /// </summary>
     public class CollectionEdge
     {
@@ -24,6 +23,9 @@ namespace Mods.ModManager
 
         /// <summary>True when the two mods belong to different groups.</summary>
         public bool Cross { get; set; }
+
+        /// <summary>At least one endpoint is missing or has an incompatible installed version.</summary>
+        public bool Problem { get; set; }
 
         /// <summary>True when the selection touches one of the endpoints.</summary>
         public bool Active { get; set; }

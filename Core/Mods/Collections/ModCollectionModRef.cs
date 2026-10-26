@@ -20,5 +20,8 @@ namespace Cthangover.Core.Mods
 
         /// <summary>Owning mechanic id inside <see cref="CollectionId"/>.</summary>
         public string MechanicId { get; set; }
+
+        /// <summary>Original versioned reference of this occurrence, independent of another group's rule for the same mod.</summary>
+        public string Requirement { get; set; }
     }
 }

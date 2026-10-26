@@ -32,11 +32,14 @@ namespace Mods.ModManager
         /// <summary>Canonical mod id this chip represents.</summary>
         public string ModId { get; private set; }
 
+        /// <summary>The displayed occurrence's group; a mod may have another chip in another group.</summary>
+        public string GroupKey { get; private set; }
+
         /// <summary>Raised on left click; the canvas turns it into a selection.</summary>
-        public event Action<string> Selected;
+        public event Action<CollectionModChip> Selected;
 
         /// <summary>Raised while dragging with the desired position inside the group's mods layer.</summary>
-        public event Action<string, Vector2> Moved;
+        public event Action<CollectionModChip, Vector2> Moved;
 
         /// <summary>Raised when a drag ends, after the last <see cref="Moved"/>.</summary>
         public event Action DragFinished;
@@ -57,17 +60,20 @@ namespace Mods.ModManager
         /// the chip is added to the tree; safe to call again to refresh the
         /// status without rebuilding the node.
         /// </summary>
-        public void Init(string modId, string role, string title, string version, string stateLabel, Color stateColor, string tooltip)
+        public void Init(string groupKey, string modId, string role, string title, string version, string requirement, string stateLabel, Color stateColor, string tooltip)
         {
             EnsureConstructed();
 
             ModId = modId;
+            GroupKey = groupKey;
             _stateColor = stateColor;
             _role.Text = string.IsNullOrEmpty(role) ? string.Empty : role.ToUpperInvariant();
             _name.Text = title;
-            _meta.Text = string.IsNullOrEmpty(version) ? stateLabel : $"{version} · {stateLabel}";
+            _meta.Text = string.IsNullOrEmpty(version) ? stateLabel
+                : version + (string.IsNullOrEmpty(requirement) ? string.Empty : " · " + requirement);
             _dot.Color = stateColor;
-            _style.BorderColor = stateColor;
+            _style.BorderColor = stateColor == UiTokens.Danger || stateColor == UiTokens.DangerText || stateColor == UiTokens.Warning
+                ? stateColor : UiTokens.LineCard;
             _panel.TooltipText = tooltip ?? string.Empty;
         }
 
@@ -75,7 +81,10 @@ namespace Mods.ModManager
         public void SetSelected(bool selected)
         {
             EnsureConstructed();
-            _style.BorderColor = selected ? UiTokens.Accent : _stateColor;
+            _style.BorderColor = selected ? UiTokens.Accent : UiTokens.LineCard;
+            _style.BgColor = selected ? UiTokens.SurfaceSelected : UiTokens.Surface1;
+            if (!selected && (_stateColor == UiTokens.Danger || _stateColor == UiTokens.DangerText || _stateColor == UiTokens.Warning))
+                _style.BorderColor = _stateColor;
         }
 
         protected override void Construct()
@@ -136,7 +145,7 @@ namespace Mods.ModManager
                 {
                     _dragging = true;
                     _moved = false;
-                    Selected?.Invoke(ModId);
+                    Selected?.Invoke(this);
                 }
                 else
                 {
@@ -168,7 +177,7 @@ namespace Mods.ModManager
                     _moved = true;
 
                 Position = clamped;
-                Moved?.Invoke(ModId, clamped);
+                Moved?.Invoke(this, clamped);
                 AcceptEvent();
             }
         }

@@ -1,5 +1,6 @@
 namespace Cthangover.Core.Mods
 {
+    using System.Collections.Generic;
     /// <summary>
     /// One mod vertex of a <see cref="ModCollectionGraph"/>. Nodes exist both
     /// for the mods explicitly listed by the collection's mechanics and for
@@ -29,6 +30,13 @@ namespace Cthangover.Core.Mods
         /// </summary>
         public ModDependency Dependency { get; set; }
 
+        /// <summary>
+        /// Every explicit and transitive requirement for this single mod id.
+        /// Deduplicating a vertex must not discard another group's pin or a
+        /// consumer's dependency; candidates have to satisfy their intersection.
+        /// </summary>
+        public List<ModDependency> Requirements { get; } = new();
+
         /// <summary>Installed version, or null when the mod is not present locally.</summary>
         public string InstalledVersion { get; set; }
 
@@ -39,5 +47,22 @@ namespace Cthangover.Core.Mods
         public string RequiredVersion => Dependency.IsValid && !string.IsNullOrEmpty(Dependency.VersionRaw)
             ? Dependency.Operator + Dependency.VersionRaw
             : null;
+
+        /// <summary>
+        /// Checks all collected requirements. The original dependency remains
+        /// a fallback for callers constructing a node directly without a resolver.
+        /// </summary>
+        public bool AcceptsVersion(string version)
+        {
+            if (Dependency.IsValid && !Dependency.IsSatisfiedBy(version))
+                return false;
+
+            foreach (var requirement in Requirements)
+            {
+                if (requirement.IsValid && !requirement.IsSatisfiedBy(version))
+                    return false;
+            }
+            return true;
+        }
     }
 }
