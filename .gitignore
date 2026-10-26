@@ -9,6 +9,8 @@ obj/
 mockups/
 
 #ai
+*.md
+!/site/**/*.md
 .omo/
 .opencode/
 .dsh/
