@@ -9,7 +9,7 @@ shader_type canvas_item;
 uniform vec4 day_color : source_color = vec4(1.0, 1.0, 1.0, 1.0);
 uniform vec4 morning_color : source_color = vec4(0.86, 0.72, 0.84, 1.0);
 uniform vec4 evening_color : source_color = vec4(0.84, 0.72, 0.92, 1.0);
-uniform vec4 night_color : source_color = vec4(0.2, 0.26, 0.42, 1.0);
+uniform vec4 night_color : source_color = vec4(0.52, 0.62, 0.76, 1.0);
 uniform vec4 time_weights = vec4(0.0, 1.0, 0.0, 0.0);
 
 // A map that sets its own ambient (indoors) uses it instead of the time of day.

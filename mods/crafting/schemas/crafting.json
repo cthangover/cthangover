@@ -1,0 +1,113 @@
+{
+  "Actions": [
+    {
+      "Id": "craft.open",
+      "Name": "crafting/schema/open",
+      "Description": "crafting/schema/open_desc",
+      "Category": "items",
+      "Params": [
+        {
+          "Key": "station",
+          "Type": "ref",
+          "Kind": "craft_station",
+          "Required": true,
+          "Name": "crafting/schema/station"
+        }
+      ]
+    }
+  ],
+  "Kinds": [
+    {
+      "Kind": "craft_station",
+      "Name": "crafting/schema/station",
+      "Description": "crafting/schema/station_desc",
+      "Folder": "stations",
+      "NewId": "{mod}/new_station",
+      "Order": 14,
+      "Fields": [
+        {
+          "Key": "Name",
+          "Type": "locale",
+          "KeyPattern": "{mod}/station/{id}",
+          "Name": "crafting/schema/name"
+        },
+        {
+          "Key": "Recipes",
+          "Type": "ref_list",
+          "Kind": "recipe",
+          "Name": "crafting/schema/recipes"
+        }
+      ]
+    },
+    {
+      "Kind": "recipe",
+      "Name": "crafting/schema/recipe",
+      "Description": "crafting/schema/recipe_desc",
+      "Folder": "recipes",
+      "NewId": "{mod}/new_recipe",
+      "Order": 15,
+      "Fields": [
+        {
+          "Key": "Name",
+          "Type": "locale",
+          "KeyPattern": "{mod}/recipe/{id}/name",
+          "Name": "crafting/schema/name"
+        },
+        {
+          "Key": "Description",
+          "Type": "locale",
+          "KeyPattern": "{mod}/recipe/{id}/desc",
+          "Name": "crafting/schema/description"
+        },
+        {
+          "Key": "Time",
+          "Type": "int",
+          "Default": "5",
+          "Name": "crafting/schema/time"
+        },
+        {
+          "Key": "Input",
+          "Type": "list",
+          "Name": "crafting/schema/input",
+          "Of": [
+            {
+              "Key": "Id",
+              "Type": "ref",
+              "Kind": "item",
+              "Required": true,
+              "Name": "crafting/schema/item"
+            },
+            {
+              "Key": "Count",
+              "Type": "int",
+              "Default": "1",
+              "Required": true,
+              "Name": "crafting/schema/count"
+            }
+          ]
+        },
+        {
+          "Key": "Output",
+          "Type": "list",
+          "Name": "crafting/schema/output",
+          "Of": [
+            {
+              "Key": "Id",
+              "Type": "ref",
+              "Kind": "item",
+              "Required": true,
+              "Name": "crafting/schema/item"
+            },
+            {
+              "Key": "Count",
+              "Type": "int",
+              "Default": "1",
+              "Required": true,
+              "Name": "crafting/schema/count"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+scene: rpg_woodland_shrine
+priority: 10
+is_one_run: true
+save_allowed: true
+---
+title "Лес помнит" key=rpg_plus/map/shrine
+ptext "За аркой кто-то ведёт счёт. На слове «деревня» сбивается и начинает заново." key=rpg_plus/woodland/shrine/1
+when "rpg_ward_done == 1" -> :end
+action quest.set_status quest_id=woodland_ward status=Progress
+action quest.set_data_status quest_id=woodland_ward level=3
+:end
+end

@@ -61,5 +61,8 @@ namespace Cthangover.Mods.Rpg
         /// lights the map (<see cref="RpgLighting"/>).
         /// </summary>
         public string Ambient { get; set; }
+
+        /// <summary>Optional woodland leaves, fireflies and water ripples; empty keeps interiors still.</summary>
+        public string Atmosphere { get; set; }
     }
 }

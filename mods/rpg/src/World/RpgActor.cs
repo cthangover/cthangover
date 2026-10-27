@@ -30,6 +30,10 @@ namespace Cthangover.Mods.Rpg
         private Vector2 to;
         private float progress = 1f;
         private float animationTime;
+        private bool hasShadow;
+
+        /// <summary>Current speed in tiles/s; the player can dash without changing NPC routes.</summary>
+        public float Speed { get; set; } = TilesPerSecond;
 
         /// <summary>Raised when a step reaches its cell.</summary>
         public event Action<RpgActor> StepFinished;
@@ -70,6 +74,8 @@ namespace Cthangover.Mods.Rpg
         {
             if (sprite == null)
                 return;
+            hasShadow = false;
+            QueueRedraw();
             sprite.QueueFree();
             sprite = null;
         }
@@ -79,6 +85,8 @@ namespace Cthangover.Mods.Rpg
         {
             if (texture == null)
                 return;
+            hasShadow = true;
+            QueueRedraw();
             sprite = new Sprite2D { Texture = texture, Hframes = 3, Vframes = 4, Centered = false, UseParentMaterial = true };
             var frame = new Vector2(texture.GetWidth() / 3f, texture.GetHeight() / 4f);
             sprite.Position = new Vector2((tileSize - frame.X) / 2f, tileSize - frame.Y);
@@ -155,12 +163,22 @@ namespace Cthangover.Mods.Rpg
             if (!IsMoving)
                 return;
 
-            progress = Mathf.Min(1f, progress + (float)delta * TilesPerSecond);
-            animationTime += (float)delta * TilesPerSecond * 2f;
+            progress = Mathf.Min(1f, progress + (float)delta * Math.Clamp(Speed, 1f, 12f));
+            animationTime += (float)delta * Math.Clamp(Speed, 1f, 12f) * 2f;
             Position = from.Lerp(to, progress);
             UpdateFrame();
             if (!IsMoving)
                 StepFinished?.Invoke(this);
+        }
+
+        /// <summary>A soft contact shadow anchors charsets to the ground without changing their art.</summary>
+        public override void _Draw()
+        {
+            if (!hasShadow)
+                return;
+            DrawSetTransform(new Vector2(tileSize / 2f, tileSize - 3), 0, new Vector2(1, 0.32f));
+            DrawCircle(Vector2.Zero, tileSize * 0.28f, new Color(0.04f, 0.09f, 0.1f, 0.28f));
+            DrawSetTransform(Vector2.Zero);
         }
 
         private Vector2 CellPosition(Vector2I cell) => new(cell.X * tileSize, cell.Y * tileSize);

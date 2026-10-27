@@ -20,6 +20,27 @@
           "Name": "items/schema/field/count"
         }
       ]
+    },
+    {
+      "Id": "item.remove",
+      "Name": "items/schema/remove",
+      "Description": "items/schema/remove_desc",
+      "Category": "items",
+      "Params": [
+        {
+          "Key": "id",
+          "Type": "ref",
+          "Kind": "item",
+          "Required": true,
+          "Name": "items/schema/field/item"
+        },
+        {
+          "Key": "count",
+          "Type": "int",
+          "Default": "1",
+          "Name": "items/schema/field/count"
+        }
+      ]
     }
   ],
   "Kinds": [

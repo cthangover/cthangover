@@ -46,9 +46,9 @@ namespace Cthangover.Core.Scenarios
                 }
 
                 var colonIdx = line.IndexOf(':');
-                if (colonIdx > 0)
+                var key = colonIdx > 0 ? line.Substring(0, colonIdx).Trim() : null;
+                if (IsMetadataKey(key))
                 {
-                    var key = line.Substring(0, colonIdx).Trim();
                     var val = line.Substring(colonIdx + 1).Trim();
                     metadata[key] = val;
                 }
@@ -61,6 +61,18 @@ namespace Cthangover.Core.Scenarios
 
             var remaining = string.Join("\n", lines, contentStart, lines.Length - contentStart);
             return (metadata, remaining);
+        }
+
+        // A colon inside a command or its jump target does not start front matter.
+        // Keep arbitrary author-defined keys, but require identifier syntax.
+        private static bool IsMetadataKey(string key)
+        {
+            if (string.IsNullOrEmpty(key) || !(char.IsAsciiLetter(key[0]) || key[0] == '_'))
+                return false;
+            foreach (var character in key)
+                if (!(char.IsAsciiLetterOrDigit(character) || character is '_' or '-' or '.'))
+                    return false;
+            return true;
         }
     }
 }

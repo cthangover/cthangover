@@ -1,0 +1,68 @@
+{
+  "Events": [
+    {
+      "Id": "woodland_lost_amber",
+      "X": 25,
+      "Y": 8,
+      "Icon": "rpg_plus/amber",
+      "Solid": false,
+      "Condition": "rpg_wolf_dead == 1 && item('rpg_plus/amber') == 0 && item('rpg_plus/ward_lantern') == 0 && rpg_ward_done != 1",
+      "Commands": [
+        "ptext \"Сердце янтаря осталось у пещеры. На этот раз забираешь его с собой.\" key=rpg_plus/woodland/amber/recovered",
+        "action item.add id=rpg_plus/amber count=1",
+        "end"
+      ]
+    },
+    {
+      "Id": "woodland_courier",
+      "X": 5,
+      "Y": 13,
+      "Sprite": "village/merchant",
+      "Dir": "Down",
+      "Scenario": "rpg_plus/woodland/courier",
+      "Pages": [
+        {
+          "Condition": "rpg_courier_paid == 1",
+          "Solid": false,
+          "Route": {
+            "Steps": [
+              "up",
+              "up",
+              "up",
+              "up",
+              "up",
+              "left",
+              "left",
+              "left",
+              "left",
+              "wait"
+            ],
+            "Every": 0.8,
+            "Repeat": false
+          }
+        }
+      ]
+    },
+    {
+      "Id": "woodland_waystone",
+      "X": 20,
+      "Y": 9,
+      "Tile": 37,
+      "Scenario": "rpg_plus/woodland/waystone"
+    },
+    {
+      "Id": "woodland_to_shrine",
+      "X": 26,
+      "Y": 8,
+      "Trigger": "Action",
+      "Solid": true,
+      "Condition": "rpg_wolf_dead == 1",
+      "Teleport": {
+        "Map": "rpg_woodland_shrine",
+        "X": 2,
+        "Y": 11,
+        "Dir": "Right"
+      }
+    }
+  ]
+}

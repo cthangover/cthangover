@@ -21,3 +21,64 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 color = Color(0.06, 0.07, 0.09, 1)
+
+[node name="Hud" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="Location" type="VBoxContainer" parent="Hud"]
+layout_mode = 0
+offset_left = 32.0
+offset_top = 84.0
+offset_right = 530.0
+offset_bottom = 145.0
+mouse_filter = 2
+
+[node name="Eyebrow" type="Label" parent="Hud/Location"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.82, 0.72, 0.47, 1)
+theme_override_colors/font_shadow_color = Color(0.03, 0.06, 0.07, 0.95)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 12
+text = "rpg/ui/location"
+mouse_filter = 2
+
+[node name="Name" type="Label" parent="Hud/Location"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.94, 0.84, 1)
+theme_override_colors/font_shadow_color = Color(0.03, 0.06, 0.07, 0.95)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 24
+mouse_filter = 2
+
+[node name="Controls" type="VBoxContainer" parent="Hud"]
+layout_mode = 1
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 32.0
+offset_top = -76.0
+offset_right = 570.0
+offset_bottom = -22.0
+mouse_filter = 2
+
+[node name="Prompt" type="Label" parent="Hud/Controls"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.88, 0.65, 1)
+theme_override_colors/font_shadow_color = Color(0.02, 0.04, 0.05, 1)
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 18
+mouse_filter = 2
+
+[node name="Hint" type="Label" parent="Hud/Controls"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.75, 0.83, 0.78, 1)
+theme_override_colors/font_shadow_color = Color(0.02, 0.04, 0.05, 1)
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 13
+text = "rpg/ui/hint"
+mouse_filter = 2

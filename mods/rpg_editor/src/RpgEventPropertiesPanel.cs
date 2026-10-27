@@ -44,6 +44,9 @@ namespace Cthangover.Tools.RpgEditor
         private readonly OptionButton teleportDir;
         private readonly SpinBox lightRadius;
         private readonly LineEdit lightColor;
+        private readonly LineEdit routeSteps;
+        private readonly SpinBox routeEvery;
+        private readonly CheckBox routeRepeat;
         private RpgMapEvent mapEvent;
         private bool suppress;
         private bool editing;
@@ -87,6 +90,12 @@ namespace Cthangover.Tools.RpgEditor
             commandsEdit.TextChanged += OnCommandsChanged;
             body.AddChild(commandsEdit);
 
+            body.AddChild(ToolUi.Section("tools/rpg_editor/section_route"));
+            routeSteps = ToolUi.Field(body, "tools/rpg_editor/route_steps", ToolUi.Text("left, wait, right", OnTextChanged), "tools/rpg_editor/route_steps_tip");
+            routeEvery = ToolUi.Field(body, "tools/rpg_editor/route_every", ToolUi.Number(0.1, 30, 0.1, OnNumberChanged));
+            routeRepeat = ToolUi.Field(body, "tools/rpg_editor/route_repeat", new CheckBox());
+            routeRepeat.Toggled += OnRouteRepeat;
+
             body.AddChild(ToolUi.Section("tools/rpg_editor/section_light"));
             lightRadius = ToolUi.Field(body, "tools/rpg_editor/light_radius", ToolUi.Number(0, 16, 0.5, OnNumberChanged), "tools/rpg_editor/light_radius_tip");
             lightColor = ToolUi.Field(body, "tools/rpg_editor/light_color", ToolUi.Text("#ffd8a0", OnTextChanged), "tools/rpg_editor/light_color_tip");
@@ -128,6 +137,9 @@ namespace Cthangover.Tools.RpgEditor
             teleportX.Value = value.Teleport?.X ?? -1;
             teleportY.Value = value.Teleport?.Y ?? -1;
             teleportDir.Select((int)(value.Teleport?.Dir ?? RpgDirection.Down));
+            routeSteps.Text = string.Join(", ", value.Route?.Steps ?? new List<string>());
+            routeEvery.Value = value.Route?.Every ?? 0.9;
+            routeRepeat.ButtonPressed = value.Route?.Repeat ?? true;
             lightRadius.Value = value.Light?.Radius ?? 0;
             lightColor.Text = value.Light?.Color ?? string.Empty;
             suppress = false;
@@ -153,6 +165,8 @@ namespace Cthangover.Tools.RpgEditor
         private void OnChoicePicked(int index) => Write();
 
         private void OnCommandsChanged() => Write();
+
+        private void OnRouteRepeat(bool value) => Write();
 
         private void OnDeletePressed()
         {
@@ -194,6 +208,9 @@ namespace Cthangover.Tools.RpgEditor
                     Dir = (RpgDirection)teleportDir.Selected,
                 }
                 : null;
+
+            var steps = routeSteps.Text.Split(new[] { ',', ';', ' ' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+            mapEvent.Route = steps.Count == 0 ? null : new RpgMoveRoute { Steps = steps, Every = routeEvery.Value, Repeat = routeRepeat.ButtonPressed };
 
             // A radius of 0 means no light; an empty colour keeps the warm default.
             mapEvent.Light = lightRadius.Value > 0

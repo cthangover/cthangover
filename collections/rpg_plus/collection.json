@@ -301,7 +301,8 @@
       "mods": [
         "items_base>=1",
         "equipment>=1",
-        "trading>=1"
+        "trading>=1",
+        "crafting>=1"
       ]
     },
     {

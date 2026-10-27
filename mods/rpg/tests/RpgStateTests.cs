@@ -57,12 +57,15 @@ namespace Cthangover.Mods.Rpg.Tests
         {
             var json = @"{""Id"":""m"",""Tileset"":""village"",""Width"":2,""Height"":1,
                 ""Spawn"":{""X"":1,""Y"":0,""Dir"":""left""},
+                ""Atmosphere"":""woodland"",""Ambient"":""#c5d6b0"",
                 ""Encounters"":{""Steps"":20,""Groups"":[""slime""]}}";
 
             var map = JsonSerializer.Deserialize<RpgMap>(json, Cthangover.Core.Utils.JsonOptionsProvider.ReadOptions);
             var again = JsonSerializer.Deserialize<RpgMap>(JsonSerializer.Serialize(map), Cthangover.Core.Utils.JsonOptionsProvider.ReadOptions);
 
             ModAssert.Equal("m", again.ID, "id");
+            ModAssert.Equal("woodland", again.Atmosphere, "atmosphere survives saves and editor snapshots");
+            ModAssert.Equal("#c5d6b0", again.Ambient, "fixed ambient retained");
             ModAssert.Equal("Left", again.Spawn.Dir.ToString(), "spawn facing, read in any case");
             ModAssert.Equal(20, again.Encounters.Steps, "encounter steps");
             ModAssert.Equal("slime", again.Encounters.Groups[0], "encounter group");

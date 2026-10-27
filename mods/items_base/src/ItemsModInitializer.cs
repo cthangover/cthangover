@@ -1,4 +1,7 @@
 using Cthangover.Core.Factories.Impls;
+using Cthangover.Core.Events;
+using Cthangover.Core.Scenes;
+using Cthangover.Core.Scenes.Parsing;
 using Cthangover.Core.Items;
 using Cthangover.Core.Mods;
 using Cthangover.Core.Settings;
@@ -23,9 +26,15 @@ namespace Cthangover.Mods.Items
     /// </summary>
     public class ItemsModInitializer : IModInitializer
     {
+        private static bool conditionsRegistered;
         /// <summary>No per-mod work is needed on load; discovery is reflection-based.</summary>
         public void OnModLoaded(string modId)
         {
+            if (conditionsRegistered)
+                return;
+            conditionsRegistered = true;
+            LeafParserRegistry.RegisterFirst(new ItemCountParser());
+            ModEventBus.Subscribe<InventoryChangedEvent>(ConditionStateMonitor.Notify);
         }
 
         /// <summary>Installs the RuntimeData factory hooks and binds the item-action bridge (both idempotent).</summary>

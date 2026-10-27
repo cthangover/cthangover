@@ -23,6 +23,9 @@ namespace Cthangover.Mods.Rpg
     public partial class RpgWorldHost : Control
     {
         private Control backdrop;
+        private Control hud;
+        private Label mapName;
+        private Label prompt;
 
         /// <summary>The host in the running shell, or null.</summary>
         public static RpgWorldHost Current { get; private set; }
@@ -43,7 +46,20 @@ namespace Cthangover.Mods.Rpg
         public override void _Ready()
         {
             backdrop = GetNodeOrNull<Control>("Backdrop");
+            hud = GetNodeOrNull<Control>("Hud");
+            mapName = GetNodeOrNull<Label>("Hud/Location/Name");
+            prompt = GetNodeOrNull<Label>("Hud/Controls/Prompt");
             Visible = false;
+        }
+
+        /// <summary>Updates the action hint from the same target selection as the world.</summary>
+        public override void _Process(double delta)
+        {
+            if (View == null || hud == null)
+                return;
+            hud.Visible = !RpgInput.IsWalkBlocked(this);
+            if (prompt != null)
+                prompt.Text = Tr(View.InteractionTarget() != null ? "rpg/ui/interact" : "rpg/ui/walk");
         }
 
         /// <summary>Unsubscribes; the view goes with the node.</summary>
@@ -97,7 +113,10 @@ namespace Cthangover.Mods.Rpg
 
             View = new RpgWorldView();
             AddChild(View);
+            MoveChild(View, 1);
             View.Build(map);
+            if (mapName != null)
+                mapName.Text = Tr(map.Name ?? map.ID);
 
             var state = RpgState.Instance.Data;
             if (state.Map == map.ID && View.Contains(state.X, state.Y))

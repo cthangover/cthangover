@@ -1,0 +1,7 @@
+scene: rpg_village
+priority: 5
+is_one_run: true
+save_allowed: true
+---
+action quest.set_status quest_id=woodland_ward status=Progress
+end

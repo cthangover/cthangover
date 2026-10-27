@@ -1,0 +1,46 @@
+# The elder's reward is guarded separately from the battle flag: revisits cannot pay twice.
+when "rpg_ward_paid == 1" -> :after
+when "rpg_ward_done == 1" -> :reward
+when "item('rpg_plus/ward_lantern') >= 1" -> :ready
+when "rpg_wolf_dead == 1" -> :lantern
+ptext "— Волк режет коз. Лес гасит фонари. Ведомость требует одного виновного. Волк уже внесён." key=rpg_plus/woodland/elder/1
+select ""
+option "Волк умеет гасить фонари?" key=rpg_plus/woodland/elder/2 -> :truth
+option "Где его искать?" key=rpg_plus/woodland/elder/3 -> :work
+:truth
+ptext "— Нет. Но писать «неизвестное» — это ещё три бланка." key=rpg_plus/woodland/elder/4
+ptext "Староста кладёт на стол обломок фонаря. Внутри — пустое гнездо размером с кулак." key=rpg_plus/woodland/elder/5
+ptext "— Раньше в святилище горел янтарь. Потом мы решили, что светить деревне полезнее. Лес оказался другого мнения." key=rpg_plus/woodland/elder/6
+:work
+flag rpg_quest_taken 1
+action quest.set_status quest_id=woodland_ward status=Progress
+action quest.set_data_status quest_id=woodland_ward level=1
+ptext "— На восток, за пруд. Волк сидит у пещеры. Прогони его. Если найдёшь янтарь — не продавай. Один раз мы уже заработали." key=rpg_plus/woodland/elder/7
+end
+:lantern
+action quest.set_status quest_id=woodland_ward status=Progress
+action quest.set_data_status quest_id=woodland_ward level=2
+ptext "— Янтарь у тебя? Значит, лес перестал доверять даже волкам." key=rpg_plus/woodland/elder/8
+ptext "— У колодца верстак. Янтарь, две смолы, две связки веток — получится сторожевой фонарь. Смола остаётся от слизней; торговец тоже держит запас." key=rpg_plus/woodland/elder/9
+ptext "— Потом через пещеру к святилищу. Свету там найдётся работа. Только не спрашивай меня, какая." key=rpg_plus/woodland/elder/10
+end
+:ready
+action quest.set_data_status quest_id=woodland_ward level=3
+ptext "— Собрал? Тогда через пещеру к святилищу. И не поднимай створки, пока не решишь, кому светить." key=rpg_plus/woodland/elder/ready
+end
+:reward
+flag rpg_ward_paid 1
+action quest.set_status quest_id=woodland_ward status=End
+action stat.exp who=rpg_hero value=35
+action item.add id=money/coin count=35
+when "rpg_ward_choice == 'free'" -> :free
+ptext "— Деревня снова спит. — Староста отсчитывает тридцать пять монет. — Впервые за месяц никто не написал жалобу на темноту." key=rpg_plus/woodland/elder/11
+ptext "— Теперь хотя бы будем знать, сколько берём." key=rpg_plus/woodland/elder/12
+end
+:free
+ptext "Староста гасит настольную лампу. За окном светлеет." key=rpg_plus/woodland/elder/13
+ptext "— Налог на свет отменяю. — Он отсчитывает тридцать пять монет. — Не делай такого лица. На темноту пока тоже не ввожу." key=rpg_plus/woodland/elder/14
+end
+:after
+ptext "— Ведомость закрыта. Козы живы. Если найдёшь ещё одну древнюю тайну — сначала узнай, кто её обслуживает." key=rpg_plus/woodland/elder/15
+end

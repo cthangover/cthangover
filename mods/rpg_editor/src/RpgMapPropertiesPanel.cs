@@ -29,6 +29,7 @@ namespace Cthangover.Tools.RpgEditor
         private readonly SpinBox heightSpin;
         private readonly SpinBox zoomSpin;
         private readonly LineEdit ambientEdit;
+        private readonly OptionButton atmospherePicker;
         private readonly SpinBox spawnX;
         private readonly SpinBox spawnY;
         private readonly OptionButton spawnDir;
@@ -65,6 +66,8 @@ namespace Cthangover.Tools.RpgEditor
             zoomSpin = ToolUi.Field(this, "tools/rpg_editor/zoom", ToolUi.Number(1, 4, 1, OnZoomChanged), "tools/rpg_editor/zoom_tip");
             ambientEdit = ToolUi.Field(this, "tools/rpg_editor/ambient", ToolUi.Text("#e0d2b8", OnAmbientChanged), "tools/rpg_editor/ambient_tip");
 
+            atmospherePicker = ToolUi.Field(this, "tools/rpg_editor/atmosphere", RpgEditorFields.Choice(new[] { "tools/rpg_editor/atmosphere_none", "tools/rpg_editor/atmosphere_woodland" }, OnAtmospherePicked));
+
             AddChild(ToolUi.Section("tools/rpg_editor/section_spawn"));
             spawnX = ToolUi.Field(this, "tools/rpg_editor/x", ToolUi.Number(0, 255, 1, OnSpawnChanged));
             spawnY = ToolUi.Field(this, "tools/rpg_editor/y", ToolUi.Number(0, 255, 1, OnSpawnChanged));
@@ -98,6 +101,7 @@ namespace Cthangover.Tools.RpgEditor
                 heightSpin.Value = value.Grid.Height;
                 zoomSpin.Value = map.Zoom;
                 ambientEdit.Text = map.Ambient ?? string.Empty;
+                atmospherePicker.Select(map.Atmosphere == "woodland" ? 1 : 0);
                 spawnX.Value = map.Spawn.X;
                 spawnY.Value = map.Spawn.Y;
                 spawnDir.Select((int)map.Spawn.Dir);
@@ -124,6 +128,14 @@ namespace Cthangover.Tools.RpgEditor
             if (!Begin())
                 return;
             document.Map.Name = string.IsNullOrWhiteSpace(text) ? null : text.Trim();
+            Changed?.Invoke();
+        }
+
+        private void OnAtmospherePicked(int index)
+        {
+            if (!Begin())
+                return;
+            document.Map.Atmosphere = index == 1 ? "woodland" : null;
             Changed?.Invoke();
         }
 

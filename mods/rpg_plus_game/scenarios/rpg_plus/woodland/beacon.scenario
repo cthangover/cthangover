@@ -1,0 +1,37 @@
+when "rpg_ward_done == 1" -> :after
+when "item('rpg_plus/ward_lantern') >= 1" -> :choose
+ptext "Пустое гнездо. Свет сюда уже приносили. Уносили тоже." key=rpg_plus/woodland/beacon/1
+ptext "Нужен сторожевой фонарь: янтарь, две смолы, две связки веток. Верстак у деревенского колодца." key=rpg_plus/woodland/beacon/2
+end
+:choose
+ptext "— ДОЛГ ПО СВЕТУ: ТРИДЦАТЬ ЛЕТ. — Голос под корнями шелестит бумагой. — КТО ОПЛАЧИВАЕТ?" key=rpg_plus/woodland/beacon/3
+select ""
+option "Вернуть свет лесу. Пусть деревня научится зажигать свой." key=rpg_plus/woodland/beacon/4 -> :free
+option "Оставить фонарь деревне, заключить честный договор." key=rpg_plus/woodland/beacon/5 -> :pact
+option "Сначала подумать" key=rpg_plus/woodland/beacon/6 -> :end
+:free
+action item.remove id=rpg_plus/ward_lantern
+flag rpg_ward_choice free
+ptext "Ты ставишь фонарь на камень и открываешь створки. Янтарь прорастает тонкими корнями." key=rpg_plus/woodland/beacon/7
+ptext "— ПРИНЯТО. — Пауза. — КВИТАНЦИЯ НЕ ПРЕДУСМОТРЕНА." key=rpg_plus/woodland/beacon/8
+goto -> :done
+:pact
+action item.remove id=rpg_plus/ward_lantern
+flag rpg_ward_choice pact
+ptext "— Один фонарь на деревню. Взамен — ни одного топора за старой тропой. И учёт без старосты." key=rpg_plus/woodland/beacon/9
+ptext "— СОГЛАСОВАНО. — На камне проступает отпечаток ладони. Слишком много пальцев. Ты всё равно прикладываешь свою." key=rpg_plus/woodland/beacon/10
+:done
+flag rpg_ward_done 1
+action quest.set_status quest_id=woodland_ward status=Progress
+action quest.set_data_status quest_id=woodland_ward level=4
+action stat.exp who=rpg_hero value=20
+ptext "Обратно идти легче. Не потому, что стало безопасно. Просто теперь дорога знает твоё имя." key=rpg_plus/woodland/beacon/11
+end
+:after
+when "rpg_ward_choice == 'free'" -> :green
+ptext "В фонаре горит ровный свет. Кто-то под корнями старательно вычёркивает строки." key=rpg_plus/woodland/beacon/12
+end
+:green
+ptext "На камне растут молодые листья. Ведомость проросла." key=rpg_plus/woodland/beacon/13
+:end
+end

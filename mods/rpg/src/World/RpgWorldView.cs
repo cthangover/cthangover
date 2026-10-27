@@ -75,6 +75,9 @@ namespace Cthangover.Mods.Rpg
             foreach (var mapEvent in RpgMapEvents.Of(map.ID))
                 AddEventActor(mapEvent);
             RefreshEvents();
+            if (string.Equals(map.Atmosphere, "woodland", StringComparison.OrdinalIgnoreCase))
+                AddChild(new RpgAtmosphere(map, grid, TileSize, Tileset));
+            AddChild(new RpgInteractionCue(this));
 
             Player = new RpgActor(TileSize) { Name = "Player", Material = lighting.Material };
             Player.UseCharset(textures.Charset(RpgPlayerLook.Charset()));
@@ -155,14 +158,22 @@ namespace Cthangover.Mods.Rpg
             if (Player == null || Player.IsMoving)
                 return false;
 
-            var target = EventAt(Player.Cell + RpgDirections.Delta(Player.Facing), RpgEventTrigger.Action)
-                ?? EventAt(Player.Cell, RpgEventTrigger.Action);
+            var target = InteractionTarget();
             if (target == null)
                 return false;
 
             if (target.Cell != Player.Cell)
                 target.Face(RpgDirections.Opposite(Player.Facing));
             return RpgEventRunner.Run(target.Current, Map.ID);
+        }
+
+        /// <summary>The action event in reach, shared by input and its visual cue; hidden while moving.</summary>
+        public RpgActor InteractionTarget()
+        {
+            if (Player == null || Player.IsMoving)
+                return null;
+            return EventAt(Player.Cell + RpgDirections.Delta(Player.Facing), RpgEventTrigger.Action)
+                ?? EventAt(Player.Cell, RpgEventTrigger.Action);
         }
 
         /// <summary>Walking: one decision per frame while the player stands still.</summary>
@@ -178,12 +189,15 @@ namespace Cthangover.Mods.Rpg
                 {
                     var next = Player.Cell + RpgDirections.Delta(held.Value);
                     if (CanEnter(next))
+                    {
+                        Player.Speed = Input.IsPhysicalKeyPressed(Key.Shift) ? 7f : RpgActor.TilesPerSecond;
                         Player.StepTo(held.Value);
+                    }
                     else
                         Player.Face(held.Value);
                 }
             }
-            UpdateCamera();
+            UpdateCamera(delta);
             lighting.Update(this, eventActors.Values);
         }
 
@@ -304,7 +318,7 @@ namespace Cthangover.Mods.Rpg
             }
         }
 
-        private void UpdateCamera()
+        private void UpdateCamera(double delta = 0)
         {
             if (Player == null || GetParent() is not Control host)
                 return;
@@ -313,7 +327,8 @@ namespace Cthangover.Mods.Rpg
             var mapSize = new Vector2(grid.Width, grid.Height) * TileSize * zoom;
             var screen = host.Size;
             var focus = (Player.Position + new Vector2(TileSize, TileSize) / 2f) * zoom;
-            Position = new Vector2(Axis(screen.X, mapSize.X, focus.X), Axis(screen.Y, mapSize.Y, focus.Y));
+            var target = new Vector2(Axis(screen.X, mapSize.X, focus.X), Axis(screen.Y, mapSize.Y, focus.Y));
+            Position = delta <= 0 ? target : Position.Lerp(target, 1f - Mathf.Exp(-(float)delta * 14f)).Round();
         }
 
         private static float Axis(float screen, float map, float focus)

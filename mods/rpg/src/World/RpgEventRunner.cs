@@ -50,7 +50,7 @@ namespace Cthangover.Mods.Rpg
             if (dialogBox == null || dialogBox.IsRunning)
                 return false;
 
-            var dialog = ScenarioParser.Parse(text.ToString());
+            var dialog = new ScenarioConverter().Convert(text.ToString());
             if (dialog?.Queue == null || dialog.Queue.Count == 0)
                 return false;
 

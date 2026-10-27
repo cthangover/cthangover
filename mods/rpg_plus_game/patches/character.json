@@ -2,7 +2,54 @@
   "Items": [
     {
       "Id": "rpg_wolf",
-      "Stats": { "str": 5, "vit": 5, "agi": 7 }
+      "Stats": {
+        "str": 5,
+        "vit": 5,
+        "agi": 7
+      },
+      "Loot": [
+        {
+          "ItemId": "rpg_plus/wolf_pelt",
+          "MinCount": 2,
+          "MaxCount": 3,
+          "Probability": 100
+        },
+        {
+          "ItemId": "money/coin",
+          "MinCount": 8,
+          "MaxCount": 14,
+          "Probability": 100
+        },
+        {
+          "ItemId": "rpg_plus/amber",
+          "MinCount": 1,
+          "MaxCount": 1,
+          "Probability": 100
+        }
+      ]
+    },
+    {
+      "Id": "rpg_slime",
+      "Loot": [
+        {
+          "ItemId": "rpg_plus/resin",
+          "MinCount": 1,
+          "MaxCount": 2,
+          "Probability": 100
+        },
+        {
+          "ItemId": "money/coin",
+          "MinCount": 2,
+          "MaxCount": 4,
+          "Probability": 100
+        },
+        {
+          "ItemId": "rpg_demo/mushroom",
+          "MinCount": 1,
+          "MaxCount": 1,
+          "Probability": 25
+        }
+      ]
     }
   ]
 }

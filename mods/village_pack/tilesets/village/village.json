@@ -7,42 +7,591 @@
       "TileSize": 32,
       "Columns": 8,
       "Tiles": [
-        { "Index": 0, "Solid": false, "Tag": "grass" },
-        { "Index": 1, "Solid": false, "Tag": "grass_tufts" },
-        { "Index": 2, "Solid": false, "Tag": "flowers" },
-        { "Index": 3, "Solid": false, "Tag": "path" },
-        { "Index": 4, "Solid": false, "Tag": "sand" },
-        { "Index": 5, "Solid": true, "Tag": "water" },
-        { "Index": 6, "Solid": false, "Tag": "stone_floor" },
-        { "Index": 7, "Solid": false, "Tag": "wood_floor" },
-        { "Index": 8, "Solid": true, "Tag": "tree_trunk" },
-        { "Index": 9, "Solid": false, "Tag": "tree_crown" },
-        { "Index": 10, "Solid": true, "Tag": "bush" },
-        { "Index": 11, "Solid": true, "Tag": "rock" },
-        { "Index": 12, "Solid": true, "Tag": "fence" },
-        { "Index": 13, "Solid": true, "Tag": "sign" },
-        { "Index": 14, "Solid": true, "Tag": "chest" },
-        { "Index": 15, "Solid": true, "Tag": "chest_open" },
-        { "Index": 16, "Solid": true, "Tag": "wall" },
-        { "Index": 17, "Solid": true, "Tag": "wall_window", "Light": { "Radius": 1.8, "Color": "#ffd27acc" } },
-        { "Index": 18, "Solid": false, "Tag": "door" },
-        { "Index": 19, "Solid": true, "Tag": "roof" },
-        { "Index": 20, "Solid": true, "Tag": "roof_eave" },
-        { "Index": 21, "Solid": false, "Tag": "bridge" },
-        { "Index": 22, "Solid": false, "Tag": "tall_grass" },
-        { "Index": 23, "Solid": true, "Tag": "well" },
-        { "Index": 24, "Solid": false, "Tag": "dark_grass" },
-        { "Index": 25, "Solid": true, "Tag": "stump" },
-        { "Index": 26, "Solid": false, "Tag": "mushrooms" },
-        { "Index": 27, "Solid": false, "Tag": "cave" },
-        { "Index": 28, "Solid": true, "Tag": "lamp_post" },
-        { "Index": 29, "Solid": false, "Tag": "lamp_top", "Light": { "Radius": 4, "Color": "#ffcf80" } },
-        { "Index": 30, "Solid": true, "Tag": "shore" },
-        { "Index": 31, "Solid": true, "Tag": "barrel" },
-        { "Index": 32, "Solid": false, "Tag": "branches" },
-        { "Index": 33, "Solid": false, "Tag": "stones" },
-        { "Index": 34, "Solid": false, "Tag": "mushroom" },
-        { "Index": 40, "Solid": true, "Tag": "water", "Autotile": "village/water_auto" }
+        {
+          "Index": 0,
+          "Solid": false,
+          "Tag": "grass"
+        },
+        {
+          "Index": 1,
+          "Solid": false,
+          "Tag": "grass_tufts"
+        },
+        {
+          "Index": 2,
+          "Solid": false,
+          "Tag": "flowers"
+        },
+        {
+          "Index": 3,
+          "Solid": false,
+          "Tag": "path"
+        },
+        {
+          "Index": 4,
+          "Solid": false,
+          "Tag": "sand"
+        },
+        {
+          "Index": 5,
+          "Solid": true,
+          "Tag": "water"
+        },
+        {
+          "Index": 6,
+          "Solid": false,
+          "Tag": "stone_floor"
+        },
+        {
+          "Index": 7,
+          "Solid": false,
+          "Tag": "wood_floor"
+        },
+        {
+          "Index": 8,
+          "Solid": true,
+          "Tag": "tree_trunk"
+        },
+        {
+          "Index": 9,
+          "Solid": false,
+          "Tag": "tree_crown"
+        },
+        {
+          "Index": 10,
+          "Solid": true,
+          "Tag": "bush"
+        },
+        {
+          "Index": 11,
+          "Solid": true,
+          "Tag": "rock"
+        },
+        {
+          "Index": 12,
+          "Solid": true,
+          "Tag": "fence"
+        },
+        {
+          "Index": 13,
+          "Solid": true,
+          "Tag": "sign"
+        },
+        {
+          "Index": 14,
+          "Solid": true,
+          "Tag": "chest"
+        },
+        {
+          "Index": 15,
+          "Solid": true,
+          "Tag": "chest_open"
+        },
+        {
+          "Index": 16,
+          "Solid": true,
+          "Tag": "wall"
+        },
+        {
+          "Index": 17,
+          "Solid": true,
+          "Tag": "wall_window",
+          "Light": {
+            "Radius": 1.8,
+            "Color": "#ffd27acc"
+          }
+        },
+        {
+          "Index": 18,
+          "Solid": false,
+          "Tag": "door"
+        },
+        {
+          "Index": 19,
+          "Solid": true,
+          "Tag": "roof"
+        },
+        {
+          "Index": 20,
+          "Solid": true,
+          "Tag": "roof_eave"
+        },
+        {
+          "Index": 21,
+          "Solid": false,
+          "Tag": "bridge"
+        },
+        {
+          "Index": 22,
+          "Solid": false,
+          "Tag": "tall_grass"
+        },
+        {
+          "Index": 23,
+          "Solid": true,
+          "Tag": "well"
+        },
+        {
+          "Index": 24,
+          "Solid": false,
+          "Tag": "dark_grass"
+        },
+        {
+          "Index": 25,
+          "Solid": true,
+          "Tag": "stump"
+        },
+        {
+          "Index": 26,
+          "Solid": false,
+          "Tag": "mushrooms"
+        },
+        {
+          "Index": 27,
+          "Solid": false,
+          "Tag": "cave"
+        },
+        {
+          "Index": 28,
+          "Solid": true,
+          "Tag": "lamp_post"
+        },
+        {
+          "Index": 29,
+          "Solid": false,
+          "Tag": "lamp_top",
+          "Light": {
+            "Radius": 4,
+            "Color": "#ffcf80"
+          }
+        },
+        {
+          "Index": 30,
+          "Solid": true,
+          "Tag": "shore"
+        },
+        {
+          "Index": 31,
+          "Solid": true,
+          "Tag": "barrel"
+        },
+        {
+          "Index": 32,
+          "Solid": false,
+          "Tag": "branches"
+        },
+        {
+          "Index": 33,
+          "Solid": false,
+          "Tag": "stones"
+        },
+        {
+          "Index": 34,
+          "Solid": false,
+          "Tag": "mushroom"
+        },
+        {
+          "Index": 40,
+          "Solid": true,
+          "Tag": "water",
+          "Autotile": "village/water_auto"
+        },
+        {
+          "Index": 39,
+          "Solid": true,
+          "Tag": "workbench_0"
+        },
+        {
+          "Index": 35,
+          "Solid": true,
+          "Tag": "hearth_0"
+        },
+        {
+          "Index": 36,
+          "Solid": true,
+          "Tag": "ward_lantern_0"
+        },
+        {
+          "Index": 37,
+          "Solid": true,
+          "Tag": "waystone_0"
+        },
+        {
+          "Index": 38,
+          "Solid": true,
+          "Tag": "living_roots_0"
+        },
+        {
+          "Index": 64,
+          "Solid": false,
+          "Tag": "oak_0"
+        },
+        {
+          "Index": 65,
+          "Solid": false,
+          "Tag": "oak_1"
+        },
+        {
+          "Index": 66,
+          "Solid": false,
+          "Tag": "oak_2"
+        },
+        {
+          "Index": 67,
+          "Solid": false,
+          "Tag": "oak_3"
+        },
+        {
+          "Index": 68,
+          "Solid": false,
+          "Tag": "oak_4"
+        },
+        {
+          "Index": 69,
+          "Solid": false,
+          "Tag": "oak_5"
+        },
+        {
+          "Index": 70,
+          "Solid": false,
+          "Tag": "oak_6"
+        },
+        {
+          "Index": 71,
+          "Solid": true,
+          "Tag": "oak_7"
+        },
+        {
+          "Index": 72,
+          "Solid": false,
+          "Tag": "oak_8"
+        },
+        {
+          "Index": 80,
+          "Solid": false,
+          "Tag": "cottage_0"
+        },
+        {
+          "Index": 81,
+          "Solid": false,
+          "Tag": "cottage_1"
+        },
+        {
+          "Index": 82,
+          "Solid": false,
+          "Tag": "cottage_2"
+        },
+        {
+          "Index": 83,
+          "Solid": true,
+          "Tag": "cottage_3"
+        },
+        {
+          "Index": 84,
+          "Solid": false,
+          "Tag": "cottage_4"
+        },
+        {
+          "Index": 85,
+          "Solid": false,
+          "Tag": "cottage_5"
+        },
+        {
+          "Index": 86,
+          "Solid": false,
+          "Tag": "cottage_6"
+        },
+        {
+          "Index": 87,
+          "Solid": true,
+          "Tag": "cottage_7"
+        },
+        {
+          "Index": 88,
+          "Solid": true,
+          "Tag": "cottage_8"
+        },
+        {
+          "Index": 89,
+          "Solid": true,
+          "Tag": "cottage_9"
+        },
+        {
+          "Index": 90,
+          "Solid": true,
+          "Tag": "cottage_10"
+        },
+        {
+          "Index": 91,
+          "Solid": false,
+          "Tag": "cottage_11"
+        },
+        {
+          "Index": 92,
+          "Solid": false,
+          "Tag": "cottage_12"
+        },
+        {
+          "Index": 93,
+          "Solid": true,
+          "Tag": "cottage_13"
+        },
+        {
+          "Index": 94,
+          "Solid": true,
+          "Tag": "cottage_14"
+        },
+        {
+          "Index": 95,
+          "Solid": true,
+          "Tag": "cottage_15"
+        },
+        {
+          "Index": 96,
+          "Solid": true,
+          "Tag": "cottage_16"
+        },
+        {
+          "Index": 97,
+          "Solid": false,
+          "Tag": "cottage_17"
+        },
+        {
+          "Index": 98,
+          "Solid": false,
+          "Tag": "cottage_18"
+        },
+        {
+          "Index": 99,
+          "Solid": true,
+          "Tag": "cottage_19",
+          "Light": {
+            "Radius": 2.2,
+            "Color": "#ffd594b0"
+          }
+        },
+        {
+          "Index": 100,
+          "Solid": true,
+          "Tag": "cottage_20"
+        },
+        {
+          "Index": 101,
+          "Solid": true,
+          "Tag": "cottage_21"
+        },
+        {
+          "Index": 102,
+          "Solid": true,
+          "Tag": "cottage_22",
+          "Light": {
+            "Radius": 2.2,
+            "Color": "#ffd594b0"
+          }
+        },
+        {
+          "Index": 103,
+          "Solid": false,
+          "Tag": "cottage_23"
+        },
+        {
+          "Index": 104,
+          "Solid": false,
+          "Tag": "cottage_24"
+        },
+        {
+          "Index": 105,
+          "Solid": true,
+          "Tag": "cottage_25",
+          "Light": {
+            "Radius": 2.2,
+            "Color": "#ffd594b0"
+          }
+        },
+        {
+          "Index": 106,
+          "Solid": true,
+          "Tag": "cottage_26"
+        },
+        {
+          "Index": 107,
+          "Solid": true,
+          "Tag": "cottage_27"
+        },
+        {
+          "Index": 108,
+          "Solid": true,
+          "Tag": "cottage_28",
+          "Light": {
+            "Radius": 2.2,
+            "Color": "#ffd594b0"
+          }
+        },
+        {
+          "Index": 109,
+          "Solid": false,
+          "Tag": "cottage_29"
+        },
+        {
+          "Index": 112,
+          "Solid": false,
+          "Tag": "shrine_arch_0"
+        },
+        {
+          "Index": 113,
+          "Solid": false,
+          "Tag": "shrine_arch_1"
+        },
+        {
+          "Index": 114,
+          "Solid": false,
+          "Tag": "shrine_arch_2"
+        },
+        {
+          "Index": 115,
+          "Solid": false,
+          "Tag": "shrine_arch_3"
+        },
+        {
+          "Index": 116,
+          "Solid": false,
+          "Tag": "shrine_arch_4"
+        },
+        {
+          "Index": 117,
+          "Solid": false,
+          "Tag": "shrine_arch_5"
+        },
+        {
+          "Index": 118,
+          "Solid": false,
+          "Tag": "shrine_arch_6"
+        },
+        {
+          "Index": 119,
+          "Solid": false,
+          "Tag": "shrine_arch_7"
+        },
+        {
+          "Index": 120,
+          "Solid": false,
+          "Tag": "shrine_arch_8"
+        },
+        {
+          "Index": 121,
+          "Solid": false,
+          "Tag": "shrine_arch_9"
+        },
+        {
+          "Index": 122,
+          "Solid": false,
+          "Tag": "shrine_arch_10"
+        },
+        {
+          "Index": 123,
+          "Solid": false,
+          "Tag": "shrine_arch_11"
+        },
+        {
+          "Index": 124,
+          "Solid": false,
+          "Tag": "shrine_arch_12"
+        },
+        {
+          "Index": 125,
+          "Solid": false,
+          "Tag": "shrine_arch_13"
+        },
+        {
+          "Index": 126,
+          "Solid": false,
+          "Tag": "shrine_arch_14"
+        },
+        {
+          "Index": 127,
+          "Solid": false,
+          "Tag": "shrine_arch_15"
+        },
+        {
+          "Index": 160,
+          "Solid": false,
+          "Tag": "path_edge_0"
+        },
+        {
+          "Index": 161,
+          "Solid": false,
+          "Tag": "path_edge_1"
+        },
+        {
+          "Index": 162,
+          "Solid": false,
+          "Tag": "path_edge_2"
+        },
+        {
+          "Index": 163,
+          "Solid": false,
+          "Tag": "path_edge_3"
+        },
+        {
+          "Index": 164,
+          "Solid": false,
+          "Tag": "path_edge_4"
+        },
+        {
+          "Index": 165,
+          "Solid": false,
+          "Tag": "path_edge_5"
+        },
+        {
+          "Index": 166,
+          "Solid": false,
+          "Tag": "path_edge_6"
+        },
+        {
+          "Index": 167,
+          "Solid": false,
+          "Tag": "path_edge_7"
+        },
+        {
+          "Index": 168,
+          "Solid": false,
+          "Tag": "path_edge_8"
+        },
+        {
+          "Index": 169,
+          "Solid": false,
+          "Tag": "path_edge_9"
+        },
+        {
+          "Index": 170,
+          "Solid": false,
+          "Tag": "path_edge_10"
+        },
+        {
+          "Index": 171,
+          "Solid": false,
+          "Tag": "path_edge_11"
+        },
+        {
+          "Index": 172,
+          "Solid": false,
+          "Tag": "path_edge_12"
+        },
+        {
+          "Index": 173,
+          "Solid": false,
+          "Tag": "path_edge_13"
+        },
+        {
+          "Index": 174,
+          "Solid": false,
+          "Tag": "path_edge_14"
+        },
+        {
+          "Index": 175,
+          "Solid": false,
+          "Tag": "path_edge_15"
+        }
       ]
     }
   ]

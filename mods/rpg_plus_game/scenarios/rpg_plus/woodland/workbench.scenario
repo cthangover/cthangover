@@ -1,0 +1,3 @@
+ptext "На верстаке лежит инструкция: «Не пробовать. Не нюхать. Если изделие заговорило — мастер не виноват»." key=rpg_plus/woodland/workbench/1
+action craft.open station=rpg_plus/workbench
+end

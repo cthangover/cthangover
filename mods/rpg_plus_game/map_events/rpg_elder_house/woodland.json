@@ -1,0 +1,22 @@
+{
+  "Events": [
+    {
+      "Id": "elder_quest",
+      "X": 6,
+      "Y": 3,
+      "Sprite": "village/elder",
+      "Dir": "Down",
+      "Scenario": "rpg_plus/woodland/elder",
+      "Condition": "rpg_wolf_dead != 1"
+    },
+    {
+      "Id": "elder_thanks",
+      "X": 6,
+      "Y": 3,
+      "Sprite": "village/elder",
+      "Dir": "Down",
+      "Scenario": "rpg_plus/woodland/elder",
+      "Condition": "rpg_wolf_dead == 1"
+    }
+  ]
+}

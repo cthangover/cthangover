@@ -1,0 +1,12 @@
+{
+  "id": "crafting",
+  "name": "Crafting",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Genre-neutral crafting stations built from recipe and craft_station data. Opens from any scenario with craft.open station=<id>; validates all ingredients and products before consuming anything. No game or tile-world dependency.",
+  "category": "gameplay",
+  "sources": ["src/**/*.cs"],
+  "test_sources": ["tests/*.cs"],
+  "depends": ["ui_base>=1", "items_base>=1"],
+  "ui": [{"id":"crafting", "kind":"overlay", "slot":"ModLastPanel", "scene_path":"scenes/craft_panel.tscn", "once":true, "show_on_start":false, "priority":10}]
+}

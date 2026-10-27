@@ -205,6 +205,10 @@ namespace Cthangover.Mods.Dialog.Executable
 			if (!IsInstanceValid(this) || !IsInsideTree() || !isActive)
 				return;
 
+			// Shell rebuilds after battles may make the early _Ready lookup miss.
+            // Resolve again on the deferred scan, after SceneManager clears scene caches.
+            if (dialogBox == null || !IsInstanceValid(dialogBox))
+                dialogBox = SceneContextNode.FindNode<DialogBox>("DialogBox");
 			if (dialogBox == null || !IsInstanceValid(dialogBox) || !dialogBox.IsActive || dialogBox.IsRunning)
 				return;
 

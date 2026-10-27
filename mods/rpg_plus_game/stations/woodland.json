@@ -1,0 +1,14 @@
+{
+  "Kind": "craft_station",
+  "Items": [
+    {
+      "Id": "rpg_plus/workbench",
+      "Name": "rpg_plus/station/name",
+      "Recipes": [
+        "rpg_plus/salve",
+        "rpg_plus/mantle",
+        "rpg_plus/lantern"
+      ]
+    }
+  ]
+}

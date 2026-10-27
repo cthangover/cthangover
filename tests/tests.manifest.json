@@ -555,6 +555,29 @@
         "--timeout=60"
       ],
       "timeoutSeconds": 120
+    },
+    {
+      "name": "woodland",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--game=rpg_plus",
+        "--new",
+        "--itest=woodland"
+      ],
+      "timeoutSeconds": 240
+    },
+    {
+      "name": "woodland_pact",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--game=rpg_plus",
+        "--new",
+        "--itest=woodland",
+        "--ward-ending=pact"
+      ],
+      "timeoutSeconds": 240
     }
   ]
 }

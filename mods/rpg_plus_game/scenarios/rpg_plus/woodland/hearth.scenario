@@ -1,0 +1,3 @@
+ptext "У очага никто не требует подвига. Редкое место." key=rpg_plus/woodland/hearth/1
+action stat.restore who=party
+end
