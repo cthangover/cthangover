@@ -1,3 +1,0 @@
-text "— О, покупатель! Эликсиры — свежие, почти без осадка. А хлам из леса — неси, всё возьму. Ну, почти всё." key=rpg_demo/merchant/line1
-action trade.open shop=rpg_demo/village_merchant
-end

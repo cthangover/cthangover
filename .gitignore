@@ -57,3 +57,6 @@ jobs/
 build_site.*
 sync_mod_repos*
 __pycache__/
+
+# Mods are maintained in their own Git repositories.
+/mods/

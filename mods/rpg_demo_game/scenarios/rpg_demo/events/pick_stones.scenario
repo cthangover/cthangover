@@ -1,2 +1,0 @@
-ptext "Пара гладких камней. Бесполезных, а значит — на продажу." key=rpg_demo/pickup/stones
-action item.add id=rpg_demo/stones count=2

@@ -1,3 +1,0 @@
-set lamp_clicked yes
-text "Вы кликнули по лампе! Интерактивный объект работает." key=test_interactive/click
-end
