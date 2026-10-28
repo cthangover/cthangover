@@ -51,6 +51,7 @@ tests/artifacts/
 
 # job channel (ai)
 jobs/
+comfy/
 
 # generated GitHub Pages copy of site/
 /site_github/
