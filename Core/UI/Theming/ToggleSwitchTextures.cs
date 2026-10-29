@@ -93,7 +93,7 @@ namespace Cthangover.Core.UI.Theming
 
         private static Texture2D Draw(bool on, Color fill, Color border, Color knob)
         {
-            var image = Image.CreateEmpty(Width, Height, false, Image.Format.Rgba8);
+            using var image = Image.CreateEmpty(Width, Height, false, Image.Format.Rgba8);
             var radius = (Height - 1) / 2f;
             var knobCenter = new Vector2(on ? Width - 1 - radius : radius, radius);
             for (var y = 0; y < Height; y++)

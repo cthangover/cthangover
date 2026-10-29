@@ -33,12 +33,23 @@ namespace Cthangover.Core.Scenes.TscnBuild.PropertyResolvers
                 var sub = ctx.InstanceLoader(extRes.Path);
                 if (sub != null)
                 {
-                    AssignSceneOwners(sub, sub);
-                    var packed = new PackedScene();
-                    if (packed.Pack(sub) == Error.Ok)
-                        node.Set(key, packed);
-                    else
-                        GameLogger.Log("TSCN_BUILD", $"ExtResourcePropertyResolver: failed to pack '{extRes.Path}' for '{key}'", LogLevel.Warning);
+                    try
+                    {
+                        AssignSceneOwners(sub, sub);
+                        var packed = new PackedScene();
+                        if (packed.Pack(sub) == Error.Ok)
+                            node.Set(key, packed);
+                        else
+                        {
+                            packed.Dispose();
+                            GameLogger.Log("TSCN_BUILD", $"ExtResourcePropertyResolver: failed to pack '{extRes.Path}' for '{key}'", LogLevel.Warning);
+                        }
+                    }
+                    finally
+                    {
+                        // Packing copies the tree; the temporary instance is not owned by the PackedScene.
+                        sub.Free();
+                    }
                 }
                 return;
             }

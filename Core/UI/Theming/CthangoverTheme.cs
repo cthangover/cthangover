@@ -689,7 +689,7 @@ namespace Cthangover.Core.UI.Theming
 
         private static ImageTexture MakeCircleTexture(int size, Color fill, Color border)
         {
-            var image = Image.CreateEmpty(size, size, false, Image.Format.Rgba8);
+            using var image = Image.CreateEmpty(size, size, false, Image.Format.Rgba8);
             image.Fill(new Color(0f, 0f, 0f, 0f));
 
             var center = (size - 1) / 2f;
@@ -716,7 +716,7 @@ namespace Cthangover.Core.UI.Theming
         {
             const int width = 11;
             const int height = 6;
-            var image = Image.CreateEmpty(width, height, false, Image.Format.Rgba8);
+            using var image = Image.CreateEmpty(width, height, false, Image.Format.Rgba8);
             image.Fill(new Color(0f, 0f, 0f, 0f));
 
             for (var y = 0; y < height; y++)

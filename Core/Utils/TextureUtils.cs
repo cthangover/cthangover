@@ -94,7 +94,7 @@ namespace Cthangover.Core.Utils
 
 		private static Texture2D BytesToTexture(byte[] bytes, string extension)
 		{
-			var image = new Image();
+			using var image = new Image();
 			Error error;
 			var ext = extension?.ToLowerInvariant();
 			if (ext == ".png")
@@ -110,7 +110,6 @@ namespace Cthangover.Core.Utils
 				return null;
 			
 			var texture = ImageTexture.CreateFromImage(image);
-			image.Dispose();
 
 			return texture;
 		}
