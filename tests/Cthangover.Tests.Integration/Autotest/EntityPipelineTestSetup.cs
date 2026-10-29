@@ -44,7 +44,7 @@ namespace Cthangover.Core.Autotest
 
             GameLogger.Log("ENTITY_TEST", $"EntityPipelineTestSetup: {_passed} passed, {_failed} failed");
             GameLogger.Log("ENTITY_TEST", $"[TEST_RESULT] name=entities passed={_passed} failed={_failed}");
-            GetTree().Quit(_failed == 0 ? 0 : 1);
+            Cthangover.Core.Bootstrap.ApplicationExit.Quit(GetTree(), _failed == 0 ? 0 : 1);
         }
 
         private void TestCharacterKind()

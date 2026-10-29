@@ -41,7 +41,7 @@ namespace Cthangover.Core.Autotest
 
             probe.QueueFree();
             GameLogger.Log(Category, $"[TEST_RESULT] name=scene_context passed={(failed == 0 ? 1 : 0)} failed={failed}");
-            GetTree().Quit(failed == 0 ? 0 : 1);
+            Cthangover.Core.Bootstrap.ApplicationExit.Quit(GetTree(), failed == 0 ? 0 : 1);
         }
 
         private static bool TryFind<T>(string name) where T : Node

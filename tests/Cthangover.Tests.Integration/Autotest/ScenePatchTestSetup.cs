@@ -78,7 +78,7 @@ text = ""badge""
 
             GameLogger.Log("TEST", $"ScenePatchTestSetup: {_passed} passed, {_failed} failed");
             GameLogger.Log("TEST", $"[TEST_RESULT] name=scene_patch passed={_passed} failed={_failed}");
-            GetTree().Quit(_failed == 0 ? 0 : 1);
+            Cthangover.Core.Bootstrap.ApplicationExit.Quit(GetTree(), _failed == 0 ? 0 : 1);
         }
 
         private void TestResolverPatching()

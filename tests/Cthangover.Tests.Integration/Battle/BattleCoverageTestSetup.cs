@@ -74,7 +74,7 @@ namespace Cthangover.Core.Autotest
             var covered = coreIds.Count(id => DeclaredTests.ContainsKey(id));
             GameLogger.Log("BATTLE_COVERAGE", $"coverage: {covered}/{coreIds.Count} cores");
             GameLogger.Log("BATTLE_COVERAGE", $"[TEST_RESULT] name=coverage passed={(_failed == 0 ? 1 : 0)} failed={_failed}");
-            GetTree().Quit(_failed == 0 ? 0 : 1);
+            Cthangover.Core.Bootstrap.ApplicationExit.Quit(GetTree(), _failed == 0 ? 0 : 1);
         }
 
         private void Pass(string message)

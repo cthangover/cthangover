@@ -117,7 +117,7 @@ texture = ExtResource(""1_tex"")
                 GameLogger.Log("TSCN_TEST", "All integration tests PASSED");
 
             GameLogger.Log("TSCN_TEST", $"[TEST_RESULT] name=tscn passed={_passed} failed={_failed}");
-            GetTree().Quit(_failed == 0 ? 0 : 1);
+            Cthangover.Core.Bootstrap.ApplicationExit.Quit(GetTree(), _failed == 0 ? 0 : 1);
         }
 
         private void Assert(bool condition, string msg)

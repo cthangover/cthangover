@@ -119,7 +119,7 @@ namespace Cthangover.Core.Autotest
                 }));
 
             GameLogger.Log(Category, $"[TEST_RESULT] name=coverage_quests passed={_passed} failed={_failed}");
-            GetTree().Quit(_failed == 0 ? 0 : 1);
+            Cthangover.Core.Bootstrap.ApplicationExit.Quit(GetTree(), _failed == 0 ? 0 : 1);
         }
 
         /// <summary>

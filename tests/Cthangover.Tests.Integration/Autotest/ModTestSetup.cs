@@ -45,7 +45,7 @@ namespace Cthangover.Core.Autotest
 			}
 
 			GameLogger.Log("TEST", $"[TEST_RESULT] name=mod passed={passed} failed={failed}");
-			GetTree().Quit(failed == 0 ? 0 : 1);
+			Cthangover.Core.Bootstrap.ApplicationExit.Quit(GetTree(), failed == 0 ? 0 : 1);
 		}
 
 		/// <summary>

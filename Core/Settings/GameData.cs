@@ -52,6 +52,7 @@ namespace Cthangover.Core.Settings
 				GameLogger.Log("DUPLICATE", $"GameData._EnterTree: Instance ALREADY SET by '{existingPath}', overwriting with duplicate at '{myPath}' on scene '{scene}'", LogLevel.Error);
 			}
 			Instance = this;
+            ApplicationExit.Attach(GetTree());
 			GameLogger.Init();
 		}
 

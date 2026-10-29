@@ -248,7 +248,7 @@ namespace Cthangover.Core.Autotest
         {
             GameLogger.Log("SKILLS_TEST", $"SkillsPanelTestSetup: {_passed} passed, {_failed} failed");
             GameLogger.Log("SKILLS_TEST", $"[TEST_RESULT] name=skills_panel passed={_passed} failed={_failed}");
-            GetTree().Quit(_failed == 0 ? 0 : 1);
+            Cthangover.Core.Bootstrap.ApplicationExit.Quit(GetTree(), _failed == 0 ? 0 : 1);
         }
 
         private void Assert(bool condition, string label)

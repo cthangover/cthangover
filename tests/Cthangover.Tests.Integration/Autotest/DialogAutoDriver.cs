@@ -138,7 +138,7 @@ namespace Cthangover.Core.Autotest
                         GameLogger.Log("TEST", $"[TEST_RESULT] name={ResultName} passed=1 failed=0");
 
                     GameLogger.Log("TEST", "DialogAutoDriver: dialog ended, quitting");
-                    GetTree().Quit();
+                    Cthangover.Core.Bootstrap.ApplicationExit.Quit(GetTree());
                 }
                 SetProcess(false);
                 return;

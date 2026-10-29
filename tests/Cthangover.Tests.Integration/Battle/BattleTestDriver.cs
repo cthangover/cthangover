@@ -181,7 +181,7 @@ namespace Cthangover.Core.Autotest
             _finished = true;
             GameLogger.Log("BATTLE_TEST", $"BattleTestDriver: {(passed ? "PASS" : "FAIL")} - {message}", passed ? LogLevel.Message : LogLevel.Error);
             GameLogger.Log("BATTLE_TEST", $"[TEST_RESULT] name=battle core={_core} passed={(passed ? 1 : 0)} failed={(passed ? 0 : 1)}");
-            GetTree().Quit(passed ? 0 : 1);
+            Cthangover.Core.Bootstrap.ApplicationExit.Quit(GetTree(), passed ? 0 : 1);
         }
     }
 }

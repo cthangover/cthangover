@@ -67,7 +67,7 @@ namespace Cthangover.Core.Autotest
 		{
 			GameLogger.Log("TEST", $"  [FAIL] {reason}", LogLevel.Error);
 			GameLogger.Log("TEST", "[TEST_RESULT] name=live2d_avatar passed=0 failed=1");
-			GetTree().Quit(1);
+			Cthangover.Core.Bootstrap.ApplicationExit.Quit(GetTree(), 1);
 		}
 	}
 }

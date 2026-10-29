@@ -340,7 +340,7 @@ namespace Cthangover.Core.Autotest
                 _failures == 0 ? "RESULT: ALL PASSED" : $"RESULT: {_failures} FAILURES",
                 _failures == 0 ? LogLevel.Message : LogLevel.Error);
             GameLogger.Log("SCENE_BUILDER_TEST", $"[TEST_RESULT] name=scene_builder passed={(_failures == 0 ? 1 : 0)} failed={_failures}");
-            GetTree().Quit(_failures == 0 ? 0 : 1);
+            Cthangover.Core.Bootstrap.ApplicationExit.Quit(GetTree(), _failures == 0 ? 0 : 1);
         }
     }
 }

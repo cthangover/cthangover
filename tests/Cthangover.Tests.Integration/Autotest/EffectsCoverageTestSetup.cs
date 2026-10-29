@@ -47,7 +47,7 @@ namespace Cthangover.Core.Autotest
                 FindOutsideKernel("Cthangover.Mods.Effects.Animation.AnimationController", kernelAssembly) != null);
 
             GameLogger.Log(Category, $"[TEST_RESULT] name=effects_coverage passed={_passed} failed={_failed}");
-            GetTree().Quit(_failed == 0 ? 0 : 1);
+            Cthangover.Core.Bootstrap.ApplicationExit.Quit(GetTree(), _failed == 0 ? 0 : 1);
         }
 
         /// <summary>Resolves a mod type by full name outside the kernel assembly (reflection only).</summary>

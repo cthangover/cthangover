@@ -60,7 +60,7 @@ namespace Cthangover.Core.Autotest
             if (battleScene == null)
             {
                 GameLogger.Log("BATTLE_TEST", "BattleTestSetup: failed to build mod battle scene 'scenes/battle/battle.tscn'", LogLevel.Error);
-                GetTree().Quit(1);
+                Cthangover.Core.Bootstrap.ApplicationExit.Quit(GetTree(), 1);
                 return;
             }
 

@@ -366,7 +366,7 @@ namespace Cthangover.Core.Autotest
 
 			GameLogger.Log("TEST", "MainMenuTestSetup: the second back returned to the menu");
 			GameLogger.Log("TEST", "[TEST_RESULT] name=mod_manager passed=1 failed=0");
-			GetTree().Quit(0);
+			Cthangover.Core.Bootstrap.ApplicationExit.Quit(GetTree(), 0);
 		}
 
 		/// <summary>With <c>--shots=&lt;dir&gt;</c> saves the window as <c>&lt;name&gt;.png</c> (windowed runs only).</summary>
@@ -485,7 +485,7 @@ namespace Cthangover.Core.Autotest
 			GameLogger.Log("TEST",
 				$"MainMenuTestSetup: collections OK, {games} game(s), {cards} group(s), {chips} mod(s)");
 			GameLogger.Log("TEST", "[TEST_RESULT] name=mod_collections passed=1 failed=0");
-			GetTree().Quit(0);
+			Cthangover.Core.Bootstrap.ApplicationExit.Quit(GetTree(), 0);
 		}
 
 		/// <summary>Finds the first descendant button with the given visible text.</summary>
@@ -550,7 +550,7 @@ namespace Cthangover.Core.Autotest
 		{
 			GameLogger.Log("TEST", $"[TEST_RESULT] name={testName} passed=0 failed=1");
 			if (GodotObject.IsInstanceValid(this))
-				GetTree().Quit(1);
+				Cthangover.Core.Bootstrap.ApplicationExit.Quit(GetTree(), 1);
 		}
 	}
 }

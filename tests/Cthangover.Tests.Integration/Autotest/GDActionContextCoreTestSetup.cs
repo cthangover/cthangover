@@ -40,7 +40,7 @@ namespace Cthangover.Core.Autotest
 				GameLogger.Log("TEST", "All GDActionContextCore tests PASSED");
 
 			GameLogger.Log("TEST", $"[TEST_RESULT] name=actioncontext passed={_passed} failed={_failed}");
-			GetTree().Quit(_failed == 0 ? 0 : 1);
+			Cthangover.Core.Bootstrap.ApplicationExit.Quit(GetTree(), _failed == 0 ? 0 : 1);
 		}
 
 		private void Test_GetParam_DelegatesToInner()

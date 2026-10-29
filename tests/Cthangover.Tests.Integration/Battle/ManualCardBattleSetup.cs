@@ -36,7 +36,7 @@ namespace Cthangover.Core.Autotest
             if (battleScene == null)
             {
                 GameLogger.Log("MANUAL_BATTLE", "failed to build battle scene", LogLevel.Error);
-                GetTree().Quit(1);
+                Cthangover.Core.Bootstrap.ApplicationExit.Quit(GetTree(), 1);
                 return;
             }
             GetParent().CallDeferred(Node.MethodName.AddChild, battleScene);

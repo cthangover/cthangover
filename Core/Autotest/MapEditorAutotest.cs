@@ -362,7 +362,7 @@ namespace Cthangover.Core.Autotest
 
             GameLogger.Log("MAP_EDITOR_TEST", $"MapEditorAutotest: {_passed} passed, {_failed} failed");
             GameLogger.Log("MAP_EDITOR_TEST", $"[TEST_RESULT] name=map_editor passed={_passed} failed={_failed}");
-            GetTree().Quit(_failed == 0 ? 0 : 1);
+            Cthangover.Core.Bootstrap.ApplicationExit.Quit(GetTree(), _failed == 0 ? 0 : 1);
         }
     }
 }

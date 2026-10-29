@@ -158,7 +158,7 @@ namespace Cthangover.Core.Autotest
             Check("character panel scene instantiates and builds" + (error != "" ? ": " + error : ""), ok);
 
             GameLogger.Log(Category, $"[TEST_RESULT] name=coverage_characters passed={_passed} failed={_failed}");
-            GetTree().Quit(_failed == 0 ? 0 : 1);
+            Cthangover.Core.Bootstrap.ApplicationExit.Quit(GetTree(), _failed == 0 ? 0 : 1);
         }
 
         private void Check(string what, bool ok)

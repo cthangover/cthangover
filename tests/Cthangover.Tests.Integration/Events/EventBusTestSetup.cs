@@ -45,7 +45,7 @@ namespace Cthangover.Core.Autotest
             bus.Unsubscribe("characters_defeated", handler);
 
             GameLogger.Log(Category, $"[TEST_RESULT] name=event_bus passed={(failed == 0 ? 1 : 0)} failed={failed}");
-            GetTree().Quit(failed == 0 ? 0 : 1);
+            Cthangover.Core.Bootstrap.ApplicationExit.Quit(GetTree(), failed == 0 ? 0 : 1);
         }
 
         private void OnBridged(Godot.Collections.Dictionary data) => received.Add(data);

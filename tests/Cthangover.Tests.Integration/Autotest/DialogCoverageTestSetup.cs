@@ -78,7 +78,7 @@ namespace Cthangover.Core.Autotest
                 kernelAssembly.GetType("Cthangover.Core.UI.Dialog.IDialogBox", throwOnError: false) != null);
 
             GameLogger.Log(Category, $"[TEST_RESULT] name=coverage_dialog passed={_passed} failed={_failed}");
-            GetTree().Quit(_failed == 0 ? 0 : 1);
+            Cthangover.Core.Bootstrap.ApplicationExit.Quit(GetTree(), _failed == 0 ? 0 : 1);
         }
 
         /// <summary>Counts the DSL commands registered in the mod-owned ScenarioCommandStrategyFactory (reflection only).</summary>

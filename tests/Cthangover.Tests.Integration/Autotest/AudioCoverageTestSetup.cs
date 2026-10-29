@@ -40,7 +40,7 @@ namespace Cthangover.Core.Autotest
             }
 
             GameLogger.Log(Category, $"[TEST_RESULT] name=coverage_audio passed={_passed} failed={_failed}");
-            GetTree().Quit(_failed == 0 ? 0 : 1);
+            Cthangover.Core.Bootstrap.ApplicationExit.Quit(GetTree(), _failed == 0 ? 0 : 1);
         }
 
         private static bool Runs(Action action)

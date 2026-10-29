@@ -33,7 +33,7 @@ namespace Cthangover.Core.Mods.Testing
             var count = GameLogger.CompilationErrors.Count;
             GameLogger.Log("TEST", $"Integration test '{name}' aborted: {count} mod compilation error(s)", LogLevel.Error);
             GameLogger.Log("TEST", $"[TEST_RESULT] name={name} passed=0 failed={count}");
-            tree.Quit(1);
+            Cthangover.Core.Bootstrap.ApplicationExit.Quit(tree, 1);
             return true;
         }
     }

@@ -312,7 +312,7 @@ namespace Cthangover.Core.UI.Menu
                 success = false;
             }
             GameLogger.Log("MODTEST", $"Mod test run finished, success={success}, quitting");
-            tree.Quit(success ? 0 : 1);
+            Cthangover.Core.Bootstrap.ApplicationExit.Quit(tree, success ? 0 : 1);
         }
 
         private void SkipToMainMenu()
@@ -474,7 +474,7 @@ namespace Cthangover.Core.UI.Menu
 
         private void OnExitClick()
         {
-            GetTree().Quit();
+            Cthangover.Core.Bootstrap.ApplicationExit.Quit(GetTree());
         }
 
         private void ApplyAndSave()

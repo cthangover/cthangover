@@ -118,7 +118,7 @@ namespace Cthangover.Core.Autotest
             Check("inventory panel scene instantiates and builds: " + error, ok);
 
             GameLogger.Log(Category, $"[TEST_RESULT] name=coverage_items passed={_passed} failed={_failed}");
-            GetTree().Quit(_failed == 0 ? 0 : 1);
+            Cthangover.Core.Bootstrap.ApplicationExit.Quit(GetTree(), _failed == 0 ? 0 : 1);
         }
 
         /// <summary>Resolves a registered item action through the mod-owned ItemActionFactory singleton (reflection only).</summary>

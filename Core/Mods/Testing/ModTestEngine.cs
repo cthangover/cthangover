@@ -26,7 +26,7 @@ namespace Cthangover.Core.Mods.Testing
     /// compiles each mod's tests (Roslyn diagnostics are reported verbatim on
     /// failure — the mod is marked ERROR and the run continues), discovers
     /// and runs the tests, writes the report and returns the aggregate exit
-    /// flag the entry scene turns into <c>GetTree().Quit(0|1)</c>.
+    /// flag the entry scene turns into <c>ApplicationExit.Quit(tree, 0|1)</c>.
     /// </summary>
     public static class ModTestEngine
     {
