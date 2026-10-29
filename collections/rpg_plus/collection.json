@@ -516,8 +516,7 @@
       ],
       "optional": true,
       "mods": [
-        "rpg_editor>=1",
-        "rpg_tileset_editor>=1"
+        "rpg_editor>=1"
       ]
     },
     {
@@ -571,6 +570,48 @@
       "mods": [
         "tile_topdown_base>=1",
         "tile_isometric_base>=1"
+      ]
+    },
+    {
+      "id": "tileset_editor",
+      "name": "RPG Tileset Editor",
+      "role": "tools",
+      "description": "Sets up the RPG engine's tilesets without editing JSON: which atlas cells are map tiles, solid and isometric plane tiles, whole objects with the point they stand on, and surface materials. A save updates the world at once.",
+      "locale": [
+        {
+          "lang": "ru",
+          "name": "Редактор тайлсетов RPG",
+          "description": "Редактор тайлсетов RPG"
+        },
+        {
+          "lang": "es",
+          "name": "Editor de tilesets RPG",
+          "description": "Editor de tilesets RPG"
+        },
+        {
+          "lang": "zh",
+          "name": "RPG 图块集编辑器",
+          "description": "RPG 图块集编辑器"
+        },
+        {
+          "lang": "ja",
+          "name": "RPG タイルセットエディター",
+          "description": "RPG タイルセットエディター"
+        },
+        {
+          "lang": "ko",
+          "name": "RPG 타일셋 에디터",
+          "description": "RPG 타일셋 에디터"
+        },
+        {
+          "lang": "vi",
+          "name": "Trình sửa tileset RPG",
+          "description": "Trình sửa tileset RPG"
+        }
+      ],
+      "optional": true,
+      "mods": [
+        "rpg_tileset_editor>=1"
       ]
     }
   ]

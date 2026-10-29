@@ -1,12 +1,12 @@
 {
- "generated": "2026-10-24",
+ "generated": "2026-10-29",
  "stats": {
-  "mods": 46,
+  "mods": 61,
   "dslCommands": 31,
-  "coreFiles": 488,
-  "coreLoc": 45051,
-  "modFiles": 921,
-  "modLoc": 103217
+  "coreFiles": 490,
+  "coreLoc": 45412,
+  "modFiles": 1044,
+  "modLoc": 114434
  },
  "battle": [
   {
@@ -42,7 +42,7 @@
    "id": "audio_base",
    "name": "Audio Engine",
    "version": "1.0.0",
-   "desc": "Engine audio subsystem: IAudioService implementation (Music/SFX/Ambient buses), the auto-advancing music player and the audio factories (music, sounds, playlists). Replaces the former Core/Audio autoloads — the AudioModInitializer adds nodes named AudioService and MusicPlayer to the scene tree root on the boot Scenes phase, so /root/AudioService keeps resolving.",
+   "desc": "Audio engine: scene music, sound effects and ambience on separate buses with their own volume, and a music player that follows the current scene.",
    "cat": [
     "engine",
     "library"
@@ -57,7 +57,7 @@
    "id": "battle_formulas",
    "name": "Battle Formulas",
    "version": "1.0.0",
-   "desc": "Battle actions as data for every battle core: an action entity with Formula= (a.mag * 3 - b.mdf + rand(0, 4)) needs no C# — Effect=damage|heal, Cost=mp:5 spends a stat pool, Pierce=1 ignores shields, State=basic/stun with StateTurns and StateChance puts a status on the target. a.* is the one acting, b.* the target: their stat sheets plus live hp, hp_max, attack, defence, point. Registered as global executors, so the same skill works in the FF core and in the card core. Enemies with stats data get their battle attributes from their sheets when the battle starts.",
+   "desc": "Battle skills written as data: damage and heal formulas over the participants' stats, resource costs, pierce and stun — no code, and the same skill works in every battle core.",
    "cat": [
     "gameplay"
    ],
@@ -70,9 +70,9 @@
   },
   {
    "id": "card_battle",
-   "name": "CardBattle",
+   "name": "Card Battle",
    "version": "1.0.0",
-   "desc": "Card battle implementation on top of turn_battle_base: an action-card hand with attack/defence values, character cards, battle HUD, log and banners, end-turn flow and its own battle sounds.",
+   "desc": "A battle system with cards: pick a character card and drag its action cards onto targets. Built on Turn Battle Base; the battle of Cthangover.",
    "cat": [
     "gameplay"
    ],
@@ -83,10 +83,25 @@
    "test": false
   },
   {
+   "id": "catalog_export",
+   "name": "Catalog Export",
+   "version": "1.0.0",
+   "desc": "Export mod catalog metadata and installable archives.",
+   "cat": [
+    "tools",
+    "editor"
+   ],
+   "deps": [
+    "tools_base",
+    "ui_base"
+   ],
+   "test": false
+  },
+  {
    "id": "characters_base",
    "name": "Characters Engine",
    "version": "1.0.0",
-   "desc": "Engine characters subsystem: the character and action-card factories (entity kinds 'character' and 'action'), the avatar factory and the character panel UI. Replaces the former Core/Characters factories and Core/UI/CharacterPanel — the CharactersModInitializer publishes kernel contracts (ICharacterTemplateProvider, IActionTemplateProvider, IAvatarProvider) so core code resolves templates without referencing this assembly.",
+   "desc": "Characters engine: heroes, companions and enemies with their battle attributes and action cards, the character actions panel and dialog portraits.",
    "cat": [
     "engine",
     "library"
@@ -99,15 +114,15 @@
   },
   {
    "id": "characters_editor",
-   "name": "Character Editor",
+   "name": "Characters Editor",
    "version": "1.0.0",
-   "desc": "Editor of the game's characters (characters_base, \"Kind\": \"character\") in the style of the other editor windows: heroes, NPCs and enemies of a writable mod in a searchable list with their portraits, a form with the name in every language of the mod, portrait, the RPG map charset, battle stats and the battle actions picked from the loaded ones; loot and fields of other mods stay editable as JSON. New characters, copies, deletion, undo, and a save the running game sees at once. Opens from the main menu tools and the in-game toolbar.",
+   "desc": "Edits a mod's characters while the game runs: names in every language, portrait, RPG walking sprite, battle numbers and actions. A save reaches the running game at once.",
    "cat": [
     "tools",
     "editor"
    ],
    "deps": [
-    "editor_tools",
+    "tools_base",
     "characters_base",
     "ui_base"
    ],
@@ -115,9 +130,9 @@
   },
   {
    "id": "classic_rpg_pack",
-   "name": "Classic RPG Pack",
+   "name": "Classic RPG Rules",
    "version": "1.0.0",
-   "desc": "Reusable classic fantasy rules any game may take, data only: six attributes (STR, AGI, INT, VIT, CHA, LUK) and derived combat stats (HP bound to health, MP as a pool, ATK bound to attack, DEF bound to the shield, MAG), three archetypes (warrior, mage, rogue) with growth formulas and skills learned by level, equipment slots (weapon, body, accessory), eight pieces of gear and a strength tonic, four formula skills (power strike, fireball, heal, guard break). A novel can take it for charisma checks, a tile RPG for everything.",
+   "desc": "A ready set of classic fantasy rules as data: six attributes, three classes, equipment slots, gear and four formula skills. RPG Plus is built on it.",
    "cat": [
     "gameplay",
     "characters",
@@ -135,7 +150,7 @@
    "id": "cooking",
    "name": "Cooking",
    "version": "1.0.0",
-   "desc": "Autonomous cooking mechanic: the kitchen workbench overlay in home_kitchen with recipe-based cooking (e.g. wolf meat into rations), a ration statistics panel and the home_kitchen_cooking scenario.",
+   "desc": "The kitchen of Cthangover: learn recipes, cook at the home_kitchen workbench and keep an eye on the party's rations.",
    "cat": [
     "gameplay"
    ],
@@ -148,10 +163,24 @@
    "test": false
   },
   {
+   "id": "crafting",
+   "name": "Crafting",
+   "version": "1.0.0",
+   "desc": "Workbench stations that turn materials into items: stations and recipes are plain data, and any scenario opens a station with one command.",
+   "cat": [
+    "gameplay"
+   ],
+   "deps": [
+    "ui_base",
+    "items_base"
+   ],
+   "test": false
+  },
+  {
    "id": "cthangover_game",
    "name": "Cthangover: Story",
    "version": "2.0.0",
-   "desc": "Story content of the Cthangover game: scenes, scenarios, characters, items, quests, backgrounds and the main game collection.",
+   "desc": "The story content of Cthangover: scenes, scenarios, characters, items, quests and the world map of Marao's very bad night. The machinery lives in engine mods.",
    "cat": [
     "story"
    ],
@@ -165,7 +194,8 @@
     "characters_base",
     "items_base",
     "quests_base",
-    "town_pack"
+    "town_pack",
+    "music_pack"
    ],
    "test": false
   },
@@ -173,7 +203,7 @@
    "id": "cthangover_murakami",
    "name": "Cthangover: Murakami",
    "version": "1.0.0",
-   "desc": "Story line about Murakami: a wild wolf prowling the town, the meeting scenario chain (start, wolf battle, werewolf boss, escort home), the Murakami character with her avatar set and the meeting quest.",
+   "desc": "A Cthangover story line: follow the beast prowling the town to a meeting with Murakami — scenarios, her character and expressions, a journal quest and battles.",
    "cat": [
     "story",
     "characters"
@@ -191,7 +221,7 @@
    "id": "cthangover_party",
    "name": "Cthangover: Starter Party",
    "version": "1.0.0",
-   "desc": "Seeds the default starter party (Marao) and the slave_master skill after mod resources are ready, and restores it on NewGameStartedEvent. Split out of cthangover_game so the base content mod stays pure content (scenes/dialogs/quests/data) with no C# gameplay logic.",
+   "desc": "Gives a new game of Cthangover its starting state: Marao in the party and the Slave Trader skill. Only code — the data lives in the base game and the skills engine.",
    "cat": [
     "engine",
     "library"
@@ -206,7 +236,7 @@
    "id": "dialog_base",
    "name": "Dialog Engine",
    "version": "1.0.0",
-   "desc": "Engine dialog subsystem: DialogBox/DialogCanvas/AnswerBox UI, the dialog queue runtime with the full DSL action set, the .scenario parser with command strategies, the executable event chains and the /root/DialogRunner for interactive dialogs. Replaces the former Core/UI/Dialog, Core/UI/Executable and Core/Scenarios implementations — SceneManager and SaveService keep driving chains and events through the core contracts (IDialogBox, IExecutableEvent, IExecutableEventChain, IScenarioEventFactory).",
+   "desc": "Dialog engine: the dialog box with portraits and answers, and the .scenario language in which every game of the collection tells its story.",
    "cat": [
     "engine",
     "library"
@@ -224,19 +254,20 @@
   {
    "id": "editor_tools",
    "name": "Editor Tools",
-   "version": "1.0.0",
-   "desc": "Developer toolbox of ToolBox windows: scenario graph editor, scene editor (create and change the places of a novel: backgrounds, ambient sound, default scenario, the scene's scenarios), map editor with zones, scene builder with inspector, interactive and light editors, the base of the data editors (items, characters: a searchable list and a form over JSON entities with texts in every language of the mod) and the mod catalog export window.",
+   "version": "1.1.0",
+   "desc": "Compatibility toolset: installs the individual scene, scenario, map, interactive, light, Godot scene and catalog tools.",
    "cat": [
     "tools",
     "editor"
    ],
    "deps": [
-    "dialog_base",
-    "interactive_base",
-    "time_base",
-    "map_base",
-    "ui_base",
-    "schema_base"
+    "scenario_editor",
+    "scene_editor",
+    "scene_builder",
+    "map_editor",
+    "interactive_editor",
+    "light_editor",
+    "catalog_export"
    ],
    "test": false
   },
@@ -244,7 +275,7 @@
    "id": "effects_base",
    "name": "Effects Engine",
    "version": "1.0.0",
-   "desc": "Engine effects subsystem: PackedScene visual effect factory (folder mods only) and the frame/animated effect controllers. Replaces the former Core/UI/Animation implementations and Core/Factories/Impls/EffectFactory.",
+   "desc": "Short visual effects for scenes — a flash, smoke, sparks, a magic glow: a mod ships small Godot scenes in effects/, a scenario plays one by name.",
    "cat": [
     "engine",
     "library"
@@ -256,7 +287,7 @@
    "id": "equipment",
    "name": "Equipment",
    "version": "1.0.0",
-   "desc": "Gear for any game with stats: slots as data (\"Kind\": \"equip_slot\": weapon, body, accessory — or outfit and jewellery in a novel), items become gear by two keys of their own JSON (\"Equip\": the equip type, \"Traits\": what they do while worn), optional \"Archetypes\" limits. Worn items feed the stats as a trait source, so battle attributes, checks and conditions follow at once. The item action action/equip uses the inventory's own target picker; scenario actions equip.put and equip.remove; condition equipped(who, item); the Equipment block of the character sheet.",
+   "desc": "Wearable gear for any game with stats: slots as data, items become equipment by their JSON keys, and worn bonuses flow into sheets, battles, checks and conditions at once.",
    "cat": [
     "gameplay"
    ],
@@ -270,9 +301,9 @@
   },
   {
    "id": "ff_battle",
-   "name": "FFBattle",
+   "name": "FF Battle",
    "version": "1.0.0",
-   "desc": "Final Fantasy style battle system on top of turn_battle_base: menu-driven commands (attack/defence/item/stun), enemy and party panels, per-action animations and executors, battle HUD and log.",
+   "desc": "A battle system in the style of classic console RPGs: the party, the enemies and a command menu — Attack, Items, Defend, Escape. The battle of RPG Plus.",
    "cat": [
     "gameplay"
    ],
@@ -286,7 +317,7 @@
    "id": "interactive_base",
    "name": "Interactive Base",
    "version": "1.0.0",
-   "desc": "Interactive objects subsystem: JSON-driven scene interactives (hover/click hit areas, highlight effects) with DSL/scenario click actions. Owns InteractiveManager, the interactive definition resolver/factory and the InteractiveEditor data plane.",
+   "desc": "Clickable objects for picture scenes: a picture of its own over the background, a glow under the mouse, and a click that starts a scenario.",
    "cat": [
     "engine",
     "library"
@@ -298,10 +329,27 @@
    "test": false
   },
   {
+   "id": "interactive_editor",
+   "name": "Interactive Editor",
+   "version": "1.0.0",
+   "desc": "Edit scene interactive objects and their placement on backgrounds.",
+   "cat": [
+    "tools",
+    "editor"
+   ],
+   "deps": [
+    "tools_base",
+    "scenario_tools_base",
+    "interactive_base",
+    "ui_base"
+   ],
+   "test": false
+  },
+  {
    "id": "items_base",
    "name": "Items Base",
    "version": "1.0.0",
-   "desc": "Item definitions and factories, inventory and recipe state, inventory UI and their save state",
+   "desc": "Items and the inventory: what an item is, the bag panel, what is saved, and scenario commands to give, take and check items.",
    "cat": [
     "gameplay"
    ],
@@ -313,17 +361,34 @@
   },
   {
    "id": "items_editor",
-   "name": "Item Editor",
+   "name": "Items Editor",
    "version": "1.0.0",
-   "desc": "Editor of the game's items (items_base, \"Kind\": \"item\") in the style of the other editor windows: the items of a writable mod in a searchable list with their pictures, a form with the name and the description in every language of the mod, price, picture picked from the items folders, item types and the use action; fields of other mods stay editable as JSON. New items, copies, deletion, undo, and a save the running game sees at once. Opens from the main menu tools and the in-game toolbar.",
+   "desc": "Edits a mod's items while the game runs: names and descriptions in every language, price, picture, types and the use action. The game shows a save at once.",
    "cat": [
     "tools",
     "editor"
    ],
    "deps": [
-    "editor_tools",
+    "tools_base",
     "items_base",
     "ui_base"
+   ],
+   "test": false
+  },
+  {
+   "id": "light_editor",
+   "name": "Light Editor",
+   "version": "1.0.0",
+   "desc": "Edit scene lights and their placement on backgrounds.",
+   "cat": [
+    "tools",
+    "editor"
+   ],
+   "deps": [
+    "tools_base",
+    "time_base",
+    "ui_base",
+    "scenario_tools_base"
    ],
    "test": false
   },
@@ -331,7 +396,7 @@
    "id": "live2d_base",
    "name": "Live2D Cubism",
    "version": "1.0.0",
-   "desc": "Live2D Cubism C# runtime: model loading, rendering, physics, animation, effects",
+   "desc": "Live2D Cubism runtime for C#: drawn characters that breathe, blink and move with physics, playing the motions and expressions their artist made.",
    "cat": [
     "library",
     "visual"
@@ -345,7 +410,7 @@
    "id": "locale_atlas",
    "name": "Locale Atlas",
    "version": "0.1.0",
-   "desc": "Localization key map for developers and AI agents: every key declared in locale/*.properties or referenced by scenarios, C#, JSON, scenes, collections and manifests, per language. Reports keys that are missing in some languages, empty, undeclared or duplicated, collection texts without a translation, and the encoding of every locale file (UTF-8 validity, BOM, mojibake, control characters, line endings). Activated by the --locale-atlas user arg; writes report.md/report.json and prints [TEST_RESULT].",
+   "desc": "Maps every translation key of every mod: what each language declares, where keys are used, and what is wrong — missing, empty, undeclared or duplicated keys and encoding problems.",
    "cat": [
     "tools",
     "debug"
@@ -357,7 +422,7 @@
    "id": "map_base",
    "name": "World Map Engine",
    "version": "1.0.0",
-   "desc": "Engine world map subsystem: the full-screen map overlay (MapWidget), polygon zones layer, markers, the zone list + runtime override singleton, the scenario-facing map service facade with the open/close/show/hide scenario actions, and the shared zone style and enterability rules. Replaces the former Core/UI/Tool Map* implementations and Core/Actions/MapZoneServiceImpl. The save-format DTO MapZoneStateData stays in the core because RuntimeSerializer owns the __core__ slot layout; the mod plugs into it through MapStateBridge.",
+   "desc": "World map engine: a full-screen picture of the world with places to travel between; scenarios open, close, hide and reveal them as the story goes.",
    "cat": [
     "engine",
     "library"
@@ -368,15 +433,32 @@
    "test": false
   },
   {
+   "id": "map_editor",
+   "name": "World Map Editor",
+   "version": "1.0.0",
+   "desc": "Edit world map zones, polygons, labels and markers.",
+   "cat": [
+    "tools",
+    "editor"
+   ],
+   "deps": [
+    "tools_base",
+    "map_base",
+    "ui_base"
+   ],
+   "test": false
+  },
+  {
    "id": "menu_base",
    "name": "Menu",
    "version": "1.0.0",
-   "desc": "Registry-driven main menu: built-in buttons, settings and save/load panels moved out of the core.",
+   "desc": "The main menu: start or continue a game, pick one of the installed games, load a save and change the language, sound and display settings.",
    "cat": [
     "ui"
    ],
    "deps": [
-    "ui_base"
+    "ui_base",
+    "music_pack"
    ],
    "test": false
   },
@@ -384,7 +466,7 @@
    "id": "mod_manager",
    "name": "Mod Manager",
    "version": "1.0.0",
-   "desc": "Nexus-style mod manager: browse the catalog, filter by category and status, install, update and remove mods.",
+   "desc": "The Mods & Collections screen: what is installed, what each mod does, installing and updating from the online catalog, and which mods make up each ready-made game.",
    "cat": [
     "tools",
     "ui"
@@ -395,10 +477,23 @@
    "test": false
   },
   {
+   "id": "music_pack",
+   "name": "Music Pack",
+   "version": "1.0.0",
+   "desc": "Shared music for any game: 22 tracks with exploration, combat and main menu playlists; a game can override playlists while keeping the track names.",
+   "cat": [
+    "audio"
+   ],
+   "deps": [
+    "audio_base"
+   ],
+   "test": false
+  },
+  {
    "id": "my_novel_game",
    "name": "My Novel",
    "version": "1.0.0",
-   "desc": "The novel template's own content: a town where you can go into a bar or back home, and a way back from both. Only scenes, scenarios and text; backgrounds and sound come from town_pack. Rename it after your game (<game>_game) and grow your story from here.",
+   "desc": "The novel template's content: an evening town, a bar and a home connected by choices. Copy it, rename it and grow your own story from these three places.",
    "cat": [
     "story"
    ],
@@ -406,7 +501,8 @@
     "shell2d_base",
     "dialog_base",
     "audio_base",
-    "town_pack"
+    "town_pack",
+    "music_pack"
    ],
    "test": false
   },
@@ -414,7 +510,7 @@
    "id": "quests_base",
    "name": "Quests Engine",
    "version": "1.0.0",
-   "desc": "Engine quests subsystem: the quest factory and runtime state (QuestFactory, QuestBase/QuestData), the IQuestService implementation, quest scenario actions, quest scene conditions with the QuestParser leaf parser and the quest journal UI. Replaces the former Core/Quests state, Core/Actions quest services and actions, Core/Scenes quest conditions and Core/UI/Quests - QuestsModInitializer publishes the kernel contract (IQuestService via QuestServiceRegistry), registers the quest leaf parser and the new-game resettable; QuestsSaveable persists quest state through the generic mod save slot.",
+   "desc": "Quests engine: quests with numbered steps that scenarios start, advance and finish, and the journal panel that shows them.",
    "cat": [
     "engine",
     "library"
@@ -429,7 +525,7 @@
    "id": "recruiting",
    "name": "Recruiting",
    "version": "1.1.0",
-   "desc": "Recruitment of defeated characters: the roster panel, join conditions (e.g. enslaving a defeated enemy), per-recruit behaviours such as nutrition, the party bridge, tick updates and save state.",
+   "desc": "Defeated enemies can be captured after a victory and later fight on the player's side; while they wait in the recruits list, they live by rules of their own.",
    "cat": [
     "gameplay"
    ],
@@ -444,7 +540,7 @@
    "id": "resource_atlas",
    "name": "Resource Atlas",
    "version": "0.1.0",
-   "desc": "Cross-mod resource map for developers and AI agents: which mod requests resources (sounds, textures, scenes, entities, actions, locale keys, res:// files) provided by another mod, which mod overrides or patches another mod's resources, and whether each link is backed by manifest depends. Activated by the --resource-atlas user arg; writes report.md/report.json and prints [TEST_RESULT].",
+   "desc": "Maps which mod uses whose resources and whether every link is backed by depends — catching undeclared dependencies and duplicate providers no depends order can settle.",
    "cat": [
     "tools",
     "debug"
@@ -458,15 +554,17 @@
    "id": "rpg",
    "name": "RPG World",
    "version": "1.0.0",
-   "desc": "Top-down tile world in the spirit of RPG Maker on top of the 2D engine mods: maps of square tiles in three layers (back, main, front) with a collision layer, walking on the grid with WASD or the arrows, events that talk, teleport or start battles with the action key E/F or on touch, random encounters. A map is a logical scene, so entry scenarios, ambience, saving and the dialog box work on maps unchanged; battles run on the turn-based platform with the game's battle core and return to the same cell. Scenario actions: rpg.battle, rpg.teleport.",
+   "desc": "A walkable tile world in the spirit of RPG Maker: grid movement with WASD, events on E/F, teleports, random encounters; a map is an ordinary scene of the game.",
    "cat": [
     "gameplay"
    ],
    "deps": [
     "shell2d_base",
     "ui_base",
+    "time_base",
     "dialog_base",
-    "turn_battle_base"
+    "turn_battle_base",
+    "tile_render_base"
    ],
    "test": false
   },
@@ -474,7 +572,7 @@
    "id": "rpg_demo_game",
    "name": "RPG Demo",
    "version": "1.0.0",
-   "desc": "Content of the RPG demo (collection rpg_demo): a village, the elder's house and a forest with a wolf at the cave, made of rpg_map files over the village_pack tileset. Shows teleports, talking NPCs, events that change with story flags, chests, things to gather in the forest (brushwood, stones, mushrooms that heal), a merchant who sells elixirs and buys the junk, a map monster with a win flag and random encounters in the forest. Only data and scenarios, no C#.",
+   "desc": "A small tile-map adventure: a village, the elder's house and a wolf at the forest cave — data and scenarios only, a working example of a tile-map game.",
    "cat": [
     "story"
    ],
@@ -484,7 +582,8 @@
     "characters_base",
     "dialog_base",
     "items_base",
-    "trading"
+    "trading",
+    "music_pack"
    ],
    "test": false
   },
@@ -492,7 +591,7 @@
    "id": "rpg_editor",
    "name": "RPG Map Editor",
    "version": "1.0.0",
-   "desc": "Editor of the rpg mod's tile maps (maps/*.json): paints the back, main and front tile layers and the collision layer with a pencil, an eraser and a flood fill from the tileset palette, places and edits map events (look, trigger, scenario, inline commands, teleport, condition), sets the map size, spawn and random encounters. Undo/redo, live update of the running world after saving, play from the spawn. Opens from the main menu tools and the in-game toolbar.",
+   "desc": "Paints the RPG engine's tile maps while the game runs: three tile layers, collision, events, spawn and random encounters. A save updates the world at once.",
    "cat": [
     "tools",
     "editor"
@@ -501,8 +600,9 @@
     "rpg",
     "characters_base",
     "items_base",
-    "editor_tools",
-    "ui_base"
+    "tools_base",
+    "ui_base",
+    "scenario_tools_base"
    ],
    "test": false
   },
@@ -510,7 +610,7 @@
    "id": "rpg_plus_game",
    "name": "RPG Plus",
    "version": "1.0.0",
-   "desc": "Content of the RPG Plus sample (collection rpg_plus), built on top of the RPG demo instead of beside it: a visual-novel prologue at a crossroads where the player picks the hero's class (warrior, mage, rogue: stats_base archetypes) and starting gear, and makes a first charisma check; then the whole rpg_demo village and forest, untouched, with a trainer and a fortune teller added through this mod's own map_events file, a training yard novel scene with exp and a strength check, the merchant selling the classic pack's gear (a shop patch), the wolf given stats (a character patch). Only data and scenarios, no C#.",
+   "desc": "A complete small RPG: a prologue that picks the class, a village and forest mystery, crafting, trade, a desert and turn-based battles — data and scenarios only.",
    "cat": [
     "story"
    ],
@@ -524,7 +624,42 @@
     "trading",
     "dialog_base",
     "characters_base",
-    "items_base"
+    "items_base",
+    "crafting",
+    "quests_base"
+   ],
+   "test": false
+  },
+  {
+   "id": "rpg_tileset_editor",
+   "name": "RPG Tileset Editor",
+   "version": "1.0.0",
+   "desc": "Sets up the RPG engine's tilesets without editing JSON: which atlas cells are map tiles, solid and isometric plane tiles, whole objects with the point they stand on, and surface materials. A save updates the world at once.",
+   "cat": [
+    "tools",
+    "editor"
+   ],
+   "deps": [
+    "rpg",
+    "tools_base",
+    "ui_base"
+   ],
+   "test": false
+  },
+  {
+   "id": "scenario_editor",
+   "name": "Scenario Editor",
+   "version": "1.0.0",
+   "desc": "Edit scenario text and transition graphs, then play-test inside the current game.",
+   "cat": [
+    "tools",
+    "editor"
+   ],
+   "deps": [
+    "tools_base",
+    "scenario_tools_base",
+    "dialog_base",
+    "ui_base"
    ],
    "test": false
   },
@@ -532,7 +667,7 @@
    "id": "scenario_studio",
    "name": "Scenario Studio",
    "version": "0.1.0",
-   "desc": "In-game scenario debugger and live editor: a non-modal dock over the running game with pause, step, breakpoints and restarts (with state rollback), the current scenario line, scene candidates with the reason they did or did not start, editable game state, an event log and the scene map. Edits go into folder mods or into a per-game studio layer over read-only mods, which can be exported as a mod; backgrounds dropped into a mod or the layer during the game are picked up with the \"Resources\" button of the transport bar. Author mode shows the script, novice mode the story moment.",
+   "desc": "A dock beside the running game that pauses, steps and edits the playing scenario: breakpoints, restarts with state rollback, live edits into a mod or a per-game layer.",
    "cat": [
     "tools",
     "editor"
@@ -544,10 +679,57 @@
    "test": false
   },
   {
+   "id": "scenario_tools_base",
+   "name": "Scenario Authoring Base",
+   "version": "1.0.0",
+   "desc": "Shared scenario file access, syntax and graph models for authoring tools. No tool windows.",
+   "cat": [
+    "engine",
+    "library"
+   ],
+   "deps": [
+    "tools_base",
+    "dialog_base"
+   ],
+   "test": false
+  },
+  {
+   "id": "scene_builder",
+   "name": "Godot Scene Builder",
+   "version": "1.0.0",
+   "desc": "Inspect and edit Godot scene nodes and their properties with a live preview.",
+   "cat": [
+    "tools",
+    "editor"
+   ],
+   "deps": [
+    "tools_base",
+    "ui_base"
+   ],
+   "test": false
+  },
+  {
+   "id": "scene_editor",
+   "name": "Scene Editor",
+   "version": "1.0.0",
+   "desc": "Create and edit logical scenes, backgrounds, ambient sound and scenario bindings.",
+   "cat": [
+    "tools",
+    "editor"
+   ],
+   "deps": [
+    "tools_base",
+    "scenario_tools_base",
+    "dialog_base",
+    "ui_base"
+   ],
+   "test": false
+  },
+  {
    "id": "schema_base",
    "name": "Schemas",
    "version": "1.0.0",
-   "desc": "Annotations as data: schemas/*.json files any mod ships describe scenario actions, DSL commands (parameters, types, entity references) and the fields of entity kinds — its own or another mod's. The catalog merges them in load order (an action or command is replaced whole, a kind is merged field by field), the checker validates values, the line writer builds DSL lines, the entity index knows the ids of any kind. The validator, the data editors and the Data Editor window build on it.",
+   "desc": "Lets every mod describe its scenario actions, DSL commands and data fields as data; the tools build forms, pickers and checks from these descriptions.",
    "cat": [
     "engine",
     "library"
@@ -559,14 +741,13 @@
    "id": "schema_tools",
    "name": "Schema Tools",
    "version": "1.0.0",
-   "desc": "The authoring tools over the schemas of schema_base: the Data Editor window edits any described entity kind with forms built from the merged fields of all mods (entity pickers, formula fields, lists of traits, stat maps, texts in every language), and the command palette builds scenario lines from action and command schemas, checks them and inserts them into the scenario editor. The schemas themselves live with the mods that own the actions and kinds.",
+   "desc": "The Data Editor window and the command palette: edit any described entity in a form and assemble checked scenario lines from the mods' schemas.",
    "cat": [
     "tools",
     "editor"
    ],
    "deps": [
-    "editor_tools",
-    "dialog_base",
+    "tools_base",
     "ui_base",
     "schema_base"
    ],
@@ -576,7 +757,7 @@
    "id": "shell2d_base",
    "name": "2D Shell",
    "version": "1.0.0",
-   "desc": "2D presentation platform: base shell scene with the view box, toolbar, panel slots and notifications. Parent for all 2D mods; content mods fill the shell through scene patches.",
+   "desc": "The frame every 2D game is drawn in: the background view box, the toolbar, panel slots and notifications that content mods fill.",
    "cat": [
     "engine",
     "library"
@@ -591,7 +772,7 @@
    "id": "skills_base",
    "name": "Skills Engine",
    "version": "1.0.0",
-   "desc": "Engine skills subsystem: card-based skill definitions, the grant service (skill + granted action pairing), the skills panel UI and the collection effect plate. Replaces the former Core/Skills implementations and Core/Factories/Impls/SkillFactory.",
+   "desc": "The player's collection of skill cards: skills that open possibilities in other mechanics, grant battle action cards and add up into the collection effect.",
    "cat": [
     "engine",
     "library"
@@ -605,7 +786,7 @@
    "id": "stat_checks",
    "name": "Stat Checks",
    "version": "1.0.0",
-   "desc": "Stat checks for any scenario: `check cha 12 [dice=d20] [bonus=2] [else=label] -> :success` rolls a stat plus dice against a difficulty, shows the outcome line and branches (a novel's persuasion, a tile RPG's locked door). The roll is left in dialog variables (check_total, check_roll, …) for ptext lines. Dice default to the game setting checks.dice, else d20; dice=none makes a plain threshold. The conditional jump `when` and option conditions live in dialog_base.",
+   "desc": "One scenario command, check: roll a character's stat plus dice against a difficulty and branch the story on success or failure.",
    "cat": [
     "gameplay"
    ],
@@ -617,9 +798,9 @@
   },
   {
    "id": "stats_base",
-   "name": "Stats",
+   "name": "Stats Engine",
    "version": "1.0.0",
-   "desc": "Genre-neutral stats engine: stats as data (\"Kind\": \"stat\": strength, charisma, max health, sanity — no built-in list), archetypes (\"Kind\": \"archetype\": RPG classes or a novel's temperaments) with stat formulas per level and exp curves, traits (stat modifiers any entity may carry in a \"Traits\" key: items, characters, statuses) and trait sources other mods plug in. A formula language for derived stats and battle numbers, sheets per character, permanent bonuses, pools, levels from exp. Bound stats are written into the battle attributes, so every battle core uses them unchanged. Conditions stat(who, stat), level(who), archetype(who, id); actions stat.add, stat.archetype, stat.exp, stat.restore; a character sheet panel.",
+   "desc": "A stats engine for any genre: stats, archetypes and traits as data, formulas for derived numbers, character sheets, levels and pools — handed to battles unchanged.",
    "cat": [
     "engine",
     "library"
@@ -635,7 +816,7 @@
    "id": "test_defaults_and_patches",
    "name": "Test Defaults and Patches",
    "version": "1.0.0",
-   "desc": "Test fixture of the property patches system: a targeted patch (Marao, food/ration) and wildcard patches of every character and item. Marked as a fixture, so --all-mods and games never load it; the property_patches itest loads it explicitly (--with-mods=test_defaults_and_patches --itest=property_patches) and checks the merged entities.",
+   "desc": "A test fixture, not content: property patches the property_patches test loads to check how patches of other mods' characters and items merge. Never part of a game.",
    "cat": [
     "other"
    ],
@@ -649,10 +830,52 @@
    "test": true
   },
   {
+   "id": "tile_isometric_base",
+   "name": "Isometric Tiles",
+   "version": "1.0.0",
+   "desc": "Draws tile maps at an angle, a grid of 2:1 diamonds, so buildings and trees stand up out of the ground. One of the two views of Tile Rendering.",
+   "cat": [
+    "visual",
+    "engine"
+   ],
+   "deps": [
+    "tile_render_base"
+   ],
+   "test": false
+  },
+  {
+   "id": "tile_render_base",
+   "name": "Tile Rendering",
+   "version": "1.0.0",
+   "desc": "The shared engine behind tile maps: turns a prepared map description into a picture; the viewing angle is a small renderer mod on top.",
+   "cat": [
+    "visual",
+    "engine"
+   ],
+   "deps": [
+    "ui_base"
+   ],
+   "test": false
+  },
+  {
+   "id": "tile_topdown_base",
+   "name": "Top-down Tiles",
+   "version": "1.0.0",
+   "desc": "Draws tile maps straight from above, on a square grid, in the style of classic 2D RPGs. One of the two views of Tile Rendering; RPG Plus uses it.",
+   "cat": [
+    "visual",
+    "engine"
+   ],
+   "deps": [
+    "tile_render_base"
+   ],
+   "test": false
+  },
+  {
    "id": "time_base",
    "name": "Time Engine",
    "version": "1.0.0",
-   "desc": "Engine time subsystem: the in-game clock tick controller bridging SceneEventController timer pulses to RuntimeData.Time, the clock HUD widget, the 2D lighting stack (UiLightController, LampBehaviour, LightDef) installed into the kernel through LightingBridge, and the lighting.clear_map scenario action. Replaces the former Core/Settings/TimeTickController, Core/UI/Lights, Core/UI/Tool/TimeController and Core/Actions/LightingServiceImpl.",
+   "desc": "The in-game clock, day and night: scenes change their look with the time, lamps and windows light them, and a portable lamp helps after dark.",
    "cat": [
     "engine",
     "library"
@@ -663,10 +886,25 @@
    "test": false
   },
   {
+   "id": "tools_base",
+   "name": "Tool Authoring Base",
+   "version": "1.0.0",
+   "desc": "Shared forms, file access, localization editing and UI components for authoring tools. No tool windows.",
+   "cat": [
+    "engine",
+    "library"
+   ],
+   "deps": [
+    "ui_base",
+    "schema_base"
+   ],
+   "test": false
+  },
+  {
    "id": "town_pack",
    "name": "Town Pack",
    "version": "1.0.0",
-   "desc": "Reusable town content for any game: the town entrance (with a depth map), a home vestibule, a bar and the bar ambience. Backgrounds: town/town_entry, home/vestibule, bar/bar; sound: bar/bar_ambient.",
+   "desc": "Ready-made scenery for a small-town story: the town entrance, a home vestibule and an evening bar as backgrounds, with the bar's ambience. No story inside.",
    "cat": [
     "visual",
     "audio"
@@ -678,7 +916,7 @@
    "id": "trading",
    "name": "Trading",
    "version": "1.0.0",
-   "desc": "Shops: merchants defined as data (\"Kind\": \"shop\": what they sell, what they buy back and at which price) and a trade window of two inventories side by side, the merchant's goods and the player's bag, with a deal card between them. Money is an ordinary inventory item, the gold coin money/coin by default. Scenario action: trade.open shop=<id>.",
+   "desc": "Shops as data and a trade window of two inventories: the merchant's goods on one side, the player's bag on the other, and money as an ordinary item.",
    "cat": [
     "gameplay"
    ],
@@ -690,9 +928,9 @@
   },
   {
    "id": "turn_battle_base",
-   "name": "Turn-based battle engine",
+   "name": "Turn Battle Base",
    "version": "2.0.0",
-   "desc": "Turn-based battle platform: battle ruleset contracts, core registry, action executors, status effects, battle scene, victory/defeat screens, EXP and loot reports",
+   "desc": "The platform under every turn-based battle: starting from a scenario, the battle scene, victory and defeat, experience and loot — how the player fights is a separate battle system.",
    "cat": [
     "engine",
     "gameplay"
@@ -710,7 +948,7 @@
    "id": "ui_base",
    "name": "UI",
    "version": "1.0.0",
-   "desc": "Engine UI subsystem: widget toolkit (Widget/ModWidget/lists), ViewBox background viewport, ToolBox toolbar, GameMenu/SaveIcon, notification panels, UiKit design system, DeviceInput. Kernel keeps only contracts (IWidget, IDialogBox, IToolbarHost, ISaveIconHost, IBackgroundView, IUiLazyConstruct, MenuRegistry, ToolFactory, NotificationBuffer, SceneEventController, CthangoverTheme/UiTokens boot styling) and drives this mod through those seams.",
+   "desc": "The interface layer every game shares: the toolbar, the in-game menu, the save indicator, notifications and the common look of panels, buttons and lists.",
    "cat": [
     "ui"
    ],
@@ -721,7 +959,7 @@
    "id": "validator",
    "name": "Validator",
    "version": "0.1.0",
-   "desc": "Static validation of mods without running the game: manifest schema, entity strategies (characters, items, quests, skills, recipes, actions), cross references, depends, scenario commands and scene patches, with an optional text report.",
+   "desc": "Checks every mod without running the game: broken references, unknown scenario commands, wrong parameters, missing dependencies — a report on every game start.",
    "cat": [
     "debug"
    ],
@@ -736,7 +974,7 @@
    "id": "village_pack",
    "name": "Village Pack",
    "version": "1.0.0",
-   "desc": "Reusable pixel-art content for RPG maps: the 'village' tileset (grass, paths, water, trees with crowns for the front layer, houses, fences, chests, a forest floor and a cave mouth, things lying on the ground to pick up — brushwood, stones, a mushroom — with solid flags), charsets of a hero, an elder, a villager, a merchant, a slime and a wolf, battle portraits of the hero, the slime and the wolf, and two battle backgrounds (meadow, forest) with depth maps. Art only: no maps, no stories.",
+   "desc": "The art kit behind the RPG Plus world: tilesets, charsets, battle portraits and backdrops in one painterly 2.5D style. Art only — no maps, no stories.",
    "cat": [
     "visual",
     "characters"

@@ -128,6 +128,7 @@ namespace Cthangover.TestRunner
                 {
                     "test", manifest.Unit.Project, "--nologo", "-v", "q",
                     "--logger", "trx;LogFileName=unit.trx",
+                    "--logger", "console;verbosity=normal",
                     "--results-directory", trxDirectory
                 };
                 var run = ProcessRunner.Run("dotnet", args, root, manifest.Unit.TimeoutSeconds);

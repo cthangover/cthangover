@@ -1,23 +1,21 @@
 # Creating a Custom Tool
 
-Implement a tool in your mod with three classes:
+Depend on `tools_base>=1` and `ui_base>=1`, and include the new `.cs` files in `manifest.sources`. Implement a tool with three classes, each in its own file. Tool windows are launched from the in-game toolbar.
 
 ## 1. Provider — `IToolProvider`
 
 ```csharp
-using Cthangover.Core.UI.Tool;
-using Godot;
-
 namespace MyMod
 {
+    using Cthangover.Core.UI.Tool;
+    using Cthangover.Mods.Interface.Tool;
+    using Godot;
     public class MyToolProvider : IToolProvider
     {
         public string Id => "my_tool";
         public string LocaleKey => "tools/my_tool/title";
         public Window CreateWindow() => new MyToolWindow();
 
-        // Adds the launcher button to the main menu's tool block (below Exit).
-        public void AddMenuButton(Container container) => ToolMenuButton.Attach(container, this);
     }
 }
 ```
@@ -25,11 +23,11 @@ namespace MyMod
 ## 2. Window — extends `ToolWindow`
 
 ```csharp
-using Cthangover.Core.UI.Tool;
-using Godot;
-
 namespace MyMod
 {
+    using Cthangover.Core.UI.Tool;
+    using Cthangover.Mods.Interface.Tool;
+    using Godot;
     public class MyToolWindow : ToolWindow
     {
         public MyToolWindow() : base("tools/my_tool/title")
@@ -48,13 +46,14 @@ namespace MyMod
 }
 ```
 
-## 3. Toolbar button (optional) — `IToolBoxButton`
+## 3. Toolbar entry — `IToolBoxButton`
 
 ```csharp
-using Cthangover.Core.UI.Tool;
-
 namespace MyMod
 {
+    using Cthangover.Core.UI.Tool;
+    using Cthangover.Mods.Interface.Tool;
+    using Godot;
     public class MyToolBoxButton : IToolBoxButton
     {
         public string ToolId => "my_tool";
@@ -78,9 +77,9 @@ tools/my_tool/close = Close
 
 | Step | Action |
 |---|---|
-| 1 | Create provider class implementing `IToolProvider` with a unique `Id` and an `AddMenuButton` that attaches the launcher button |
+| 1 | Create provider class implementing `IToolProvider` with a unique `Id` |
 | 2 | Create window class extending `ToolWindow` — use `CreateFillContainer`, `CreateToolbar`, etc. |
-| 3 | (Optional) Create `IToolBoxButton` class for a persistent HUD button |
+| 3 | Create an `IToolBoxButton` class for the toolbar tools list |
 | 4 | Add locale keys in your mod's `locale/ui_en.properties` |
 | 5 | Ensure your mod's `manifest.json` has `"sources"` covering the new `.cs` files |
 

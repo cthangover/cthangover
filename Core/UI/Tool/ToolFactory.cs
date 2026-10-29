@@ -11,7 +11,7 @@ namespace Cthangover.Core.UI.Tool
     /// Registry for modding/dev tools (IToolProvider implementations).
     /// Discovers tools via reflection on construction; supports RegisterAssembly
     /// for mod-injected tools. Deduplicates by Id. Get/GetAll provide lookup
-    /// for the tool block of the main menu and the in-game toolbox.
+    /// for the in-game toolbox and tool automation.
     /// <para/>
     /// The single instance is owned by the <see cref="AppServices"/>
     /// composition root; the static facade stays as the public API during
@@ -97,8 +97,7 @@ namespace Cthangover.Core.UI.Tool
         }
 
         /// <summary>
-        /// Returns all registered tools as a read-only list. Used by <see cref="MainMenu"/> to
-        /// populate the Tools dropdown.
+        /// Returns all registered tools as a read-only list for automation and discovery.
         /// </summary>
         public IReadOnlyList<IToolProvider> GetAll()
         {

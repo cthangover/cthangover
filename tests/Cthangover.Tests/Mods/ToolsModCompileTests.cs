@@ -28,7 +28,10 @@ namespace Engine.Tests.Mods
             if (mods.Count == 0)
                 return;
 
-            var knownIds = mods.Keys.ToList();
+            LoadPrecompiledLibraries();
+            var runtimeMods = new Dictionary<string, IModInfo>(StringComparer.OrdinalIgnoreCase);
+            foreach (var entry in mods)
+                runtimeMods[entry.Key] = new ModInfo { Id = entry.Key, Manifest = new ModManifest { Depends = entry.Value.Depends.Select(ModDependency.Parse).ToList() } };
             foreach (var modId in TopologicalOrder(mods))
             {
                 var sourceRoot = mods[modId].SourceRoot;
@@ -45,13 +48,15 @@ namespace Engine.Tests.Mods
                 // <modId>_<hash>.dll is how dependent mods resolve mod-to-mod
                 // references (TryParseCacheDllName), so a "<id>_compile_test"
                 // prefix would make every dependency invisible to its
-                // dependents and break exactly the mods that have depends.
+                // dependents and break exactly the mods that have depends. Only
+                // its dependency closure is visible, as in production: a source-free
+                // compatibility package must not resurrect its old cached assembly.
                 var assembly = ModCompiler.Compile(
                     modId,
                     sources,
                     null,
                     default,
-                    knownIds);
+                    ModCompiler.DependencyClosure((ModInfo)runtimeMods[modId], runtimeMods));
 
                 if (assembly == null)
                     Assert.Fail($"Mod '{modId}' failed to compile:\n" + string.Join("\n", GameLogger.CompilationErrors));
@@ -59,6 +64,19 @@ namespace Engine.Tests.Mods
         }
 
         private sealed record ModGuardInfo(string Id, string SourceRoot, List<string> Depends);
+
+        private static void LoadPrecompiledLibraries()
+        {
+            // Runtime boot loads mod-owned managed DLLs before compiling sources.
+            // Mirror that setup so libraries such as Markdig are visible here too.
+            foreach (var modRoot in Directory.GetDirectories(Path.Combine(FindRepoRoot(), "mods")))
+            {
+                var directory = Path.Combine(modRoot, "dll");
+                if (!Directory.Exists(directory)) continue;
+                foreach (var library in Directory.GetFiles(directory, "*.dll"))
+                    Assert.NotNull(ModAssemblyLoader.LoadFromPath(library));
+            }
+        }
 
         /// <summary>
         /// Finds the repository root (walks up from the test binaries until

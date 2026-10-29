@@ -12,12 +12,11 @@ flowchart TD
     end
 
     subgraph Kernel
-        MMA[MainMenu] -->|GetAll + AddMenuButton| TF
         TB[ToolBox] -->|GetVisible| TBF
     end
 
     subgraph Runtime
-        MMB[Main-menu tool buttons] -->|"Pressed: ShowWindow(CreateWindow())"| TW[ToolWindow popup]
+        TW[ToolWindow popup]
         TB -->|AddToolButtons| BTN[Dynamic toolbar buttons]
         BTN -->|"Pressed: Get + ShowWindow(CreateWindow())"| TW
     end
@@ -36,8 +35,7 @@ Tools bootstrapping happens at startup:
 1. `ToolFactory.Instance` scans all loaded assemblies for `IToolProvider` implementations via `Reflections.FindAndCreate`.
 2. `ToolBoxButtonFactory.Instance` scans for `IToolBoxButton` implementations.
 3. When a mod assembly loads (`ModAssemblyLoader`), both factories call `RegisterAssembly(assembly)` to discover mod-provided tools.
-4. `MainMenu` asks every registered tool to append its launcher button to the tool block below **Exit** via `IToolProvider.AddMenuButton`.
-5. `ToolBox` dynamically creates HUD toolbar buttons from `ToolBoxButtonFactory.GetVisible()`.
+4. `ToolBox` dynamically creates HUD toolbar buttons from `ToolBoxButtonFactory.GetVisible()`.
 
 ## Core interfaces
 
@@ -50,11 +48,10 @@ The entry point for a custom tool. Every tool window must have a provider that i
 | `Id` | `string` | Unique identifier used as the registry key (e.g. `"scenario_editor"`) |
 | `LocaleKey` | `string` | Translation key for the tool's display name, resolved via `TranslationServer.Translate` |
 | `CreateWindow()` | `Window` | Creates a new `Window` instance for this tool. The caller is responsible for adding it to the scene tree and displaying it |
-| `AddMenuButton(Container)` | `void` | Appends the tool's launcher button to the main menu's tool block. Use `ToolMenuButton.Attach(container, this)` for the standard button (localized caption, opens the window on press, retranslated on language change) |
 
 ### `IToolBoxButton`
 
-Optional companion interface. Implement it alongside `IToolProvider` to add a persistent button on the in-game HUD toolbar that opens your tool.
+The in-game launcher interface. Implement it alongside `IToolProvider` to add a persistent button on the in-game HUD toolbar that opens your tool.
 
 | Member | Type | Description |
 |---|---|---|
@@ -63,11 +60,7 @@ Optional companion interface. Implement it alongside `IToolProvider` to add a pe
 | `LocaleKey` | `string` | Translation key for the button's tooltip or accessible label |
 | `IsVisible()` | `bool` | Return `false` to hide the button dynamically (e.g. dev-only buttons in release builds) |
 
-`IconPath` and `LocaleKey` **are** consumed by `ToolBox.AddToolButtons`: the locale key is
-translated into the button's tooltip/label, and the icon is loaded via `ResourceLoader`
-when the path exists (a button without a usable icon falls back to its text label).
-`ToolId` wires the press to `ToolFactory.Get(toolId)` and opens the tool through
-`ToolWindow.ShowWindow(tool.CreateWindow())`.
+`ToolBox` groups visible tools under one toolbar popup, labelled with each entry's translated `LocaleKey`. `ToolId` opens the provider through `ToolWindow.ShowWindow(tool.CreateWindow())`. `IconPath` is retained in the contract; the grouped popup currently uses text entries.
 
 ## `ToolWindow` base class
 
@@ -101,7 +94,7 @@ Singleton registry (`ToolFactory.Instance`) for `IToolProvider` implementations.
 | `Register(IToolProvider)` | Adds a tool; duplicates by `Id` are silently ignored (first-wins) |
 | `RegisterAssembly(Assembly)` | Scans an assembly for `IToolProvider` implementations and registers them — the primary hook for mods |
 | `Get(string id)` | Looks up a tool by `Id`, returns `null` if not found |
-| `GetAll()` | Returns all registered tools as a read-only list — used by `MainMenu` to ask each tool for its menu button |
+| `GetAll()` | Returns all registered tools as a read-only list — used for tool discovery and automation |
 
 Logging uses the `"TOOLS"` category.
 
@@ -117,7 +110,7 @@ Singleton registry (`ToolBoxButtonFactory.Instance`) for `IToolBoxButton` implem
 
 ## HUD integration — `ToolBox`
 
-The `ToolBox` control (`Core/UI/Tool/ToolBox.cs`) is the main toolbar/HUD container. It is
+The `ToolBox` control (`mods/ui_base/src/Tool/ToolBox.cs`) is the main toolbar/HUD container. It is
 manifest-driven and knows no concrete panels itself: `UiBuilder` hands it one
 `UiEntry` per mod-declared toolbar panel (from `UiRegistry.PanelEntries`, pre-sorted by
 button index, mod load order, then id), and `ApplyPanelButtons(entries)` builds a styled
@@ -133,7 +126,15 @@ from `IconPath` when the resource exists — and opens its tool via
 
 ## Built-in tools
 
-The `editor_tools` mod provides six development tools:
+The `editor_tools` compatibility package installs seven independent tool mods. Select individual tools through `dev_tools`, or depend on `tools_base` for shared forms and file services. Scenario parsing is isolated in `scenario_tools_base`. No tool adds a title-screen button.
+
+| Mod | Role |
+|---|---|
+| `tools_base` | Shared UI, entity/schema forms, locale editing, neutral scene/file services; no windows |
+| `scenario_tools_base` | Scenario files, syntax and graph models; no windows |
+| `scene_editor` | Logical scenes, backgrounds, ambient sound and scenario bindings |
+
+The window tools are:
 
 | Tool ID | Description | Locale Key |
 |---|---|---|
@@ -152,14 +153,11 @@ throwing the player to the main menu.
 
 Each tool has a provider class (`ScenarioEditorToolProvider`, `SceneBuilderToolProvider`, `LightEditorToolProvider`, `InteractiveEditorToolProvider`, `MapEditorToolProvider`, `CatalogExportToolProvider`) implementing `IToolProvider`, and a dedicated window class extending `ToolWindow`.
 
-Three tools also provide `IToolBoxButton` implementations for quick access from the HUD toolbar:
-- `LightEditorToolBoxButton` — always visible
-- `InteractiveEditorToolBoxButton` — always visible
-- `MapEditorToolBoxButton` — always visible (map authoring is part of the normal dev workflow)
+Every window tool provides an `IToolBoxButton` for the in-game toolbar. Studio instead declares its panel button in `manifest.ui`.
 
 ## Data editors: items and characters
 
-Two tool mods build on the editor_tools base window `EntityEditorWindow`, each depending only on
+Two tool mods build on the `tools_base` window `EntityEditorWindow`, each depending only on
 the data it edits, so a game takes the ones it needs:
 
 | Mod | Tool ID | Edits | Locale Key |
@@ -167,7 +165,7 @@ the data it edits, so a game takes the ones it needs:
 | `items_editor` | `items_editor` | items (`"Kind": "item"`): name and description, price, icon, types, use action | `tools/items_editor/title` |
 | `characters_editor` | `characters_editor` | characters (`"Kind": "character"`): name, portrait, RPG charset, stats, battle actions | `tools/characters_editor/title` |
 
-Both open from the main menu tools and the in-game toolbar, and are part of the `cthangover`
+Both open from the in-game toolbar, and are part of the `cthangover`
 developer tools and the optional `data_editor` mechanic of `rpg_plus`. Fields other mods' schemas add to
 the kind appear in a "Fields of other mods" section ([schemas](../schemas/)).
 

@@ -496,7 +496,7 @@ picker.
   and the Data Editor with the item and character editors (`schema_tools`,
   `items_editor`, `characters_editor`).
 - `collections/dev_tools/` — the developer toolset to add to any game: the
-  editors (`editor_tools`), the in-game scenario studio (`scenario_studio`,
+  individually selectable editors (shared components in `tools_base`; legacy package `editor_tools`), the in-game scenario studio (`scenario_studio`,
   opened by the **Studio** button on the game's toolbar), validators and the
   mod manager. Add it to a game in the collection editor and enter the game
   again — the mod set switches without a restart.

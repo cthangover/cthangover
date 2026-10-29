@@ -204,7 +204,11 @@
     {
       "name": "collection_settings",
       "scene": "res://scenes/menu/launcher.tscn",
-      "args": ["--", "--frontend", "--itest=collection_settings"],
+      "args": [
+        "--",
+        "--frontend",
+        "--itest=collection_settings"
+      ],
       "timeoutSeconds": 120
     },
     {
@@ -421,7 +425,8 @@
       "args": [
         "--",
         "--scene=home_kitchen",
-        "--itest=tools_windows"
+        "--itest=tools_windows",
+        "--with-mods=test_defaults_and_patches"
       ],
       "timeoutSeconds": 180
     },
@@ -446,7 +451,7 @@
         "--",
         "--game=novel_template",
         "--new",
-        "--with-mods=editor_tools",
+        "--with-mods=scenario_editor",
         "--itest=ingame_play"
       ],
       "timeoutSeconds": 240
@@ -680,6 +685,259 @@
         "--itest=desert"
       ],
       "timeoutSeconds": 240
+    },
+    {
+      "name": "tools_isolation_tools_base",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "windowed": true,
+      "args": [
+        "--",
+        "--frontend",
+        "--with-mods=tools_base,tools_base",
+        "--itest=tools_isolation",
+        "--expected-tools=",
+        "--absent-mods=scenario_editor,scene_editor,scene_builder,map_editor,interactive_editor,light_editor,catalog_export,items_editor,characters_editor,schema_tools,rpg_editor,rpg_tileset_editor,editor_tools"
+      ],
+      "timeoutSeconds": 120
+    },
+    {
+      "name": "tools_isolation_scenario_tools_base",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "windowed": true,
+      "args": [
+        "--",
+        "--frontend",
+        "--with-mods=scenario_tools_base,tools_base",
+        "--itest=tools_isolation",
+        "--expected-tools=",
+        "--absent-mods=scenario_editor,scene_editor,scene_builder,map_editor,interactive_editor,light_editor,catalog_export,items_editor,characters_editor,schema_tools,rpg_editor,rpg_tileset_editor,editor_tools"
+      ],
+      "timeoutSeconds": 120
+    },
+    {
+      "name": "tools_isolation_scenario_editor",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "windowed": true,
+      "args": [
+        "--",
+        "--frontend",
+        "--with-mods=scenario_editor,tools_base",
+        "--itest=tools_isolation",
+        "--expected-tools=scenario_editor",
+        "--absent-mods=scene_editor,scene_builder,map_editor,interactive_editor,light_editor,catalog_export,items_editor,characters_editor,schema_tools,rpg_editor,rpg_tileset_editor,editor_tools"
+      ],
+      "timeoutSeconds": 120
+    },
+    {
+      "name": "tools_isolation_scene_editor",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "windowed": true,
+      "args": [
+        "--",
+        "--frontend",
+        "--with-mods=scene_editor,tools_base",
+        "--itest=tools_isolation",
+        "--expected-tools=scene_editor",
+        "--absent-mods=scenario_editor,scene_builder,map_editor,interactive_editor,light_editor,catalog_export,items_editor,characters_editor,schema_tools,rpg_editor,rpg_tileset_editor,editor_tools"
+      ],
+      "timeoutSeconds": 120
+    },
+    {
+      "name": "tools_isolation_scene_builder",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "windowed": true,
+      "args": [
+        "--",
+        "--frontend",
+        "--with-mods=scene_builder,tools_base",
+        "--itest=tools_isolation",
+        "--expected-tools=scene_builder",
+        "--absent-mods=scenario_editor,scene_editor,map_editor,interactive_editor,light_editor,catalog_export,items_editor,characters_editor,schema_tools,rpg_editor,rpg_tileset_editor,editor_tools"
+      ],
+      "timeoutSeconds": 120
+    },
+    {
+      "name": "tools_isolation_map_editor",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "windowed": true,
+      "args": [
+        "--",
+        "--frontend",
+        "--with-mods=map_editor,tools_base",
+        "--itest=tools_isolation",
+        "--expected-tools=map_editor",
+        "--absent-mods=scenario_editor,scene_editor,scene_builder,interactive_editor,light_editor,catalog_export,items_editor,characters_editor,schema_tools,rpg_editor,rpg_tileset_editor,editor_tools"
+      ],
+      "timeoutSeconds": 120
+    },
+    {
+      "name": "tools_isolation_interactive_editor",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "windowed": true,
+      "args": [
+        "--",
+        "--frontend",
+        "--with-mods=interactive_editor,tools_base",
+        "--itest=tools_isolation",
+        "--expected-tools=interactive_editor",
+        "--absent-mods=scenario_editor,scene_editor,scene_builder,map_editor,light_editor,catalog_export,items_editor,characters_editor,schema_tools,rpg_editor,rpg_tileset_editor,editor_tools"
+      ],
+      "timeoutSeconds": 120
+    },
+    {
+      "name": "tools_isolation_light_editor",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "windowed": true,
+      "args": [
+        "--",
+        "--frontend",
+        "--with-mods=light_editor,tools_base",
+        "--itest=tools_isolation",
+        "--expected-tools=light_editor",
+        "--absent-mods=scenario_editor,scene_editor,scene_builder,map_editor,interactive_editor,catalog_export,items_editor,characters_editor,schema_tools,rpg_editor,rpg_tileset_editor,editor_tools"
+      ],
+      "timeoutSeconds": 120
+    },
+    {
+      "name": "tools_isolation_catalog_export",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "windowed": true,
+      "args": [
+        "--",
+        "--frontend",
+        "--with-mods=catalog_export,tools_base",
+        "--itest=tools_isolation",
+        "--expected-tools=catalog_export",
+        "--absent-mods=scenario_editor,scene_editor,scene_builder,map_editor,interactive_editor,light_editor,items_editor,characters_editor,schema_tools,rpg_editor,rpg_tileset_editor,editor_tools"
+      ],
+      "timeoutSeconds": 120
+    },
+    {
+      "name": "tools_isolation_items_editor",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "windowed": true,
+      "args": [
+        "--",
+        "--frontend",
+        "--with-mods=items_editor,tools_base",
+        "--itest=tools_isolation",
+        "--expected-tools=items_editor",
+        "--absent-mods=scenario_editor,scene_editor,scene_builder,map_editor,interactive_editor,light_editor,catalog_export,characters_editor,schema_tools,rpg_editor,rpg_tileset_editor,editor_tools"
+      ],
+      "timeoutSeconds": 120
+    },
+    {
+      "name": "tools_isolation_characters_editor",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "windowed": true,
+      "args": [
+        "--",
+        "--frontend",
+        "--with-mods=characters_editor,tools_base",
+        "--itest=tools_isolation",
+        "--expected-tools=characters_editor",
+        "--absent-mods=scenario_editor,scene_editor,scene_builder,map_editor,interactive_editor,light_editor,catalog_export,items_editor,schema_tools,rpg_editor,rpg_tileset_editor,editor_tools"
+      ],
+      "timeoutSeconds": 120
+    },
+    {
+      "name": "tools_isolation_schema_tools",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "windowed": true,
+      "args": [
+        "--",
+        "--frontend",
+        "--with-mods=schema_tools,tools_base",
+        "--itest=tools_isolation",
+        "--expected-tools=schema_palette,schema_data_editor",
+        "--absent-mods=scenario_editor,scene_editor,scene_builder,map_editor,interactive_editor,light_editor,catalog_export,items_editor,characters_editor,rpg_editor,rpg_tileset_editor,editor_tools"
+      ],
+      "timeoutSeconds": 120
+    },
+    {
+      "name": "tools_isolation_rpg_editor",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "windowed": true,
+      "args": [
+        "--",
+        "--frontend",
+        "--with-mods=rpg_editor,tools_base",
+        "--itest=tools_isolation",
+        "--expected-tools=rpg_map_editor",
+        "--absent-mods=scenario_editor,scene_editor,scene_builder,map_editor,interactive_editor,light_editor,catalog_export,items_editor,characters_editor,schema_tools,rpg_tileset_editor,editor_tools"
+      ],
+      "timeoutSeconds": 120
+    },
+    {
+      "name": "tools_isolation_rpg_tileset_editor",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "windowed": true,
+      "args": [
+        "--",
+        "--frontend",
+        "--with-mods=rpg_tileset_editor,tools_base",
+        "--itest=tools_isolation",
+        "--expected-tools=rpg_tileset_editor",
+        "--absent-mods=scenario_editor,scene_editor,scene_builder,map_editor,interactive_editor,light_editor,catalog_export,items_editor,characters_editor,schema_tools,rpg_editor,editor_tools"
+      ],
+      "timeoutSeconds": 120
+    },
+    {
+      "name": "tools_isolation_editor_tools",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "windowed": true,
+      "args": [
+        "--",
+        "--frontend",
+        "--with-mods=editor_tools,tools_base",
+        "--itest=tools_isolation",
+        "--expected-tools=scenario_editor,scene_editor,scene_builder,map_editor,interactive_editor,light_editor,catalog_export",
+        "--absent-mods=items_editor,characters_editor,schema_tools,rpg_editor,rpg_tileset_editor"
+      ],
+      "timeoutSeconds": 120
+    },
+    {
+      "name": "tools_scenario_contract",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "windowed": true,
+      "args": [
+        "--",
+        "--game=novel_template",
+        "--new",
+        "--with-mods=scenario_editor",
+        "--itest=tools_isolation",
+        "--expected-tools=scenario_editor",
+        "--absent-mods=editor_tools,scene_editor,schema_tools",
+        "--exercise-scenario-contract"
+      ],
+      "timeoutSeconds": 120
+    },
+    {
+      "name": "tools_windows_game",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "windowed": true,
+      "args": [
+        "--",
+        "--game=cthangover",
+        "--new",
+        "--with-mods=editor_tools,schema_tools,rpg_editor,rpg_tileset_editor,test_defaults_and_patches",
+        "--itest=tools_windows"
+      ],
+      "timeoutSeconds": 180
+    },
+    {
+      "name": "rpg_authoring",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "windowed": true,
+      "args": [
+        "--",
+        "--game=rpg_plus",
+        "--new",
+        "--with-mods=rpg_editor,rpg_tileset_editor",
+        "--itest=rpg_authoring",
+        "--editor-renderer=isometric"
+      ],
+      "timeoutSeconds": 180
     }
   ]
 }
