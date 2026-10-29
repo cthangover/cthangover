@@ -38,6 +38,7 @@ namespace Cthangover.Core.Scenes
         private readonly TscnParser _parser = new();
         private readonly HashSet<string> _buildingPaths = new();
         private ParsedScene _resolvingScene;
+        private bool _shutdownHookAttached;
 
         /// <summary>
         /// Collects all .tscn scene files from every mod's "scenes/" directory.
@@ -86,6 +87,7 @@ namespace Cthangover.Core.Scenes
         /// </param>
         public Node LoadAndBuild(string scenePath)
         {
+            EnsureShutdownHook();
             scenePath = NormalizeResourcePath(scenePath);
 
             var index = Collect();
@@ -158,6 +160,18 @@ namespace Cthangover.Core.Scenes
             finally
             {
                 _buildingPaths.Remove(cacheKey);
+            }
+        }
+
+        private void EnsureShutdownHook()
+        {
+            if (_shutdownHookAttached || !GameEnvironment.IsRuntime)
+                return;
+            if (Engine.GetMainLoop() is SceneTree tree)
+            {
+                // Cached prototypes never enter the tree, so Godot cannot free them with the live scene.
+                tree.Root.TreeExiting += ClearCache;
+                _shutdownHookAttached = true;
             }
         }
 
@@ -433,7 +447,8 @@ namespace Cthangover.Core.Scenes
         {
             scenePath = NormalizeResourcePath(scenePath);
             _parsedCache.Remove(scenePath);
-            _builtCache.Remove(scenePath);
+            if (_builtCache.Remove(scenePath, out var prototype) && GameEnvironment.IsRuntime && GodotObject.IsInstanceValid(prototype))
+                prototype.Free();
         }
 
         /// <inheritdoc />
@@ -441,7 +456,12 @@ namespace Cthangover.Core.Scenes
         {
             _sceneIndex = null;
             _parsedCache.Clear();
+            var prototypes = _builtCache.Values.Distinct().ToArray();
             _builtCache.Clear();
+            if (GameEnvironment.IsRuntime)
+                foreach (var prototype in prototypes)
+                    if (GodotObject.IsInstanceValid(prototype))
+                        prototype.Free();
             _buildingPaths.Clear();
             _resolvingScene = null;
         }

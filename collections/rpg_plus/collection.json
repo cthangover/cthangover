@@ -13,7 +13,8 @@
     "battle.core": "ff_battle",
     "rpg.player_charset": "village/hero",
     "stats.player": "rpg_hero",
-    "checks.dice": "d20"
+    "checks.dice": "d20",
+    "tile.renderer": "topdown"
   },
   "tags": [
     "rpg",
@@ -515,7 +516,8 @@
       ],
       "optional": true,
       "mods": [
-        "rpg_editor>=1"
+        "rpg_editor>=1",
+        "rpg_tileset_editor>=1"
       ]
     },
     {
@@ -560,6 +562,15 @@
         "schema_tools>=1",
         "items_editor>=1",
         "characters_editor>=1"
+      ]
+    },
+    {
+      "id": "tile_view",
+      "name": "Tile renderer",
+      "role": "engine",
+      "mods": [
+        "tile_topdown_base>=1",
+        "tile_isometric_base>=1"
       ]
     }
   ]

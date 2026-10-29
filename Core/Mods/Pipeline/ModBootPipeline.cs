@@ -292,6 +292,11 @@ namespace Cthangover.Core.Mods.Pipeline
                         ScriptTypeRegistry.RegisterAssembly(assembly, modId, sourceFiles);
                     }
 
+                    // These lists transfer assemblies between boot phases only.
+                    // Keeping them after registration pins collectible contexts
+                    // even after the loader and every consumer release a mod.
+                    ResetStagedAssemblies();
+
                     ModGDScriptLoader.LoadGDScripts(mods);
 
                     // Discard any order computed during the launcher boot window:

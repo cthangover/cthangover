@@ -202,6 +202,12 @@
       "timeoutSeconds": 180
     },
     {
+      "name": "collection_settings",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": ["--", "--frontend", "--itest=collection_settings"],
+      "timeoutSeconds": 120
+    },
+    {
       "name": "mod_help",
       "scene": "res://scenes/menu/launcher.tscn",
       "args": [
@@ -586,6 +592,92 @@
         "--new",
         "--itest=woodland",
         "--ward-ending=pact"
+      ],
+      "timeoutSeconds": 240
+    },
+    {
+      "name": "tile_render",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--game=rpg_plus",
+        "--new",
+        "--itest=tile_render"
+      ],
+      "timeoutSeconds": 120
+    },
+    {
+      "name": "rpg_walk_iso",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--game=rpg_plus",
+        "--new",
+        "--itest=rpg_walk",
+        "--with-mods=tile_isometric_base",
+        "--tile-renderer=isometric"
+      ],
+      "timeoutSeconds": 240
+    },
+    {
+      "name": "rpg_plus_iso",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--game=rpg_plus",
+        "--new",
+        "--itest=rpg_plus",
+        "--with-mods=tile_isometric_base",
+        "--tile-renderer=isometric"
+      ],
+      "timeoutSeconds": 240
+    },
+    {
+      "name": "woodland_iso",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--game=rpg_plus",
+        "--new",
+        "--itest=woodland",
+        "--with-mods=tile_isometric_base",
+        "--tile-renderer=isometric"
+      ],
+      "timeoutSeconds": 240
+    },
+    {
+      "name": "trade_iso",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--game=rpg_plus",
+        "--new",
+        "--itest=trade",
+        "--with-mods=tile_isometric_base",
+        "--tile-renderer=isometric"
+      ],
+      "timeoutSeconds": 240
+    },
+    {
+      "name": "rpg_editor_edit_iso",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--game=rpg_plus",
+        "--new",
+        "--itest=rpg_editor_edit",
+        "--editor-renderer=isometric"
+      ],
+      "timeoutSeconds": 180
+    },
+    {
+      "name": "desert",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--game=rpg_plus",
+        "--new",
+        "--itest=desert"
       ],
       "timeoutSeconds": 240
     }
