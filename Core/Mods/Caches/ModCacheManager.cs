@@ -1,11 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using Cthangover.Core.Utils;
-using Godot;
-
 namespace Cthangover.Core.Mods.Caches
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using Cthangover.Core.Utils;
+    using Godot;
+
     /// <summary>
     /// On-disk cache manager for shader files extracted from zip mods.
     /// Godot's <c>GD.Load&lt;Shader&gt;</c> requires a real filesystem
@@ -64,14 +64,6 @@ namespace Cthangover.Core.Mods.Caches
         /// copied alongside each shader because Godot resolves include
         /// directives relative to the shader's location.
         /// </summary>
-        private static bool WriteIfChanged(string path, byte[] bytes)
-        {
-            if (bytes == null || (File.Exists(path) && File.ReadAllBytes(path).AsSpan().SequenceEqual(bytes)))
-                return false;
-            File.WriteAllBytes(path, bytes);
-            return true;
-        }
-
         public static void ExtractShaders(string modId, IModFileProvider provider)
         {
             var files = provider.ListFiles(ShaderGroupDir);
@@ -79,7 +71,7 @@ namespace Cthangover.Core.Mods.Caches
                 return;
 
             var shaderExts = ModConfig.Instance.GetShaderExtensionSet();
-            var includeData = new Dictionary<string, byte[]>();
+            var includeEntries = new List<string>();
             var shaderEntries = new List<string>();
 
             foreach (var entry in files)
@@ -98,9 +90,7 @@ namespace Cthangover.Core.Mods.Caches
 
                 if (ext == ".gdshaderinclude")
                 {
-                    var bytes = provider.ReadFileBinary(entry);
-                    if (bytes != null)
-                        includeData[relativeName] = bytes;
+                    includeEntries.Add(entry);
                 }
                 else
                 {
@@ -116,9 +106,12 @@ namespace Cthangover.Core.Mods.Caches
                 var targetDir = GetShaderCacheDir(modId, shaderName);
                 Directory.CreateDirectory(targetDir);
 
-                var changed = WriteIfChanged(Path.Combine(targetDir, relativeName), provider.ReadFileBinary(entry));
-                foreach (var (incName, incBytes) in includeData)
-                    changed |= WriteIfChanged(Path.Combine(targetDir, incName), incBytes);
+                var changed = ModFileAccess.Materialize(provider, entry, Path.Combine(targetDir, relativeName));
+                foreach (var include in includeEntries)
+                {
+                    var includeName = include.Substring(ShaderGroupDir.Length + 1);
+                    changed |= ModFileAccess.Materialize(provider, include, Path.Combine(targetDir, includeName));
+                }
 
                 if (changed)
                     GameLogger.Log("CACHE", $"Cached shader '{shaderName}' from mod '{modId}'");

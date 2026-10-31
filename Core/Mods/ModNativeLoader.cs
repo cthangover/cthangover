@@ -93,7 +93,7 @@ namespace Cthangover.Core.Mods
                 if (nativePatterns == null || nativePatterns.Count == 0)
                     continue;
 
-                var nativeFiles = CollectNativeFiles(mod.FileProvider, nativePatterns);
+                var nativeFiles = CollectNativeFiles(NestedFolders.Visible(mod), nativePatterns);
                 if (nativeFiles.Count == 0)
                     continue;
 

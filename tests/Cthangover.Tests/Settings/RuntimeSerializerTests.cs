@@ -36,12 +36,11 @@ namespace Engine.Tests.Settings
         }
 
         [Fact]
-        public void BuildCoreSlot_MetadataIsRequiredTrue()
+        public void BuildCoreSlot_MetadataHasCoreIdentity()
         {
             var runtime = CreateRuntime();
             var slot = RuntimeSerializer.BuildCoreSlot(runtime, "1.0.0", "test_scene", new HashSet<string>());
 
-            Assert.True(slot.Metadata.IsRequired);
             Assert.Equal(SavePackage.CoreSlotKey, slot.Metadata.ModId);
             Assert.Equal("Core Game", slot.Metadata.ModName);
             Assert.Equal("1.0.0", slot.Metadata.MinCoreVersion);

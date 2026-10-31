@@ -468,10 +468,7 @@ namespace Cthangover.Core.Settings
             return result;
         }
 
-        /// <summary>
-        /// Games that have saves on disk (newest first), plus the shared root
-        /// as an entry with a null id when saves without a game exist.
-        /// </summary>
+        /// <summary>Games that have saves on disk (newest first).</summary>
         public static List<SaveGameSummary> ListGamesWithSaves()
         {
             var result = new List<SaveGameSummary>();
@@ -488,10 +485,6 @@ namespace Cthangover.Core.Settings
                 if (saves.Count > 0)
                     result.Add(Summarize(gameId, saves));
             }
-
-            var legacy = ListSaves(null);
-            if (legacy.Count > 0)
-                result.Add(Summarize(null, legacy));
 
             result.Sort((a, b) => b.LastSave.CompareTo(a.LastSave));
             return result;
@@ -541,28 +534,6 @@ namespace Cthangover.Core.Settings
             File.Copy(source, target, overwrite: true);
             GameLogger.Log("SAVE", $"Backup of '{fileName}' before a composition change: {target}");
             return target;
-        }
-
-        /// <summary>
-        /// Moves a save made without a game (shared root) into
-        /// <paramref name="gameId"/>'s folder under a free slot name, together
-        /// with its screenshot. Returns the new slot name.
-        /// </summary>
-        public static string AdoptLegacySave(string fileName, string gameId)
-        {
-            var slot = NextSlotName(gameId);
-            var fromDir = ProjectSettings.GlobalizePath(GameDirectory(null));
-            var toDir = ProjectSettings.GlobalizePath(GameDirectory(gameId));
-            Directory.CreateDirectory(toDir);
-            foreach (var extension in new[] { ".json", ".png" })
-            {
-                var from = System.IO.Path.Combine(fromDir, Sanitize(fileName) + extension);
-                if (File.Exists(from))
-                    File.Move(from, System.IO.Path.Combine(toDir, slot + extension));
-            }
-
-            GameLogger.Log("SAVE", $"Save '{fileName}' without a game moved to game '{gameId}' as '{slot}'");
-            return slot;
         }
 
         /// <summary>

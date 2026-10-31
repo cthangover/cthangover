@@ -50,7 +50,7 @@ namespace Cthangover.Core.Mods.Pipeline
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
-                    if (entry.EntryName == ".gdignore" || entry.EntryName == ".gitkeep")
+                    if (ModContentFiles.IsHidden(entry.EntryName))
                         continue;
 
                     var loader = ModDiscoveryRegistry.FindLoader(entry.Url);
@@ -68,6 +68,8 @@ namespace Cthangover.Core.Mods.Pipeline
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
+                foreach (var candidate in candidates)
+                    candidate.Provider.Dispose();
                 throw;
             }
             catch (Exception ex)
@@ -163,18 +165,22 @@ namespace Cthangover.Core.Mods.Pipeline
         /// </summary>
         private static ModCandidate? TryLoadModFromLoader(IModLoader loader, string url, string entryName)
         {
+            IModFileProvider fileProvider = null;
             try
             {
-                var fileProvider = loader.CreateProvider(url, entryName);
-                var manifest = ReadManifest(fileProvider);
+                fileProvider = loader.CreateProvider(url, entryName);
+                var manifest = ReadManifest(fileProvider, out var problem);
 
                 if (manifest == null)
                 {
-                    GameLogger.Log("MODS_REGISTRY", $"Skipping '{entryName}': no manifest found", LogLevel.Error);
+                    if (fileProvider is Providers.ArchiveModFileProvider)
+                        ArchiveUnlockService.Default.RecordFailure(url, false);
+                    GameLogger.Log("MODS_REGISTRY", $"Skipping '{entryName}': {problem}", LogLevel.Error);
                     fileProvider.Dispose();
                     return null;
                 }
 
+                ArchiveUnlockService.Default.Remove(url);
                 var id = !string.IsNullOrEmpty(manifest.Id) ? manifest.Id : loader.GetFallbackModId(url, entryName);
 
                 var info = new ModInfo
@@ -200,9 +206,14 @@ namespace Cthangover.Core.Mods.Pipeline
             }
             catch (Exception ex)
             {
+                var archive = fileProvider as Providers.ArchiveModFileProvider;
+                var needsPassword = ex is SharpCompress.Common.CryptographicException || archive?.IsEncrypted == true;
+                fileProvider?.Dispose();
+                if (loader is ZipModLoader || loader is SevenZipModLoader)
+                    ArchiveUnlockService.Default.RecordFailure(url, needsPassword);
                 GameLogger.Log("MODS_REGISTRY",
-                    $"Failed to load mod '{entryName}' via {loader.Name}: {ex.Message}",
-                    LogLevel.Error);
+                    $"Cannot open package '{entryName}' via {loader.Name}; visible in the mod manager for retry",
+                    LogLevel.Warning);
                 return null;
             }
         }
@@ -230,24 +241,39 @@ namespace Cthangover.Core.Mods.Pipeline
         /// entry name is not known here), which makes the whole entry skipped
         /// by <see cref="TryLoadModFromLoader"/>.
         /// </summary>
-        private static ModManifest ReadManifest(IModFileProvider provider)
+        /// <summary>
+        /// The manifest of a mod entry, or null with <paramref name="problem"/> saying why: <c>no manifest found</c>
+        /// when the file is missing, <c>invalid manifest.json: &lt;reason&gt;</c> when it is empty or does not
+        /// parse (a wrong <c>category</c> name, broken JSON) — the author must see that the file is there but wrong.
+        /// </summary>
+        public static ModManifest ReadManifest(IModFileProvider provider, out string problem)
         {
+            problem = null;
             if (!provider.FileExists("manifest.json"))
+            {
+                problem = "no manifest found";
                 return null;
+            }
 
             var json = provider.ReadFileText("manifest.json");
-            if (string.IsNullOrEmpty(json))
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                problem = "invalid manifest.json: the file is empty";
                 return null;
+            }
 
             try
             {
-                return JsonSerializer.Deserialize<ModManifest>(json, JsonOptionsProvider.ReadOptions);
+                var manifest = JsonSerializer.Deserialize<ModManifest>(json, JsonOptionsProvider.ReadOptions);
+                if (manifest == null)
+                    problem = "invalid manifest.json: the file holds null";
+                return manifest;
             }
             catch (JsonException ex)
             {
-                GameLogger.Log("MODS_REGISTRY", $"Failed to parse manifest.json: {ex.Message}", LogLevel.Error);
+                problem = $"invalid manifest.json: {ex.Message}";
+                return null;
             }
-            return null;
         }
     }
 }

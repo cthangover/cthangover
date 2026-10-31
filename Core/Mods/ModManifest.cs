@@ -99,6 +99,15 @@ namespace Cthangover.Core.Mods
         public List<ModTestSuite> TestSuites { get; set; }
 
         /// <summary>
+        /// Integrations hosted by this mod: glue mounted as the virtual mod <c>&lt;host&gt;__&lt;id&gt;</c>
+        /// whenever the host and all partners (<see cref="ModIntegration.With"/>) are in the mod set —
+        /// at boot and on an in-process game switch. Not a mod of its own for the player: no card, no
+        /// toggle; the host's card lists it. See <see cref="ModIntegrations"/>.
+        /// </summary>
+        [JsonPropertyName("integrations")]
+        public List<ModIntegration> Integrations { get; set; }
+
+        /// <summary>
         /// Test fixture: never part of <c>--all-mods</c> (or a game); loaded
         /// only when named explicitly in <c>--with-mods=</c>, so its patches and
         /// demo data cannot leak into unrelated tests.

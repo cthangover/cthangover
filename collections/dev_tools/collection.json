@@ -163,6 +163,47 @@
       "optional": true
     },
     {
+      "id": "translations",
+      "name": "Translations",
+      "description": "The translations window: lists the texts a language lacks and writes them into the locale files of their mods.",
+      "locale": [
+        {
+          "lang": "ru",
+          "name": "Переводы",
+          "description": "Окно переводов: список недостающих текстов языка и их запись в файлы локализации."
+        },
+        {
+          "lang": "es",
+          "name": "Traducciones",
+          "description": "Ventana de traducciones: lista los textos que faltan en un idioma y los escribe en los archivos de localización."
+        },
+        {
+          "lang": "zh",
+          "name": "翻译",
+          "description": "翻译窗口：列出某种语言缺少的文本，并写入本地化文件。"
+        },
+        {
+          "lang": "ja",
+          "name": "翻訳",
+          "description": "翻訳ウィンドウ：言語に不足しているテキストを一覧し、ローカライズファイルに書き込みます。"
+        },
+        {
+          "lang": "ko",
+          "name": "번역",
+          "description": "번역 창: 언어에 없는 텍스트를 목록으로 보여 주고 현지화 파일에 씁니다."
+        },
+        {
+          "lang": "vi",
+          "name": "Bản dịch",
+          "description": "Cửa sổ bản dịch: liệt kê văn bản ngôn ngữ còn thiếu và ghi vào tệp bản địa hóa."
+        }
+      ],
+      "mods": [
+        "locale_editor>=1"
+      ],
+      "optional": true
+    },
+    {
       "id": "manager",
       "name": "Mod Manager",
       "description": "Catalog browser and installer.",
@@ -452,88 +493,64 @@
       "selected": false
     },
     {
-      "id": "rpg_maps",
-      "name": "RPG Map Editor",
-      "description": "Paints the RPG engine's tile maps while the game runs: three tile layers, collision, events, spawn and random encounters. A save updates the world at once.",
+      "id": "rpg_editors",
+      "name": "RPG Editors",
+      "description": "The RPG map editor and the RPG object editor (plan 12.3, 12.4).",
       "mods": [
-        "rpg_editor>=1"
+        "rpg_editor>=1",
+        "rpg_object_editor>=1"
       ],
       "locale": [
         {
           "lang": "ru",
-          "name": "Редактор RPG-карт",
-          "description": "Редактор RPG-карт"
+          "name": "Редакторы RPG",
+          "description": "Редактор RPG-карт и редактор RPG-объектов."
         },
         {
           "lang": "es",
-          "name": "Editor de mapas RPG",
-          "description": "Editor de mapas RPG"
+          "name": "Editores RPG",
+          "description": "Editor de mapas RPG y editor de objetos RPG."
         },
         {
           "lang": "zh",
-          "name": "RPG 地图编辑器",
-          "description": "RPG 地图编辑器"
+          "name": "RPG 编辑器",
+          "description": "RPG 地图编辑器和 RPG 对象编辑器。"
         },
         {
           "lang": "ja",
-          "name": "RPG マップエディター",
-          "description": "RPG マップエディター"
+          "name": "RPG エディター",
+          "description": "RPG マップエディターと RPG オブジェクトエディター。"
         },
         {
           "lang": "ko",
-          "name": "RPG 맵 에디터",
-          "description": "RPG 맵 에디터"
+          "name": "RPG 에디터",
+          "description": "RPG 맵 에디터와 RPG 오브젝트 에디터."
         },
         {
           "lang": "vi",
-          "name": "Trình sửa bản đồ RPG",
-          "description": "Trình sửa bản đồ RPG"
+          "name": "Trình sửa RPG",
+          "description": "Trình sửa bản đồ RPG và trình sửa đối tượng RPG."
         }
       ],
-      "optional": true,
-      "selected": false
+      "optional": true
     },
     {
-      "id": "rpg_atlases",
-      "name": "RPG Tileset Editor",
-      "description": "Sets up the RPG engine's tilesets without editing JSON: which atlas cells are map tiles, solid and isometric plane tiles, whole objects with the point they stand on, and surface materials. A save updates the world at once.",
+      "id": "effects_editor",
+      "name": "Effects Editor",
+      "description": "Live atmosphere profiles and map painting.",
+      "role": "tools",
+      "optional": true,
+      "selected": true,
       "mods": [
-        "rpg_tileset_editor>=1"
+        "effects_editor>=1"
       ],
       "locale": [
         {
           "lang": "ru",
-          "name": "Редактор тайлсетов RPG",
-          "description": "Редактор тайлсетов RPG"
-        },
-        {
-          "lang": "es",
-          "name": "Editor de tilesets RPG",
-          "description": "Editor de tilesets RPG"
-        },
-        {
-          "lang": "zh",
-          "name": "RPG 图块集编辑器",
-          "description": "RPG 图块集编辑器"
-        },
-        {
-          "lang": "ja",
-          "name": "RPG タイルセットエディター",
-          "description": "RPG タイルセットエディター"
-        },
-        {
-          "lang": "ko",
-          "name": "RPG 타일셋 에디터",
-          "description": "RPG 타일셋 에디터"
-        },
-        {
-          "lang": "vi",
-          "name": "Trình sửa tileset RPG",
-          "description": "Trình sửa tileset RPG"
+          "name": "Редактор эффектов",
+          "description": "Создание и настройка эффектов окружения с живым предпросмотром и нанесением на карту."
         }
-      ],
-      "optional": true,
-      "selected": false
+      ]
     }
   ]
 }

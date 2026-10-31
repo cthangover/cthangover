@@ -8,8 +8,7 @@
 /// categories at once (e.g. a battle engine is both
 /// <c>Library</c> and <c>Gameplay</c>). JSON serialisation via
 /// <c>JsonStringEnumConverter</c> keeps single categories as plain
-/// names (<c>"gameplay"</c>, fully backward compatible with catalogs
-/// written before combinations existed) and writes combinations as a
+/// names (<c>"gameplay"</c>) and writes combinations as a
 /// comma-separated list (<c>"library, gameplay"</c>). Parsing is
 /// case-insensitive.
 /// </summary>

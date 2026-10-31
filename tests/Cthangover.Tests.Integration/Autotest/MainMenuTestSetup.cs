@@ -253,11 +253,13 @@ namespace Cthangover.Core.Autotest
 				var status = card.GetNodeOrNull<Label>("VBox/Body/Box/MetaRow/Status");
 				if (status == null || string.IsNullOrEmpty(status.Text))
 					continue;
-				var width = status.GetThemeFont("font").GetStringSize(status.Text, HorizontalAlignment.Left, -1, status.GetThemeFontSize("font_size")).X;
-				if (width <= status.Size.X + 0.5f)
+				// The status may wrap onto two lines inside its label (see mod_card.tscn), so the text
+				// is cut only when the wrapped height exceeds the label, not when one line is wider.
+				var height = status.GetThemeFont("font").GetMultilineStringSize(status.Text, HorizontalAlignment.Left, status.Size.X, status.GetThemeFontSize("font_size")).Y;
+				if (height <= status.Size.Y + 0.5f)
 					continue;
 				GameLogger.Log("TEST",
-					$"MainMenuTestSetup: status '{status.Text}' of {card.Name} is cut ({width:0} px text in a {status.Size.X:0} px label)",
+					$"MainMenuTestSetup: status '{status.Text}' of {card.Name} is cut ({height:0} px wrapped text in a {status.Size.Y:0} px label, {status.Size.X:0} px wide)",
 					LogLevel.Error);
 				Fail("mod_manager");
 				return;

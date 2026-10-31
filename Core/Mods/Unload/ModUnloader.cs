@@ -76,6 +76,10 @@ namespace Cthangover.Core.Mods.Unload
             if (consumers > 0)
                 report.Add($"removed {consumers} mod-contributed assembly consumer(s)");
 
+            var resettables = Cthangover.Core.Bootstrap.AppServices.Current.RemoveOwnedResettables(ownership);
+            if (resettables > 0)
+                report.Add($"removed {resettables} new-game resettable(s) of mod code");
+
             var hosts = hostAssemblies ?? DefaultHosts();
             report.AddRange(StaticReferenceSweeper.Sweep(ownership, hosts, AutoloadNodes(tree, ownership)));
 

@@ -60,7 +60,15 @@ namespace Cthangover.Core.Mods.Pipeline
             lock (pipeline.PipelineLock)
             {
                 prep.PreviousArtifacts = new Dictionary<string, string>(ModAssemblyCache.CurrentArtifacts, StringComparer.OrdinalIgnoreCase);
-                DiscoverAndCompile(prep, cancellationToken);
+                try
+                {
+                    DiscoverAndCompile(prep, cancellationToken);
+                }
+                catch
+                {
+                    Discard(prep);
+                    throw;
+                }
             }
 
             if (prep.Succeeded)
@@ -116,6 +124,7 @@ namespace Cthangover.Core.Mods.Pipeline
 
             ModSetFilter.FilterDisabledMods(prep.Mods, prep.Selection.WithMods);
             prep.Choice = ModSetFilter.SelectActiveGame(prep.Mods, prep.Selection);
+            ModIntegrations.Mount(prep.Mods);
             ModSetFilter.ValidateDependencies(prep.Mods);
 
             prep.Precompiled = ModAssemblyLoader.StagePrecompiledDlls(prep.Mods.Values, cancellationToken);
@@ -132,14 +141,25 @@ namespace Cthangover.Core.Mods.Pipeline
         {
             if (prep == null)
                 return;
-            ModAssemblyCache.CurrentArtifacts.Clear();
-            foreach (var kvp in prep.PreviousArtifacts)
-                ModAssemblyCache.CurrentArtifacts[kvp.Key] = kvp.Value;
-            foreach (var mod in prep.AllDiscovered.Values)
+            lock (pipeline.PipelineLock)
             {
-                if (!mods.TryGetValue(mod.Id, out var running) || !ReferenceEquals(running.FileProvider, mod.FileProvider))
-                    mod.FileProvider?.Dispose();
+                ModAssemblyCache.CurrentArtifacts.Clear();
+                foreach (var kvp in prep.PreviousArtifacts)
+                    ModAssemblyCache.CurrentArtifacts[kvp.Key] = kvp.Value;
+                var disposed = new HashSet<IModFileProvider>(ReferenceEqualityComparer.Instance);
+                foreach (var mod in prep.AllDiscovered.Values)
+                    DisposePreparedProvider(mod, disposed);
+                foreach (var mod in prep.Mods.Values)
+                    DisposePreparedProvider(mod, disposed);
             }
+        }
+
+        private void DisposePreparedProvider(IModInfo mod, HashSet<IModFileProvider> disposed)
+        {
+            if (mod.FileProvider == null || !disposed.Add(mod.FileProvider))
+                return;
+            if (!mods.TryGetValue(mod.Id, out var running) || !ReferenceEquals(running.FileProvider, mod.FileProvider))
+                mod.FileProvider.Dispose();
         }
 
         /// <summary>

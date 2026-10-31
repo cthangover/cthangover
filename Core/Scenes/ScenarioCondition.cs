@@ -63,7 +63,15 @@ namespace Cthangover.Core.Scenes
         /// (and fail) on every call.
         /// </summary>
         /// <param name="condition">The condition expression string to evaluate.</param>
-        public static bool Evaluate(string condition)
+        public static bool Evaluate(string condition) => Evaluate(condition, null);
+
+        /// <summary>
+        /// <see cref="Evaluate(string)"/> inside an instance scope: <c>self.&lt;name&gt;</c> in the
+        /// condition reads the flag <c>&lt;scope&gt;:&lt;name&gt;</c>. <paramref name="scope"/> is the
+        /// placement id of the object whose state, interaction or scenario is being evaluated (set by
+        /// the runtime that runs it, e.g. the RPG map); null = no scope, where <c>self.</c> is an error.
+        /// </summary>
+        public static bool Evaluate(string condition, string scope)
         {
             if (string.IsNullOrWhiteSpace(condition))
                 return true;
@@ -92,8 +100,44 @@ namespace Cthangover.Core.Scenes
 
             evalCtx.Flags = Flags;
             evalCtx.QuestFactory = QuestServiceRegistry.Provider;
-            return ast.Evaluate(evalCtx);
+            var outerScope = evalCtx.Scope;
+            evalCtx.Scope = scope;
+            try
+            {
+                return ast.Evaluate(evalCtx);
+            }
+            finally
+            {
+                evalCtx.Scope = outerScope;
+            }
         }
+
+        /// <summary>
+        /// The story flag a flag name means in <paramref name="scope"/>: <c>self.&lt;name&gt;</c> becomes
+        /// <c>&lt;scope&gt;:&lt;name&gt;</c> (contract <c>rpg-model-v2.md</c> 5.5 — two barrels of one object
+        /// keep separate <c>self.open</c>), any other name is returned as is. The result is an ordinary
+        /// flag of <see cref="RuntimeData.Flags"/>: saved, reset with a new game and readable elsewhere by
+        /// its full name. <c>self.</c> without a scope is never a silent global flag: an ERROR is logged
+        /// and null returned, so the caller skips the read or write. Used by conditions, the <c>flag</c>
+        /// command and actions whose parameter names a flag (<c>win_flag=self.won</c>).
+        /// </summary>
+        public static string FlagKey(string name, string scope)
+        {
+            if (name == null || !name.StartsWith(SelfPrefix + ".", StringComparison.Ordinal))
+                return name;
+            var local = name.Substring(SelfPrefix.Length + 1);
+            if (string.IsNullOrEmpty(scope) || local.Length == 0)
+            {
+                GameLogger.Log("COND", string.IsNullOrEmpty(scope)
+                    ? $"'{name}' is used outside an instance scope (self. is only valid in an object's states, interaction and its scenario)"
+                    : $"'{name}' names no flag", LogLevel.Error);
+                return null;
+            }
+            return scope + ":" + local;
+        }
+
+        /// <summary>The prefix of instance flags, <c>self</c> (written <c>self.&lt;name&gt;</c>).</summary>
+        public const string SelfPrefix = "self";
 
         /// <summary>
         /// Forgets every cached AST. Leaves of a tree may be nodes of a mod's own

@@ -1,17 +1,19 @@
-using System.IO;
-using System.IO.Compression;
-using System.Text.Json;
-using Cthangover.Core.Utils;
-
 namespace Cthangover.Core.Mods
 {
+    using System;
+    using System.IO;
+    using Cthangover.Core.Mods.Providers;
+    using System.IO.Compression;
+    using System.Text.Json;
+    using Cthangover.Core.Utils;
+
     /// <summary>
     /// Generates catalog JSON entries from installed mods. Two entry
     /// points:
     ///
     /// <see cref="ExportFromFolder"/> — for folder mods under
     /// development. Creates a .zip archive next to the mod folder
-    /// (if one doesn't already exist), computes both SHA256 checksums,
+    /// (rebuilt from the current content), computes both SHA256 checksums,
     /// and writes a companion .json catalog entry file.
     ///
     /// <see cref="ExportFromZip"/> — for already-packaged zip mods.
@@ -26,8 +28,7 @@ namespace Cthangover.Core.Mods
     public static class ModCatalogExporter
     {
         /// <summary>
-        /// Exports a catalog entry for a folder mod. If no zip archive
-        /// for this mod exists in <paramref name="outputDir"/>, one is
+        /// Exports a fresh catalog entry and archive for a folder mod. The archive is
         /// created from the mod's content files (<see cref="ModContentFiles"/>:
         /// the folder's <c>.git/</c> and other hidden entries stay out of the
         /// published archive). The companion .json file is then written
@@ -45,29 +46,33 @@ namespace Cthangover.Core.Mods
             var zipName = entry.Id + ".zip";
             var zipPath = Path.Combine(outputDir, zipName);
 
-            if (!File.Exists(zipPath))
+            Directory.CreateDirectory(outputDir);
+            var token = Guid.NewGuid().ToString("N");
+            var temporaryZip = zipPath + "." + token + ".tmp";
+            var jsonPath = Path.ChangeExtension(zipPath, ".json");
+            var temporaryJson = jsonPath + "." + token + ".tmp";
+            try
             {
-                Directory.CreateDirectory(outputDir);
-                File.Delete(zipPath + ".tmp");
-                using (var archive = ZipFile.Open(zipPath, ZipArchiveMode.Create))
+                using (var archive = ZipFile.Open(temporaryZip, ZipArchiveMode.Create))
                 {
                     foreach (var file in ModContentFiles.Enumerate(folderPath))
                         archive.CreateEntryFromFile(file, ModPath.Normalize(Path.GetRelativePath(folderPath, file)), CompressionLevel.Optimal);
                 }
-                GameLogger.Log("MODS_EXPORT", $"Created archive '{zipPath}' from folder mod '{entry.Id}'");
+                var downloadEntry = EnsureDownloadEntry(entry);
+                downloadEntry.ArchiveSha256 = ModHasher.ComputeArchiveSha256(temporaryZip);
+                using (var package = new ZipModFileProvider(temporaryZip, entry.Id))
+                    downloadEntry.InstallSha256 = ModHasher.ComputeInstallSha256(package,
+                        ModConfig.Instance.CatalogIgnorePatterns);
+                downloadEntry.SizeBytes = new FileInfo(temporaryZip).Length;
+                WriteJsonFile(temporaryJson, entry);
+                PackageExportTransaction.Publish(temporaryZip, zipPath, temporaryJson, jsonPath);
+                return jsonPath;
             }
-
-            var downloadEntry = EnsureDownloadEntry(entry);
-            downloadEntry.ArchiveSha256 = ModHasher.ComputeArchiveSha256(zipPath);
-            downloadEntry.InstallSha256 = ModHasher.ComputeInstallSha256(modInfo.FileProvider,
-                ModConfig.Instance.CatalogIgnorePatterns);
-            downloadEntry.SizeBytes = new FileInfo(zipPath).Length;
-
-            var jsonPath = Path.ChangeExtension(zipPath, ".json");
-            WriteJsonFile(jsonPath, entry);
-
-            GameLogger.Log("MODS_EXPORT", $"Exported catalog entry for '{entry.Id}' → '{jsonPath}'");
-            return jsonPath;
+            finally
+            {
+                File.Delete(temporaryZip);
+                File.Delete(temporaryJson);
+            }
         }
 
         /// <summary>
@@ -80,6 +85,10 @@ namespace Cthangover.Core.Mods
         /// (typically the mods root directory).</param>
         /// <returns>Absolute path to the written .json file.</returns>
         public static string ExportFromZip(ModInfo modInfo, CatalogExportEntry entry, string outputDir)
+            => ExportFromArchive(modInfo, entry, outputDir);
+
+        /// <summary>Exports metadata for an already mounted ZIP/7z, preserving its format and encryption.</summary>
+        public static string ExportFromArchive(ModInfo modInfo, CatalogExportEntry entry, string outputDir)
         {
             var zipPath = modInfo.FileProvider.RootPath;
 
@@ -90,7 +99,13 @@ namespace Cthangover.Core.Mods
             downloadEntry.SizeBytes = new FileInfo(zipPath).Length;
 
             var jsonPath = Path.Combine(outputDir, Path.GetFileNameWithoutExtension(zipPath) + ".json");
-            WriteJsonFile(jsonPath, entry);
+            var temporary = jsonPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
+            try
+            {
+                WriteJsonFile(temporary, entry);
+                File.Move(temporary, jsonPath, true);
+            }
+            finally { File.Delete(temporary); }
 
             GameLogger.Log("MODS_EXPORT", $"Exported catalog entry for '{entry.Id}' → '{jsonPath}'");
             return jsonPath;
@@ -111,6 +126,7 @@ namespace Cthangover.Core.Mods
         private static void WriteJsonFile(string path, CatalogExportEntry entry)
         {
             var json = JsonSerializer.Serialize(entry, JsonOptionsProvider.WriteIndentedIgnoreNullOptions);
+            Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path)));
             File.WriteAllText(path, json);
         }
     }

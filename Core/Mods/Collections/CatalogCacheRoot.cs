@@ -4,12 +4,9 @@ using System.Text.Json.Serialization;
 namespace Cthangover.Core.Mods
 {
     /// <summary>
-    /// On-disk envelope for <c>user://catalog_cache.json</c>. Replaced the bare
-    /// mod-entry array when collections were added to the catalog: the cache now
-    /// stores both lists together so a refresh persists everything in one write.
-    /// <see cref="CatalogService.LoadCache"/> still understands the legacy
-    /// array-only format and falls back to it when the file does not start with
-    /// an object.
+    /// On-disk envelope for <c>user://catalog_cache.json</c>: both lists are
+    /// stored together so a refresh persists everything in one write. A cache
+    /// in any other format is ignored (no reading of old formats).
     /// </summary>
     public class CatalogCacheRoot
     {

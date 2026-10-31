@@ -28,5 +28,12 @@ namespace Cthangover.Core.Scenes
 
         /// <summary>Quest service of the quests engine mod (core contract <see cref="IQuestService"/>) for quest resolution.</summary>
         public IQuestService QuestFactory;
+
+        /// <summary>
+        /// The instance scope of this evaluation (a placement id), or null outside one: a flag
+        /// written <c>self.&lt;name&gt;</c> means the flag <c>&lt;scope&gt;:&lt;name&gt;</c>
+        /// (<see cref="ScenarioCondition.FlagKey"/>).
+        /// </summary>
+        public string Scope;
     }
 }

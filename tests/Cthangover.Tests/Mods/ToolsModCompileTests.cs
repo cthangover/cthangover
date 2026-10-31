@@ -16,8 +16,12 @@ namespace Engine.Tests.Mods
     /// order (ModCompiler.CompileAll): manifest dependencies first, so
     /// mod-to-mod references resolve through the compilation cache the same
     /// way, and the real mod ids are passed to the compiler so the reference
-    /// scan sees exactly the set the game would see. Mods without sources are
-    /// skipped, and the whole check is skipped when the checkout has no mods.
+    /// scan sees exactly the set the game would see. Test fixtures
+    /// (<c>"fixture": true</c>) are compiled too (plan 14.B5): they are left out of
+    /// the game, not out of this check. Integrations (<c>integrations/&lt;id&gt;/src</c>)
+    /// are compiled as the virtual mods <c>&lt;host&gt;__&lt;id&gt;</c> against their host and
+    /// partners, as ModIntegrations mounts them. Mods without sources are skipped,
+    /// and the whole check is skipped when the checkout has no mods.
     /// </summary>
     public class ToolsModCompileTests
     {
@@ -101,6 +105,7 @@ namespace Engine.Tests.Mods
 
                 string id;
                 var depends = new List<string>();
+                var integrations = new List<ModGuardInfo>();
                 try
                 {
                     using var document = JsonDocument.Parse(File.ReadAllText(manifestPath));
@@ -118,6 +123,23 @@ namespace Engine.Tests.Mods
                             depends.Add(separator > 0 ? raw.Substring(0, separator) : raw);
                         }
                     }
+                    if (document.RootElement.TryGetProperty("integrations", out var integrationsElement)
+                        && integrationsElement.ValueKind == JsonValueKind.Array)
+                    {
+                        // An integration is the virtual mod <host>__<id>: it depends on its host and its partners.
+                        foreach (var integration in integrationsElement.EnumerateArray())
+                        {
+                            var integrationId = integration.GetProperty("id").GetString();
+                            var partners = new List<string> { id };
+                            if (integration.TryGetProperty("with", out var withElement) && withElement.ValueKind == JsonValueKind.Array)
+                                partners.AddRange(withElement.EnumerateArray().Select(partner => partner.GetString()));
+                            var integrationSources = Path.Combine(dir, "integrations", integrationId, "src");
+                            integrations.Add(new ModGuardInfo(
+                                id + "__" + integrationId,
+                                Directory.Exists(integrationSources) ? integrationSources : null,
+                                partners));
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -127,6 +149,8 @@ namespace Engine.Tests.Mods
 
                 var sourceRoot = Path.Combine(dir, "src");
                 result[id] = new ModGuardInfo(id, Directory.Exists(sourceRoot) ? sourceRoot : null, depends);
+                foreach (var integration in integrations)
+                    result[integration.Id] = integration;
             }
 
             return result;

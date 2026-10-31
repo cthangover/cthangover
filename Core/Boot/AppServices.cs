@@ -168,7 +168,11 @@ namespace Cthangover.Core.Bootstrap
         /// from an IModInitializer, i.e. after the boot pipeline has begun).
         /// Registering on Current before SetCurrent would target the throwaway
         /// default instance and be lost. Duplicates by IResettable.Id are
-        /// ignored.
+        /// ignored, except a registration of the same type from another
+        /// assembly: that is the owner's mod loaded again (a game switch or a
+        /// reload), and its new instance replaces the old one in place — the
+        /// old one would reset state nobody reads and keep the old load
+        /// context alive.
         /// </summary>
         public void RegisterResettable(IResettable resettable)
         {
@@ -177,13 +181,36 @@ namespace Cthangover.Core.Bootstrap
 
             lock (resettablesLock)
             {
-                foreach (var existing in resettables)
+                for (var i = 0; i < resettables.Count; i++)
                 {
-                    if (string.Equals(existing.Id, resettable.Id, StringComparison.OrdinalIgnoreCase))
-                        return;
+                    var existing = resettables[i];
+                    if (!string.Equals(existing.Id, resettable.Id, StringComparison.OrdinalIgnoreCase))
+                        continue;
+                    var oldType = existing.GetType();
+                    var newType = resettable.GetType();
+                    if (oldType.Assembly != newType.Assembly && oldType.FullName == newType.FullName)
+                    {
+                        resettables[i] = resettable;
+                        GameLogger.Log("BOOT", $"resettable '{resettable.Id}' replaced by its reloaded assembly");
+                    }
+                    return;
                 }
                 resettables.Add(resettable);
             }
+        }
+
+        /// <summary>
+        /// Unload pass (<c>ModUnloader</c>): drops the resettables whose code
+        /// lives in a dying mod assembly, so a new game no longer calls into
+        /// unloaded code and the entry does not pin its load context. Returns
+        /// the number removed.
+        /// </summary>
+        public int RemoveOwnedResettables(Cthangover.Core.Mods.Unload.AssemblyOwnership ownership)
+        {
+            if (ownership == null || ownership.IsEmpty)
+                return 0;
+            lock (resettablesLock)
+                return resettables.RemoveAll(r => ownership.OwnsValue(r) || r is LambdaResettable lambda && lambda.IsOwnedBy(ownership));
         }
 
         /// <summary>Resets every registered state owner, in registration order.</summary>
@@ -286,6 +313,9 @@ namespace Cthangover.Core.Bootstrap
 
             /// <summary>Runs the wrapped reset delegate.</summary>
             public void ResetForNewGame() => reset();
+
+            /// <summary>True when the wrapped delegate is code of <paramref name="ownership"/>.</summary>
+            public bool IsOwnedBy(Cthangover.Core.Mods.Unload.AssemblyOwnership ownership) => ownership.Owns(reset);
         }
     }
 }

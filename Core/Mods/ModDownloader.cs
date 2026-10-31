@@ -1,51 +1,17 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.IO.Compression;
-using System.Linq;
-using System.Threading.Tasks;
-using Cthangover.Core.Utils;
-using Godot;
-
 namespace Cthangover.Core.Mods
 {
-    /// <summary>
-    /// Stages of a <see cref="ModDownloader.InstallAsync"/> run, reported
-    /// through <see cref="ModDownloader.OnProgress"/> so the UI can render a
-    /// progress bar with a human-readable message per stage.
-    /// </summary>
-    public enum InstallStep
-    {
-        /// <summary>Fetching the .zip from a catalog mirror.</summary>
-        Downloading,
-        /// <summary>Comparing the downloaded archive against <c>archive_sha256</c>.</summary>
-        VerifyingArchive,
-        /// <summary>Extracting the archive into a staging directory.</summary>
-        Extracting,
-        /// <summary>Recomputing the install hash of the extracted mod.</summary>
-        VerifyingInstall,
-        /// <summary>Mod installed; a restart is required to load it.</summary>
-        Complete,
-        /// <summary>Install aborted — see the reported message for the reason.</summary>
-        Failed,
-    }
-
-    /// <summary>Snapshot of the downloader state at one moment of an install.</summary>
-    public class InstallProgress
-    {
-        /// <summary>Current pipeline stage.</summary>
-        public InstallStep Step { get; set; }
-        /// <summary>Completion fraction 0–1; 0 for stages without a measurable fraction.</summary>
-        public float Progress { get; set; }
-        /// <summary>Human-readable status line for the UI (e.g. "Downloading... 42%").</summary>
-        public string Message { get; set; }
-    }
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Threading.Tasks;
+    using Cthangover.Core.Utils;
+    using Godot;
 
     /// <summary>
     /// Downloads and installs mods from the online catalog into the user mods
     /// root (<c>user://mods/</c>). One <see cref="InstallAsync"/> run picks the
     /// catalog entry (by id and, when given, the source catalog that published
-    /// it), streams the zip from the first reachable mirror, verifies
+    /// it), streams the ZIP/7z from the first reachable mirror, verifies
     /// <c>archive_sha256</c>, extracts through a staging directory (flattening
     /// a single wrapper folder), verifies <c>install_sha256</c>, and swaps the
     /// result into place. The new mod set only loads after a restart — like
@@ -66,6 +32,9 @@ namespace Cthangover.Core.Mods
         /// <summary>Fired once when an install finishes; <c>true</c> on success, <c>false</c> on any failure.</summary>
         public static event Action<string, bool> OnCompleted;
 
+        /// <summary>Asks the active UI for a session password after an encrypted download cannot be opened. Cancellation aborts installation.</summary>
+        public static event Func<string, Task<string>> PasswordRequired;
+
         /// <summary>
         /// Installs a mod from the catalog into the user mods root. Selects the
         /// entry (optionally from a specific source catalog), picks the download
@@ -78,15 +47,15 @@ namespace Cthangover.Core.Mods
         /// <param name="modId">Canonical mod id to install.</param>
         /// <param name="version">Specific version to install, or null for the newest download.</param>
         /// <param name="sourceUrl">Catalog URL that published the entry (disambiguates variant conflicts), or null.</param>
-		public static async Task<bool> InstallAsync(string modId, string version = null, string sourceUrl = null)
+        /// <param name="password">Optional ZIP/7z password, used for this installation only.</param>
+		public static async Task<bool> InstallAsync(string modId, string version = null, string sourceUrl = null, string password = null)
 		{
 			if (string.IsNullOrEmpty(modId))
 				return Fail(modId, "Mod ID is empty");
 
-			if (_installingMods.Contains(modId))
-				return false;
-
-			_installingMods.Add(modId);
+            lock (_installingMods)
+                if (!_installingMods.Add(modId))
+                    return false;
 
 			try
 			{
@@ -106,75 +75,33 @@ namespace Cthangover.Core.Mods
 					?? entry.Downloads[0];
 
                 var tempFile = Path.Combine(
-                    Path.GetTempPath(), $"cthangover_dl_{modId}_{Guid.NewGuid():N}.zip");
+                    Path.GetTempPath(), $"cthangover_dl_{modId}_{Guid.NewGuid():N}.package");
 
                 try
                 {
                     if (!await DownloadWithProgressAsync(download.Urls, tempFile))
                         return Fail(modId, "All download mirrors failed");
 
-                    ReportProgress(InstallStep.VerifyingArchive, 0,
-                        $"Verifying archive...");
-
-                    if (!string.IsNullOrEmpty(download.ArchiveSha256))
+                    ReportProgress(InstallStep.VerifyingArchive, 0, "Verifying and preparing package...");
+                    var targetDir = GetModTargetDir(modId);
+                    var packagePassword = password;
+                    while (true)
                     {
-                        var archiveHash = ModHasher.ComputeArchiveSha256(tempFile);
-                        if (!string.Equals(archiveHash, download.ArchiveSha256,
-                            StringComparison.OrdinalIgnoreCase))
+                        try
                         {
-                            return Fail(modId,
-                                $"Archive SHA256 mismatch: expected {download.ArchiveSha256}, got {archiveHash}");
+                            await Task.Factory.StartNew(InstallDownloadedPackage,
+                                (tempFile, targetDir, modId, download, packagePassword),
+                                System.Threading.CancellationToken.None, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default);
+                            break;
                         }
-                    }
-
-					ReportProgress(InstallStep.Extracting, 0,
-						$"Installing {modId}...");
-
-					var targetDir = GetModTargetDir(modId);
-					var stagingDir = targetDir + "_staging";
-
-					if (Directory.Exists(stagingDir))
-						Directory.Delete(stagingDir, recursive: true);
-
-					ZipFile.ExtractToDirectory(tempFile, stagingDir);
-
-					var stagingEntries = Directory.GetFileSystemEntries(stagingDir);
-					if (stagingEntries.Length == 1
-						&& Directory.Exists(stagingEntries[0])
-						&& !File.Exists(Path.Combine(stagingDir, "manifest.json")))
-					{
-						var wrapperDir = stagingEntries[0];
-						var flatDir = stagingDir + "_flat";
-						if (Directory.Exists(flatDir))
-							Directory.Delete(flatDir, recursive: true);
-						Directory.Move(wrapperDir, flatDir);
-						Directory.Delete(stagingDir, recursive: true);
-						stagingDir = flatDir;
-					}
-
-					if (!File.Exists(Path.Combine(stagingDir, "manifest.json")))
-					{
-						if (Directory.Exists(stagingDir))
-							Directory.Delete(stagingDir, recursive: true);
-						return Fail(modId, "Extracted zip does not contain a manifest.json");
-					}
-
-					if (Directory.Exists(targetDir))
-						Directory.Delete(targetDir, recursive: true);
-					Directory.Move(stagingDir, targetDir);
-
-                    ReportProgress(InstallStep.VerifyingInstall, 0,
-                        $"Verifying install...");
-
-                    if (!string.IsNullOrEmpty(download.InstallSha256))
-                    {
-                        var installHash = ModHasher.ComputeInstallSha256(targetDir);
-                        if (!string.Equals(installHash, download.InstallSha256,
-                            StringComparison.OrdinalIgnoreCase))
+                        catch (SharpCompress.Common.CryptographicException)
                         {
-                            GameLogger.Log("DOWNLOADER",
-                                $"Install SHA256 mismatch for '{modId}': expected {download.InstallSha256}, got {installHash}",
-                                LogLevel.Warning);
+                            var request = PasswordRequired;
+                            if (request == null)
+                                throw;
+                            packagePassword = await request(modId);
+                            if (packagePassword == null)
+                                throw new OperationCanceledException("Password entry cancelled");
                         }
                     }
 
@@ -186,6 +113,12 @@ namespace Cthangover.Core.Mods
                     if (File.Exists(tempFile))
                         File.Delete(tempFile);
                 }
+            }
+            catch (OperationCanceledException)
+            {
+                ReportProgress(InstallStep.Failed, 0, "Installation cancelled");
+                OnCompleted?.Invoke(modId, false);
+                return false;
             }
             catch (Exception ex)
             {
@@ -200,6 +133,12 @@ namespace Cthangover.Core.Mods
                 "Install complete. Restart required.");
             OnCompleted?.Invoke(modId, true);
             return true;
+        }
+
+        private static void InstallDownloadedPackage(object state)
+        {
+            var (path, target, id, download, password) = ((string, string, string, CatalogEntryDownload, string))state;
+            ModPackageInstaller.Install(path, target, id, download.ArchiveSha256, download.InstallSha256, password);
         }
 
         private static async Task<bool> DownloadWithProgressAsync(
@@ -262,6 +201,8 @@ namespace Cthangover.Core.Mods
 
         private static string GetModTargetDir(string modId)
         {
+            if (modId != Path.GetFileName(modId) || modId.Contains('\\') || modId == "." || modId == "..")
+                throw new ArgumentException("Invalid mod id", nameof(modId));
             if (GameEnvironment.IsRuntime)
             {
                 var modsRoot = ProjectSettings.GlobalizePath("user://mods/");

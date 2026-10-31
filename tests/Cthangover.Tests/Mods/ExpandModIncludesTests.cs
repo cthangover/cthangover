@@ -3,6 +3,7 @@ using Engine.Tests.Mods.Mocks;
 
 namespace Engine.Tests.Mods
 {
+    using System.Text.Json;
     public class ExpandModIncludesTests
     {
         private static ModManager CreateModManagerWith(MockModFileProvider provider)
@@ -136,6 +137,53 @@ namespace Engine.Tests.Mods
             var result = ModManager.Instance.ReadResolvedText("test_mod", "dir/main.txt", provider);
 
             Assert.Equal("Resolved", result);
+        }
+
+        [Fact]
+        public void ReadResolvedText_JsonScenarioVariables_ArePreserved()
+        {
+            var provider = new MockModFileProvider("test_mod");
+            var commands = new[] { "cset reward \"${money}+0\"", "action item.add id=money/coin count=${reward}", "ptext \"${reward} coins\"" };
+            var source = JsonSerializer.Serialize(commands);
+            provider.AddFile("events.json", source);
+            // Even an existing file must not shadow a runtime variable inside a JSON string.
+            provider.AddFile("money.json", "99");
+
+            var result = ModManager.Instance.ReadResolvedText("test_mod", "events.json", provider);
+
+            Assert.Equal(source, result);
+            Assert.Equal(commands, JsonSerializer.Deserialize<string[]>(result));
+        }
+
+        [Fact]
+        public void ReadResolvedText_JsonIncludeAndVariables_ResolveAtDifferentStages()
+        {
+            var provider = new MockModFileProvider("test_mod");
+            provider.AddFile("events.json", "{\"Events\": [${chest}], \"Text\": \"${reward}\"}");
+            provider.AddFile("chest.json", "{\"Commands\": [\"ptext \\\"${money}\\\"\", \"action item.add count=${reward}\"]}");
+
+            var result = ModManager.Instance.ReadResolvedText("test_mod", "events.json", provider);
+
+            using var json = JsonDocument.Parse(result);
+            Assert.Equal("${reward}", json.RootElement.GetProperty("Text").GetString());
+            var commands = json.RootElement.GetProperty("Events")[0].GetProperty("Commands");
+            Assert.Equal("ptext \"${money}\"", commands[0].GetString());
+            Assert.Equal("action item.add count=${reward}", commands[1].GetString());
+        }
+
+        [Fact]
+        public void ReadResolvedText_JsonEscapes_DoNotHideFollowingInclude()
+        {
+            var provider = new MockModFileProvider("test_mod");
+            var literal = "path\\\"quoted ${reward}\\";
+            provider.AddFile("events.json", "{\"Text\":" + JsonSerializer.Serialize(literal) + ",\"Data\":${data.json}}");
+            provider.AddFile("data.json", "[1,2]");
+
+            var result = ModManager.Instance.ReadResolvedText("test_mod", "events.json", provider);
+
+            using var json = JsonDocument.Parse(result);
+            Assert.Equal(literal, json.RootElement.GetProperty("Text").GetString());
+            Assert.Equal(2, json.RootElement.GetProperty("Data")[1].GetInt32());
         }
     }
 }

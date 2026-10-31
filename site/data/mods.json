@@ -1,12 +1,12 @@
 {
- "generated": "2026-10-29",
+ "generated": "2026-10-31",
  "stats": {
-  "mods": 61,
-  "dslCommands": 31,
-  "coreFiles": 490,
-  "coreLoc": 45412,
-  "modFiles": 1044,
-  "modLoc": 114434
+  "mods": 65,
+  "dslCommands": 32,
+  "coreFiles": 512,
+  "coreLoc": 47864,
+  "modFiles": 1164,
+  "modLoc": 124647
  },
  "battle": [
   {
@@ -16,7 +16,6 @@
     "characters_base",
     "ui_base",
     "items_base",
-    "quests_base",
     "time_base"
    ]
   },
@@ -50,6 +49,32 @@
    "deps": [
     "shell2d_base",
     "ui_base"
+   ],
+   "test": false
+  },
+  {
+   "id": "avatar_base",
+   "name": "Avatar Engine",
+   "version": "1.0.0",
+   "desc": "Reusable avatar definitions and independent preset state, with renderer-neutral composition for layered images and animated models.",
+   "cat": [
+    "engine",
+    "library"
+   ],
+   "deps": [],
+   "test": false
+  },
+  {
+   "id": "avatar_layers",
+   "name": "Layered Avatars",
+   "version": "1.0.0",
+   "desc": "Layered PNG avatar renderer: preset-controlled images, ordering, placement, visibility and opacity.",
+   "cat": [
+    "engine",
+    "visual"
+   ],
+   "deps": [
+    "avatar_base"
    ],
    "test": false
   },
@@ -124,6 +149,7 @@
    "deps": [
     "tools_base",
     "characters_base",
+    "stats_base",
     "ui_base"
    ],
    "test": false
@@ -246,8 +272,8 @@
     "interactive_base",
     "effects_base",
     "time_base",
-    "map_base",
-    "ui_base"
+    "ui_base",
+    "expressions_base"
    ],
    "test": false
   },
@@ -275,12 +301,30 @@
    "id": "effects_base",
    "name": "Effects Engine",
    "version": "1.0.0",
-   "desc": "Short visual effects for scenes — a flash, smoke, sparks, a magic glow: a mod ships small Godot scenes in effects/, a scenario plays one by name.",
+   "desc": "Scene effects and continuous atmosphere: editable particle profiles and extensible emitters for leaves, fireflies, snow, rain and dust.",
    "cat": [
     "engine",
     "library"
    ],
    "deps": [],
+   "test": false
+  },
+  {
+   "id": "effects_editor",
+   "name": "Effects Editor",
+   "version": "1.0.0",
+   "desc": "Live atmosphere authoring: particle and ripple profiles, preview, map and cell placement.",
+   "cat": [
+    "tools",
+    "editor"
+   ],
+   "deps": [
+    "effects_base",
+    "tools_base",
+    "ui_base",
+    "tile_render_base",
+    "tile_topdown_base"
+   ],
    "test": false
   },
   {
@@ -297,6 +341,18 @@
     "characters_base",
     "ui_base"
    ],
+   "test": false
+  },
+  {
+   "id": "expressions_base",
+   "name": "Expression Engine",
+   "version": "1.0.0",
+   "desc": "Reusable numeric expressions with mod-defined function and operator strategies, strict runtime assignments and compatible game formulas.",
+   "cat": [
+    "engine",
+    "library"
+   ],
+   "deps": [],
    "test": false
   },
   {
@@ -554,7 +610,7 @@
    "id": "rpg",
    "name": "RPG World",
    "version": "1.0.0",
-   "desc": "A walkable tile world in the spirit of RPG Maker: grid movement with WASD, events on E/F, teleports, random encounters; a map is an ordinary scene of the game.",
+   "desc": "A walkable tile world in the spirit of RPG Maker: grid movement with WASD, events on E/F, teleports; a map is an ordinary scene of the game. Battles and random encounters come with turn_battle_base through the battles integration, so the world runs without it.",
    "cat": [
     "gameplay"
    ],
@@ -563,27 +619,8 @@
     "ui_base",
     "time_base",
     "dialog_base",
-    "turn_battle_base",
-    "tile_render_base"
-   ],
-   "test": false
-  },
-  {
-   "id": "rpg_demo_game",
-   "name": "RPG Demo",
-   "version": "1.0.0",
-   "desc": "A small tile-map adventure: a village, the elder's house and a wolf at the forest cave — data and scenarios only, a working example of a tile-map game.",
-   "cat": [
-    "story"
-   ],
-   "deps": [
-    "rpg",
-    "village_pack",
     "characters_base",
-    "dialog_base",
-    "items_base",
-    "trading",
-    "music_pack"
+    "tile_render_base"
    ],
    "test": false
   },
@@ -591,7 +628,7 @@
    "id": "rpg_editor",
    "name": "RPG Map Editor",
    "version": "1.0.0",
-   "desc": "Paints the RPG engine's tile maps while the game runs: three tile layers, collision, events, spawn and random encounters. A save updates the world at once.",
+   "desc": "RPG map editor for model v2 (plan 12.4): a palette by shape, the map in the game's own top-down and isometric projections, placements (own and foreign, as patches), strokes, collision, spawn, teleport links, undo and a byte-stable save; encounters when rpg__battles is mounted.",
    "cat": [
     "tools",
     "editor"
@@ -607,6 +644,24 @@
    "test": false
   },
   {
+   "id": "rpg_object_editor",
+   "name": "RPG Object Editor",
+   "version": "1.0.0",
+   "desc": "Edits RPG objects (model v2) while the game runs: surfaces, segments, sprites and actors in a form by shape, their pictures, footprint, anchor, interaction and extends, with a preview in the top-down and the isometric projection drawn by the game's own renderer. A foreign object is edited as a patch in the own mod; the source stays untouched.",
+   "cat": [
+    "tools",
+    "editor"
+   ],
+   "deps": [
+    "tools_base",
+    "rpg",
+    "ui_base",
+    "tile_topdown_base",
+    "tile_isometric_base"
+   ],
+   "test": false
+  },
+  {
    "id": "rpg_plus_game",
    "name": "RPG Plus",
    "version": "1.0.0",
@@ -615,7 +670,6 @@
     "story"
    ],
    "deps": [
-    "rpg_demo_game",
     "classic_rpg_pack",
     "stat_checks",
     "equipment",
@@ -626,23 +680,10 @@
     "characters_base",
     "items_base",
     "crafting",
-    "quests_base"
-   ],
-   "test": false
-  },
-  {
-   "id": "rpg_tileset_editor",
-   "name": "RPG Tileset Editor",
-   "version": "1.0.0",
-   "desc": "Sets up the RPG engine's tilesets without editing JSON: which atlas cells are map tiles, solid and isometric plane tiles, whole objects with the point they stand on, and surface materials. A save updates the world at once.",
-   "cat": [
-    "tools",
-    "editor"
-   ],
-   "deps": [
-    "rpg",
-    "tools_base",
-    "ui_base"
+    "quests_base",
+    "village_pack",
+    "turn_battle_base",
+    "music_pack"
    ],
    "test": false
   },
@@ -734,7 +775,9 @@
     "engine",
     "library"
    ],
-   "deps": [],
+   "deps": [
+    "expressions_base"
+   ],
    "test": false
   },
   {
@@ -808,7 +851,8 @@
    "deps": [
     "characters_base",
     "shell2d_base",
-    "ui_base"
+    "ui_base",
+    "expressions_base"
    ],
    "test": false
   },
@@ -827,6 +871,17 @@
     "characters_base",
     "items_base"
    ],
+   "test": true
+  },
+  {
+   "id": "test_integrations",
+   "name": "Test Integrations",
+   "version": "1.0.0",
+   "desc": "A test fixture, not content: hosts the integration 'probe' that joins a mod set only together with quests_base, so the tests can check both the boot and the in-process mounting gate. Never part of a game.",
+   "cat": [
+    "other"
+   ],
+   "deps": [],
    "test": true
   },
   {
@@ -853,7 +908,8 @@
     "engine"
    ],
    "deps": [
-    "ui_base"
+    "ui_base",
+    "effects_base"
    ],
    "test": false
   },
@@ -939,7 +995,6 @@
     "characters_base",
     "ui_base",
     "items_base",
-    "quests_base",
     "time_base"
    ],
    "test": false
@@ -974,13 +1029,14 @@
    "id": "village_pack",
    "name": "Village Pack",
    "version": "1.0.0",
-   "desc": "The art kit behind the RPG Plus world: tilesets, charsets, battle portraits and backdrops in one painterly 2.5D style. Art only — no maps, no stories.",
+   "desc": "Reusable RPG art: nine tilesets, walking sprites, battle artwork, snow enemies, six shared architectural interiors, reusable containers and editable atmosphere profiles.",
    "cat": [
     "visual",
     "characters"
    ],
    "deps": [
-    "rpg"
+    "rpg",
+    "effects_base"
    ],
    "test": false
   }

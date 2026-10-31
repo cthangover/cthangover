@@ -45,7 +45,10 @@ namespace Cthangover.Core.Mods
         /// <summary>Reads a binary file as byte array, or null if not found.</summary>
         byte[] ReadFileBinary(string path);
 
-        /// <summary>Opens a seekable stream to a file inside the mod.</summary>
+        /// <summary>
+        /// Opens a readable stream owned by the caller. Archive streams may be
+        /// forward-only; check CanSeek before seeking. Dispose before unloading the mod.
+        /// </summary>
         Stream OpenStream(string path);
 
         /// <summary>

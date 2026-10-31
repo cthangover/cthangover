@@ -11,7 +11,6 @@
   },
   "settings": {
     "battle.core": "ff_battle",
-    "rpg.player_charset": "village/hero",
     "stats.player": "rpg_hero",
     "checks.dice": "d20",
     "tile.renderer": "topdown"
@@ -57,84 +56,43 @@
   "mechanics": [
     {
       "id": "story",
-      "name": "Story",
+      "name": "Story and world",
       "role": "story",
-      "description": "The prologue, the trainer and the fortune teller, the training yard, the patches of the demo's merchant and wolf.",
+      "description": "All game content lives in `rpg_plus_game`: maps, events, characters, items, shops and stories.",
       "locale": [
         {
           "lang": "ru",
-          "name": "Сюжет",
-          "description": "Пролог, наставник и гадалка, тренировочная площадка, патчи торговца и волка из демо."
+          "name": "Сюжет и мир",
+          "description": "Весь игровой контент находится в `rpg_plus_game`: карты, события, персонажи, предметы, магазины и сюжет."
         },
         {
           "lang": "es",
-          "name": "Historia",
-          "description": "El prólogo, el maestro y la adivina, el patio de entrenamiento, los parches del mercader y el lobo de la demo."
+          "name": "Historia y mundo",
+          "description": "Todo el contenido del juego está en `rpg_plus_game`: mapas, eventos, personajes, objetos, tiendas e historias."
         },
         {
           "lang": "zh",
-          "name": "故事",
-          "description": "序章、导师和占卜师、练武场，以及对演示中商人和狼的补丁。"
+          "name": "剧情与世界",
+          "description": "所有游戏内容均在 `rpg_plus_game` 中：地图、事件、角色、物品、商店和剧情。怪物属性和掉落直接定义在 `characters/rpg_plus_characters.json`，商人定义在 `shops/village_merchant.json`。为兼容存档保留 `rpg_plus/` 资源键；它们不再属于独立模组。."
         },
         {
           "lang": "ja",
-          "name": "ストーリー",
-          "description": "プロローグ、師匠と占い師、稽古場、デモの商人と狼へのパッチ。"
+          "name": "物語と世界",
+          "description": "マップ、イベント、キャラクター、アイテム、店、物語はすべて `rpg_plus_game` にあります。モンスターの能力値とドロップは `characters/rpg_plus_characters.json`、商人は `shops/village_merchant.json` で直接編集します。セーブ互換性のため `rpg_plus/` のリソースキーは維持しますが、別の MOD ではありません。."
         },
         {
           "lang": "ko",
-          "name": "스토리",
-          "description": "프롤로그, 스승과 점쟁이, 수련장, 데모의 상인과 늑대 패치."
+          "name": "이야기와 세계",
+          "description": "맵, 이벤트, 캐릭터, 아이템, 상점과 이야기는 모두 `rpg_plus_game`에 있습니다."
         },
         {
           "lang": "vi",
-          "name": "Câu chuyện",
-          "description": "Phần mở đầu, sư phụ và bà thầy bói, bãi tập, các bản vá cho thương nhân và con sói của demo."
+          "name": "Cốt truyện và thế giới",
+          "description": "Toàn bộ bản đồ, sự kiện, nhân vật, vật phẩm, cửa hàng và cốt truyện nằm trong `rpg_plus_game`."
         }
       ],
       "mods": [
         "rpg_plus_game>=1"
-      ]
-    },
-    {
-      "id": "world",
-      "name": "Village and forest",
-      "role": "content",
-      "description": "The tile maps, events, characters and items of rpg_demo_game: the world this game extends.",
-      "locale": [
-        {
-          "lang": "ru",
-          "name": "Деревня и лес",
-          "description": "Тайловые карты, события, персонажи и предметы rpg_demo_game — мир, который игра расширяет."
-        },
-        {
-          "lang": "es",
-          "name": "Aldea y bosque",
-          "description": "Los mapas de casillas, eventos, personajes y objetos de rpg_demo_game: el mundo que este juego amplía."
-        },
-        {
-          "lang": "zh",
-          "name": "村庄与森林",
-          "description": "rpg_demo_game 的瓦片地图、事件、角色和物品：本游戏所扩展的世界。"
-        },
-        {
-          "lang": "ja",
-          "name": "村と森",
-          "description": "rpg_demo_game のタイルマップ、イベント、キャラクター、アイテム：このゲームが広げる世界。"
-        },
-        {
-          "lang": "ko",
-          "name": "마을과 숲",
-          "description": "rpg_demo_game의 타일 맵, 이벤트, 캐릭터, 아이템: 이 게임이 확장하는 세계."
-        },
-        {
-          "lang": "vi",
-          "name": "Làng và rừng",
-          "description": "Bản đồ ô, sự kiện, nhân vật và vật phẩm của rpg_demo_game: thế giới mà game này mở rộng."
-        }
-      ],
-      "mods": [
-        "rpg_demo_game>=1"
       ]
     },
     {
@@ -478,48 +436,6 @@
       ]
     },
     {
-      "id": "map_editor",
-      "name": "Tile map editor",
-      "role": "tools",
-      "description": "Editor of the tile maps, opened from the toolbar.",
-      "locale": [
-        {
-          "lang": "ru",
-          "name": "Редактор карт",
-          "description": "Редактор тайловых карт, открывается с панели инструментов."
-        },
-        {
-          "lang": "es",
-          "name": "Editor de mapas de casillas",
-          "description": "Editor de los mapas de casillas, se abre desde la barra de herramientas."
-        },
-        {
-          "lang": "zh",
-          "name": "瓦片地图编辑器",
-          "description": "瓦片地图编辑器，从工具栏打开。"
-        },
-        {
-          "lang": "ja",
-          "name": "タイルマップエディター",
-          "description": "タイルマップのエディター。ツールバーから開く。"
-        },
-        {
-          "lang": "ko",
-          "name": "타일 맵 에디터",
-          "description": "타일 맵 에디터. 툴바에서 엽니다."
-        },
-        {
-          "lang": "vi",
-          "name": "Trình sửa bản đồ ô",
-          "description": "Trình sửa bản đồ ô, mở từ thanh công cụ."
-        }
-      ],
-      "optional": true,
-      "mods": [
-        "rpg_editor>=1"
-      ]
-    },
-    {
       "id": "data_editor",
       "name": "Data editors",
       "role": "tools",
@@ -564,6 +480,103 @@
       ]
     },
     {
+      "id": "scenarios",
+      "name": "Scenarios",
+      "role": "tools",
+      "description": "The scenario editor: the dialogs of the game are text files, written here or with the command palette's lines.",
+      "locale": [
+        {
+          "lang": "ru",
+          "name": "Сценарии",
+          "description": "Редактор сценариев: диалоги игры — текстовые файлы; пишутся здесь или строками из командной палитры."
+        },
+        {
+          "lang": "en",
+          "name": "Scenarios",
+          "description": "The scenario editor: the game's dialogs are text files, written here or with the command palette's lines."
+        },
+        {
+          "lang": "es",
+          "name": "Escenarios",
+          "description": "El editor de escenarios: los diálogos del juego son archivos de texto, se escriben aquí o con las líneas de la paleta de comandos."
+        },
+        {
+          "lang": "zh",
+          "name": "剧本",
+          "description": "剧本编辑器：游戏的对话是文本文件，可在此编写，也可使用命令面板的行。"
+        },
+        {
+          "lang": "ja",
+          "name": "シナリオ",
+          "description": "シナリオエディター：ゲームの会話はテキストファイルです。ここで書くか、コマンドパレットの行を使います。"
+        },
+        {
+          "lang": "ko",
+          "name": "시나리오",
+          "description": "시나리오 에디터: 게임의 대화는 텍스트 파일입니다. 여기서 쓰거나 명령 팔레트의 줄을 씁니다."
+        },
+        {
+          "lang": "vi",
+          "name": "Kịch bản",
+          "description": "Trình sửa kịch bản: hội thoại của trò chơi là tệp văn bản, viết tại đây hoặc bằng dòng từ bảng lệnh."
+        }
+      ],
+      "mods": [
+        "scenario_editor>=1"
+      ],
+      "optional": true,
+      "selected": true
+    },
+    {
+      "id": "translations",
+      "name": "Translations",
+      "role": "tools",
+      "description": "The translations window: lists the texts a language lacks and writes them into the locale files of their mods.",
+      "locale": [
+        {
+          "lang": "ru",
+          "name": "Переводы",
+          "description": "Окно переводов: список недостающих текстов языка и их запись в файлы локализации."
+        },
+        {
+          "lang": "en",
+          "name": "Translations",
+          "description": "The translations window: lists the texts a language lacks and writes them into the locale files of their mods."
+        },
+        {
+          "lang": "es",
+          "name": "Traducciones",
+          "description": "Ventana de traducciones: lista los textos que faltan en un idioma y los escribe en los archivos de localización."
+        },
+        {
+          "lang": "zh",
+          "name": "翻译",
+          "description": "翻译窗口：列出某种语言缺少的文本，并写入本地化文件。"
+        },
+        {
+          "lang": "ja",
+          "name": "翻訳",
+          "description": "翻訳ウィンドウ：言語に不足しているテキストを一覧し、ローカライズファイルに書き込みます。"
+        },
+        {
+          "lang": "ko",
+          "name": "번역",
+          "description": "번역 창: 언어에 없는 텍스트를 목록으로 보여 주고 현지화 파일에 씁니다."
+        },
+        {
+          "lang": "vi",
+          "name": "Bản dịch",
+          "description": "Cửa sổ bản dịch: liệt kê văn bản ngôn ngữ còn thiếu và ghi vào tệp bản địa hóa."
+        }
+      ],
+      "mods": [
+        "locale_editor>=1",
+        "locale_atlas>=0.1"
+      ],
+      "optional": true,
+      "selected": true
+    },
+    {
       "id": "tile_view",
       "name": "Tile renderer",
       "role": "engine",
@@ -573,45 +586,70 @@
       ]
     },
     {
-      "id": "tileset_editor",
-      "name": "RPG Tileset Editor",
+      "id": "effects_editor",
+      "name": "Effects Editor",
+      "description": "Live atmosphere profiles and map painting.",
       "role": "tools",
-      "description": "Sets up the RPG engine's tilesets without editing JSON: which atlas cells are map tiles, solid and isometric plane tiles, whole objects with the point they stand on, and surface materials. A save updates the world at once.",
+      "optional": true,
+      "selected": true,
+      "mods": [
+        "effects_editor>=1"
+      ],
       "locale": [
         {
           "lang": "ru",
-          "name": "Редактор тайлсетов RPG",
-          "description": "Редактор тайлсетов RPG"
+          "name": "Редактор эффектов",
+          "description": "Создание и настройка эффектов окружения с живым предпросмотром и нанесением на карту."
+        }
+      ]
+    },
+    {
+      "id": "map_editor",
+      "name": "RPG Map and Object Editors",
+      "description": "The RPG map editor and the RPG object editor.",
+      "role": "tools",
+      "optional": true,
+      "selected": true,
+      "mods": [
+        "rpg_editor>=1",
+        "rpg_object_editor>=1"
+      ],
+      "locale": [
+        {
+          "lang": "ru",
+          "name": "Редакторы RPG-карт и объектов",
+          "description": "Редактор карт: расстановки, телепорты, встречи; редактор объектов по форме."
+        },
+        {
+          "lang": "en",
+          "name": "RPG map and object editors",
+          "description": "Map editor: placements, teleports, encounters; object editor by shape."
         },
         {
           "lang": "es",
-          "name": "Editor de tilesets RPG",
-          "description": "Editor de tilesets RPG"
+          "name": "Editores de mapas y objetos RPG",
+          "description": "Editor de mapas: colocaciones, teletransportes, encuentros; editor de objetos por forma."
         },
         {
           "lang": "zh",
-          "name": "RPG 图块集编辑器",
-          "description": "RPG 图块集编辑器"
+          "name": "RPG 地图与对象编辑器",
+          "description": "地图编辑器：摆放物、传送、遭遇；按形状的对象编辑器。"
         },
         {
           "lang": "ja",
-          "name": "RPG タイルセットエディター",
-          "description": "RPG タイルセットエディター"
+          "name": "RPG マップ・オブジェクトエディター",
+          "description": "マップエディター：配置、テレポート、エンカウント。形状ごとのオブジェクトエディター。"
         },
         {
           "lang": "ko",
-          "name": "RPG 타일셋 에디터",
-          "description": "RPG 타일셋 에디터"
+          "name": "RPG 맵·오브젝트 에디터",
+          "description": "맵 에디터: 배치, 텔레포트, 조우; 모양별 오브젝트 에디터."
         },
         {
           "lang": "vi",
-          "name": "Trình sửa tileset RPG",
-          "description": "Trình sửa tileset RPG"
+          "name": "Trình sửa bản đồ và đối tượng RPG",
+          "description": "Trình sửa bản đồ: vị trí đặt, dịch chuyển, trận gặp; trình sửa đối tượng theo hình dạng."
         }
-      ],
-      "optional": true,
-      "mods": [
-        "rpg_tileset_editor>=1"
       ]
     }
   ]

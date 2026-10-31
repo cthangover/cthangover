@@ -12,7 +12,7 @@ namespace Cthangover.Core.Mods
     /// <list type="number">
     /// <item><b>OnSave</b> — the mod receives a pre-filled slot
     ///   (ModId, ModName, ModVersion set by the core) and writes its
-    ///   data, MinCoreVersion, IsRequired, and CustomData.</item>
+    ///   data, MinCoreVersion, and CustomData.</item>
     /// <item><b>OnLoad</b> — two variants:
     ///   <list type="bullet">
     ///     <item><b>Preferred:</b> override
@@ -31,7 +31,7 @@ namespace Cthangover.Core.Mods
         /// Called by the core when saving the game. The mod receives a
         /// slot with <c>Metadata.ModId</c>, <c>Metadata.ModName</c>,
         /// and <c>Metadata.ModVersion</c> already filled by the core.
-        /// The mod should set <c>MinCoreVersion</c>, <c>IsRequired</c>,
+        /// The mod should set <c>MinCoreVersion</c>,
         /// <c>CustomData</c>, and write its state into
         /// <c>slot.Data</c>.
         /// </summary>

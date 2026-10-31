@@ -119,8 +119,16 @@ namespace Cthangover.Core.Scenes
                     else if (char.IsLetter(c) || c == '_')
                     {
                         var start = pos;
-                        while (pos < input.Length && (char.IsLetterOrDigit(input[pos]) || input[pos] == '_'))
+                        while (pos < input.Length && IsNameChar(input[pos]))
                             pos++;
+                        // "self.<name>" is one flag name of the instance scope, not a quest member access.
+                        if (pos - start == 4 && string.CompareOrdinal(input, start, ScenarioCondition.SelfPrefix, 0, 4) == 0
+                            && pos + 1 < input.Length && input[pos] == '.' && (char.IsLetter(input[pos + 1]) || input[pos + 1] == '_'))
+                        {
+                            pos++;
+                            while (pos < input.Length && IsNameChar(input[pos]))
+                                pos++;
+                        }
                         Add(TokenType.Ident, input.Substring(start, pos - start));
                     }
                     else
@@ -131,6 +139,12 @@ namespace Cthangover.Core.Scenes
                 Add(TokenType.EOF, "");
                 return tokens;
             }
+
+            /// <summary>
+            /// Characters inside a name: letters, digits, <c>_</c>, and <c>/</c> and <c>:</c> so the full
+            /// name of an instance flag (<c>rpg_village/supply_1:open</c>) can be read by any condition.
+            /// </summary>
+            private static bool IsNameChar(char c) => char.IsLetterOrDigit(c) || c == '_' || c == '/' || c == ':';
 
             private void SkipWhitespace()
             {

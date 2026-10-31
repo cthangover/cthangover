@@ -140,6 +140,13 @@ namespace Engine.Tests.Mods
         }
 
         [Fact]
+        public void FindLoader_SevenZipPath_ReturnsSevenZipLoader()
+        {
+            ModDiscoveryRegistry.Initialize();
+            Assert.IsType<SevenZipModLoader>(ModDiscoveryRegistry.FindLoader("some_mod.7z"));
+        }
+
+        [Fact]
         public void FindLoader_UnrecognizedPath_ReturnsNull()
         {
             ModDiscoveryRegistry.Initialize();

@@ -11,7 +11,6 @@ namespace Engine.Tests.Settings
             Assert.NotNull(slot.Metadata);
             Assert.NotNull(slot.Data);
             Assert.Empty(slot.Data);
-            Assert.True(slot.Metadata.IsRequired);
         }
 
         [Fact]

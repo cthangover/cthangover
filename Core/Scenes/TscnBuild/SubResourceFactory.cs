@@ -33,7 +33,7 @@ namespace Cthangover.Core.Scenes.TscnBuild
 
         private static Resource Build(SubResourceDef def, Func<string, Resource> resourceResolver)
         {
-            var b = SubResourceBuilderRegistry.Get(def.Type) ?? SubResourceBuilderRegistry.Get(def.Type == "Font" ? "FontFile" : null);
+            var b = SubResourceBuilderRegistry.Get(def.Type);
             if (b == null) { GameLogger.Log("TSCN_BUILD", $"SubResourceFactory: unsupported type '{def.Type}'", LogLevel.Warning); return null; }
             return b.Build(def, new SubResourceBuildContext { ResourceResolver = resourceResolver });
         }

@@ -1,12 +1,12 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-
 namespace Cthangover.Core.Mods
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
+    using System.Security.Cryptography;
+    using System.Text;
+
     /// <summary>
     /// SHA256 checksum utility for mod catalog export. Two hash modes:
     ///
@@ -93,8 +93,22 @@ namespace Cthangover.Core.Mods
         /// </summary>
         public static string ComputeInstallSha256(IModFileProvider provider, List<string> ignorePatterns = null)
         {
-            var allFiles = CollectAllFilesRecursive(provider, "");
-            return ComputeInstallSha256FromProvider(provider, allFiles, ignorePatterns);
+            var hasher = new InstallContentHasher(ignorePatterns);
+            if (provider is IModFileSequence sequence)
+                sequence.VisitFiles(hasher.Visit);
+            else
+            {
+                foreach (var file in CollectAllFilesRecursive(provider, ""))
+                {
+                    if (ShouldIgnore(file, ignorePatterns))
+                        continue;
+                    using var stream = provider.OpenStream(file);
+                    if (stream == null)
+                        throw new FileNotFoundException("Mod content disappeared while hashing", file);
+                    hasher.Visit(file, stream);
+                }
+            }
+            return hasher.Finish();
         }
 
         private static List<string> CollectAllFilesRecursive(IModFileProvider provider, string directory)
@@ -118,68 +132,22 @@ namespace Cthangover.Core.Mods
             return result;
         }
 
-        private static string ComputeInstallSha256FromProvider(
-            IModFileProvider provider, List<string> files, List<string> ignorePatterns)
-        {
-            var sorted = files
-                .Select(ModPath.Normalize)
-                .Where(f => !ShouldIgnore(f, ignorePatterns))
-                .OrderBy(f => f, StringComparer.OrdinalIgnoreCase)
-                .ToList();
-
-            using var sha = SHA256.Create();
-            var hashes = new byte[sorted.Count * 32];
-
-            for (int i = 0; i < sorted.Count; i++)
-            {
-                var path = sorted[i];
-                var content = provider.ReadFileBinary(path);
-                var fileHash = HashFile(path, content, sha);
-                Array.Copy(fileHash, 0, hashes, i * 32, 32);
-            }
-
-            var final = sha.ComputeHash(hashes);
-            return BytesToHex(final);
-        }
-
         private static string ComputeInstallSha256FromFiles(
             string folderPath, List<string> files, List<string> ignorePatterns)
         {
-            var sorted = files
-                .Select(f => f.Replace('\\', '/'))
-                .Select(f => new
-                {
-                    FullPath = f,
-                    RelativePath = GetRelativePath(folderPath, f)
-                })
-                .Where(x => !ShouldIgnore(x.RelativePath, ignorePatterns))
-                .OrderBy(x => x.RelativePath, StringComparer.OrdinalIgnoreCase)
-                .ToList();
-
-            using var sha = SHA256.Create();
-            var hashes = new byte[sorted.Count * 32];
-
-            for (int i = 0; i < sorted.Count; i++)
+            var hasher = new InstallContentHasher(ignorePatterns);
+            foreach (var file in files)
             {
-                var content = File.ReadAllBytes(sorted[i].FullPath);
-                var fileHash = HashFile(sorted[i].RelativePath, content, sha);
-                Array.Copy(fileHash, 0, hashes, i * 32, 32);
+                var relative = ModPath.Normalize(GetRelativePath(folderPath, file));
+                if (ShouldIgnore(relative, ignorePatterns))
+                    continue;
+                using var stream = File.OpenRead(file);
+                hasher.Visit(relative, stream);
             }
-
-            var final = sha.ComputeHash(hashes);
-            return BytesToHex(final);
+            return hasher.Finish();
         }
 
-        private static byte[] HashFile(string relativePath, byte[] content, SHA256 sha)
-        {
-            var pathBytes = Encoding.UTF8.GetBytes(relativePath);
-            var combined = new byte[pathBytes.Length + content.Length];
-            Array.Copy(pathBytes, 0, combined, 0, pathBytes.Length);
-            Array.Copy(content, 0, combined, pathBytes.Length, content.Length);
-            return sha.ComputeHash(combined);
-        }
-
-        private static bool ShouldIgnore(string relativePath, List<string> ignorePatterns)
+        internal static bool ShouldIgnore(string relativePath, List<string> ignorePatterns)
         {
             var parts = relativePath.Split('/');
             foreach (var part in parts)

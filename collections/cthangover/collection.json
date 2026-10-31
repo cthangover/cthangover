@@ -533,6 +533,7 @@
         "validator>=0.1",
         "resource_atlas>=0.1",
         "locale_atlas>=0.1",
+        "locale_editor>=1",
         "mod_manager>=1"
       ]
     }

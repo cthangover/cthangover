@@ -13,6 +13,7 @@
         <DefineConstants Condition="'$(OS)' == 'Windows_NT'">$(DefineConstants);WINDOWS</DefineConstants>
     </PropertyGroup>
     <ItemGroup>
+        <PackageReference Include="SharpCompress" Version="0.50.7" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.11.0" />
         <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" Version="3.11.0" />
         <PackageReference Include="System.Text.Json" Version="8.0.6" />
@@ -22,7 +23,6 @@
         <Compile Remove="tests\Cthangover.Tests\**\*.cs" />
         <Compile Remove="tests\Cthangover.TestRunner\**\*.cs" />
         <Compile Remove="sdk\**\*.cs" />
-        <Compile Include="mods\card_battle\src\ICard.cs" />
 
         <None Include="tests\Cthangover.Tests\**\*.cs" />
         <None Include="tests\Cthangover.TestRunner\**\*.cs" />

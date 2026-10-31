@@ -1,9 +1,9 @@
-using System;
-using System.IO;
-using Cthangover.Core.Mods.Providers;
-
 namespace Cthangover.Core.Mods.Discovery
 {
+    using System;
+    using System.IO;
+    using Cthangover.Core.Mods.Providers;
+
     /// <summary>
     /// Loads mods stored as <c>.zip</c> archives. <see cref="IsCanProvide"/>
     /// matches any path ending with <c>.zip</c> (case-insensitive).
@@ -36,7 +36,7 @@ namespace Cthangover.Core.Mods.Discovery
         /// </summary>
         public IModFileProvider CreateProvider(string url, string modName)
         {
-            return new ZipModFileProvider(url, modName);
+            return new ZipModFileProvider(url, modName, ArchivePasswordStore.Default.Get(url));
         }
 
         /// <summary>

@@ -8,6 +8,7 @@ using Cthangover.Core.Utils;
 
 namespace Cthangover.Core.Mods.Resolvers
 {
+    using System.Text;
     /// <summary>
     /// Provides resolvers with a unified API for accessing the mod
     /// registry, reading files from mod providers, resolving JSON with
@@ -86,10 +87,9 @@ namespace Cthangover.Core.Mods.Resolvers
         /// </summary>
         public IEnumerable<string> ListFiles(string modId, string directory = "")
         {
-            var mod = GetMod(modId);
-            if (mod == null)
-                return Enumerable.Empty<string>();
-            return mod.FileProvider.ListFiles(directory);
+            // A listing sees the mod as the host sees it: its nested test suites and integrations are not its files.
+            var manifest = (GetMod(modId) as ModInfo)?.Manifest;
+            return NestedFolders.Visible(ProviderOf(modId), manifest)?.ListFiles(directory) ?? Enumerable.Empty<string>();
         }
 
         /// <summary>Reads a text file from the specified mod's provider.</summary>
@@ -139,16 +139,16 @@ namespace Cthangover.Core.Mods.Resolvers
         /// </summary>
         public string ReadResolvedText(string modId, string path)
         {
-            var mod = GetMod(modId);
-            if (mod == null)
+            var provider = ProviderOf(modId);
+            if (provider == null)
                 return null;
-            var content = mod.FileProvider.ReadFileText(path);
+            var content = provider.ReadFileText(path);
             if (content == null)
                 return null;
             try
             {
                 var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { path };
-                return ExpandModIncludes(mod.FileProvider, content, path, visited);
+                return ExpandModIncludes(provider, content, path, visited);
             }
             catch (Exception ex)
             {
@@ -215,38 +215,64 @@ namespace Cthangover.Core.Mods.Resolvers
         private static readonly Regex _includePattern = new Regex(@"\$\s*\{\s*([^{}]+)\s*\}", RegexOptions.Compiled);
 
         /// <summary>
-        /// Recursively processes <c>${ path }</c> include directives in
-        /// a text file, replacing each directive with the content of the
-        /// referenced file. Detects circular includes and missing files.
+        /// Recursively processes <c>${ path }</c> include directives. In JSON,
+        /// tokens inside strings remain literal so embedded scenario variables
+        /// are substituted at execution rather than mistaken for file paths.
+        /// Detects circular includes and missing files.
         /// Shared statically so that it can be used in tests without a
         /// full <see cref="ModResolutionContext"/>.
         /// </summary>
         public static string ExpandModIncludes(IModFileProvider provider, string content, string currentPath, HashSet<string> visited)
         {
-            return _includePattern.Replace(content, match =>
+            var json = string.Equals(Path.GetExtension(currentPath), ".json", StringComparison.OrdinalIgnoreCase);
+            var result = new StringBuilder(content.Length);
+            var previous = 0;
+            var scanned = 0;
+            var quoted = false;
+            var escaped = false;
+            foreach (Match match in _includePattern.Matches(content))
             {
-                var includePath = match.Groups[1].Value.Trim();
-                if (string.IsNullOrEmpty(includePath))
-                    throw new InvalidOperationException("Empty include path in ${}.");
-                var resolvedPath = provider.ResolveIncludePath(includePath, currentPath);
-                var loaded = provider.ReadFileText(resolvedPath);
-                if (loaded == null)
-                    loaded = provider.ReadFileText(resolvedPath + ".json");
-                if (loaded == null)
-                    throw new InvalidOperationException($"Include not found: '{resolvedPath}' (from '${{{includePath}}}').");
-                if (visited.Contains(resolvedPath))
-                    throw new InvalidOperationException($"Circular include detected: {resolvedPath}");
-                visited.Add(resolvedPath);
-                try
+                if (json)
                 {
-                    var expanded = ExpandModIncludes(provider, loaded, resolvedPath, visited);
-                    return expanded.Trim();
+                    for (; scanned < match.Index; scanned++)
+                    {
+                        var character = content[scanned];
+                        if (escaped) escaped = false;
+                        else if (quoted && character == '\\') escaped = true;
+                        else if (character == '"') quoted = !quoted;
+                    }
                 }
-                finally
-                {
-                    visited.Remove(resolvedPath);
-                }
-            });
+                result.Append(content, previous, match.Index - previous);
+                result.Append(json && quoted ? match.Value : ExpandInclude(provider, match.Groups[1].Value.Trim(), currentPath, visited));
+                previous = match.Index + match.Length;
+            }
+            result.Append(content, previous, content.Length - previous);
+            return result.ToString();
+        }
+
+        private static string ExpandInclude(IModFileProvider provider, string includePath, string currentPath, HashSet<string> visited)
+        {
+            if (string.IsNullOrEmpty(includePath))
+                throw new InvalidOperationException("Empty include path in ${}.");
+            var resolvedPath = provider.ResolveIncludePath(includePath, currentPath);
+            var loaded = provider.ReadFileText(resolvedPath);
+            if (loaded == null)
+            {
+                resolvedPath += ".json";
+                loaded = provider.ReadFileText(resolvedPath);
+            }
+            if (loaded == null)
+                throw new InvalidOperationException($"Include not found: '{resolvedPath}' (from '${{{includePath}}}').");
+            if (!visited.Add(resolvedPath))
+                throw new InvalidOperationException($"Circular include detected: {resolvedPath}");
+            try
+            {
+                return ExpandModIncludes(provider, loaded, resolvedPath, visited).Trim();
+            }
+            finally
+            {
+                visited.Remove(resolvedPath);
+            }
         }
     }
 }

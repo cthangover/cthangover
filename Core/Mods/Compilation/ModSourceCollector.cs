@@ -32,6 +32,7 @@ namespace Cthangover.Core.Mods.Compilation
         public static List<(string FilePath, string Source)> CollectSourceFiles(ModInfo modInfo, CancellationToken cancellationToken)
         {
             var result = new List<(string, string)>();
+            var provider = NestedFolders.Visible(modInfo);
 
             foreach (var pattern in modInfo.Manifest.Sources)
             {
@@ -51,7 +52,7 @@ namespace Cthangover.Core.Mods.Compilation
                 while (prefix == "**" || prefix.EndsWith("/**", StringComparison.Ordinal))
                     prefix = prefix.Length > 2 ? prefix.Substring(0, prefix.Length - 3) : string.Empty;
 
-                CollectSourceFilesRecursive(modInfo.FileProvider, prefix, file =>
+                CollectSourceFilesRecursive(provider, prefix, file =>
                 {
                     if (!file.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
                         return false;
@@ -66,7 +67,7 @@ namespace Cthangover.Core.Mods.Compilation
 
             if (result.Count == 0)
             {
-                CollectSourceFilesRecursive(modInfo.FileProvider, "", file =>
+                CollectSourceFilesRecursive(provider, "", file =>
                 {
                     return file.EndsWith(".cs", StringComparison.OrdinalIgnoreCase);
                 }, result, cancellationToken);

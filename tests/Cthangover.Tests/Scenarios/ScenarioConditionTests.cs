@@ -310,5 +310,56 @@ namespace Engine.Tests.Scenarios
             Assert.True(ScenarioCondition.Evaluate("true"));
             Assert.False(ScenarioCondition.Evaluate("invalid condition ("));
         }
+
+        [Fact]
+        public void Evaluate_SelfFlag_ReadsTheFlagOfItsScopeOnly()
+        {
+            ScenarioCondition.SetFlag(ScenarioCondition.FlagKey("self.open", "cond_map/barrel_1"), "1");
+
+            Assert.True(ScenarioCondition.Evaluate("self.open == 1", "cond_map/barrel_1"));
+            Assert.False(ScenarioCondition.Evaluate("self.open == 1", "cond_map/barrel_2"));
+            Assert.True(ScenarioCondition.Evaluate("self.open != 1 && true", "cond_map/barrel_2"));
+            Assert.True(ScenarioCondition.Evaluate("cond_map/barrel_1:open == 1"));
+        }
+
+        [Fact]
+        public void Evaluate_SelfOutsideAScope_IsFalseEvenForNotEqual()
+        {
+            Assert.False(ScenarioCondition.Evaluate("self.never != 1"));
+            Assert.False(ScenarioCondition.Evaluate("self.never != 1", ""));
+        }
+
+        [Fact]
+        public void Evaluate_SameTextInTwoScopes_UsesTheScopeOfEachCall()
+        {
+            ScenarioCondition.SetFlag("cond_map/a:hp", "3");
+            ScenarioCondition.SetFlag("cond_map/b:hp", "9");
+
+            Assert.True(ScenarioCondition.Evaluate("self.hp < 5", "cond_map/a"));
+            Assert.False(ScenarioCondition.Evaluate("self.hp < 5", "cond_map/b"));
+            Assert.True(ScenarioCondition.Evaluate("self.hp < 5", "cond_map/a"));
+        }
+
+        [Fact]
+        public void Evaluate_NamesStartingWithSelf_AreOrdinaryFlags()
+        {
+            ScenarioCondition.SetFlag("selfish", "2");
+
+            Assert.True(ScenarioCondition.Evaluate("selfish == 2"));
+            Assert.True(ScenarioCondition.Evaluate("selfish == 2", "cond_map/x"));
+        }
+
+        [Theory]
+        [InlineData("self.open", "rpg_village/supply_1", "rpg_village/supply_1:open")]
+        [InlineData("rpg_wolf_dead", "rpg_village/supply_1", "rpg_wolf_dead")]
+        [InlineData("rpg_wolf_dead", null, "rpg_wolf_dead")]
+        [InlineData("self.open", null, null)]
+        [InlineData("self.open", "", null)]
+        [InlineData("self.", "rpg_village/supply_1", null)]
+        [InlineData(null, "x", null)]
+        public void FlagKey_ResolvesSelfInTheScope(string name, string scope, string expected)
+        {
+            Assert.Equal(expected, ScenarioCondition.FlagKey(name, scope));
+        }
     }
 }

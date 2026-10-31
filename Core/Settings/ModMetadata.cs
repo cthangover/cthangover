@@ -6,8 +6,7 @@ namespace Cthangover.Core.Settings
     /// during the validation phase before <c>OnLoad</c>.
     ///
     /// <b>Required fields</b> (<c>ModId</c>, <c>ModName</c>,
-    /// <c>MinCoreVersion</c>, <c>IsRequired</c>) are validated by the
-    /// core.
+    /// <c>MinCoreVersion</c>) are validated by the core.
     ///
     /// <b>Optional fields</b> (<c>ModVersion</c>, <c>CustomData</c>)
     /// are ignored by the core — they exist for the mod's own use.
@@ -22,13 +21,6 @@ namespace Cthangover.Core.Settings
 
         /// <summary>Minimum core version required by this save.</summary>
         public string MinCoreVersion { get; set; }
-
-        /// <summary>
-        /// Historical flag kept for save-format compatibility. Loading no
-        /// longer blocks on it: a missing mod's slot becomes dormant
-        /// (<see cref="SaveDormancy"/>) so games survive composition changes.
-        /// </summary>
-        public bool IsRequired { get; set; } = true;
 
         /// <summary>Version of the mod that created this save (optional).</summary>
         public string ModVersion { get; set; }

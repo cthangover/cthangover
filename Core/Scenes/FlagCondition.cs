@@ -11,6 +11,10 @@ namespace Cthangover.Core.Scenes
     /// for <c>!=</c> and <c>false</c> for all other operators — this "missing means
     /// not-equal" semantics allows scenario scripts to gate on flags that may not
     /// yet have been set.
+    ///
+    /// A key <c>self.&lt;name&gt;</c> is resolved per evaluation against
+    /// <see cref="EvaluationContext.Scope"/> (the tree is cached per text, the scope is not
+    /// part of it); without a scope the condition is false and an ERROR is logged.
     /// </summary>
     public class FlagCondition : ConditionNode
     {
@@ -39,7 +43,10 @@ namespace Cthangover.Core.Scenes
         /// <summary>Reads the live flag value and compares it; a missing flag counts as "not equal".</summary>
         public override bool Evaluate(EvaluationContext ctx)
         {
-            if (!ctx.Flags.TryGetValue(Key, out var current))
+            var key = ScenarioCondition.FlagKey(Key, ctx.Scope);
+            if (key == null)
+                return false;
+            if (!ctx.Flags.TryGetValue(key, out var current))
                 return Op == "!=";
 
             if (int.TryParse(current, out var ci) && int.TryParse(Value, out var fi))

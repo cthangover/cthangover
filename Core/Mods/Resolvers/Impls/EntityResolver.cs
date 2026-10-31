@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Cthangover.Core.Bootstrap;
 using Cthangover.Core.Factories;
 using Cthangover.Core.Mods.Patches;
@@ -20,9 +21,11 @@ namespace Cthangover.Core.Mods.Resolvers
     /// deserialised as the one DTO its kind names.
     /// <para/>
     /// Collection follows the established override semantics: mods are visited
-    /// in dependency order, later mods override earlier ones by entity ID, and
-    /// property patches for the kind (<c>patches/&lt;kind&gt;/</c> and
-    /// <c>patches/&lt;kind&gt;.json</c>) are merged into each surviving entity.
+    /// in dependency order, later mods override earlier ones by entity ID, then
+    /// <c>Extends</c> inheritance and the property patches of the kind
+    /// (<c>patches/&lt;kind&gt;/</c> and <c>patches/&lt;kind&gt;.json</c>) are
+    /// resolved by <see cref="EntityExtendsResolution{T}"/>; a patch with
+    /// <c>"$delete": true</c> removes its entity.
     /// The scan and the parsed per-kind dictionaries are cached until
     /// <see cref="ClearCache"/> — one directory walk serves every factory
     /// instead of one walk per type.
@@ -69,15 +72,16 @@ namespace Cthangover.Core.Mods.Resolvers
             EnsureScanned();
 
             var result = new Dictionary<string, T>();
+            var written = new Dictionary<string, JsonObject>();
             if (_filesByKind.TryGetValue(kind, out var files))
             {
                 foreach (var file in files)
                 {
-                    ReadFile(file, kind, result);
+                    ReadFile(file, kind, result, written);
                 }
             }
 
-            ApplyPatches(kind, result);
+            result = new EntityExtendsResolution<T>(kind, result, written, Context.GetResolver<PatchResolver>()).ResolveAll();
 
             GameLogger.Log("MODS", result.Count > 0
                 ? $"CollectEntities<{typeof(T).Name}>('{kind}') → {result.Count} item(s)"
@@ -88,9 +92,11 @@ namespace Cthangover.Core.Mods.Resolvers
             return result;
         }
 
-        private void ReadFile<T>(EntityFile file, string kind, Dictionary<string, T> result) where T : class, IIdentifiable
+        private void ReadFile<T>(EntityFile file, string kind, Dictionary<string, T> result, Dictionary<string, JsonObject> written) where T : class, IIdentifiable
         {
             var provider = Context.GetMod(file.ModId)?.FileProvider;
+            if (provider == null && ModOverlays.TryGet(file.ModId, out var overlay))
+                provider = overlay;
             if (provider == null)
                 return;
 
@@ -115,8 +121,10 @@ namespace Cthangover.Core.Mods.Resolvers
                     return;
                 }
 
-                foreach (var item in fileData.Items)
+                var itemsAsWritten = ItemsAsWritten(jsonText);
+                for (var index = 0; index < fileData.Items.Count; index++)
                 {
+                    var item = fileData.Items[index];
                     if (string.IsNullOrEmpty(item.ID))
                     {
                         GameLogger.Log("MODS", $"entity without Id in '{file.ModId}/{file.Path}' (kind={kind})", LogLevel.Error);
@@ -132,6 +140,11 @@ namespace Cthangover.Core.Mods.Resolvers
                     }
 
                     result[item.ID] = item;
+                    var asWritten = itemsAsWritten != null && index < itemsAsWritten.Count ? itemsAsWritten[index] as JsonObject : null;
+                    if (EntityExtendsResolution<T>.ExtendsOf(asWritten) != null)
+                        written[item.ID] = asWritten;
+                    else
+                        written.Remove(item.ID);
                 }
             }
             catch (JsonException ex)
@@ -157,17 +170,16 @@ namespace Cthangover.Core.Mods.Resolvers
             _filesByKind.Clear();
             EntityKindRegistry.Refresh();
 
-            foreach (var modId in Context.GetOrderedModIds())
+            foreach (var source in Context.GetOrderedModIds().Select(id => (Id: id, Mod: Context.GetMod(id)))
+                .Select(pair => (pair.Id, Provider: pair.Mod?.FileProvider, Manifest: (pair.Mod as ModInfo)?.Manifest))
+                .Concat(ModOverlays.All.Select(pair => (Id: pair.Key, Provider: pair.Value, Manifest: (ModManifest)null))))
             {
-                var provider = Context.GetMod(modId)?.FileProvider;
+                var modId = source.Id;
+                var provider = source.Provider;
                 if (provider == null)
                     continue;
 
-                var paths = new List<string>();
-                CollectJsonPaths(provider, string.Empty, paths);
-                paths.Sort(StringComparer.OrdinalIgnoreCase);
-
-                foreach (var path in paths)
+                foreach (var path in JsonPathsOf(provider, source.Manifest))
                 {
                     if (!EntityKindPeek.TryRead(provider.ReadFileText(path), out var kind))
                         continue;
@@ -191,6 +203,21 @@ namespace Cthangover.Core.Mods.Resolvers
             }
         }
 
+        /// <summary>
+        /// The <c>.json</c> files of one mod, sorted, as the entity scan reads them. The nested folders of the
+        /// manifest (test suites, integrations) are left out: they are mounted as their own mods.
+        /// </summary>
+        public static List<string> JsonPathsOf(IModFileProvider provider, ModManifest manifest)
+        {
+            var paths = new List<string>();
+            if (provider == null)
+                return paths;
+
+            CollectJsonPaths(NestedFolders.Visible(provider, manifest), string.Empty, paths);
+            paths.Sort(StringComparer.OrdinalIgnoreCase);
+            return paths;
+        }
+
         private static void CollectJsonPaths(IModFileProvider provider, string directory, List<string> result)
         {
             foreach (var entry in provider.ListFiles(directory))
@@ -208,33 +235,82 @@ namespace Cthangover.Core.Mods.Resolvers
         }
 
         /// <summary>
-        /// Merges kind-scoped property patches into the collected entities.
-        /// The patch key is the entity kind (e.g. <c>patches/character.json</c>),
-        /// which is what stops a character patch from being applied to skills
-        /// and actions the way the old shared <c>patches/characters/</c> key did.
+        /// Explains one entity for editors: the value the game sees and, for every leaf, the layer
+        /// (definition or patch), the entity (itself or an <c>Extends</c> ancestor), the mod and the
+        /// file that set it — replayed with the same merge engine as <see cref="Collect{T}"/>
+        /// (<see cref="EntityExplainer"/>). Null for an unknown kind or id, or an id in an
+        /// <c>Extends</c> cycle; <see cref="EntityExplanation.Deleted"/> when a patch deleted it.
+        /// Reads the kind's files again, so it is meant for tools, not for per-frame game code.
         /// </summary>
-        private void ApplyPatches<T>(string kind, Dictionary<string, T> result) where T : class, IIdentifiable
+        public EntityExplanation Explain(string kind, string id)
         {
-            var patchResolver = Context.GetResolver<PatchResolver>();
-            if (patchResolver == null)
-                return;
+            Context.Initialize();
+            if (string.IsNullOrEmpty(kind) || string.IsNullOrEmpty(id))
+                return null;
+            EnsureScanned();
+            if (!EntityKindRegistry.TryResolve(kind, out var type) || type == null)
+                return null;
+            return new EntityExplainer(kind, type, ReadDefinitions(kind, type), Context.GetResolver<PatchResolver>()).Explain(id);
+        }
 
-            var patches = patchResolver.Collect(kind);
-            if (patches == null || patches.Count == 0)
-                return;
+        /// <summary>
+        /// The winning definition of every entity of <paramref name="kind"/> as written, with its mod
+        /// and file. A file that does not read as the kind's DTO is skipped, as in <see cref="Collect{T}"/>.
+        /// </summary>
+        private Dictionary<string, EntityDefinitionSource> ReadDefinitions(string kind, Type type)
+        {
+            var result = new Dictionary<string, EntityDefinitionSource>();
+            if (!_filesByKind.TryGetValue(kind, out var files))
+                return result;
 
-            GameLogger.Log("MODS", $"Applying patches to kind '{kind}' ({patches.Count} id set(s))");
-
-            var merger = new JsonPatchMerger();
-            var mergeKeys = JsonPatchMerger.BuildMergeKeys<T>();
-            var opts = JsonOptionsProvider.ReadOptions;
-            var ids = new List<string>(result.Keys);
-            foreach (var id in ids)
+            var fileType = typeof(FileData<>).MakeGenericType(type);
+            foreach (var file in files)
             {
-                var itemJson = JsonSerializer.Serialize(result[id], opts);
-                var mergedJson = merger.Merge(itemJson, id, patches, mergeKeys);
-                result[id] = JsonSerializer.Deserialize<T>(mergedJson, opts);
+                var provider = Context.GetMod(file.ModId)?.FileProvider;
+                if (provider == null && ModOverlays.TryGet(file.ModId, out var overlay))
+                    provider = overlay;
+                var text = provider == null ? null : Context.ReadResolvedText(file.ModId, file.Path, provider);
+                if (text == null)
+                    continue;
+                try
+                {
+                    JsonSerializer.Deserialize(text, fileType, JsonOptionsProvider.ReadOptions);
+                    if (JsonNode.Parse(text, null, JsonOptionsProvider.DocumentOptions) is not JsonObject root)
+                        continue;
+                    var items = root.FirstOrDefault(p => string.Equals(p.Key, "Items", StringComparison.OrdinalIgnoreCase)).Value as JsonArray;
+                    if (items == null)
+                        continue;
+                    foreach (var item in items.OfType<JsonObject>())
+                    {
+                        var id = item.FirstOrDefault(p => string.Equals(p.Key, "Id", StringComparison.OrdinalIgnoreCase)).Value;
+                        if (id is JsonValue value && value.GetValueKind() == JsonValueKind.String && !string.IsNullOrEmpty(value.GetValue<string>()))
+                            result[value.GetValue<string>()] = new EntityDefinitionSource { ModId = file.ModId, File = file.Path, Written = item };
+                    }
+                }
+                catch (JsonException)
+                {
+                    // reported by Collect; an unreadable file defines nothing
+                }
             }
+            return result;
+        }
+
+        /// <summary>
+        /// The <c>Items</c> of a data file as written, parsed only when the text mentions
+        /// <c>Extends</c> (the inheritance resolution needs the child's own keys, not its DTO).
+        /// </summary>
+        private static JsonArray ItemsAsWritten(string jsonText)
+        {
+            if (jsonText.IndexOf("extends", StringComparison.OrdinalIgnoreCase) < 0)
+                return null;
+            if (JsonNode.Parse(jsonText, null, JsonOptionsProvider.DocumentOptions) is not JsonObject root)
+                return null;
+            foreach (var pair in root)
+            {
+                if (string.Equals(pair.Key, "Items", StringComparison.OrdinalIgnoreCase))
+                    return pair.Value as JsonArray;
+            }
+            return null;
         }
 
         /// <inheritdoc />

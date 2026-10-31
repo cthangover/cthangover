@@ -488,8 +488,8 @@ picker.
   engine, characters, quests, items, battles with an optional second battle
   core, Live2D and tools, each as its own mechanic.
 - `collections/rpg_plus/` — an RPG Maker style game on the same engine mods:
-  its story (`rpg_plus_game`: a novel prologue, a training yard, patches),
-  the tile world it extends (`rpg_demo_game`), pixel art (`village_pack`),
+  its story and world (`rpg_plus_game`: prologue, village, forest, shrine, desert),
+  reusable art (`village_pack`),
   classic rules as data (`classic_rpg_pack`), the stats mods (`stats_base`,
   `stat_checks`, `equipment`, `battle_formulas`), the FF battle core with the
   card core as an option, and as optional tools the map editor (`rpg_editor`)

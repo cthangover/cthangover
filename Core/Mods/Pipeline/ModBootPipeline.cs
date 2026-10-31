@@ -170,6 +170,7 @@ namespace Cthangover.Core.Mods.Pipeline
                 _ = ModNativeLoader.CacheRoot;
                 _ = ModConfig.Instance;
                 DisabledModsStore.WarmUp();
+                ArchivePasswordStore.WarmUp();
                 ModCollectionStore.WarmUp();
                 Games.GameLaunchArgs.WarmUp();
                 CollectionLayoutStore.WarmUp();
@@ -244,6 +245,7 @@ namespace Cthangover.Core.Mods.Pipeline
 
                 ModSetFilter.FilterDisabledMods(mods);
                 ModSetFilter.FilterToActiveGame(mods);
+                ModIntegrations.Mount(mods);
                 ModSetFilter.ValidateDependencies(mods);
 
                 ModNativeLoader.LoadNativeDlls(mods.Values, cancellationToken);

@@ -126,7 +126,7 @@ namespace Cthangover.Core.Autotest
 					var subEntry = zip.CreateEntry("include/characters.json");
 					using (var sw = new StreamWriter(subEntry.Open()))
 					{
-						sw.Write("{ \"id\": \"hero\", \"desc\": \"${stats}\" }");
+						sw.Write("{ \"id\": \"hero\", \"stats\": ${stats} }");
 					}
 
 				var statsEntry = zip.CreateEntry("include/stats.json");

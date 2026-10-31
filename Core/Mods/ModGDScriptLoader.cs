@@ -57,7 +57,7 @@ public static class ModGDScriptLoader
 
 			foreach (var pattern in gdSources)
 			{
-				CollectGdFiles(modInfo.FileProvider, pattern, (filePath, source) =>
+				CollectGdFiles(NestedFolders.Visible(modInfo), pattern, (filePath, source) =>
 				{
 					GameLogger.Log("GDS_MOD", $"Loading GDScript '{filePath}' from mod '{modInfo.Id}'");
 

@@ -1,9 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text.Json;
-using Cthangover.Core.Mods.Providers;
 using Cthangover.Core.Utils;
 
 namespace Cthangover.Core.Mods
@@ -91,51 +88,6 @@ namespace Cthangover.Core.Mods
         /// manifest is missing. Pure apart from reading the host's files.
         /// </summary>
         public static ModInfo CreateSuiteMod(ModInfo host, ModTestSuite suite)
-        {
-            var id = ModIdOf(host.Id, suite.Id);
-            var folder = suite.Folder;
-            // Folder is a mod path ('/'-separated); a disk path gets the OS separators, or Windows ends up with "…\test_suites/walk".
-            IModFileProvider provider = host.FileProvider?.RootPath != null && Directory.Exists(host.FileProvider.RootPath)
-                ? new FolderModFileProvider(Path.Combine(host.FileProvider.RootPath, folder.Replace('/', Path.DirectorySeparatorChar)), id)
-                : new SubdirModFileProvider(host.FileProvider, folder, id);
-
-            if (!provider.FileExists("manifest.json"))
-            {
-                GameLogger.Log("MODS_REGISTRY", $"Test suite '{id}': '{host.Id}/{folder}/manifest.json' not found", LogLevel.Error);
-                provider.Dispose();
-                return null;
-            }
-
-            ModManifest manifest;
-            try
-            {
-                manifest = JsonSerializer.Deserialize<ModManifest>(provider.ReadFileText("manifest.json"), JsonOptionsProvider.ReadOptions) ?? new ModManifest();
-            }
-            catch (JsonException ex)
-            {
-                GameLogger.Log("MODS_REGISTRY", $"Test suite '{id}': bad manifest.json: {ex.Message}", LogLevel.Error);
-                provider.Dispose();
-                return null;
-            }
-
-            manifest.Id = id;
-            manifest.Version = string.IsNullOrEmpty(manifest.Version) ? host.Manifest?.Version : manifest.Version;
-            manifest.Name = string.IsNullOrEmpty(manifest.Name) ? $"{host.Name ?? host.Id} — test {suite.Id}" : manifest.Name;
-            manifest.Author ??= host.Author;
-            manifest.Depends ??= new List<ModDependency>();
-            if (manifest.Depends.All(d => !string.Equals(d.ModId, host.Id, StringComparison.OrdinalIgnoreCase)))
-                manifest.Depends.Insert(0, ModDependency.Parse(host.Id));
-            manifest.TestSuites = null; // suites do not nest
-
-            return new ModInfo
-            {
-                Id = id,
-                Name = manifest.Name,
-                Author = manifest.Author,
-                Description = manifest.Description,
-                FileProvider = provider,
-                Manifest = manifest,
-            };
-        }
+            => NestedMod.Create(host, ModIdOf(host.Id, suite.Id), suite.Folder, "Test suite", $"{host.Name ?? host.Id} — test {suite.Id}");
     }
 }

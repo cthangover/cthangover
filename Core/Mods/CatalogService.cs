@@ -82,8 +82,7 @@ namespace Cthangover.Core.Mods
                         return;
                     }
 
-                    _cachedEntries = JsonSerializer.Deserialize<List<CatalogExportEntry>>(json, JsonOptionsProvider.ReadOptions);
-                    GameLogger.Log("CATALOG", $"Loaded legacy catalog cache: {_cachedEntries?.Count ?? 0} entr(y/ies)");
+                    GameLogger.Log("CATALOG", "Catalog cache has an unknown format; it is ignored and refreshed", LogLevel.Warning);
                 }
                 catch (Exception ex)
                 {
@@ -93,9 +92,8 @@ namespace Cthangover.Core.Mods
         }
 
         /// <summary>
-        /// Reads the two-list cache envelope. Returns false for the legacy
-        /// array-only format (a bare JSON array), which the caller then parses
-        /// as a plain mod list.
+        /// Reads the cache envelope (<see cref="CatalogCacheRoot"/>). Returns
+        /// false when the text is not an envelope object.
         /// </summary>
         private static bool TryLoadEnvelope(string json)
         {

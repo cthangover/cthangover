@@ -17,6 +17,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <None Include="..\fixtures\sevenzip\*.7z;..\fixtures\sevenzip\*.zip" Link="fixtures\sevenzip\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
         <ProjectReference Include="..\..\Cthangover.csproj"/>
         <ProjectReference Include="..\..\mods\live2d_base\source_code\Live2D.csproj"/>
     </ItemGroup>

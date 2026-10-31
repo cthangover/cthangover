@@ -58,7 +58,6 @@ namespace Cthangover.Core.Settings
                     ModId          = SavePackage.CoreSlotKey,
                     ModName        = "Core Game",
                     MinCoreVersion = coreVersion,
-                    IsRequired     = true,
                 }
             };
 

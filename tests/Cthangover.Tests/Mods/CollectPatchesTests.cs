@@ -87,8 +87,7 @@ namespace Engine.Tests.Mods
                 ["Marao"] = new() { patch }
             };
 
-            var merger = new JsonPatchMerger();
-            var mergedJson = merger.Merge(maraoJson, "Marao", patches);
+            var mergedJson = JsonPatchMerger.Merge(maraoJson, "Marao", patches);
 
             var result = JsonSerializer.Deserialize<CharacterPatchSample>(mergedJson, ReadOptions);
 
@@ -112,8 +111,7 @@ namespace Engine.Tests.Mods
                 ""Actions"": [""physics/attack"", ""physics/defence""]
             }";
 
-            var merger = new JsonPatchMerger();
-            var mergedJson = merger.Merge(maraoJson, "Marao", null);
+            var mergedJson = JsonPatchMerger.Merge(maraoJson, "Marao", null);
 
             var result = JsonSerializer.Deserialize<CharacterPatchSample>(mergedJson, ReadOptions);
 
@@ -145,8 +143,7 @@ namespace Engine.Tests.Mods
                 ["Marao"] = new() { patch }
             };
 
-            var merger = new JsonPatchMerger();
-            var mergedJson = merger.Merge(maraoJson, "Marao", patches);
+            var mergedJson = JsonPatchMerger.Merge(maraoJson, "Marao", patches);
 
             var result = JsonSerializer.Deserialize<CharacterPatchSample>(mergedJson, ReadOptions);
 
@@ -177,8 +174,7 @@ namespace Engine.Tests.Mods
                 ["Marao"] = new() { patch }
             };
 
-            var merger = new JsonPatchMerger();
-            var mergedJson = merger.Merge(maraoJson, "Marao", patches);
+            var mergedJson = JsonPatchMerger.Merge(maraoJson, "Marao", patches);
 
             var result = JsonSerializer.Deserialize<CharacterPatchSample>(mergedJson, ReadOptions);
 

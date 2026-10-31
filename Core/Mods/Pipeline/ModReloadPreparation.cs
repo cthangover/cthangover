@@ -34,6 +34,9 @@ namespace Cthangover.Core.Mods.Pipeline
 
         internal Dictionary<string, IModInfo> Mods { get; } = new();
 
+        /// <summary>Ids of the mods of the prepared set (after the game filter and the integrations).</summary>
+        public IReadOnlyCollection<string> ModIds => Mods.Keys;
+
         internal Dictionary<string, IModInfo> AllDiscovered { get; } = new();
 
         internal Dictionary<string, int> Priorities { get; } = new();

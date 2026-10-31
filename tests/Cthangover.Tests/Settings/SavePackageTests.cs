@@ -19,7 +19,6 @@ namespace Engine.Tests.Settings
                 {
                     ModId = SavePackage.CoreSlotKey,
                     ModName = "Core Game",
-                    IsRequired = true,
                     MinCoreVersion = "1.0.0"
                 }
             };
@@ -57,8 +56,7 @@ namespace Engine.Tests.Settings
                     ModId = "test_mod",
                     ModName = "Test Mod",
                     ModVersion = "1.5.0",
-                    MinCoreVersion = "2.0.0",
-                    IsRequired = false
+                    MinCoreVersion = "2.0.0"
                 }
             };
             
@@ -79,7 +77,6 @@ namespace Engine.Tests.Settings
             Assert.Equal("Test Mod", restored.Metadata.ModName);
             Assert.Equal("1.5.0", restored.Metadata.ModVersion);
             Assert.Equal("2.0.0", restored.Metadata.MinCoreVersion);
-            Assert.False(restored.Metadata.IsRequired);
             Assert.Equal(42, restored.Data["custom"].GetInt("Code"));
             Assert.Equal("cthangover", restored.Data["custom"].GetString("Text"));
         }
@@ -95,8 +92,7 @@ namespace Engine.Tests.Settings
                     ModId = "test_mod",
                     ModName = "Test Mod",
                     ModVersion = "1.5.0",
-                    MinCoreVersion = "2.0.0",
-                    IsRequired = false
+                    MinCoreVersion = "2.0.0"
                 }
             };
             
@@ -113,7 +109,6 @@ namespace Engine.Tests.Settings
             Assert.Equal("Test Mod", restored.Metadata.ModName);
             Assert.Equal("1.5.0", restored.Metadata.ModVersion);
             Assert.Equal("2.0.0", restored.Metadata.MinCoreVersion);
-            Assert.False(restored.Metadata.IsRequired);
             Assert.Equal(31, restored.Data["custom"].ReadJson<int>());
         }
 
