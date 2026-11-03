@@ -1175,6 +1175,29 @@
       "timeoutSeconds": 240
     },
     {
+      "name": "tutorial_first_game",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "windowed": true,
+      "args": [
+        "--",
+        "--frontend",
+        "--itest=tutorial_first_game"
+      ],
+      "timeoutSeconds": 180
+    },
+    {
+      "name": "tutorial_first_game_play",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "windowed": true,
+      "args": [
+        "--",
+        "--game=rpg_plus",
+        "--new",
+        "--itest=tutorial_first_game_play"
+      ],
+      "timeoutSeconds": 300
+    },
+    {
       "name": "effects_editor_edit",
       "scene": "res://scenes/menu/launcher.tscn",
       "windowed": true,
@@ -1262,6 +1285,34 @@
         "--itest=archive_password"
       ],
       "timeoutSeconds": 120
+    },
+    {
+      "name": "rpg_map_events_topdown",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "windowed": true,
+      "args": [
+        "--",
+        "--game=rpg_plus",
+        "--new",
+        "--scene=rpg_map_events_test",
+        "--itest=rpg_map_events",
+        "--tile-renderer=topdown"
+      ],
+      "timeoutSeconds": 180
+    },
+    {
+      "name": "rpg_map_events_isometric",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "windowed": true,
+      "args": [
+        "--",
+        "--game=rpg_plus",
+        "--new",
+        "--scene=rpg_map_events_test",
+        "--itest=rpg_map_events",
+        "--tile-renderer=isometric"
+      ],
+      "timeoutSeconds": 180
     }
   ],
   "disabled_until_phase_8": {
