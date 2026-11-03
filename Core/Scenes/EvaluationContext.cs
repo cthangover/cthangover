@@ -35,5 +35,8 @@ namespace Cthangover.Core.Scenes
         /// (<see cref="ScenarioCondition.FlagKey"/>).
         /// </summary>
         public string Scope;
+
+        /// <summary>Optional execution-owned services; the kernel does not interpret gameplay types.</summary>
+        public object Services;
     }
 }

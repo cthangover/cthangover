@@ -32,14 +32,16 @@ namespace Cthangover.Core.Localization
         private static readonly Dictionary<string, Translation> _translations = new();
 
         /// <summary>
-        /// Reads the language saved in <see cref="GameData.Settings"/>, reads it
+        /// Reads the active collection's optional <c>settings.language</c>, otherwise
+        /// the language saved in <see cref="GameData.Settings"/>, and reads it
         /// through <see cref="LanguageCode.Normalize"/> (<c>en-en</c>, <c>en_US</c>
         /// and <c>en</c> are all English; an unsupported one falls back to
         /// <c>"ru"</c> with a warning), and delegates to <see cref="LoadLocale"/>.
         /// </summary>
         public static void LoadCurrentLanguage()
         {
-            var settingsLang = GameData.Instance.Settings.Language;
+            var settingsLang = Cthangover.Core.Games.ActiveGame.GetSetting("language")
+                ?? GameData.Instance.Settings.Language;
             var locale = LanguageCode.Normalize(settingsLang);
             if (locale == null)
             {

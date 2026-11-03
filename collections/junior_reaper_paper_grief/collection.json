@@ -1,0 +1,98 @@
+{
+  "id": "junior_reaper_paper_grief",
+  "kind": "game",
+  "name": "Junior Reaper & Paper Grief",
+  "author": "ct",
+  "version": "0.2.0",
+  "description": "Расследование младшего менеджера по реанимации: осмотр мельницы, сброс мира и поиск причины повторных смертей стражника.",
+  "cover": "cover.png",
+  "entry": {
+    "scene": "jrp_arrival"
+  },
+  "settings": {
+    "stats.player": "jrp_stas",
+    "tile.renderer": "isometric",
+    "language": "ru"
+  },
+  "tags": [
+    "rpg",
+    "isometric",
+    "comedy",
+    "story"
+  ],
+  "locale": [
+    {
+      "lang": "ru",
+      "name": "Junior Reaper & Paper Grief",
+      "description": "Расследование младшего менеджера по реанимации: осмотр мельницы, сброс мира и поиск причины повторных смертей стражника."
+    }
+  ],
+  "mechanics": [
+    {
+      "id": "story",
+      "name": "Расследование Бюро",
+      "role": "story",
+      "description": "Вступление, улики, сброс мира, свидетели и дело стражника.",
+      "locale": [
+        {
+          "lang": "ru",
+          "name": "Дело стражника",
+          "description": "Вступление в Бюро, осмотр мельницы, улики, восстановление стражника, опрос свидетелей и завершение первого расследования."
+        }
+      ],
+      "mods": [
+        "junior_reaper_paper_grief>=0.1"
+      ]
+    },
+    {
+      "id": "rpg",
+      "name": "Изометрический мир",
+      "role": "engine",
+      "description": "Фэнтезийные улицы и ворота, переулок, мельница, рынок и дом семьи стражника.",
+      "locale": [
+        {
+          "lang": "ru",
+          "name": "Изометрический фэнтезийный мир",
+          "description": "Офис, ворота, переулок, двор мельницы и рынок: WASD/стрелки, E/F. Внутри мельницы и дома — диалоги и осмотр мышью."
+        }
+      ],
+      "mods": [
+        "rpg>=1",
+        "tile_isometric_base>=1",
+        "items_base>=1",
+        "quests_base>=1",
+        "tile_topdown_base>=1"
+      ]
+    },
+    {
+      "id": "editors",
+      "name": "Редакторы игры",
+      "role": "tools",
+      "description": "Редакторы RPG-карт, объектов, персонажей, предметов, сцен, сценариев, интерактивов, света, эффектов, данных и переводов; студия сценариев.",
+      "locale": [
+        {
+          "lang": "ru",
+          "name": "Редакторы игры",
+          "description": "Все редакторы доступны с панели инструментов во время игры."
+        }
+      ],
+      "mods": [
+        "rpg_editor>=1",
+        "rpg_object_editor>=1",
+        "characters_editor>=1",
+        "items_editor>=1",
+        "scenario_editor>=1",
+        "scenario_studio>=0.1",
+        "scene_editor>=1",
+        "scene_builder>=1",
+        "map_editor>=1",
+        "interactive_editor>=1",
+        "light_editor>=1",
+        "effects_editor>=1",
+        "schema_tools>=1",
+        "locale_editor>=1",
+        "catalog_export>=1"
+      ]
+    }
+  ]
+}

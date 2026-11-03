@@ -21,6 +21,9 @@ namespace Cthangover.Core.Scenes
         /// </summary>
         public string Scene { get; set; }
 
+        /// <summary>Execution channel; non-dialog channels are consumed by their owning mods.</summary>
+        public string Channel { get; set; } = "dialog";
+
         /// <summary>
         /// Execution priority; lower values execute earlier. Ties are broken by
         /// identifier ordering.

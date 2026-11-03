@@ -209,6 +209,7 @@ namespace Cthangover.Core.Scenes
             ModManager.Instance.GetResolver<SceneDefinitionResolver>()?.ClearCache();
             AppServices.Current.SceneDefs.Clear();
             RescanScenes();
+            ModEventBus.Publish(new ScenarioContentChangedEvent());
         }
 
         private void RescanSceneTable()
@@ -432,6 +433,7 @@ namespace Cthangover.Core.Scenes
             {
                 foreach (var scenario in scenarios)
                 {
+                    if (!string.Equals(scenario.Channel, "dialog", System.StringComparison.OrdinalIgnoreCase)) continue;
                     var id = scenario.Name;
                     var info = new SceneEventInfo
                     {

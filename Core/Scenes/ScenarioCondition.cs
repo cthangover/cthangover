@@ -29,7 +29,7 @@ namespace Cthangover.Core.Scenes
             => GameEnvironment.IsRuntime && GameData.Instance is { } data ? data.Runtime.Flags : DetachedFlags;
         private static readonly Dictionary<string, ConditionNode> AstCache = new();
         private static readonly object AstLock = new();
-        private static readonly EvaluationContext evalCtx = new();
+
 
         /// <summary>
         /// Sets a story flag of the running game (the scenario <c>flag</c> command
@@ -71,7 +71,10 @@ namespace Cthangover.Core.Scenes
         /// placement id of the object whose state, interaction or scenario is being evaluated (set by
         /// the runtime that runs it, e.g. the RPG map); null = no scope, where <c>self.</c> is an error.
         /// </summary>
-        public static bool Evaluate(string condition, string scope)
+        public static bool Evaluate(string condition, string scope) => EvaluateWithServices(condition, scope, null);
+
+        /// <summary>Cached syntax with fresh per-call services, safe for nested and independent executions.</summary>
+        public static bool EvaluateWithServices(string condition, string scope, object services)
         {
             if (string.IsNullOrWhiteSpace(condition))
                 return true;
@@ -98,18 +101,11 @@ namespace Cthangover.Core.Scenes
                 }
             }
 
-            evalCtx.Flags = Flags;
-            evalCtx.QuestFactory = QuestServiceRegistry.Provider;
-            var outerScope = evalCtx.Scope;
-            evalCtx.Scope = scope;
-            try
+            return ast.Evaluate(new EvaluationContext
             {
-                return ast.Evaluate(evalCtx);
-            }
-            finally
-            {
-                evalCtx.Scope = outerScope;
-            }
+                Flags = Flags, QuestFactory = QuestServiceRegistry.Provider,
+                Scope = scope, Services = services,
+            });
         }
 
         /// <summary>

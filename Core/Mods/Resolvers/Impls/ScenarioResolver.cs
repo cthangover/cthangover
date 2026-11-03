@@ -221,6 +221,7 @@ namespace Cthangover.Core.Mods.Resolvers
                 {
                     Name = name,
                     Scene = sceneName,
+                    Channel = metadata.TryGetValue("channel", out var channel) ? channel : "dialog",
                     ModId = modId,
                     FilePath = entry,
                 });
@@ -260,6 +261,7 @@ namespace Cthangover.Core.Mods.Resolvers
                 {
                     Name = name,
                     Scene = sceneName,
+                    Channel = metadata.TryGetValue("channel", out var channel) ? channel : "dialog",
                     ModId = modId,
                     FilePath = entry,
                     Priority = metadata.TryGetValue("priority", out var p) && int.TryParse(p, out var prio) ? prio : 0,
@@ -267,7 +269,7 @@ namespace Cthangover.Core.Mods.Resolvers
                     Condition = metadata.TryGetValue("condition", out var cond) ? cond : null,
                     LightUseTime = metadata.TryGetValue("light_use_time", out var l) && bool.TryParse(l, out var b) ? b : null,
                     SaveAllowed = metadata.TryGetValue("save_allowed", out var sa) && bool.TryParse(sa, out var sab),
-                    IsOneRun = metadata.TryGetValue("is_one_run", out var ior) && bool.TryParse(ior, out var iorb),
+                    IsOneRun = metadata.TryGetValue("is_one_run", out var ior) && bool.TryParse(ior, out var iorb) && iorb,
                 };
 
                 collected.Add(def);
