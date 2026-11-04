@@ -8,6 +8,7 @@ Sources (read-only, live next to the site folder):
                                        (locale/scenarios_en.properties of the same mod)
 
 Output:
+    index.html — static statistics and catalogue title, also used without JSON/JavaScript
     data/mods.json
     {
       "generated": "YYYY-MM-DD",
@@ -23,6 +24,8 @@ Output:
 import json
 import os
 import re
+
+from build_html import update_html
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # repo root
 MODS_DIR = os.path.join(ROOT, "mods")
@@ -174,6 +177,13 @@ def main():
     os.makedirs(OUT_DIR, exist_ok=True)
     with open(OUT_FILE, "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, indent=1)
+    update_html(os.path.join(os.path.dirname(OUT_DIR), "index.html"), {
+        "statMods": len(mods),
+        "statDsl": out["stats"]["dslCommands"],
+        "statLoc": f"{int((core_loc + mod_loc) / 1000 + 0.5)}K",
+        "statBattle": len(battle),
+        "modsTitle": f"{len(mods)} mods already in the repository",
+    }, scripts=("js/main.js",))
     print(f"OK  {os.path.relpath(OUT_FILE, ROOT)}  "
           f"({len(mods)} mods, dsl={out['stats']['dslCommands']}, "
           f"core={core_loc} loc, mods={mod_loc} loc)")

@@ -1,12 +1,12 @@
 {
- "generated": "2026-10-31",
+ "generated": "2026-11-04",
  "stats": {
-  "mods": 65,
+  "mods": 67,
   "dslCommands": 32,
-  "coreFiles": 512,
-  "coreLoc": 47864,
-  "modFiles": 1164,
-  "modLoc": 124647
+  "coreFiles": 533,
+  "coreLoc": 49048,
+  "modFiles": 1345,
+  "modLoc": 148735
  },
  "battle": [
   {
@@ -244,21 +244,6 @@
    "test": false
   },
   {
-   "id": "cthangover_party",
-   "name": "Cthangover: Starter Party",
-   "version": "1.0.0",
-   "desc": "Gives a new game of Cthangover its starting state: Marao in the party and the Slave Trader skill. Only code — the data lives in the base game and the skills engine.",
-   "cat": [
-    "engine",
-    "library"
-   ],
-   "deps": [
-    "cthangover_game",
-    "skills_base"
-   ],
-   "test": false
-  },
-  {
    "id": "dialog_base",
    "name": "Dialog Engine",
    "version": "1.0.0",
@@ -432,6 +417,27 @@
    "test": false
   },
   {
+   "id": "junior_reaper_paper_grief",
+   "name": "Junior Reaper & Paper Grief",
+   "version": "0.2.0",
+   "desc": "Расследование повторных смертей стражника: фэнтезийный RPG-мир, осмотр мельницы мышью, сброс, свидетели и решение семейной причины.",
+   "cat": [
+    "story"
+   ],
+   "deps": [
+    "rpg",
+    "tile_isometric_base",
+    "dialog_base",
+    "characters_base",
+    "items_base",
+    "quests_base",
+    "interactive_base",
+    "ui_base",
+    "npc_barks_base"
+   ],
+   "test": false
+  },
+  {
    "id": "light_editor",
    "name": "Light Editor",
    "version": "1.0.0",
@@ -472,6 +478,22 @@
     "debug"
    ],
    "deps": [],
+   "test": false
+  },
+  {
+   "id": "locale_editor",
+   "name": "Locale Editor",
+   "version": "1.0.0",
+   "desc": "A translations window: lists every text a language lacks (from the locale atlas), and writes the translation into the locale file of the mod that owns the key, so the game shows it at once.",
+   "cat": [
+    "tools",
+    "editor"
+   ],
+   "deps": [
+    "tools_base",
+    "locale_atlas",
+    "ui_base"
+   ],
    "test": false
   },
   {
@@ -563,6 +585,23 @@
    "test": false
   },
   {
+   "id": "npc_barks_base",
+   "name": "NPC Ambient Scenarios",
+   "version": "0.1.0",
+   "desc": "Concurrent ambient scenario hosts, speech cues and NPC attention. Prototype.",
+   "cat": [
+    "engine",
+    "library"
+   ],
+   "deps": [
+    "rpg",
+    "dialog_base",
+    "ui_base",
+    "tile_render_base"
+   ],
+   "test": false
+  },
+  {
    "id": "quests_base",
    "name": "Quests Engine",
    "version": "1.0.0",
@@ -635,6 +674,7 @@
    ],
    "deps": [
     "rpg",
+    "effects_base",
     "characters_base",
     "items_base",
     "tools_base",
@@ -715,7 +755,8 @@
    ],
    "deps": [
     "ui_base",
-    "dialog_base"
+    "dialog_base",
+    "scenario_tools_base"
    ],
    "test": false
   },
@@ -1029,7 +1070,7 @@
    "id": "village_pack",
    "name": "Village Pack",
    "version": "1.0.0",
-   "desc": "Reusable RPG art: nine tilesets, walking sprites, battle artwork, snow enemies, six shared architectural interiors, reusable containers and editable atmosphere profiles.",
+   "desc": "Reusable RPG objects and individual images: surfaces, vegetation, buildings, shared interiors, containers, walking sprites, battle artwork, snow enemies and editable atmosphere profiles.",
    "cat": [
     "visual",
     "characters"

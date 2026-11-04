@@ -1,69 +1,70 @@
 #!/usr/bin/env python3
-"""Converts the game screenshots taken by make-shots.ps1 into the site's images.
+"""Convert approved sRGB game captures into full and thumbnail site images.
 
-    python site/shots-to-img.py <shots dir> <out dir>
-
-Only the shots the site uses are converted: the gallery list of js/main.js (`f: "<suite>__<name>"`) and the
-/img/shots/ references of the pages. Each <shots dir>/<suite>/<name>.png becomes <out dir>/<suite>__<name>.jpg,
-scaled to 1600 px wide (the widest the page shows them), plus <suite>__<name>.thumb.jpg 640 px wide for the
-gallery grid. The test suites take more frames than the page shows; any other jpg in <out dir> is deleted, so a
-shot dropped from the page does not linger in the site folder. Needs Pillow.
+Usage: python site/shots-to-img.py <captures directory> <output directory>
+Optional --site-root selects a prepared site checkout for gallery discovery.
+All referenced PNGs must exist before any existing site image is replaced.
 """
-import glob
-import os
+import argparse
+from pathlib import Path
 import re
-import sys
+import tempfile
 
 from PIL import Image
 
 FULL_WIDTH = 1600
 THUMB_WIDTH = 640
-SITE = os.path.dirname(os.path.abspath(__file__))
-# `f: "site_shots__novel_wolf"` in the gallery list, `/img/shots/<shot>.jpg` / `.thumb.jpg` in the pages
+SITE = Path(__file__).resolve().parent
 USE_RE = re.compile(r'f:\s*"(\w+__\w+)"|/img/shots/(\w+__\w+?)(?:\.thumb)?\.jpg')
 
 
-def used_shots():
+def used_shots(site=SITE):
     used = set()
-    for path in [os.path.join(SITE, "js", "main.js")] + glob.glob(os.path.join(SITE, "*.html")):
-        if os.path.basename(path).startswith("ai_"):
+    for path in [site / 'js/main.js'] + sorted(site.glob('*.html')):
+        if path.name.startswith('ai_'):
             continue
-        with open(path, encoding="utf-8") as f:
-            for m in USE_RE.finditer(f.read()):
-                used.add(m.group(1) or m.group(2))
+        for match in USE_RE.finditer(path.read_text(encoding='utf-8')):
+            used.add(match[1] or match[2])
     return used
 
 
-def save(img, width, path):
-    h = round(img.height * width / img.width)
-    img.resize((width, h), Image.LANCZOS).save(path, "JPEG", quality=84, optimize=True, progressive=True)
+def save(image, width, path):
+    height = round(image.height * width / image.width)
+    with image.resize((width, height), Image.Resampling.LANCZOS) as scaled:
+        scaled.save(path, 'JPEG', quality=88, optimize=True, progressive=True)
 
 
 def main():
-    if len(sys.argv) != 3:
-        print(__doc__)
-        return 2
-    src, out = sys.argv[1], sys.argv[2]
-    os.makedirs(out, exist_ok=True)
-    used = used_shots()
-    count = 0
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('source', type=Path)
+    parser.add_argument('output', type=Path)
+    parser.add_argument('--site-root', type=Path, default=SITE)
+    args = parser.parse_args()
+    used = used_shots(args.site_root)
+    sources = {}
     for shot in sorted(used):
-        suite, name = shot.split("__", 1)
-        png = os.path.join(src, suite, name + ".png")
-        if not os.path.isfile(png):
-            print("MISSING", png)
-            continue
-        img = Image.open(png).convert("RGB")
-        save(img, FULL_WIDTH, os.path.join(out, shot + ".jpg"))
-        save(img, THUMB_WIDTH, os.path.join(out, shot + ".thumb.jpg"))
-        count += 1
-    for path in glob.glob(os.path.join(out, "*.jpg")):
-        if os.path.basename(path).split(".")[0] not in used:
-            os.remove(path)
-            print("removed", os.path.basename(path))
-    print(f"OK  {count} of {len(used)} screenshots -> {out}")
-    return 0 if count == len(used) else 1
+        suite, name = shot.split('__', 1)
+        sources[shot] = args.source / suite / (name + '.png')
+    missing = [str(path) for path in sources.values() if not path.is_file()]
+    if missing:
+        print('Missing captures; output left unchanged:\n' + '\n'.join(missing))
+        return 1
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix='.site-shots-', dir=args.output.parent) as temporary:
+        prepared = Path(temporary)
+        for shot, path in sources.items():
+            with Image.open(path) as original, original.convert('RGB') as image:
+                save(image, FULL_WIDTH, prepared / (shot + '.jpg'))
+                save(image, THUMB_WIDTH, prepared / (shot + '.thumb.jpg'))
+        args.output.mkdir(parents=True, exist_ok=True)
+        for path in prepared.iterdir():
+            path.replace(args.output / path.name)
+    for path in args.output.glob('*.jpg'):
+        if path.name.split('.')[0] not in used:
+            path.unlink()
+    print(f'OK {len(sources)} screenshots and thumbnails -> {args.output}')
+    return 0
 
 
-if __name__ == "__main__":
-    sys.exit(main())
+if __name__ == '__main__':
+    raise SystemExit(main())

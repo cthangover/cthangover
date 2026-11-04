@@ -1,4 +1,4 @@
-"""Build docs-index.json from all .md files in docs/.
+"""Build docs-index.json from all .md files in docs/ and update the HTML footer count.
 
 Output:
     {
@@ -12,7 +12,10 @@ import json
 import os
 import sys
 
-DOCS_DIR = "docs"
+from build_html import update_html
+
+SITE_DIR = os.path.dirname(os.path.abspath(__file__))
+DOCS_DIR = os.path.join(SITE_DIR, "docs")
 OUT_FILE = os.path.join(DOCS_DIR, "docs-index.json")
 
 
@@ -81,6 +84,7 @@ def main():
         json.dump(output, f, ensure_ascii=False)
 
     file_count = len(docs)
+    update_html(os.path.join(SITE_DIR, "docs.html"), {"builtFileCount": file_count})
     total_bytes = sum(len(v) for v in docs.values())
     print(f"OK  {OUT_FILE}  ({file_count} files, {total_bytes} bytes, tree depth built)")
 

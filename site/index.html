@@ -11,7 +11,7 @@
 <meta property="og:title" content="cthangover — a game engine assembled from mods">
 <meta property="og:description" content="A resource-free C# kernel assembles the game from mods at runtime: a visual novel, an RPG on tile maps, card and FF battles, in-game mod manager.">
 <meta property="og:url" content="https://cthangover.ru/">
-<meta property="og:image" content="https://cthangover.ru/img/shots/site_shots__battle_later.jpg">
+<meta property="og:image" content="https://cthangover.ru/img/shots/card_played__battle_round4.jpg?v=marao_retake_20261104T065313Z">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" href="/img/favicon-32.png" sizes="32x32">
@@ -20,7 +20,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/style.css?v=20261104">
 <script>document.documentElement.classList.add("js");</script>
 </head>
 
@@ -70,16 +70,16 @@
         <a class="btn btn-ghost" href="#gallery" data-i18n="cta_gallery">See the game</a>
       </div>
       <div class="stats">
-        <div class="stat"><div class="n" id="statDsl">29</div><div class="l" data-i18n="st_dsl_l">DSL commands</div></div>
-        <div class="stat"><div class="n" id="statMods">28</div><div class="l" data-i18n="st_mods_l">mods in the repository</div></div>
-        <div class="stat"><div class="n" id="statLoc">119K</div><div class="l" data-i18n="st_loc_l">lines of C#, kernel and mods</div></div>
+        <div class="stat"><div class="n" id="statDsl">32</div><div class="l" data-i18n="st_dsl_l">DSL commands</div></div>
+        <div class="stat"><div class="n" id="statMods">67</div><div class="l" data-i18n="st_mods_l">mods in the repository</div></div>
+        <div class="stat"><div class="n" id="statLoc">198K</div><div class="l" data-i18n="st_loc_l">lines of C#, kernel and mods</div></div>
         <div class="stat"><div class="n" id="statBattle">3</div><div class="l" data-i18n="st_battle_l">battle rulesets</div></div>
       </div>
     </div>
     <div class="hero-shots reveal" aria-hidden="true">
-      <figure class="hs hs-main"><img src="/img/shots/rpg_walk__rpg_village.jpg" alt=""></figure>
-      <figure class="hs hs-a"><img src="/img/shots/site_shots__battle_later.thumb.jpg" alt=""></figure>
-      <figure class="hs hs-b"><img src="/img/shots/site_shots__panel_inventory.thumb.jpg" alt=""></figure>
+      <figure class="hs hs-main"><img src="/img/shots/stas_case__02_capital_gates.jpg?v=20261104" alt=""></figure>
+      <figure class="hs hs-a"><img src="/img/shots/card_played__battle_round4.thumb.jpg?v=marao_retake_20261104T065313Z" alt=""></figure>
+      <figure class="hs hs-b"><img src="/img/shots/site_shots__panel_inventory.thumb.jpg?v=20261104" alt=""></figure>
     </div>
   </div>
 </section>
@@ -105,7 +105,7 @@
     </div>
     <div class="games">
       <article class="game reveal">
-        <div class="gimg"><img src="/img/shots/site_shots__novel_wolf.thumb.jpg" alt="Cthangover" loading="lazy"></div>
+        <div class="gimg"><img src="/img/shots/site_shots__novel_wolf.thumb.jpg?v=20261104" alt="Cthangover" loading="lazy"></div>
         <div class="gbody">
           <div class="gtags"><span>novel</span><span>cards</span><span>ff</span></div>
           <h3>Cthangover</h3>
@@ -114,7 +114,7 @@
         </div>
       </article>
       <article class="game reveal">
-        <div class="gimg"><img src="/img/shots/rpg_plus__rpg_plus_prologue.thumb.jpg" alt="RPG Plus" loading="lazy"></div>
+        <div class="gimg"><img src="/img/shots/rpg_world__rpg_plus_prologue.thumb.jpg?v=20261104" alt="RPG Plus" loading="lazy"></div>
         <div class="gbody">
           <div class="gtags"><span>rpg</span><span>stats</span><span>tiles</span></div>
           <h3>RPG Plus</h3>
@@ -123,7 +123,16 @@
         </div>
       </article>
       <article class="game reveal">
-        <div class="gimg"><img src="/img/shots/site_shots__location_home_outside.thumb.jpg" alt="My Novel" loading="lazy"></div>
+        <div class="gimg"><img src="/img/shots/stas_case__04_mill_investigation.thumb.jpg?v=20261104" alt="Junior Reaper &amp; Paper Grief" loading="lazy"></div>
+        <div class="gbody">
+          <div class="gtags"><span>isometric</span><span>investigation</span><span>story</span></div>
+          <h3>Junior Reaper &amp; Paper Grief</h3>
+          <p data-i18n="g_stas_d">Stas investigates the Bureau’s first case: isometric streets, clues and conversations.</p>
+          <code>--game=junior_reaper_paper_grief</code>
+        </div>
+      </article>
+      <article class="game reveal">
+        <div class="gimg"><img src="/img/shots/novel_template__bar.thumb.jpg?v=20261104" alt="My Novel" loading="lazy"></div>
         <div class="gbody">
           <div class="gtags"><span>template</span><span>novel</span></div>
           <h3>My Novel</h3>
@@ -163,8 +172,8 @@
       <p class="sub" data-i18n="battle_desc">turn_battle_base defines the ruleset contracts…</p>
     </div>
     <div class="battleshots reveal">
-      <figure><img src="/img/shots/site_shots__battle.thumb.jpg" alt="card_battle" loading="lazy"><figcaption>card_battle · Cthangover</figcaption></figure>
-      <figure><img src="/img/shots/rpg_walk__rpg_battle.thumb.jpg" alt="ff_battle" loading="lazy"><figcaption>ff_battle · RPG Plus</figcaption></figure>
+      <figure><img src="/img/shots/card_played__battle_round4.thumb.jpg?v=marao_retake_20261104T065313Z" alt="card_battle" loading="lazy"><figcaption>card_battle · Cthangover</figcaption></figure>
+      <figure><img src="/img/shots/ff_played__battle_round4.thumb.jpg?v=20261104" alt="ff_battle" loading="lazy"><figcaption>ff_battle · RPG Plus</figcaption></figure>
     </div>
     <div class="bgrid" id="battleGrid"></div>
   </div>
@@ -194,7 +203,7 @@
   <div class="wrap">
     <div class="sechead reveal">
       <div class="cap" data-i18n="mods_cap">Catalog</div>
-      <h2 class="sec" id="modsTitle">28 mods already in the repository</h2>
+      <h2 class="sec" id="modsTitle">67 mods already in the repository</h2>
     </div>
     <div class="gtabs small" id="modTabs"></div>
     <div class="modgrid" id="modGrid"></div>
@@ -230,7 +239,7 @@
   <button class="lb-nav lb-next" id="lbNext" aria-label="Next">›</button>
 </div>
 
-<script src="/js/i18n.js"></script>
-<script src="/js/main.js"></script>
+<script src="/js/i18n.js?v=20261104"></script>
+<script src="/js/main.js?v=4c42bb56bc76"></script>
 </body>
 </html>

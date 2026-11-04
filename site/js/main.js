@@ -24,11 +24,14 @@
   /* ---------- данные ---------- */
   var DATA = null;
 
-  /* числа до загрузки data/mods.json (и при file://) — те же, что в разметке */
-  var FALLBACK_STATS = { mods: 28, dslCommands: 29 };
+  /* build-mods-catalog.py обновляет числа в HTML; они же служат запасными значениями. */
+  var FALLBACK_STATS = {
+    mods: Number(document.getElementById("statMods").textContent),
+    dslCommands: Number(document.getElementById("statDsl").textContent)
+  };
 
   function stat(k) {
-    return (DATA && DATA.stats && DATA.stats[k]) || FALLBACK_STATS[k];
+    return DATA && DATA.stats && DATA.stats[k] != null ? DATA.stats[k] : FALLBACK_STATS[k];
   }
 
   var LAYERS = [
@@ -44,35 +47,39 @@
   ];
   var RN2 = ["i","ii","iii","iv","v","vi","vii","viii"];
 
-  /* Скриншоты галереи: site/make-shots.ps1 снимает их тест-сьютами игры,
+  /* Скриншоты галереи: site/make-shots.ps1 снимает их через игровые сценарии захвата,
      shots-to-img.py кладёт в img/shots/<suite>__<name>.jpg (+ .thumb.jpg). */
   var GAL_CATS = [
     ["all", "gal_all"], ["story", "gal_story"], ["battle", "gal_battle"],
-    ["rpg", "gal_rpg"], ["ui", "gal_ui"], ["tools", "gal_tools"]
+    ["rpg", "gal_rpg"], ["stas", "gal_stas"], ["ui", "gal_ui"], ["tools", "gal_tools"]
   ];
   /* первые ALL_COUNT кадров — подборка вкладки «All», остальные видны во вкладках категорий */
   var ALL_COUNT = 12;
   var SHOTS = [
     { f: "site_shots__novel_wolf", c: "story", k: "s_novel_wolf", big: true },
+    { f: "stas_case__01b_office_native128", c: "stas", k: "s_stas_office", big: true },
+    { f: "card_played__battle_round4", c: "battle", k: "s_card_battle", big: true },
+    { f: "ff_played__battle_round4", c: "battle", k: "s_ff_battle" },
+    { f: "stas_case__04_mill_investigation", c: "stas", k: "s_stas_mill", big: true },
+    { f: "stas_case__02_capital_gates", c: "stas", k: "s_stas_gates" },
+    { f: "stas_world__market", c: "stas", k: "s_stas_market" },
+    { f: "rpg_world__rpg_village", c: "rpg", k: "s_rpg_village", big: true },
     { f: "site_shots__panel_inventory", c: "ui", k: "s_inventory" },
-    { f: "rpg_walk__rpg_battle", c: "battle", k: "s_ff_battle" },
-    { f: "site_shots__battle_later", c: "battle", k: "s_card_battle", big: true },
+    { f: "stas_case__06_journal_all_clues", c: "stas", k: "s_stas_journal" },
     { f: "trade__trade_trade", c: "ui", k: "s_trade" },
+    { f: "rpg_world__rpg_plus_prologue", c: "story", k: "s_rp_prologue" },
+    { f: "stas_world__riverside", c: "stas", k: "s_stas_river" },
+    { f: "stas_case__01c_office_death_portrait", c: "stas", k: "s_stas_death" },
+    { f: "stas_world__bureau", c: "stas", k: "s_stas_bureau" },
     { f: "site_shots__panel_map", c: "ui", k: "s_map" },
-    { f: "rpg_walk__rpg_village", c: "rpg", k: "s_rpg_village", big: true },
-    { f: "rpg_plus__rpg_plus_prologue", c: "story", k: "s_rp_prologue" },
-    { f: "rpg_plus__rpg_plus_sheet", c: "rpg", k: "s_rp_sheet" },
-    { f: "rpg_plus__rpg_plus_battle", c: "battle", k: "s_rp_battle" },
+    { f: "rpg_world__rpg_plus_sheet", c: "rpg", k: "s_rp_sheet" },
     { f: "site_shots__novel_menu", c: "story", k: "s_novel_menu" },
     { f: "site_shots__panel_characters", c: "ui", k: "s_characters" },
     { f: "tools_windows__scenario_editor", c: "tools", k: "s_scenario_editor" },
-    { f: "trade__trade_forest", c: "rpg", k: "s_forest" },
+    { f: "rpg_world__rpg_forest", c: "rpg", k: "s_forest" },
     { f: "menu_flow__game_picker", c: "ui", k: "s_picker" },
     { f: "site_shots__location_home_outside", c: "story", k: "s_home_outside" },
-    { f: "site_shots__location_home_livingroom", c: "story", k: "s_livingroom" },
-    { f: "site_shots__location_town_outskirts", c: "story", k: "s_outskirts" },
-    { f: "rpg_walk__rpg_victory", c: "battle", k: "s_victory" },
-    { f: "rpg_walk__rpg_house", c: "rpg", k: "s_house" },
+    { f: "rpg_world__rpg_house", c: "rpg", k: "s_house" },
     { f: "site_shots__panel_skills", c: "ui", k: "s_skills" },
     { f: "tools_windows__scene_editor", c: "tools", k: "s_scene_editor" },
     { f: "tools_windows__rpg_map_editor", c: "tools", k: "s_rpg_editor" },
@@ -218,7 +225,7 @@
 
   /* ---------- галерея и лайтбокс ---------- */
   function shotSrc(s, thumb) {
-    return "/img/shots/" + s.f + (thumb ? ".thumb.jpg" : ".jpg");
+    return "/img/shots/" + s.f + (thumb ? ".thumb.jpg" : ".jpg") + "?v=marao_retake_20261104T065313Z";
   }
 
   function renderGallery() {
@@ -341,7 +348,7 @@
     setText("statDsl", s.dslCommands);
     setText("statMods", s.mods);
     setText("statLoc", Math.round((s.coreLoc + s.modLoc) / 1000) + "K");
-    setText("statBattle", (DATA.battle && DATA.battle.length) || 3);
+    if (DATA.battle) setText("statBattle", DATA.battle.length);
   }
 
   function renderDynamic() {
@@ -362,7 +369,7 @@
     initReveal();
     document.addEventListener("langchange", renderDynamic);
 
-    fetch("/data/mods.json")
+    fetch("/data/mods.json", { cache: "no-cache" })
       .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
       .then(function (data) {
         DATA = data;

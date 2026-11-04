@@ -1,4 +1,4 @@
-"""Build quickstart-index.json from all .md files in quickstart/.
+"""Build quickstart-index.json and update the HTML footer with its page count.
 
 Output:
     {
@@ -12,14 +12,16 @@ Output:
 import json
 import os
 
-QUICKSTART_DIR = "quickstart"
+from build_html import update_html
+
+SITE_DIR = os.path.dirname(os.path.abspath(__file__))
+QUICKSTART_DIR = os.path.join(SITE_DIR, "quickstart")
 OUT_FILE = os.path.join(QUICKSTART_DIR, "quickstart-index.json")
 
 
 def main():
     if not os.path.isdir(QUICKSTART_DIR):
-        print(f"Error: {QUICKSTART_DIR} not found")
-        return
+        raise SystemExit(f"Error: {QUICKSTART_DIR} not found")
 
     result = {}
     file_count = 0
@@ -42,6 +44,7 @@ def main():
         json.dump(result, f, ensure_ascii=False)
 
     total_bytes = sum(len(v) for v in result.values())
+    update_html(os.path.join(SITE_DIR, "quickstart.html"), {"builtFileCount": file_count})
     print(f"OK  {OUT_FILE}  ({file_count} pages, {total_bytes} bytes)")
 
 

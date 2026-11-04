@@ -149,7 +149,7 @@ h1 .amp{display:block;background:linear-gradient(100deg,var(--gold-bright),var(-
 .lb-next{right:14px;top:50%;transform:translateY(-50%)}
 
 /* ---- games ---- */
-.games{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.games{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
 .game{background:linear-gradient(180deg,var(--surface2),var(--surface));border:1px solid var(--line-card);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;transition:border-color .2s ease,transform .2s ease}
 .game:hover{border-color:var(--gold-line);transform:translateY(-3px)}
 .gimg{aspect-ratio:16/9;overflow:hidden;border-bottom:1px solid var(--line-soft)}
