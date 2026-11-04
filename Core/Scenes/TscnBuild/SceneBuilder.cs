@@ -69,7 +69,21 @@ namespace Cthangover.Core.Scenes.TscnBuild
                         .SelectMany(a => a.GetTypes())
                         .FirstOrDefault(t => t.FullName == scene.EntryPointClass || t.Name == scene.EntryPointClass);
                 if (entryType != null && typeof(ITscnSceneEntryPoint).IsAssignableFrom(entryType))
-                    (Activator.CreateInstance(entryType) as ITscnSceneEntryPoint)?.OnSceneBuilt(_rootNode);
+                {
+                    var entry = Activator.CreateInstance(entryType) as ITscnSceneEntryPoint;
+                    if (entry is Node entryNode)
+                    {
+                        if (_rootNode == null)
+                        {
+                            entryNode.Free();
+                            return null;
+                        }
+                        // Native entry points live with the scene instead of becoming detached leaked nodes.
+                        entryNode.Name = entryType.Name;
+                        _rootNode.AddChild(entryNode);
+                    }
+                    entry?.OnSceneBuilt(_rootNode);
+                }
             }
 
             return _rootNode;

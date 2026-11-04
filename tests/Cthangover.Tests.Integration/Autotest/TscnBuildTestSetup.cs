@@ -53,6 +53,7 @@ text = ""Hello World""
 
             var builder = new SceneBuilder();
             var root = builder.Build(scene, null, null);
+            AddChild(root);
 
             Assert(root != null, "Build: root not null");
             Assert(root.Name == "Root", "Build: root name is Root");
@@ -77,6 +78,7 @@ text = ""Hello World""
             Assert(signalFired, "Build: signal pressed fired and handled");
 
             Assert(TscnTestEntryPoint.WasCalled, "Build: entry point called");
+            Assert(root.GetNodeOrNull<TscnTestEntryPoint>(nameof(TscnTestEntryPoint))?.GetParent() == root, "Build: scene owns its native entry point");
 
             // --- ExtResource texture test ---
             var tscnTex = @"
@@ -99,11 +101,12 @@ texture = ExtResource(""1_tex"")
             var texRoot = builder.Build(parsedTex, null, refId =>
             {
                 texResolved = true;
-                var img = Image.CreateEmpty(2, 2, false, Image.Format.Rgba8);
+                using var img = Image.CreateEmpty(2, 2, false, Image.Format.Rgba8);
                 resolvedTex = ImageTexture.CreateFromImage(img);
                 return resolvedTex;
             });
 
+            AddChild(texRoot);
             Assert(texRoot != null, "ExtRes: root not null");
             Assert(texResolved, "ExtRes: resolver callback was invoked");
 
@@ -111,6 +114,10 @@ texture = ExtResource(""1_tex"")
             Assert(texRect != null, "ExtRes: TexChild exists");
             Assert(texRect.Texture != null, "ExtRes: texture assigned");
             Assert(texRect.Texture == resolvedTex, "ExtRes: texture is the one we returned");
+
+            root.Free();
+            texRoot.Free();
+            resolvedTex?.Dispose();
 
             GameLogger.Log("TSCN_TEST", $"TscnBuildTestSetup: {_passed} passed, {_failed} failed");
             if (_failed == 0)
