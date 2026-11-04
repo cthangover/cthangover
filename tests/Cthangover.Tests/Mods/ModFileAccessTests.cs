@@ -4,6 +4,7 @@ namespace Engine.Tests.Mods
     using System.IO;
     using Cthangover.Core.Mods;
     using Cthangover.Core.Mods.Providers;
+    using Engine.Tests.Mods.Mocks;
 
     /// <summary>Consumers can request seekability or a real file without extracting the entire package.</summary>
     public class ModFileAccessTests : IDisposable
@@ -39,6 +40,20 @@ namespace Engine.Tests.Mods
             Assert.False(ModFileAccess.Materialize(provider, "Data/payload.bin", destination));
             Assert.Equal(timestamp, File.GetLastWriteTimeUtc(destination));
             Assert.Single(Directory.GetFiles(root, "*", SearchOption.AllDirectories));
+        }
+
+        [Fact]
+        public void MockProviderStreamsBinaryFilesWithoutTextConversion()
+        {
+            var provider = new MockModFileProvider("stream_contract");
+            var bytes = new byte[] { 0, 255, 128, 65 };
+            provider.AddBinaryFile("data.bin", bytes);
+            using var stream = provider.OpenStream("data.bin");
+            using var copy = new MemoryStream();
+            Assert.NotNull(stream);
+            stream.CopyTo(copy);
+            Assert.Equal(bytes, copy.ToArray());
+            Assert.Null(provider.OpenStream("missing.bin"));
         }
     }
 }

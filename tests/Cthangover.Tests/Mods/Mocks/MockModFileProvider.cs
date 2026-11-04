@@ -107,6 +107,9 @@ namespace Engine.Tests.Mods.Mocks
 
         public Stream OpenStream(string path)
         {
+            var binary = ReadFileBinary(path);
+            if (binary != null)
+                return new MemoryStream(binary, writable: false);
             var content = ReadFileText(path);
             if (content == null)
                 return null;
