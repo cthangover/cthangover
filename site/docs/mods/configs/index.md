@@ -8,7 +8,7 @@ Every mod needs a manifest and optionally a properties file. These define the mo
 {
   // Canonical mod identifier (falls back to folder name if omitted)
   "id": "my_mod",
-  // Human-readable name shown in the mod menu (required)
+  // Human-readable name shown in the mod menu
   "name": "MyMod",
   // Semver version — used for saves and deduplication
   "version": "1.0.0",
@@ -44,11 +44,15 @@ Every mod needs a manifest and optionally a properties file. These define the mo
 | Field | Required | Description |
 |---|---|---|
 | `id` | No | Canonical mod identifier (falls back to folder/zip name) |
-| `name` | Yes | Human-readable mod name |
+| `name` | No | Human-readable mod name (a display value, not the dependency ID) |
 | `version` | No | Semver version string (e.g. "1.0.0"). Used by the save system and for deduplication |
 | `author` | No | Author identifier |
 | `description` | No | Short description |
 | `sources` | No | Glob patterns for C# files to compile via Roslyn |
+| `test_sources` | No | C# test globs compiled separately in explicit mod-test mode, never into production assemblies |
+| `test_suites` | No | Opt-in virtual test mods; each entry has `id`, optional `path` and `activate` prefixes |
+| `integrations` | No | Conditional glue: `id`, partner IDs in `with`, optional `path`; see [Integrations](../src/integrations.md) |
+| `fixture` | No | Test-only mod excluded from normal game/all-mod selection; explicitly mount with `--with-mods=` |
 | `gd_sources` | No | Glob patterns for `.gd` GDScript files to compile via Godot's engine |
 | `depends` | No | List of mod IDs that must be loaded before this mod (versioned strings allowed — see [Load Order](../load-order/)) |
 | `category` | No | Catalog category slug or comma-separated combination (e.g. `"library, gameplay"`). See the [catalog](../catalog/) page for the full list |
@@ -66,7 +70,7 @@ Every mod needs a manifest and optionally a properties file. These define the mo
 
 - `"scripts/*.gd"` — all `.gd` files in `scripts/`, one level deep
 
-GDScript files are compiled by Godot's GDScript engine (no Roslyn needed). A single `.gd` file can implement multiple interfaces simultaneously — actions, conditions, battle executors, item actions, and mod initializers. See [GDScript in Mods](site/docs/mods/src/gdscript) for the full API reference.
+GDScript files are compiled by Godot's GDScript engine (no Roslyn needed). A single `.gd` file can implement multiple interfaces simultaneously — actions, conditions, battle executors, item actions, and mod initializers. See [GDScript in Mods](../src/gdscript/) for the full API reference.
 
 ### Dependencies
 
@@ -74,7 +78,7 @@ GDScript files are compiled by Godot's GDScript engine (no Roslyn needed). A sin
 "depends": ["cthangover_game"]
 ```
 
-The kernel resolves dependencies in topological order. Circular dependencies cause a load error. `cthangover_game` is always loaded first.
+The kernel resolves the selected game or frontend mod set in topological order. `cthangover_game` is ordinary game content and is loaded only when selected or required; it has no privileged first position. C# compilation sees the transitive closure of the mod's declared dependencies. Circular dependencies are invalid.
 
 ### Scene lifecycle hooks
 
@@ -115,7 +119,7 @@ From `mods/cooking/manifest.json`:
 ```jsonc
 {
   "id": "cooking",
-  // cthangover_game, interface, items_base and time_base load before this mod
+  // The named dependencies load before this mod
   "depends": [ "cthangover_game>=1", "ui_base>=1", "items_base>=1", "time_base>=1" ]
 }
 ```
@@ -148,4 +152,4 @@ only when named in `--with-mods=`.
 }
 ```
 
-Save as `mods/my_first_mod/manifest.json`. The mod is now loaded by the kernel. Even without `sources` or `ui`, the mod's scenarios, items, and other data files are discovered automatically from their conventional locations.
+Save as `mods/my_first_mod/manifest.json`. The mod is now discoverable. Add it to the game's collection, or launch with `--with-mods=my_first_mod`; normal startup loads the frontend rather than every installed mod. Even without `sources` or `ui`, the mod's scenarios, items, and other data files are discovered automatically from their conventional locations.

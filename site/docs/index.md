@@ -15,12 +15,13 @@ scenario DSL (`dialog_base`), characters, items, quests, skills, the world map, 
 platform with its cores (`card_battle`, `ff_battle`), the tile world (`rpg`), the UI toolkit and the main menu.
 
 A **game** is a [collection](mods/collections/): the game's own content mod plus the mechanics it chooses. The project
-ships three of them, all running on the same engine mods and switching inside one process:
+ships four of them, all running on the same engine mods and switching inside one process:
 
 | Game | Content | Built from |
 |---|---|---|
 | `cthangover` | `cthangover_game`, `cthangover_murakami` | a visual novel with characters, quests, items, cooking and turn-based battles |
 | `rpg_plus` | `rpg_plus_game`, `village_pack`, `classic_rpg_pack` | an RPG Maker style game: a novel prologue picks the class, tile maps walked with WASD, events on E/F, [stats, checks and gear](mods/stats/), formula skills, the map editor and the [Data Editor](mods/schemas/) |
+| `junior_reaper_paper_grief` | `junior_reaper_paper_grief` | an isometric investigation with mouse-driven interiors, map-owned events and concurrent NPC speech |
 | `novel_template` | `my_novel_game`, `town_pack` | the smallest playable novel, a starting point for a new story |
 
 | Layer | Location | Responsibility |
@@ -37,7 +38,7 @@ The kernel never depends on a game or a genre. A mod that needs another one decl
 
 | Topic | Description |
 |---|---|
-| [Avatars](mods/avatars/) | Character portrait images |
+| [Avatars](mods/avatars/) | Dialog portraits and [logical avatars with PNG layers](mods/avatars/layers.md) |
 | [Backgrounds](mods/backgrounds/) | Scene background images and depth maps |
 | [Characters](mods/characters/) | Character JSON definitions and attributes |
 | [Interactive Objects](mods/interactives/) | Clickable scene objects with hit areas and actions |
@@ -55,7 +56,7 @@ The kernel never depends on a game or a genre. A mod that needs another one decl
 | [Game Config](mods/configs/game_config) | Default game settings |
 | [Mod Config](mods/configs/mod_config) | Mod system cache and file discovery |
 | [Catalog & Network](mods/catalog/) | Online mod catalog schema, merging, and export |
-| [Collections](mods/collections/) | Curated mod sets implementing a mechanic, shown as a dependency graph |
+| [Collections](mods/collections/) | Games and reusable toolsets, their mechanics and dependency graph |
 
 ## Scenarios & DSL
 
@@ -65,13 +66,21 @@ The kernel never depends on a game or a genre. A mod that needs another one decl
 | [Runtime TSCN Scenes](mods/scenes/tscn-runtime/) | Loading Godot `.tscn` scene files at runtime from mods |
 | [Scenarios](mods/scenes/scenarios/) | `.scenario` format and metadata |
 | [Scenario Actions](mods/scenes/scenarios/actions/) | `action` command reference |
-| [DSL Commands](mods/scenes/scenarios/dsl/) | Full command reference (30 commands) |
-| [Conditions](mods/scenes/scenarios/dsl/conditions/) | Quest condition expression language |
+| [DSL Commands](mods/scenes/scenarios/dsl/) | Built-in and mod-provided command reference |
+| [Conditions](mods/scenes/scenarios/dsl/conditions/) | Shared condition language: flags, quests and optional mechanics |
+| [Expressions](mods/scenes/scenarios/expressions.md) | Numeric assignments, random functions and strict dialog variables |
+| [Background scenarios](mods/scenes/scenarios/background.md) | Concurrent NPC speech, spatial conditions, cue reactions, patches and debugging |
 
 ## Gameplay systems
 
 | Topic | Description |
 |---|---|
+| [RPG world](mods/rpg/) | Maps, objects, placements, projections, party followers and optional battles |
+| [Map events](mods/rpg/events.md) | Invisible interaction rectangles, inline scripts and scoped flags |
+| [Stats and equipment](mods/stats/) | Classes, checks, gear, formulas and the character sheet |
+| [Crafting](mods/crafting/) | Data-driven stations, recipes and material exchange |
+| [Trading](mods/trading/) | Shops, currencies, buying and selling |
+| [Effects](mods/effects/) | Scene effects, atmosphere emitters and painted map masks |
 | [Battle](mods/battle/) | Battle system architecture and custom battle mods |
 | [Quests](mods/quests/) | Quest definitions and progression |
 | [Status Effects](mods/status_effects/) | Buff, debuff, and stun effect definitions |
@@ -92,6 +101,9 @@ The kernel never depends on a game or a genre. A mod that needs another one decl
 
 | Topic | Description |
 |---|---|
+| [Launching and testing](mods/testing/) | Game selection, developer flags, mod tests and diagnostic atlases |
+| [Integrations and reload](mods/src/integrations.md) | Conditional glue mods, assembly consumers and hot reload |
+| [Bundled modules](mods/modules/) | Installed subsystems, mechanics, tools, content and their references |
 | [Source Code (C#)](mods/src/) | C# in mods — Roslyn compilation, interfaces |
 | [GDScript in Mods](mods/src/gdscript/) | Scenario actions, conditions, battle, items, lifecycle |
 | [Developer Tools](mods/editor_tools/) | Custom editor windows and toolbar integration |

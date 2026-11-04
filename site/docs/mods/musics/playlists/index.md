@@ -25,7 +25,7 @@ engine (~1s delay, then a volume ramp) and cannot be configured per playlist.
 | Field | Type | Description |
 |---|---|---|
 | `Scene` | string | Scene name this playlist applies to (`"default"` is used when no playlist matches the loaded scene) |
-| `MusicType` | string | Category: `Ambient` (exploration), `Combat` (battle), `Force` (transient, normalised to `Ambient`). A scene named `Battle` switches playback to `Combat`, otherwise `Ambient` plays |
+| `MusicType` | string | Category: `Ambient` (exploration), `Combat` (battle), `Force` (transient, normalised to `Ambient`). The registered scene route chooses the music type (`turn_battle_base` supplies the battle route); ordinary scenes use `Ambient` |
 | `MusicNames` | string[] | Track filenames without extension. Must match `.ogg` files in `music/` |
 
 ## Real example — default playlist

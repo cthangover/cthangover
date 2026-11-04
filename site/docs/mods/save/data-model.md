@@ -7,7 +7,9 @@
 | `SaveId` | `string` | User-facing save name (e.g. "slot_1") |
 | `Timestamp` | `DateTime` | UTC timestamp when the save was created |
 | `CoreVersion` | `string` | Version of the game core that created this save |
-| `ModData` | `Dict<string, ModSlot>` | Data slots from core + all mods |
+| `ModData` | `Dict<string, ModSlot>` | Core and active mod data slots |
+| `Game` | `SaveGameInfo` | Game ID/name/version and ordered `Mods` (`Id`, `Version`) snapshot; null for unscoped development saves |
+| `Dormant` | `Dict<string, ModSlot>` | Inactive/incompatible slots preserved for a later return |
 
 ## `"__core__"` slot structure
 
@@ -17,15 +19,26 @@ The core slot uses these blob keys:
 |---|---|---|
 | `Time` | `long` | In-game clock tick (minutes elapsed) |
 | `Lamp` | key-value | `Radius` (float), `Influence` (float) |
-| `Characters` | `List<CharacterInfoData>` | Recruited character snapshots |
-| `Quests` | `List<QuestBase>` | Quest instances with progress |
-| `BattleSet` | `List<string>` | Active battle party character IDs |
-| `Inventory` | `List<CItem>` | Inventory item stacks |
-| `Recipes` | `List<string>` | Unlocked recipe IDs |
 | `ActionPool` | `List<string>` | Persistent action card pool IDs |
 | `Skills` | `List<string>` | Owned skill IDs |
-| `CompletedScenarios` | `List<string>` | One-shot scenario IDs already run |
-| `MapZones` | `MapZoneStateData` | World-map zone open/visible overrides (delta against the mod-authored defaults) |
+| `CompletedScenarios` | `List<string>` | Completed scene-chain scenario IDs |
+| `MapZones` | `MapZoneStateData` | World-map open/visible overrides against authored defaults |
+| `Flags` | `Dictionary<string,string>` | Global flags and scoped `<map>/<event>:<name>` flags |
+
+## Mod-owned slots
+
+| Slot | Blob keys | Owner |
+|---|---|---|
+| `characters_base` | `Characters`, `BattleSet` | Party snapshots and active combat-party IDs |
+| `items_base` | `Inventory`, `Recipes` | Item id/count pairs (including unresolved entries) and learned recipes |
+| `quests_base` | `Quests` | Quest state, including unresolved records |
+| `rpg` | `Position` | RPG map and position state |
+| `stats_base` | `Stats` | Stats sheets and progression |
+| `equipment` | `Worn` | Equipped item state |
+| `recruiting` | `Recruits` | Recruit roster |
+| `npc_barks_base` | `History` | Completed ambient definitions and remaining cooldowns |
+
+These slots are written by the owning mods' `IModSaveable` implementations; they are not part of `__core__`. Current loading does not migrate former core-owned character/item/quest blobs automatically. A currently running battle, dialog execution pointer, speech bubble or transient speech event is not a saved snapshot.
 
 Slot preview metadata (`CurrentSceneName`, `GameTime`, `CharacterCount`) is stored in `ModMetadata.CustomData` as a JSON object, so the slot list UI can read it without deserialising game-state blobs.
 
@@ -42,7 +55,7 @@ The saved `CurrentSceneName` is used for the slot-list UI and scene navigation a
 
 ## ModMetadata
 
-The core pre-fills `ModId`, `ModName`, and `ModVersion` from `IModInfo` before calling `OnSave`. The mod only needs to set `MinCoreVersion`, `IsRequired`, `CustomData`, and the data blobs.
+The core pre-fills `ModId`, `ModName`, and `ModVersion` from `IModInfo` before calling `OnSave`. The mod only needs to set `MinCoreVersion`, `CustomData`, and the data blobs.
 
 | Field | Type | Set by | Description |
 |---|---|---|---|
@@ -50,7 +63,9 @@ The core pre-fills `ModId`, `ModName`, and `ModVersion` from `IModInfo` before c
 | `ModName` | `string` | core | Human-readable name (from `IModInfo.DisplayTitle`) |
 | `ModVersion` | `string` | core | Version of the installed mod (from `IModInfo.Version`, read from `manifest.json`) |
 | `MinCoreVersion` | `string` | mod | Minimum core version required |
-| `IsRequired` | `bool` | mod | If true, save cannot load without this mod (default: true) |
+| `Dormant` | `bool` | core | True while the slot is retained inactive |
+| `DormantReason` | `string` | core | `NotLoaded`, `Downgrade`, `CoreTooOld`, or `LoadFailed` |
+| `DormantSince` | `DateTime?` | core | First dormancy date |
 | `CustomData` | `string` | mod | Free-form JSON for extra metadata |
 
 ## DataBlob
@@ -85,9 +100,11 @@ Returned by `SaveService.GetSaveSlots(slotCount)` for the load-game UI. There is
 | `FileName` | `string` | Logical slot name (e.g. `slot_1`), used as the save-file identifier |
 | `SaveTime` | `DateTime` | UTC timestamp from `SavePackage.Timestamp` (`DateTime.MinValue` for empty slots) |
 | `SceneName` | `string` | Scene at save time (from the core slot preview; `"unknown"` fallback) |
-| `ScreenshotPath` | `string` | Godot path of the thumbnail PNG (e.g. `user://saves/slot_1.png`) |
+| `ScreenshotPath` | `string` | Godot path of the thumbnail PNG (e.g. `user://saves/<game_id>/slot_1.png`) |
 | `HasScreenshot` | `bool` | `true` if a thumbnail PNG exists on disk |
 | `IsEmpty` | `bool` | `true` when no JSON save file exists for this slot |
 | `GameTime` | `long` | In-game time tick at save moment |
 | `CharacterCount` | `int` | Number of characters at save moment |
+| `GameId`, `GameName` | `string` | Game identity and saved display name |
+| `Mods` | `List<SaveGameMod>` | Saved mod-composition snapshot |
 | `LampPercent` | `float` | **Known placeholder**: currently always written as `0f` by `GetSaveSlots` — no real lamp data is computed yet |

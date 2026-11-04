@@ -223,3 +223,9 @@ All typed events derive from `ModEvent` (`Core/Events/ModEvent.cs`), which carri
 
 - `ClearForMod(string modId)` — removes all subscriptions registered with that `modId`, across both the typed and string layers. Called on mod unload/reload.
 - `ClearAll()` — wipes every subscription on both layers.
+
+## Reload and background speech events
+
+`ScenarioContentChangedEvent` tells consumers to re-read changed scenario content. `ModSetReloadedEvent` reports an applied/rejected mod-set change; consumers must inspect `Applied` before rebuilding live state. Their contracts live in `Core/Events/Events/`.
+
+`npc_barks_base` declares `BarkSpeechEvent`, bridged under `npc_speech`. It carries `EventId`, `SessionId`, simulation time `At`, `RunId`, `UtteranceId`, placement `Speaker`, `Map`, `Cue`, `Phase` and `Depth`. Phases are `speech.started`, `speech.finished`, `speech.interrupted`. The director defers cue reactions until the next simulation update and filters stale or duplicate events; interruption is not reported as completion. Events are transient and are not replayed from saves. See [Background NPC scenarios](../scenes/scenarios/background.md).

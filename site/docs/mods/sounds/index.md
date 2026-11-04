@@ -22,7 +22,7 @@ sounds/
 
 ## File format
 
-- `.ogg` (Vorbis) and `.wav` are both accepted — see `audio_extensions` in `config/mod_config.json`
+- `.ogg` (Vorbis) and `.wav` are accepted. Although `audio_extensions` exists in the config DTO, the current runtime loader retains this default list; changing that JSON field alone does not enable another format.
 - Short duration (0.1–5 seconds) recommended for one-shot effects
 - The sound id is the path relative to the mod's `sounds/` folder, minus extension: `sounds/ui/click.ogg` → `ui/click`, `battle/hit`
 

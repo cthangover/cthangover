@@ -28,10 +28,10 @@ config/
   "display": {
     "window_mode": 3,             // 0=Windowed, 1=Min, 2=Max, 3=Fullscreen, 4=Exclusive
     "resolution_width": 1920,     // Width in pixels
-    "resolution_height": 1080,    // Height in pixels
+    "resolution_height": 1024,    // Height in pixels
     "current_screen": 0,          // Monitor index (0-based)
     "vsync_enabled": false,       // Vertical sync
-    "scale": 1                    // UI window scale factor
+    "max_fps": 0                  // Frame cap; 0 is unlimited
   },
   // Logging configuration
   "logging": {
@@ -59,11 +59,13 @@ config/
 | Field | Type | Values | Description |
 |---|---|---|---|
 | `window_mode` | int | 0=Windowed, 1=Min, 2=Max, 3=Fullscreen, 4=Exclusive | Window display mode (Godot `DisplayServer.WindowMode`) |
-| `resolution_width` | int | pixels | Target screen width |
-| `resolution_height` | int | pixels | Target screen height |
+| `resolution_width` | int | pixels | Window width; fullscreen uses the monitor resolution |
+| `resolution_height` | int | pixels | Window height; fullscreen uses the monitor resolution |
 | `current_screen` | int | 0-indexed | Monitor/display index |
 | `vsync_enabled` | bool | true/false | Vertical sync |
-| `scale` | int | multiplier | UI/window scaling factor |
+| `max_fps` | int | 0 or frame cap | 0 means unlimited |
+
+The shipped config uses a 1920×1024 window size; `DisplaySection` code defaults are 1920×1080. The base viewport is 1920×1024 with `canvas_items` stretch. The Display tab exposes window mode, monitor, window size, V-Sync and frame cap; `scale` is not a current field. Windowed sizes are centred on the selected monitor.
 
 ## `language` section
 

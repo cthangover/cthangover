@@ -6,7 +6,7 @@ Old saves (without `ModData`, `SaveId`, `Timestamp`, `CoreVersion` fields) will 
 
 ## Version comparison
 
-During phase-1 validation the core compares `ModMetadata.ModVersion` from the save with `IModInfo.Version` from the installed mod. Both values originate from the `"version"` field in `manifest.json`.
+During slot classification the core compares `ModMetadata.ModVersion` from the save with `IModInfo.Version` from the installed mod. Both values originate from the `"version"` field in `manifest.json`.
 
 ### Comparison strategy
 
@@ -33,7 +33,7 @@ Consequences: a segment like `"1b"` does **not** parse as int, so it compares **
 | Condition | Result |
 |---|---|
 | No version in save or installed mod | Skip check |
-| `save.Version > installed.Version` | **Abort** — save was made by a newer mod; downgrade not supported |
+| `save.Version > installed.Version` | Keep this slot **dormant** (`Downgrade`); compatible parts of the game still load |
 | `save.Version < installed.Version` | **Warning** — save is from an older mod version; the mod must handle migration in `OnLoad` |
 | `save.Version == installed.Version` | OK |
 
@@ -57,8 +57,16 @@ This value flows through `ModManifest.Version` → `IModInfo.Version` → `ModMe
 
 - **Add `"version"` to `manifest.json`** — the core uses it for save validation and migration detection.
 - **One `IModSaveable` per mod** — create a single implementation in your assembly.
-- **Never set `ModId`, `ModName`, or `ModVersion`** — the core pre-fills them. Set `MinCoreVersion`, `IsRequired`, `CustomData`, and `Data`.
+- **Never set `ModId`, `ModName`, or `ModVersion`** — the core pre-fills them. Set `MinCoreVersion`, `CustomData`, and `Data`.
 - **Prefer `bool OnLoad(ModSlot, out string)`** — explicit contract, no exceptions. Override `OnLoadVoid` only for legacy/compatibility.
 - **Mods must not depend on each other's save data** — the dispatch order is undefined.
 - **Version your `DataBlob` blocks** — use separate blobs per logical entity, version each independently.
 - **Handle missing keys** — use `TryGetValue` and provide defaults.
+
+## Missing mods and rejoining
+
+A missing/unloaded mod or a mod whose slot requires a newer core is kept dormant (`NotLoaded` or `CoreTooOld`). A rejected `OnLoad` becomes `LoadFailed`. These mod-local outcomes do not abort the whole package. A missing or incompatible reserved core slot still blocks load. See [Save system](index.md).
+
+When a compatible mod returns, its dormant data can revive. A new mechanic without restored data receives `OnJoinedExistingGame()` after defaults are prepared. Retain a stable mod ID; renaming it does not automatically transfer the old slot. Cleanup in the save settings explicitly purges dormant data.
+
+The current format does not migrate the former `Characters`/`BattleSet`, `Inventory`/`Recipes`, or `Quests` blobs out of `__core__`; those owners now read their own mod slots. Older saves may therefore start those subsystems at fresh defaults unless a dedicated converter is supplied.

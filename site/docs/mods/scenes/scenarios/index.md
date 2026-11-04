@@ -27,7 +27,8 @@ end
 
 | Field | Type | Default | Description |
 |---|---|---|---|
-| `scene` | string | *(required)* | Scene this scenario targets. Multiple scenario files can target the same scene |
+| `scene` | string | *(none)* | Required for automatic scene-chain execution; a headerless script can be invoked by an interactive object or RPG event |
+| `channel` | string | `dialog` | `dialog` runs in the modal scene chain; `ambient` is hosted by `npc_barks_base` and excluded from that chain |
 | `priority` | int | `0` | Execution order — **lower runs earlier**. All matching scenarios are enqueued in this order |
 | `after` | string | *(none)* | Scenario ID that must come before this one in the chain (ordering dependency) |
 | `condition` | expression | *(none)* | Quest-condition expression. Scenario only runs if true. See `dsl/conditions/` |
@@ -37,7 +38,7 @@ end
 
 ## Real examples
 
-### Default kitchen scenario (core)
+### Default kitchen scenario (game content)
 
 ```scenario
 scene: home_kitchen
@@ -74,7 +75,7 @@ end
 
 Because `priority: 5 < 10`, the cooking scenario is enqueued **before** the default one. Note that it does **not** replace the default — both scenarios are enqueued and run in priority order. Use `condition:` (or `is_one_run: true`) to exclude scenarios from execution, not priority.
 
-### Bedroom with save_allowed (core)
+### Bedroom with save_allowed (game content)
 
 ```scenario
 scene: home_bedroom
@@ -102,6 +103,8 @@ end
 
 The interactive lamp is added once, on first visit. Subsequent visits skip this scenario.
 
+For `channel: ambient`, actor roles, spatial conditions, cooldowns and speech reactions are documented in [Background NPC scenarios](background.md). These headers belong to the background host.
+
 ## Adding or replacing a scenario
 
 A scenario is identified by its **file name** (without `.scenario`): that is the
@@ -119,7 +122,7 @@ id the completion history, `after:` links and the studio use.
 
 ## How the engine selects scenarios
 
-1. Player enters `scene: home_kitchen`
+1. Player enters `scene: home_kitchen` (the following steps describe `channel: dialog`).
 2. Engine collects all `.scenario` files targeting `home_kitchen` across all mods
 3. Sorts by `priority` (ascending) and resolves `after:` dependencies (topological order)
 4. For each scenario in that order, evaluates `condition:` (if present). A scenario **without** a condition always passes.

@@ -84,7 +84,7 @@ The map is declared like any mod panel — in the manifest `ui` array:
 Zone state has two layers:
 
 - **Authoring defaults** — `locked` / `hidden` flags from the JSON above.
-- **Runtime overrides** — sparse dictionaries owned by the `MapZoneService` singleton (`Core/UI/Tool/MapZoneService.cs`), changed via `Open`/`Close`/`Show`/`Hide`/`ResetZone`.
+- **Runtime overrides** — sparse dictionaries owned by the `MapZoneService` singleton (`mods/map_base/src/MapZoneService.cs`), changed via `Open`/`Close`/`Show`/`Hide`/`ResetZone`.
 
 The effective state is the override when present, otherwise the authoring default. Every change publishes a `MapZoneChangedEvent`, so an open map updates live when a scenario changes a zone. Extra rule shared by the game and the editor (`MapZoneRules`): a zone whose `scene` is empty or unregistered is always treated as locked, so authors can sketch future regions safely. The zone matching the active scene is marked *you are here* and cannot be entered again.
 
@@ -116,17 +116,17 @@ Persistence is covered by an integration test that runs the real `SaveService` s
 
 The `map_editor` mod ships a visual map editor (`mods/map_editor/src/MapEditor/`, tool id `map_editor`). It edits the same zone JSON: a canvas with draggable polygon, marker and label handles, per-zone fields, load/save of `map/*.json` into the selected mod, and a game-like preview that renders the real `map_widget.tscn` with the unsaved data. The editor and the game share one style implementation (`MapZoneStyle`), so both views render zones identically; after saving, the running map reloads without a game restart.
 
-See [Creating a Custom Tool](../tools/tutorial.md) for how tools like this are registered.
+See [Creating a Custom Tool](../editor_tools/tutorial.md) for how tools like this are registered.
 
 ## Code reference
 
 | Component | Location |
 |---|---|
-| `MapWidget` | `Core/UI/Tool/MapWidget.cs` — overlay behaviour, markers, location card |
-| `MapZonesLayer` | `Core/UI/Tool/MapZonesLayer.cs` — polygon hit-testing and painting |
-| `MapMarker` | `Core/UI/Tool/MapMarker.cs` — marker emblem (`scenes/ui/map_marker.tscn`) |
-| `MapZone` | `Core/UI/Tool/MapZone.cs` — JSON zone DTO |
-| `MapZoneService` | `Core/UI/Tool/MapZoneService.cs` — zone list + runtime overrides singleton |
+| `MapWidget` | `mods/map_base/src/MapWidget.cs` — overlay behaviour, markers, location card |
+| `MapZonesLayer` | `mods/map_base/src/MapZonesLayer.cs` — polygon hit-testing and painting |
+| `MapMarker` | `mods/map_base/src/MapMarker.cs` — marker emblem (`scenes/ui/map_marker.tscn`) |
+| `MapZone` | `mods/map_base/src/MapZone.cs` — JSON zone DTO |
+| `MapZoneService` | `mods/map_base/src/MapZoneService.cs` — zone list + runtime overrides singleton |
 | `IMapZoneService` | `Core/Actions/IMapZoneService.cs` — scenario-facing facade (`ctx.Map`) |
-| `MapZoneRules` / `MapZoneStyle` | `Core/UI/Tool/` — shared enterability rule and zone visuals |
-| `Map*ZoneAction` | `Core/Actions/Atomic/` — the four DSL commands |
+| `MapZoneRules` / `MapZoneStyle` | `mods/map_base/src/` — shared enterability rule and zone visuals |
+| `Map*ZoneAction` | `mods/map_base/src/Actions/` — the four DSL actions |

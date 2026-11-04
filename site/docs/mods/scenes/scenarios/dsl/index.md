@@ -1,6 +1,6 @@
 # DSL Command Reference
 
-Complete reference to the Scenario DSL commands: 29 keywords registered in the command strategy registry, plus `select`/`option`, which are handled specially by the parser (31 commands total, grouped by category).
+Dialog strategies provide the standard commands below; `select`/`option` are handled specially by the parser. Dialog assignments `set`/`cset` use the shared `expressions_base` evaluator, and optional mechanics add commands such as `check`. The active command set is determined by the loaded mods, so no fixed total describes every game.
 
 ---
 
@@ -39,6 +39,7 @@ option "Leave" :exit
 - Text can be a literal or a `key=` locale reference
 - All three target forms are equivalent; the `->` arrow takes priority when several are present
 - An `option` outside a `select` block is ignored
+- `if=` hides the answer while its condition is false; quote the whole argument when it contains spaces: `option "Pay" "if=item('money/coin') >= 5" -> :pay`
 
 ### `:label`
 Anchor point for jumps. Must start with `:` at the beginning of a line.
@@ -67,6 +68,16 @@ goto target=cleanup
 > **Note:** The bare form `goto :cleanup` is **not** supported — it is silently ignored by the parser. Always use the `->` arrow or the `target=` parameter.
 
 Useful for skipping optional content or implementing complex branching without nested options.
+
+### `when`
+
+Evaluate the shared condition language at the current line:
+
+```scenario
+when "door_open == 1" else=locked -> :enter
+```
+
+Without a matching branch target execution continues. Add `wait=true timeout=8` to re-evaluate until the condition becomes true or a positive finite deadline expires; success uses the arrow, timeout uses `else`. See [Background scenarios](../background.md) for a complete waiting example and spatial conditions.
 
 ### `end`
 Terminates the scenario script. Required at the end of every execution path.
@@ -166,6 +177,7 @@ text "- Dear lady!" key=meeting/greeting first=marao/think second=murakami/fear_
 | `second=` | Right-side avatar |
 | `hide_color=` | `hide_color=true` shows avatars in shader-based silhouette mode (color suppressed) — useful for flashbacks or unknown speakers |
 | `wait=` | `wait=false` advances the script immediately without waiting for a click |
+| `who=`, `duration=`, `cue=` | Background host speaker role, positive finite speech duration in seconds, and speech-event cue; see [Background scenarios](../background.md) |
 | (inline) | If no `key=`, the text is displayed literally |
 
 ### `ptext`
@@ -403,9 +415,21 @@ set met_murakami true
 set door_locked false
 ```
 
-The syntax is **space-separated**: first token is the name, second token is the value. Do not write `set name = value` with spaced equals — the parser stores the literal `"="` as the value. A `name=value` token (no spaces around `=`) is treated as a named argument, which is a different mechanism and not how `set` reads its operands.
+The syntax is **space-separated**: first token is the name, second token is the value. Do not write `set name = value` with spaced equals — the parser stores the literal `"="` as the value. The no-space form `set name=expression` is a numeric assignment supplied by `expressions_base`. `cset name expression` and `cset name=expression` also calculate; see [Expressions](../expressions.md) for functions, validation and extension strategies.
 
 `set` variables live only while this dialog runs. For state that scenario conditions read, use `flag`.
+
+### `cset`
+
+Calculate one dialog variable using the shared expression engine:
+
+```scenario
+set reward=rnd(3,5)
+cset total "1+2+${reward}"
+ptext "Total: ${total}"
+```
+
+Unlike literal `set name value`, this rejects nonnumeric variables, division by zero and non-finite results before later actions execute.
 
 ### `flag`
 Sets a **story flag** of the game. Unlike `set`, a flag is game state: it is saved, a new game starts
@@ -424,7 +448,7 @@ condition: door == "open" && visits >= 3
 text "The door stands open now."
 ```
 
-Same space-separated syntax as `set`. Numeric values compare as integers in conditions.
+Use the space-separated literal form. In an object or map event, `flag self.done 1` addresses only its own scope (`<map>/<local_id>:done`); a global flag uses a plain name. Numeric values compare as integers in conditions.
 
 ### `empty`
 A no-op command — it queues a placeholder action that does nothing and is skipped instantly.

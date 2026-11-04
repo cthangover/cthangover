@@ -102,7 +102,7 @@ wrappers/
 
 ## Building mod UI from code — ModWidget
 
-When creating UI components from mod C# code, inherit from `ModWidget` (`Core/UI/Base/Lists/ModWidget.cs`). It provides an idempotent `Construct()`/`Destruct()` lifecycle for UI built from code inside mods: `EnsureConstructed()` calls the abstract `Construct()` exactly once, and the virtual `Destruct()` is called automatically on `_ExitTree`. Usage = override `Construct()` and build your children there:
+When creating UI components from mod C# code, inherit from `ModWidget` (`mods/ui_base/src/Base/Lists/ModWidget.cs`). It provides an idempotent `Construct()`/`Destruct()` lifecycle for UI built from code inside mods: `EnsureConstructed()` calls the abstract `Construct()` exactly once, and the virtual `Destruct()` is called automatically on `_ExitTree`. Usage = override `Construct()` and build your children there:
 
 ```csharp
 public class MyUIPanel : ModWidget

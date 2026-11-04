@@ -96,7 +96,7 @@ name with the "pages are still empty" placeholder:
 
 ## Two kinds of status — don't conflate them
 
-A quest carries **two independent state values** (`Core/Quests/`):
+A quest carries **two independent state values** (`mods/quests_base/src/Quests/`, with transitional contracts in `Core/Quests/`):
 
 | Where | Type | What it means | How it changes |
 |---|---|---|---|
@@ -132,7 +132,7 @@ action battle.init scene=town_entry enemies=wolf_2,werewolf_girl_1 quest_id=Meet
 This sets the tag `boss_battle` on `MeetingMurakamiQuest` when the battle is initiated.
 
 On the C# side, tags live in a `HashSet<string>` on `QuestBase.Data`
-(`Core/Quests/QuestBase.cs`):
+(`mods/quests_base/src/Quests/QuestBase.cs`):
 
 | Method | Description |
 |---|---|
@@ -143,7 +143,7 @@ On the C# side, tags live in a `HashSet<string>` on `QuestBase.Data`
 
 Scenario `condition:` expressions map onto these directly: `hasTag(...)` calls
 `IQuest.ContainsTag`, `notHasTag(...)` calls `IQuest.NotContainsTag` (resolved
-by `QuestMethodCondition`, `Core/Scenes/QuestMethodCondition.cs`).
+by `QuestMethodCondition`, `mods/quests_base/src/Scenes/QuestMethodCondition.cs`).
 
 ## Conditional scenarios
 
@@ -185,15 +185,15 @@ action quest.send_notification quest_id=OldHouseQuest
 ```
 
 Under the hood this routes to `IQuestExtensions.SendNotification(this IQuest)`
-(`Core/Quests/IQuestExtensions.cs`), which posts a localized
+(`mods/quests_base/src/Quests/IQuestExtensions.cs`), which posts a localized
 `ui/journal/new - <quest name>` message to the notification banner queue. It
 does not modify quest state.
 
 ## Events emitted
 
 `quest_status_changed` is published from `QuestServiceImpl.SetStatus`
-(`Core/Actions/QuestServiceImpl.cs`); `quest_tag_changed` is published from
-`QuestBase.AddTag` / `QuestBase.RemoveTag` (`Core/Quests/QuestBase.cs`) — and
+(`mods/quests_base/src/Actions/QuestServiceImpl.cs`); `quest_tag_changed` is published from
+`QuestBase.AddTag` / `QuestBase.RemoveTag` (`mods/quests_base/src/Quests/QuestBase.cs`) — and
 only when the tag set actually changed. Both reach GDScript mods through the
 ModEventBus string layer (payload keys are snake_case versions of the C#
 properties):
@@ -209,7 +209,7 @@ published for a quest that doesn't exist.
 
 ## Persistence pipeline
 
-`QuestFactory` (`Core/Quests/QuestFactory.cs`) owns quest instances end-to-end:
+`QuestFactory` (`mods/quests_base/src/Quests/QuestFactory.cs`) owns quest instances end-to-end:
 
 - `QuestFactory.Instance.Get(id)` — returns the shared runtime `QuestBase`.
   **Throws `KeyNotFoundException`** when the id was never loaded from mod data
@@ -219,8 +219,7 @@ published for a quest that doesn't exist.
 - `QuestFactory.Instance.SetAll(List<QuestBase>)` — save/restore: looks up each
   entry from the save file by ID and overwrites its `Data` (tags + stage) and
   lifecycle `Status`. Empty/null lists are ignored; entries whose quest no
-  longer exists (removed mod, renamed quest) are skipped with a warning so an
-  ageing save cannot block loading.
+  longer exists (removed mod, renamed quest) are retained in `QuestFactory.Unresolved` and written back by `QuestsSaveable`, so an ageing save does not silently lose them.
 - `QuestFactory.Instance.ResetAll()` — returns every quest to `NotStarted` with
   an empty tag set. Called by `GameData.StartNewGame` because the factory
   singleton survives returning to the main menu and would otherwise leak the
@@ -280,3 +279,5 @@ a tag without locale entries still appears as a stamp.
 ## Quest conditions — full expression reference
 
 See [Conditions](../scenes/scenarios/dsl/conditions/) for the complete condition expression language.
+
+Quest state is serialized by `QuestsSaveable` into the `quests_base` slot (`Quests` blob), rather than `__core__`; see [Save data](../save/data-model.md).

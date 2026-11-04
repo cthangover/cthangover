@@ -2,6 +2,8 @@
 
 Character portrait images displayed during dialogue scenes, positioned via `first=` (left, player) and `second=` (right, NPC) parameters.
 
+For renderer-independent preset groups and optional transparent PNG composition, see [Logical avatars and PNG layers](layers.md). That API is separate from `first=`/`second=` portraits.
+
 ## Directory structure
 
 ```filestree
@@ -41,7 +43,7 @@ text "- What are you doing here alone?" key=murakami/alone first=marao/think
 
 1. Create `avatars/{character_name}/` in your mod
 2. Add `.png` files for each expression you need
-3. The character's JSON definition sets `"Image"` to the base path:
+3. A character's JSON `"Image"` is its character-panel artwork, separate from the dialog portrait lookup:
 
 ```jsonc
 {
@@ -74,6 +76,6 @@ Note that the on-disk set and the compile-time catalog may differ slightly: `Ava
 ## Format requirements
 
 - **Format:** PNG with transparency
-- **Resolution:** 512×512 recommended, but any square power-of-two works
+- **Resolution:** Choose dimensions suitable for the dialog layout; rectangular portraits are supported and no power-of-two or square restriction is imposed
 - **Naming:** lowercase, underscores for multi-word expressions (`fear_1`, `very_happy`)
 - The extension is omitted in scenario files — the engine resolves `{character}/{expression}` to `avatars/{character}/{expression}.png`

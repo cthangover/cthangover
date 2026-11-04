@@ -38,7 +38,7 @@ The root of the zip IS the mod root — no extra wrapper folder.
 3. The mod is loaded as if it were a folder — `manifest.json` is read from inside the zip, sources compiled, assets discovered
 4. Zip mods have the same dependency resolution and lifecycle as folder mods; deduplication priority is controlled by the scanner's `ModSourceRoot.Priority`, not by format type
 
-See [Resources — Loaders](../resources/loaders/) for details on how `ZipModLoader` and custom loaders work.
+See [Resources — Loaders](../../resources/loaders/) for details on how `ZipModLoader` and custom loaders work.
 
 ## Creating a .zip for distribution
 

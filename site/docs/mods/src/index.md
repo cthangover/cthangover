@@ -29,11 +29,11 @@ Step 4 happens in `ModAssemblyLoader.RegisterAssembly` (`Core/Mods/ModAssemblyLo
 | `PropertyResolverRegistry` | Property resolvers used while building scenes from `.tscn` |
 | `SubResourceBuilderRegistry` | Sub-resource builders for `.tscn` construction |
 | `ExtResourceBuilderRegistry` | External-resource builders for `.tscn` construction |
-| `ModManager.RegisterResolversFromAssembly` | `IModAssetResolver` implementations |
+| `ModAssetResolverConsumer` | `IModAssetResolver` implementations |
 
-Adding a new reflection-based plugin system to the kernel requires exactly one line in this method. Note that `ScriptTypeRegistry` (below) is populated separately — by `ModRegistry.FinalizeGodotInit`, which calls `ScriptTypeRegistry.RegisterAssembly` right after registering each compiled assembly through `ModAssemblyLoader`.
+Registration fans out through `AssemblyConsumerRegistry` and declarative consumers in `Core/Mods/Consumers/`. A mod-owned registry can subclass `ModTypeConsumer<T>` and receives catch-up and unload notifications; see [Integrations and reload](integrations.md). No subsystem-specific branch in `ModAssemblyLoader` is required. Note that `ScriptTypeRegistry` (below) is populated separately — by `ModRegistry.FinalizeGodotInit`, which calls `ScriptTypeRegistry.RegisterAssembly` right after registering each compiled assembly through `ModAssemblyLoader`.
 
-Subsystems that now live in mods register their own implementations through an `IModInitializer` instead of this fan-out: battle cores and winground listeners (`turn_battle_base`) and recruit behaviours/conditions (`recruiting`). `ModEventBus` typed events with `[EventKey]` can also be declared in any mod — the GDScript bridge reads the attribute at publish time.
+Subsystems owned by mods contribute their own consumers and initialization hooks: battle cores and winground listeners (`turn_battle_base`), recruit behaviours/conditions (`recruiting`), expression strategies, avatar renderers and atmosphere emitters. `ModEventBus` typed events with `[EventKey]` can also be declared in any mod — the GDScript bridge reads the attribute at publish time.
 
 ## ScriptTypeRegistry — resolving `.tscn` script paths
 
@@ -177,7 +177,7 @@ namespace Cthangover.MyMod
 | `Cthangover.Core.Utils.GameLogger` | Structured logging: `GameLogger.Log(module, msg, level)` |
 | `Cthangover.Core.Battle.IBattleCore` | Implement to create a battle system |
 | `Cthangover.Core.Actions.IScenarioAction` | Implement to add `action` commands to the DSL: `string Name { get; }` + `void Run(IActionContext context)` |
-| `manifest.json` → `ui[]` | Declare panels and overlays in the shell — no interface to implement: the kernel instantiates your `.tscn`, anchors it to a named slot, and (for panels) wires a toolbar toggle button. See [UI Wrappers](wrappers/) |
+| `manifest.json` → `ui[]` | Declare panels and overlays in the shell — no interface to implement: the kernel instantiates your `.tscn`, anchors it to a named slot, and (for panels) wires a toolbar toggle button. See [UI Wrappers](../wrappers/) |
 | `Cthangover.Core.Mods.IModSettings` | Implement to expose settings in the in-game menu |
 | `Cthangover.Core.Characters.Character` | Character data model — use `Copy()` for battles |
 | `Cthangover.Core.Characters.CharacterAttributes` | Stats container: `Health`, `Point`, `Defence`, `Attack` |
@@ -195,7 +195,7 @@ GameLogger.Log("MY_MOD", "This might be a problem", LogLevel.Warning);
 
 ## Important: Godot input in mods
 
-Because mod code compiles into a separate assembly (not processed by Godot's source generators), two rules apply:
+The runtime compiler runs Godot source generators when `Godot.SourceGenerators.dll` is available. `_Ready`/`_Process` bindings then work in mod classes; if the generator is unavailable the compiler logs a lifecycle-binding warning. `ModNode`, `InputHandlerNode` and `ModWidget` from `ui_base` remain the standard forwarder bases. For custom input, keep these placement/event conventions:
 
 1. **`AddChild` BEFORE `GlobalPosition`**: If you set `GlobalPosition` before `AddChild`, the node has no parent canvas transform and the position will be misinterpreted.
 

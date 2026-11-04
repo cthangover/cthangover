@@ -1,201 +1,97 @@
-# Mod Save API
+# Mod save API
 
-## Implementing IModSaveable in a mod
+Implement a public `IModSaveable` class in normal mod sources. The assembly consumer discovers it and registers the handler under its mod ID. Use one handler per mod and version each logical `DataBlob` independently.
 
-Your mod must provide a class implementing `IModSaveable`. It is auto-discovered via reflection when your mod assembly loads.
-
-### API
+## Handler contract
 
 ```csharp
-public interface IModSaveable
+namespace ExampleMod
 {
-    // Called on save. Slot metadata (ModId, ModName, ModVersion) is
-    // already filled by the core. Set MinCoreVersion, IsRequired,
-    // CustomData, and write Data[...].
-    void OnSave(ModSlot slot);
+    using Cthangover.Core.Mods;
+    using Cthangover.Core.Settings;
 
-    // Preferred: explicit contract. Return false + error message on
-    // failure. Default impl calls OnLoadVoid for backward compat.
-    bool OnLoad(ModSlot slot, out string errorMessage);
-
-    // Legacy: throw-based error handling. Override instead of OnLoad
-    // if you prefer exceptions for error reporting.
-    void OnLoadVoid(ModSlot slot);
-}
-```
-
-### Minimal example
-
-```csharp
-using Cthangover.Core.Mods;
-using Cthangover.Core.Settings;
-
-public class MyModSaveHandler : IModSaveable
-{
-    public void OnSave(ModSlot slot)
+    public class CounterSave : IModSaveable
     {
-        // ModId, ModName, ModVersion already set by core.
-        // Set only what the core needs for validation:
-        slot.Metadata.IsRequired = true;
+        public static int Visits { get; set; }
 
-        var blob = new DataBlob();
-        blob.SetInt("Health", player.Health);
-        blob.SetInt("Mana",   player.Mana);
-        blob.SetString("Name", player.Name);
-
-        slot.Data["Stats"] = blob;
-    }
-
-    public bool OnLoad(ModSlot slot, out string errorMessage)
-    {
-        if (slot.Data.TryGetValue("Stats", out var blob))
+        public void OnSave(ModSlot slot)
         {
-            player.Health = blob.GetInt("Health", 100);
-            player.Mana   = blob.GetInt("Mana", 50);
-            player.Name   = blob.GetString("Name", "Hero");
+            // ModId, ModName and ModVersion are already populated.
+            slot.Data["Visits"] = new DataBlob(1, Visits);
+        }
+
+        public bool OnLoad(ModSlot slot, out string errorMessage)
+        {
             errorMessage = null;
+            if (slot?.Data == null || !slot.Data.TryGetValue("Visits", out var blob))
+                return true;
+            if (blob.Version != 1)
+            {
+                errorMessage = "Unsupported Visits blob version";
+                return false;
+            }
+            Visits = blob.ReadJson<int>();
             return true;
         }
 
-        errorMessage = null;
-        return true; // No data → nothing to restore, not an error
-    }
-}
-```
-
-### Versioned migration
-
-When your data schema changes, use `DataBlob.Version` to handle migration:
-
-```csharp
-public void OnSave(ModSlot slot)
-{
-    var data = new PlayerStateV2 { Health = 80, Mana = 40, Stamina = 100 };
-    slot.Data["FullState"] = new DataBlob(version: 2, data);
-}
-
-public bool OnLoad(ModSlot slot, out string errorMessage)
-{
-    if (!slot.Data.TryGetValue("FullState", out var blob))
-    {
-        errorMessage = null;
-        return true; // no data — nothing to restore
-    }
-
-    if (blob.Version == 2)
-    {
-        var state = blob.ReadJson<PlayerStateV2>();
-        Apply(state);
-        errorMessage = null;
-        return true;
-    }
-
-    if (blob.Version == 1)
-    {
-        var old = blob.ReadJson<PlayerStateV1>();
-        Apply(new PlayerStateV2
+        public void OnJoinedExistingGame()
         {
-            Health  = old.Health,
-            Mana    = old.Mana,
-            Stamina = 100, // default for new field
-        });
-        errorMessage = null;
-        return true;
+            // Optional: supply starter state when no slot was restored.
+        }
     }
-
-    errorMessage = $"Unsupported data version: {blob.Version}";
-    return false;
 }
 ```
 
-### Binary data
+Reset new-game state through the normal reset lifecycle as well; loading is not the only way a game starts. `OnJoinedExistingGame` is called for new, dormant or rejected mechanics with no restored slot. Do not use it to overwrite a successfully restored value.
 
-`DataBlob` can hold raw bytes: construct it from a `byte[]`, or use the binary API (`GetBytes`/`SetBytes`) to read and write raw data.
+The preferred load method is `bool OnLoad(ModSlot, out string)`. The legacy `void OnLoadVoid(ModSlot)` may throw; the default implementation delegates to it. Override at least one or the default throws `NotSupportedException`. `OnJoinedExistingGame()` has a no-op default. There is no `IsRequired` metadata property.
 
-```csharp
-public void OnSave(ModSlot slot)
-{
-    slot.Data["Skin"] = new DataBlob(textureBytes);
-}
+## Blobs and migrations
 
-public bool OnLoad(ModSlot slot, out string errorMessage)
-{
-    if (slot.Data.TryGetValue("Skin", out var blob))
-    {
-        byte[] bytes = blob.GetBytes();
-        // Decode the bytes yourself, e.g. via Godot's Image + ImageTexture.
-        ApplySkin(bytes);
-    }
+Use `slot.Data.TryGetValue` for missing keys and inspect `blob.Version` before reading a payload. For a schema upgrade, keep branches reading old DTOs and convert them to the current DTO; write only the current version. Return false with a descriptive error if conversion is impossible.
 
-    errorMessage = null;
-    return true;
-}
-```
+- `new DataBlob(2, data)` stores a versioned JSON payload, read with `ReadJson<T>()`.
+- Key-value fields use `SetInt`/`GetInt`, `SetFloat`/`GetFloat`, `SetString`/`GetString`, `SetBool`/`GetBool`.
+- Raw bytes use `new DataBlob(bytes)` or `SetBytes`/`GetBytes`.
 
-### Marking a mod as optional
+Choose one access mode per blob. Key-value writes and whole JSON writes replace one another. The core fills `ModId`, `ModName`, `ModVersion`; a handler may set `MinCoreVersion`, `CustomData` and its own data. A mod slot requiring a newer core is kept dormant instead of handed to the old implementation.
 
-If a save can be loaded without your mod, set `IsRequired = false`:
+## Discovery and error handling
 
-```csharp
-slot.Metadata.IsRequired = false;
-```
+`ModAssemblyLoader.RegisterAssembly(assembly, modId)` fans out through `ModSaveableConsumer` and `ModSaveableRegistry`.
 
-The core will log a warning and skip the mod's data if the mod is not installed.
-
-### Compatibility guard (MinCoreVersion)
-
-If your save data depends on a specific core API, set the minimum version:
-
-```csharp
-slot.Metadata.MinCoreVersion = "0.2.0";
-```
-
-On load, if the current core version is below `0.2.0`, the load is aborted with an error message.
-
-## Registration & dispatch (ModSaveableRegistry)
-
-You never invoke the registry yourself — implementations are discovered **automatically via reflection** when your mod assembly is loaded (`ModAssemblyLoader.RegisterAssembly` scans it with `Reflections.FindAndCreate<IModSaveable>` and registers every implementation under your mod's ID).
-
-| Method | When | Behaviour |
-|---|---|---|
-| `ModSaveableRegistry.RegisterAssembly(assembly, modId)` | Mod assembly load | Scans the assembly and creates one instance per `IModSaveable` implementation |
-| `CollectSaveData() : Dictionary<string, ModSlot>` | Save time | Per registered mod: builds a `ModSlot` with `ModId`, `ModName`, `ModVersion` pre-filled from `IModInfo`, then calls `OnSave(slot)` |
-| `DispatchLoad(Dictionary<string, ModSlot>) : List<string>` | Load time (phase 3) | Per registered mod whose ID is present in the loaded dictionary, calls `OnLoad(slot, out error)`; collects error strings (empty list = success) |
-
-Error handling rules:
-
-- An exception thrown from `OnSave` is logged and **that mod's slot is skipped**; other mods keep saving.
-- If you override neither load method, the defaults chain into `void OnLoadVoid(ModSlot)`, which throws `NotSupportedException` — override at least one of `bool OnLoad(...)` or `OnLoadVoid`.
-- A `false` return from `OnLoad` (or an exception from either overload) is converted to `Mod '<id>' (<name>): <message>`; any such error aborts the whole load after phase 3.
-
-## Save slot API (SaveService)
-
-| Member | Description |
+| Registry operation | Behaviour |
 |---|---|
-| `Path : string` (static property) | Saves directory — globalised `user://saves` at runtime, `"saves"` otherwise |
-| `Save(string fileName)` | Build `"__core__"` slot, collect mod slots, write JSON |
-| `Load(string fileName) : bool` | Deserialize, validate + restore + dispatch |
-| `GetSaveSlots(int slotCount) : List<SaveSlotInfo>` | Enumerate slots with preview metadata |
-| `DeleteSave(string fileName)` | Delete JSON + PNG screenshot |
+| `RegisterAssembly(assembly, modId)` | Discover save handlers |
+| `CollectSaveData()` | Create metadata and call each handler's `OnSave` |
+| `DispatchLoad(modData, failedModIds)` | Restore compatible live slots; collect failures |
+| `NotifyJoined(restoredModIds)` | Notify handlers without a restored slot |
 
-## Slot preview API (RuntimeSerializer)
+An `OnSave` exception is logged and that handler's new slot is skipped. A false/throwing `OnLoad` is reported and its original slot is retained as dormant (`LoadFailed`). Other compatible mod slots continue loading. The core does not inspect the payload or migrate it on the handler's behalf. Do not depend on the order of unrelated save handlers.
 
-| Member | Description |
+## Save browser API
+
+| `SaveService` member | Purpose |
 |---|---|
-| `RuntimeSerializer.ReadSlotPreview(ModMetadata meta) : CoreSlotPreview` | Deserialises the preview JSON from `ModMetadata.CustomData`; returns a default (empty) preview when the field is absent or malformed |
-| `RuntimeSerializer.CoreSlotPreview` | Nested public DTO: `CurrentSceneName` (`string`), `GameTime` (`long`), `CharacterCount` (`int`) |
+| `SaveDirectory`, `Path` | Active game's Godot directory and globalized path |
+| `Save(fileName)`, `Load(fileName)` | Save/load the active game's logical slot |
+| `ApplyPackage(package, sourceName)` | Restore an already read package |
+| `GameDirectory(gameId)` | Directory for a specific game |
+| `ListSaves(gameId)` | Unlimited saved-slot list with previews |
+| `GetSaveSlots(slotCount)` | Compatibility grid with empty slot placeholders |
+| `ListGamesWithSaves()` | Games represented in the save browser |
+| `NextSlotName(gameId)` | Next available logical name |
+| `ReadPackage(gameId, fileName)` | Read without applying |
+| `BackupSave(gameId, fileName)` | Create a backup |
+| `CopyGameSaves(fromGameId, toGameId)` | Copy saves for a duplicated game and rewrite the game ID |
+| `LastLoadDormancy` | Classification from the last applied save |
+| `PurgeDormantData()` | Explicitly remove dormant slots from saves and current session |
+| `DeleteSave(fileName)` | Delete active-game JSON and PNG |
 
-Lets a custom save-slot UI read slot info without deserialising any game-state blobs.
+Named-game saves live at `user://saves/<game_id>/`; unscoped development saves use `user://saves/`. Slot names are sanitized for filesystem use.
 
-## Save screenshots (SaveScreenshotService)
+## Preview and screenshots
 
-| Method | Description |
-|---|---|
-| `CaptureAndSave(string fileName)` | Grabs the current background texture from the `ViewBox` node, downscales it to 320×180 with Lanczos interpolation, writes `user://saves/{fileName}.png` (same name sanitisation as the JSON save) |
-| `LoadScreenshot(string fileName) : Texture2D` | Reads the thumbnail PNG back as a `Texture2D`; returns `null` if the file is missing or fails to decode |
+`RuntimeSerializer.ReadSlotPreview(metadata)` reads `CurrentSceneName`, `GameTime`, `CharacterCount` from the reserved slot's `CustomData` without reading gameplay blobs. `SaveSlotInfo` also exposes game identity and the saved mod composition; see [Data model](data-model.md).
 
-Notes:
-
-- If no valid background texture exists at capture time, a solid dark-grey **64×64 fallback** image is saved instead.
-- The thumbnail is a **separate PNG file** next to the save JSON — it is not part of `SavePackage`. Only the textual preview (`CurrentSceneName`, `GameTime`, `CharacterCount`) is embedded in the save, inside `ModMetadata.CustomData` of the `"__core__"` slot (see [Data Model](data-model.md)).
-- `DeleteSave(fileName)` removes both the JSON and the PNG.
+`SaveScreenshotService.CaptureAndSave(fileName)` captures the background view and writes a 320×180 PNG beside the JSON. If no background is available it uses a solid fallback image before scaling. `LoadScreenshot(fileName)` uses the active game's directory; `LoadScreenshotFromPath(path)` can load a preview from another game's directory. Both return null if the PNG is absent or cannot be decoded. Screenshots are separate files, not package blobs.

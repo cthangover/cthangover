@@ -1,79 +1,42 @@
-# Save System
+# Save system
 
-The save system uses a mod-aware dispatch architecture. All game state — core and mod alike — lives in named slots inside `SavePackage.ModData`. The core writes its state into the reserved `"__core__"` slot; mods write into their own named slots via `IModSaveable`.
+A `SavePackage` contains a reserved `__core__` slot, mod-owned slots in `ModData`, the game composition snapshot in `Game`, and preserved inactive slots in `Dormant`. The kernel routes blobs to their owners; it does not interpret their payloads.
 
-## Architecture
+## Where saves live
+
+A game's saves and PNG thumbnails live in `user://saves/<game_id>/`. The save browser supports an unlimited list; `slot_1`, `slot_2`, … are logical names, not a hard slot limit. Development runs without a game retain the unscoped saves directory. `Game` records the collection's ID, name, version and mod versions at save time; this snapshot does not force the old composition to be reinstalled.
+
+## Save and load
 
 ```mermaid
 flowchart TD
-    subgraph SaveFlow["Save Flow"]
-        direction TB
-        S1["Save()"] --> S2["Build '__core__' slot"]
-        S1 --> S3["CollectSaveData()"]
-        S2 --> S3b["Metadata, Time, Characters, ..."]
-        S3 --> S4["For each mod:\npre-fill slot.Metadata\n&#40;ModId, ModName, ModVersion&#41;"]
-        S4 --> S5["mod.OnSave&#40;slot&#41;"]
-        S5 --> S5a["Mod writes:\nMinCoreVersion, IsRequired, Data[...]"]
-        S3b --> S6["Merge + Serialise"]
-        S5a --> S6
-    end
-
-    subgraph LoadFlow["Load Flow"]
-        direction TB
-        L1["Load()"] --> L2["Validate all ModData slots"]
-        L2 --> L2a["IsRequired mod installed?"]
-        L2 --> L2b["CoreVersion >= MinCoreVersion?"]
-        L2 --> L2c["ModVersion comparison\n&#40;downgrade/migration&#41;"]
-        L2a --> L3{"Pass?"}
-        L2b --> L3
-        L2c --> L3
-        L3 -->|yes| L4["Restore core state\nfrom '__core__'"]
-        L3 -->|no| LErr["Abort"]
-        L4 --> L5["DispatchLoad() → mods"]
-        L5 --> L6["mod.OnLoad&#40;slot, out error&#41;"]
-        L6 --> L6a["Read slot.Data[...]"]
-        L6 --> L6b["Check blob.Version"]
-        L6 --> L6c["Migrate if needed"]
-    end
-
-    S6 -->|writes| SavePkg["SavePackage\nModData dict"]
-    SavePkg -->|reads| L1
+    S[Save] --> C[Build core slot]
+    S --> M[Collect mod slots]
+    C --> P[Write package with Game and Dormant]
+    M --> P
+    P --> L[Load and validate core slot]
+    L --> D[Classify mod slots]
+    D --> R[Restore compatible live slots]
+    D --> K[Carry incompatible slots as Dormant]
+    R --> J[Notify mods joining an existing game]
 ```
 
-## Core concepts
+Loading first requires a valid core slot. It then classifies each mod slot against the **loaded** mod set and versions, restores core state, and dispatches compatible mod data. A slot whose mod is missing, downgraded, requires a newer core, or rejects its payload is retained as dormant; these mod-local problems do not abort the entire load. The reasons are `NotLoaded`, `Downgrade`, `CoreTooOld`, `LoadFailed`.
 
-### Uniform slots
+Dormant data is written forward unchanged and can revive when the compatible mod returns. New mechanics without restored data start from new-game defaults and receive `IModSaveable.OnJoinedExistingGame()`. The save settings provide explicit dormant-data cleanup (`SaveService.PurgeDormantData()`); data is otherwise retained. Unresolved item and quest records are also retained by their owners rather than silently lost.
 
-Every piece of persisted state lives in a `ModSlot` under `SavePackage.ModData`. There is no distinction between "core" and "mod" data at the storage level — the core just happens to own the reserved key `"__core__"`.
+## State ownership
 
-### Dispatcher (core)
+The core currently keeps time, lamp, skills/action pool, completed scenarios, world-map overrides and story flags. Characters, inventory, recipes, quests, RPG position, stats, equipment, recruits and NPC background history each have their own mod slots. There is no active-battle snapshot or automatic saving of concurrent speech execution pointers.
 
-The core is a lightweight dispatcher. It:
-- Builds its own `"__core__"` slot with named `DataBlob` blocks per subsystem.
-- Collects slots from mods and merges them into the save package.
-- Validates mod metadata on load (required mods present, version compatibility).
-- **Never inspects mod data contents** — it works only with byte arrays and version numbers.
+Removing a mechanic from a game's collection therefore preserves its save slot for a later return. This does not convert old saves from before a subsystem moved out of `__core__`: see [Versioning](versioning.md).
 
-## Load flow (three phases)
+## Mod contract
 
-1. **Phase 1 — Validation** (via `ModMetadata` of every slot):
-   - For each `ModSlot` in `ModData`:
-     - If `IsRequired == true` and the mod is not installed → **abort**.
-     - If `CoreVersion < MinCoreVersion` → **abort**.
-     - **Mod version comparison** (if both save and installed mod have versions):
-       - `save.Version > installed.Version` → **abort** (downgrade not supported).
-       - `save.Version < installed.Version` → **warning** (mod must handle migration in `OnLoad`).
-2. **Phase 2 — Core state restore**: read blobs from `ModData["__core__"]` and push values into `RuntimeData`.
-3. **Phase 3 — Mod dispatch** (`ModSaveableRegistry.DispatchLoad`):
-   - For each installed mod whose ID is in `ModData` (excluding `"__core__"`), call `OnLoad(slot, out error)`.
-   - Two overloads supported: `bool OnLoad(ModSlot, out string)` and legacy `void OnLoadVoid(ModSlot)` (throw on error).
+Implement `IModSaveable`; discovery supplies one slot per mod. The core fills `ModId`, `ModName`, `ModVersion`; the mod sets `MinCoreVersion`, optional `CustomData`, and `Data`. There is no `IsRequired` field in the current metadata DTO. Use versioned blobs, handle missing keys, and keep another mod's state out of your own payload.
 
-## Reserved slot key
+`__core__` remains reserved; a mod cannot replace it. Scene navigation after loading uses the core preview's `CurrentSceneName`, while mod state restores before gameplay resumes.
 
-The key `"__core__"` is reserved for the core game state. If a mod attempts to write a slot with this key, the save service logs a warning and skips it.
-
-## Pages
-
-- [Data Model](data-model.md) — SavePackage, __core__ slot, ModSlot, ModMetadata, DataBlob
-- [Mod API](api.md) — IModSaveable interface, examples, SaveService
-- [Versioning & Compatibility](versioning.md) — version comparison, backward compatibility, rules
+- [Data model](data-model.md) — package, slot ownership, blobs and preview fields.
+- [Mod API](api.md) — save handlers, migrations and save-browser methods.
+- [Versioning and compatibility](versioning.md) — version comparison and dormancy.

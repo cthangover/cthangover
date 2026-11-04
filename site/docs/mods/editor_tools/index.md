@@ -181,6 +181,19 @@ the kind appear in a "Fields of other mods" section ([schemas](../schemas/)).
   `items/<mod>.json` / `characters/<mod>.json` — and the running game re-reads its data and texts
   at once.
 
+## RPG and schema authoring
+
+- **RPG Map Editor** (`rpg_editor`) paints ground/structure, collision and atmosphere masks; places characters and props; creates map-owned Event rectangles; edits spawn, interactions and teleport links; supports rectangle selection, copy/paste, undo and Play from here. Map event size is `Width`/`Height`; a legacy invisible placement uses `Footprint.Size`.
+- **RPG objects** (`rpg_object_editor`) edits the four forms, PNG imports, parts, footprints, anchors, states, variants, lights and routes. Its visual parts workspace moves/resizes art and sorting points, with behind/in-front checks using a reference character. Apply transfers the draft to the object; Save writes the mod.
+- **Data Editor and command palette** (`schema_tools`) use all loaded schemas, including typed lists, numeric choices, quest stages and equipment-type pickers. **Rename…** previews local reference changes and foreign usages; Undo rename restores the local transaction.
+- **Translations** (`locale_editor`) lists missing translations from the locale atlas and writes each text into the owning mod's flat locale files.
+- **Effects Editor** (`effects_editor`) previews atmosphere parameters; its map button opens the map editor's Effects mask tool.
+- **Scenario Studio** (`scenario_studio`) supports modal pause/step/breakpoints, rollback, live edits and export of the game's studio layer. The **Background** tab separately controls concurrent NPC runs. `self.` flags in the State page can be edited in the running game.
+
+Items and Characters editors can include dependency entries and save minimal patches in the selected writable mod. Field reset inherits the owner's value again. Characters can create a companion join interaction; a selected shared scenario plays before the appended join commands. Items can open the RPG map editor's pickup placement through the optional capability interface. Editors add needed resource-owner dependencies on Save; transitive dependencies already supplied by the chosen base are not duplicated.
+
+See [RPG](../rpg/), [map events](../rpg/events.md), [schemas](../schemas/) and [background scenarios](../scenes/scenarios/background.md) for the formats and limitations. Bundled mod guides in Mods & Collections show the actual authoring windows.
+
 ## Pages
 
 - [Creating a Custom Tool](tutorial.md) — step-by-step guide with code examples and locale keys

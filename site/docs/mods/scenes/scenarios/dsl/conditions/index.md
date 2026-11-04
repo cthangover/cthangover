@@ -1,4 +1,4 @@
-# Conditions — Quest Expression Language
+# Shared scenario conditions
 
 The `condition:` metadata field uses a simple expression language to control which scenarios execute based on quest state and scene flags. Boolean literals `true` and `false` are also valid condition expressions.
 
@@ -160,3 +160,19 @@ flowchart LR
     C["priority: 10<br/>condition: none"] -->|"always passes"| S
     S --> SCENE["Run scenarios in priority order"]
 ```
+
+## Optional mechanic conditions and object scope
+
+The same grammar is used in scenario headers, `when`, `option … if=`, RPG object states and map events. Loaded mods add leaves without replacing the parser:
+
+| Expression | Owner and meaning |
+|---|---|
+| `item('money/coin') >= 5` | `items_base`: inventory count |
+| `stat(cha) >= 5`, `stat('hero', cha) >= 5` | `stats_base`: current stat for the player or named character |
+| `level() >= 2`, `level('hero') >= 2` | `stats_base`: level |
+| `archetype(warrior)`, `archetype('hero', warrior)` | `stats_base`: class membership |
+| `equipped('classic/iron_sword')` | `equipment`: worn item, optional first argument selects the character |
+| `near("guard", "player", 4)`, `can_hear("guard", "source")` | `npc_barks_base`: spatial checks, requiring an ambient host's role context |
+| `self.done == 1` | Scoped flag of the active object or map event; not a global variable named literally `self.done` |
+
+A map event's scope is `<map>/<local_id>`, and `self.done` resolves to `<scope>:done`. The anchor role determines this scope for ambient definitions. Ordinary dialog variables created with `set`/`cset` are separate from persistent flags. See [Expressions](../../expressions.md), [RPG events](../../../../rpg/events.md) and [Background scenarios](../../background.md) for complete examples.

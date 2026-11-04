@@ -76,7 +76,7 @@ prefix, in lowercase `snake_case`. The folder name, `id`, the repository
 | Engine subsystem other mods build on | `<subject>_base` | `dialog_base`, `ui_base`, `shell2d_base` |
 | Mechanic, optional for a game | plain noun or `<variant>_<mechanic>` | `cooking`, `card_battle` |
 | The game itself: scenes, story, entry point | `<game>_game` | `cthangover_game` |
-| Further content of one game | `<game>_<part>` | `cthangover_murakami`, `cthangover_party` |
+| Further content of one game | `<game>_<part>` | `cthangover_murakami` |
 | Reusable content any game may take | `<theme>_pack` | `town_pack` |
 | Template to copy | `<what>_template` | the collection `novel_template` (its own mod: `my_novel_game`) |
 | Developer tool | `<subject>_<tool>` | `editor_tools`, `resource_atlas` |
@@ -100,6 +100,10 @@ Every mod's `manifest.json` is deserialized into `ModManifest` (`Core/Mods/ModMa
 | `category` | string | Optional catalog category, or a comma-separated combination for mods that belong to several groups (e.g. `"library, gameplay"`). Slugs: `story`, `characters`, `gameplay`, `visual`, `audio`, `ui`, `locale`, `library`, `engine`, `overhaul`, `tools`, `editor`, `debug`, or `other` (default). Parsed case-insensitively into the `[Flags]` `CategoryType`; all selected categories are pre-checked in the Catalog Export dialog (`CatalogExportWindow`) |
 | `sources` | string[] | Glob-style paths to C# source files (e.g. `"src/"`, `"scripts/*.cs"`). Collected and compiled via Roslyn by `ModCompiler` |
 | `gd_sources` | string[] | Glob-style paths to GDScript files (e.g. `"scripts/*.gd"`, `"gd/**/*.gd"`). `ModGDScriptLoader` collects them, compiles via Godot's GDScript runtime, and registers them as scenario actions or mod initializers |
+| `test_sources` | string[] | Test-only C# globs, compiled separately in explicit mod-test mode |
+| `test_suites` | array | Opt-in suites with `id`, optional `path` and activation prefixes |
+| `integrations` | array | Conditional virtual mods: `id`, `with` partner IDs, optional `path`; see [Integrations](../src/integrations.md) |
+| `fixture` | bool | Test fixture excluded from ordinary game/all-mod selection |
 | `depends` | string[] | Versioned dependencies in format `modId[op][version][?]` — see below. Parsed into `ModDependency` entries via `ModDependencyListConverter`; affects topological compile order and version validation |
 | `depends_native` | string[] | Glob patterns for native shared libraries handled by `ModNativeLoader` — see below |
 | `conflicts_with` | string[] | Mutually exclusive mod IDs. Declarative only — see section above |

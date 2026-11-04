@@ -54,7 +54,7 @@ JSON-defined items — consumables, resources, and recipe items — with localiz
 Any JSON key that does not match a DTO field is captured by
 `ItemInfo.ExtraProperties` (`[JsonExtensionData]`) and imported by
 `ItemFactory` into `Item.Properties` — a string-keyed `PropertyData` bag
-(`Core/Items/ItemInfo.cs`, `Core/Items/Item.cs`). Numbers import as int/float,
+(`mods/items_base/src/ItemInfo.cs`, `mods/items_base/src/Item.cs`). Numbers import as int/float,
 booleans as bool, strings as strings; arrays and objects are stored as raw JSON
 text. Core code never reads `Properties` — the bag exists so your own C# item
 actions or scenario logic can attach custom data to items without schema
@@ -229,7 +229,7 @@ Recipes are their own entity kind and follow the same envelope:
 
 ## Inventory API
 
-The player inventory (`Inventory` / `IInventory`, `Core/Items/Inventory.cs`)
+The player inventory (`Inventory` / `IInventory`, `mods/items_base/src/Inventory.cs`)
 is an ordered list of item slots:
 
 - `Items` — `List<IItemContainer>`, each slot being `{ Item, Count }`. Slot
@@ -249,7 +249,7 @@ All query and mutation methods are overloaded by **item id string** or by
 
 Every successful mutation publishes an `InventoryChangedEvent` to the global
 `ModEventBus` — published from `Inventory.PublishInventoryChanged`
-(`Core/Items/Inventory.cs`). GDScript subscribers receive it under the key
+(`mods/items_base/src/Inventory.cs`). GDScript subscribers receive it under the key
 `"inventory_changed"` with a snake_case payload:
 
 | Payload key | Type | Meaning |

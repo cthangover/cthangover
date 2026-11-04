@@ -18,7 +18,7 @@ Parameters use `key=value` syntax (no spaces around `=`).
 action party.add id=Murakami
 ```
 
-Adds the character `Murakami` to the player's party. `type=` matches the character's `Id` field in their JSON definition.
+Adds the character `Murakami` to the player's party. `id=` matches the character's `Id` field in their JSON definition.
 
 ```scenario
 action character.send_notification type=Murakami
@@ -55,6 +55,8 @@ action ui.toggle_panel name=cooking_workbench
 ```
 
 `name=` is required. The panel is first looked up as a `Control` node in the scene tree by node name; if nothing matches, the name is treated as a mod UI entry id from the manifest `ui` list and toggled through the UI registry — this is how the cooking mod's workbench overlay opens. A mod can also wrap the call into its own action: the cooking mod registers `toggle_cooking_workbench` for exactly that.
+
+The [action parameter catalog](catalog.md) lists every production action schema, including items, stats, equipment, crafting, trading, RPG and ambient speech. The tables below explain the common actions in more detail.
 
 ## Available action namespaces
 
@@ -179,4 +181,4 @@ Declare in `manifest.json`:
 }
 ```
 
-The kernel auto-discovers `get_name()` + `run()` and registers the action — no factory or provider code needed. The `ctx` parameter provides access to all game subsystems (Quests, Character, Battle, Inventory, etc.). See [GDScript in Mods](site/docs/mods/src/gdscript) for the full action context API.
+The kernel auto-discovers `get_name()` + `run()` and registers the action — no factory or provider code needed. The `ctx` parameter provides access to all game subsystems (Quests, Character, Battle, Inventory, etc.). See [GDScript in Mods](../../../src/gdscript/) for the full action context API.

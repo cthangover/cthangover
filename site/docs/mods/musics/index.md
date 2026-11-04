@@ -19,7 +19,7 @@ music/
 - `.ogg` — Vorbis-compressed audio, any bitrate
 - Files are referenced by name (without extension) in playlists
 
-## Real example — `cthangover_game/music/playlists/default.json`
+## Real example — `music_pack/music/playlists/default.json`
 
 ```jsonc
 {
@@ -145,7 +145,7 @@ not via `defaultAmbient`.
 
 ## `MusicPlayerBehaviour` public API
 
-`Cthangover.Core.Audio.MusicPlayerBehaviour` (`Core/Audio/MusicPlayerBehaviour.cs`)
+`Cthangover.Core.Audio.MusicPlayerBehaviour` (`mods/audio_base/src/MusicPlayerBehaviour.cs`)
 is the node that drives playlist auto-advance and scene-aware switching. Its
 public surface:
 

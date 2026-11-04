@@ -37,15 +37,14 @@ tools merge every mod's schema and build forms, pickers and checks from it.
 ```
 
 Field types: `text`, `locale`, `int`, `number`, `bool`, `choice` (`Options`), `ref` / `ref_list` (`Kind`),
-`who`, `picture`, `formula`, `condition`, `scene`, `flag`, `label`, `list` (`Of`), `values`, `map`, `json`.
+`who`, `picture` (`Group`), `formula`, `condition`, `scene`, `flag`, `label`, `list` (`Of`), `map`, `pick` (`Kind` + `From`), `stages`, `json`. Unknown types fall back to text. `pick` gathers a field's values across entities (for example accepted equipment types) rather than naming an entity. `stages` edits quest step numbers and localized texts. `choice` accepts a named option or a zero-based numeric option index; serialized numeric enums need not become strings.
 `Name` and `Description` are locale keys of your own mod.
 
 Schemas merge in mod load order. An action or command is replaced whole. A kind is merged field by field,
 so two mods can each add their own fields to `item`.
 
 Each engine mod describes its own actions next to its code: `dialog_base` its commands (`text`, `select`,
-`option` with `if`, `when`, …), `items_base` `item.add`, `trading` `trade.open`, `rpg` `rpg.battle` and
-`rpg.teleport`, `quests_base` the `quest.*` actions, and so on.
+`option` with `if`, `when`, …), `items_base` `item.add`, `trading` `trade.open`, `rpg` `rpg.teleport` and its battles integration `rpg.battle`, `quests_base` the `quest.*` actions, and so on.
 
 ## What you get from it
 
@@ -59,6 +58,12 @@ Each engine mod describes its own actions next to its code: `dialog_base` its co
   section. Install `equipment` and the item editor gains Equip and Traits.
 - **Validator**: unknown and missing parameters, bad numbers and choices, references to entities that do
   not exist, unparsable conditions in `option … if=` and `when`. The resource atlas sees the references too.
+
+## Foreign entries, field patches and renaming
+
+The Data Editor can include entries of the chosen mod's dependencies. Editing one writes `patches/<kind>/<chosen_mod>.json` containing only changed fields; **Reset to inherited** removes the local patch, and the per-field reset removes that override. Unknown fields are preserved.
+
+**Rename…** previews changed references within the chosen mod and separately lists references from other mods. Confirming writes the local transaction only; other mods are not rewritten. **Undo rename** restores the prior files. Items and Characters editors use the same service. This is entity renaming, not a promise that RPG map/placement identifiers and save data are migrated.
 
 ## Your own mechanic
 

@@ -166,7 +166,7 @@ mods/test_defaults_and_patches/
 
 Besides scalar last-wins overwrites, patch keys can carry array operation
 suffixes — `$add`, `$remove`, and `$set` (parsed by
-`ArrayMergeHelper.ParseArrayOperation`). These enable appending, removing, and
+`JsonPatchMerger`). These enable appending, removing, and
 explicitly replacing array elements, including per-field merging of object
 arrays matched by identity keys. See
 [Array Operations & Identity Keys](arrays-and-identity.md) for the full
@@ -176,15 +176,9 @@ Mechanically, `JsonPatchMerger.Merge` applies all patches whose entry id is
 `"*"` (the wildcard targeting every entity of the type) first, then the
 patches matching the concrete entity id.
 
-Public helpers on `JsonPatchMerger` (`Core/Mods/Patches/JsonPatchMerger.cs`)
-are available to C# code:
-
-| Member | Purpose |
-|---|---|
-| `DetectIdentityKey(JsonElement)` | Auto-detects the identity field of an object array from its JSON: `"Id"` first, then the first property ending in `Id`; returns `null` if none |
-| `BuildMergeKeys<T>()` | Reflects over type `T` and returns a map of list-typed property → identity key for element types implementing `IMergeable` |
+Public APIs are `JsonPatchMerger.Apply(JsonObject, JsonObject, Type)` and `Merge(..., Type targetType = null)`. `MergeTypeMap` walks DTO types for declared list identities. There is no identity-name guessing: extra arrays use explicit `$key` / `$items` operation values. Null removes a property, `$set` replaces an object wholesale, and `"$delete": true` removes an entity. See the array reference for nested layers and failure isolation.
 
 ## Pages
 
-- [Array Operations & Identity Keys](arrays-and-identity.md) — $add/$remove/$set, per-field merge, identity key detection
+- [Array Operations & Identity Keys](arrays-and-identity.md) — $add/$remove/$set, per-field merge, declared identities and explicit keys
 - [Scene Patches](scenes.md) — patching `.tscn` scenes with inherited scenes and `metadata/_patch_*` operations

@@ -19,6 +19,11 @@ config/
   "catalog_ignore_patterns": [".*","bin","obj"],
   // Catalog JSON URLs (multiple are merged)
   "catalog_urls": [],
+  // Optional private catalog URL -> bearer token file, never the token itself
+  "catalog_token_files": {},
+  // Explicit development-time mod unit tests
+  "run_mod_tests": false,
+  "mod_test_exclude": [],
   // File extensions treated as textures
   "texture_extensions": [".png", ".jpg", ".jpeg"],
   // Audio file extensions (OGG and WAV)
@@ -58,8 +63,11 @@ config/
 | `use_assembly_cache` | bool | Cache compiled mod assemblies to disk (`true` by default in code). Set to `false` to delete cached DLLs and recompile on every launch — useful during mod development |
 | `catalog_ignore_patterns` | string[] | File/directory patterns excluded when computing `install_sha256` for catalog export. Default: `[".*"]` excludes all dot-prefixed entries (`.godot/`, `.import/`, `.gitignore`, etc.) |
 | `catalog_urls` | string[] | URLs of catalog JSON files to fetch for the online mod browser. Multiple URLs are merged — metadata from highest version wins, `downloads` arrays are combined |
+| `catalog_token_files` | object | Exact catalog URL to token-file path; [private sources](../catalog/) are fetched without redirects |
+| `run_mod_tests` | bool | Run mod unit tests (default false); `--run-tests` also enables explicit test mode |
+| `mod_test_exclude` | string[] | Mod IDs excluded from that test run |
 | `texture_extensions` | string[] | File extensions treated as textures |
-| `audio_extensions` | string[] | File extensions treated as audio streams |
+| `audio_extensions` | string[] | DTO field; runtime `ModConfig.Load` currently keeps the code-default `.ogg`/`.wav` list instead of copying this parsed field |
 | `shader_extensions` | string[] | File extensions treated as shader files |
 | `texture_groups` | string[] | Mod subdirectories scanned for textures. A file in `mods/{mod}/ui/image.png` is found because `"ui"` is listed here |
 | `cache` | object | Cache configuration (see below) |
@@ -103,6 +111,8 @@ Each factory type has a maximum cache capacity. When exceeded, the least recentl
 | `actions` | 128 | Character action definitions |
 | `characters` | 128 | Character definitions |
 | `recipes` | 128 | Recipe definitions |
+
+The first user edit of the catalog source list creates `user://catalog_servers.json`. That list then supplies enabled catalog URLs and token paths, including an intentionally empty list; shipped `catalog_urls` is the seed before the first edit. See [Catalog configuration](../catalog/).
 
 ## How textures are discovered
 

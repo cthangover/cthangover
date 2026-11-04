@@ -500,3 +500,5 @@ picker.
   opened by the **Studio** button on the game's toolbar), validators and the
   mod manager. Add it to a game in the collection editor and enter the game
   again — the mod set switches without a restart.
+
+- `collections/junior_reaper_paper_grief/` — a separate Russian-first investigation: Bureau offices, isometric city gates/market/mill yard, mouse-driven mill and home interiors, clue inventory, quest stages and ambient NPC conversations. It uses map-owned events and `npc_barks_base`, and includes the authoring editors and studio. Entry scene: `jrp_arrival`; projection: `isometric`. Full story translations are not implemented yet.
