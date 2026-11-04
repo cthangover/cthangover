@@ -43,6 +43,14 @@ namespace Cthangover.Core.Mods
         {
             var config = new ModConfig();
             config.Load();
+            if (GameEnvironment.IsRuntime)
+            {
+                try { CatalogServerStore.Default.ApplyTo(config); }
+                catch (Exception ex)
+                {
+                    GameLogger.Log("CONFIG", $"Failed to load player catalog servers: {ex.Message}", LogLevel.Error);
+                }
+            }
             return config;
         }
 
@@ -118,6 +126,13 @@ namespace Cthangover.Core.Mods
         [JsonPropertyName("catalog_urls")]
         public List<string> CatalogUrls { get; set; } = new();
 
+        /// <summary>
+        /// Exact catalog URL to bearer-token file. Secrets stay outside this
+        /// config and are read for each refresh; HTTPS or literal loopback only.
+        /// </summary>
+        [JsonPropertyName("catalog_token_files")]
+        public Dictionary<string, string> CatalogTokenFiles { get; set; } = new();
+
         private HashSet<string> textureExtensionSet;
         private HashSet<string> shaderExtensionSet;
 
@@ -180,6 +195,7 @@ namespace Cthangover.Core.Mods
                 Cache = parsed.Cache ?? new CacheConfig();
                 CatalogIgnorePatterns = parsed.CatalogIgnorePatterns ?? new List<string> { ".*" };
                 CatalogUrls = parsed.CatalogUrls ?? new List<string>();
+                CatalogTokenFiles = parsed.CatalogTokenFiles ?? new Dictionary<string, string>();
                 RunModTests = parsed.RunModTests;
                 ModTestExclude = parsed.ModTestExclude ?? new List<string>();
 

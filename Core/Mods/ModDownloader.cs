@@ -60,6 +60,14 @@ namespace Cthangover.Core.Mods
 			try
 			{
 				CatalogService.LoadCache();
+                // Temporary links and permissions are refreshed immediately before
+                // a private installation, including after expiry or revocation.
+                if (ModConfig.Instance.CatalogTokenFiles.Count > 0)
+                {
+                    while (CatalogService.IsFetching)
+                        await Task.Delay(25);
+                    await CatalogService.RefreshAsync(forceRefresh: true);
+                }
 				var cached = CatalogService.CachedEntries;
 				if (cached == null)
 					return Fail(modId, "Catalog not loaded");
@@ -151,8 +159,7 @@ namespace Cthangover.Core.Mods
 
                 try
                 {
-                    GameLogger.Log("DOWNLOADER",
-                        $"Downloading '{url}'...");
+                    GameLogger.Log("DOWNLOADER", "Downloading package...");
 
                     using var response = await _httpClient.GetAsync(
                         url, System.Net.Http.HttpCompletionOption.ResponseHeadersRead);
@@ -185,14 +192,15 @@ namespace Cthangover.Core.Mods
                         }
                     }
 
-                    GameLogger.Log("DOWNLOADER",
-                        $"Downloaded {totalRead} bytes from '{url}'");
+                    GameLogger.Log("DOWNLOADER", $"Downloaded {totalRead} bytes");
                     return true;
                 }
                 catch (Exception ex)
                 {
+                    // Temporary download URLs are secrets. HTTP exceptions can
+                    // contain the full request URI, so log only the failure type.
                     GameLogger.Log("DOWNLOADER",
-                        $"Download from '{url}' failed: {ex.Message}", LogLevel.Warning);
+                        $"Package download failed: {ex.GetType().Name}", LogLevel.Warning);
                 }
             }
 

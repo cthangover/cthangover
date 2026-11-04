@@ -27,10 +27,21 @@ namespace Cthangover.Core.Mods
     /// <see cref="OnRefreshed"/> / <see cref="OnRefreshFailed"/> fire
     /// on the main thread after an async fetch completes so that UI
     /// subscribers can safely rebuild their node trees.
+    /// Private sources use file-backed bearers with redirects disabled; only
+    /// public source data is persisted. Every successful response, including an
+    /// empty one, replaces the previous access snapshot.
     /// </summary>
     public static class CatalogService
     {
         private static readonly System.Net.Http.HttpClient _httpClient = new()
+        {
+            Timeout = TimeSpan.FromSeconds(30),
+            DefaultRequestHeaders = { { "User-Agent", "Cthangover/1.0" } },
+        };
+
+        // A private source must not redirect the bearer to any other endpoint.
+        private static readonly System.Net.Http.HttpClient _privateHttpClient = new(
+            new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false })
         {
             Timeout = TimeSpan.FromSeconds(30),
             DefaultRequestHeaders = { { "User-Agent", "Cthangover/1.0" } },
@@ -142,6 +153,8 @@ namespace Cthangover.Core.Mods
 
             _isFetching = true;
             _lastFetchTime = DateTime.UtcNow;
+            var notifyRefreshed = false;
+            string refreshErrors = null;
 
             try
             {
@@ -155,6 +168,9 @@ namespace Cthangover.Core.Mods
 
                 var allEntries = new List<CatalogExportEntry>();
                 var allCollections = new List<ModCollection>();
+                var publicEntries = new List<CatalogExportEntry>();
+                var publicCollections = new List<ModCollection>();
+                var successfulSources = 0;
                 var errors = new List<string>();
                 var urls = ModConfig.Instance.CatalogUrls;
 
@@ -162,7 +178,7 @@ namespace Cthangover.Core.Mods
                 {
                     _cachedEntries = new List<CatalogExportEntry>();
                     _cachedCollections = new List<ModCollection>();
-                    OnRefreshed?.Invoke();
+                    notifyRefreshed = true;
                     return;
                 }
 
@@ -178,13 +194,24 @@ namespace Cthangover.Core.Mods
                     try
                     {
                         GameLogger.Log("CATALOG", $"Fetching catalog from '{url}'...");
-                        var json = await _httpClient.GetStringAsync(url, cancellationToken);
+                        var isPrivate = ModConfig.Instance.CatalogTokenFiles.TryGetValue(url, out var tokenFile);
+                        if (isPrivate && string.IsNullOrWhiteSpace(tokenFile))
+                            throw new InvalidOperationException("Private catalog token file is not configured");
+                        using var request = CatalogRequest.Create(url, isPrivate ? tokenFile : null);
+                        using var response = await (isPrivate ? _privateHttpClient : _httpClient).SendAsync(request, cancellationToken);
+                        response.EnsureSuccessStatusCode();
+                        var json = await response.Content.ReadAsStringAsync(cancellationToken);
                         var catalog = JsonSerializer.Deserialize<CatalogRoot>(json, JsonOptionsProvider.ReadOptions);
+                        if (catalog?.Meta == null || catalog.Meta.Version != 1)
+                            throw new InvalidOperationException("Unsupported catalog envelope");
+                        successfulSources++;
                         if (catalog?.Mods != null)
                         {
                             foreach (var mod in catalog.Mods)
                                 CatalogMerger.TagSource(mod, url);
                             allEntries.AddRange(catalog.Mods);
+                            if (!isPrivate)
+                                publicEntries.AddRange(catalog.Mods);
                             GameLogger.Log("CATALOG", $"Fetched {catalog.Mods.Count} entr(y/ies) from '{url}'");
                         }
 
@@ -193,6 +220,8 @@ namespace Cthangover.Core.Mods
                             foreach (var collection in catalog.Collections)
                                 CatalogCollectionMerger.TagSource(collection, url);
                             allCollections.AddRange(catalog.Collections);
+                            if (!isPrivate)
+                                publicCollections.AddRange(catalog.Collections);
                             GameLogger.Log("CATALOG", $"Fetched {catalog.Collections.Count} collection(s) from '{url}'");
                         }
                     }
@@ -208,29 +237,48 @@ namespace Cthangover.Core.Mods
                     }
                 }
 
-                if (allEntries.Count > 0 || allCollections.Count > 0)
+                if (successfulSources > 0)
                 {
+                    // Save before merging: a merge can add private URLs to an entry
+                    // also present in a public catalog. Private data stays in memory.
+                    SaveCache(CatalogMerger.MergeAndDeduplicate(publicEntries),
+                        CatalogCollectionMerger.MergeAndDeduplicate(publicCollections));
                     _cachedEntries = CatalogMerger.MergeAndDeduplicate(allEntries);
                     _cachedCollections = CatalogCollectionMerger.MergeAndDeduplicate(allCollections);
-                    SaveCache(_cachedEntries, _cachedCollections);
                     GameLogger.Log("CATALOG",
                         $"Catalog refresh complete: {_cachedEntries.Count} total mod(s), {_cachedCollections.Count} collection(s) merged");
-                    OnRefreshed?.Invoke();
+                    notifyRefreshed = true;
+                    if (errors.Count > 0)
+                        refreshErrors = string.Join("\n", errors);
                 }
-                else if (_cachedEntries == null && errors.Count > 0)
+                else if (errors.Count > 0)
                 {
+                    // A failed private refresh cannot keep old permissions or URLs.
+                    if (ModConfig.Instance.CatalogTokenFiles.Count > 0)
+                    {
+                        _cachedEntries = new List<CatalogExportEntry>();
+                        _cachedCollections = new List<ModCollection>();
+                        notifyRefreshed = true;
+                    }
                     GameLogger.Log("CATALOG", "Catalog refresh failed: all URLs returned errors", LogLevel.Error);
-                    OnRefreshFailed?.Invoke(string.Join("\n", errors));
+                    refreshErrors = string.Join("\n", errors);
                 }
                 else
                 {
                     GameLogger.Log("CATALOG", "Catalog refresh complete: no new entries");
-                    OnRefreshed?.Invoke();
+                    notifyRefreshed = true;
                 }
             }
             finally
             {
                 _isFetching = false;
+                // External refreshers (the sources dialog and downloader) do
+                // not own the manager's banner. Notify after clearing the flag
+                // so every subscriber renders the completed state immediately.
+                if (notifyRefreshed)
+                    OnRefreshed?.Invoke();
+                if (refreshErrors != null)
+                    OnRefreshFailed?.Invoke(refreshErrors);
             }
         }
 
