@@ -96,7 +96,6 @@
       "mods": [
         "cthangover_game>=2",
         "cthangover_murakami>=1",
-        "cthangover_party>=1",
         "town_pack>=1"
       ]
     },
