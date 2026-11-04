@@ -22,7 +22,8 @@
 # - canonical/og/robots point at --url, repository links at --repo (the GitHub copy must not send visitors
 #   to git.cthangover.ru: the RU infrastructure is not reachable from outside the RF segment);
 # - build scripts, local server, bat/ps1 and __pycache__ are left out.
-set -euo pipefail
+set -Eeuo pipefail
+trap 'echo "site: failed at line $LINENO (exit $?)" >&2' ERR
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 OUT="$HERE/site_github"
@@ -48,11 +49,27 @@ case "$OUT" in
   /*) ;;
   *) OUT="$HERE/$OUT" ;;
 esac
+OUT=$(realpath -m -- "$OUT")
+case "$HERE/" in
+  "$OUT/"*) echo "site: output must not contain the project: $OUT" >&2; exit 2 ;;
+esac
+case "$OUT/" in
+  "$HERE/site/"*) echo "site: output must not overwrite site sources: $OUT" >&2; exit 2 ;;
+esac
+TARGET="$OUT"
+mkdir -p "$(dirname "$TARGET")"
+STAGING=$(mktemp -d "$(dirname "$TARGET")/.site-build.XXXXXX")
+trap 'rm -rf -- "$STAGING"' EXIT
+OUT="$STAGING"
 
-rm -rf "$OUT"
-mkdir -p "$OUT"
+# Refresh the source indices and their static HTML statistics before copying the site.
+echo "site: refreshing source indices"
+"${PYTHON:-python3}" "$HERE/site/build-docs-index.py"
+"${PYTHON:-python3}" "$HERE/site/build-quickstart-index.py"
+"${PYTHON:-python3}" "$HERE/site/build-mods-catalog.py"
 
 # Everything is generated except the site sources that are not web content.
+echo "site: preparing GitHub Pages files"
 (cd "$HERE/site" && find . -type f \
   ! -name '*.py' ! -name '*.pyc' ! -name '*.bat' ! -name '*.ps1' \
   ! -name '.gdignore' ! -name '.gitkeep' ! -name 'git.sitemap.xml' \
@@ -141,6 +158,24 @@ Generated from the site/ folder by build_site.sh; do not edit the files here, ed
 Publish: push the contents of this folder as the root of the repository (or of a gh-pages branch), then
 Settings -> Pages -> Deploy from a branch -> / (root).
 EOF
+
+# Do not remove the destination directory: Windows can keep it open and deny its removal
+# after rm -rf has already emptied it. Prepare everything first, copy new files before
+# removing obsolete ones, and retain the directory itself for local servers and Explorer.
+for required in index.html docs.html quickstart.html css/style.css js/main.js js/i18n.js \
+  data/mods.json docs/docs-index.json quickstart/quickstart-index.json 404.html; do
+  test -s "$OUT/$required"
+done
+echo "site: updating $TARGET"
+mkdir -p "$TARGET"
+cp -R "$OUT/." "$TARGET/"
+while IFS= read -r -d '' entry; do
+  relative=${entry#"$TARGET/"}
+  if [ ! -e "$OUT/$relative" ]; then
+    rm -rf -- "$entry"
+  fi
+done < <(find "$TARGET" -depth -mindepth 1 -print0)
+OUT="$TARGET"
 
 if [ "$PUSH" -eq 1 ]; then
   TMP=$(mktemp -d)
