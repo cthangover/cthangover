@@ -14,7 +14,7 @@ rem
 rem Godot is taken from GODOT_BIN or `godot` on PATH.
 rem
 rem Output: summary at the end, exit code 0 only when everything is green.
-rem         Per-test logs:  tests\artifacts\logs\<name>.log
+rem         Per-test logs:  tests\artifacts\runs\<id>\tests\<name>\process.log
 rem         JSON report:    tests\artifacts\test-results.json
 rem ---------------------------------------------------------------------------
 
@@ -34,7 +34,7 @@ popd
 echo.
 echo Started:    %START%
 echo Finished:   %TIME%
-echo Logs:       tests\artifacts\logs\
+echo Runs:       tests\artifacts\runs\
 if exist "%REPORT%" echo Report:     tests\artifacts\test-results.json
 if "%EXIT_CODE%"=="0" (
     echo RESULT: ALL TESTS PASSED

@@ -56,7 +56,8 @@ namespace Cthangover.Core.Mods.Testing
             Assembly testAssembly,
             ModTestLedger ledger,
             CancellationToken cancellationToken,
-            string compileErrors = null)
+            string compileErrors = null,
+            string testFilter = null)
         {
             var summary = new ModTestSuiteSummary { ModId = modId };
             var mod = ModManager.Instance.GetMod(modId);
@@ -86,6 +87,9 @@ namespace Cthangover.Core.Mods.Testing
             try
             {
                 tests = ModTestDiscovery.Discover(testAssembly);
+                if (tests.Count == 0) throw new InvalidOperationException("no ModTest methods discovered");
+                tests = tests.Where(test => ModTestFilter.Matches(test.Name, testFilter)).ToList();
+                if (tests.Count == 0) throw new InvalidOperationException("test filter matched no ModTest methods: " + testFilter);
             }
             catch (Exception ex)
             {
@@ -111,11 +115,23 @@ namespace Cthangover.Core.Mods.Testing
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var entry = await RunOneAsync(modId, test, sandboxDir, cancellationToken);
+                var entry = await RunOneAsync(modId, test, CaseSandbox(sandboxDir, test.Name), cancellationToken);
                 summary.Tests.Add(entry);
                 ledger.Add(entry);
 
-                var contamination = RecoveryCycle(modId);
+                // A timed-out task can still be alive. Never let it overlap another test.
+                if (entry.Status == ModTestStatus.Timeout || entry.Message?.StartsWith("test run aborted", StringComparison.Ordinal) == true)
+                {
+                    foreach (var remaining in tests.SkipWhile(candidate => candidate != test).Skip(1))
+                    {
+                        var blocked = new ModTestEntry { ModId = modId, TestName = remaining.Name, Status = ModTestStatus.Error,
+                            Message = "not run: environment invalid after timeout or cancellation of " + test.Name };
+                        summary.Tests.Add(blocked);
+                        ledger.Add(blocked);
+                    }
+                    break;
+                }
+                var contamination = await RecoveryCycleAsync(modId);
                 if (contamination != null)
                 {
                     var err = new ModTestEntry
@@ -127,6 +143,7 @@ namespace Cthangover.Core.Mods.Testing
                     };
                     summary.Tests.Add(err);
                     ledger.Add(err);
+                    break;
                 }
             }
             swTotal.Stop();
@@ -182,6 +199,7 @@ namespace Cthangover.Core.Mods.Testing
                         throw task.Exception?.GetBaseException() ?? new Exception("task faulted");
                 }
 
+                cts.Token.ThrowIfCancellationRequested();
                 entry.Status = ModTestStatus.Passed;
             }
             catch (ModAssertException ex)
@@ -253,7 +271,7 @@ namespace Cthangover.Core.Mods.Testing
         /// self-check invariant (§6.4) fails after recovery, or null when the
         /// environment is clean.
         /// </summary>
-        private static string RecoveryCycle(string modId)
+        private static async Task<string> RecoveryCycleAsync(string modId)
         {
             try
             {
@@ -264,7 +282,7 @@ namespace Cthangover.Core.Mods.Testing
                     try { resettable.ResetForNewGame(); }
                     catch (Exception ex)
                     {
-                        GameLogger.Log("MODTEST", $"resettable '{resettable.Id}' failed: {ex.Message}", LogLevel.Warning);
+                        throw new InvalidOperationException($"resettable '{resettable.Id}' failed: {ex.Message}", ex);
                     }
                 }
 
@@ -273,7 +291,11 @@ namespace Cthangover.Core.Mods.Testing
                 AppServices.Current.RebuildRegistries();
 
                 FreeStrayRootNodes();
-
+                if (Engine.GetMainLoop() is SceneTree tree)
+                {
+                    await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
+                    await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
+                }
                 return SelfCheck();
             }
             catch (Exception ex)
@@ -338,6 +360,13 @@ namespace Cthangover.Core.Mods.Testing
                 catch { /* fall through */ }
             }
             return Path.Combine(Path.GetTempPath(), "cthangover_mod_test_sandbox", modId);
+        }
+
+        private static string CaseSandbox(string root, string name)
+        {
+            var readable = new string(name.Select(character => char.IsAsciiLetterOrDigit(character) || character == '_' ? character : '_').Take(48).ToArray());
+            var hash = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(name))).Substring(0, 8);
+            return Path.Combine(root, readable + "_" + hash);
         }
 
         private static void PrepareSandbox(string sandboxDir)

@@ -7,6 +7,9 @@ namespace Cthangover.Core.Utils
     /// </summary>
     public static class GameEnvironment
     {
+        /// <summary>Non-Godot persistence root; test processes receive their own root before any cache is initialised.</summary>
+        public static string LocalApplicationData => System.Environment.GetEnvironmentVariable("CTHANGOVER_TEST_DATA")
+            ?? System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData);
         /// <summary>
         /// True when the process is a real game run whose boot pipeline has executed.
         /// Unit tests and design-time tooling leave it <c>false</c>, which routes

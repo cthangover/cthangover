@@ -59,14 +59,14 @@ namespace Cthangover.Core.Mods
                 catch
                 {
                     CacheRoot = Path.Combine(
-                        System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData),
+                        GameEnvironment.LocalApplicationData,
                         "cthangover", "mod_cache", "native");
                 }
             }
             else
             {
                 CacheRoot = Path.Combine(
-                    System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData),
+                    GameEnvironment.LocalApplicationData,
                     "cthangover", "mod_cache", "native");
             }
         }

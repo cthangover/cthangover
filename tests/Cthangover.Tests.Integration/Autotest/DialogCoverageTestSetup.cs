@@ -57,6 +57,8 @@ namespace Cthangover.Core.Autotest
 
             var evt = SafeGet(() => factory.CreateFromText("background black"));
             Check("factory produces an executable event through the core contract", evt != null);
+            // Factory results are detached native nodes until a chain adopts them.
+            if (evt is Node eventNode) eventNode.Free();
 
             Check("migrated type DialogBox is loaded from a mod assembly",
                 FindOutsideKernel("Cthangover.Mods.Dialog.DialogBox", kernelAssembly) != null);

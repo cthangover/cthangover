@@ -30,7 +30,7 @@ namespace Cthangover.Core.Mods.Testing
     /// </summary>
     public static class ModTestDiscovery
     {
-        private const BindingFlags TestMethodBinding = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
+        private const BindingFlags TestMethodBinding = BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly;
 
         /// <summary>
         /// Returns every [ModTest] method in <paramref name="assembly"/> in
@@ -52,16 +52,28 @@ namespace Cthangover.Core.Mods.Testing
             {
                 // Surface which types failed and why: a mod test assembly that
                 // cannot fully load is a data problem of the mod, not of the engine.
-                types = ex.Types.Where(t => t != null).ToArray();
+                throw new InvalidOperationException("test assembly type discovery failed: " +
+                    string.Join("; ", ex.LoaderExceptions.Select(error => error?.Message)), ex);
             }
 
-            foreach (var type in types.Where(t => t.IsClass && !t.IsAbstract).OrderBy(t => t.FullName, StringComparer.Ordinal))
+            foreach (var type in types.Where(t => t.IsClass).OrderBy(t => t.FullName, StringComparer.Ordinal))
             {
                 foreach (var method in type.GetMethods(TestMethodBinding).OrderBy(m => m.Name, StringComparer.Ordinal))
                 {
                     var attr = method.GetCustomAttribute<ModTestAttribute>();
-                    if (attr == null || string.IsNullOrWhiteSpace(attr.Name))
-                        continue;
+                    if (attr == null) continue;
+                    if (string.IsNullOrWhiteSpace(attr.Name))
+                        throw new InvalidOperationException($"{type.FullName}.{method.Name}: ModTest name is required");
+                    var parameters = method.GetParameters();
+                    if (!method.IsStatic || method.ContainsGenericParameters ||
+                        (parameters.Length != 0 && (parameters.Length != 1 || parameters[0].ParameterType != typeof(ModTestContext))) ||
+                        (method.ReturnType != typeof(void) && method.ReturnType != typeof(System.Threading.Tasks.Task)) ||
+                        (method.ReturnType == typeof(void) && method.IsDefined(typeof(System.Runtime.CompilerServices.AsyncStateMachineAttribute))))
+                        throw new InvalidOperationException($"{attr.Name}: expected static void/Task method with zero parameters or one ModTestContext; async void is forbidden");
+                    if (result.Any(test => test.Name == attr.Name))
+                        throw new InvalidOperationException("duplicate ModTest name: " + attr.Name);
+                    if (attr.TimeoutSeconds <= 0)
+                        throw new InvalidOperationException("ModTest timeout must be positive: " + attr.Name);
                     result.Add(new DiscoveredModTest
                     {
                         Name = attr.Name,

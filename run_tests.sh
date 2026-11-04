@@ -15,7 +15,7 @@
 # display: without $DISPLAY the run goes through xvfb-run when it is installed.
 #
 # Output: summary at the end, exit code 0 only when everything is green.
-#         Per-test logs:  tests/artifacts/logs/<name>.log
+#         Per-test logs:  tests/artifacts/runs/<id>/tests/<name>/process.log
 #         JSON report:    tests/artifacts/test-results.json
 # ---------------------------------------------------------------------------
 set -uo pipefail
@@ -48,7 +48,7 @@ ELAPSED=$(( $(date +%s) - START ))
 
 echo
 echo "Total time: $((ELAPSED / 60)) min $((ELAPSED % 60)) s"
-echo "Logs:       tests/artifacts/logs/"
+echo "Runs:       tests/artifacts/runs/"
 [ -f "$REPORT" ] && echo "Report:     tests/artifacts/test-results.json"
 if [ $EXIT_CODE -eq 0 ]; then
     echo "RESULT: ALL TESTS PASSED"

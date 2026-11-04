@@ -91,6 +91,7 @@ text = ""badge""
                 ModManager.Instance.Reload();
 
                 var root = TscnScenes.LoadAndBuild(TargetScene);
+                if (root != null) AddChild(root);
                 Assert(root != null, "resolver: patched scene loads");
                 if (root == null)
                     return;
@@ -114,6 +115,7 @@ text = ""badge""
                 var badge = root.GetNodeOrNull<ColorRect>("Badge");
                 Assert(badge != null, "resolver: editor-style mods/<mod> ext_resource instance built");
                 Assert(badge != null && badge.GetNodeOrNull<Label>("BadgeLabel") != null, "resolver: ext_resource instance child built");
+                root.Free();
             }
             finally
             {

@@ -1,304 +1,221 @@
-using System.Text;
-
 namespace Cthangover.TestRunner
 {
-    /// <summary>
-    /// Cross-platform entry point for the whole test suite: builds the game
-    /// assembly, runs xUnit unit tests, then every integration scene from
-    /// <c>tests/tests.manifest.json</c> sequentially (they share the mod cache
-    /// and write into <c>mods/</c>, so parallel runs are unsafe), and prints
-    /// one summary with an aggregate exit code. Replaces the Windows-only
-    /// PowerShell scripts; requires only the .NET 8 SDK and a Godot .NET
-    /// executable on PATH, via <c>GODOT_BIN</c> or <c>--godot</c>.
-    /// </summary>
+    using System.Text;
+    using System.Text.Json;
+
+    /// <summary>Plans first, builds once, executes dependency groups in a private workspace and persists every outcome.</summary>
     public static class Program
     {
         public static int Main(string[] args)
         {
             try { Console.OutputEncoding = Encoding.UTF8; } catch { }
-
-            try
-            {
-                return Run(args);
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine($"test runner error: {ex.Message}");
-                return 2;
-            }
+            try { return Run(RunnerOptions.Parse(args)); }
+            catch (Exception error) { Console.Error.WriteLine("test runner error: " + error.Message); return 2; }
         }
 
-        private static int Run(string[] args)
+        private static int Run(RunnerOptions options)
         {
-            var options = RunnerOptions.Parse(args);
-            if (options.ShowHelp)
-            {
-                Console.WriteLine(RunnerOptions.HelpText);
-                return 0;
-            }
-
+            if (options.ShowHelp) { Console.WriteLine(RunnerOptions.HelpText); return 0; }
             var root = ProjectLocator.Locate();
             var manifest = TestManifest.Load(Path.Combine(root, "tests", "tests.manifest.json"));
-
-            if (options.List)
+            var catalog = TestCatalog.Load(root, manifest);
+            if (options.List || options.Catalog != null)
             {
-                Console.WriteLine($"{"unit",-14} {manifest.Unit.Project}");
-                foreach (var test in manifest.Integration)
-                    Console.WriteLine($"{test.Name,-14} {test.Scene}");
+                var listed = catalog.Where(t => (options.Mod == null || t.Owners.Contains(options.Mod))
+                    && (options.Profile == null || t.Profiles.Contains(options.Profile))
+                    && (options.Kind == null || t.Kind == options.Kind) && (options.Tag == null || t.Tags.Contains(options.Tag))
+                    && (options.Game == null || t.Game == options.Game) && (options.Renderer == null || t.Renderer == options.Renderer)
+                    && (options.Tests.Count == 0 || options.Tests.Any(p => NamePattern.Matches(t.Name, p)))).ToList();
+                if (listed.Count == 0) throw new ArgumentException("catalogue selection is empty");
+                foreach (var test in listed)
+                    Console.WriteLine($"{test.Name,-38} {test.Kind,-12} owners={string.Join(',', test.Owners)} profiles={string.Join(',', test.Profiles)} {(test.Windowed ? "windowed" : "headless")} {test.ManualReason}");
+                if (options.Catalog != null) TestCatalog.Write(options.Catalog, listed);
                 return 0;
             }
-
-            var godot = GodotLocator.Locate(options.Godot);
-            var results = new List<TestResult>();
-
-            if (!string.IsNullOrEmpty(options.Switcher))
+            var plan = options.Switcher == null ? TestPlanner.Build(catalog, options) : SmokePlan(options);
+            if (options.Plan)
             {
-                if (!EnsureBuild(root, options.NoBuild))
-                    return 1;
-                results.Add(RunSwitcher(root, godot, options));
-                return SummaryPrinter.Print(results, options.Json);
+                foreach (var entry in plan)
+                    Console.WriteLine($"{entry.Test.Name,-38} {entry.Reason}; env={entry.Environment}; depends={string.Join(',', entry.Test.DependsOn)}; filter={entry.Filter}");
+                return 0;
             }
-
-            var selected = manifest.Integration.FirstOrDefault(t => t.Name == options.Test);
-            var runUnit = string.IsNullOrEmpty(options.Test) || options.Test == "unit";
-            var runAllIntegration = string.IsNullOrEmpty(options.Test);
-
-            if (!runUnit && selected == null)
-                throw new InvalidOperationException($"unknown test '{options.Test}'; use --list to see available tests");
-
-            if ((runAllIntegration || selected != null) && !EnsureBuild(root, options.NoBuild))
-                return 1;
-
-            if (runUnit)
-            {
-                Console.WriteLine("Unit-тесты...");
-                results.Add(RunUnit(root, manifest));
-            }
-
-            if (runAllIntegration)
-            {
-                foreach (var test in manifest.Integration)
-                {
-                    Console.WriteLine($"Интеграционный тест: {test.Name}...");
-                    results.Add(RunIntegration(root, godot, test));
-                }
-            }
-            else if (selected != null)
-            {
-                Console.WriteLine($"Интеграционный тест: {selected.Name}...");
-                results.Add(RunIntegration(root, godot, selected));
-            }
-
-            return SummaryPrinter.Print(results, options.Json);
-        }
-
-        /// <summary>
-        /// Builds the game assembly so Godot loads the current code (integration
-        /// scenes and SceneSwitcher both run against it). Returns <c>false</c>
-        /// after printing the compiler output when the build fails, so the
-        /// caller can exit before reporting misleading test results.
-        /// </summary>
-        private static bool EnsureBuild(string root, bool noBuild)
-        {
-            if (noBuild)
-                return true;
-
-            Console.WriteLine("Сборка Cthangover.csproj...");
-            var build = ProcessRunner.Run("dotnet", new[] { "build", "Cthangover.csproj", "--nologo", "-v", "q" }, root, 300);
-            if (!build.TimedOut && build.ExitCode == 0)
-                return true;
-
-            Console.Error.WriteLine("Сборка не удалась:");
-            Console.Error.WriteLine(build.OutputText);
-            return false;
-        }
-
-        /// <summary>
-        /// Runs the xUnit project through <c>dotnet test</c> with a TRX logger
-        /// and reads exact counters from the report. TRX avoids parsing the
-        /// localized console summary.
-        /// </summary>
-        private static TestResult RunUnit(string root, TestManifest manifest)
-        {
-            var trxDirectory = Path.Combine(Path.GetTempPath(), "cthangover_trx_" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(trxDirectory);
+            var runId = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss_fff") + "_" + Guid.NewGuid().ToString("N").Substring(0, 8);
+            var artifacts = Path.Combine(Path.GetFullPath(options.Artifacts ?? Path.Combine(root, "tests", "artifacts", "runs")), runId);
+            Directory.CreateDirectory(artifacts);
+            File.WriteAllText(Path.Combine(artifacts, "plan.json"), JsonSerializer.Serialize(plan, ReportWriter.JsonOptions));
+            TestCatalog.Write(Path.Combine(artifacts, "catalog.json"), catalog);
+            var report = new RunReport { RunId = runId, Results = plan.Select(Pending).ToList() };
+            ReportWriter.Write(artifacts, report, options.Json);
+            Console.WriteLine("Запуск " + runId + "; отчёты: " + artifacts);
+            TestWorkspace workspace = null;
             try
             {
-                var args = new List<string>
+                var unit = plan.Any(e => e.Test.Kind == "unit");
+                if (!options.NoBuild || unit)
                 {
-                    "test", manifest.Unit.Project, "--nologo", "-v", "q",
-                    "--logger", "trx;LogFileName=unit.trx",
-                    "--logger", "console;verbosity=normal",
-                    "--results-directory", trxDirectory
-                };
-                var run = ProcessRunner.Run("dotnet", args, root, manifest.Unit.TimeoutSeconds);
-                var counters = TrxParser.TryParseCounters(Path.Combine(trxDirectory, "unit.trx"));
-
-                var result = new TestResult
+                    Console.WriteLine("Сборка проекта и тестов...");
+                    var project = unit ? manifest.Unit.Project : "Cthangover.csproj";
+                    var build = ProcessRunner.Run("dotnet", new[] { "build", project, "--nologo", "-v", "minimal" }, root, 300, Path.Combine(artifacts, "build.log"));
+                    report.Build = new TestResult { Name = "build", Kind = "build", Passed = build.ExitCode == 0 && !build.TimedOut,
+                        ExitCode = build.ExitCode, TimedOut = build.TimedOut, Duration = build.Duration, LogFile = build.LogFile,
+                        Note = build.TimedOut ? "build timeout" : build.ExitCode == 0 ? null : "build failed",
+                        FailureKind = build.TimedOut ? "timeout" : build.ExitCode == 0 ? null : "compilation",
+                        Diagnostics = build.ExitCode == 0 ? new() : TestLogs.Highlights(build.Output) };
+                    if (!report.Build.Passed) return Finish(artifacts, report, options, workspace);
+                }
+                Console.WriteLine("Подготовка отдельной копии проекта...");
+                workspace = new TestWorkspace(root, runId);
+                report.Workspace = workspace.Root;
+                workspace.Keep = true; // An interrupted run must leave its diagnostics and mutable copy available.
+                var completed = new Dictionary<string, TestResult>(StringComparer.Ordinal);
+                string component = null;
+                for (var i = 0; i < plan.Count; i++)
                 {
-                    Name = "unit",
-                    Kind = "unit",
-                    ExitCode = run.ExitCode,
-                    Duration = run.Duration,
-                    TimedOut = run.TimedOut,
-                    Passed = !run.TimedOut && run.ExitCode == 0,
-                    PassedChecks = counters?.Passed ?? 0,
-                    FailedChecks = counters?.Failed ?? 0,
-                    LogFile = TestLogs.Save(root, "unit", run),
-                };
-                if (counters?.Failed > 0)
-                    result.Passed = false;
-                if (counters == null)
-                    result.Note = "trx counters unavailable";
-                else if (counters.Value.Skipped > 0)
-                    result.Note = $"skipped={counters.Value.Skipped}";
-                if (!result.Passed)
-                    result.Diagnostics = run.Output
-                        .Where(l => l.Contains("[FAIL]", StringComparison.Ordinal) || l.TrimStart().StartsWith("Failed ", StringComparison.Ordinal))
-                        .Select(l => l.Trim())
-                        .Take(12)
-                        .ToList();
-                return result;
+                    var entry = plan[i];
+                    TestResult result;
+                    var blocked = entry.Test.DependsOn.Where(name => !completed.TryGetValue(name, out var prerequisite) || !prerequisite.Passed).ToArray();
+                    if (blocked.Length > 0)
+                    {
+                        result = Pending(entry);
+                        result.Note = "blocked by unsuccessful prerequisite(s): " + string.Join(", ", blocked);
+                        result.FailureKind = "dependency";
+                    }
+                    else
+                    {
+                        if (component != entry.Environment)
+                        {
+                            workspace.Begin(entry.Environment);
+                            component = entry.Environment;
+                            report.UserDirectories.Add(workspace.UserDirectory);
+                            ReportWriter.Write(artifacts, report, options.Json);
+                        }
+                        var directory = Path.Combine(artifacts, "tests", TestWorkspace.Key(entry.Test.Name));
+                        Directory.CreateDirectory(directory);
+                        Console.WriteLine($"[{i + 1}/{plan.Count}] {entry.Test.Name} ({entry.Reason})...");
+                        try
+                        {
+                            result = entry.Test.Kind == "unit" ? RunUnit(workspace, manifest.Unit, entry, directory)
+                                : RunIntegration(workspace, GodotLocator.Locate(options.Godot), entry, directory);
+                        }
+                        catch (Exception error)
+                        {
+                            result = new TestResult { Name = entry.Test.Name, Kind = entry.Test.Kind, Note = "infrastructure: " + error.Message,
+                                FailureKind = "infrastructure",
+                                ExitCode = -1, Diagnostics = new() { error.ToString() } };
+                        }
+                        try { ArtifactCollector.Collect(workspace, directory, result); }
+                        catch (Exception error) { result.Passed = false; result.FailureKind ??= "artifacts"; result.Note += "; artifact collection: " + error.Message; }
+                    }
+                    result.Environment = entry.Environment;
+                    result.Filter = entry.Filter;
+                    result.ModFilter = entry.ModFilter;
+                    result.SelectionReason = entry.Reason;
+                    result.DependsOn = entry.Test.DependsOn;
+                    completed[entry.Test.Name] = result;
+                    report.Results[i] = result;
+                    Console.WriteLine($"  {result.Status.ToUpperInvariant()} {result.PassedChecks}/{result.PassedChecks + result.FailedChecks} skipped={result.SkippedChecks} {result.DurationSeconds:0.0}s {result.Note}");
+                    ReportWriter.Write(artifacts, report, options.Json);
+                }
+                workspace.Keep = options.KeepWorkspace || report.Results.Any(result => !result.Passed);
+                return Finish(artifacts, report, options, workspace);
             }
-            finally
+            catch (Exception error)
             {
-                try { Directory.Delete(trxDirectory, true); } catch { }
+                report.Results.Add(new TestResult { Name = "infrastructure", Kind = "infrastructure", ExitCode = -1,
+                    FailureKind = "infrastructure",
+                    Note = error.Message, Diagnostics = new() { error.ToString() } });
+                return Finish(artifacts, report, options, workspace);
             }
         }
 
-        /// <summary>
-        /// A plain launch boots only the front-end (main menu + mod manager), so
-        /// every integration test that does not name a game gets
-        /// <c>--all-mods</c> after the <c>--</c> separator, keeping the scenes
-        /// on the full mod set they were written for.
-        /// </summary>
-        private static List<string> WithModSet(IReadOnlyList<string> testArgs)
+        private static TestResult Pending(TestPlanEntry entry) => new()
         {
-            var args = new List<string>(testArgs ?? Array.Empty<string>());
-            if (args.Any(a => a.StartsWith("--game=", StringComparison.Ordinal) || a == "--all-mods" || a == "--frontend"))
-                return args;
+            Name = entry.Test.Name, Kind = entry.Test.Kind, Blocked = true, ExitCode = -1, Note = "not started",
+            Environment = entry.Environment, Filter = entry.Filter, SelectionReason = entry.Reason, DependsOn = entry.Test.DependsOn,
+            ModFilter = entry.ModFilter,
+            FailureKind = "not-started",
+        };
 
-            if (!args.Contains("--"))
-                args.Add("--");
-            args.Add("--all-mods");
-            return args;
-        }
-
-        /// <summary>
-        /// Integration runs are automated: the mod hot reload watcher (on for
-        /// any run from the editor binary) only costs a recursive watch of
-        /// every mod root and could reload under a test that writes mod files,
-        /// so it is switched off unless the test opts in with
-        /// <c>--hot-reload</c> (HotReloadSettings.EnableFlag).
-        /// </summary>
-        private static List<string> WithoutHotReload(List<string> args)
+        private static int Finish(string directory, RunReport report, RunnerOptions options, TestWorkspace workspace)
         {
-            if (!args.Contains("--hot-reload"))
-                args.Add("--no-hot-reload");
-            return args;
-        }
-
-        /// <summary>
-        /// Runs one integration scene headless and evaluates it from three
-        /// sources: process exit code, the scene's <c>[TEST_RESULT]</c> line
-        /// (authoritative for check counts) and the timeout flag.
-        /// </summary>
-        private static TestResult RunIntegration(string root, string godot, IntegrationTestDefinition test)
-        {
-            // A wrong path (typically wrong case: fine on Windows, broken on
-            // Linux/CI and in exported packs) fails here with a precise
-            // message instead of a Godot run that ends in "no result marker".
-            var sceneProblem = ScenePathValidator.Check(root, test.Scene);
-            if (sceneProblem != null)
+            if (workspace != null)
             {
-                return new TestResult
+                try { workspace.Dispose(); }
+                catch (Exception error)
                 {
-                    Name = test.Name,
-                    Kind = "integration",
-                    Passed = false,
-                    ExitCode = -1,
-                    FailedChecks = 1,
-                    Note = sceneProblem,
-                };
+                    workspace.Keep = true;
+                    report.Results.Add(new TestResult { Name = "cleanup", Kind = "infrastructure", ExitCode = -1,
+                        FailureKind = "cleanup",
+                        Note = "workspace cleanup failed: " + error.Message, Diagnostics = new() { error.ToString() } });
+                }
+                report.WorkspaceRetained = workspace.Keep;
             }
+            report.Complete = true;
+            report.FinishedAt = DateTimeOffset.UtcNow;
+            ReportWriter.Write(directory, report, options.Json);
+            SummaryPrinter.Print(report.Build == null ? report.Results : report.Results.Prepend(report.Build).ToList());
+            Console.WriteLine("JSON / HTML / JUnit: " + directory);
+            if (report.WorkspaceRetained) Console.WriteLine("Окружение сохранено: " + report.Workspace);
+            return report.Success ? 0 : 1;
+        }
 
+        private static TestResult RunUnit(TestWorkspace workspace, UnitManifest unit, TestPlanEntry entry, string directory)
+        {
+            var assembly = Path.Combine(workspace.Root, Path.GetDirectoryName(unit.Project), "bin", "Debug", "net8.0", Path.GetFileNameWithoutExtension(unit.Project) + ".dll");
+            if (!File.Exists(assembly)) throw new FileNotFoundException("built unit-test assembly not found", assembly);
+            var args = new List<string> { "vstest", assembly, "--logger:trx;LogFileName=unit.trx", "--logger:console;verbosity=normal", "--ResultsDirectory:" + directory };
+            if (entry.Filter != null) args.Add("--TestCaseFilter:" + entry.Filter);
+            var working = Path.Combine(workspace.Root, "unit-work");
+            Directory.CreateDirectory(working);
+            var run = ProcessRunner.Run("dotnet", args, working, entry.Test.TimeoutSeconds, Path.Combine(directory, "process.log"), workspace.EnvironmentVariables());
+            var trx = TrxParser.Read(Path.Combine(directory, "unit.trx"));
+            return new TestResult
+            {
+                Name = entry.Test.Name, Kind = "unit", Passed = run.ExitCode == 0 && !run.TimedOut && trx.Failed == 0 && trx.Problems.Count == 0,
+                ExitCode = run.ExitCode, TimedOut = run.TimedOut, Duration = run.Duration, LogFile = run.LogFile,
+                PassedChecks = trx.Passed, FailedChecks = trx.Failed, SkippedChecks = trx.Skipped, Cases = trx.Cases,
+                Note = string.Join("; ", trx.Problems), Diagnostics = run.ExitCode == 0 && trx.Problems.Count == 0 ? new() : TestLogs.Highlights(run.Output),
+                FailureKind = run.TimedOut ? "timeout" : trx.Problems.Count > 0 ? "contract" : trx.Failed > 0 ? "assertion" : run.ExitCode == 0 ? null : "process",
+                Artifacts = File.Exists(Path.Combine(directory, "unit.trx")) ? new() { Path.Combine(directory, "unit.trx") } : new(),
+            };
+        }
+
+        private static TestResult RunIntegration(TestWorkspace workspace, string godot, TestPlanEntry entry, string directory)
+        {
+            var test = entry.Test;
+            var problem = ScenePathValidator.Check(workspace.Root, test.Scene);
+            if (problem != null) throw new InvalidOperationException(problem);
             var args = new List<string>();
-            if (!test.Windowed)
-                args.Add("--headless");
-            args.Add("--path");
-            args.Add(root);
-            args.Add(test.Scene);
-            args.AddRange(WithoutHotReload(WithModSet(test.Args)));
-
-            var run = ProcessRunner.Run(godot, args, root, test.TimeoutSeconds);
-            var parsed = ResultParser.Parse(run.Output);
-            var passed = !run.TimedOut && run.ExitCode == 0 && (!parsed.HasResult || parsed.Failed == 0);
-
-            return new TestResult
+            if (!test.Windowed) args.Add("--headless");
+            args.AddRange(new[] { "--path", workspace.Root, test.Scene });
+            var userArgs = new List<string>(test.Args ?? Array.Empty<string>());
+            if (!userArgs.Contains("--")) userArgs.Add("--");
+            if (!userArgs.Any(a => a.StartsWith("--game=", StringComparison.Ordinal) || a == "--all-mods" || a == "--frontend")) userArgs.Add("--all-mods");
+            if (!userArgs.Contains("--hot-reload")) userArgs.Add("--no-hot-reload");
+            if (entry.ModFilter != null) userArgs.Add("--mod=" + entry.ModFilter);
+            if (entry.Filter != null) userArgs.Add("--test-filter=" + entry.Filter);
+            args.AddRange(userArgs);
+            var modReport = Path.Combine(workspace.UserDirectory, "mod_tests", "last-report.json");
+            if (test.Kind == "mod-unit" && File.Exists(modReport)) File.Delete(modReport);
+            var run = ProcessRunner.Run(godot, args, workspace.Root, test.TimeoutSeconds, Path.Combine(directory, "process.log"), workspace.EnvironmentVariables());
+            var result = ResultParser.Evaluate(test.Name, test.Kind, run, test.Result);
+            if (test.Kind == "mod-unit")
             {
-                Name = test.Name,
-                Kind = "integration",
-                Passed = passed,
-                TimedOut = run.TimedOut,
-                ExitCode = run.ExitCode,
-                PassedChecks = parsed.HasResult ? parsed.Passed : (passed ? 1 : 0),
-                FailedChecks = parsed.HasResult ? parsed.Failed : (passed ? 0 : 1),
-                Duration = run.Duration,
-                Core = parsed.Core,
-                Coverage = parsed.Coverage,
-                Note = run.TimedOut ? "timeout" : (!parsed.HasResult ? "no result marker" : null),
-                LogFile = TestLogs.Save(root, test.Name, run),
-                Diagnostics = passed ? new List<string>() : TestLogs.Highlights(run.Output),
-            };
+                try { ModReportReader.Import(modReport, result); }
+                catch (Exception error) { result.Passed = false; result.FailureKind ??= "contract"; result.Note += "; " + error.Message; }
+            }
+            return result;
         }
 
-        /// <summary>
-        /// Smoke run of an arbitrary scene through the native
-        /// <c>--scene=</c> launch (kernel navigation) plus the
-        /// <c>test_runner</c> engine mod, which auto-plays the dialog and
-        /// prints the authoritative <c>[TEST_RESULT]</c>. A <c>.tscn</c>
-        /// target is passed positionally (Godot loads it natively); a
-        /// logical scene name goes through user args after <c>--</c>. The
-        /// driver's flags are always user args — the mod reads
-        /// <c>OS.GetCmdlineUserArgs()</c>, so they never spuriously activate
-        /// it during regular integration entries.
-        /// </summary>
-        private static TestResult RunSwitcher(string root, string godot, RunnerOptions options)
+        private static List<TestPlanEntry> SmokePlan(RunnerOptions options)
         {
-            var isTscn = options.Switcher.EndsWith(".tscn", StringComparison.OrdinalIgnoreCase);
-            var args = new List<string> { "--headless", "--path", root };
-            if (isTscn)
-                args.Add(options.Switcher);
-            args.Add("--");
-            if (!isTscn)
-                args.Add($"--scene={options.Switcher}");
-            args.Add($"--timeout={options.TimeoutSeconds}");
-            if (!string.IsNullOrEmpty(options.Choices))
-                args.Add($"--choices={options.Choices}");
-
-            Console.WriteLine($"SceneSwitcher: {options.Switcher}...");
-            var run = ProcessRunner.Run(godot, args, root, options.TimeoutSeconds + 60);
-            var parsed = ResultParser.Parse(run.Output);
-            var passed = !run.TimedOut && run.ExitCode == 0 && parsed.HasResult && parsed.Failed == 0;
-
-            return new TestResult
-            {
-                Name = "switcher",
-                Kind = "smoke",
-                Passed = passed,
-                TimedOut = run.TimedOut,
-                ExitCode = run.ExitCode,
-                PassedChecks = parsed.HasResult ? parsed.Passed : (passed ? 1 : 0),
-                FailedChecks = parsed.HasResult ? parsed.Failed : (passed ? 0 : 1),
-                Duration = run.Duration,
-                LogFile = TestLogs.Save(root, "switcher", run),
-                Diagnostics = passed ? new List<string>() : TestLogs.Highlights(run.Output),
-                Note = passed
-                    ? $"scene={options.Switcher}"
-                    : parsed.HasResult && parsed.Failed > 0
-                        ? $"driver timeout/fail: scene={options.Switcher}"
-                        : $"no result: scene={options.Switcher}"
-            };
+            var args = new List<string> { "--", "--all-mods", "--timeout=" + options.TimeoutSeconds };
+            var isScene = options.Switcher.EndsWith(".tscn", StringComparison.OrdinalIgnoreCase);
+            if (!isScene) args.Add("--scene=" + options.Switcher);
+            if (options.Choices != null) args.Add("--choices=" + options.Choices);
+            return new() { new TestPlanEntry { Environment = "switcher", Reason = "smoke scene", Test = new IntegrationTestDefinition
+            { Name = "switcher", Kind = "smoke", Scene = isScene ? options.Switcher : "res://scenes/menu/launcher.tscn", Args = args.ToArray(),
+                TimeoutSeconds = options.TimeoutSeconds + 60, Result = new ResultContract { Name = "test_runner" } } } };
         }
     }
 }

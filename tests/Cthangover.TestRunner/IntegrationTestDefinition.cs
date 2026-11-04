@@ -12,6 +12,19 @@ namespace Cthangover.TestRunner
         public string Scene { get; set; }
         public string[] Args { get; set; }
 
+        /// <summary>Execution adapter: integration, mod-unit, unit, or manual (catalogue only).</summary>
+        public string Kind { get; set; } = "integration";
+        public string[] Owners { get; set; } = Array.Empty<string>();
+        public string[] Profiles { get; set; } = Array.Empty<string>();
+        public string[] Tags { get; set; } = Array.Empty<string>();
+        public string[] DependsOn { get; set; } = Array.Empty<string>();
+        public string Game { get; set; }
+        public string Renderer { get; set; }
+        public string Source { get; set; }
+        public string ManualReason { get; set; }
+        public string[] Requirements { get; set; } = Array.Empty<string>();
+        public ResultContract Result { get; set; }
+
         /// <summary>
         /// When true the scene runs with a real window instead of
         /// <c>--headless</c>. Headless uses a dummy rendering server, so

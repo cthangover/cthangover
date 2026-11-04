@@ -40,7 +40,7 @@ namespace Cthangover.Core.Mods.Caches
         {
             if (!GameEnvironment.IsRuntime)
                 return Path.Combine(
-                    System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData),
+                    GameEnvironment.LocalApplicationData,
                     "cthangover", "mod_cache");
 
             return ProjectSettings.GlobalizePath(ModConfig.Instance.Cache.Root);

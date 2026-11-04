@@ -59,21 +59,30 @@ namespace Cthangover.TestRunner
         {
             if (string.IsNullOrWhiteSpace(line))
                 return false;
-            // Engine shutdown noise is reported on every exit and explains nothing.
-            if (line.Contains("Unreferenced static string") || line.Contains("leaked at exit") || line.Contains("Pages in use exist at exit"))
-                return false;
             // GameLogger marks LogLevel.Error with red ANSI on non-Windows consoles.
             if (line.Contains("\x1b[31m[", StringComparison.Ordinal))
                 return true;
             line = StripAnsi(line);
-            return line.StartsWith("ERROR:", StringComparison.Ordinal)
+            return IsEngineFailure(line)
                 || line.StartsWith("SCRIPT ERROR:", StringComparison.Ordinal)
                 || line.Contains("Exception:", StringComparison.Ordinal)
                 || line.Contains("[ERROR]", StringComparison.Ordinal)
                 || line.Contains("[FAIL]", StringComparison.Ordinal)
                 || line.Contains("[TIMEOUT]", StringComparison.Ordinal)
+                || line.Contains(": error ", StringComparison.Ordinal)
                 || (line.Contains("[MODS_COMPILE]", StringComparison.Ordinal) && (line.Contains("FAILED") || line.Contains(": error CS")))
                 || line.Contains("Cannot open file", StringComparison.Ordinal);
+        }
+
+        /// <summary>Native errors and resource-lifetime warnings invalidate completion even after a passing marker.</summary>
+        public static bool IsEngineFailure(string line)
+        {
+            line = StripAnsi(line).TrimStart();
+            return line.StartsWith("ERROR:", StringComparison.Ordinal) || line.StartsWith("SCRIPT ERROR:", StringComparison.Ordinal)
+                || line.StartsWith("Unhandled exception.", StringComparison.Ordinal)
+                || line.StartsWith("WARNING:", StringComparison.Ordinal) && (line.Contains("leaked at exit", StringComparison.Ordinal)
+                    || line.Contains("resources still in use", StringComparison.Ordinal) || line.Contains("Pages in use", StringComparison.Ordinal)
+                    || line.Contains("Unreferenced static string", StringComparison.Ordinal));
         }
 
         private static string StripAnsi(string line)

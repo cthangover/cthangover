@@ -39,9 +39,31 @@ namespace Cthangover.Core.Autotest
                 Check("ambience starts and stops without throwing", Runs(() => audio.PlayAmbient("bar/bar_ambient")) && Runs(audio.StopAmbient));
             }
 
-            GameLogger.Log(Category, $"[TEST_RESULT] name=coverage_audio passed={_passed} failed={_failed}");
+            Cthangover.Core.Bootstrap.ApplicationExit.Preparing += VerifyLatePlayback;
             Cthangover.Core.Bootstrap.ApplicationExit.Quit(GetTree(), _failed == 0 ? 0 : 1);
         }
+
+        /// <summary>Late scene notifications must not restart native playback after the service releases streams.</summary>
+        private System.Threading.Tasks.Task VerifyLatePlayback(SceneTree tree)
+        {
+            var node = tree.Root.GetNodeOrNull("AudioService");
+            if (node is IAudioService audio)
+            {
+                audio.PlayMusic("Serpent's Lament", MusicType.Ambient);
+                audio.PlayAmbient("bar/bar_ambient");
+                audio.PlaySound("ui/click", SoundType.UI);
+                var players = node.GetChildren().OfType<AudioStreamPlayer>().ToArray();
+                Check("shutdown rejects late music, ambient and sound commands",
+                    players.Length >= 3 && players.All(player => !player.Playing && player.Stream == null));
+            }
+            else Check("shutdown audio service remains available for cleanup", false);
+            if (_failed > 0) Cthangover.Core.Bootstrap.ApplicationExit.Quit(tree, 1);
+            GameLogger.Log(Category, $"[TEST_RESULT] name=coverage_audio passed={_passed} failed={_failed}");
+            return System.Threading.Tasks.Task.CompletedTask;
+        }
+
+        public override void _ExitTree()
+            => Cthangover.Core.Bootstrap.ApplicationExit.Preparing -= VerifyLatePlayback;
 
         private static bool Runs(Action action)
         {

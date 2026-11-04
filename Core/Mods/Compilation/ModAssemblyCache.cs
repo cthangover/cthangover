@@ -31,6 +31,12 @@ namespace Cthangover.Core.Mods.Compilation
 
         static ModAssemblyCache()
         {
+            var testCache = System.Environment.GetEnvironmentVariable("CTHANGOVER_TEST_CACHE");
+            if (!string.IsNullOrEmpty(testCache))
+            {
+                CacheRoot = System.IO.Path.GetFullPath(testCache);
+                return;
+            }
             if (GameEnvironment.IsRuntime)
             {
                 try
@@ -40,14 +46,14 @@ namespace Cthangover.Core.Mods.Compilation
                 catch
                 {
                     CacheRoot = System.IO.Path.Combine(
-                        System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData),
+                        GameEnvironment.LocalApplicationData,
                         "cthangover", "mod_cache", "assemblies");
                 }
             }
             else
             {
                 CacheRoot = System.IO.Path.Combine(
-                    System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData),
+                    GameEnvironment.LocalApplicationData,
                     "cthangover", "mod_cache", "assemblies");
             }
         }

@@ -33,6 +33,7 @@ namespace Cthangover.Core.Settings
         /// </summary>
         public GameData()
         {
+            Mods.Testing.TestRuntimeEnvironment.Verify();
             GameLogger.Init();
         }
 

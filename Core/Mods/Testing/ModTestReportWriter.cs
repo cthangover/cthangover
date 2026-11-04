@@ -41,7 +41,7 @@ namespace Cthangover.Core.Mods.Testing
                     catch { /* fall through */ }
                 }
                 return Path.Combine(
-                    System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData),
+                    GameEnvironment.LocalApplicationData,
                     "Godot", "app_userdata", "Cthangover", "mod_tests");
             }
         }
@@ -49,7 +49,7 @@ namespace Cthangover.Core.Mods.Testing
         /// <summary>Writes every channel and prints the console report; returns the aggregate pass/fail of the run.</summary>
         public static bool Write(IReadOnlyList<ModTestSuiteSummary> suites, string mode)
         {
-            var runId = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss", System.Globalization.CultureInfo.InvariantCulture);
+            var runId = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss_fff", System.Globalization.CultureInfo.InvariantCulture) + "_" + Guid.NewGuid().ToString("N").Substring(0, 8);
             var root = ReportRoot;
             Directory.CreateDirectory(root);
 
@@ -70,6 +70,8 @@ namespace Cthangover.Core.Mods.Testing
                     GameLogger.Log("MODTEST", $"[{tag}] {test.ModId}/{test.TestName} ({test.DurationMs:0} ms){Suffix(test)}");
                     if (!string.IsNullOrEmpty(test.Message))
                         GameLogger.Log("MODTEST", $"       {test.Message.Replace("\n", "\n       ")}");
+                    if (!string.IsNullOrEmpty(test.StackTrace))
+                        GameLogger.Log("MODTEST", "       " + test.StackTrace.Replace("\n", "\n       "));
                     foreach (var line in test.Log)
                         GameLogger.Log("MODTEST", $"       log: {line}");
                 }
@@ -150,7 +152,7 @@ namespace Cthangover.Core.Mods.Testing
             var passed = suites.Sum(s => s.Passed);
             var failed = suites.Sum(s => s.Failed + s.Errors);
             var skipped = suites.Sum(s => s.Skipped);
-            return new ModTestTotals(passed, failed, skipped, failed == 0);
+            return new ModTestTotals(passed, failed, skipped, failed == 0 && passed + skipped > 0);
         }
 
         /// <summary>Copies per-mod JSON reports into the CI artifact directory (runner collects them); best-effort.</summary>

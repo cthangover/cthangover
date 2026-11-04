@@ -121,7 +121,7 @@ namespace Cthangover.Core.Mods.Testing
             }
 
             if (sources.Count == 0)
-                return null;
+                throw new InvalidOperationException($"'{mod.Id}': test_sources matched no C# files ({string.Join(", ", patterns)})");
 
             // Separate cache root: a player's assembly cache never contains
             // test DLLs, and editing tests does not invalidate the production cache.
@@ -241,6 +241,8 @@ namespace Cthangover.Core.Mods.Testing
         public static async Task<bool> RunAllAsync(string modFilter, CancellationToken cancellationToken)
         {
             ledger.Clear();
+            var testFilter = GameEnvironment.IsRuntime ? OS.GetCmdlineUserArgs()
+                .FirstOrDefault(arg => arg.StartsWith("--test-filter=", StringComparison.Ordinal))?.Substring("--test-filter=".Length) : null;
             var excluded = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             try
             {
@@ -267,8 +269,9 @@ namespace Cthangover.Core.Mods.Testing
                     GameLogger.Log("MODTEST", $"[TEST_RESULT] name=mod_units passed=0 failed=1");
                     return false;
                 }
-                GameLogger.Log("MODTEST", "ModTestEngine: no mods with test_sources found");
-                return true;
+                GameLogger.Log("MODTEST", "ModTestEngine: no mods with test_sources found", LogLevel.Error);
+                GameLogger.Log("MODTEST", "[TEST_RESULT] name=mod_units passed=0 failed=1");
+                return false;
             }
 
             GameLogger.Log("MODTEST", $"ModTestEngine: running mod tests, mode=author, mods: {string.Join(", ", eligible.Select(m => m.Id))}");
@@ -290,12 +293,19 @@ namespace Cthangover.Core.Mods.Testing
                     }
                     catch (Exception ex)
                     {
+                        lastCompileErrors[mod.Id] = ex.Message;
                         GameLogger.Log("MODTEST", $"compile of '{mod.Id}__tests' threw: {ex.Message}", LogLevel.Error);
                     }
 
                     lastCompileErrors.TryGetValue(mod.Id, out var compileErrors);
-                    var summary = await ModTestRunner.RunSuiteAsync(mod.Id, testAssembly, ledger, cancellationToken, compileErrors);
+                    var summary = await ModTestRunner.RunSuiteAsync(mod.Id, testAssembly, ledger, cancellationToken, compileErrors, testFilter);
                     summaries.Add(summary);
+                    if (summary.Tests.Any(test => test.Status == ModTestStatus.Timeout || test.TestName.EndsWith(" [recovery]", StringComparison.Ordinal)))
+                    {
+                        aborted = true;
+                        GameLogger.Log("MODTEST", "stopping run: test isolation was lost", LogLevel.Error);
+                        break;
+                    }
                 }
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)

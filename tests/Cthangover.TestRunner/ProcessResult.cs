@@ -9,6 +9,7 @@ namespace Cthangover.TestRunner
     {
         public int ExitCode { get; set; }
         public bool TimedOut { get; set; }
+        public string LogFile { get; set; }
         public TimeSpan Duration { get; set; }
         public List<string> Output { get; set; } = new();
 

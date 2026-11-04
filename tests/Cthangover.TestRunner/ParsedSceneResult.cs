@@ -12,6 +12,8 @@ namespace Cthangover.TestRunner
         public string Core { get; set; }
         public int Passed { get; set; }
         public int Failed { get; set; }
+        public int Skipped { get; set; }
+        public List<string> Problems { get; set; } = new();
         public string Coverage { get; set; }
     }
 }

@@ -152,7 +152,6 @@ namespace Cthangover.Tests.Mods.Testing
         [ModTest("fixture/skipped", Skip = "not relevant")]
         public static void Skipped() { }
 
-        [ModTest(null)]
         public static void NullName() { }
 
         public static void NotATest() { }
@@ -160,7 +159,6 @@ namespace Cthangover.Tests.Mods.Testing
         [ModTest("fixture/private")]
         private static void PrivateTest() { }
 
-        [ModTest("fixture/instance_decoy")]
         public void InstanceMethod() { }
     }
 }

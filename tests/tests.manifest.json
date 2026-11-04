@@ -1,9 +1,95 @@
 {
+  "schemaVersion": 2,
   "unit": {
     "project": "tests/Cthangover.Tests/Cthangover.Tests.csproj",
     "timeoutSeconds": 300
   },
   "integration": [
+    {
+      "name": "test_engine_contracts",
+      "scene": "res://tests/Cthangover.Tests.Integration/Scenes/mod_test_runtime_contract.tscn",
+      "args": [],
+      "timeoutSeconds": 90,
+      "result": {
+        "name": "test_engine_contracts",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "core"
+      ],
+      "profiles": [
+        "full",
+        "fast",
+        "headless"
+      ],
+      "tags": [
+        "contracts",
+        "headless"
+      ],
+      "dependsOn": [],
+      "source": "tests/Cthangover.Tests.Integration/Autotest/ModTestRuntimeContractSetup.cs"
+    },
+    {
+      "name": "dependency_setup_positive",
+      "scene": "res://tests/Cthangover.Tests.Integration/Scenes/dependency_contract.tscn",
+      "args": [
+        "--",
+        "--frontend",
+        "--dependency-probe=setup-pass"
+      ],
+      "timeoutSeconds": 60,
+      "result": {
+        "name": "dependency_setup",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "core"
+      ],
+      "profiles": [
+        "full",
+        "fast",
+        "headless"
+      ],
+      "tags": [
+        "contracts",
+        "headless"
+      ],
+      "dependsOn": [],
+      "source": "tests/Cthangover.Tests.Integration/Autotest/DependencyContractSetup.cs"
+    },
+    {
+      "name": "dependency_child_positive",
+      "scene": "res://tests/Cthangover.Tests.Integration/Scenes/dependency_contract.tscn",
+      "args": [
+        "--",
+        "--frontend",
+        "--dependency-probe=child"
+      ],
+      "timeoutSeconds": 60,
+      "result": {
+        "name": "dependency_child",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "core"
+      ],
+      "profiles": [
+        "full",
+        "fast",
+        "headless"
+      ],
+      "tags": [
+        "contracts",
+        "headless"
+      ],
+      "dependsOn": [
+        "dependency_setup_positive"
+      ],
+      "source": "tests/Cthangover.Tests.Integration/Autotest/DependencyContractSetup.cs"
+    },
     {
       "name": "live2d_avatar",
       "scene": "res://tests/Cthangover.Tests.Integration/Scenes/live2d_avatar_test.tscn",
@@ -12,7 +98,28 @@
       "args": [
         "--",
         "--itest=live2d_avatar"
-      ]
+      ],
+      "result": {
+        "name": "live2d_avatar",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "live2d_base"
+      ],
+      "profiles": [
+        "full",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "windowed",
+        "gui"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "mods/live2d_base/test_suites/avatar/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "mod_units",
@@ -21,7 +128,29 @@
         "--",
         "--run-tests"
       ],
-      "timeoutSeconds": 300
+      "timeoutSeconds": 300,
+      "result": {
+        "name": "mod_units",
+        "childPrefix": "mod_units:",
+        "expectedErrors": []
+      },
+      "kind": "mod-unit",
+      "owners": [
+        "all-mods"
+      ],
+      "profiles": [
+        "full",
+        "headless"
+      ],
+      "tags": [
+        "mod-unit",
+        "headless",
+        "aggregate"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "tests/tests.manifest.json",
+      "dependsOn": []
     },
     {
       "name": "resource_atlas",
@@ -32,7 +161,27 @@
         "--atlas-out=res://tests/artifacts/resource_atlas",
         "--with-test-suites"
       ],
-      "timeoutSeconds": 240
+      "timeoutSeconds": 240,
+      "result": {
+        "name": "resource_atlas",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "resource_atlas"
+      ],
+      "profiles": [
+        "full",
+        "headless"
+      ],
+      "tags": [
+        "integration",
+        "headless"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "tests/tests.manifest.json",
+      "dependsOn": []
     },
     {
       "name": "locale_atlas",
@@ -43,7 +192,27 @@
         "--locale-out=res://tests/artifacts/locale_atlas",
         "--with-test-suites"
       ],
-      "timeoutSeconds": 240
+      "timeoutSeconds": 240,
+      "result": {
+        "name": "locale_atlas",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "locale_atlas"
+      ],
+      "profiles": [
+        "full",
+        "headless"
+      ],
+      "tags": [
+        "integration",
+        "headless"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "tests/tests.manifest.json",
+      "dependsOn": []
     },
     {
       "name": "game_novel_template",
@@ -55,7 +224,27 @@
         "--timeout=60",
         "--dialogs=3"
       ],
-      "timeoutSeconds": 180
+      "timeoutSeconds": 180,
+      "result": {
+        "name": "test_runner",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "dialog_base"
+      ],
+      "profiles": [
+        "full",
+        "headless"
+      ],
+      "tags": [
+        "integration",
+        "headless"
+      ],
+      "game": "novel_template",
+      "renderer": null,
+      "source": "tests/tests.manifest.json",
+      "dependsOn": []
     },
     {
       "name": "resource_atlas_novel_template",
@@ -67,7 +256,27 @@
         "--resource-atlas",
         "--atlas-out=res://tests/artifacts/resource_atlas/novel_template"
       ],
-      "timeoutSeconds": 240
+      "timeoutSeconds": 240,
+      "result": {
+        "name": "resource_atlas",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "resource_atlas"
+      ],
+      "profiles": [
+        "full",
+        "headless"
+      ],
+      "tags": [
+        "integration",
+        "headless"
+      ],
+      "game": "novel_template",
+      "renderer": null,
+      "source": "tests/tests.manifest.json",
+      "dependsOn": []
     },
     {
       "name": "rpg_walk",
@@ -78,7 +287,29 @@
         "--new",
         "--itest=rpg_walk"
       ],
-      "timeoutSeconds": 180
+      "timeoutSeconds": 180,
+      "result": {
+        "name": "rpg_walk",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "rpg"
+      ],
+      "profiles": [
+        "full",
+        "headless",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "headless",
+        "gui"
+      ],
+      "game": "rpg_plus",
+      "renderer": null,
+      "source": "mods/rpg/test_suites/walk/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "rpg_plain_walk",
@@ -91,7 +322,29 @@
         "--tile-renderer=topdown",
         "--itest=rpg_plain_walk"
       ],
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "result": {
+        "name": "rpg_plain_walk",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "rpg"
+      ],
+      "profiles": [
+        "full",
+        "headless",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "headless",
+        "gui"
+      ],
+      "game": "novel_template",
+      "renderer": "topdown",
+      "source": "mods/rpg/test_suites/plain_walk/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "rpg_plus",
@@ -102,7 +355,29 @@
         "--new",
         "--itest=rpg_plus"
       ],
-      "timeoutSeconds": 240
+      "timeoutSeconds": 240,
+      "result": {
+        "name": "rpg_plus",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "rpg_plus_game"
+      ],
+      "profiles": [
+        "full",
+        "headless",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "headless",
+        "gui"
+      ],
+      "game": "rpg_plus",
+      "renderer": null,
+      "source": "mods/rpg_plus_game/test_suites/play/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "items_editor_edit",
@@ -113,7 +388,29 @@
         "--new",
         "--itest=items_editor_edit"
       ],
-      "timeoutSeconds": 180
+      "timeoutSeconds": 180,
+      "result": {
+        "name": "items_editor_edit",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "items_editor"
+      ],
+      "profiles": [
+        "full",
+        "headless",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "headless",
+        "gui"
+      ],
+      "game": "rpg_plus",
+      "renderer": null,
+      "source": "mods/items_editor/test_suites/edit/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "editor_foreign_patch",
@@ -124,7 +421,29 @@
         "--new",
         "--itest=editor_foreign_patch"
       ],
-      "timeoutSeconds": 180
+      "timeoutSeconds": 180,
+      "result": {
+        "name": "editor_foreign_patch",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "items_editor"
+      ],
+      "profiles": [
+        "full",
+        "headless",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "headless",
+        "gui"
+      ],
+      "game": "rpg_plus",
+      "renderer": null,
+      "source": "mods/items_editor/test_suites/foreign_patch/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "rpg_object_editor_edit",
@@ -136,7 +455,29 @@
         "--with-mods=rpg_object_editor",
         "--itest=rpg_object_editor_edit"
       ],
-      "timeoutSeconds": 180
+      "timeoutSeconds": 180,
+      "result": {
+        "name": "rpg_object_editor_edit",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "rpg_object_editor"
+      ],
+      "profiles": [
+        "full",
+        "headless",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "headless",
+        "gui"
+      ],
+      "game": "rpg_plus",
+      "renderer": null,
+      "source": "mods/rpg_object_editor/test_suites/edit/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "schema_tools_edit",
@@ -147,7 +488,29 @@
         "--new",
         "--itest=schema_tools_edit"
       ],
-      "timeoutSeconds": 180
+      "timeoutSeconds": 180,
+      "result": {
+        "name": "schema_tools_edit",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "schema_tools"
+      ],
+      "profiles": [
+        "full",
+        "headless",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "headless",
+        "gui"
+      ],
+      "game": "rpg_plus",
+      "renderer": null,
+      "source": "mods/schema_tools/test_suites/edit/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "trade",
@@ -158,7 +521,29 @@
         "--new",
         "--itest=trade"
       ],
-      "timeoutSeconds": 180
+      "timeoutSeconds": 180,
+      "result": {
+        "name": "trade",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "trading"
+      ],
+      "profiles": [
+        "full",
+        "headless",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "headless",
+        "gui"
+      ],
+      "game": "rpg_plus",
+      "renderer": null,
+      "source": "mods/trading/test_suites/trade/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "site_shots",
@@ -169,7 +554,30 @@
         "--new",
         "--itest=site_shots"
       ],
-      "timeoutSeconds": 300
+      "timeoutSeconds": 300,
+      "result": {
+        "name": "site_shots",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "cthangover_game"
+      ],
+      "profiles": [
+        "full",
+        "headless",
+        "docs",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "headless",
+        "gui"
+      ],
+      "game": "cthangover",
+      "renderer": null,
+      "source": "mods/cthangover_game/test_suites/site_shots/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "game_rpg_plus",
@@ -181,7 +589,27 @@
         "--timeout=60",
         "--dialogs=1"
       ],
-      "timeoutSeconds": 180
+      "timeoutSeconds": 180,
+      "result": {
+        "name": "test_runner",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "dialog_base"
+      ],
+      "profiles": [
+        "full",
+        "headless"
+      ],
+      "tags": [
+        "integration",
+        "headless"
+      ],
+      "game": "rpg_plus",
+      "renderer": null,
+      "source": "tests/tests.manifest.json",
+      "dependsOn": []
     },
     {
       "name": "resource_atlas_rpg_plus",
@@ -193,7 +621,27 @@
         "--resource-atlas",
         "--atlas-out=res://tests/artifacts/resource_atlas/rpg_plus"
       ],
-      "timeoutSeconds": 240
+      "timeoutSeconds": 240,
+      "result": {
+        "name": "resource_atlas",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "resource_atlas"
+      ],
+      "profiles": [
+        "full",
+        "headless"
+      ],
+      "tags": [
+        "integration",
+        "headless"
+      ],
+      "game": "rpg_plus",
+      "renderer": null,
+      "source": "tests/tests.manifest.json",
+      "dependsOn": []
     },
     {
       "name": "menu_flow",
@@ -203,7 +651,29 @@
         "--frontend",
         "--itest=menu_flow"
       ],
-      "timeoutSeconds": 180
+      "timeoutSeconds": 180,
+      "result": {
+        "name": "menu_flow",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "menu_base"
+      ],
+      "profiles": [
+        "full",
+        "headless",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "headless",
+        "gui"
+      ],
+      "game": "frontend",
+      "renderer": null,
+      "source": "mods/menu_base/test_suites/menu_flow/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "mod_documentation",
@@ -213,7 +683,29 @@
         "--frontend",
         "--itest=mod_documentation"
       ],
-      "timeoutSeconds": 180
+      "timeoutSeconds": 180,
+      "result": {
+        "name": "mod_documentation",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "mod_manager"
+      ],
+      "profiles": [
+        "full",
+        "headless",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "headless",
+        "gui"
+      ],
+      "game": "frontend",
+      "renderer": null,
+      "source": "mods/mod_manager/test_suites/documentation/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "collection_settings",
@@ -223,7 +715,29 @@
         "--frontend",
         "--itest=collection_settings"
       ],
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "result": {
+        "name": "collection_settings",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "mod_manager"
+      ],
+      "profiles": [
+        "full",
+        "headless",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "headless",
+        "gui"
+      ],
+      "game": "frontend",
+      "renderer": null,
+      "source": "mods/mod_manager/test_suites/collection_settings/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "new_mod",
@@ -233,7 +747,29 @@
         "--frontend",
         "--itest=new_mod"
       ],
-      "timeoutSeconds": 180
+      "timeoutSeconds": 180,
+      "result": {
+        "name": "new_mod",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "mod_manager"
+      ],
+      "profiles": [
+        "full",
+        "headless",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "headless",
+        "gui"
+      ],
+      "game": "frontend",
+      "renderer": null,
+      "source": "mods/mod_manager/test_suites/new_mod/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "new_mod_check",
@@ -244,7 +780,31 @@
         "--new",
         "--itest=new_mod_check"
       ],
-      "timeoutSeconds": 180
+      "timeoutSeconds": 180,
+      "result": {
+        "name": "new_mod_check",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "mod_manager"
+      ],
+      "profiles": [
+        "full",
+        "headless",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "headless",
+        "gui"
+      ],
+      "game": "new_mod_itest_game",
+      "renderer": null,
+      "source": "mods/mod_manager/test_suites/new_mod_check/manifest.json",
+      "dependsOn": [
+        "new_mod"
+      ]
     },
     {
       "name": "locale_window",
@@ -255,7 +815,29 @@
         "--new",
         "--itest=locale_window"
       ],
-      "timeoutSeconds": 180
+      "timeoutSeconds": 180,
+      "result": {
+        "name": "locale_window",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "locale_editor"
+      ],
+      "profiles": [
+        "full",
+        "headless",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "headless",
+        "gui"
+      ],
+      "game": "rpg_plus",
+      "renderer": null,
+      "source": "mods/locale_editor/test_suites/window/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "new_scenario",
@@ -266,7 +848,29 @@
         "--new",
         "--itest=new_scenario"
       ],
-      "timeoutSeconds": 180
+      "timeoutSeconds": 180,
+      "result": {
+        "name": "new_scenario",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "scenario_editor"
+      ],
+      "profiles": [
+        "full",
+        "headless",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "headless",
+        "gui"
+      ],
+      "game": "rpg_plus",
+      "renderer": null,
+      "source": "mods/scenario_editor/test_suites/new_scenario/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "mod_help",
@@ -276,7 +880,29 @@
         "--frontend",
         "--itest=mod_help"
       ],
-      "timeoutSeconds": 180
+      "timeoutSeconds": 180,
+      "result": {
+        "name": "mod_help",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "mod_manager"
+      ],
+      "profiles": [
+        "full",
+        "headless",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "headless",
+        "gui"
+      ],
+      "game": "frontend",
+      "renderer": null,
+      "source": "mods/mod_manager/test_suites/help/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "display_settings",
@@ -287,7 +913,28 @@
         "--frontend",
         "--itest=display_settings"
       ],
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "result": {
+        "name": "display_settings",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "menu_base"
+      ],
+      "profiles": [
+        "full",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "windowed",
+        "gui"
+      ],
+      "game": "frontend",
+      "renderer": null,
+      "source": "mods/menu_base/test_suites/display_settings/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "collection_edit",
@@ -298,7 +945,29 @@
         "--new",
         "--itest=collection_edit"
       ],
-      "timeoutSeconds": 300
+      "timeoutSeconds": 300,
+      "result": {
+        "name": "collection_edit",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "menu_base"
+      ],
+      "profiles": [
+        "full",
+        "headless",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "headless",
+        "gui"
+      ],
+      "game": "novel_template",
+      "renderer": null,
+      "source": "mods/menu_base/test_suites/collection_edit/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "hot_reload",
@@ -309,7 +978,29 @@
         "--itest=hot_reload",
         "--hot-reload"
       ],
-      "timeoutSeconds": 360
+      "timeoutSeconds": 360,
+      "result": {
+        "name": "hot_reload",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "menu_base"
+      ],
+      "profiles": [
+        "full",
+        "headless",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "headless",
+        "gui"
+      ],
+      "game": "frontend",
+      "renderer": null,
+      "source": "mods/menu_base/test_suites/hot_reload/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "new_game_cthangover",
@@ -319,7 +1010,29 @@
         "--frontend",
         "--itest=new_game"
       ],
-      "timeoutSeconds": 300
+      "timeoutSeconds": 300,
+      "result": {
+        "name": "new_game",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "menu_base"
+      ],
+      "profiles": [
+        "full",
+        "headless",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "headless",
+        "gui"
+      ],
+      "game": "frontend",
+      "renderer": null,
+      "source": "mods/menu_base/test_suites/new_game/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "game_cthangover",
@@ -330,7 +1043,27 @@
         "--new",
         "--timeout=60"
       ],
-      "timeoutSeconds": 180
+      "timeoutSeconds": 180,
+      "result": {
+        "name": "test_runner",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "dialog_base"
+      ],
+      "profiles": [
+        "full",
+        "headless"
+      ],
+      "tags": [
+        "integration",
+        "headless"
+      ],
+      "game": "cthangover",
+      "renderer": null,
+      "source": "tests/tests.manifest.json",
+      "dependsOn": []
     },
     {
       "name": "resource_atlas_cthangover",
@@ -341,7 +1074,27 @@
         "--resource-atlas",
         "--atlas-out=res://tests/artifacts/resource_atlas/cthangover"
       ],
-      "timeoutSeconds": 240
+      "timeoutSeconds": 240,
+      "result": {
+        "name": "resource_atlas",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "resource_atlas"
+      ],
+      "profiles": [
+        "full",
+        "headless"
+      ],
+      "tags": [
+        "integration",
+        "headless"
+      ],
+      "game": "cthangover",
+      "renderer": null,
+      "source": "tests/tests.manifest.json",
+      "dependsOn": []
     },
     {
       "name": "resource_atlas_frontend",
@@ -353,7 +1106,27 @@
         "--resource-atlas",
         "--atlas-out=res://tests/artifacts/resource_atlas/frontend"
       ],
-      "timeoutSeconds": 240
+      "timeoutSeconds": 240,
+      "result": {
+        "name": "resource_atlas",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "resource_atlas"
+      ],
+      "profiles": [
+        "full",
+        "headless"
+      ],
+      "tags": [
+        "integration",
+        "headless"
+      ],
+      "game": "frontend",
+      "renderer": null,
+      "source": "tests/tests.manifest.json",
+      "dependsOn": []
     },
     {
       "name": "save_dormancy",
@@ -364,7 +1137,29 @@
         "--new",
         "--itest=save_dormancy"
       ],
-      "timeoutSeconds": 180
+      "timeoutSeconds": 180,
+      "result": {
+        "name": "save_dormancy",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "menu_base"
+      ],
+      "profiles": [
+        "full",
+        "headless",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "headless",
+        "gui"
+      ],
+      "game": "novel_template",
+      "renderer": null,
+      "source": "mods/menu_base/test_suites/save_dormancy/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "resettables",
@@ -374,7 +1169,29 @@
         "--frontend",
         "--itest=resettables"
       ],
-      "timeoutSeconds": 480
+      "timeoutSeconds": 480,
+      "result": {
+        "name": "resettables",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "menu_base"
+      ],
+      "profiles": [
+        "full",
+        "headless",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "headless",
+        "gui"
+      ],
+      "game": "frontend",
+      "renderer": null,
+      "source": "mods/menu_base/test_suites/resettables/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "interactives",
@@ -384,7 +1201,29 @@
         "--scene=interactives_test",
         "--itest=interactives"
       ],
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "result": {
+        "name": "interactives",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "interactive_base"
+      ],
+      "profiles": [
+        "full",
+        "headless",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "headless",
+        "gui"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "mods/interactive_base/test_suites/interactives/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "gdscript",
@@ -393,7 +1232,29 @@
         "--",
         "--itest=gdscript"
       ],
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "result": {
+        "name": "gdscript",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "dialog_base"
+      ],
+      "profiles": [
+        "full",
+        "headless",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "headless",
+        "gui"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "mods/dialog_base/test_suites/gdscript/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "property_patches",
@@ -403,7 +1264,29 @@
         "--with-mods=test_defaults_and_patches",
         "--itest=property_patches"
       ],
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "result": {
+        "name": "property_patches",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "core"
+      ],
+      "profiles": [
+        "full",
+        "headless",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "headless",
+        "gui"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "tests/tests.manifest.json",
+      "dependsOn": []
     },
     {
       "name": "integrations",
@@ -414,7 +1297,29 @@
         "--run-tests",
         "--mod=test_integrations"
       ],
-      "timeoutSeconds": 300
+      "timeoutSeconds": 300,
+      "result": {
+        "name": "mod_units",
+        "childPrefix": "mod_units:",
+        "expectedErrors": []
+      },
+      "kind": "mod-unit",
+      "owners": [
+        "test_integrations"
+      ],
+      "profiles": [
+        "full",
+        "headless"
+      ],
+      "tags": [
+        "mod-unit",
+        "headless",
+        "contracts"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "tests/tests.manifest.json",
+      "dependsOn": []
     },
     {
       "name": "integrations_frontend",
@@ -426,7 +1331,29 @@
         "--run-tests",
         "--mod=test_integrations"
       ],
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "result": {
+        "name": "mod_units",
+        "childPrefix": "mod_units:",
+        "expectedErrors": []
+      },
+      "kind": "mod-unit",
+      "owners": [
+        "test_integrations"
+      ],
+      "profiles": [
+        "full",
+        "headless"
+      ],
+      "tags": [
+        "mod-unit",
+        "headless",
+        "contracts"
+      ],
+      "game": "frontend",
+      "renderer": null,
+      "source": "tests/tests.manifest.json",
+      "dependsOn": []
     },
     {
       "name": "inventory",
@@ -436,7 +1363,29 @@
         "--scene=home_kitchen",
         "--itest=inventory"
       ],
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "result": {
+        "name": "inventory_test",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "items_base"
+      ],
+      "profiles": [
+        "full",
+        "headless",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "headless",
+        "gui"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "mods/items_base/test_suites/inventory/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "sheet_equip",
@@ -448,7 +1397,28 @@
         "--new",
         "--itest=sheet_equip"
       ],
-      "timeoutSeconds": 240
+      "timeoutSeconds": 240,
+      "result": {
+        "name": "sheet_equip",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "equipment"
+      ],
+      "profiles": [
+        "full",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "windowed",
+        "gui"
+      ],
+      "game": "rpg_plus",
+      "renderer": null,
+      "source": "mods/equipment/test_suites/sheet_equip/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "cooking_walk",
@@ -458,67 +1428,341 @@
         "--scene=home_outside",
         "--itest=cooking_walk"
       ],
-      "timeoutSeconds": 180
+      "timeoutSeconds": 180,
+      "result": {
+        "name": "cooking_walk_test",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "cooking"
+      ],
+      "profiles": [
+        "full",
+        "headless",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "headless",
+        "gui"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "mods/cooking/test_suites/cooking_walk/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "mod",
       "scene": "res://tests/Cthangover.Tests.Integration/Scenes/mod_test.tscn",
-      "timeoutSeconds": 180
+      "timeoutSeconds": 180,
+      "args": [],
+      "result": {
+        "name": "mod",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "core"
+      ],
+      "profiles": [
+        "full",
+        "headless"
+      ],
+      "tags": [
+        "integration",
+        "headless"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "tests/tests.manifest.json",
+      "dependsOn": []
     },
     {
       "name": "save_integrity",
       "scene": "res://tests/Cthangover.Tests.Integration/Scenes/save_integrity_test.tscn",
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "args": [],
+      "result": {
+        "name": "save_integrity",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "core"
+      ],
+      "profiles": [
+        "full",
+        "headless"
+      ],
+      "tags": [
+        "integration",
+        "headless"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "tests/tests.manifest.json",
+      "dependsOn": []
     },
     {
       "name": "scene_context",
       "scene": "res://tests/Cthangover.Tests.Integration/Scenes/scene_context_test.tscn",
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "args": [],
+      "result": {
+        "name": "scene_context",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "core"
+      ],
+      "profiles": [
+        "full",
+        "headless"
+      ],
+      "tags": [
+        "integration",
+        "headless"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "tests/tests.manifest.json",
+      "dependsOn": []
     },
     {
       "name": "event_bus",
       "scene": "res://tests/Cthangover.Tests.Integration/Scenes/event_bus_test.tscn",
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "args": [],
+      "result": {
+        "name": "event_bus",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "core"
+      ],
+      "profiles": [
+        "full",
+        "headless"
+      ],
+      "tags": [
+        "integration",
+        "headless"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "tests/tests.manifest.json",
+      "dependsOn": []
     },
     {
       "name": "actioncontext",
       "scene": "res://tests/Cthangover.Tests.Integration/Scenes/gd_action_context_core_test.tscn",
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "args": [],
+      "result": {
+        "name": "actioncontext",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "core"
+      ],
+      "profiles": [
+        "full",
+        "headless"
+      ],
+      "tags": [
+        "integration",
+        "headless"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "tests/tests.manifest.json",
+      "dependsOn": []
     },
     {
       "name": "recruiting",
       "scene": "res://tests/Cthangover.Tests.Integration/Scenes/recruiting_test.tscn",
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "args": [],
+      "result": {
+        "name": "recruiting",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "recruiting"
+      ],
+      "profiles": [
+        "full",
+        "headless"
+      ],
+      "tags": [
+        "integration",
+        "headless"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "tests/tests.manifest.json",
+      "dependsOn": []
     },
     {
       "name": "map_zones",
       "scene": "res://tests/Cthangover.Tests.Integration/Scenes/map_zones_test.tscn",
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "args": [],
+      "result": {
+        "name": "map_zones",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "map_base"
+      ],
+      "profiles": [
+        "full",
+        "headless"
+      ],
+      "tags": [
+        "integration",
+        "headless"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "tests/tests.manifest.json",
+      "dependsOn": []
     },
     {
       "name": "entities",
       "scene": "res://tests/Cthangover.Tests.Integration/Scenes/entity_pipeline_test.tscn",
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "args": [],
+      "result": {
+        "name": "entities",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "core"
+      ],
+      "profiles": [
+        "full",
+        "headless"
+      ],
+      "tags": [
+        "integration",
+        "headless"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "tests/tests.manifest.json",
+      "dependsOn": []
     },
     {
       "name": "skills_panel",
       "scene": "res://tests/Cthangover.Tests.Integration/Scenes/skills_panel_test.tscn",
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "args": [],
+      "result": {
+        "name": "skills_panel",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "skills_base"
+      ],
+      "profiles": [
+        "full",
+        "headless"
+      ],
+      "tags": [
+        "integration",
+        "headless"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "tests/tests.manifest.json",
+      "dependsOn": []
     },
     {
       "name": "tscn",
       "scene": "res://tests/Cthangover.Tests.Integration/Scenes/tscn_test_scene.tscn",
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "args": [],
+      "result": {
+        "name": "tscn",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "core"
+      ],
+      "profiles": [
+        "full",
+        "headless"
+      ],
+      "tags": [
+        "integration",
+        "headless"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "tests/tests.manifest.json",
+      "dependsOn": []
     },
     {
       "name": "scene_patch",
       "scene": "res://tests/Cthangover.Tests.Integration/Scenes/scene_patch_test.tscn",
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "args": [],
+      "result": {
+        "name": "scene_patch",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "core"
+      ],
+      "profiles": [
+        "full",
+        "headless"
+      ],
+      "tags": [
+        "integration",
+        "headless"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "tests/tests.manifest.json",
+      "dependsOn": []
     },
     {
       "name": "scene_builder",
       "scene": "res://scenes/test/scene_builder_autotest.tscn",
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "args": [],
+      "result": {
+        "name": "scene_builder",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "scene_builder"
+      ],
+      "profiles": [
+        "full",
+        "headless"
+      ],
+      "tags": [
+        "integration",
+        "headless"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "tests/tests.manifest.json",
+      "dependsOn": []
     },
     {
       "name": "studio_live",
@@ -531,7 +1775,28 @@
         "--studio-write=layer",
         "--studio-layer=user://studio_test"
       ],
-      "timeoutSeconds": 180
+      "timeoutSeconds": 180,
+      "result": {
+        "name": "studio_live",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "scenario_studio"
+      ],
+      "profiles": [
+        "full",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "windowed",
+        "gui"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "mods/scenario_studio/test_suites/live/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "ingame_play",
@@ -544,7 +1809,28 @@
         "--with-mods=scenario_editor",
         "--itest=ingame_play"
       ],
-      "timeoutSeconds": 240
+      "timeoutSeconds": 240,
+      "result": {
+        "name": "ingame_play",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "scenario_editor"
+      ],
+      "profiles": [
+        "full",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "windowed",
+        "gui"
+      ],
+      "game": "novel_template",
+      "renderer": null,
+      "source": "mods/scenario_editor/test_suites/ingame_play/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "novel_flow",
@@ -557,72 +1843,366 @@
         "--with-mods=editor_tools",
         "--itest=novel_flow"
       ],
-      "timeoutSeconds": 240
+      "timeoutSeconds": 240,
+      "result": {
+        "name": "novel_flow",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "editor_tools"
+      ],
+      "profiles": [
+        "full",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "windowed",
+        "gui"
+      ],
+      "game": "novel_template",
+      "renderer": null,
+      "source": "mods/editor_tools/test_suites/novel_flow/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "map_editor",
       "scene": "res://scenes/test/map_editor_autotest.tscn",
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "args": [],
+      "result": {
+        "name": "map_editor",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "map_editor"
+      ],
+      "profiles": [
+        "full",
+        "headless"
+      ],
+      "tags": [
+        "integration",
+        "headless"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "tests/tests.manifest.json",
+      "dependsOn": []
     },
     {
       "name": "coverage",
       "scene": "res://tests/Cthangover.Tests.Integration/Scenes/battle_coverage_test.tscn",
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "args": [],
+      "result": {
+        "name": "coverage",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "turn_battle_base"
+      ],
+      "profiles": [
+        "full",
+        "headless"
+      ],
+      "tags": [
+        "integration",
+        "headless"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "tests/tests.manifest.json",
+      "dependsOn": []
     },
     {
       "name": "coverage_subsystems",
       "scene": "res://tests/Cthangover.Tests.Integration/Scenes/subsystems_coverage_test.tscn",
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "args": [],
+      "result": {
+        "name": "coverage_subsystems",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "core"
+      ],
+      "profiles": [
+        "full",
+        "headless"
+      ],
+      "tags": [
+        "integration",
+        "headless"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "tests/tests.manifest.json",
+      "dependsOn": []
     },
     {
       "name": "coverage_characters",
       "scene": "res://tests/Cthangover.Tests.Integration/Scenes/characters_coverage_test.tscn",
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "args": [],
+      "result": {
+        "name": "coverage_characters",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "characters_base"
+      ],
+      "profiles": [
+        "full",
+        "headless"
+      ],
+      "tags": [
+        "integration",
+        "headless"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "tests/tests.manifest.json",
+      "dependsOn": []
     },
     {
       "name": "coverage_quests",
       "scene": "res://tests/Cthangover.Tests.Integration/Scenes/quests_coverage_test.tscn",
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "args": [],
+      "result": {
+        "name": "coverage_quests",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "quests_base"
+      ],
+      "profiles": [
+        "full",
+        "headless"
+      ],
+      "tags": [
+        "integration",
+        "headless"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "tests/tests.manifest.json",
+      "dependsOn": []
     },
     {
       "name": "coverage_items",
       "scene": "res://tests/Cthangover.Tests.Integration/Scenes/items_coverage_test.tscn",
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "args": [],
+      "result": {
+        "name": "coverage_items",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "items_base"
+      ],
+      "profiles": [
+        "full",
+        "headless"
+      ],
+      "tags": [
+        "integration",
+        "headless"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "tests/tests.manifest.json",
+      "dependsOn": []
     },
     {
       "name": "coverage_dialog",
       "scene": "res://tests/Cthangover.Tests.Integration/Scenes/dialog_coverage_test.tscn",
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "args": [],
+      "result": {
+        "name": "coverage_dialog",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "dialog_base"
+      ],
+      "profiles": [
+        "full",
+        "headless"
+      ],
+      "tags": [
+        "integration",
+        "headless"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "tests/tests.manifest.json",
+      "dependsOn": []
     },
     {
       "name": "coverage_interactive",
       "scene": "res://tests/Cthangover.Tests.Integration/Scenes/interactive_coverage_test.tscn",
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "args": [],
+      "result": {
+        "name": "coverage_interactive",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "interactive_base"
+      ],
+      "profiles": [
+        "full",
+        "headless"
+      ],
+      "tags": [
+        "integration",
+        "headless"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "tests/tests.manifest.json",
+      "dependsOn": []
     },
     {
       "name": "coverage_time",
       "scene": "res://tests/Cthangover.Tests.Integration/Scenes/time_coverage_test.tscn",
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "args": [],
+      "result": {
+        "name": "time_coverage",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "time_base"
+      ],
+      "profiles": [
+        "full",
+        "headless"
+      ],
+      "tags": [
+        "integration",
+        "headless"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "tests/tests.manifest.json",
+      "dependsOn": []
     },
     {
       "name": "coverage_audio",
       "scene": "res://tests/Cthangover.Tests.Integration/Scenes/audio_coverage_test.tscn",
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "args": [],
+      "result": {
+        "name": "coverage_audio",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "audio_base"
+      ],
+      "profiles": [
+        "full",
+        "headless"
+      ],
+      "tags": [
+        "integration",
+        "headless"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "tests/tests.manifest.json",
+      "dependsOn": []
     },
     {
       "name": "coverage_map",
       "scene": "res://tests/Cthangover.Tests.Integration/Scenes/map_coverage_test.tscn",
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "args": [],
+      "result": {
+        "name": "map_coverage",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "map_base"
+      ],
+      "profiles": [
+        "full",
+        "headless"
+      ],
+      "tags": [
+        "integration",
+        "headless"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "tests/tests.manifest.json",
+      "dependsOn": []
     },
     {
       "name": "coverage_effects",
       "scene": "res://tests/Cthangover.Tests.Integration/Scenes/effects_coverage_test.tscn",
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "args": [],
+      "result": {
+        "name": "effects_coverage",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "effects_base"
+      ],
+      "profiles": [
+        "full",
+        "headless"
+      ],
+      "tags": [
+        "integration",
+        "headless"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "tests/tests.manifest.json",
+      "dependsOn": []
     },
     {
       "name": "coverage_skills",
       "scene": "res://tests/Cthangover.Tests.Integration/Scenes/skills_coverage_test.tscn",
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "args": [],
+      "result": {
+        "name": "skills_coverage",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "skills_base"
+      ],
+      "profiles": [
+        "full",
+        "headless"
+      ],
+      "tags": [
+        "integration",
+        "headless"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "tests/tests.manifest.json",
+      "dependsOn": []
     },
     {
       "name": "battle",
@@ -630,7 +2210,28 @@
       "args": [
         "--core=card_battle"
       ],
-      "timeoutSeconds": 180
+      "timeoutSeconds": 180,
+      "result": {
+        "name": "battle",
+        "core": "card_battle",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "card_battle"
+      ],
+      "profiles": [
+        "full",
+        "headless"
+      ],
+      "tags": [
+        "integration",
+        "headless"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "tests/tests.manifest.json",
+      "dependsOn": []
     },
     {
       "name": "battle_ff",
@@ -638,7 +2239,28 @@
       "args": [
         "--core=ff_battle"
       ],
-      "timeoutSeconds": 180
+      "timeoutSeconds": 180,
+      "result": {
+        "name": "battle",
+        "core": "ff_battle",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "ff_battle"
+      ],
+      "profiles": [
+        "full",
+        "headless"
+      ],
+      "tags": [
+        "integration",
+        "headless"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "tests/tests.manifest.json",
+      "dependsOn": []
     },
     {
       "name": "menu",
@@ -647,7 +2269,27 @@
         "--test=menu",
         "--timeout=180"
       ],
-      "timeoutSeconds": 240
+      "timeoutSeconds": 240,
+      "result": {
+        "name": "menu",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "menu_base"
+      ],
+      "profiles": [
+        "full",
+        "headless"
+      ],
+      "tags": [
+        "integration",
+        "headless"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "tests/tests.manifest.json",
+      "dependsOn": []
     },
     {
       "name": "mod_manager",
@@ -656,7 +2298,27 @@
         "--test=mod_manager",
         "--timeout=60"
       ],
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "result": {
+        "name": "mod_manager",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "mod_manager"
+      ],
+      "profiles": [
+        "full",
+        "headless"
+      ],
+      "tags": [
+        "integration",
+        "headless"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "tests/tests.manifest.json",
+      "dependsOn": []
     },
     {
       "name": "mod_collections",
@@ -665,7 +2327,27 @@
         "--test=mod_collections",
         "--timeout=60"
       ],
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "result": {
+        "name": "mod_collections",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "mod_manager"
+      ],
+      "profiles": [
+        "full",
+        "headless"
+      ],
+      "tags": [
+        "integration",
+        "headless"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "tests/tests.manifest.json",
+      "dependsOn": []
     },
     {
       "name": "woodland",
@@ -676,7 +2358,29 @@
         "--new",
         "--itest=woodland"
       ],
-      "timeoutSeconds": 240
+      "timeoutSeconds": 240,
+      "result": {
+        "name": "woodland",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "rpg_plus_game"
+      ],
+      "profiles": [
+        "full",
+        "headless",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "headless",
+        "gui"
+      ],
+      "game": "rpg_plus",
+      "renderer": null,
+      "source": "mods/rpg_plus_game/test_suites/woodland/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "woodland_pact",
@@ -688,7 +2392,29 @@
         "--itest=woodland",
         "--ward-ending=pact"
       ],
-      "timeoutSeconds": 240
+      "timeoutSeconds": 240,
+      "result": {
+        "name": "woodland_pact",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "rpg_plus_game"
+      ],
+      "profiles": [
+        "full",
+        "headless",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "headless",
+        "gui"
+      ],
+      "game": "rpg_plus",
+      "renderer": null,
+      "source": "mods/rpg_plus_game/test_suites/woodland/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "tile_render",
@@ -699,7 +2425,30 @@
         "--new",
         "--itest=tile_render"
       ],
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "result": {
+        "name": "tile_render",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "rpg"
+      ],
+      "profiles": [
+        "full",
+        "headless",
+        "visual",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "headless",
+        "gui"
+      ],
+      "game": "rpg_plus",
+      "renderer": null,
+      "source": "mods/rpg/test_suites/render/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "rpg_party_walk",
@@ -710,7 +2459,29 @@
         "--new",
         "--itest=rpg_party_walk"
       ],
-      "timeoutSeconds": 240
+      "timeoutSeconds": 240,
+      "result": {
+        "name": "rpg_party_walk",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "rpg"
+      ],
+      "profiles": [
+        "full",
+        "headless",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "headless",
+        "gui"
+      ],
+      "game": "rpg_plus",
+      "renderer": null,
+      "source": "mods/rpg/test_suites/party_walk/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "rpg_party_walk_iso",
@@ -723,7 +2494,29 @@
         "--with-mods=tile_isometric_base",
         "--tile-renderer=isometric"
       ],
-      "timeoutSeconds": 240
+      "timeoutSeconds": 240,
+      "result": {
+        "name": "rpg_party_walk",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "rpg"
+      ],
+      "profiles": [
+        "full",
+        "headless",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "headless",
+        "gui"
+      ],
+      "game": "rpg_plus",
+      "renderer": "isometric",
+      "source": "mods/rpg/test_suites/party_walk/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "rpg_walk_iso",
@@ -736,7 +2529,29 @@
         "--with-mods=tile_isometric_base",
         "--tile-renderer=isometric"
       ],
-      "timeoutSeconds": 240
+      "timeoutSeconds": 240,
+      "result": {
+        "name": "rpg_walk",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "rpg"
+      ],
+      "profiles": [
+        "full",
+        "headless",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "headless",
+        "gui"
+      ],
+      "game": "rpg_plus",
+      "renderer": "isometric",
+      "source": "mods/rpg/test_suites/walk/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "rpg_plus_iso",
@@ -749,7 +2564,29 @@
         "--with-mods=tile_isometric_base",
         "--tile-renderer=isometric"
       ],
-      "timeoutSeconds": 240
+      "timeoutSeconds": 240,
+      "result": {
+        "name": "rpg_plus",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "rpg_plus_game"
+      ],
+      "profiles": [
+        "full",
+        "headless",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "headless",
+        "gui"
+      ],
+      "game": "rpg_plus",
+      "renderer": "isometric",
+      "source": "mods/rpg_plus_game/test_suites/play/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "woodland_iso",
@@ -762,7 +2599,29 @@
         "--with-mods=tile_isometric_base",
         "--tile-renderer=isometric"
       ],
-      "timeoutSeconds": 240
+      "timeoutSeconds": 240,
+      "result": {
+        "name": "woodland",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "rpg_plus_game"
+      ],
+      "profiles": [
+        "full",
+        "headless",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "headless",
+        "gui"
+      ],
+      "game": "rpg_plus",
+      "renderer": "isometric",
+      "source": "mods/rpg_plus_game/test_suites/woodland/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "trade_iso",
@@ -775,7 +2634,29 @@
         "--with-mods=tile_isometric_base",
         "--tile-renderer=isometric"
       ],
-      "timeoutSeconds": 240
+      "timeoutSeconds": 240,
+      "result": {
+        "name": "trade",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "trading"
+      ],
+      "profiles": [
+        "full",
+        "headless",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "headless",
+        "gui"
+      ],
+      "game": "rpg_plus",
+      "renderer": "isometric",
+      "source": "mods/trading/test_suites/trade/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "desert",
@@ -786,7 +2667,29 @@
         "--new",
         "--itest=desert"
       ],
-      "timeoutSeconds": 240
+      "timeoutSeconds": 240,
+      "result": {
+        "name": "desert",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "rpg_plus_game"
+      ],
+      "profiles": [
+        "full",
+        "headless",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "headless",
+        "gui"
+      ],
+      "game": "rpg_plus",
+      "renderer": null,
+      "source": "mods/rpg_plus_game/test_suites/desert/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "tools_isolation_tools_base",
@@ -800,7 +2703,28 @@
         "--expected-tools=",
         "--absent-mods=scenario_editor,scene_editor,scene_builder,map_editor,interactive_editor,light_editor,catalog_export,items_editor,characters_editor,schema_tools,rpg_editor,editor_tools"
       ],
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "result": {
+        "name": "tools_isolation",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "tools_base"
+      ],
+      "profiles": [
+        "full",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "windowed",
+        "gui"
+      ],
+      "game": "frontend",
+      "renderer": null,
+      "source": "mods/tools_base/test_suites/isolation/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "tools_isolation_scenario_tools_base",
@@ -814,7 +2738,28 @@
         "--expected-tools=",
         "--absent-mods=scenario_editor,scene_editor,scene_builder,map_editor,interactive_editor,light_editor,catalog_export,items_editor,characters_editor,schema_tools,rpg_editor,editor_tools"
       ],
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "result": {
+        "name": "tools_isolation",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "tools_base"
+      ],
+      "profiles": [
+        "full",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "windowed",
+        "gui"
+      ],
+      "game": "frontend",
+      "renderer": null,
+      "source": "mods/tools_base/test_suites/isolation/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "tools_isolation_scenario_editor",
@@ -828,7 +2773,28 @@
         "--expected-tools=scenario_editor",
         "--absent-mods=scene_editor,scene_builder,map_editor,interactive_editor,light_editor,catalog_export,items_editor,characters_editor,schema_tools,rpg_editor,editor_tools"
       ],
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "result": {
+        "name": "tools_isolation",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "tools_base"
+      ],
+      "profiles": [
+        "full",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "windowed",
+        "gui"
+      ],
+      "game": "frontend",
+      "renderer": null,
+      "source": "mods/tools_base/test_suites/isolation/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "tools_isolation_scene_editor",
@@ -842,7 +2808,28 @@
         "--expected-tools=scene_editor",
         "--absent-mods=scenario_editor,scene_builder,map_editor,interactive_editor,light_editor,catalog_export,items_editor,characters_editor,schema_tools,rpg_editor,editor_tools"
       ],
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "result": {
+        "name": "tools_isolation",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "tools_base"
+      ],
+      "profiles": [
+        "full",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "windowed",
+        "gui"
+      ],
+      "game": "frontend",
+      "renderer": null,
+      "source": "mods/tools_base/test_suites/isolation/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "tools_isolation_scene_builder",
@@ -856,7 +2843,28 @@
         "--expected-tools=scene_builder",
         "--absent-mods=scenario_editor,scene_editor,map_editor,interactive_editor,light_editor,catalog_export,items_editor,characters_editor,schema_tools,rpg_editor,editor_tools"
       ],
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "result": {
+        "name": "tools_isolation",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "tools_base"
+      ],
+      "profiles": [
+        "full",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "windowed",
+        "gui"
+      ],
+      "game": "frontend",
+      "renderer": null,
+      "source": "mods/tools_base/test_suites/isolation/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "tools_isolation_map_editor",
@@ -870,7 +2878,28 @@
         "--expected-tools=map_editor",
         "--absent-mods=scenario_editor,scene_editor,scene_builder,interactive_editor,light_editor,catalog_export,items_editor,characters_editor,schema_tools,rpg_editor,editor_tools"
       ],
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "result": {
+        "name": "tools_isolation",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "tools_base"
+      ],
+      "profiles": [
+        "full",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "windowed",
+        "gui"
+      ],
+      "game": "frontend",
+      "renderer": null,
+      "source": "mods/tools_base/test_suites/isolation/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "tools_isolation_interactive_editor",
@@ -884,7 +2913,28 @@
         "--expected-tools=interactive_editor",
         "--absent-mods=scenario_editor,scene_editor,scene_builder,map_editor,light_editor,catalog_export,items_editor,characters_editor,schema_tools,rpg_editor,editor_tools"
       ],
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "result": {
+        "name": "tools_isolation",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "tools_base"
+      ],
+      "profiles": [
+        "full",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "windowed",
+        "gui"
+      ],
+      "game": "frontend",
+      "renderer": null,
+      "source": "mods/tools_base/test_suites/isolation/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "tools_isolation_light_editor",
@@ -898,7 +2948,28 @@
         "--expected-tools=light_editor",
         "--absent-mods=scenario_editor,scene_editor,scene_builder,map_editor,interactive_editor,catalog_export,items_editor,characters_editor,schema_tools,rpg_editor,editor_tools"
       ],
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "result": {
+        "name": "tools_isolation",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "tools_base"
+      ],
+      "profiles": [
+        "full",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "windowed",
+        "gui"
+      ],
+      "game": "frontend",
+      "renderer": null,
+      "source": "mods/tools_base/test_suites/isolation/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "tools_isolation_catalog_export",
@@ -912,7 +2983,28 @@
         "--expected-tools=catalog_export",
         "--absent-mods=scenario_editor,scene_editor,scene_builder,map_editor,interactive_editor,light_editor,items_editor,characters_editor,schema_tools,rpg_editor,editor_tools"
       ],
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "result": {
+        "name": "tools_isolation",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "tools_base"
+      ],
+      "profiles": [
+        "full",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "windowed",
+        "gui"
+      ],
+      "game": "frontend",
+      "renderer": null,
+      "source": "mods/tools_base/test_suites/isolation/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "tools_isolation_items_editor",
@@ -926,7 +3018,28 @@
         "--expected-tools=items_editor",
         "--absent-mods=scenario_editor,scene_editor,scene_builder,map_editor,interactive_editor,light_editor,catalog_export,characters_editor,schema_tools,rpg_editor,editor_tools"
       ],
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "result": {
+        "name": "tools_isolation",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "tools_base"
+      ],
+      "profiles": [
+        "full",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "windowed",
+        "gui"
+      ],
+      "game": "frontend",
+      "renderer": null,
+      "source": "mods/tools_base/test_suites/isolation/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "tools_isolation_characters_editor",
@@ -940,7 +3053,28 @@
         "--expected-tools=characters_editor",
         "--absent-mods=scenario_editor,scene_editor,scene_builder,map_editor,interactive_editor,light_editor,catalog_export,items_editor,schema_tools,rpg_editor,editor_tools"
       ],
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "result": {
+        "name": "tools_isolation",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "tools_base"
+      ],
+      "profiles": [
+        "full",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "windowed",
+        "gui"
+      ],
+      "game": "frontend",
+      "renderer": null,
+      "source": "mods/tools_base/test_suites/isolation/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "tools_isolation_schema_tools",
@@ -954,7 +3088,28 @@
         "--expected-tools=schema_palette,schema_data_editor",
         "--absent-mods=scenario_editor,scene_editor,scene_builder,map_editor,interactive_editor,light_editor,catalog_export,items_editor,characters_editor,rpg_editor,editor_tools"
       ],
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "result": {
+        "name": "tools_isolation",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "tools_base"
+      ],
+      "profiles": [
+        "full",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "windowed",
+        "gui"
+      ],
+      "game": "frontend",
+      "renderer": null,
+      "source": "mods/tools_base/test_suites/isolation/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "tools_isolation_editor_tools",
@@ -968,7 +3123,28 @@
         "--expected-tools=scenario_editor,scene_editor,scene_builder,map_editor,interactive_editor,light_editor,catalog_export",
         "--absent-mods=items_editor,characters_editor,schema_tools,rpg_editor"
       ],
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "result": {
+        "name": "tools_isolation",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "tools_base"
+      ],
+      "profiles": [
+        "full",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "windowed",
+        "gui"
+      ],
+      "game": "frontend",
+      "renderer": null,
+      "source": "mods/tools_base/test_suites/isolation/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "tools_scenario_contract",
@@ -984,7 +3160,28 @@
         "--absent-mods=editor_tools,scene_editor,schema_tools",
         "--exercise-scenario-contract"
       ],
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "result": {
+        "name": "tools_isolation",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "tools_base"
+      ],
+      "profiles": [
+        "full",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "windowed",
+        "gui"
+      ],
+      "game": "novel_template",
+      "renderer": null,
+      "source": "mods/tools_base/test_suites/isolation/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "winter",
@@ -999,7 +3196,29 @@
         "--shots=res://tests/artifacts/village_pack/topdown",
         "--with-mods=tile_topdown_base",
         "--tile-renderer=topdown"
-      ]
+      ],
+      "result": {
+        "name": "winter",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "rpg_plus_game"
+      ],
+      "profiles": [
+        "full",
+        "gui",
+        "visual"
+      ],
+      "tags": [
+        "integration",
+        "windowed",
+        "gui"
+      ],
+      "game": "rpg_plus",
+      "renderer": "topdown",
+      "source": "mods/rpg_plus_game/test_suites/winter/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "winter_iso",
@@ -1014,7 +3233,29 @@
         "--shots=res://tests/artifacts/village_pack/isometric",
         "--with-mods=tile_isometric_base",
         "--tile-renderer=isometric"
-      ]
+      ],
+      "result": {
+        "name": "winter",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "rpg_plus_game"
+      ],
+      "profiles": [
+        "full",
+        "gui",
+        "visual"
+      ],
+      "tags": [
+        "integration",
+        "windowed",
+        "gui"
+      ],
+      "game": "rpg_plus",
+      "renderer": "isometric",
+      "source": "mods/rpg_plus_game/test_suites/winter/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "snow_enemies",
@@ -1029,7 +3270,29 @@
         "--shots=res://tests/artifacts/snow_enemies/topdown",
         "--with-mods=tile_topdown_base",
         "--tile-renderer=topdown"
-      ]
+      ],
+      "result": {
+        "name": "snow_enemies",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "village_pack"
+      ],
+      "profiles": [
+        "full",
+        "gui",
+        "visual"
+      ],
+      "tags": [
+        "integration",
+        "windowed",
+        "gui"
+      ],
+      "game": "rpg_plus",
+      "renderer": "topdown",
+      "source": "mods/village_pack/test_suites/snow_enemies/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "snow_enemies_iso",
@@ -1044,7 +3307,29 @@
         "--shots=res://tests/artifacts/snow_enemies/isometric",
         "--with-mods=tile_isometric_base",
         "--tile-renderer=isometric"
-      ]
+      ],
+      "result": {
+        "name": "snow_enemies",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "village_pack"
+      ],
+      "profiles": [
+        "full",
+        "gui",
+        "visual"
+      ],
+      "tags": [
+        "integration",
+        "windowed",
+        "gui"
+      ],
+      "game": "rpg_plus",
+      "renderer": "isometric",
+      "source": "mods/village_pack/test_suites/snow_enemies/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "biome_expansion",
@@ -1059,7 +3344,29 @@
         "--shots=res://tests/artifacts/biome_expansion/topdown",
         "--with-mods=tile_topdown_base,tile_isometric_base",
         "--tile-renderer=topdown"
-      ]
+      ],
+      "result": {
+        "name": "biome_expansion",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "village_pack"
+      ],
+      "profiles": [
+        "full",
+        "gui",
+        "visual"
+      ],
+      "tags": [
+        "integration",
+        "windowed",
+        "gui"
+      ],
+      "game": "rpg_plus",
+      "renderer": "topdown",
+      "source": "mods/village_pack/test_suites/biome_expansion/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "biome_expansion_iso",
@@ -1074,7 +3381,29 @@
         "--shots=res://tests/artifacts/biome_expansion/isometric",
         "--with-mods=tile_topdown_base,tile_isometric_base",
         "--tile-renderer=isometric"
-      ]
+      ],
+      "result": {
+        "name": "biome_expansion",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "village_pack"
+      ],
+      "profiles": [
+        "full",
+        "gui",
+        "visual"
+      ],
+      "tags": [
+        "integration",
+        "windowed",
+        "gui"
+      ],
+      "game": "rpg_plus",
+      "renderer": "isometric",
+      "source": "mods/village_pack/test_suites/biome_expansion/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "desert_surfaces",
@@ -1088,7 +3417,29 @@
         "--itest=desert",
         "--tile-renderer=topdown",
         "--shots=res://tests/artifacts/desert_surfaces_v2/topdown"
-      ]
+      ],
+      "result": {
+        "name": "desert",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "rpg_plus_game"
+      ],
+      "profiles": [
+        "full",
+        "gui",
+        "visual"
+      ],
+      "tags": [
+        "integration",
+        "windowed",
+        "gui"
+      ],
+      "game": "rpg_plus",
+      "renderer": "topdown",
+      "source": "mods/rpg_plus_game/test_suites/desert/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "desert_surfaces_iso",
@@ -1102,7 +3453,29 @@
         "--itest=desert",
         "--tile-renderer=isometric",
         "--shots=res://tests/artifacts/desert_surfaces_v2/isometric"
-      ]
+      ],
+      "result": {
+        "name": "desert",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "rpg_plus_game"
+      ],
+      "profiles": [
+        "full",
+        "gui",
+        "visual"
+      ],
+      "tags": [
+        "integration",
+        "windowed",
+        "gui"
+      ],
+      "game": "rpg_plus",
+      "renderer": "isometric",
+      "source": "mods/rpg_plus_game/test_suites/desert/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "characters_editor_edit",
@@ -1113,7 +3486,29 @@
         "--new",
         "--itest=characters_editor_edit"
       ],
-      "timeoutSeconds": 180
+      "timeoutSeconds": 180,
+      "result": {
+        "name": "characters_editor_edit",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "characters_editor"
+      ],
+      "profiles": [
+        "full",
+        "headless",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "headless",
+        "gui"
+      ],
+      "game": "rpg_plus",
+      "renderer": null,
+      "source": "mods/characters_editor/test_suites/edit/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "tools_windows",
@@ -1125,7 +3520,28 @@
         "--itest=tools_windows",
         "--with-mods=test_defaults_and_patches"
       ],
-      "timeoutSeconds": 180
+      "timeoutSeconds": 180,
+      "result": {
+        "name": "tools_windows",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "editor_tools"
+      ],
+      "profiles": [
+        "full",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "windowed",
+        "gui"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "mods/editor_tools/test_suites/windows/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "tools_windows_game",
@@ -1138,7 +3554,28 @@
         "--with-mods=editor_tools,schema_tools,test_defaults_and_patches",
         "--itest=tools_windows"
       ],
-      "timeoutSeconds": 180
+      "timeoutSeconds": 180,
+      "result": {
+        "name": "tools_windows",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "editor_tools"
+      ],
+      "profiles": [
+        "full",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "windowed",
+        "gui"
+      ],
+      "game": "cthangover",
+      "renderer": null,
+      "source": "mods/editor_tools/test_suites/windows/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "rpg_editor_edit",
@@ -1149,7 +3586,29 @@
         "--new",
         "--itest=rpg_editor_edit"
       ],
-      "timeoutSeconds": 180
+      "timeoutSeconds": 180,
+      "result": {
+        "name": "rpg_editor_edit",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "rpg_editor"
+      ],
+      "profiles": [
+        "full",
+        "headless",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "headless",
+        "gui"
+      ],
+      "game": "rpg_plus",
+      "renderer": null,
+      "source": "mods/rpg_editor/test_suites/edit/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "rpg_editor_edit_iso",
@@ -1161,7 +3620,29 @@
         "--itest=rpg_editor_edit",
         "--editor-renderer=isometric"
       ],
-      "timeoutSeconds": 180
+      "timeoutSeconds": 180,
+      "result": {
+        "name": "rpg_editor_edit",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "rpg_editor"
+      ],
+      "profiles": [
+        "full",
+        "headless",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "headless",
+        "gui"
+      ],
+      "game": "rpg_plus",
+      "renderer": "isometric",
+      "source": "mods/rpg_editor/test_suites/edit/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "rpg_companion_edit",
@@ -1172,7 +3653,29 @@
         "--new",
         "--itest=rpg_companion_edit"
       ],
-      "timeoutSeconds": 240
+      "timeoutSeconds": 240,
+      "result": {
+        "name": "rpg_companion_edit",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "rpg_editor"
+      ],
+      "profiles": [
+        "full",
+        "headless",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "headless",
+        "gui"
+      ],
+      "game": "rpg_plus",
+      "renderer": null,
+      "source": "mods/rpg_editor/test_suites/companion/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "tutorial_first_game",
@@ -1183,7 +3686,28 @@
         "--frontend",
         "--itest=tutorial_first_game"
       ],
-      "timeoutSeconds": 180
+      "timeoutSeconds": 180,
+      "result": {
+        "name": "tutorial_first_game",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "rpg_editor"
+      ],
+      "profiles": [
+        "full",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "windowed",
+        "gui"
+      ],
+      "game": "frontend",
+      "renderer": null,
+      "source": "mods/rpg_editor/test_suites/tutorial/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "tutorial_first_game_play",
@@ -1195,7 +3719,30 @@
         "--new",
         "--itest=tutorial_first_game_play"
       ],
-      "timeoutSeconds": 300
+      "timeoutSeconds": 300,
+      "result": {
+        "name": "tutorial_first_game_play",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "rpg_editor"
+      ],
+      "profiles": [
+        "full",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "windowed",
+        "gui"
+      ],
+      "game": "rpg_plus",
+      "renderer": null,
+      "source": "mods/rpg_editor/test_suites/tutorial_play/manifest.json",
+      "dependsOn": [
+        "tutorial_first_game"
+      ]
     },
     {
       "name": "effects_editor_edit",
@@ -1210,7 +3757,28 @@
         "--tile-renderer=topdown",
         "--editor-renderer=topdown",
         "--shots=res://tests/artifacts/effects_editor/topdown"
-      ]
+      ],
+      "result": {
+        "name": "effects_editor_edit",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "effects_editor"
+      ],
+      "profiles": [
+        "full",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "windowed",
+        "gui"
+      ],
+      "game": "rpg_plus",
+      "renderer": "topdown",
+      "source": "mods/effects_editor/test_suites/edit/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "effects_editor_edit_iso",
@@ -1225,7 +3793,28 @@
         "--tile-renderer=isometric",
         "--editor-renderer=isometric",
         "--shots=res://tests/artifacts/effects_editor/isometric"
-      ]
+      ],
+      "result": {
+        "name": "effects_editor_edit",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "effects_editor"
+      ],
+      "profiles": [
+        "full",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "windowed",
+        "gui"
+      ],
+      "game": "rpg_plus",
+      "renderer": "isometric",
+      "source": "mods/effects_editor/test_suites/edit/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "tools_isolation_rpg_editor",
@@ -1239,7 +3828,28 @@
         "--expected-tools=rpg_map_editor",
         "--absent-mods=scenario_editor,scene_editor,scene_builder,map_editor,interactive_editor,light_editor,catalog_export,items_editor,characters_editor,schema_tools,editor_tools"
       ],
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "result": {
+        "name": "tools_isolation",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "tools_base"
+      ],
+      "profiles": [
+        "full",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "windowed",
+        "gui"
+      ],
+      "game": "frontend",
+      "renderer": null,
+      "source": "mods/tools_base/test_suites/isolation/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "avatar_contracts",
@@ -1250,7 +3860,32 @@
         "--run-tests",
         "--mod=avatar_base__contracts"
       ],
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "result": {
+        "name": "mod_units",
+        "childPrefix": "mod_units:",
+        "expectedErrors": []
+      },
+      "kind": "mod-unit",
+      "owners": [
+        "avatar_base",
+        "avatar_base__contracts"
+      ],
+      "profiles": [
+        "full",
+        "headless",
+        "gui"
+      ],
+      "tags": [
+        "mod-unit",
+        "headless",
+        "gui",
+        "contracts"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "mods/avatar_base/test_suites/contracts/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "avatar_layers_contracts",
@@ -1262,7 +3897,31 @@
         "--run-tests",
         "--mod=avatar_layers__contracts"
       ],
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "result": {
+        "name": "mod_units",
+        "childPrefix": "mod_units:",
+        "expectedErrors": []
+      },
+      "kind": "mod-unit",
+      "owners": [
+        "avatar_layers",
+        "avatar_layers__contracts"
+      ],
+      "profiles": [
+        "full",
+        "gui"
+      ],
+      "tags": [
+        "mod-unit",
+        "windowed",
+        "gui",
+        "contracts"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "mods/avatar_layers/test_suites/contracts/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "marao_avatars",
@@ -1274,7 +3933,31 @@
         "--run-tests",
         "--mod=cthangover_game__marao_avatars"
       ],
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "result": {
+        "name": "mod_units",
+        "childPrefix": "mod_units:",
+        "expectedErrors": []
+      },
+      "kind": "mod-unit",
+      "owners": [
+        "cthangover_game",
+        "cthangover_game__marao_avatars"
+      ],
+      "profiles": [
+        "full",
+        "gui"
+      ],
+      "tags": [
+        "mod-unit",
+        "windowed",
+        "gui",
+        "contracts"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "mods/cthangover_game/test_suites/marao_avatars/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "archive_password",
@@ -1284,7 +3967,29 @@
         "--frontend",
         "--itest=archive_password"
       ],
-      "timeoutSeconds": 120
+      "timeoutSeconds": 120,
+      "result": {
+        "name": "archive_password",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "mod_manager"
+      ],
+      "profiles": [
+        "full",
+        "headless",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "headless",
+        "gui"
+      ],
+      "game": "frontend",
+      "renderer": null,
+      "source": "mods/mod_manager/test_suites/archive_password/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "rpg_map_events_topdown",
@@ -1298,7 +4003,28 @@
         "--itest=rpg_map_events",
         "--tile-renderer=topdown"
       ],
-      "timeoutSeconds": 180
+      "timeoutSeconds": 180,
+      "result": {
+        "name": "rpg_map_events",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "rpg_editor"
+      ],
+      "profiles": [
+        "full",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "windowed",
+        "gui"
+      ],
+      "game": "rpg_plus",
+      "renderer": "topdown",
+      "source": "mods/rpg_editor/test_suites/events/manifest.json",
+      "dependsOn": []
     },
     {
       "name": "rpg_map_events_isometric",
@@ -1312,11 +4038,273 @@
         "--itest=rpg_map_events",
         "--tile-renderer=isometric"
       ],
-      "timeoutSeconds": 180
+      "timeoutSeconds": 180,
+      "result": {
+        "name": "rpg_map_events",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "rpg_editor"
+      ],
+      "profiles": [
+        "full",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "windowed",
+        "gui"
+      ],
+      "game": "rpg_plus",
+      "renderer": "isometric",
+      "source": "mods/rpg_editor/test_suites/events/manifest.json",
+      "dependsOn": []
+    },
+    {
+      "name": "map_lights",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "windowed": true,
+      "args": [
+        "--",
+        "--game=rpg_plus",
+        "--new",
+        "--with-mods=light_editor",
+        "--scene=rpg_lighting_test",
+        "--itest=map_lights"
+      ],
+      "timeoutSeconds": 180,
+      "result": {
+        "name": "map_lights",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "rpg_editor"
+      ],
+      "profiles": [
+        "full",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "windowed",
+        "gui"
+      ],
+      "game": "rpg_plus",
+      "renderer": null,
+      "source": "mods/rpg_editor/test_suites/lighting/manifest.json",
+      "dependsOn": []
+    },
+    {
+      "name": "free_lights",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "windowed": true,
+      "args": [
+        "--",
+        "--game=rpg_plus",
+        "--new",
+        "--with-mods=light_editor",
+        "--scene=rpg_light_wall",
+        "--itest=free_lights"
+      ],
+      "timeoutSeconds": 180,
+      "result": {
+        "name": "free_lights",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "rpg_editor"
+      ],
+      "profiles": [
+        "full",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "windowed",
+        "gui"
+      ],
+      "game": "rpg_plus",
+      "renderer": null,
+      "source": "mods/rpg_editor/test_suites/darkness/manifest.json",
+      "dependsOn": []
+    },
+    {
+      "name": "stas_lamp",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "windowed": true,
+      "args": [
+        "--",
+        "--game=junior_reaper_paper_grief",
+        "--new",
+        "--scene=jrp_office",
+        "--itest=stas_lamp"
+      ],
+      "timeoutSeconds": 120,
+      "result": {
+        "name": "stas_lamp",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "junior_reaper_paper_grief"
+      ],
+      "profiles": [
+        "full",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "windowed",
+        "gui"
+      ],
+      "game": "junior_reaper_paper_grief",
+      "renderer": null,
+      "source": "mods/junior_reaper_paper_grief/test_suites/toolbar_lamp/manifest.json",
+      "dependsOn": []
+    },
+    {
+      "name": "dependency_setup_negative",
+      "scene": "res://tests/Cthangover.Tests.Integration/Scenes/dependency_contract.tscn",
+      "args": [
+        "--",
+        "--frontend",
+        "--dependency-probe=setup"
+      ],
+      "timeoutSeconds": 60,
+      "result": {
+        "name": "dependency_setup",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "core"
+      ],
+      "profiles": [
+        "contract-negative"
+      ],
+      "tags": [
+        "contracts",
+        "negative"
+      ],
+      "dependsOn": [],
+      "source": "tests/Cthangover.Tests.Integration/Autotest/DependencyContractSetup.cs"
+    },
+    {
+      "name": "dependency_child_negative",
+      "scene": "res://tests/Cthangover.Tests.Integration/Scenes/dependency_contract.tscn",
+      "args": [
+        "--",
+        "--frontend",
+        "--dependency-probe=child"
+      ],
+      "timeoutSeconds": 60,
+      "result": {
+        "name": "dependency_child",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "core"
+      ],
+      "profiles": [
+        "contract-negative"
+      ],
+      "tags": [
+        "contracts",
+        "negative"
+      ],
+      "dependsOn": [
+        "dependency_setup_negative"
+      ],
+      "source": "tests/Cthangover.Tests.Integration/Autotest/DependencyContractSetup.cs"
     }
   ],
   "disabled_until_phase_8": {
     "reason": "Empty since plan 14.B6 (2026-10-31): tools_isolation_rpg_editor is back in the integration list.",
     "integration": []
+  },
+  "manualSuites": {
+    "dialog_base__doc_shots": {
+      "reason": "Requires an explicit steps file and screenshot destination; documentation capture, not a regression check.",
+      "windowed": true,
+      "game": null,
+      "requirements": [
+        "game selection",
+        "steps file",
+        "screenshot directory"
+      ]
+    },
+    "junior_reaper_paper_grief__investigation": {
+      "reason": "Standalone suite: requires explicit game/fixture setup; not part of the automated full profile.",
+      "windowed": false,
+      "game": "junior_reaper_paper_grief",
+      "requirements": [
+        "explicit standalone suite/game setup"
+      ]
+    },
+    "mod_manager__catalog_servers": {
+      "reason": "Requires the local catalogue HTTP fixture and its endpoint.",
+      "windowed": true,
+      "game": null,
+      "requirements": [
+        "local catalogue HTTP fixture"
+      ]
+    },
+    "mod_manager__private_catalog": {
+      "reason": "Requires the local private catalogue/keyserver fixture and its endpoint.",
+      "windowed": false,
+      "game": null,
+      "requirements": [
+        "local private catalogue and keyserver fixture"
+      ]
+    },
+    "npc_barks_base__prototype": {
+      "reason": "Standalone suite: requires explicit game/fixture setup; not part of the automated full profile.",
+      "windowed": false,
+      "game": null,
+      "requirements": [
+        "explicit standalone suite/game setup"
+      ]
+    },
+    "npc_barks_base__tools": {
+      "reason": "Standalone suite: requires explicit game/fixture setup; not part of the automated full profile.",
+      "windowed": false,
+      "game": null,
+      "requirements": [
+        "explicit standalone suite/game setup"
+      ]
+    },
+    "rpg__snapshots": {
+      "reason": "Requires a reviewed reference image set and a windowed renderer; use --snapshot-mode and --snapshot-dir explicitly.",
+      "windowed": true,
+      "game": "rpg_plus",
+      "requirements": [
+        "reviewed reference images",
+        "snapshot directory"
+      ]
+    },
+    "rpg_editor__areas": {
+      "reason": "Standalone suite: requires explicit game/fixture setup; not part of the automated full profile.",
+      "windowed": false,
+      "game": "rpg_plus",
+      "requirements": [
+        "explicit map/editor fixture setup"
+      ]
+    },
+    "rpg_object_editor__visual": {
+      "reason": "Standalone suite: requires explicit game/fixture setup; not part of the automated full profile.",
+      "windowed": true,
+      "game": "junior_reaper_paper_grief",
+      "requirements": [
+        "explicit visual-editor fixture setup"
+      ]
+    }
+  },
+  "manualScenes": {
+    "tests/Cthangover.Tests.Integration/Scenes/manual_card_battle_scene.tscn": "Manual battle playground.",
+    "tests/Cthangover.Tests.Integration/Scenes/TscnTestScene.tscn": "Scene-building fixture, not a self-terminating test."
   }
 }

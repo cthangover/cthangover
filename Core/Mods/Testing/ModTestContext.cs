@@ -53,8 +53,9 @@ namespace Cthangover.Core.Mods.Testing
         public Node SandboxRoot { get; }
 
         /// <summary>
-        /// Absolute path of the per-mod sandbox directory, created on first
-        /// access. Wiped before the suite, kept after the run for artifacts.
+        /// Absolute path of this case's sandbox directory, created on first
+        /// access. Cases have separate directories; the mod's parent tree is
+        /// wiped before the suite and retained afterwards for artifacts.
         /// </summary>
         public string SandboxDir
         {
