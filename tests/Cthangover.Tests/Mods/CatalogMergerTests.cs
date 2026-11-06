@@ -5,10 +5,10 @@ namespace Engine.Tests.Mods
 {
     /// <summary>
     /// Tests the catalog merge rules: provenance tagging, cross-catalog
-    /// deduplication and — most importantly — the variant-conflict rule. When the
-    /// same mod id/version/title appears with different content hashes, the
-    /// variants must survive as separate entries so the manager can warn the
-    /// player instead of silently merging (or picking) one of them.
+    /// deduplication and — most importantly — the hash rule. When listings of
+    /// one id (compared case-insensitively) disagree on any content hash, every
+    /// listing survives as a separate entry flagged unsafe, so the manager warns
+    /// about all of them instead of silently merging (or picking) one.
     /// </summary>
     public class CatalogMergerTests
     {
@@ -50,9 +50,10 @@ namespace Engine.Tests.Mods
         }
 
         [Fact]
-        public void Merge_DifferentVersionsAcrossCatalogs_KeepsNewestAndAllDownloads()
+        public void Merge_AgreeingCatalogsWithDifferentHistory_KeepsNewestAndAllDownloads()
         {
-            var a = Entry("x", "1.0", "X", "hash_1", "cat_a");
+            var a = Entry("x", "1.1", "X", "hash_2", "cat_a");
+            a.Downloads.Add(new CatalogEntryDownload { Version = "1.0", InstallSha256 = "hash_1", Urls = new List<string> { "https://cat_a/x-1.0.zip" } });
             var b = Entry("x", "1.1", "X", "hash_2", "cat_b");
 
             var merged = CatalogMerger.MergeAndDeduplicate(new List<CatalogExportEntry> { a, b });
@@ -61,6 +62,87 @@ namespace Engine.Tests.Mods
             Assert.Equal("1.1", merged[0].Version);
             Assert.Equal(2, merged[0].Downloads.Count);
             Assert.Null(merged[0].VariantConflict);
+        }
+
+        [Fact]
+        public void Merge_DifferentCurrentVersionsAcrossCatalogs_MarksEveryListingUnsafe()
+        {
+            var a = Entry("x", "1.0", "X", "hash_1", "cat_a");
+            var b = Entry("x", "99.0", "X", "hash_2", "cat_b");
+
+            var merged = CatalogMerger.MergeAndDeduplicate(new List<CatalogExportEntry> { a, b });
+
+            Assert.Equal(2, merged.Count);
+            Assert.All(merged, e => Assert.True(e.VariantConflict));
+            Assert.Contains(merged, e => e.Version == "1.0" && e.SourceUrls.Count == 1 && e.SourceUrls[0] == "cat_a");
+            Assert.Contains(merged, e => e.Version == "99.0" && e.SourceUrls.Count == 1 && e.SourceUrls[0] == "cat_b");
+        }
+
+        [Fact]
+        public void Merge_SharedOlderVersionWithAnotherHash_MarksEveryListingUnsafe()
+        {
+            var a = Entry("x", "2.0", "X", "hash_2", "cat_a");
+            a.Downloads.Add(new CatalogEntryDownload { Version = "1.0", InstallSha256 = "hash_1" });
+            var b = Entry("x", "2.0", "X", "hash_2", "cat_b");
+            b.Downloads.Add(new CatalogEntryDownload { Version = "1.0", InstallSha256 = "forged" });
+
+            var merged = CatalogMerger.MergeAndDeduplicate(new List<CatalogExportEntry> { a, b });
+
+            Assert.Equal(2, merged.Count);
+            Assert.All(merged, e => Assert.True(e.VariantConflict));
+        }
+
+        [Fact]
+        public void Merge_OneOfThreeCatalogsDiffers_MarksAllThreeUnsafe()
+        {
+            var a = Entry("x", "1.0", "X", "hash_1", "cat_a");
+            var b = Entry("x", "1.0", "X", "hash_1", "cat_b");
+            var c = Entry("x", "1.0", "X", "hash_2", "cat_c");
+
+            var merged = CatalogMerger.MergeAndDeduplicate(new List<CatalogExportEntry> { a, b, c });
+
+            Assert.Equal(3, merged.Count);
+            Assert.All(merged, e => Assert.True(e.VariantConflict));
+            Assert.All(merged, e => Assert.Single(e.SourceUrls));
+        }
+
+        [Fact]
+        public void Merge_MissingHashWithSeveralCatalogs_MarksEveryListingUnsafe()
+        {
+            var a = Entry("x", "1.0", "X", "hash_1", "cat_a");
+            var b = Entry("x", "1.0", "X", null, "cat_b");
+
+            var merged = CatalogMerger.MergeAndDeduplicate(new List<CatalogExportEntry> { a, b });
+
+            Assert.Equal(2, merged.Count);
+            Assert.All(merged, e => Assert.True(e.VariantConflict));
+        }
+
+        [Fact]
+        public void Merge_SingleCatalogWithoutHash_IsNotFlagged()
+        {
+            var merged = CatalogMerger.MergeAndDeduplicate(new List<CatalogExportEntry> { Entry("x", "1.0", "X", null, "cat_a") });
+
+            Assert.Single(merged);
+            Assert.Null(merged[0].VariantConflict);
+        }
+
+        [Fact]
+        public void Merge_IdsDifferingOnlyInCase_AreComparedAsOneMod()
+        {
+            var same = CatalogMerger.MergeAndDeduplicate(new List<CatalogExportEntry>
+            {
+                Entry("story", "1.0", "Story", "hash_1", "cat_a"), Entry("Story", "1.0", "Story", "hash_1", "cat_b"),
+            });
+            var forged = CatalogMerger.MergeAndDeduplicate(new List<CatalogExportEntry>
+            {
+                Entry("story", "1.0", "Story", "hash_1", "cat_a"), Entry("STORY", "1.0", "Story", "hash_2", "cat_b"),
+            });
+
+            Assert.Single(same);
+            Assert.Equal(2, same[0].SourceUrls.Count);
+            Assert.Equal(2, forged.Count);
+            Assert.All(forged, e => Assert.True(e.VariantConflict));
         }
 
         [Fact]
@@ -91,15 +173,15 @@ namespace Engine.Tests.Mods
         }
 
         [Fact]
-        public void Merge_SameVersionDifferentNameDifferentHash_MergesWithoutConflict()
+        public void Merge_SameVersionDifferentNameDifferentHash_MarksEveryListingUnsafe()
         {
             var a = Entry("x", "1.0", "X", "hash_1", "cat_a");
             var b = Entry("x", "1.0", "Y", "hash_2", "cat_b");
 
             var merged = CatalogMerger.MergeAndDeduplicate(new List<CatalogExportEntry> { a, b });
 
-            Assert.Single(merged);
-            Assert.Null(merged[0].VariantConflict);
+            Assert.Equal(2, merged.Count);
+            Assert.All(merged, e => Assert.True(e.VariantConflict));
         }
 
         [Fact]

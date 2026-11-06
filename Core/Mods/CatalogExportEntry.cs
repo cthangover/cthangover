@@ -103,11 +103,10 @@ namespace Cthangover.Core.Mods
         public List<string> SourceUrls { get; set; }
 
         /// <summary>
-        /// Set when several catalogs publish the same id with the same version and
-        /// title but different content hashes. Such entries are not merged: each
-        /// variant stays a separate entry flagged for the UI to highlight, because
-        /// one of the catalogs is likely serving a modified build. Null (omitted)
-        /// for normal entries so catalog export JSON stays clean.
+        /// Set on every listing of an id whose catalog listings disagree on any
+        /// content hash (see <see cref="CatalogMerger"/>). Such listings are not
+        /// merged and are all shown as unsafe: the client cannot tell which one is
+        /// genuine. Null (omitted) for normal entries so catalog export JSON stays clean.
         /// </summary>
         [JsonPropertyName("variant_conflict")]
         public bool? VariantConflict { get; set; }

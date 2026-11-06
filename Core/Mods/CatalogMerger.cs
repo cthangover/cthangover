@@ -10,14 +10,20 @@ namespace Cthangover.Core.Mods
     /// <see cref="CatalogService"/> so the conflict/provenance logic is unit
     /// testable without network or Godot.
     /// <para/>
-    /// Normal case: all catalogs publishing the same mod id are combined into one
-    /// entry — the newest version wins, downloads of every version are merged and
-    /// <see cref="CatalogExportEntry.SourceUrls"/> lists every catalog that
-    /// published it. Exceptional case: the same id, version and title appear in
-    /// several catalogs with <b>different content hashes</b>; those are kept as
-    /// separate entries flagged with <see cref="CatalogExportEntry.VariantConflict"/>
-    /// (each carrying its own source URL) so the UI can warn the player about a
-    /// likely counterfeit build instead of silently picking one.
+    /// Ids are compared case-insensitively, like the downloader and the mods
+    /// folder do. When several catalog listings share an id, every content hash
+    /// they publish must agree: the hash of each listing's current version and
+    /// the hash of every version present in more than one listing. A missing
+    /// hash cannot be checked and counts as a mismatch.
+    /// <para/>
+    /// Agreeing listings are combined into one entry — the newest version wins,
+    /// downloads of every version are merged and
+    /// <see cref="CatalogExportEntry.SourceUrls"/> lists every catalog. On any
+    /// mismatch nothing is merged: each listing stays a separate entry flagged
+    /// with <see cref="CatalogExportEntry.VariantConflict"/>. The client cannot
+    /// tell which catalog serves the genuine build (a higher version from a
+    /// foreign catalog could replace a private mod), so all of them are shown as
+    /// unsafe and the catalog administrators sort it out.
     /// </summary>
     public static class CatalogMerger
     {
@@ -45,20 +51,20 @@ namespace Cthangover.Core.Mods
             if (entries == null)
                 return result;
 
-            foreach (var group in entries.GroupBy(e => e.Id))
+            foreach (var group in entries.Where(e => e?.Id != null).GroupBy(e => e.Id, StringComparer.OrdinalIgnoreCase))
             {
                 var list = group.ToList();
-                if (!HasVariantConflict(list))
+                if (list.Count == 1 || !HasHashMismatch(list))
                 {
                     result.Add(MergeGroup(list));
                     continue;
                 }
 
-                foreach (var variant in list.GroupBy(GetVariantKey))
+                foreach (var listing in list)
                 {
-                    var merged = MergeGroup(variant.ToList());
-                    merged.VariantConflict = true;
-                    result.Add(merged);
+                    var separate = MergeGroup(new List<CatalogExportEntry> { listing });
+                    separate.VariantConflict = true;
+                    result.Add(separate);
                 }
             }
 
@@ -98,42 +104,43 @@ namespace Cthangover.Core.Mods
         }
 
         /// <summary>
-        /// True when two entries describe the same mod (id, version, title) but
-        /// their content hashes differ — one of the catalogs is serving a modified
-        /// build or a different mod under the same name.
+        /// True when listings of one id disagree on any content hash: their
+        /// current versions differ in hash, a shared version has two hashes, or
+        /// a hash is missing and cannot be compared.
         /// </summary>
-        private static bool HasVariantConflict(List<CatalogExportEntry> list)
+        private static bool HasHashMismatch(List<CatalogExportEntry> list)
         {
-            for (var i = 0; i < list.Count; i++)
+            string current = null;
+            var byVersion = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var entry in list)
             {
-                for (var j = i + 1; j < list.Count; j++)
+                var hash = GetVersionHash(entry, entry.Version);
+                if (hash == null)
+                    return true;
+                if (current != null && !string.Equals(current, hash, StringComparison.OrdinalIgnoreCase))
+                    return true;
+                current = hash;
+
+                foreach (var download in entry.Downloads ?? new List<CatalogEntryDownload>())
                 {
-                    var a = list[i];
-                    var b = list[j];
-                    if (!string.Equals(a.Version, b.Version, StringComparison.OrdinalIgnoreCase))
-                        continue;
-                    if (!string.Equals(a.Name ?? a.Id, b.Name ?? b.Id, StringComparison.OrdinalIgnoreCase))
-                        continue;
-                    if (!string.Equals(GetVariantKey(a), GetVariantKey(b), StringComparison.OrdinalIgnoreCase))
+                    var downloadHash = GetDownloadHash(download);
+                    if (downloadHash == null || string.IsNullOrEmpty(download.Version))
                         return true;
+                    if (byVersion.TryGetValue(download.Version, out var known)
+                        && !string.Equals(known, downloadHash, StringComparison.OrdinalIgnoreCase))
+                        return true;
+                    byVersion[download.Version] = downloadHash;
                 }
             }
 
             return false;
         }
 
-        /// <summary>
-        /// Content identity of an entry: its own version plus the hash of that
-        /// version's download. Entries with the same key are the same build and may
-        /// be merged across catalogs.
-        /// </summary>
-        private static string GetVariantKey(CatalogExportEntry entry)
-            => $"{entry?.Version ?? "?"}|{GetVersionHash(entry, entry?.Version)}";
-
+        /// <summary>Hash of the entry's own version download (first download as fallback), or null without one.</summary>
         private static string GetVersionHash(CatalogExportEntry entry, string version)
         {
             if (entry?.Downloads == null || entry.Downloads.Count == 0)
-                return "nohash";
+                return null;
 
             CatalogEntryDownload match = null;
             foreach (var download in entry.Downloads)
@@ -145,12 +152,17 @@ namespace Cthangover.Core.Mods
                 }
             }
 
-            match ??= entry.Downloads[0];
-            if (!string.IsNullOrEmpty(match.InstallSha256))
-                return match.InstallSha256;
-            if (!string.IsNullOrEmpty(match.ArchiveSha256))
-                return match.ArchiveSha256;
-            return "nohash";
+            return GetDownloadHash(match ?? entry.Downloads[0]);
+        }
+
+        /// <summary>Install hash (content identity) when published, otherwise the archive hash; null without either.</summary>
+        private static string GetDownloadHash(CatalogEntryDownload download)
+        {
+            if (!string.IsNullOrEmpty(download?.InstallSha256))
+                return download.InstallSha256;
+            if (!string.IsNullOrEmpty(download?.ArchiveSha256))
+                return download.ArchiveSha256;
+            return null;
         }
 
         private static CatalogExportEntry MergeGroup(List<CatalogExportEntry> group)
