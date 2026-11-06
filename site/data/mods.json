@@ -1,12 +1,12 @@
 {
- "generated": "2026-11-04",
+ "generated": "2026-11-05",
  "stats": {
   "mods": 67,
   "dslCommands": 32,
-  "coreFiles": 533,
-  "coreLoc": 49048,
-  "modFiles": 1345,
-  "modLoc": 148735
+  "coreFiles": 539,
+  "coreLoc": 49833,
+  "modFiles": 1377,
+  "modLoc": 152032
  },
  "battle": [
   {
@@ -205,7 +205,7 @@
   {
    "id": "cthangover_game",
    "name": "Cthangover: Story",
-   "version": "2.0.0",
+   "version": "0.1.0",
    "desc": "The story content of Cthangover: scenes, scenarios, characters, items, quests and the world map of Marao's very bad night. The machinery lives in engine mods.",
    "cat": [
     "story"
@@ -228,7 +228,7 @@
   {
    "id": "cthangover_murakami",
    "name": "Cthangover: Murakami",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "A Cthangover story line: follow the beast prowling the town to a meeting with Murakami — scenarios, her character and expressions, a journal quest and battles.",
    "cat": [
     "story",
@@ -419,7 +419,7 @@
   {
    "id": "junior_reaper_paper_grief",
    "name": "Junior Reaper & Paper Grief",
-   "version": "0.2.0",
+   "version": "0.1.0",
    "desc": "Расследование повторных смертей стражника: фэнтезийный RPG-мир, осмотр мельницы мышью, сброс, свидетели и решение семейной причины.",
    "cat": [
     "story"
@@ -570,7 +570,7 @@
   {
    "id": "my_novel_game",
    "name": "My Novel",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "The novel template's content: an evening town, a bar and a home connected by choices. Copy it, rename it and grow your own story from these three places.",
    "cat": [
     "story"
@@ -704,7 +704,7 @@
   {
    "id": "rpg_plus_game",
    "name": "RPG Plus",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "A complete small RPG: a prologue that picks the class, a village and forest mystery, crafting, trade, a desert and turn-based battles — data and scenarios only.",
    "cat": [
     "story"
