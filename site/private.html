@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Приватный каталог — cthangover</title>
+<meta name="description" content="Официальный приватный каталог модов cthangover: новые моды, которых нет в открытом доступе, публикация собственных модов и поддержка от разработчика архитектуры. Подписка на 6 месяцев.">
+<link rel="canonical" href="https://cthangover.ru/private.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Приватный каталог — cthangover">
+<meta property="og:description" content="Новые моды вне открытого доступа, свои моды в каталоге и поддержка от разработчика архитектуры cthangover. Подписка на полгода.">
+<meta property="og:url" content="https://cthangover.ru/private.html">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="/img/favicon-32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/img/favicon-16.png" sizes="16x16">
+<link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+<link rel="stylesheet" href="/css/fonts.css?v=20261105">
+<link rel="stylesheet" href="/css/style.css?v=20261105">
+<script>document.documentElement.classList.add("js");</script>
+</head>
+
+<!--
+  Тексты страницы — в js/private-i18n.js (ключи pv_*), разметка здесь — только
+  структура и русский текст для показа без JavaScript. Новый язык: скопировать
+  блок ru в private-i18n.js под нужный код языка и перевести значения.
+-->
+
+<body class="private">
+
+<header class="top">
+  <div class="wrap hbar">
+    <a class="brand" href="/">
+      <img src="/img/logo.png" alt="cthangover">
+      <span class="name">cthangover</span>
+    </a>
+    <nav class="main">
+      <a href="/" data-nav="home" data-i18n="nav_home">Главная</a>
+      <a href="/docs.html" data-nav="docs" data-i18n="nav_docs">Документация</a>
+      <a href="/quickstart.html" data-nav="quickstart" data-i18n="nav_quickstart">Быстрый старт</a>
+      <a href="/private.html" data-nav="private" data-i18n="nav_private">Приватный каталог</a>
+    </nav>
+    <div class="hright">
+      <div class="langsel">
+        <button id="langBtn" aria-haspopup="true"><span id="langCurName">Русский</span><span class="caret">▼</span></button>
+        <div class="langmenu" id="langMenu"></div>
+      </div>
+      <a class="repobtn" href="https://git.cthangover.ru/cthangover/cthangover" target="_blank" rel="noopener">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 10h12v4a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5v-4z"/><path d="M3 21h14"/></svg>
+        <span data-i18n="nav_repo">Репозиторий</span>
+      </a>
+      <button class="nav-toggle" id="navToggle" aria-label="Menu"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+  <nav class="mobile-nav" id="mobileNav">
+    <a href="/" data-nav="home" data-i18n="nav_home">Главная</a>
+    <a href="/docs.html" data-nav="docs" data-i18n="nav_docs">Документация</a>
+    <a href="/quickstart.html" data-nav="quickstart" data-i18n="nav_quickstart">Быстрый старт</a>
+    <a href="/private.html" data-nav="private" data-i18n="nav_private">Приватный каталог</a>
+  </nav>
+</header>
+
+<div class="pv-fallback" id="pvFallback" hidden>
+  <div class="wrap"><span data-i18n="pv_fallback">Эта страница пока переведена не на все языки: показан русский текст.</span></div>
+</div>
+
+<!-- ============ 1. Вступление ============ -->
+<section class="hero pv-hero">
+  <div class="hero-bg" aria-hidden="true"></div>
+  <div class="wrap pv-hero-in">
+    <div class="pill"><span class="dot"></span><span data-i18n="pv_kicker">официальный каталог · подписка на 6 месяцев</span></div>
+    <h1 class="title"><span data-i18n="pv_h1a">Приватный каталог</span> <span class="amp" data-i18n="pv_h1b">модов cthangover</span></h1>
+    <p class="tagline" data-i18n="pv_tag">Закрытый раздел менеджера модов для подписчиков: новые моды, которых нет в открытом доступе, место для ваших собственных модов и прямая поддержка от разработчика архитектуры движка. Сам движок, все моды из репозитория и документация остаются открытыми и бесплатными.</p>
+    <div class="ctarow">
+      <a class="btn btn-gold" href="#pricing"><span data-i18n="pv_cta_price">Тариф и условия</span><span class="arr">→</span></a>
+      <a class="btn btn-ghost" href="#what" data-i18n="pv_cta_what">Что такое приватный каталог</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2. Что такое приватный каталог ============ -->
+<section id="what">
+  <div class="wrap">
+    <div class="sechead reveal">
+      <div class="cap" data-i18n="pv_what_cap">Как это устроено</div>
+      <h2 class="sec" data-i18n="pv_what_title">Что такое приватный каталог</h2>
+      <p class="sub" data-i18n="pv_what_sub">В менеджере модов игры можно подключить несколько каталогов. Открытый каталог видят все. Приватный каталог — это отдельный сервер, который показывает моды только тем, у кого есть персональный ключ доступа.</p>
+    </div>
+    <div class="pv-text reveal">
+      <p data-i18n="pv_what_p1">Приватный каталог работает на сервере cthangover-keyserver. Каталог разбит на разделы, и ключ подписчика открывает только свои разделы. Без ключа сервер не отдаёт ни списка модов, ни файлов: со стороны приватные моды просто не видны.</p>
+      <p data-i18n="pv_what_p2">Для игрока всё выглядит как обычный менеджер модов: приватные моды появляются в том же списке рядом с открытыми, устанавливаются, обновляются и удаляются той же кнопкой, без выхода из игры. Отдельного сайта, учётной записи и пароля нет: доступ — это ключ, который вы вставляете в игру один раз.</p>
+    </div>
+    <div class="pv-steps">
+      <div class="pv-step reveal"><span class="n">1</span><h3 data-i18n="pv_step1_t">Персональный ключ</h3><p data-i18n="pv_step1_d">После оплаты вы получаете ключ доступа. Он выпускается лично для вас, на срок подписки.</p></div>
+      <div class="pv-step reveal"><span class="n">2</span><h3 data-i18n="pv_step2_t">Ключ в менеджере модов</h3><p data-i18n="pv_step2_d">Достаточно ввести ключ в менеджере модов игры («Моды и коллекции» → «Каталоги»). Больше ничего настраивать не нужно.</p></div>
+      <div class="pv-step reveal"><span class="n">3</span><h3 data-i18n="pv_step3_t">Закрытые моды в списке</h3><p data-i18n="pv_step3_d">После обновления каталога приватные моды и коллекции появляются в менеджере рядом с открытыми.</p></div>
+      <div class="pv-step reveal"><span class="n">4</span><h3 data-i18n="pv_step4_t">Свои моды — кнопкой</h3><p data-i18n="pv_step4_d">На странице установленного мода кнопка «Опубликовать мод» отправляет его в ваш раздел каталога прямо из игры.</p></div>
+    </div>
+    <div class="pv-tech reveal">
+      <h3 data-i18n="pv_tech_t">Что обеспечивает сервер</h3>
+      <ul>
+        <li data-i18n="pv_tech_1">Ключ выпускается офлайн и подписывается постквантовой подписью ML-DSA-87; сам сервер не может выпустить новый ключ, даже если его взломают.</li>
+        <li data-i18n="pv_tech_2">Только HTTPS; ссылки на скачивание персональные и временные, срок и отзыв ключа проверяются при каждом запросе.</li>
+        <li data-i18n="pv_tech_3">Нестабильная связь — обычный режим: скачивание и публикация продолжаются с места обрыва, даже после перезапуска игры, медленная передача не обрывается.</li>
+        <li data-i18n="pv_tech_4">Игра сверяет SHA-256 каждого архива и содержимого. Если мод с тем же ID приходит из другого каталога с другим хешем, обе карточки помечаются красным «Небезопасно» — подменить приватный мод незаметно нельзя.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 3. Что даёт подписка ============ -->
+<section id="benefits">
+  <div class="wrap">
+    <div class="sechead reveal">
+      <div class="cap" data-i18n="pv_ben_cap">Подписка</div>
+      <h2 class="sec" data-i18n="pv_ben_title">Что даёт подписка</h2>
+      <p class="sub" data-i18n="pv_ben_sub">Три вещи, которых нет в открытой части проекта.</p>
+    </div>
+    <div class="pv-benefits">
+      <article class="pv-ben reveal">
+        <div class="no">01</div>
+        <h3 data-i18n="pv_b1_t">Новые моды вне открытого доступа</h3>
+        <p data-i18n="pv_b1_d">Моды, которые выходят только в приватном каталоге и не публикуются в открытом.</p>
+        <ul>
+          <li data-i18n="pv_b1_1">Новый контент и механики: сюжеты, игровые системы, инструменты и редакторы.</li>
+          <li data-i18n="pv_b1_2">Установка и обновления из менеджера модов в игре, по одной кнопке.</li>
+          <li data-i18n="pv_b1_3">Коллекции: готовые наборы модов, которые собираются в игру целиком.</li>
+          <li data-i18n="pv_b1_4">Все новые моды, вышедшие за время подписки, а не только то, что было на момент оплаты.</li>
+        </ul>
+      </article>
+      <article class="pv-ben reveal">
+        <div class="no">02</div>
+        <h3 data-i18n="pv_b2_t">Собственные моды в каталоге</h3>
+        <p data-i18n="pv_b2_d">Ваш ключ становится ключом автора: вы публикуете и ведёте свои моды прямо из игры.</p>
+        <ul>
+          <li data-i18n="pv_b2_1">Кнопка «Опубликовать мод» в менеджере: мод упаковывается и загружается в разрешённый раздел каталога.</li>
+          <li data-i18n="pv_b2_2">ID мода закрепляется за вами навсегда: никто другой не сможет его перезаписать, имя автора берётся из ключа, а не из файла.</li>
+          <li data-i18n="pv_b2_3">Новые версии публикуются тем же способом; прежние версии сохраняются (до 128 на мод).</li>
+          <li data-i18n="pv_b2_4">До 100 модов на автора, архив до 200 МиБ, загрузка частями с продолжением после обрыва.</li>
+          <li data-i18n="pv_b2_5">Архив можно зашифровать паролем и передавать пароль отдельно — сервер его не знает.</li>
+          <li data-i18n="pv_b2_6">Ваши моды видят подписчики с доступом к разделу, но не открытый каталог.</li>
+        </ul>
+      </article>
+      <article class="pv-ben reveal">
+        <div class="no">03</div>
+        <h3 data-i18n="pv_b3_t">Поддержка от разработчика архитектуры</h3>
+        <p data-i18n="pv_b3_d">Вопросы напрямую автору ядра cthangover — тому, кто проектировал реестр модов, DSL, патчи и боевые ядра.</p>
+        <ul>
+          <li data-i18n="pv_b3_1">Архитектура: как устроено ядро и как правильно встроить свою механику.</li>
+          <li data-i18n="pv_b3_2">Проблемы ядра: разбор и исправление ошибок, которые мешают вашим модам.</li>
+          <li data-i18n="pv_b3_3">Проблемы ваших модов: ошибки компиляции, конфликты патчей, загрузка, коллекции, публикация.</li>
+          <li data-i18n="pv_b3_4">В разумных пределах — что именно входит, описано ниже.</li>
+        </ul>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 4. Тариф ============ -->
+<section id="pricing">
+  <div class="wrap">
+    <div class="sechead reveal">
+      <div class="cap" data-i18n="pv_price_cap">Прайс-лист</div>
+      <h2 class="sec" data-i18n="pv_price_title">Один тариф, без уровней</h2>
+      <p class="sub" data-i18n="pv_price_sub">Все подписчики получают одно и то же. Цель цены — покрыть сервер и время на поддержку, а не закрыть проект за платной стеной.</p>
+    </div>
+    <div class="pv-notice reveal" role="note">
+      <div class="pv-notice-ic" aria-hidden="true">!</div>
+      <div>
+        <h3 data-i18n="pv_notice_t">Перед оформлением подписки</h3>
+        <p><span data-i18n="pv_notice_p1a">Убедитесь, что у вас есть беспрепятственный доступ к</span> <a href="https://cthangover.ru/">https://cthangover.ru/</a><span data-i18n="pv_notice_p1b">, иначе могут возникнуть проблемы с доступом к приватному каталогу.</span></p>
+        <p data-i18n="pv_notice_p2">После покупки вы получите ключ, который достаточно ввести в вашем менеджере модов.</p>
+      </div>
+    </div>
+    <div class="pv-pricing">
+      <div class="pv-plan reveal">
+        <div class="pv-plan-head">
+          <div class="pv-plan-name" data-i18n="pv_plan_name">Официальный приватный каталог</div>
+          <div class="pv-price"><span class="amount" data-seller="price_rub">300 ₽</span><span class="per" data-i18n="pv_period">за 6 месяцев</span></div>
+          <div class="pv-plan-note" data-i18n="pv_plan_note">≈ $3 · оплата сразу за весь срок</div>
+        </div>
+        <ul class="pv-checks">
+          <li data-i18n="pv_inc_1">Доступ к закрытым разделам официального каталога на 6 месяцев</li>
+          <li data-i18n="pv_inc_2">Все новые моды, которых нет в открытом доступе, вышедшие за срок подписки</li>
+          <li data-i18n="pv_inc_3">Публикация и ведение собственных модов: до 100 модов, история версий</li>
+          <li data-i18n="pv_inc_4">Поддержка по архитектуре cthangover, проблемам ядра и вашим модам</li>
+          <li data-i18n="pv_inc_5">Персональный ключ доступа, который можно перевыпустить при утере</li>
+        </ul>
+        <!-- ОПЛАТА: когда появится способ оплаты, заменить href="#pay" на ссылку
+             и убрать класс is-soon и aria-disabled у кнопки ниже. -->
+        <a class="btn btn-gold pv-buy is-soon" id="pvBuy" href="#pay" aria-disabled="true"><span data-i18n="pv_buy_soon">Оплата скоро появится</span></a>
+        <p class="pv-accept"><span data-i18n="pv_accept">Оплачивая подписку, вы принимаете условия</span> <a href="/offer.html" data-i18n="pv_accept_link">публичной оферты</a>.</p>
+        <p class="pv-plan-foot" data-i18n="pv_plan_foot">Полный возврат денег — в течение 14 дней после оплаты. По окончании срока ключ перестаёт действовать; установленные моды остаются у вас, а ваши опубликованные моды — за вами.</p>
+      </div>
+      <div class="pv-free reveal">
+        <h3 data-i18n="pv_free_t">Бесплатно и без подписки</h3>
+        <ul class="pv-checks muted">
+          <li data-i18n="pv_free_1">Ядро движка и все моды из открытого репозитория — лицензия MIT</li>
+          <li data-i18n="pv_free_2">Открытый каталог модов в менеджере игры</li>
+          <li data-i18n="pv_free_3">Документация, быстрые старты и примеры</li>
+          <li data-i18n="pv_free_4">Исправления ядра — в том числе найденные через подписчиков — попадают в открытый репозиторий</li>
+          <li data-i18n="pv_free_5">Свой собственный приватный каталог: сервер cthangover-keyserver можно развернуть самому</li>
+        </ul>
+        <p data-i18n="pv_free_p">Подписка не нужна, чтобы играть, писать моды и делиться ими. Она нужна тем, кто хочет больше модов, место в официальном каталоге и прямую помощь разработчика.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 5. Почему платно ============ -->
+<section id="why">
+  <div class="wrap">
+    <div class="sechead reveal">
+      <div class="cap" data-i18n="pv_why_cap">Честно о деньгах</div>
+      <h2 class="sec" data-i18n="pv_why_title">Почему эта часть платная</h2>
+      <p class="sub" data-i18n="pv_why_sub">Код проекта открыт и останется открытым. Платной сделана не программа, а то, что стоит денег и времени каждый день: сервер, новые моды и работа разработчика с вашими вопросами.</p>
+    </div>
+    <div class="pv-why">
+      <div class="pv-reason reveal"><h3 data-i18n="pv_why1_t">Сервер работает круглосуточно</h3><p data-i18n="pv_why1_d">Приватный каталог — это постоянно включённый HTTPS-сервер, диск под архивы модов и все их сохранённые версии, трафик на скачивания с докачкой, резервные копии базы и ключей. Открытый репозиторий можно положить куда угодно бесплатно, а закрытый каталог с персональными ключами и временными ссылками — нет.</p></div>
+      <div class="pv-reason reveal"><h3 data-i18n="pv_why2_t">Поддержка — это время разработчика</h3><p data-i18n="pv_why2_d">Разобрать чужую ошибку — значит прочитать логи, воспроизвести проблему, найти, виновато ядро или мод, и объяснить решение. Это часы работы автора архитектуры, которые иначе ушли бы на развитие движка. Подписка оплачивает это время, поэтому помощь можно обещать, а не оказывать «когда получится».</p></div>
+      <div class="pv-reason reveal"><h3 data-i18n="pv_why3_t">Новые моды нужно сделать</h3><p data-i18n="pv_why3_d">Моды приватного каталога — это новая работа: сюжеты, механики, арт, тесты на всех поддерживаемых играх. Подписка позволяет выпускать их регулярно и не урезать открытую часть проекта.</p></div>
+      <div class="pv-reason reveal"><h3 data-i18n="pv_why4_t">Доверие к коду</h3><p data-i18n="pv_why4_d">Мод cthangover — это C#-код, который выполняется в игре без песочницы. Доверять каталогу — значит доверять всем его авторам. Поэтому публиковать в официальный каталог могут только известные люди с персональным ключом: автор закреплён за постоянным ID, ключ можно отозвать. Платный вход отсекает одноразовые анонимные учётки и спам и держит круг авторов небольшим и ответственным.</p></div>
+      <div class="pv-reason reveal"><h3 data-i18n="pv_why5_t">Деньги идут в открытый проект</h3><p data-i18n="pv_why5_d">Ошибки ядра, найденные подписчиками, исправляются в открытом репозитории — от этого выигрывают все, а не только платящие. Подписка финансирует развитие движка, который остаётся бесплатным по лицензии MIT.</p></div>
+      <div class="pv-reason reveal"><h3 data-i18n="pv_why6_t">Символическая цена</h3><p data-i18n="pv_why6_d">Около $3 за полгода — примерно 50 центов в месяц. Это не попытка заработать на сообществе, а способ разделить реальные расходы между теми, кто пользуется закрытой частью.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 6. Пределы поддержки ============ -->
+<section id="support">
+  <div class="wrap">
+    <div class="sechead reveal">
+      <div class="cap" data-i18n="pv_sup_cap">Поддержка</div>
+      <h2 class="sec" data-i18n="pv_sup_title">Что значит «в разумных пределах»</h2>
+      <p class="sub" data-i18n="pv_sup_sub">Поддержка — это консультации и помощь в поиске причины проблемы, а не разработка вместо вас. Если вопрос выходит за рамки, вам прямо об этом скажут и подскажут, как быть дальше.</p>
+    </div>
+    <div class="pv-scope">
+      <div class="pv-scope-col yes reveal">
+        <h3 data-i18n="pv_yes_t">Входит в подписку</h3>
+        <ul>
+          <li data-i18n="pv_yes_1">Вопросы по архитектуре: ядро Core/, реестр и загрузка модов, коллекции, DSL сценариев, tscn- и JSON-патчи, шина событий, сохранения, боевые ядра.</li>
+          <li data-i18n="pv_yes_2">Совет по проектированию: какой контракт, событие или точку расширения использовать для вашей задачи.</li>
+          <li data-i18n="pv_yes_3">Ошибки ядра, которые проявляются в ваших модах: воспроизведение, разбор и исправление в открытом репозитории.</li>
+          <li data-i18n="pv_yes_4">Проблемы модов, которые пишете вы: ошибки компиляции Roslyn, конфликты патчей, порядок загрузки, зависимости, совместимость с играми.</li>
+          <li data-i18n="pv_yes_5">Помощь с публикацией в приватный каталог и с менеджером модов.</li>
+          <li data-i18n="pv_yes_6">Просмотр небольших фрагментов вашего кода, связанных с вопросом.</li>
+        </ul>
+      </div>
+      <div class="pv-scope-col no reveal">
+        <h3 data-i18n="pv_no_t">Не входит</h3>
+        <ul>
+          <li data-i18n="pv_no_1">Написание модов, игр или их частей под ключ.</li>
+          <li data-i18n="pv_no_2">Большой аудит или переписывание вашего проекта целиком.</li>
+          <li data-i18n="pv_no_3">Поддержка чужих модов, которые вы не пишете: с ними — к их авторам.</li>
+          <li data-i18n="pv_no_4">Обучение C# и Godot с нуля (документация и быстрые старты для этого открыты всем).</li>
+          <li data-i18n="pv_no_5">Гарантированный срок ответа и связь круглосуточно.</li>
+          <li data-i18n="pv_no_6">Изменения ядра под один проект, если они ломают другие моды или противоречат архитектуре: такие предложения обсуждаются, но решение остаётся за проектом.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 7. Вопросы ============ -->
+<section id="faq">
+  <div class="wrap">
+    <div class="sechead reveal">
+      <div class="cap" data-i18n="pv_faq_cap">Вопросы</div>
+      <h2 class="sec" data-i18n="pv_faq_title">Частые вопросы</h2>
+    </div>
+    <div class="pv-faq reveal">
+      <details><summary data-i18n="pv_q1">Движок становится платным?</summary><p data-i18n="pv_a1">Нет. Ядро, моды из репозитория, документация и открытый каталог остаются бесплатными и открытыми по лицензии MIT. Подписка — это отдельный сервис поверх них.</p></details>
+      <details><summary data-i18n="pv_q2">Что будет, когда закончатся 6 месяцев?</summary><p data-i18n="pv_a2">Ключ перестанет действовать: приватные моды пропадут из списка каталога, публикация закроется. Уже установленные моды останутся в игре и продолжат работать. Ваши опубликованные моды по-прежнему закреплены за вами: после продления вы продолжите их обновлять.</p></details>
+      <details><summary data-i18n="pv_q3">Можно поделиться ключом с другом?</summary><p data-i18n="pv_a3">Нет. Ключ персональный и работает как пароль: кто им владеет, получает ваши права, в том числе право публиковать от вашего имени. Утёкший ключ отзывается, а вам выпускается новый.</p></details>
+      <details><summary data-i18n="pv_q4">Нужна ли подписка, чтобы делать моды?</summary><p data-i18n="pv_a4">Нет. Моды пишутся и распространяются без неё — как угодно, в том числе через открытый каталог. Подписка даёт место в официальном приватном каталоге и поддержку.</p></details>
+      <details><summary data-i18n="pv_q5">Можно сделать свой приватный каталог?</summary><p data-i18n="pv_a5">Да. Сервер каталогов cthangover-keyserver распространяется по лицензии MIT: вы можете развернуть его сами, выдавать свои ключи и держать свои закрытые разделы. Официальный каталог — это наш экземпляр такого сервера с нашими модами и поддержкой.</p></details>
+      <details><summary data-i18n="pv_q6">Насколько безопасны моды из приватного каталога?</summary><p data-i18n="pv_a6">Публикуют только авторы с персональными ключами, игра проверяет хеш каждого архива и содержимого, а конфликтующие копии помечает «Небезопасно». Но мод — это код без песочницы: проверка хеша подтверждает, что файл тот самый, а не то, что код безвреден. Поэтому доступ к публикации и ограничен.</p></details>
+      <details><summary data-i18n="pv_q8">Можно вернуть деньги?</summary><p data-i18n="pv_a8">Да. В течение 14 календарных дней после оплаты вернём всю сумму по письму на e-mail, указанный внизу страницы, без объяснения причин; ключ при этом отзывается. Подробные условия — в публичной оферте.</p></details>
+      <details><summary data-i18n="pv_q7">Если я потерял ключ?</summary><p data-i18n="pv_a7">Напишите разработчику: старый ключ будет отозван, а для вас выпущен новый на оставшийся срок. Ваши моды и ID останутся за вами.</p></details>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 8. Оплата и связь ============ -->
+<!-- ОПЛАТА И СВЯЗЬ: сюда добавить способ оплаты. Контакты и реквизиты берутся
+     из data/seller.json (python build-seller.py). Новые тексты — ключами pv_*
+     в js/private-i18n.js, как у остальных блоков страницы. -->
+<section class="cta" id="pay">
+  <div class="wrap">
+    <div class="cta-card reveal">
+      <h2 data-i18n="pv_pay_title">Оплата и связь</h2>
+      <p data-i18n="pv_pay_p">Способ оплаты появится здесь в ближайшее время. После покупки вы получите ключ, который достаточно ввести в вашем менеджере модов.</p>
+      <p class="pv-pay-warn"><span data-i18n="pv_notice_p1a">Убедитесь, что у вас есть беспрепятственный доступ к</span> <a href="https://cthangover.ru/">https://cthangover.ru/</a><span data-i18n="pv_notice_p1b">, иначе могут возникнуть проблемы с доступом к приватному каталогу.</span></p>
+      <dl class="pv-contacts">
+        <div><dt data-i18n="pv_c_seller">Продавец</dt><dd><span data-seller="name">Исаев Илья Викторович</span>, <span data-i18n="pv_c_status">самозанятый</span></dd></div>
+        <div><dt data-i18n="ft_inn">ИНН</dt><dd data-seller="inn">673206026792</dd></div>
+        <div><dt data-i18n="ft_email">E-mail</dt><dd><a data-seller="email" href="mailto:vpcoder@ya.ru">vpcoder@ya.ru</a></dd></div>
+        <div><dt data-i18n="ft_phone">Телефон</dt><dd><a data-seller="phone" href="tel:+79203323347">+7 920 332-33-47</a></dd></div>
+        <div><dt data-i18n="ft_community">Сообщество</dt><dd><a data-seller="telegram" target="_blank" rel="noopener" href="https://t.me/cthangover">t.me/cthangover</a></dd></div>
+        <div><dt data-i18n="pv_c_city">Город</dt><dd data-seller="city">г. Смоленск, Смоленская область</dd></div>
+      </dl>
+      <div class="row" id="pvPayRow">
+        <span class="btn btn-ghost is-soon" aria-disabled="true" data-i18n="pv_pay_soon">Скоро</span>
+        <a class="btn btn-ghost" href="/offer.html" data-i18n="pv_pay_offer">Публичная оферта</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap fgrid">
+    <span>© 2026 Isaev Ilya · <span data-i18n="license">Лицензия MIT</span> · Godot 4.6 / C# / .NET 8</span>
+    <a rel="me" href="https://mastodon.gamedev.place/@cthangover">Mastodon</a>
+  </div>
+  <div class="wrap fseller">
+    <span><span data-i18n="ft_seller">Продавец — самозанятый</span> <span data-seller="name">Исаев Илья Викторович</span>, <span data-i18n="ft_inn">ИНН</span> <span data-seller="inn">673206026792</span>, <span data-seller="city">г. Смоленск, Смоленская область</span></span>
+    <span><span data-i18n="ft_email">E-mail</span>: <a data-seller="email" href="mailto:vpcoder@ya.ru">vpcoder@ya.ru</a></span>
+    <span><span data-i18n="ft_phone">Телефон</span>: <a data-seller="phone" href="tel:+79203323347">+7 920 332-33-47</a></span>
+    <span><span data-i18n="ft_community">Сообщество</span>: <a data-seller="telegram" target="_blank" rel="noopener" href="https://t.me/cthangover">t.me/cthangover</a></span>
+    <a href="/offer.html" data-i18n="ft_offer">Публичная оферта</a>
+    <a href="/privacy.html" data-i18n="ft_privacy">Политика персональных данных</a>
+    <a href="/private.html#pricing" data-i18n="ft_prices">Тарифы</a>
+  </div>
+</footer>
+
+<script src="/js/seller.js?v=20261105"></script>
+<script src="/js/i18n.js?v=20261105"></script>
+<script src="/js/private-i18n.js?v=20261105"></script>
+<script src="/js/private.js?v=20261105"></script>
+</body>
+</html>

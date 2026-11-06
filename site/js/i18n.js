@@ -6,7 +6,7 @@
 
 var LANGS = [["ru","Русский"],["en","English"],["es","Español"],["zh","中文"],["ja","日本語"],["ko","한국어"],["vi","Tiếng Việt"]];
 var I18N = {
-ru:{gal_stas:"Стас",s_stas_office:"Стас в кабинете Смерти",s_stas_gates:"Стас: ворота столицы и городская стража",s_stas_mill:"Осмотр мельницы: тело, бутылки и записка",s_stas_river:"Стас у старой мельницы: двор и река",s_stas_journal:"Журнал расследования после сбора улик",s_stas_market:"Стас на рынке: жители и фоновые разговоры",s_stas_death:"Разговор со Смертью в Бюро",s_stas_bureau:"Коридор Бюро и кабинеты",g_stas_d:"Стас расследует дело Бюро: изометрические улицы, осмотр интерьеров мышью, улики и разговоры. История на русском.",qs_overview:"Обзор",nav_home:"Главная",nav_docs:"Документация",nav_quickstart:"Быстрый старт",nav_repo:"Репозиторий",
+ru:{gal_stas:"Стас",s_stas_office:"Стас в кабинете Смерти",s_stas_gates:"Стас: ворота столицы и городская стража",s_stas_mill:"Осмотр мельницы: тело, бутылки и записка",s_stas_river:"Стас у старой мельницы: двор и река",s_stas_journal:"Журнал расследования после сбора улик",s_stas_market:"Стас на рынке: жители и фоновые разговоры",s_stas_death:"Разговор со Смертью в Бюро",s_stas_bureau:"Коридор Бюро и кабинеты",g_stas_d:"Стас расследует дело Бюро: изометрические улицы, осмотр интерьеров мышью, улики и разговоры. История на русском.",qs_overview:"Обзор",nav_home:"Главная",nav_private:"Приватный каталог",ft_seller:"Продавец — самозанятый",ft_inn:"ИНН",ft_email:"E-mail",ft_phone:"Телефон",ft_offer:"Публичная оферта",ft_prices:"Тарифы",ft_privacy:"Политика персональных данных",ft_community:"Сообщество",nav_offer:"Оферта",nav_docs:"Документация",nav_quickstart:"Быстрый старт",nav_repo:"Репозиторий",
 nav_gallery:"Галерея",cta_gallery:"Смотреть игру",gal_cap:"В игре",gal_title:"Как это выглядит",gal_sub:"Каждый кадр снят самой игрой: интеграционные тесты проходят её и сохраняют скриншоты, поэтому здесь нет ни одного макета.",gal_all:"Все",gal_story:"Новелла",gal_battle:"Бои",gal_rpg:"RPG-мир",gal_ui:"Интерфейс",gal_tools:"Редакторы",g_cth_d:"Визуальная новелла с пошаговыми карточными боями, квестами, готовкой, наймом и линией Мураками.",g_rpg_d:"Игра в духе RPG Maker, которая выросла из него: пролог-новелла с выбором класса, деревня и лес на WASD, статы и классы как данные, проверки характеристик в диалогах, снаряжение, навыки на формулах, лист персонажа и редактор данных.",g_nov_d:"Самая маленькая играбельная новелла: город, бар и дом из текста, фонов и переходов — отправная точка моддера.",dsl_p3:"Литералы сценариев пишутся по-русски; пример показан с английским переводом мода из scenarios_en.properties.",s_novel_wolf:"Сценарий задаёт фон и ведёт рассказ",s_card_battle:"Карточный бой: Марао и Мураками против двух волков",s_rpg_village:"RPG Plus: деревня на тайловой карте",s_novel_menu:"Выбор у въезда в город",s_home_outside:"Дом Марао",s_livingroom:"Гостиная",s_outskirts:"Окраина города",s_ff_battle:"Бой на ядре в стиле Final Fantasy",s_victory:"Экран победы с опытом и добычей",s_forest:"Лес: что можно подобрать",s_house:"Дом старосты",s_trade:"Окно торговли: два инвентаря",s_inventory:"Инвентарь",s_characters:"Партия и карты действий",s_map:"Карта мира",s_skills:"Коллекция навыков",s_picker:"Выбор игры: один движок, несколько игр",s_scenario_editor:"Редактор сценариев",s_scene_editor:"Редактор сцен",s_rpg_editor:"Редактор тайловых карт",s_map_editor:"Редактор карты мира",s_light_editor:"Редактор света",s_data_editor:"Редактор данных: поля из схем модов",s_rp_battle:"Навык на формуле против волка с патченными статами",s_rp_sheet:"Лист персонажа: статы, уровень, снаряжение",s_rp_prologue:"Пролог RPG Plus: выбор класса — это реплика",
 kicker:"мод-ориентированный движок · Godot 4.6 · C# / .NET 8 · MIT",
 hero_h1a:"Игровой движок, который",hero_h1b:"собирают моды",
@@ -380,11 +380,12 @@ function getInitialLang(){
 
 var lang = getInitialLang();
 
-/* t("key") — строка интерфейса на текущем языке (фолбэк en, затем сам ключ).
+/* t("key") — строка интерфейса на текущем языке (фолбэк en, затем ru, затем сам ключ;
+   ru — для текстов, которые пока написаны только по-русски, например nav_private и pv_*).
    t("key", {n: 31}) подставляет {n} — так числа из data/mods.json попадают в фразы. */
 function t(k, vars){
   var d = I18N[lang] || I18N.en;
-  var s = d[k] || I18N.en[k] || k;
+  var s = d[k] || I18N.en[k] || I18N.ru[k] || k;
   if (vars) for (var v in vars) s = s.split("{" + v + "}").join(vars[v]);
   return s;
 }
@@ -395,10 +396,51 @@ function esc(s){
   return d.innerHTML;
 }
 
+/* ---------- реквизиты продавца (js/seller.js из data/seller.json) ----------
+   Поле — строка или {ru:"…", en:"…"}: берётся текущий язык, затем en, затем ru. */
+function sellerValue(k){
+  if (typeof SELLER === "undefined" || !(k in SELLER)) return null;
+  var v = SELLER[k];
+  if (v && typeof v === "object") v = v[lang] || v.en || v.ru || "";
+  return String(v);
+}
+
+function sellerHref(k, v){
+  if (k === "email") return "mailto:" + v;
+  if (k === "phone") return "tel:+" + v.replace(/\D/g, "");
+  if (k === "telegram") return "https://" + v;
+  return null;
+}
+
+function sellerHtml(k){
+  var v = sellerValue(k);
+  if (v === null) return null;
+  var href = sellerHref(k, v);
+  if (href) return '<a data-seller="' + k + '" href="' + esc(href) + '">' + esc(v) + '</a>';
+  return '<span data-seller="' + k + '">' + esc(v) + '</span>';
+}
+
+/* Шаблон data-i18n-tpl: текст экранируется, затем **жирный**, [текст](/адрес или https://…)
+   и {поле} реквизитов. Другой разметки в переводах нет — перевод не может внедрить HTML. */
+function renderTpl(s){
+  var out = esc(s);
+  out = out.replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
+  out = out.replace(/\[([^\]]+)\]\(((?:\/|https:\/\/)[^)\s"<>]*)\)/g, '<a href="$2">$1</a>');
+  out = out.replace(/\{(\w+)\}/g, function(m, k){ var h = sellerHtml(k); return h === null ? m : h; });
+  return out;
+}
+
 function applyI18n(){
   document.documentElement.lang = lang;
   var els = document.querySelectorAll("[data-i18n]");
   for (var i=0;i<els.length;i++){ els[i].textContent = t(els[i].getAttribute("data-i18n")); }
+  var tps = document.querySelectorAll("[data-i18n-tpl]");
+  for (var j=0;j<tps.length;j++){ tps[j].innerHTML = renderTpl(t(tps[j].getAttribute("data-i18n-tpl"))); }
+  var sel = document.querySelectorAll("[data-seller]");
+  for (var n=0;n<sel.length;n++){
+    var sv = sellerValue(sel[n].getAttribute("data-seller"));
+    if (sv !== null) sel[n].textContent = sv;
+  }
   var phs = document.querySelectorAll("[data-i18n-ph]");
   for (var p=0;p<phs.length;p++){ phs[p].placeholder = t(phs[p].getAttribute("data-i18n-ph")); }
   try { localStorage.setItem(LS_KEY, lang); } catch(e) {}

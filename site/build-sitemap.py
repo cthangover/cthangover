@@ -68,6 +68,9 @@ def main():
         (f"{SITE_URL}/", lastmod("index.html")),
         (f"{SITE_URL}/docs.html", lastmod("docs.html")),
         (f"{SITE_URL}/quickstart.html", lastmod("quickstart.html")),
+        (f"{SITE_URL}/private.html", lastmod("private.html")),
+        (f"{SITE_URL}/offer.html", lastmod("offer.html")),
+        (f"{SITE_URL}/privacy.html", lastmod("privacy.html")),
     ]
     urls += collect_docs()
     urls += collect_quickstart()

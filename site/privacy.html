@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Политика персональных данных — cthangover</title>
+<meta name="description" content="Политика обработки персональных данных сайта cthangover.ru и официального приватного каталога модов cthangover: какие данные, зачем, сколько хранятся и как их удалить.">
+<link rel="canonical" href="https://cthangover.ru/privacy.html">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="/img/favicon-32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/img/favicon-16.png" sizes="16x16">
+<link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+<link rel="stylesheet" href="/css/fonts.css?v=20261105">
+<link rel="stylesheet" href="/css/style.css?v=20261105">
+</head>
+
+<!--
+  Тексты политики — в js/privacy-i18n.js (ключи pp_*). Русский текст правится ЗДЕСЬ:
+  блок ru словаря собирает из этой разметки python build-page-i18n.py. Абзацы с
+  data-i18n-tpl — шаблоны: реквизиты из data/seller.json ({email}, {inn} …),
+  **жирный**, [текст](/ссылка). Меняя политику, обновите privacy_date в data/seller.json.
+-->
+
+<body class="private offer" data-dict="PRIVACY_I18N" data-page="privacy">
+
+<header class="top">
+  <div class="wrap hbar">
+    <a class="brand" href="/">
+      <img src="/img/logo.png" alt="cthangover">
+      <span class="name">cthangover</span>
+    </a>
+    <nav class="main">
+      <a href="/" data-nav="home" data-i18n="nav_home">Главная</a>
+      <a href="/docs.html" data-nav="docs" data-i18n="nav_docs">Документация</a>
+      <a href="/quickstart.html" data-nav="quickstart" data-i18n="nav_quickstart">Быстрый старт</a>
+      <a href="/private.html" data-nav="private" data-i18n="nav_private">Приватный каталог</a>
+    </nav>
+    <div class="hright">
+      <div class="langsel">
+        <button id="langBtn" aria-haspopup="true"><span id="langCurName">Русский</span><span class="caret">▼</span></button>
+        <div class="langmenu" id="langMenu"></div>
+      </div>
+      <a class="repobtn" href="https://git.cthangover.ru/cthangover/cthangover" target="_blank" rel="noopener">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 10h12v4a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5v-4z"/><path d="M3 21h14"/></svg>
+        <span data-i18n="nav_repo">Репозиторий</span>
+      </a>
+      <button class="nav-toggle" id="navToggle" aria-label="Menu"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+  <nav class="mobile-nav" id="mobileNav">
+    <a href="/" data-nav="home" data-i18n="nav_home">Главная</a>
+    <a href="/docs.html" data-nav="docs" data-i18n="nav_docs">Документация</a>
+    <a href="/quickstart.html" data-nav="quickstart" data-i18n="nav_quickstart">Быстрый старт</a>
+    <a href="/private.html" data-nav="private" data-i18n="nav_private">Приватный каталог</a>
+  </nav>
+</header>
+
+<div class="pv-fallback" id="docFallback" hidden>
+  <div class="wrap"><span data-i18n="pp_fallback">Перевод политики на этот язык ещё не готов: показан русский текст.</span></div>
+</div>
+
+<main class="wrap offer-doc prose">
+  <p class="offer-lang" data-i18n="pp_lang_note">Политика составлена на русском языке. Переводы на другие языки приводятся для удобства; при расхождении действует русский текст.</p>
+
+  <h1 data-i18n-tpl="pp_title">Политика обработки персональных данных</h1>
+  <p class="offer-meta" data-i18n-tpl="pp_meta">Редакция от <span data-seller="privacy_date">5 ноября 2026 г.</span></p>
+
+  <h2 data-i18n-tpl="pp_h1">1. Кто обрабатывает данные</h2>
+  <p data-i18n-tpl="pp_1_1">1.1. Оператор персональных данных — <span data-seller="name">Исаев Илья Викторович</span>, <span data-seller="status">самозанятый, плательщик налога на профессиональный доход</span>, ИНН <span data-seller="inn">673206026792</span>, <span data-seller="city">г. Смоленск, Смоленская область</span> (далее — «Оператор»).</p>
+  <p data-i18n-tpl="pp_1_2">1.2. Вопросы о персональных данных: <a data-seller="email" href="mailto:vpcoder@ya.ru">vpcoder@ya.ru</a>, телефон <a data-seller="phone" href="tel:+79203323347">+7 920 332-33-47</a>.</p>
+  <p data-i18n-tpl="pp_1_3">1.3. Политика действует для сайта https://cthangover.ru/ (далее — «Сайт») и официального приватного каталога модов cthangover (далее — «Каталог»), в том числе для покупателей подписки на условиях <a href="/offer.html">публичной оферты</a>.</p>
+
+  <h2 data-i18n-tpl="pp_h2">2. Какие данные и зачем</h2>
+  <p data-i18n-tpl="pp_2_1">2.1. Оператор обрабатывает только следующие данные:</p>
+  <ul>
+    <li data-i18n-tpl="pp_2_1_li1"><b>ник</b> — имя, которое подписчик выбирает сам и которое не обязано совпадать с настоящим. Ник записывается в зашифрованном виде в ключ доступа и в данные Оператора для продления ключа; сервер Каталога читает его только при обращении с ключом и показывает другим пользователям Каталога как имя автора модов, опубликованных подписчиком;</li>
+    <li data-i18n-tpl="pp_2_1_li2"><b>адрес электронной почты</b> подписчика — чтобы отправить ключ доступа, рассмотреть заявление о возврате и ответить на вопросы поддержки;</li>
+    <li data-i18n-tpl="pp_2_1_li3"><b>IP-адрес</b> посетителя Сайта и Каталога — только чтобы защитить Каталог от подбора ключей и перегрузки.</li>
+  </ul>
+  <p data-i18n-tpl="pp_2_2">2.2. Оператор не запрашивает фамилию, имя, отчество, адрес, дату рождения и документы. Сайт не использует cookie и сервисы веб-аналитики; выбранный язык Сайта хранится только в браузере посетителя и Оператору не передаётся. Шрифты, скрипты и изображения Сайта загружаются только с самого Сайта, поэтому сторонние серверы не получают сведений о его посетителях.</p>
+  <p data-i18n-tpl="pp_2_3">2.3. Данные банковской карты подписчик вводит непосредственно на странице платёжного сервиса, который обрабатывает их как самостоятельный оператор по своим правилам. Оператор получает от платёжного сервиса только сведения о платеже (сумма, дата, номер) и адрес электронной почты для отправки ключа.</p>
+  <p data-i18n-tpl="pp_2_4">2.4. Если пользователь пишет в сообщество <a data-seller="telegram" href="https://t.me/cthangover">t.me/cthangover</a>, переписка хранится в Telegram по правилам этого сервиса; Оператор не переносит её в свои системы.</p>
+
+  <h2 data-i18n-tpl="pp_h3">3. Основания</h2>
+  <p data-i18n-tpl="pp_3_1">3.1. Ник и адрес электронной почты подписчика обрабатываются для исполнения договора, стороной которого он является (п. 5 ч. 1 ст. 6 Федерального закона от 27.07.2006 № 152-ФЗ «О персональных данных»). IP-адреса — для защиты Сайта и Каталога от злоупотреблений, то есть в законных интересах Оператора без ущерба правам посетителей (п. 7 ч. 1 ст. 6 того же закона).</p>
+  <p data-i18n-tpl="pp_3_2">3.2. Оператор рекомендует выбирать ник, не содержащий настоящих имени и фамилии. Если подписчик хочет публиковать моды под настоящим именем, он даёт на это отдельное согласие на распространение персональных данных (ст. 10.1 того же закона).</p>
+
+  <h2 data-i18n-tpl="pp_h4">4. Сроки хранения</h2>
+  <ul>
+    <li data-i18n-tpl="pp_4_li1">адрес электронной почты и переписка — в течение срока подписки и 30 дней после его окончания или после возврата денежных средств, затем удаляются;</li>
+    <li data-i18n-tpl="pp_4_li2">IP-адрес — не более 7 дней после последнего обращения к Сайту или Каталогу, затем удаляется автоматически;</li>
+    <li data-i18n-tpl="pp_4_li3">ник — пока действует ключ доступа и 30 дней после окончания его срока, затем удаляется вместе с файлами ключа; как имя автора — пока в Каталоге размещены моды подписчика.</li>
+  </ul>
+
+  <h2 data-i18n-tpl="pp_h5">5. Передача и защита</h2>
+  <p data-i18n-tpl="pp_5_1">5.1. Оператор не передаёт данные третьим лицам и не поручает их обработку другим лицам, кроме случаев, предусмотренных законом. Ник виден другим пользователям Каталога только как имя автора опубликованных модов.</p>
+  <p data-i18n-tpl="pp_5_2">5.2. Каталог работает только по HTTPS, ключи доступа подписаны и проверяются при каждом запросе, IP-адреса удаляются автоматически, доступ к серверам и почте есть только у Оператора.</p>
+
+  <h2 data-i18n-tpl="pp_h6">6. Ваши права</h2>
+  <p data-i18n-tpl="pp_6_1">6.1. Вы вправе узнать, какие ваши данные обрабатываются, потребовать их уточнения или удаления и отозвать согласие, если оно давалось. Напишите на <a data-seller="email" href="mailto:vpcoder@ya.ru">vpcoder@ya.ru</a>: Оператор ответит в течение 10 рабочих дней.</p>
+  <p data-i18n-tpl="pp_6_2">6.2. Если удалить адрес электронной почты до окончания подписки, Оператор не сможет перевыпустить ключ и рассмотреть заявление о возврате.</p>
+  <p data-i18n-tpl="pp_6_3">6.3. Вы вправе обжаловать действия Оператора в Роскомнадзоре или в суде.</p>
+
+  <h2 data-i18n-tpl="pp_h7">7. Изменения</h2>
+  <p data-i18n-tpl="pp_7_1">7.1. Оператор может изменить Политику, опубликовав новую редакцию на этой странице. Дата редакции указана в начале документа.</p>
+</main>
+
+<footer>
+  <div class="wrap fgrid">
+    <span>© 2026 Isaev Ilya · <span data-i18n="license">Лицензия MIT</span> · Godot 4.6 / C# / .NET 8</span>
+    <a rel="me" href="https://mastodon.gamedev.place/@cthangover">Mastodon</a>
+  </div>
+  <div class="wrap fseller">
+    <span><span data-i18n="ft_seller">Продавец — самозанятый</span> <span data-seller="name">Исаев Илья Викторович</span>, <span data-i18n="ft_inn">ИНН</span> <span data-seller="inn">673206026792</span>, <span data-seller="city">г. Смоленск, Смоленская область</span></span>
+    <span><span data-i18n="ft_email">E-mail</span>: <a data-seller="email" href="mailto:vpcoder@ya.ru">vpcoder@ya.ru</a></span>
+    <span><span data-i18n="ft_phone">Телефон</span>: <a data-seller="phone" href="tel:+79203323347">+7 920 332-33-47</a></span>
+    <span><span data-i18n="ft_community">Сообщество</span>: <a data-seller="telegram" target="_blank" rel="noopener" href="https://t.me/cthangover">t.me/cthangover</a></span>
+    <a href="/offer.html" data-i18n="ft_offer">Публичная оферта</a>
+    <a href="/privacy.html" data-i18n="ft_privacy">Политика персональных данных</a>
+    <a href="/private.html#pricing" data-i18n="ft_prices">Тарифы</a>
+  </div>
+</footer>
+
+<script src="/js/seller.js?v=20261105"></script>
+<script src="/js/i18n.js?v=20261105"></script>
+<script src="/js/privacy-i18n.js?v=20261105"></script>
+<script src="/js/legal.js?v=20261105"></script>
+</body>
+</html>

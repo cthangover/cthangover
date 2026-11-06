@@ -65,6 +65,8 @@ footer{border-top:1px solid var(--gold-line-weak);background:var(--surface);padd
 footer .fgrid{display:flex;flex-wrap:wrap;gap:8px 24px;align-items:center}
 footer .build{font-family:var(--mono);font-size:11px;color:var(--faint)}
 footer .build b{color:var(--seal-text);font-weight:400}
+footer .fseller{display:flex;flex-wrap:wrap;gap:6px 22px;align-items:center;margin-top:12px;padding-top:12px;border-top:1px dashed var(--line-soft);color:var(--body)}
+footer .fseller a{white-space:nowrap}
 
 /* ============================================================
    HOME
@@ -388,4 +390,122 @@ h1 .amp{display:block;background:linear-gradient(100deg,var(--gold-bright),var(-
   .tiles .tile:nth-child(1),.tiles .tile:nth-child(4),.shot.big{grid-column:auto;grid-row:auto}
   .lightbox{padding:20px 10px}
   .lb-nav{display:none}
+}
+
+/* шапка: пятая ссылка «Приватный каталог» должна помещаться до мобильного меню */
+@media (max-width:1240px) and (min-width:761px){
+  nav.main a{padding:7px 8px;font-size:13.5px}
+  .repobtn span{display:none}
+}
+@media (max-width:980px) and (min-width:761px){
+  .brand .name{display:none}
+}
+
+/* ============================================================
+   PRIVATE CATALOG (private.html)
+   ============================================================ */
+.pv-fallback{background:rgba(162,96,63,.12);border-bottom:1px solid rgba(162,96,63,.4);color:var(--seal-text);font-size:13px;padding:8px 0}
+.pv-fallback[hidden]{display:none}
+.pv-hero{padding:72px 0 80px}
+.pv-hero-in{position:relative;max-width:900px}
+.pv-hero .tagline{max-width:760px}
+
+.pv-text{max-width:820px;margin-bottom:30px}
+.pv-text p{font-size:15.5px;color:var(--body);margin:0 0 14px}
+
+.pv-steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:22px}
+.pv-step{background:var(--surface);border:1px solid var(--line-card);border-radius:14px;padding:20px}
+.pv-step .n{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;border:1px solid var(--gold-line);color:var(--gold-bright);font-family:var(--mono);font-size:13px;margin-bottom:12px}
+.pv-step h3{font-size:16px;color:var(--bright);margin-bottom:6px}
+.pv-step p{font-size:13.5px;color:var(--muted);line-height:1.55}
+
+.pv-tech{background:var(--well);border:1px solid var(--line-soft);border-left:3px solid var(--gold-line);border-radius:var(--r);padding:18px 22px}
+.pv-tech h3{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:10px}
+.pv-tech ul{margin-left:18px}
+.pv-tech li{font-size:14px;color:var(--body);margin:6px 0}
+
+.pv-benefits{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.pv-ben{background:linear-gradient(180deg,var(--surface2),var(--surface));border:1px solid var(--line-card);border-radius:16px;padding:24px;transition:border-color .2s ease}
+.pv-ben:hover{border-color:var(--gold-line)}
+.pv-ben .no{font-family:var(--display);font-weight:700;font-size:30px;color:var(--gold);line-height:1;margin-bottom:12px}
+.pv-ben h3{font-family:var(--display);font-weight:600;font-size:25px;line-height:1.15;color:var(--bright);margin-bottom:8px}
+.pv-ben>p{font-size:14.5px;color:var(--body);margin-bottom:12px}
+.pv-ben ul{margin-left:18px}
+.pv-ben li{font-size:13.5px;color:var(--muted);margin:6px 0;line-height:1.55}
+
+.pv-notice{display:flex;gap:16px;align-items:flex-start;border:1px solid var(--gold-line);background:linear-gradient(160deg,rgba(217,164,65,.16),var(--surface) 75%);border-radius:14px;padding:20px 22px;margin-bottom:18px}
+.pv-notice-ic{flex:none;display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--gold);color:#1a1409;font-weight:700;font-size:18px}
+.pv-notice h3{font-size:17px;color:var(--bright);margin-bottom:6px}
+.pv-notice p{font-size:15px;color:var(--ink);margin:4px 0}
+.pv-notice a{font-family:var(--mono);font-size:.95em;word-break:break-all}
+
+.pv-pricing{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:16px;align-items:start}
+.pv-plan{position:relative;border:1px solid var(--gold-line);border-radius:20px;padding:30px;background:radial-gradient(ellipse 500px 220px at 50% 0%,rgba(217,164,65,.14),transparent 70%),var(--surface)}
+.pv-plan-name{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+.pv-price{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:10px 0 4px}
+.pv-price .amount{font-family:var(--display);font-weight:700;font-size:64px;line-height:1;color:var(--bright)}
+.pv-price .per{font-size:17px;color:var(--body)}
+.pv-plan-note{font-size:13px;color:var(--muted);margin-bottom:20px}
+.pv-checks{list-style:none;margin:0 0 22px}
+.pv-checks li{position:relative;padding-left:26px;margin:9px 0;font-size:14.5px;color:var(--ink)}
+.pv-checks li::before{content:"✓";position:absolute;left:0;top:0;color:var(--gold-bright);font-weight:700}
+.pv-checks.muted li{color:var(--body)}
+.pv-checks.muted li::before{color:var(--green)}
+.pv-buy{width:100%;justify-content:center}
+.btn.is-soon{opacity:.6;cursor:default;pointer-events:none;box-shadow:none}
+.pv-plan-foot{margin-top:14px;font-size:13px;color:var(--muted)}
+.pv-accept{margin-top:12px;font-size:13px;color:var(--body);text-align:center}
+.pv-contacts{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;max-width:860px;margin:0 auto 26px;text-align:left}
+.pv-contacts>div{background:var(--well);border:1px solid var(--line-soft);border-radius:10px;padding:10px 14px}
+.pv-contacts dt{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
+.pv-contacts dd{margin:4px 0 0;font-size:14.5px;color:var(--ink);overflow-wrap:anywhere}
+.pv-free{border:1px solid var(--line-card);border-radius:20px;padding:30px;background:var(--surface)}
+.pv-free h3{font-family:var(--display);font-weight:600;font-size:25px;color:var(--bright);margin-bottom:12px}
+.pv-free>p{font-size:14px;color:var(--muted)}
+
+.pv-why{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.pv-reason{background:var(--surface);border:1px solid var(--line-card);border-radius:14px;padding:22px}
+.pv-reason h3{font-size:16.5px;color:var(--bright);margin-bottom:8px}
+.pv-reason p{font-size:14px;color:var(--muted);line-height:1.6}
+
+.pv-scope{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.pv-scope-col{background:var(--surface);border:1px solid var(--line-card);border-radius:14px;padding:22px 24px}
+.pv-scope-col h3{font-size:17px;margin-bottom:10px}
+.pv-scope-col.yes{border-top:3px solid var(--green)}
+.pv-scope-col.yes h3{color:var(--green)}
+.pv-scope-col.no{border-top:3px solid var(--red)}
+.pv-scope-col.no h3{color:var(--red)}
+.pv-scope-col ul{margin-left:18px}
+.pv-scope-col li{font-size:14px;color:var(--body);margin:8px 0;line-height:1.55}
+
+.pv-faq{max-width:860px}
+.pv-faq details{border:1px solid var(--line-card);border-radius:12px;background:var(--surface);margin-bottom:10px}
+.pv-faq details[open]{border-color:var(--gold-line)}
+.pv-faq summary{cursor:pointer;padding:15px 20px;font-weight:600;color:var(--bright);font-size:15px;list-style:none;position:relative;padding-right:44px}
+.pv-faq summary::-webkit-details-marker{display:none}
+.pv-faq summary::after{content:"+";position:absolute;right:20px;top:12px;color:var(--gold);font-size:20px;font-weight:400}
+.pv-faq details[open] summary::after{content:"−"}
+.pv-faq details p{padding:0 20px 16px;font-size:14.5px;color:var(--body)}
+.offer-doc{max-width:860px;padding-top:40px;padding-bottom:70px}
+.offer-doc h1{font-size:clamp(26px,3.4vw,34px)}
+.offer-doc h2{margin-top:34px}
+.offer-doc p,.offer-doc li{font-size:15px;line-height:1.7}
+.offer-lang{font-family:var(--mono);font-size:11.5px!important;color:var(--faint);border-left:2px solid var(--gold-line-weak);padding-left:12px}
+.offer-meta{color:var(--muted);font-size:13.5px!important}
+.offer-req{display:table!important;max-width:560px}
+.offer-req td:first-child{color:var(--muted);width:150px}
+.cta .pv-pay-warn{font-size:14px;color:var(--gold-bright);margin-top:-12px}
+
+@media (max-width:1080px){
+  .pv-steps{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .pv-benefits,.pv-why{grid-template-columns:1fr 1fr}
+  .pv-pricing{grid-template-columns:1fr}
+}
+@media (max-width:760px){
+  .private .wrap{padding:0 16px}
+  .pv-hero{padding:44px 0 56px}
+  .pv-steps,.pv-benefits,.pv-why,.pv-scope{grid-template-columns:1fr}
+  .pv-plan,.pv-free{padding:22px}
+  .pv-price .amount{font-size:52px}
+  .pv-notice{padding:16px}
 }
