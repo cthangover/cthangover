@@ -4,6 +4,28 @@ namespace Engine.Tests.Utils
 {
     public class VersionHelperTests
     {
+        [Theory]
+        [InlineData("0.1.0", true)]
+        [InlineData("0", true)]
+        [InlineData("00.9", true)]
+        [InlineData(" 0.1.0 ", true)]
+        [InlineData("alpha.1.0", true)]
+        [InlineData("1b.2.0", true)]
+        [InlineData("v1.0.0", true)]
+        [InlineData("альфа.1", true)]
+        [InlineData("1.0.0", false)]
+        [InlineData("12.0.0", false)]
+        [InlineData("1.0.0-beta", false)]
+        [InlineData("1.alpha.0", false)]
+        [InlineData(null, false)]
+        [InlineData("", false)]
+        [InlineData(" ", false)]
+        [InlineData(".1", false)]
+        public void DevelopmentStage_DependsOnMajorOnly(string version, bool expected)
+        {
+            Assert.Equal(expected, VersionHelper.IsInDevelopment(version));
+        }
+
         // ─── Semver (strict numeric) ───
 
         [Fact]

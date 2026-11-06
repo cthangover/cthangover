@@ -17,6 +17,24 @@ namespace Cthangover.Core.Utils
     public static class VersionHelper
     {
         /// <summary>
+        /// A zero major or any letter in the first dot-separated segment marks a
+        /// package as in development. Missing versions carry no development claim;
+        /// letters in later segments do not change the major's status.
+        /// </summary>
+        public static bool IsInDevelopment(string version)
+        {
+            if (string.IsNullOrWhiteSpace(version))
+                return false;
+
+            var major = version.Trim().Split('.')[0];
+            foreach (var character in major)
+                if (char.IsLetter(character))
+                    return true;
+
+            return long.TryParse(major, out var number) && number == 0;
+        }
+
+        /// <summary>
         /// Compares two version strings. Negative if a &lt; b,
         /// zero if equal, positive if a &gt; b.
         /// </summary>
