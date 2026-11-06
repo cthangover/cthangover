@@ -3,7 +3,7 @@
   "kind": "game",
   "name": "My Novel",
   "author": "ct",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "The smallest playable novel: a town, a bar and a home connected by scene switches. Made to show a modder how scenes, scenarios and transitions fit together.",
   "cover": "cover.jpg",
   "entry": { "scene": "my_novel_town" },
@@ -31,7 +31,7 @@
         { "lang": "ko", "name": "스토리", "description": "게임 자체의 장면과 시나리오 — my_novel_game을 당신 게임의 이름으로 바꾸세요." },
         { "lang": "vi", "name": "Câu chuyện", "description": "Các cảnh và kịch bản riêng của game — hãy đổi tên my_novel_game theo game của bạn." }
       ],
-      "mods": ["my_novel_game>=1"]
+      "mods": ["my_novel_game>=0.1.0"]
     },
     {
       "id": "assets",

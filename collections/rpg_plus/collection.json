@@ -3,7 +3,7 @@
   "kind": "game",
   "name": "RPG Plus",
   "author": "ct",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "An RPG Maker style game that grows past RPG Maker: a visual-novel prologue where you pick a class, then a tile village and forest walked with WASD, events on E/F, gathering, a merchant and battles on the FF core — with stats and classes as data, gear that changes battles, stat checks in dialogs, skills defined by formulas, the character sheet, the tile map editor and the data editor.",
   "cover": "cover.jpg",
   "entry": {
@@ -92,7 +92,7 @@
         }
       ],
       "mods": [
-        "rpg_plus_game>=1"
+        "rpg_plus_game>=0.1.0"
       ]
     },
     {

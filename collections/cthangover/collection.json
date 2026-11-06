@@ -3,7 +3,7 @@
   "kind": "game",
   "name": "Cthangover",
   "author": "ct",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "The full game: the visual novel story with characters, quests, items and cooking, turn-based battles with card and Final Fantasy style cores, recruitment, Live2D avatars and the developer tools.",
   "cover": "cover.png",
   "entry": {
@@ -94,8 +94,8 @@
         }
       ],
       "mods": [
-        "cthangover_game>=2",
-        "cthangover_murakami>=1",
+        "cthangover_game>=0.1.0",
+        "cthangover_murakami>=0.1.0",
         "town_pack>=1"
       ]
     },

@@ -3,8 +3,8 @@
   "kind": "game",
   "name": "Junior Reaper & Paper Grief",
   "author": "ct",
-  "version": "0.2.0",
-  "description": "Расследование младшего менеджера по реанимации: осмотр мельницы, сброс мира и поиск причины повторных смертей стражника.",
+  "version": "0.1.0",
+  "description": "An investigation by a junior resuscitation manager: inspect the mill, reset the world and uncover why the guard keeps dying.",
   "cover": "cover.png",
   "entry": {
     "scene": "jrp_arrival"
@@ -41,7 +41,7 @@
         }
       ],
       "mods": [
-        "junior_reaper_paper_grief>=0.1"
+        "junior_reaper_paper_grief>=0.1.0"
       ]
     },
     {
