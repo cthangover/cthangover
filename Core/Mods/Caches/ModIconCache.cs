@@ -19,15 +19,26 @@ namespace Cthangover.Core.Mods.Caches
     ///   <item>HTTP download from the catalog's <c>icon_url</c> field</item>
     /// </list>
     ///
+    /// The id and the URL come from third-party catalogs and are checked by
+    /// <see cref="RemoteIconPolicy"/>: an id that cannot name a file inside the
+    /// icons folder or a non-HTTPS URL gives no icon; the client connects only to
+    /// public addresses, follows no redirects and reads at most
+    /// <see cref="RemoteIconPolicy.MaxIconBytes"/>.
+    ///
     /// <see cref="Clear"/> drops both tiers and is called by
     /// <see cref="CatalogService"/> when the catalog is force-refreshed,
     /// so stale icons for removed mods don't linger on disk.
     /// </summary>
     public static class ModIconCache
     {
-        private static readonly System.Net.Http.HttpClient _httpClient = new()
+        private static readonly System.Net.Http.HttpClient _httpClient = new(new System.Net.Http.SocketsHttpHandler
+        {
+            AllowAutoRedirect = false,
+            ConnectCallback = RemoteIconPolicy.ConnectPublicAsync,
+        })
         {
             Timeout = TimeSpan.FromSeconds(15),
+            MaxResponseContentBufferSize = RemoteIconPolicy.MaxIconBytes,
             DefaultRequestHeaders = { { "User-Agent", "Cthangover/1.0" } },
         };
 
@@ -52,21 +63,28 @@ namespace Cthangover.Core.Mods.Caches
             return Path.Combine(GetCacheRoot(), IconsSubDir);
         }
 
-        /// <summary>Disk path of the cached PNG preview for one mod id.</summary>
+        /// <summary>
+        /// Disk path of the cached PNG preview for one mod id. Throws
+        /// <see cref="ArgumentException"/> for an id that
+        /// <see cref="RemoteIconPolicy.IsSafeModId"/> refuses, so a catalog id such as
+        /// <c>..\..\x</c> or an absolute path never leaves the icons folder.
+        /// </summary>
         public static string GetIconPath(string modId)
         {
+            if (!RemoteIconPolicy.IsSafeModId(modId))
+                throw new ArgumentException("Mod id cannot name an icon file", nameof(modId));
             return Path.Combine(GetIconsDir(), $"{modId}.png");
         }
 
         /// <summary>
         /// Returns the cached <see cref="Texture2D"/> for the given mod,
         /// downloading it from <paramref name="iconUrl"/> if necessary.
-        /// Returns <c>null</c> when <paramref name="iconUrl"/> is empty
-        /// or the download fails.
+        /// Returns <c>null</c> when the id or <paramref name="iconUrl"/> is empty or
+        /// refused by <see cref="RemoteIconPolicy"/>, or the download fails.
         /// </summary>
         public static async Task<Texture2D> GetOrDownloadAsync(string modId, string iconUrl)
         {
-            if (string.IsNullOrEmpty(modId) || string.IsNullOrEmpty(iconUrl))
+            if (!RemoteIconPolicy.IsSafeModId(modId) || !RemoteIconPolicy.IsAllowedUrl(iconUrl))
                 return null;
 
             if (_memoryCache.TryGetValue(modId, out var cached))
@@ -117,7 +135,7 @@ namespace Cthangover.Core.Mods.Caches
         /// </summary>
         public static void GetOrDownload(string modId, string iconUrl, Action<Texture2D> onComplete)
         {
-            if (string.IsNullOrEmpty(modId) || string.IsNullOrEmpty(iconUrl))
+            if (!RemoteIconPolicy.IsSafeModId(modId) || !RemoteIconPolicy.IsAllowedUrl(iconUrl))
             {
                 onComplete?.Invoke(null);
                 return;
