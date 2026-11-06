@@ -25,19 +25,79 @@
       "lang": "ru",
       "name": "Junior Reaper & Paper Grief",
       "description": "Расследование младшего менеджера по реанимации: осмотр мельницы, сброс мира и поиск причины повторных смертей стражника."
+    },
+    {
+      "lang": "en",
+      "name": "Junior Reaper & Paper Grief",
+      "description": "An investigation by a junior resuscitation manager: inspect the mill, reset the world and uncover why the guard keeps dying."
+    },
+    {
+      "lang": "es",
+      "name": "Junior Reaper & Paper Grief",
+      "description": "Una investigación de un gerente subalterno de reanimación: inspecciona el molino, reinicia el mundo y descubre por qué el guardia muere una y otra vez."
+    },
+    {
+      "lang": "zh",
+      "name": "Junior Reaper & Paper Grief",
+      "description": "初级复苏经理的调查：勘查磨坊、重置世界，查明守卫反复死亡的原因。"
+    },
+    {
+      "lang": "ja",
+      "name": "Junior Reaper & Paper Grief",
+      "description": "蘇生部門の新米マネージャーによる捜査。製粉所を調べ、世界をリセットし、衛兵が何度も死ぬ原因を突き止めよう。"
+    },
+    {
+      "lang": "ko",
+      "name": "Junior Reaper & Paper Grief",
+      "description": "신입 소생 매니저의 수사: 제분소를 조사하고 세계를 초기화하며 경비병이 거듭 죽는 원인을 밝혀내세요."
+    },
+    {
+      "lang": "vi",
+      "name": "Junior Reaper & Paper Grief",
+      "description": "Cuộc điều tra của một quản lý hồi sinh mới vào nghề: khám xét cối xay, đặt lại thế giới và tìm nguyên nhân khiến người lính gác liên tục chết."
     }
   ],
   "mechanics": [
     {
       "id": "story",
-      "name": "Расследование Бюро",
+      "name": "The guard’s case",
       "role": "story",
-      "description": "Вступление, улики, сброс мира, свидетели и дело стражника.",
+      "description": "Join the Bureau, inspect the mill, collect clues, restore the guard, question witnesses and complete the first investigation.",
       "locale": [
         {
           "lang": "ru",
           "name": "Дело стражника",
           "description": "Вступление в Бюро, осмотр мельницы, улики, восстановление стражника, опрос свидетелей и завершение первого расследования."
+        },
+        {
+          "lang": "en",
+          "name": "The guard’s case",
+          "description": "Join the Bureau, inspect the mill, collect clues, restore the guard, question witnesses and complete the first investigation."
+        },
+        {
+          "lang": "es",
+          "name": "El caso del guardia",
+          "description": "Entra en la Oficina, inspecciona el molino, reúne pistas, restaura al guardia, interroga a los testigos y completa la primera investigación."
+        },
+        {
+          "lang": "zh",
+          "name": "守卫案件",
+          "description": "加入事务局、勘查磨坊、收集线索、复原守卫、询问证人，完成第一次调查。"
+        },
+        {
+          "lang": "ja",
+          "name": "衛兵の事件",
+          "description": "局に入り、製粉所を調べ、手がかりを集め、衛兵を復元し、証人に話を聞いて最初の捜査を完了しよう。"
+        },
+        {
+          "lang": "ko",
+          "name": "경비병 사건",
+          "description": "사무국에 합류하고 제분소를 조사하며 단서를 모으고 경비병을 복원하세요. 증인을 심문하고 첫 수사를 마무리하세요."
+        },
+        {
+          "lang": "vi",
+          "name": "Vụ án người lính gác",
+          "description": "Gia nhập Cục, khám xét cối xay, thu thập manh mối, khôi phục người lính gác, hỏi các nhân chứng và hoàn thành cuộc điều tra đầu tiên."
         }
       ],
       "mods": [
@@ -46,14 +106,44 @@
     },
     {
       "id": "rpg",
-      "name": "Изометрический мир",
+      "name": "Isometric fantasy world",
       "role": "engine",
-      "description": "Фэнтезийные улицы и ворота, переулок, мельница, рынок и дом семьи стражника.",
+      "description": "Office, gates, alley, mill yard and market: WASD/arrow keys, E/F. Inside the mill and the house, use the mouse for dialogue and inspection.",
       "locale": [
         {
           "lang": "ru",
           "name": "Изометрический фэнтезийный мир",
           "description": "Офис, ворота, переулок, двор мельницы и рынок: WASD/стрелки, E/F. Внутри мельницы и дома — диалоги и осмотр мышью."
+        },
+        {
+          "lang": "en",
+          "name": "Isometric fantasy world",
+          "description": "Office, gates, alley, mill yard and market: WASD/arrow keys, E/F. Inside the mill and the house, use the mouse for dialogue and inspection."
+        },
+        {
+          "lang": "es",
+          "name": "Mundo de fantasía isométrico",
+          "description": "Oficina, puertas, callejón, patio del molino y mercado: WASD/flechas, E/F. Dentro del molino y de la casa, usa el ratón para dialogar e inspeccionar."
+        },
+        {
+          "lang": "zh",
+          "name": "等距奇幻世界",
+          "description": "办公室、城门、小巷、磨坊庭院和集市：使用 WASD/方向键和 E/F。在磨坊和屋内，用鼠标进行对话和勘查。"
+        },
+        {
+          "lang": "ja",
+          "name": "アイソメトリックなファンタジー世界",
+          "description": "オフィス、門、路地、製粉所の庭、市場：WASD／矢印キー、E/Fで操作。製粉所と家の中ではマウスで会話や調査を行います。"
+        },
+        {
+          "lang": "ko",
+          "name": "아이소메트릭 판타지 세계",
+          "description": "사무실, 성문, 골목, 제분소 마당과 시장: WASD/방향키, E/F로 조작합니다. 제분소와 집 안에서는 마우스로 대화하고 조사합니다."
+        },
+        {
+          "lang": "vi",
+          "name": "Thế giới kỳ ảo góc nhìn đẳng cự",
+          "description": "Văn phòng, cổng, ngõ hẻm, sân cối xay và chợ: WASD/phím mũi tên, E/F. Bên trong cối xay và ngôi nhà, dùng chuột để đối thoại và khám xét."
         }
       ],
       "mods": [
@@ -66,14 +156,44 @@
     },
     {
       "id": "editors",
-      "name": "Редакторы игры",
+      "name": "Game editors",
       "role": "tools",
-      "description": "Редакторы RPG-карт, объектов, персонажей, предметов, сцен, сценариев, интерактивов, света, эффектов, данных и переводов; студия сценариев.",
+      "description": "All editors are available from the toolbar during gameplay.",
       "locale": [
         {
           "lang": "ru",
           "name": "Редакторы игры",
           "description": "Все редакторы доступны с панели инструментов во время игры."
+        },
+        {
+          "lang": "en",
+          "name": "Game editors",
+          "description": "All editors are available from the toolbar during gameplay."
+        },
+        {
+          "lang": "es",
+          "name": "Editores del juego",
+          "description": "Todos los editores están disponibles en la barra de herramientas durante la partida."
+        },
+        {
+          "lang": "zh",
+          "name": "游戏编辑器",
+          "description": "游戏过程中可从工具栏打开所有编辑器。"
+        },
+        {
+          "lang": "ja",
+          "name": "ゲームエディター",
+          "description": "ゲーム中はツールバーからすべてのエディターを開けます。"
+        },
+        {
+          "lang": "ko",
+          "name": "게임 편집기",
+          "description": "게임 중 도구 모음에서 모든 편집기를 열 수 있습니다."
+        },
+        {
+          "lang": "vi",
+          "name": "Trình biên tập game",
+          "description": "Có thể mở tất cả trình biên tập từ thanh công cụ trong khi chơi."
         }
       ],
       "mods": [
