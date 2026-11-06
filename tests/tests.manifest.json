@@ -6,6 +6,75 @@
   },
   "integration": [
     {
+      "name": "rpg_editor_geometry",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "windowed": true,
+      "args": [
+        "--",
+        "--game=rpg_plus",
+        "--new",
+        "--scene=rpg_village",
+        "--itest=rpg_editor_geometry"
+      ],
+      "timeoutSeconds": 150,
+      "result": {
+        "name": "rpg_editor_geometry",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "rpg_editor"
+      ],
+      "profiles": [
+        "full",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "windowed",
+        "gui"
+      ],
+      "game": "rpg_plus",
+      "renderer": "topdown",
+      "source": "mods/rpg_editor/test_suites/geometry/manifest.json",
+      "dependsOn": []
+    },
+    {
+      "name": "rpg_editor_geometry_iso",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "windowed": true,
+      "args": [
+        "--",
+        "--game=rpg_plus",
+        "--new",
+        "--scene=rpg_village",
+        "--itest=rpg_editor_geometry",
+        "--editor-renderer=isometric"
+      ],
+      "timeoutSeconds": 150,
+      "result": {
+        "name": "rpg_editor_geometry",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "rpg_editor"
+      ],
+      "profiles": [
+        "full",
+        "gui"
+      ],
+      "tags": [
+        "integration",
+        "windowed",
+        "gui"
+      ],
+      "game": "rpg_plus",
+      "renderer": "isometric",
+      "source": "mods/rpg_editor/test_suites/geometry/manifest.json",
+      "dependsOn": []
+    },
+    {
       "name": "test_engine_contracts",
       "scene": "res://tests/Cthangover.Tests.Integration/Scenes/mod_test_runtime_contract.tscn",
       "args": [],
