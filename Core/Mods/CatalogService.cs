@@ -53,6 +53,41 @@ namespace Cthangover.Core.Mods
         private static DateTime _lastFetchTime = DateTime.MinValue;
         private static readonly TimeSpan FetchCooldown = TimeSpan.FromSeconds(5);
 
+        /// <summary>
+        /// Attempts per catalog source. A dropped connection must not blank a
+        /// private catalog (and its download links) until the next refresh.
+        /// </summary>
+        private const int CatalogFailures = 4;
+
+        /// <summary>
+        /// Sends a fresh request until a non-transient answer arrives or
+        /// <see cref="CatalogFailures"/> attempts failed; the last answer is returned.
+        /// </summary>
+        private static async Task<System.Net.Http.HttpResponseMessage> SendWithRetryAsync(System.Net.Http.HttpClient client,
+            Func<System.Net.Http.HttpRequestMessage> create, CancellationToken cancellation)
+        {
+            var retry = new TransferRetry(CatalogFailures);
+            while (true)
+            {
+                System.Net.Http.HttpResponseMessage response;
+                try
+                {
+                    using var request = create();
+                    response = await client.SendAsync(request, cancellation);
+                }
+                catch (Exception error) when (TransferRetry.IsTransient(error, cancellation))
+                {
+                    GameLogger.Log("CATALOG", $"Catalog request interrupted: {error.GetType().Name}; attempt {retry.Failures + 1}", LogLevel.Warning);
+                    if (!await retry.WaitAsync(null, cancellation))
+                        throw;
+                    continue;
+                }
+                if (!TransferRetry.IsTransient(response.StatusCode) || !await retry.WaitAsync(TransferRetry.RetryAfter(response), cancellation))
+                    return response;
+                response.Dispose();
+            }
+        }
+
         /// <summary>The current merged catalog data, or null until first load.</summary>
         public static List<CatalogExportEntry> CachedEntries => _cachedEntries;
 
@@ -197,8 +232,8 @@ namespace Cthangover.Core.Mods
                         var isPrivate = ModConfig.Instance.CatalogTokenFiles.TryGetValue(url, out var tokenFile);
                         if (isPrivate && string.IsNullOrWhiteSpace(tokenFile))
                             throw new InvalidOperationException("Private catalog token file is not configured");
-                        using var request = CatalogRequest.Create(url, isPrivate ? tokenFile : null);
-                        using var response = await (isPrivate ? _privateHttpClient : _httpClient).SendAsync(request, cancellationToken);
+                        using var response = await SendWithRetryAsync(isPrivate ? _privateHttpClient : _httpClient,
+                            () => CatalogRequest.Create(url, isPrivate ? tokenFile : null), cancellationToken);
                         response.EnsureSuccessStatusCode();
                         var json = await response.Content.ReadAsStringAsync(cancellationToken);
                         var catalog = JsonSerializer.Deserialize<CatalogRoot>(json, JsonOptionsProvider.ReadOptions);

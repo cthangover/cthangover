@@ -7,6 +7,8 @@ namespace Cthangover.Core.Mods
     /// </summary>
     public enum InstallStep
     {
+        /// <summary>Waiting for its turn: one download runs at a time (<see cref="DownloadQueue"/>).</summary>
+        Queued,
         /// <summary>Fetching the archive from a catalog mirror.</summary>
         Downloading,
         /// <summary>Comparing the downloaded archive against <c>archive_sha256</c>.</summary>
