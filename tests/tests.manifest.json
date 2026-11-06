@@ -4296,6 +4296,12 @@
     "integration": []
   },
   "manualSuites": {
+    "mod_manager__publishing": {
+      "reason": "Requires the sibling keyserver publishing harness with a temporary database and author keys.",
+      "windowed": true,
+      "game": null,
+      "requirements": ["cthangover-keyserver/tests/integration_windows.py --suite publishing"]
+    },
     "dialog_base__doc_shots": {
       "reason": "Requires an explicit steps file and screenshot destination; documentation capture, not a regression check.",
       "windowed": true,
