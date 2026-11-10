@@ -1,6 +1,6 @@
 """Build the Russian block of page dictionaries from the pages' own markup.
 
-The Russian text of private.html, offer.html and privacy.html is written in
+The Russian text of private.html and the six legal documents is written in
 the HTML (it is what a visitor without JavaScript and a payment aggregator's
 checker see). This script reads every element with data-i18n="<prefix>..."
 or data-i18n-tpl="<prefix>..." and rewrites only the `ru: {...}` block of the
@@ -12,6 +12,7 @@ data-i18n-tpl -> a template rendered by renderTpl() in js/i18n.js:
     <span|a data-seller="x">…</span|a>  -> {x}
     <b>…</b>                            -> **…**
     <a href="/url">text</a>             -> [text](/url)
+    <a href="mailto:user@example.com">text</a> -> [text](mailto:user@example.com)
 Any other tag inside is an error.
 
 Usage: python build-page-i18n.py   (also run by update_indexes.bat)
@@ -26,7 +27,12 @@ ROOT = Path(__file__).resolve().parent
 PAGES = [
     ("private.html", "js/private-i18n.js", "PRIVATE_I18N", "pv_", "страницы приватного каталога"),
     ("offer.html", "js/offer-i18n.js", "OFFER_I18N", "of_", "публичной оферты"),
+    ("terms.html", "js/terms-i18n.js", "TERMS_I18N", "tm_", "документа Пользовательское соглашение"),
+    ("consent-pd.html", "js/consent-pd-i18n.js", "CONSENT_PD_I18N", "cpd_", "документа Согласие на обработку персональных данных"),
+    ("consent-ads.html", "js/consent-ads-i18n.js", "CONSENT_ADS_I18N", "cad_", "документа Согласие на рассылку"),
+    ("consent-author.html", "js/consent-author-i18n.js", "CONSENT_AUTHOR_I18N", "cau_", "документа Согласие автора мода"),
     ("privacy.html", "js/privacy-i18n.js", "PRIVACY_I18N", "pp_", "политики обработки персональных данных"),
+    ("cookies.html", "js/cookies-i18n.js", "COOKIES_I18N", "ck_", "политики использования файлов cookie"),
 ]
 LANGS = ["en", "es", "zh", "ja", "ko", "vi"]
 
@@ -37,6 +43,7 @@ def to_template(inner, where):
     t = re.sub(r'<(\w+) data-seller="(\w+)"[^>]*>[^<]*</\1>', r"{\2}", inner)
     t = re.sub(r"<b>([^<]*)</b>", r"**\1**", t)
     t = re.sub(r'<a href="((?:/|https://)[^"]*)">([^<]*)</a>', r"[\2](\1)", t)
+    t = re.sub(r'<a href="(mailto:[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+)">([^<]*)</a>', r"[\2](\1)", t)
     if "<" in t:
         raise SystemExit(f"{where}: unsupported markup in a template: {t}")
     return html.unescape(t)
@@ -57,7 +64,8 @@ def collect(page, prefix):
             if "<" in inner:
                 raise SystemExit(f"{where}: data-i18n must hold plain text, use data-i18n-tpl")
             value = html.unescape(inner)
-        value = " ".join(value.split())
+        if prefix == "pv_":
+            value = " ".join(value.split())
         if key in keys and keys[key] != value:
             raise SystemExit(f"{where}: the same key has different texts on the page")
         keys[key] = value

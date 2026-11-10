@@ -72,6 +72,8 @@ def main():
         (f"{SITE_URL}/offer.html", lastmod("offer.html")),
         (f"{SITE_URL}/privacy.html", lastmod("privacy.html")),
     ]
+    for page in ("terms", "consent-pd", "consent-ads", "consent-author", "cookies"):
+        urls.append((f"{SITE_URL}/{page}.html", lastmod(f"{page}.html")))
     urls += collect_docs()
     urls += collect_quickstart()
 

@@ -1,4 +1,4 @@
-"""Fill seller details (data/seller.json) into every HTML page of the site.
+"""Fill seller details (data/seller.json) into the subscription and legal pages.
 
 Elements marked with data-seller="<field>" get the field as their text.
 <a data-seller="email"> also gets href="mailto:...", data-seller="phone"
@@ -16,7 +16,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-PAGES = ["index.html", "docs.html", "quickstart.html", "private.html", "offer.html", "privacy.html"]
+PAGES = ["private.html", "offer.html", "terms.html", "privacy.html", "consent-pd.html", "consent-ads.html", "consent-author.html", "cookies.html"]
 
 ELEMENT = re.compile(r'<(?P<tag>\w+)\b(?P<attrs>[^>]*\bdata-seller="(?P<key>\w+)"[^>]*)>[^<]*</(?P=tag)>')
 

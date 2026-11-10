@@ -509,3 +509,14 @@ h1 .amp{display:block;background:linear-gradient(100deg,var(--gold-bright),var(-
   .pv-price .amount{font-size:52px}
   .pv-notice{padding:16px}
 }
+
+/* Legal documents keep their original spacing; wide tables scroll inside the document. */
+#legalDocument{min-width:0;overflow-wrap:anywhere}
+#legalDocument p,#legalDocument h1,#legalDocument h2,#legalDocument th,#legalDocument td{white-space:pre-wrap}
+.legal-table-scroll{max-width:100%;overflow-x:auto;margin:14px 0}
+.prose .legal-table{display:table;min-width:720px;margin:0;overflow:visible}
+.legal-table th,.legal-table td{vertical-align:top;padding:10px;border:1px solid var(--line-soft);text-align:left}
+.pv-consent{display:flex;gap:10px;align-items:flex-start;margin:12px 0;font-size:13px;color:var(--body)}
+.pv-consent input{margin-top:4px;flex-shrink:0}
+.pv-buy[aria-disabled="true"]{opacity:.55;cursor:not-allowed}
+footer .fseller a{white-space:normal}

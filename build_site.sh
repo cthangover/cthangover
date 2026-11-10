@@ -71,6 +71,7 @@ echo "site: refreshing source indices"
 # Everything is generated except the site sources that are not web content.
 echo "site: preparing GitHub Pages files"
 (cd "$HERE/site" && find . -type f \
+  ! -path './юрист/*' ! -iname '*.docx' \
   ! -name '*.py' ! -name '*.pyc' ! -name '*.bat' ! -name '*.ps1' \
   ! -name '.gdignore' ! -name '.gitkeep' ! -name 'git.sitemap.xml' \
   ! -path '*/__pycache__/*' -print0) |

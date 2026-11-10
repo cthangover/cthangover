@@ -13,11 +13,5 @@ var SELLER = {
   "email": "vpcoder@ya.ru",
   "phone": "+7 920 332-33-47",
   "telegram": "t.me/cthangover",
-  "price_rub": "300 ₽",
-  "offer_date": {
-    "ru": "5 ноября 2026 г."
-  },
-  "privacy_date": {
-    "ru": "5 ноября 2026 г."
-  }
+  "price_rub": "300 ₽"
 };
