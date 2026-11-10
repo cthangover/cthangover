@@ -1,12 +1,12 @@
 {
- "generated": "2026-11-05",
+ "generated": "2026-11-10",
  "stats": {
-  "mods": 67,
+  "mods": 68,
   "dslCommands": 32,
   "coreFiles": 539,
   "coreLoc": 49833,
-  "modFiles": 1377,
-  "modLoc": 152032
+  "modFiles": 1391,
+  "modLoc": 153175
  },
  "battle": [
   {
@@ -341,6 +341,20 @@
    "test": false
   },
   {
+   "id": "fdgdfgdfgfg",
+   "name": "fdgdfgdfgfg fdgdfgdfgfg",
+   "version": "1.0.0",
+   "desc": "One scenario command, check: roll a character's stat plus dice against a difficulty and branch the story on success or failure.",
+   "cat": [
+    "gameplay"
+   ],
+   "deps": [
+    "stats_base",
+    "dialog_base"
+   ],
+   "test": false
+  },
+  {
    "id": "ff_battle",
    "name": "FF Battle",
    "version": "1.0.0",
@@ -420,7 +434,7 @@
    "id": "junior_reaper_paper_grief",
    "name": "Junior Reaper & Paper Grief",
    "version": "0.1.0",
-   "desc": "Расследование повторных смертей стражника: фэнтезийный RPG-мир, осмотр мельницы мышью, сброс, свидетели и решение семейной причины.",
+   "desc": "Два дела младшего менеджера по реанимации: повторные смерти стражника и еженедельный налёт дракона. Осмотр мельницы, опросы жителей, профсоюз NPC и иск против убийственного плана.",
    "cat": [
     "story"
    ],
