@@ -1,7 +1,7 @@
 {
  "generated": "2026-11-10",
  "stats": {
-  "mods": 68,
+  "mods": 67,
   "dslCommands": 32,
   "coreFiles": 539,
   "coreLoc": 49833,
@@ -338,20 +338,6 @@
     "library"
    ],
    "deps": [],
-   "test": false
-  },
-  {
-   "id": "fdgdfgdfgfg",
-   "name": "fdgdfgdfgfg fdgdfgdfgfg",
-   "version": "1.0.0",
-   "desc": "One scenario command, check: roll a character's stat plus dice against a difficulty and branch the story on success or failure.",
-   "cat": [
-    "gameplay"
-   ],
-   "deps": [
-    "stats_base",
-    "dialog_base"
-   ],
    "test": false
   },
   {
