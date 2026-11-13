@@ -19,7 +19,8 @@ namespace Cthangover.Core.Scenes.Patching
     {
         /// <summary>
         /// Converts a declared target path into canonical mod-relative form: forward slashes,
-        /// no <c>res://</c> scheme, no leading slash, and no <c>mods/&lt;mod&gt;/</c> prefix.
+        /// no <c>res://</c> scheme, no leading slash, and no <c>&lt;mods folder&gt;/&lt;mod&gt;/</c>
+        /// prefix (any folder of <see cref="ModRootFolders"/>).
         /// Returns an empty string for null/empty input.
         /// </summary>
         public static string Normalize(string declaredPath)
@@ -32,11 +33,7 @@ namespace Cthangover.Core.Scenes.Patching
                 path = path.Substring("res://".Length);
             path = path.TrimStart('/');
 
-            var segments = path.Split('/');
-            if (segments.Length >= 3 && segments[0].Equals("mods", StringComparison.OrdinalIgnoreCase))
-                path = string.Join("/", segments, 2, segments.Length - 2);
-
-            return ModPath.Normalize(path);
+            return ModPath.Normalize(ModRootFolders.StripModPrefix(path));
         }
 
         /// <summary>

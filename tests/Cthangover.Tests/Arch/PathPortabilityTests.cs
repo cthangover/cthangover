@@ -87,7 +87,8 @@ namespace Engine.Tests.Arch
             var problems = new List<string>();
 
             foreach (var manifest in RepoPaths.ProjectFiles(root)
-                         .Where(f => Regex.IsMatch(f, @"^mods/[^/]+/manifest\.json$")))
+                         .Where(f => f.Split('/') is var parts && parts.Length == 3
+                             && Cthangover.Core.Mods.ModRootFolders.Contains(parts[0]) && parts[2] == "manifest.json"))
             {
                 var modRoot = ModRootOf(manifest);
                 using var json = JsonDocument.Parse(File.ReadAllText(Path.Combine(root, manifest)));
@@ -132,11 +133,11 @@ namespace Engine.Tests.Arch
             => RepoPaths.ProjectFiles(root)
                 .Where(f => AssetExtensions.Contains(Path.GetExtension(f), StringComparer.OrdinalIgnoreCase));
 
-        /// <summary>Returns <c>mods/&lt;id&gt;</c> for files inside a mod, null otherwise.</summary>
+        /// <summary>Returns <c>&lt;mods folder&gt;/&lt;id&gt;</c> for files inside a mod, null otherwise.</summary>
         private static string ModRootOf(string file)
         {
             var parts = file.Split('/');
-            return parts.Length > 2 && parts[0] == "mods" ? $"mods/{parts[1]}" : null;
+            return parts.Length > 2 && Cthangover.Core.Mods.ModRootFolders.Names.Contains(parts[0]) ? $"{parts[0]}/{parts[1]}" : null;
         }
     }
 }

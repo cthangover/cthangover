@@ -66,11 +66,13 @@ namespace Engine.Tests.Scenes
             Assert.Empty(result);
         }
 
-        [Fact]
-        public void CollectFromProviders_ModTargetPrefixNormalized()
+        [Theory]
+        [InlineData("mods")]
+        [InlineData("mods_private")]
+        public void CollectFromProviders_ModTargetPrefixNormalized(string folder)
         {
             var mod = new MockModFileProvider("mod_a");
-            mod.AddFile("patches/scenes/panel.tscn", PatchText("res://mods/mod_a/scenes/ui/panel.tscn", "x"));
+            mod.AddFile("patches/scenes/panel.tscn", PatchText($"res://{folder}/mod_a/scenes/ui/panel.tscn", "x"));
 
             var result = ScenePatchResolver.CollectFromProviders(new[] { ("mod_a", (IModFileProvider)mod) });
 

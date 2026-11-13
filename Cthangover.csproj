@@ -29,6 +29,10 @@
         <None Include="sdk\**\*.cs" />
         <Compile Remove="mods\**\*" />
         <None Include="mods\**\*" />
+        <!-- Every mods folder of Core/Mods/ModRootFolders.cs is excluded the
+             same way: mods compile at game start, never into the core. -->
+        <Compile Remove="mods_private\**\*" />
+        <None Include="mods_private\**\*" />
         <!-- The release packaging copies the whole mods/ tree next to the
              exported binaries; those loose copies must never re-enter the
              core compilation through the default source glob. -->

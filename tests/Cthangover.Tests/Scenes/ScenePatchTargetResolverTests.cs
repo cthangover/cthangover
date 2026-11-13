@@ -21,6 +21,13 @@ namespace Engine.Tests.Scenes
         }
 
         [Fact]
+        public void Normalize_StripsThePrefixOfEveryModsFolder()
+        {
+            Assert.Equal("scenes/menu/main_menu.tscn",
+                ScenePatchTargetResolver.Normalize("res://mods_private/my_mod/scenes/menu/main_menu.tscn"));
+        }
+
+        [Fact]
         public void Normalize_ConvertsBackslashesAndEmptyInput()
         {
             Assert.Equal("scenes/menu/main_menu.tscn",

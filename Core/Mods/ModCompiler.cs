@@ -168,7 +168,7 @@ namespace Cthangover.Core.Mods
                     }
 
                     var visibleModIds = DependencyClosure(modInfo, mods);
-                    var artifact = EnsureCompiled(modInfo.Id, sourceFiles, dependencySignature, cancellationToken, visibleModIds, modInfo.FileProvider?.RootPath);
+                    var artifact = EnsureCompiled(modInfo.Id, sourceFiles, dependencySignature, cancellationToken, visibleModIds, modInfo.FileProvider?.RootPath, mods.Values);
                     if (artifact != null)
                         result.Add(new ModCompileArtifact(modInfo.Id, artifact, sourceFiles));
                 }
@@ -286,8 +286,10 @@ namespace Cthangover.Core.Mods
         /// <paramref name="modRoot"/> is the mod's directory on disk; syntax trees
         /// are parsed with paths under it so the Godot generator emits a correct
         /// <c>[ScriptPath]</c> (see <see cref="ModReferenceProvider.ResolveSourcePath"/>).
+        /// <paramref name="referenceMods"/> supplies the selected providers for precompiled
+        /// references, so duplicate installations cannot contribute conflicting DLLs.
         /// </summary>
-        public static string EnsureCompiled(string modId, IEnumerable<(string FilePath, string Source)> sources, string dependencySignature, CancellationToken cancellationToken = default, IReadOnlyCollection<string> knownModIds = null, string modRoot = null)
+        public static string EnsureCompiled(string modId, IEnumerable<(string FilePath, string Source)> sources, string dependencySignature, CancellationToken cancellationToken = default, IReadOnlyCollection<string> knownModIds = null, string modRoot = null, IEnumerable<IModInfo> referenceMods = null)
         {
             var sourceList = sources.ToList();
             if (sourceList.Count == 0)
@@ -296,7 +298,11 @@ namespace Cthangover.Core.Mods
             cancellationToken.ThrowIfCancellationRequested();
 
             var generators = GodotGeneratorHost.GetGodotGenerators();
-            var cachedPath = ModAssemblyCache.BuildCachePath(modId, sourceList, dependencySignature, generators != null && generators.Length > 0);
+            var scriptRoot = ModReferenceProvider.GetScriptResourceRoot(modRoot);
+            // A project copy and an identical user/archive installation need
+            // different bindings; never reuse res:// attributes outside res://.
+            var bindingSignature = (dependencySignature ?? string.Empty) + ";script-root=" + (scriptRoot ?? "managed");
+            var cachedPath = ModAssemblyCache.BuildCachePath(modId, sourceList, bindingSignature, generators != null && generators.Length > 0);
             using var cacheEntry = AssemblyCacheEntry.Acquire(cachedPath, cancellationToken);
             if (ModAssemblyCache.IsUsableHit(cacheEntry, cachedPath))
             {
@@ -314,7 +320,7 @@ namespace Cthangover.Core.Mods
                 .ToList();
 
             var metadataReferences = new List<MetadataReference>();
-            AddCoreReferences(metadataReferences, modId, knownModIds);
+            ModReferenceProvider.Collect(metadataReferences, modId, knownModIds, referenceMods);
 
             var compilation = CSharpCompilation.Create(
                 assemblyName: modId,
@@ -324,7 +330,7 @@ namespace Cthangover.Core.Mods
                     .WithOptimizationLevel(OptimizationLevel.Debug)
             );
 
-            compilation = GodotGeneratorHost.RunGodotGenerators(generators, compilation, modId);
+            compilation = GodotGeneratorHost.RunGodotGenerators(generators, compilation, modId, useScriptPaths: scriptRoot != null);
 
             cancellationToken.ThrowIfCancellationRequested();
 

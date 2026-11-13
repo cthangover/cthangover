@@ -32,6 +32,24 @@ namespace Engine.Tests.Arch
             return dir?.FullName ?? throw new InvalidOperationException("Repository root (AGENTS.md) not found");
         }
 
+        /// <summary>
+        /// Absolute paths of every mod directory of the repository, across all
+        /// mods folders (<see cref="Cthangover.Core.Mods.ModRootFolders"/>), in
+        /// folder order and by name inside a folder.
+        /// </summary>
+        public static List<string> ModDirectories(string root)
+        {
+            var result = new List<string>();
+            foreach (var folder in Cthangover.Core.Mods.ModRootFolders.Names)
+            {
+                var path = Path.Combine(root, folder);
+                if (Directory.Exists(path))
+                    result.AddRange(Directory.GetDirectories(path).OrderBy(p => p, StringComparer.OrdinalIgnoreCase));
+            }
+
+            return result;
+        }
+
         /// <summary>Repo-relative, '/'-separated paths of every project file.</summary>
         public static List<string> ProjectFiles(string root)
         {

@@ -364,7 +364,8 @@ namespace Cthangover.Core.Scenes
 
         /// <summary>
         /// Canonicalises a resource path: forward slashes, no <c>res://</c> scheme, no leading
-        /// slash and no <c>mods/&lt;mod&gt;/</c> prefix. The last form is what the Godot editor
+        /// slash and no <c>&lt;mods folder&gt;/&lt;mod&gt;/</c> prefix (any folder of
+        /// <see cref="ModRootFolders"/>). The last form is what the Godot editor
         /// writes when a file of one mod references a file of another mod, so stripping it lets
         /// editor-authored <c>ext_resource</c> paths and patch additions resolve unchanged.
         /// </summary>
@@ -376,11 +377,7 @@ namespace Cthangover.Core.Scenes
                 n = n.Substring(6);
             n = n.TrimStart('/');
 
-            var segments = n.Split('/');
-            if (segments.Length >= 3 && segments[0].Equals("mods", StringComparison.OrdinalIgnoreCase))
-                n = string.Join("/", segments, 2, segments.Length - 2);
-
-            return n;
+            return ModRootFolders.StripModPrefix(n);
         }
 
         /// <summary>

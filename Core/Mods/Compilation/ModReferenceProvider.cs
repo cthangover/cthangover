@@ -16,7 +16,7 @@ namespace Cthangover.Core.Mods.Compilation
     ///
     /// <see cref="Collect"/> scans, in order: the runtime directories of
     /// every loaded assembly, the Godot build output directory, precompiled
-    /// <c>mods/&lt;id&gt;/dll</c> folders and the compilation cache (newest
+    /// selected providers' <c>dll/</c> folders and the compilation cache (newest
     /// artifact per known mod id). The scan is deliberately filtered — the
     /// inline comments explain why — because a naive directory scan would
     /// resurrect stale copies of mod assemblies and break dependent
@@ -84,9 +84,11 @@ namespace Cthangover.Core.Mods.Compilation
         /// the mod's own (possibly stale) cache artifacts from its own
         /// references; <paramref name="knownModIds"/>, when provided,
         /// restricts the cache scan to at most the newest DLL per real
-        /// mod id, ignoring foreign helper artifacts.
+        /// mod id, ignoring foreign helper artifacts. <paramref name="referenceMods"/>
+        /// is the selected mod set when compiling at boot or preparing a reload; its
+        /// providers identify the winning installation across all roots.
         /// </summary>
-        public static void Collect(List<MetadataReference> references, string currentModId = null, IReadOnlyCollection<string> knownModIds = null)
+        public static void Collect(List<MetadataReference> references, string currentModId = null, IReadOnlyCollection<string> knownModIds = null, IEnumerable<IModInfo> referenceMods = null)
         {
             AddAssemblyReference(references, typeof(object).Assembly);
 
@@ -153,32 +155,30 @@ namespace Cthangover.Core.Mods.Compilation
                     TryAddReference(references, dll);
             }
 
-            // Precompiled library mods (mods/<id>/dll/*.dll) are loaded from
-            // bytes at runtime, so their Assembly.Location is empty and the
-            // AppDomain scan above never sees their directories. Reference
-            // them explicitly so runtime-compiled dependants keep compiling
-            // (live2d_test needs the live2d library types).
-            var modsRoot = string.IsNullOrEmpty(_resRoot) ? null : Path.Combine(_resRoot, "mods");
-            if (modsRoot != null && Directory.Exists(modsRoot) && searchedDirs.Add(modsRoot))
+            // Byte-loaded libraries have no Assembly.Location. Production callers
+            // pass their selected providers (also during reload preparation), so a
+            // losing copy in another root never contributes a conflicting DLL.
+            // Standalone compile helpers without discovery still search every root.
+            var modDirectories = referenceMods != null
+                ? referenceMods.Select(mod => (Id: mod.Id, Path: mod.FileProvider?.RootPath))
+                : ModRegistry.Instance.RootPaths.Where(Directory.Exists)
+                    .SelectMany(root => Directory.EnumerateDirectories(root))
+                    .Select(path => (Id: Path.GetFileName(path), Path: path));
+            foreach (var mod in modDirectories)
             {
-                foreach (var modDir in Directory.GetDirectories(modsRoot))
-                {
-                    // Precompiled libraries follow the same visibility rule as
-                    // runtime-compiled mods: only the mod itself and its
-                    // dependency closure may reference them.
-                    var ownerId = Path.GetFileName(modDir);
-                    if (knownModIds != null
-                        && !string.Equals(ownerId, currentModId, StringComparison.OrdinalIgnoreCase)
-                        && !knownModIds.Contains(ownerId, StringComparer.OrdinalIgnoreCase))
-                        continue;
+                if (string.IsNullOrEmpty(mod.Path) || !Directory.Exists(mod.Path))
+                    continue;
+                if (knownModIds != null
+                    && !string.Equals(mod.Id, currentModId, StringComparison.OrdinalIgnoreCase)
+                    && !knownModIds.Contains(mod.Id, StringComparer.OrdinalIgnoreCase))
+                    continue;
 
-                    var precompiledDir = Path.Combine(modDir, "dll");
-                    if (!Directory.Exists(precompiledDir) || !searchedDirs.Add(precompiledDir))
-                        continue;
+                var precompiledDir = Path.Combine(mod.Path, "dll");
+                if (!Directory.Exists(precompiledDir) || !searchedDirs.Add(Path.GetFullPath(precompiledDir)))
+                    continue;
 
-                    foreach (var dll in Directory.GetFiles(precompiledDir, "*.dll"))
-                        TryAddReference(references, dll);
-                }
+                foreach (var dll in Directory.GetFiles(precompiledDir, "*.dll"))
+                    TryAddReference(references, dll);
             }
 
             if (searchedDirs.Add(ModAssemblyCache.CacheRoot) && Directory.Exists(ModAssemblyCache.CacheRoot))
@@ -250,46 +250,55 @@ namespace Cthangover.Core.Mods.Compilation
             GameLogger.Log("MODS_COMPILE", $"AddCoreReferences: total references={references.Count}");
             foreach (var r in references)
             {
-                if(!r.Display?.Contains("mods/")??false)
+                if (r.Display == null || !r.Display.Replace('\\', '/').Split('/').Any(ModRootFolders.Contains))
                     continue;
                 GameLogger.Log("MODS_COMPILE", $"  ref: {r.Display}", LogLevel.Debug);
             }
         }
 
         /// <summary>
-        /// Absolute path for a mod source file when it exists on disk inside the
-        /// project. The Godot source generator derives each class's script path
-        /// (<c>res://...</c>) from the syntax tree's file path, so the tree must
-        /// be parsed with its real location inside the project; otherwise the
-        /// generated <c>[ScriptPath]</c> points nowhere and lifecycle callbacks
-        /// never fire.
-        /// <para/>
-        /// <paramref name="modRoot"/> is the mod's real directory
-        /// (<see cref="IModFileProvider.RootPath"/>). It matters for mods whose
-        /// id is not their folder name — a test suite <c>host__suite</c> lives in
-        /// <c>mods/host/test_suites/suite/</c>; resolving it as
-        /// <c>mods/host__suite/</c> missed and yielded <c>res://src/...</c>.
-        /// Only directories inside the project are used (a zip or a
-        /// <c>user://</c> folder has no <c>res://</c> path); otherwise the
-        /// conventional <c>mods/&lt;modId&gt;/</c> location is tried.
+        /// Returns the resource directory of a loose mod inside the project, or
+        /// null for archives and external installations. Only these directories
+        /// can supply Godot's generated res:// script paths. The relative result
+        /// also distinguishes binding locations in the compilation cache.
+        /// </summary>
+        public static string GetScriptResourceRoot(string modRoot, string projectRoot = null)
+        {
+            projectRoot ??= _resRoot;
+            if (string.IsNullOrEmpty(projectRoot) || string.IsNullOrEmpty(modRoot) || !Directory.Exists(modRoot))
+                return null;
+            var relative = Path.GetRelativePath(Path.GetFullPath(projectRoot), Path.GetFullPath(modRoot));
+            if (Path.IsPathRooted(relative) || relative == ".." || relative.StartsWith(".." + Path.DirectorySeparatorChar, StringComparison.Ordinal))
+                return null;
+            return relative.Replace('\\', '/');
+        }
+
+        /// <summary>
+        /// Resolves source locations through the selected provider directory,
+        /// including user installations outside res://. Their absolute paths
+        /// belong in PDBs; Godot script-path generation is separately disabled
+        /// for them. An explicit provider never falls back to another installed
+        /// copy with the same id. Logical paths remain for archive sources.
         /// </summary>
         public static string ResolveSourcePath(string modId, string filePath, string modRoot = null)
         {
-            var resRoot = _resRoot;
-            if (string.IsNullOrEmpty(resRoot))
-                return filePath;
-
             var normalized = filePath.Replace('\\', '/');
-            var projectRoot = Path.GetFullPath(resRoot);
-            if (!string.IsNullOrEmpty(modRoot) && Directory.Exists(modRoot))
+            if (!string.IsNullOrEmpty(modRoot))
             {
-                var fromRoot = Path.GetFullPath(Path.Combine(modRoot, normalized));
-                if (fromRoot.StartsWith(projectRoot, StringComparison.OrdinalIgnoreCase) && File.Exists(fromRoot))
-                    return fromRoot;
+                if (Directory.Exists(modRoot))
+                {
+                    var fromRoot = Path.GetFullPath(Path.Combine(modRoot, normalized));
+                    if (File.Exists(fromRoot)) return fromRoot;
+                }
+                return filePath;
             }
-
-            var absolute = Path.GetFullPath(Path.Combine(resRoot, "mods", modId, normalized));
-            return File.Exists(absolute) ? absolute : filePath;
+            if (string.IsNullOrEmpty(_resRoot)) return filePath;
+            foreach (var folder in ModRootFolders.Names)
+            {
+                var absolute = Path.GetFullPath(Path.Combine(_resRoot, folder, modId, normalized));
+                if (File.Exists(absolute)) return absolute;
+            }
+            return filePath;
         }
 
         private static string ResolveBuildOutputDir()

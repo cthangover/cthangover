@@ -65,6 +65,7 @@ __pycache__/
 
 # Mods are maintained in their own Git repositories.
 /mods/
+/mods_private/
 
 # Small encrypted ZIP fixtures are source test data.
 !tests/fixtures/sevenzip/*.zip

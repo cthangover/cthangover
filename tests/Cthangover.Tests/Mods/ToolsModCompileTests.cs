@@ -73,7 +73,7 @@ namespace Engine.Tests.Mods
         {
             // Runtime boot loads mod-owned managed DLLs before compiling sources.
             // Mirror that setup so libraries such as Markdig are visible here too.
-            foreach (var modRoot in Directory.GetDirectories(Path.Combine(FindRepoRoot(), "mods")))
+            foreach (var modRoot in Engine.Tests.Arch.RepoPaths.ModDirectories(FindRepoRoot()))
             {
                 var directory = Path.Combine(modRoot, "dll");
                 if (!Directory.Exists(directory)) continue;
@@ -93,11 +93,7 @@ namespace Engine.Tests.Mods
                 return new Dictionary<string, ModGuardInfo>();
 
             var result = new Dictionary<string, ModGuardInfo>(StringComparer.OrdinalIgnoreCase);
-            var modsRoot = Path.Combine(repoRoot, "mods");
-            if (!Directory.Exists(modsRoot))
-                return result;
-
-            foreach (var dir in Directory.GetDirectories(modsRoot).OrderBy(path => path, StringComparer.OrdinalIgnoreCase))
+            foreach (var dir in Engine.Tests.Arch.RepoPaths.ModDirectories(repoRoot))
             {
                 var manifestPath = Path.Combine(dir, "manifest.json");
                 if (!File.Exists(manifestPath))
@@ -143,7 +139,7 @@ namespace Engine.Tests.Mods
                 }
                 catch (Exception ex)
                 {
-                    Assert.Fail($"mods/{Path.GetFileName(dir)}/manifest.json is not readable: {ex.Message}");
+                    Assert.Fail($"{Path.GetRelativePath(repoRoot, dir)}/manifest.json is not readable: {ex.Message}");
                     return result;
                 }
 

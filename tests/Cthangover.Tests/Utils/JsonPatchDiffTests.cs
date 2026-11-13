@@ -126,7 +126,7 @@ namespace Engine.Tests.Utils
         public void RoundTrip_OverAllEntitiesOfAllMods()
         {
             var byKind = new Dictionary<string, List<JsonObject>>(StringComparer.OrdinalIgnoreCase);
-            foreach (var file in Directory.EnumerateFiles(Path.Combine(RepoPaths.FindRepoRoot(), "mods"), "*.json", SearchOption.AllDirectories))
+            foreach (var file in RepoPaths.ModDirectories(RepoPaths.FindRepoRoot()).SelectMany(mod => Directory.EnumerateFiles(mod, "*.json", SearchOption.AllDirectories)))
             {
                 if (file.Contains(Path.DirectorySeparatorChar + ".git" + Path.DirectorySeparatorChar))
                     continue;

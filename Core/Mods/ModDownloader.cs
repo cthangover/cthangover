@@ -324,7 +324,8 @@ namespace Cthangover.Core.Mods
                 return Path.Combine(modsRoot, modId);
             }
 
-            return Path.Combine("mods", modId);
+            // Downloads target the public folder outside runtime; never a private root.
+            return Path.Combine(ModRootFolders.Primary, modId);
         }
 
         private static bool Fail(Install install, string modId, string reason)

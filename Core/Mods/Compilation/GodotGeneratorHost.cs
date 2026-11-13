@@ -166,17 +166,25 @@ namespace Cthangover.Core.Mods.Compilation
         /// Runs the official Godot source generators over the mod compilation so
         /// every Godot-derived class gets <c>[ScriptPath]</c> (plus the assembly
         /// marker), exactly like the main project build. Without this, engine
-        /// lifecycle callbacks are never dispatched for mod nodes.
+        /// lifecycle callbacks are never dispatched for mod nodes. For sources
+        /// outside the project, omit only ScriptPathAttributeGenerator so the
+        /// bridge can bind the type without attempting to load a res:// file.
         /// </summary>
-        public static CSharpCompilation RunGodotGenerators(Microsoft.CodeAnalysis.ISourceGenerator[] generators, CSharpCompilation compilation, string modId)
+        public static CSharpCompilation RunGodotGenerators(Microsoft.CodeAnalysis.ISourceGenerator[] generators, CSharpCompilation compilation, string modId, bool useScriptPaths = true)
         {
             if (generators == null || generators.Length == 0)
                 return compilation;
 
             try
             {
+                // External folders and archives have no loadable res:// C#
+                // file. Godot creates their managed script bridge from the type
+                // itself. Keep method/property/signal generators: only omit the
+                // filesystem path attribute that would force a failed load.
+                var selected = useScriptPaths ? generators : generators
+                    .Where(generator => generator.GetType().Name != "ScriptPathAttributeGenerator").ToArray();
                 var driver = CSharpGeneratorDriver.Create(
-                    generators,
+                    selected,
                     null,
                     null,
                     new ModAnalyzerConfigOptionsProvider(ModReferenceProvider.ProjectRoot));

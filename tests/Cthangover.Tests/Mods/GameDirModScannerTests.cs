@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using Cthangover.Core.Mods;
 using Cthangover.Core.Mods.Discovery;
 using Cthangover.Core.Utils;
 
@@ -48,9 +50,9 @@ namespace Engine.Tests.Mods
 
             var roots = new List<ModSourceRoot>(scanner.GetRoots());
 
-            Assert.Single(roots);
-            Assert.Equal("mods", roots[0].Url);
-            Assert.Equal(0, roots[0].Priority);
+            var expected = ModRootFolders.Names.Where(folder => folder == ModRootFolders.Primary || Directory.Exists(folder)).ToArray();
+            Assert.Equal(expected, roots.Select(root => root.Url));
+            Assert.All(roots, root => Assert.Equal(0, root.Priority));
         }
 
         [Fact]

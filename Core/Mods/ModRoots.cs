@@ -1,6 +1,8 @@
 namespace Cthangover.Core.Mods
 {
+    using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Linq;
     using Cthangover.Core.Mods.Discovery;
 
@@ -24,8 +26,10 @@ namespace Cthangover.Core.Mods
     /// </summary>
     public static class ModRoots
     {
-        /// <summary>Primary mods root (the first accessible scanner root, lowest priority number).</summary>
-        public static string ModsPath => ResolveModsRoots().FirstOrDefault().Path;
+        /// <summary>Primary write target for new mods; existing mods must use their provider's RootPath.</summary>
+        public static string ModsPath => ResolveModsRoots()
+            .FirstOrDefault(root => !ModRootFolders.Names.Skip(1).Any(folder =>
+                string.Equals(Path.GetFileName(root.Path.TrimEnd('/', '\\')), folder, StringComparison.OrdinalIgnoreCase))).Path;
 
         /// <summary>All currently accessible mods roots with their dedup priorities; used by the uninstaller's writable-root check.</summary>
         public static List<(string Path, int Priority)> AllModsRoots => ResolveModsRoots();

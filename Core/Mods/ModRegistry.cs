@@ -77,7 +77,7 @@ namespace Cthangover.Core.Mods
             }
         }
 
-        /// <summary>Primary mods root (the first accessible scanner root, lowest priority number).</summary>
+        /// <summary>Primary write target for new mods; existing mods must use their provider's RootPath.</summary>
         public static string ModsPath => ModRoots.ModsPath;
 
         /// <summary>All currently accessible mods roots with their dedup priorities; used by the uninstaller's writable-root check.</summary>

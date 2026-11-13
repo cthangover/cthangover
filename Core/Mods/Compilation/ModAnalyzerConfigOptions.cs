@@ -36,9 +36,9 @@ namespace Cthangover.Core.Mods.Compilation
                     // The Sdk leaves this property empty for the game project
                     // itself; it is 'true' only for the editor tool assembly.
                     // ScriptPathAttributeGenerator and GodotPluginsInitializer
-                    // bail out when it is 'true', which would strip
-                    // [ScriptPathAttribute] from runtime-compiled mods and kill
-                    // their [Signal]s, so mirror the game project here.
+                    // bail out when it is 'true'. Mirror the game project;
+                    // external sources omit only the path generator in the host,
+                    // retaining the generated signal/property/method bindings.
                     value = string.Empty;
                     return true;
 
