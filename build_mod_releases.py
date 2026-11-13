@@ -14,7 +14,7 @@ Does for all mods at once what the game's "Export to Catalog" does for one
     (git.cthangover.ru/cthangover/catalog, github.com/cthangover/catalog); the
     icon URL is the first host's.
 
-Entries take id, name, author, version, description, category, depends and
+Entries take id, name, author, version, description, categories, depends and
 conflicts_with from manifest.json; locale from the mod's own
 mod_<id>_name / mod_<id>_desc keys in locale/*.properties; tags from the id's
 words and the categories. archive_sha256 is the zip's SHA-256, install_sha256
@@ -181,10 +181,18 @@ def mod_locale(folder, mod_id):
 
 
 def categories(manifest):
-    raw = manifest.get("category") or "other"
-    if isinstance(raw, list):
-        raw = ",".join(raw)
-    return [c.strip().lower() for c in str(raw).split(",") if c.strip()] or ["other"]
+    raw = manifest.get("categories", [])
+    if not isinstance(raw, list) or not all(isinstance(value, str) for value in raw):
+        raise ScriptError("manifest categories must be a JSON array of strings")
+    result = []
+    seen = set()
+    for value in raw:
+        name = value.strip()
+        identity = name.lower()
+        if name and identity not in seen:
+            result.append(name)
+            seen.add(identity)
+    return result or ["other"]
 
 
 def tags(mod_id, cats):
@@ -223,7 +231,7 @@ def entry_for(manifest, mod_id, locale, cats, download, icon_url):
         "description": manifest.get("description"),
         "locale": locale or [{"lang": "en", "name": manifest.get("name") or mod_id,
                               "description": manifest.get("description")}],
-        "category": ", ".join(cats),
+        "categories": cats,
         "tags": tags(mod_id, cats),
         "icon_url": icon_url,
         "depends": list(manifest.get("depends") or []),
@@ -256,14 +264,14 @@ def select_mods(only, skip):
     return [d for d in folders if d.name not in skip]
 
 
-def build_mod(folder, out, patterns, hosts):
+def build_mod(folder, out, patterns, hosts, no_git=False):
     manifest = json.loads((folder / "manifest.json").read_text(encoding="utf-8-sig"))
     mod_id = manifest.get("id")
     if mod_id != folder.name:
         raise ScriptError("%s: manifest id '%s' differs from the folder name" % (folder.name, mod_id))
     if not manifest.get("version"):
         raise ScriptError("%s: manifest has no version" % mod_id)
-    if git_dirty(folder):
+    if not no_git and git_dirty(folder):
         print("  warning: %s has uncommitted changes, built from the working tree" % mod_id)
 
     version = manifest["version"]
@@ -276,7 +284,7 @@ def build_mod(folder, out, patterns, hosts):
     locale = mod_locale(folder, mod_id)
     cats = categories(manifest)
     icon = next((n for n in ICON_NAMES if (folder / n).is_file()), None)
-    branch = git_branch(folder)
+    branch = "master" if no_git else git_branch(folder)
     hashes = {
         "size_bytes": archive.stat().st_size,
         "archive_sha256": file_sha256(archive),
@@ -292,12 +300,12 @@ def build_mod(folder, out, patterns, hosts):
     return entry
 
 
-def build_all(out, mods, hosts):
+def build_all(out, mods, hosts, no_git=False):
     """Archive and entry of every mod folder in `mods`; the entries in that order."""
     out.mkdir(parents=True, exist_ok=True)
     patterns = load_patterns()
     print("Building %d mods into %s" % (len(mods), out))
-    return [build_mod(folder, out, patterns, hosts) for folder in mods]
+    return [build_mod(folder, out, patterns, hosts, no_git=no_git) for folder in mods]
 
 
 def archive_path(out, entry):
@@ -327,6 +335,7 @@ def split_list(value):
 
 def main():
     parser = argparse.ArgumentParser(description="Build release archives of the mods and their catalogs.")
+    parser.add_argument("--no-git", action="store_true", help="offline build without Git inspection; source links use master")
     parser.add_argument("--out", default=str(ROOT / "releases"), help="output folder (default: releases/)")
     parser.add_argument("--only", help="comma-separated mod ids to build")
     parser.add_argument("--skip", help="comma-separated mod ids to leave out")
@@ -343,7 +352,7 @@ def main():
     if not mods:
         raise ScriptError("no mods to build")
 
-    entries = build_all(out, mods, hosts)
+    entries = build_all(out, mods, hosts, no_git=args.no_git)
     path = out / "catalog.json"
     write_json(path, catalog_document(entries))
     print("Catalog: %d mods, mirrors %s -> %s" % (len(entries), ", ".join(hosts), path))

@@ -198,7 +198,7 @@ def mod_notes(state):
         # The manifest's own English description: the full text, not the short locale one.
         entry.get("description") or "",
         "| | |\n|---|---|\n| Mod id | `%s` |\n| Category | %s |\n| Depends on | %s |"
-        % (state.mod.mod_id, entry.get("category") or "other", depends),
+        % (state.mod.mod_id, ", ".join(entry.get("categories") or ["other"]), depends),
         "### Install\n\nIn the game: **Mods → Network** lists it from the catalog. By hand: put `%s` as it is "
         "into the game's `mods/` folder, or unpack it into `mods/%s/`." % (archive, state.mod.mod_id),
         sha_block({archive: state.download["archive_sha256"]})
