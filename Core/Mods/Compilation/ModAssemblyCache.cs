@@ -126,16 +126,29 @@ namespace Cthangover.Core.Mods.Compilation
             // "refs=depends": mods compile against their dependency closure only
             // (ModCompiler.DependencyClosure); entries built against every mod
             // could hide an undeclared dependency and must not be reused.
-            var hash = ModHasher.ComputeHash(sourceList, (dependencySignature ?? string.Empty) + ";core=" + coreSignature + ";codegen=" + codegenMarker + ";pdb=named;refs=depends");
+            var generationPath = Path.Combine(CacheRoot, modId + ".generation");
+            var generation = ReadGeneration(generationPath);
+            var hash = ModHasher.ComputeHash(sourceList, (dependencySignature ?? string.Empty) + ";core=" + coreSignature + ";codegen=" + codegenMarker + ";pdb=named;refs=depends;generation=" + generation,
+                System.Environment.GetEnvironmentVariable("CTHANGOVER_TEST_PROJECT"));
             return Path.Combine(CacheRoot, $"{modId}_{hash}.dll");
+        }
+
+        private static string ReadGeneration(string path)
+        {
+            if (!File.Exists(path)) return string.Empty;
+            // A concurrent invalidation atomically renames the token. Permit that
+            // rename while reading on Windows as well as Unix; either complete token is valid.
+            using var stream = new FileStream(path, FileMode.Open, System.IO.FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            using var reader = new StreamReader(stream);
+            return reader.ReadToEnd();
         }
 
         /// <summary>
         /// Applies the cache policy to a computed cache path. On a valid hit
         /// (DLL plus PDB present and <c>UseAssemblyCache</c> enabled) the
-        /// cached assembly is loaded and returned; otherwise any stale
-        /// artifact is deleted (setting requires recompilation, or the PDB
-        /// is missing) and null is returned so the caller compiles.
+        /// cached assembly is loaded and returned; otherwise null tells the caller to
+        /// compile. Only incomplete pairs are removed under a lease; complete pairs
+        /// stay immutable even when the cache policy forces compilation.
         /// <paramref name="modId"/> routes the load into the mod's collectible
         /// context (null callers — test engine — keep the default context).
         /// </summary>
@@ -157,24 +170,22 @@ namespace Cthangover.Core.Mods.Compilation
         /// may be used as is (DLL plus PDB present and <c>UseAssemblyCache</c>
         /// enabled, or the artifact is the one a live mod context runs right now —
         /// rewriting a loaded, memory-mapped DLL fails on Windows and would only
-        /// reproduce the same bytes). Otherwise stale files are deleted and false
-        /// tells the caller to compile.
+        /// reproduce the same bytes). Otherwise false tells the caller to compile.
+        /// Interrupted incomplete pairs are recovered under the publication lease.
         /// </summary>
         public static bool IsUsableHit(string cachedPath)
         {
-            // A DLL without its PDB (cache entry from before §9.2) is treated
-            // as stale so every mod gains debug symbols after one recompile.
-            var cachedPdbPath = Path.ChangeExtension(cachedPath, ".pdb");
-            if (!File.Exists(cachedPath))
-                return false;
-            if (File.Exists(cachedPdbPath) && (ModConfig.Instance.UseAssemblyCache || ModAssemblyLoader.IsArtifactLoaded(cachedPath)))
-                return true;
+            using var entry = AssemblyCacheEntry.Acquire(cachedPath);
+            return IsUsableHit(entry, cachedPath);
+        }
 
-            File.Delete(cachedPath);
-            if (File.Exists(cachedPdbPath))
-                File.Delete(cachedPdbPath);
-            GameLogger.Log("MODS_COMPILE", $"ModCompiler.Compile: cached {cachedPath} need delete by settings 'use_assembly_cache'", LogLevel.Warning);
-            return false;
+        /// <summary>Checks policy under the caller's existing lease, so compilation can retain it through publication.</summary>
+        internal static bool IsUsableHit(AssemblyCacheEntry entry, string cachedPath)
+        {
+            if (!entry.HasArtifacts) { entry.RemoveIncomplete(); return false; }
+            if (!ModConfig.Instance.UseAssemblyCache && !ModAssemblyLoader.IsArtifactLoaded(cachedPath)) return false;
+            entry.Touch();
+            return true;
         }
 
         /// <summary>
@@ -184,40 +195,30 @@ namespace Cthangover.Core.Mods.Compilation
         /// </summary>
         public static void Store(string cachedPath, MemoryStream assemblyStream, MemoryStream pdbStream)
         {
-            Directory.CreateDirectory(CacheRoot);
-            assemblyStream.Seek(0, SeekOrigin.Begin);
-            File.WriteAllBytes(cachedPath, assemblyStream.ToArray());
-            pdbStream.Seek(0, SeekOrigin.Begin);
-            File.WriteAllBytes(Path.ChangeExtension(cachedPath, ".pdb"), pdbStream.ToArray());
+            using var entry = AssemblyCacheEntry.Acquire(cachedPath);
+            entry.Publish(assemblyStream, pdbStream);
         }
 
         /// <summary>
-        /// Deletes all cached compilation output for a specific mod.
-        /// Returns true if any files were deleted.
+        /// Invalidates a mod by advancing its cache generation. Existing pairs remain
+        /// immutable for processes already loading them; age-based runner pruning reclaims them later.
+        /// Returns true when cached artifacts existed and a new generation was published.
         /// </summary>
         public static bool InvalidateCache(string modId)
         {
             if (!Directory.Exists(CacheRoot))
                 return false;
-            var deleted = false;
-            // File-backed (debuggable) assemblies memory-map their DLL/PDB, so
-            // Windows can refuse to delete the files of the mod that is
-            // currently loaded — hot-reload must survive that: a stale DLL is
-            // harmless because cache lookups and the reference scan always
-            // pick the newest artifact per mod id.
-            foreach (var file in Directory.GetFiles(CacheRoot, $"{modId}_*.*"))
+            var generation = Path.Combine(CacheRoot, modId + ".generation");
+            using var lease = AssemblyCacheEntry.Acquire(generation);
+            if (!Directory.EnumerateFiles(CacheRoot, modId + "_*.dll").Any()) return false;
+            var temporary = generation + "." + Guid.NewGuid().ToString("N") + ".tmp";
+            try
             {
-                try
-                {
-                    File.Delete(file);
-                    deleted = true;
-                }
-                catch (IOException ex)
-                {
-                    GameLogger.Log("MODS_COMPILE", $"InvalidateCache: '{file}' is locked (loaded mod), left in place: {ex.Message}", LogLevel.Warning);
-                }
+                File.WriteAllText(temporary, Guid.NewGuid().ToString("N"));
+                File.Move(temporary, generation, true);
             }
-            return deleted;
+            finally { File.Delete(temporary); }
+            return true;
         }
 
         /// <summary>

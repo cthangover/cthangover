@@ -137,8 +137,13 @@ namespace Cthangover.Core.Mods.Testing
             var cachedPath = Path.Combine(testRoot, $"{mod.Id}__tests_{hash}.dll");
 
             // Missing PDB = pre-§9.2 cache entry: recompile once to gain symbols.
-            if (File.Exists(cachedPath) && File.Exists(Path.ChangeExtension(cachedPath, ".pdb")))
+            using var cacheEntry = Compilation.AssemblyCacheEntry.Acquire(cachedPath, cancellationToken);
+            if (cacheEntry.HasArtifacts)
+            {
+                cacheEntry.Touch();
+                GameLogger.Log("MODTEST", $"ModTestEngine: cache hit '{mod.Id}__tests'", LogLevel.Debug);
                 return ModAssemblyLoader.LoadTestAssembly(cachedPath, mod.Id);
+            }
 
             // Encoding is mandatory for PDB emission (see ModCompiler.Compile).
             var syntaxTrees = sources
@@ -192,10 +197,7 @@ namespace Cthangover.Core.Mods.Testing
                 return null;
             }
 
-            File.WriteAllBytes(cachedPath, ms.ToArray());
-            var cachedPdbPath = Path.ChangeExtension(cachedPath, ".pdb");
-            pdb.Seek(0, SeekOrigin.Begin);
-            File.WriteAllBytes(cachedPdbPath, pdb.ToArray());
+            cacheEntry.Publish(ms, pdb);
             GameLogger.Log("MODTEST", $"ModTestEngine: compiled test assembly '{mod.Id}__tests' ({sources.Count} files) -> {cachedPath}");
             return ModAssemblyLoader.LoadTestAssembly(cachedPath, mod.Id);
         }

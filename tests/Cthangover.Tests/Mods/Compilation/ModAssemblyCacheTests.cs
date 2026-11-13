@@ -22,6 +22,8 @@ namespace Cthangover.Tests.Mods.Compilation
         public void Dispose()
         {
             ModAssemblyCache.CurrentArtifacts.TryRemove(depId, out _);
+            if (Directory.Exists(ModAssemblyCache.CacheRoot))
+                ModAssemblyCache.InvalidateCache(depId);
             Directory.Delete(dir, recursive: true);
         }
 
@@ -58,6 +60,25 @@ namespace Cthangover.Tests.Mods.Compilation
             Assert.NotEqual(plain, ModAssemblyCache.BuildCachePath("app", sources, "dep@1.0.0#dep_new", generatorsAvailable: true));
             Assert.NotEqual(plain, ModAssemblyCache.BuildCachePath("app", new List<(string, string)> { ("A.cs", "class B { }") }, "dep@1.0.0", generatorsAvailable: true));
             Assert.StartsWith("app_", Path.GetFileName(plain));
+        }
+
+        [Fact]
+        public void InvalidationChangesTheKeyWithoutDeletingACommittedPair()
+        {
+            var sources = new List<(string, string)> { ("A.cs", "class A { }") };
+            var before = ModAssemblyCache.BuildCachePath(depId, sources, "dep@1", true);
+            // A shared cache must contain valid metadata even in fixtures: another
+            // process may enumerate it while this assertion runs.
+            var original = ModCompiler.EnsureCompiled(depId, sources, "dep@1", knownModIds: Array.Empty<string>());
+            Assert.NotNull(original);
+            var dll = File.ReadAllBytes(original);
+            var pdb = File.ReadAllBytes(Path.ChangeExtension(original, ".pdb"));
+            Assert.True(ModAssemblyCache.InvalidateCache(depId));
+            var invalidated = ModAssemblyCache.BuildCachePath(depId, sources, "dep@1", true);
+            Assert.NotEqual(before, invalidated);
+            Assert.False(File.Exists(invalidated));
+            Assert.Equal(dll, File.ReadAllBytes(original));
+            Assert.Equal(pdb, File.ReadAllBytes(Path.ChangeExtension(original, ".pdb")));
         }
 
         [Fact]

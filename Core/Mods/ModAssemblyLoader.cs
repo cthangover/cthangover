@@ -7,6 +7,7 @@ using System.Threading;
 using Cthangover.Core.Factories.Impls;
 using Cthangover.Core.Items;
 using Cthangover.Core.Mods.Consumers;
+using Cthangover.Core.Mods.Compilation;
 using Cthangover.Core.Mods.Discovery;
 using Cthangover.Core.Scenes.TscnBuild;
 using Cthangover.Core.Scenes.TscnParsing;
@@ -464,10 +465,7 @@ namespace Cthangover.Core.Mods
                 {
                     try
                     {
-                        var hash = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(bytes)).Substring(0, 16).ToLowerInvariant();
-                        var cachedPath = Path.Combine(ModCompiler.CacheRoot, $"{mod.Id}_dll_{hash}_{Path.GetFileName(filePath)}");
-                        if (!File.Exists(cachedPath))
-                            File.WriteAllBytes(cachedPath, bytes);
+                        var cachedPath = PrecompiledAssemblyCache.Stage(ModCompiler.CacheRoot, mod.Id, filePath, bytes, cancellationToken);
                         result.Add((mod.Id, cachedPath));
                     }
                     catch (Exception ex)

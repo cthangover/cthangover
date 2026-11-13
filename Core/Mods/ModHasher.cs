@@ -52,11 +52,24 @@ namespace Cthangover.Core.Mods
         /// assembly name its compiled code links against — invalidates the cache even when
         /// the mod's own sources are unchanged.
         /// </summary>
-        public static string ComputeHash(List<(string FilePath, string Source)> sources, string dependencySignature = null)
+        /// <param name="sourceRoot">Optional project root removed from absolute source paths to reuse keys across test snapshots.</param>
+        public static string ComputeHash(List<(string FilePath, string Source)> sources, string dependencySignature = null, string sourceRoot = null)
         {
             using var sha = SHA256.Create();
             var sb = new StringBuilder();
-            foreach (var (path, source) in sources.OrderBy(s => s.FilePath))
+            var identities = new List<(string FilePath, string Source)>();
+            foreach (var (path, source) in sources)
+            {
+                var identity = path;
+                if (!string.IsNullOrEmpty(sourceRoot) && Path.IsPathRooted(path))
+                {
+                    var relative = Path.GetRelativePath(sourceRoot, path);
+                    if (!Path.IsPathRooted(relative) && relative != ".." && !relative.StartsWith(".." + Path.DirectorySeparatorChar, StringComparison.Ordinal))
+                        identity = relative.Replace('\\', '/');
+                }
+                identities.Add((identity, source));
+            }
+            foreach (var (path, source) in identities.OrderBy(s => s.FilePath))
             {
                 sb.Append(path);
                 sb.Append(':');

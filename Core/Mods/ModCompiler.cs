@@ -297,8 +297,10 @@ namespace Cthangover.Core.Mods
 
             var generators = GodotGeneratorHost.GetGodotGenerators();
             var cachedPath = ModAssemblyCache.BuildCachePath(modId, sourceList, dependencySignature, generators != null && generators.Length > 0);
-            if (ModAssemblyCache.IsUsableHit(cachedPath))
+            using var cacheEntry = AssemblyCacheEntry.Acquire(cachedPath, cancellationToken);
+            if (ModAssemblyCache.IsUsableHit(cacheEntry, cachedPath))
             {
+                GameLogger.Log("MODS_COMPILE", $"ModCompiler: cache hit '{modId}' -> {cachedPath}", LogLevel.Debug);
                 ModAssemblyCache.CurrentArtifacts[modId] = cachedPath;
                 return cachedPath;
             }
@@ -358,7 +360,7 @@ namespace Cthangover.Core.Mods
                 return null;
             }
 
-            ModAssemblyCache.Store(cachedPath, ms, pdb);
+            cacheEntry.Publish(ms, pdb);
 
             GameLogger.Log("MODS_COMPILE", $"ModCompiler.Compile: Compilation of mod '{modId}' with {sourceList.Count} source files - success -> {cachedPath}");
 
@@ -455,8 +457,8 @@ namespace Cthangover.Core.Mods
         }
 
         /// <summary>
-        /// Deletes all cached compilation output for a specific mod.
-        /// Returns true if any files were deleted.
+        /// Advances a mod's cache generation without deleting pairs another process may load.
+        /// Returns true if cached artifacts existed and were invalidated.
         /// </summary>
         public static bool InvalidateCache(string modId)
         {

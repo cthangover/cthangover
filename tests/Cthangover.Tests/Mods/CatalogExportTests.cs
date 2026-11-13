@@ -415,6 +415,16 @@ namespace Engine.Tests.Mods
 
 	public class ModHasherTests : IDisposable
 	{
+        [Fact]
+        public void SourceHashDoesNotDependOnThePhysicalTestProjectRoot()
+        {
+            var first = Path.Combine(Path.GetTempPath(), "run_one");
+            var second = Path.Combine(Path.GetTempPath(), "run_two");
+            var one = new List<(string, string)> { (Path.Combine(first, "mods", "probe", "src", "A.cs"), "class A { }") };
+            var two = new List<(string, string)> { (Path.Combine(second, "mods", "probe", "src", "A.cs"), "class A { }") };
+            Assert.Equal(ModHasher.ComputeHash(one, "dep@1", first), ModHasher.ComputeHash(two, "dep@1", second));
+            Assert.NotEqual(ModHasher.ComputeHash(one, "dep@1", first), ModHasher.ComputeHash(two, "dep@2", second));
+        }
 		private readonly string _testDir;
 
 		public ModHasherTests()
