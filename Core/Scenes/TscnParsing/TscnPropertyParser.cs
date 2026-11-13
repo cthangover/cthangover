@@ -34,6 +34,8 @@ namespace Cthangover.Core.Scenes.TscnParsing
             if (TryParseConstructorArgs("Rect2", trimmed, out var r2, 4)) return ParsedGodotValue.Create("Rect2", r2.ToArray());
             if (TryParseConstructorArgs("Rect2i", trimmed, out var r2i, 4)) return ParsedGodotValue.Create("Rect2i", r2i.ToArray());
             if (TryParseConstructorArgs("Transform2D", trimmed, out var t2, 6)) return ParsedGodotValue.Create("Transform2D", t2.ToArray());
+            if (TryParseConstructorArgs("Basis", trimmed, out var basis, 9)) return ParsedGodotValue.Create("Basis", basis.ToArray());
+            if (TryParseConstructorArgs("Transform3D", trimmed, out var transform3d, 12)) return ParsedGodotValue.Create("Transform3D", transform3d.ToArray());
             if (TryParseConstructorArgs("Plane", trimmed, out var pa, 4)) return ParsedGodotValue.Create("Plane", pa.ToArray());
             if (TryParseConstructorArgs("Quaternion", trimmed, out var qa, 4)) return ParsedGodotValue.Create("Quaternion", qa.ToArray());
             if (TryParseConstructorArgs("AABB", trimmed, out var aa, 6)) return ParsedGodotValue.Create("AABB", aa.ToArray());

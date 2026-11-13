@@ -138,9 +138,12 @@ namespace Cthangover.Core.Scenes.TscnBuild
             return current;
         }
 
-        private static void ApplyProperties(Node node, ParsedNode parsedNode, ParsedScene scene, Func<string, Resource> extResourceResolver, Func<string, Node> instanceLoader)
+        private void ApplyProperties(Node node, ParsedNode parsedNode, ParsedScene scene, Func<string, Resource> extResourceResolver, Func<string, Node> instanceLoader)
         {
-            var ctx = new PropertyContext(scene, instanceLoader, extResourceResolver);
+            var ctx = new PropertyContext(scene, instanceLoader, extResourceResolver)
+            {
+                SubResourceResolver = _subResourceFactory.Get,
+            };
             foreach (var kvp in parsedNode.OrderedProperties)
             {
                 try

@@ -13,6 +13,8 @@ namespace Cthangover.Core.Scenes.TscnBuild
         public Func<string, Node> InstanceLoader { get; set; }
         /// <summary>Fallback resolver for non-Script/non-PackedScene ext_resource types (textures, fonts, …).</summary>
         public Func<string, Resource> ExtResourceResolver { get; set; }
+        /// <summary>Already-built local resources, shared by node properties within this scene instance.</summary>
+        public Func<string, Resource> SubResourceResolver { get; set; }
         /// <summary>Creates a context bundling the scene model and the two build callbacks.</summary>
         public PropertyContext(ParsedScene scene, Func<string, Node> instanceLoader, Func<string, Resource> extResourceResolver) { Scene = scene; InstanceLoader = instanceLoader; ExtResourceResolver = extResourceResolver; }
     }
