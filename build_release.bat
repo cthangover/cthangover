@@ -18,6 +18,7 @@ rem The pck carries only engine resources; mods\, collections\ and config\ are
 rem copied loose next to the executable (the runtime mod pipeline reads them
 rem from the game dir). Dev-only parts of the mods (git repos, GUI test suites,
 rem native sources, debug symbols, the other platform's natives) are left out.
+rem test_* fixture mods are excluded; stat_checks is runtime gameplay.
 rem
 rem The Linux .tar.gz is packed through WSL when it is available, so the
 rem executable keeps its +x bit; Windows tar.exe cannot store it, then the
@@ -121,11 +122,10 @@ if not exist "%OUT%\%EXE%" (
 
 set RID=linux-x64
 if "%PLATFORM%"=="windows" set RID=win-x64
-"%PYTHON_BIN%" tests\verify_release_runtime.py "%OUT%" "%RID%"
-if errorlevel 1 exit /b 1
 
 echo === %PLATFORM%: loose content ===
 if "%PLATFORM%"=="windows" (set NATIVE_SKIP=*.so) else (set NATIVE_SKIP=)
+rem test_* is reserved for fixture mods; stat_checks is runtime gameplay.
 call :copy_tree mods "%OUT%\mods" %NATIVE_SKIP%
 if errorlevel 1 exit /b 1
 call :copy_tree collections "%OUT%\collections"
@@ -135,6 +135,9 @@ if errorlevel 1 exit /b 1
 if "%PLATFORM%"=="linux" (
     for /d %%m in ("%OUT%\mods\*") do if exist "%%m\native\*.dll" del /q "%%m\native\*.dll"
 )
+
+"%PYTHON_BIN%" tests\verify_release_runtime.py "%OUT%" "%RID%"
+if errorlevel 1 exit /b 1
 
 if "%ARCHIVE%"=="0" exit /b 0
 if "%PLATFORM%"=="windows" (
@@ -153,7 +156,9 @@ rem :copy_tree <src> <dst> [extra file masks to skip]
 rem robocopy exit codes below 8 mean success.
 rem ---------------------------------------------------------------------------
 :copy_tree
-robocopy "%~1" "%~2" /E /XD .git .git-template test_suites source_code /XF *.pdb *.lib *.zip %3 /NFL /NDL /NJH /NJS /NP >nul
+set FIXTURE_SKIP=
+if /i "%~1"=="mods" set FIXTURE_SKIP=test_*
+robocopy "%~1" "%~2" /E /XJ /XD .git .git-template test_suites source_code %FIXTURE_SKIP% /XF *.pdb *.lib *.zip %3 /NFL /NDL /NJH /NJS /NP >nul
 if errorlevel 8 (
     echo Copying %~1 failed.
     exit /b 1
@@ -226,11 +231,16 @@ echo === windows: verify (menu - New game - prologue) ===
 set VDIR=%TEMP%\cthangover_verify_%RANDOM%%RANDOM%
 set VGAME=%VDIR%\game
 mkdir "%VGAME%"
-if exist "releases\cthangover-%VERSION%-windows.zip" (
+rem --no-archive must never select an old ZIP left by an earlier build.
+if "%ARCHIVE%"=="1" (
+    echo verify source: archive created by this build
     tar -x -f "releases\cthangover-%VERSION%-windows.zip" -C "%VGAME%" --strip-components 1
 ) else (
+    echo verify source: freshly exported releases\windows folder
     robocopy releases\windows "%VGAME%" /E /NFL /NDL /NJH /NJS /NP >nul
 )
+"%PYTHON_BIN%" tests\verify_release_runtime.py "%VGAME%" win-x64 --expected-release releases\windows
+if errorlevel 1 exit /b 1
 robocopy mods\menu_base\test_suites "%VGAME%\mods\menu_base\test_suites" /E /NFL /NDL /NJH /NJS /NP >nul
 if not exist "%VGAME%\cthangover.exe" (
     echo verify: the unpacked release has no cthangover.exe

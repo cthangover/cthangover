@@ -19,7 +19,7 @@
 # copied loose next to the executable, because the runtime mod pipeline reads
 # them from the game dir. Dev-only parts of the mods (git repos, GUI test
 # suites, native sources, debug symbols, the other platform's natives) are
-# left out.
+# left out. Fixture mods named test_* are excluded; stat_checks is gameplay.
 #
 # --verify unpacks the release into a temp dir, adds the menu_base GUI test
 # suites and runs `--frontend --itest=new_game` from another working dir with
@@ -80,12 +80,13 @@ build() {
 
     local rid=linux-x64
     [ "$platform" != windows ] || rid=win-x64
-    "${PYTHON_BIN:-python3}" tests/verify_release_runtime.py "$out" "$rid"
 
     echo "=== $platform: loose content ==="
-    copy_tree mods        "$out/mods" --exclude="$natives_skip"
+    # test_* is reserved for fixture mods; stat_checks is runtime gameplay.
+    copy_tree mods        "$out/mods" --exclude='./test_*' --exclude="$natives_skip"
     copy_tree collections "$out/collections"
     copy_tree config      "$out/config"
+    "${PYTHON_BIN:-python3}" tests/verify_release_runtime.py "$out" "$rid"
 
     if [ "$ARCHIVE" -eq 1 ]; then
         local name="cthangover-$VERSION-$platform"
@@ -115,11 +116,15 @@ verify_linux() {
     dir="$(mktemp -d)"
     game="$dir/game"
     mkdir -p "$game"
-    if [ -f "releases/cthangover-$VERSION-linux.tar.gz" ]; then
+    # --no-archive must never select a leftover archive from an earlier build.
+    if [ "$ARCHIVE" -eq 1 ]; then
+        echo "verify source: archive created by this build"
         tar -xzf "releases/cthangover-$VERSION-linux.tar.gz" -C "$game" --strip-components=1
     else
+        echo "verify source: freshly exported releases/linux folder"
         cp -r releases/linux/. "$game"
     fi
+    "${PYTHON_BIN:-python3}" tests/verify_release_runtime.py "$game" linux-x64 --expected-release releases/linux
     cp -r mods/menu_base/test_suites "$game/mods/menu_base/"
 
     log="${XDG_DATA_HOME:-$HOME/.local/share}/cthangover/logs/cthangover.log"

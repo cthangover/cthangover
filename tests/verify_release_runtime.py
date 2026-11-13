@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""Verify the exported CLR against its resolved runtime pack before archiving.
+"""Verify the exported runtime, PCK content and loose mod set before archiving.
 
 Проверка экспортированного CLR по runtime pack перед упаковкой релиза.
+Copied/unpacked verification payloads must match the current export.
 SDK 10/net10.0 compile the game; the self-contained payload includes CLR 10
 and the SDK reference pack needed to compile mods without an installed SDK.
 """
@@ -11,11 +12,60 @@ import json
 import os
 from pathlib import Path
 import shutil
+import struct
 import sys
 import xml.etree.ElementTree as ET
 
 
-def verify(root, rid, packages):
+def pck_paths(path):
+    """Read the unencrypted standalone Godot 4 PCK directory (formats 2/3).
+
+    Layout: godot/4.6/core/io/file_access_pack.cpp, PackedSourcePCK::try_open_pack.
+    """
+    with path.open("rb") as stream:
+        header = stream.read(40)
+        magic, version, _major, _minor, _patch, flags, _base, directory = struct.unpack("<6I2Q", header)
+        if magic != 0x43504447 or version not in (2, 3) or flags & 1:
+            raise ValueError("release content audit requires an unencrypted Godot 4 PCK")
+        stream.seek(directory if version == 3 else 96)
+        count = struct.unpack("<I", stream.read(4))[0]
+        paths = []
+        for _ in range(count):
+            length = struct.unpack("<I", stream.read(4))[0]
+            path = stream.read(length).rstrip(b"\0").decode("utf-8").removeprefix("res://")
+            stream.read(36)  # offset, size, MD5 and file flags
+            paths.append(path)
+        return paths
+
+
+def verify_content(root):
+    """Reject development trees in the PCK and fixture mods in loose content."""
+    packs = list(root.glob("*.pck"))
+    if len(packs) != 1:
+        raise ValueError(f"expected one standalone game PCK, found {len(packs)}")
+    paths = pck_paths(packs[0])
+    forbidden = {"jobs", "site_github", "comfy", "node_modules", "authoring3d", "docs", "tests", "sdk",
+                 "site", "mockups", "gen", "undefined", "releases", "mods_private", "collections", "config"}
+    unwanted = []
+    for path in paths:
+        parts = path.split("/")
+        if (parts[0] in forbidden or any(part in {"bin", "obj", "__pycache__"} for part in parts)
+                or path == "global.json" or path.startswith("scenes/test/")):
+            unwanted.append(path)
+        elif parts[0] == "mods" and (parts[1].startswith("test_") or "test_suites" in parts or "source_code" in parts):
+            unwanted.append(path)
+    if unwanted:
+        raise ValueError(f"development content leaked into PCK: {unwanted[:5]}")
+    source = Path(__file__).resolve().parents[1] / "mods"
+    expected = {path.parent.name for path in source.glob("*/manifest.json")
+                if not json.loads(path.read_text(encoding="utf-8-sig")).get("fixture", False)}
+    actual = {path.parent.name for path in (root / "mods").glob("*/manifest.json")}
+    if actual != expected:
+        raise ValueError(f"release mod set differs: missing={sorted(expected - actual)}, extra={sorted(actual - expected)}")
+    print(f"release content: {len(paths)} PCK files; {len(actual)} runtime mods; no development trees or fixtures")
+
+
+def verify(root, rid, packages, expected_release=None):
     project = ET.parse(Path(__file__).resolve().parents[1] / "Cthangover.csproj")
     version = project.findtext(".//ReleaseRuntimeVersion")
     target = project.findtext(".//TargetFramework")
@@ -27,6 +77,14 @@ def verify(root, rid, packages):
     folder = configs[0].parent
     if not (folder / "Cthangover.dll").is_file():
         raise ValueError("exported game assembly is missing")
+    if expected_release is not None:
+        built = list(expected_release.rglob("Cthangover.runtimeconfig.json"))
+        if len(built) != 1:
+            raise ValueError("cannot identify the current build's managed payload")
+        for name in ("Cthangover.dll", "Cthangover.deps.json", "Cthangover.runtimeconfig.json"):
+            if (folder / name).read_bytes() != (built[0].parent / name).read_bytes():
+                raise ValueError(f"verify payload {name} differs from the release just built")
+    print(f"release core: sha256={hashlib.sha256((folder / 'Cthangover.dll').read_bytes()).hexdigest()}")
     if not (folder / "Godot.SourceGenerators.dll").is_file():
         raise ValueError("runtime mod compiler requires exported Godot.SourceGenerators.dll")
     config = json.loads(configs[0].read_text(encoding="utf-8"))["runtimeOptions"]
@@ -73,10 +131,12 @@ def main():
     parser.add_argument("root", type=Path)
     parser.add_argument("rid", choices=["linux-x64", "win-x64"])
     parser.add_argument("--packages", type=Path, default=Path(os.environ.get("NUGET_PACKAGES", Path.home() / ".nuget" / "packages")))
+    parser.add_argument("--expected-release", type=Path, help="require the same core/deps/config as the release just built")
     args = parser.parse_args()
     try:
-        verify(args.root, args.rid, args.packages)
-    except (OSError, ValueError, KeyError, ET.ParseError) as error:
+        verify(args.root, args.rid, args.packages, args.expected_release)
+        verify_content(args.root)
+    except (OSError, ValueError, KeyError, struct.error, ET.ParseError) as error:
         print(f"release runtime verification failed: {error}", file=sys.stderr)
         return 1
     return 0
