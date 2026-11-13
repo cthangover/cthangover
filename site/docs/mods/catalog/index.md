@@ -32,7 +32,7 @@ locally-installed mods.
           "description": "C#-рантайм Live2D Cubism: загрузка и отрисовка моделей, физика, анимации и эффекты."
         }
       ],
-      "category": "library, visual",                       // Category slugs: story, characters, gameplay, visual, audio, ui, locale, library, engine, overhaul, tools, editor, debug, other
+      "categories": ["library", "visual"],                       // Built-in codes: story, characters, gameplay, visual, audio, ui, locale, library, engine, overhaul, tools, editor, debug, other
       "tags": ["live2d", "base", "library", "visual"],     // Search/filter tags
       "icon_url": "https://git.cthangover.ru/cthangover/mod_live2d_base/raw/branch/master/mod.jpg", // Full URL to preview icon (PNG or JPEG)
       "depends": ["ui_base>=0.1.0"],                           // Versioned dependency strings
@@ -77,7 +77,7 @@ locally-installed mods.
 | `version` | string | Semver version of the latest release (e.g. "0.1.0") |
 | `description` | string | Fallback short description (used when no `locale` entry matches the player's language) |
 | `locale` | object[] | Localized name/description entries for different languages (see below) |
-| `category` | string | Category slug or comma-separated combination of slugs (e.g. `"library, gameplay"`): `story`, `characters`, `gameplay`, `visual`, `audio`, `ui`, `locale`, `library`, `engine`, `overhaul`, `tools`, `editor`, `debug`, `other` |
+| `categories` | string[] | Any authored category names. Trim/empty removal and case-insensitive deduplication preserve the first spelling and order; the first is primary. Empty/omitted means `other`. No client count or length limit. |
 | `tags` | string[] | Search/filter tags |
 | `icon_url` | string | Full URL to preview icon (PNG or JPEG) |
 | `depends` | string[] | Versioned dependency strings (e.g. `"cthangover_game>=0.1.0"`) |
@@ -175,9 +175,8 @@ download URL, category, tags, and changelog, then generates:
 - A `.zip` archive of the mod (if it was a folder)
 - A `.json` catalog entry file alongside the archive
 
-Categories are pre-checked from the mod's `manifest.json` `category`
-field (falling back to `other` when absent); several categories can be
-toggled at once.
+Categories are pre-checked from the mod's `manifest.json` `categories`
+field (falling back to `other` when absent). The shared editor offers base checkboxes, free-text category chips, completion and a primary selector. Development-folder changes are saved to the manifest before packing.
 
 Both files go into the mods root directory. The JSON snippet can be
 copied to clipboard and pasted into the catalog JSON you host online.
@@ -210,7 +209,7 @@ catalog to both `cthangover/catalog` repositories. The game's packages from `bui
   release; the game tries them in order), so the same file goes into both catalog repositories. The icon is
   the Gitea raw `mod.jpg`.
 
-Entries come from `manifest.json` (name, author, version, description, category, depends, conflicts_with) and
+Entries come from `manifest.json` (name, author, version, description, categories, depends, conflicts_with) and
 the mod's `mod_<id>_name` / `mod_<id>_desc` keys in every language; tags are the id's words plus the categories;
 `install_sha256` uses `catalog_ignore_patterns` from `config/mod_config.json`. Options: `--only=a,b`,
 `--skip=a,b`, `--hosts=gitea,github` (mirrors and their order), `--out=<dir>`.
@@ -225,3 +224,53 @@ The unified Mods view combines installed and remote state, including disabled an
 | **Update available** | Newer version in catalog |
 | **Not installed** | No local copy found |
 | **Modified locally** | Same version, but `install_sha256` differs player edited the mod |
+
+## Category names / Названия категорий
+
+```json
+"categories": ["RPG", "Weap ons! 世界", "Новая категория"]
+```
+
+Every string is a category. A previously unseen name creates a new category; there is no vocabulary or code-format validation.
+The client trims surrounding whitespace, ignores empty names and removes duplicates using `OrdinalIgnoreCase`, retaining the first spelling and order.
+It preserves the author's case and places no limit on category length or count. `RPG` and `rpg` are one category in filters, counts and groups.
+The first category is primary; an omitted or empty list displays as `other`. The singular field has no alias.
+
+The filter lists **all categories present in installed mods and every catalog**, with counts. It sorts by the displayed name
+(case-insensitive ordinal order), keeping `other` last. Alphabetical order stays stable when counts change.
+The sidebar scrolls; no categories are collapsed. Base categories are translated suggestions, not automatically added filters.
+Other facets can reduce a category's count to zero without hiding a name still present in the data.
+
+The shared editor offers free text, completion from all known and base categories, chips and a primary selector.
+There is no client category count/length limit. Use **Add** or Enter to add the typed name.
+In a development folder (`mods/` or `mods_private/`), **Save categories** writes the manifest without publishing.
+Publication and folder export save it before packaging. Installed packages and archives show metadata read-only because updates replace their contents.
+
+Ready translations use `mod_category/<name>` in `ui_base`. A mod can add, for example,
+`mod_category/rpg = Role-playing gear` in English and `mod_category/rpg = Снаряжение RPG` in Russian.
+Translation lookup also tries a lowercase key, while storage and untranslated display preserve the first authored spelling.
+Without a translation, `Weap ons! 世界` is shown exactly as written.
+
+A non-array field or a non-string element is a **JSON type error**: a manifest is rejected, and a catalog skips only that erroneous record.
+The keyserver only bounds untrusted input: a JSON array of at most 32 strings,
+at most 64 Unicode characters per string, without control characters. These are server input limits, not category-name rules.
+
+Любая строка — категория. Ранее не встречавшееся название просто создаёт новую категорию; проверки формата и «неизвестных» категорий нет.
+Клиент обрезает пробелы по краям, игнорирует пустые строки и убирает дубли через `OrdinalIgnoreCase`, сохраняя первое написание и порядок.
+Регистр автора сохраняется; клиент не ограничивает длину и количество. `RPG` и `rpg` дают один фильтр, счётчик и группу.
+Первая категория — основная; пустой или отсутствующий массив означает `other`. Старое одиночное поле не читается.
+
+Фильтр показывает все категории установленных модов и всех каталогов, с количеством модов. Порядок — по отображаемому названию
+без учёта регистра, `other` последняя. Такой алфавитный порядок остаётся стабильным при изменении счётчиков.
+Список прокручивается, сворачивания нет. Базовые категории служат только готовыми переводами и подсказками.
+Другие фильтры могут обнулить счётчик, но не скрывают категорию, пока она есть в данных.
+
+Редактор позволяет ввести любое название, выбрать подсказку, убрать фишку и назначить основную категорию. Нажмите **Добавить** или Enter.
+Кнопка **Сохранить категории** в карточке правит папки разработки `mods/` и `mods_private/` без публикации.
+Публикация и экспорт папки сохраняют манифест перед упаковкой; установленные пакеты и архивы доступны для чтения.
+Перевод задаётся ключом `mod_category/<название>` в локали мода; также пробуется ключ в нижнем регистре, но хранимое название не меняется.
+Без перевода показывается первое авторское написание.
+
+Не массив строк — ошибка типа JSON: манифест отклоняется, в каталоге пропускается только эта запись.
+На keyserver действуют лишь технические пределы недоверенного ввода:
+до 32 строк, до 64 символов Unicode в строке, без управляющих символов.

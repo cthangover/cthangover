@@ -90,10 +90,12 @@
   var galCat = "all";
   var galVisible = [];
   var lbIndex = 0;
-  var modCat = "all";
+  var modCat = null;
+  var modTabNames = [];
 
-  var CAT_KEYS = { engine:"cat_engine", gameplay:"cat_gameplay", story:"cat_story",
-                   library:"cat_library", ui:"cat_ui", tools:"cat_tools" };
+  var CAT_KEYS = { story:"cat_story", characters:"cat_characters", gameplay:"cat_gameplay",
+    visual:"cat_visual", audio:"cat_audio", ui:"cat_ui", locale:"cat_locale", library:"cat_library",
+    engine:"cat_engine", overhaul:"cat_overhaul", tools:"cat_tools", editor:"cat_editor", debug:"cat_debug", other:"cat_other" };
   var BATTLE_DESC = { turn_battle_base:"turn_d", card_battle:"card_d", ff_battle:"ff_d" };
   var BATTLE_TITLE = { turn_battle_base:"turn_t", card_battle:"card_t", ff_battle:"ff_t" };
   var BATTLE_ENGINE = "turn_battle_base";
@@ -173,27 +175,43 @@
     }
   }
 
-  function catLabel(c) {
-    return CAT_KEYS[c] ? t(CAT_KEYS[c]) : c;
+  function catLabel(category) {
+    var identity = category.toLowerCase();
+    var key = Object.prototype.hasOwnProperty.call(CAT_KEYS, identity) ? CAT_KEYS[identity] : null;
+    var translated = key ? t(key) : category;
+    return translated === key ? category : translated;
   }
 
   function renderModTabs() {
     var el = document.getElementById("modTabs");
     if (!el || !DATA || !DATA.mods) return;
-    var counts = { all: DATA.mods.length };
-    var order = ["all"];
+    // Category text may also be "all", "constructor" or "__proto__".
+    var counts = Object.create(null);
+    var names = Object.create(null);
+    var order = [];
     for (var i = 0; i < DATA.mods.length; i++) {
-      var cats = DATA.mods[i].cat;
-      for (var c = 0; c < cats.length; c++) {
-        if (!counts[cats[c]]) { counts[cats[c]] = 0; order.push(cats[c]); }
-        counts[cats[c]]++;
+      var seen = Object.create(null);
+      for (var c = 0; c < DATA.mods[i].cat.length; c++) {
+        var name = DATA.mods[i].cat[c];
+        var identity = name.toLowerCase();
+        if (!(identity in counts)) { counts[identity] = 0; names[identity] = name; order.push(identity); }
+        if (!seen[identity]) { counts[identity]++; seen[identity] = true; }
       }
     }
-    var html = "";
+    order.sort(function (a, b) {
+      if (a === "other") return 1;
+      if (b === "other") return -1;
+      var left = catLabel(names[a]).toLowerCase(), right = catLabel(names[b]).toLowerCase();
+      return left < right ? -1 : left > right ? 1 : 0;
+    });
+    modTabNames = order.map(function (identity) { return names[identity]; });
+    var html = '<button data-all="1" class="' + (modCat === null ? "on" : "") + '">' +
+      esc(t("gal_all")) + '<span class="c">' + DATA.mods.length + '</span></button>';
     for (var o = 0; o < order.length; o++) {
-      var k = order[o];
-      html += '<button data-c="' + esc(k) + '" class="' + (k === modCat ? "on" : "") + '">' +
-              esc(k === "all" ? t("gal_all") : catLabel(k)) + '<span class="c">' + counts[k] + '</span></button>';
+      var identity = order[o];
+      html += '<button data-category-index="' + o + '" class="' +
+        (modCat !== null && modCat.toLowerCase() === identity ? "on" : "") + '">' +
+        esc(catLabel(names[identity])) + '<span class="c">' + counts[identity] + '</span></button>';
     }
     el.innerHTML = html;
   }
@@ -206,11 +224,10 @@
     var html = "";
     for (var i = 0; i < DATA.mods.length; i++) {
       var m = DATA.mods[i];
-      if (modCat !== "all" && m.cat.indexOf(modCat) === -1) continue;
+      if (modCat !== null && !m.cat.some(function (category) { return category.toLowerCase() === modCat.toLowerCase(); })) continue;
       var chips = "";
       for (var c = 0; c < m.cat.length; c++) {
-        var key = CAT_KEYS[m.cat[c]];
-        chips += '<span class="chip">' + esc(key ? t(key) : m.cat[c]) + '</span>';
+        chips += '<span class="chip">' + esc(catLabel(m.cat[c])) + '</span>';
       }
       if (m.test) chips += '<span class="chip test">' + esc(t("cat_test")) + '</span>';
       var deps = (m.deps || []).join(" · ");
@@ -295,7 +312,7 @@
     if (mtabs) mtabs.addEventListener("click", function (e) {
       var b = e.target.closest("button");
       if (!b) return;
-      modCat = b.getAttribute("data-c");
+      modCat = b.hasAttribute("data-all") ? null : modTabNames[Number(b.getAttribute("data-category-index"))];
       renderMods();
     });
     if (grid) grid.addEventListener("click", function (e) {

@@ -53,7 +53,19 @@ def load_mods():
                 m = json.load(f)
         except (OSError, json.JSONDecodeError):
             continue
-        cats = [c.strip() for c in (m.get("category") or "").split(",") if c.strip()]
+        raw_categories = m.get("categories", [])
+        if not isinstance(raw_categories, list) or not all(isinstance(value, str) for value in raw_categories):
+            print("Skipping manifest with JSON type error in categories: " + manifest)
+            continue
+        cats = []
+        seen = set()
+        for value in raw_categories:
+            category = value.strip()
+            identity = category.lower()
+            if category and identity not in seen:
+                cats.append(category)
+                seen.add(identity)
+        cats = cats or ["other"]
         deps = [d.split(">")[0].split("<")[0].split("=")[0].strip()
                 for d in (m.get("depends") or [])]
         deps = [d for d in deps if d]

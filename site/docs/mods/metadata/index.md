@@ -97,7 +97,7 @@ Every mod's `manifest.json` is deserialized into `ModManifest` (`Core/Mods/ModMa
 | `version` | string | Semver mod version (e.g. `"0.1.0"`). Used by the save system to detect downgrades and trigger migrations |
 | `author` | string | Author credit string |
 | `description` | string | Short description of what the mod does |
-| `category` | string | Optional catalog category, or a comma-separated combination for mods that belong to several groups (e.g. `"library, gameplay"`). Slugs: `story`, `characters`, `gameplay`, `visual`, `audio`, `ui`, `locale`, `library`, `engine`, `overhaul`, `tools`, `editor`, `debug`, or `other` (default). Parsed case-insensitively into the `[Flags]` `CategoryType`; all selected categories are pre-checked in the Catalog Export dialog (`CatalogExportWindow`) |
+| `categories` | string[] | Any authored category names. Trim/empty removal and case-insensitive deduplication preserve the first spelling and order; the first is primary. Empty/omitted means `other`. No client count or length limit. |
 | `sources` | string[] | Glob-style paths to C# source files (e.g. `"src/"`, `"scripts/*.cs"`). Collected and compiled via Roslyn by `ModCompiler` |
 | `gd_sources` | string[] | Glob-style paths to GDScript files (e.g. `"scripts/*.gd"`, `"gd/**/*.gd"`). `ModGDScriptLoader` collects them, compiles via Godot's GDScript runtime, and registers them as scenario actions or mod initializers |
 | `test_sources` | string[] | Test-only C# globs, compiled separately in explicit mod-test mode |
@@ -153,3 +153,53 @@ If multiple mods provide the same library name, the first one wins; duplicates a
 A mod may ship precompiled .NET assemblies in a `dll/` directory. During `ModRegistry.Initialize()`, `ModAssemblyLoader.LoadPrecompiledDlls` (`Core/Mods/ModAssemblyLoader.cs`) scans that directory recursively, copies each `.dll` to the assembly cache (`{modId}_dll_{fileName}`), loads it, and runs the standard `RegisterAssembly` fan-out (the same registries listed on the [C# Source Code page](../src/)).
 
 This runs **before** Roslyn compilation of `sources`, so source-based mods can reference types from precompiled API assemblies. Each loaded precompiled assembly also gets a `DllImportResolver` installed (`ModNativeLoader.InstallResolverOnAssembly`) for its own P/Invoke calls.
+
+## Category names / Названия категорий
+
+```json
+"categories": ["RPG", "Weap ons! 世界", "Новая категория"]
+```
+
+Every string is a category. A previously unseen name creates a new category; there is no vocabulary or code-format validation.
+The client trims surrounding whitespace, ignores empty names and removes duplicates using `OrdinalIgnoreCase`, retaining the first spelling and order.
+It preserves the author's case and places no limit on category length or count. `RPG` and `rpg` are one category in filters, counts and groups.
+The first category is primary; an omitted or empty list displays as `other`. The singular field has no alias.
+
+The filter lists **all categories present in installed mods and every catalog**, with counts. It sorts by the displayed name
+(case-insensitive ordinal order), keeping `other` last. Alphabetical order stays stable when counts change.
+The sidebar scrolls; no categories are collapsed. Base categories are translated suggestions, not automatically added filters.
+Other facets can reduce a category's count to zero without hiding a name still present in the data.
+
+The shared editor offers free text, completion from all known and base categories, chips and a primary selector.
+There is no client category count/length limit. Use **Add** or Enter to add the typed name.
+In a development folder (`mods/` or `mods_private/`), **Save categories** writes the manifest without publishing.
+Publication and folder export save it before packaging. Installed packages and archives show metadata read-only because updates replace their contents.
+
+Ready translations use `mod_category/<name>` in `ui_base`. A mod can add, for example,
+`mod_category/rpg = Role-playing gear` in English and `mod_category/rpg = Снаряжение RPG` in Russian.
+Translation lookup also tries a lowercase key, while storage and untranslated display preserve the first authored spelling.
+Without a translation, `Weap ons! 世界` is shown exactly as written.
+
+A non-array field or a non-string element is a **JSON type error**: a manifest is rejected, and a catalog skips only that erroneous record.
+The keyserver only bounds untrusted input: a JSON array of at most 32 strings,
+at most 64 Unicode characters per string, without control characters. These are server input limits, not category-name rules.
+
+Любая строка — категория. Ранее не встречавшееся название просто создаёт новую категорию; проверки формата и «неизвестных» категорий нет.
+Клиент обрезает пробелы по краям, игнорирует пустые строки и убирает дубли через `OrdinalIgnoreCase`, сохраняя первое написание и порядок.
+Регистр автора сохраняется; клиент не ограничивает длину и количество. `RPG` и `rpg` дают один фильтр, счётчик и группу.
+Первая категория — основная; пустой или отсутствующий массив означает `other`. Старое одиночное поле не читается.
+
+Фильтр показывает все категории установленных модов и всех каталогов, с количеством модов. Порядок — по отображаемому названию
+без учёта регистра, `other` последняя. Такой алфавитный порядок остаётся стабильным при изменении счётчиков.
+Список прокручивается, сворачивания нет. Базовые категории служат только готовыми переводами и подсказками.
+Другие фильтры могут обнулить счётчик, но не скрывают категорию, пока она есть в данных.
+
+Редактор позволяет ввести любое название, выбрать подсказку, убрать фишку и назначить основную категорию. Нажмите **Добавить** или Enter.
+Кнопка **Сохранить категории** в карточке правит папки разработки `mods/` и `mods_private/` без публикации.
+Публикация и экспорт папки сохраняют манифест перед упаковкой; установленные пакеты и архивы доступны для чтения.
+Перевод задаётся ключом `mod_category/<название>` в локали мода; также пробуется ключ в нижнем регистре, но хранимое название не меняется.
+Без перевода показывается первое авторское написание.
+
+Не массив строк — ошибка типа JSON: манифест отклоняется, в каталоге пропускается только эта запись.
+На keyserver действуют лишь технические пределы недоверенного ввода:
+до 32 строк, до 64 символов Unicode в строке, без управляющих символов.

@@ -21,7 +21,7 @@ Every mod needs a manifest and optionally a properties file. These define the mo
   // Glob patterns for GDScript files (.gd)
   "gd_sources": ["scripts/*.gd"],
   // Catalog category slug or comma-separated combination (e.g. "library, gameplay")
-  "category": "library",
+  "categories": ["library"],
   // Glob patterns for native shared libraries (.dll / .so / .dylib)
   "depends_native": ["bin/*.dll"],
   // List of mod IDs that must be loaded before this mod (versioned strings allowed)
@@ -55,7 +55,7 @@ Every mod needs a manifest and optionally a properties file. These define the mo
 | `fixture` | No | Test-only mod excluded from normal game/all-mod selection; explicitly mount with `--with-mods=` |
 | `gd_sources` | No | Glob patterns for `.gd` GDScript files to compile via Godot's engine |
 | `depends` | No | List of mod IDs that must be loaded before this mod (versioned strings allowed — see [Load Order](../load-order/)) |
-| `category` | No | Catalog category slug or comma-separated combination (e.g. `"library, gameplay"`). See the [catalog](../catalog/) page for the full list |
+| `categories` | No | Ordered array of any category names, e.g. `["RPG", "Weap ons!"]`. The first is primary. Trim/empty removal and `OrdinalIgnoreCase` deduplication preserve first spelling; empty/omitted means `other`. No client limit. Translate with `mod_category/<name>`. See [catalog](../catalog/). |
 | `depends_native` | No | Glob patterns for native shared libraries (`.dll` / `.so` / `.dylib`). Copied to the mod cache and wired into P/Invoke resolution by `ModNativeLoader` |
 | `conflicts_with` | No | Mutually exclusive mod IDs. **Informational only** — parsed and copied into catalog exports, never enforced at runtime (see the [load order](../load-order/) warning) |
 | `ui` | No | Declarative GUI entries anchored to named shell slots — toolbar-toggled `panel`s and code-driven `overlay`s, collected by `UiRegistry` |
@@ -153,3 +153,5 @@ only when named in `--with-mods=`.
 ```
 
 Save as `mods/my_first_mod/manifest.json`. The mod is now discoverable. Add it to the game's collection, or launch with `--with-mods=my_first_mod`; normal startup loads the frontend rather than every installed mod. Even without `sources` or `ui`, the mod's scenarios, items, and other data files are discovered automatically from their conventional locations.
+
+Категории задаются массивом `categories`: любые строки, первая — основная. Регистр сохраняется, дубли сравниваются без учёта регистра; лимита количества в клиенте нет. Пустой массив означает `other`. Перевод — ключ `mod_category/<название>`.
