@@ -4,6 +4,7 @@ namespace Cthangover.Core.Bootstrap
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using Cthangover.Core.Utils;
+    using Cthangover.Core.Games;
     using Godot;
 
     /// <summary>Lets engine mods finish asynchronous cleanup before SceneTree and its servers are torn down.</summary>
@@ -14,6 +15,9 @@ namespace Cthangover.Core.Bootstrap
         private static SceneTree runtime;
         private static bool quitting;
         private static int requestedCode;
+
+        /// <summary>True once cleanup starts; background producers must not restart during shutdown.</summary>
+        public static bool IsQuitting => quitting;
 
         /// <summary>Routes the OS window close request through the same cleanup as menus and test drivers.</summary>
         public static void Attach(SceneTree tree)
@@ -39,9 +43,19 @@ namespace Cthangover.Core.Bootstrap
             var pending = new List<Task>();
             try
             {
+                pending.Add(GameSession.StopWarmUpAsync());
                 if (Preparing != null)
                     foreach (Func<SceneTree, Task> handler in Preparing.GetInvocationList())
-                        pending.Add(handler(tree) ?? Task.CompletedTask);
+                    {
+                        try
+                        {
+                            pending.Add(handler(tree) ?? Task.CompletedTask);
+                        }
+                        catch (Exception error)
+                        {
+                            pending.Add(Task.FromException(error));
+                        }
+                    }
                 await Task.WhenAll(pending);
             }
             catch (Exception error)
@@ -49,6 +63,8 @@ namespace Cthangover.Core.Bootstrap
                 requestedCode = 1;
                 GameLogger.Log("BOOT", "Application cleanup failed: " + error.Message, LogLevel.Error);
             }
+            GodotLifetime.StopAnimations(tree);
+            GodotLifetime.DrainFinalizers();
             tree.Quit(requestedCode);
         }
     }

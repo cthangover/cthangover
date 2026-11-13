@@ -8,6 +8,7 @@ using Cthangover.Core.Scenes;
 using Cthangover.Core.UI.Menu;
 using Cthangover.Core.Settings;
 using Cthangover.Core.Utils;
+using Cthangover.Core.Bootstrap;
 using Godot;
 
 namespace Cthangover.Core.Games
@@ -26,6 +27,7 @@ namespace Cthangover.Core.Games
         /// <summary>Resets the runtime and enters <see cref="ActiveGame.EntryScene"/> through the base shell.</summary>
         public static void StartNew(Node host)
         {
+            JoinWarmUps();
             GameData.Instance?.StartNewGame();
             EnterScene(host, ActiveGame.EntryScene);
         }
@@ -37,6 +39,7 @@ namespace Cthangover.Core.Games
         /// </summary>
         public static bool LoadAndEnter(Node host, string fileName)
         {
+            JoinWarmUps();
             if (!SaveService.Load(fileName))
                 return false;
 
@@ -58,7 +61,7 @@ namespace Cthangover.Core.Games
         /// <summary>True while <see cref="SwitchToAsync"/> runs; menus ignore further switch requests meanwhile.</summary>
         public static bool IsSwitching { get; private set; }
 
-        private static CancellationTokenSource warmUpCancel;
+        private static readonly List<(Task Task, CancellationTokenSource Cancel)> warmUps = new();
         private static int warmUpRuns;
 
         /// <summary>True while a background warm-up (<see cref="WarmUp"/>) is compiling.</summary>
@@ -75,22 +78,71 @@ namespace Cthangover.Core.Games
         public static void WarmUp(IReadOnlyList<string> gameIds)
         {
             StopWarmUp();
-            if (gameIds == null || gameIds.Count == 0)
+            PruneWarmUps();
+            if (ApplicationExit.IsQuitting || gameIds == null || gameIds.Count == 0)
                 return;
 
             var cancel = new CancellationTokenSource();
-            warmUpCancel = cancel;
             var args = GameLaunchArgs.Current;
             var manager = ModManager.Instance;
             Interlocked.Increment(ref warmUpRuns);
-            Task.Run(() => WarmUpGames(manager, args, new List<string>(gameIds), cancel.Token));
+            var ids = new List<string>(gameIds);
+            var task = Task.Run(() => WarmUpGames(manager, args, ids, cancel.Token));
+            warmUps.Add((task, cancel));
         }
 
         /// <summary>Stops the background warm-up between two mods; already compiled mods stay in the cache.</summary>
         public static void StopWarmUp()
         {
-            warmUpCancel?.Cancel();
-            warmUpCancel = null;
+            foreach (var run in warmUps)
+                run.Cancel.Cancel();
+        }
+
+        /// <summary>Cancels every outstanding warm-up and joins its workers before native engine teardown.</summary>
+        public static async Task StopWarmUpAsync()
+        {
+            StopWarmUp();
+            var pending = new List<Task>();
+            foreach (var run in warmUps)
+                pending.Add(run.Task);
+            try
+            {
+                await Task.WhenAll(pending);
+            }
+            finally
+            {
+                PruneWarmUps();
+            }
+        }
+
+        private static void PruneWarmUps()
+        {
+            for (var i = warmUps.Count - 1; i >= 0; i--)
+            {
+                if (!warmUps[i].Task.IsCompleted)
+                    continue;
+                warmUps[i].Cancel.Dispose();
+                warmUps.RemoveAt(i);
+            }
+        }
+
+        private static void JoinWarmUps()
+        {
+            StopWarmUp();
+            var pending = new List<Task>();
+            foreach (var run in warmUps)
+                pending.Add(run.Task);
+            // Workers are pure .NET and never await the Godot context. Cancellation
+            // is observed by source collection/Roslyn; do not let their allocations
+            // and provider lifetime cross the synchronous gameplay mutation below.
+            try
+            {
+                Task.WhenAll(pending).GetAwaiter().GetResult();
+            }
+            finally
+            {
+                PruneWarmUps();
+            }
         }
 
         private static void WarmUpGames(ModManager manager, GameLaunchArgs args, List<string> gameIds, CancellationToken cancellationToken)
@@ -224,6 +276,7 @@ namespace Cthangover.Core.Games
 
         private static void EnterScene(Node host, string scene)
         {
+            StopWarmUp();
             var sceneManager = host.GetNodeOrNull<SceneManager>("/root/SceneManager");
             if (sceneManager == null)
             {
