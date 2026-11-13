@@ -137,34 +137,34 @@ namespace Engine.Tests.Mods
         [Fact]
         public void Deserialize_Category()
         {
-            var json = @"{ ""id"": ""cat_mod"", ""category"": ""gameplay"" }";
+            var json = @"{ ""id"": ""cat_mod"", ""categories"": [""gameplay""] }";
 
             var manifest = JsonSerializer.Deserialize<ModManifest>(json, JsonOptionsProvider.ReadOptions);
 
             Assert.NotNull(manifest);
-            Assert.Equal(CategoryType.Gameplay, manifest.Category);
+            Assert.Equal(new[] { "gameplay" }, manifest.Categories);
         }
 
         [Fact]
-        public void Deserialize_Category_NotPresent_ReturnsNull()
+        public void Deserialize_Categories_NotPresent_ReturnsEmpty()
         {
             var json = @"{ ""id"": ""no_cat"" }";
 
             var manifest = JsonSerializer.Deserialize<ModManifest>(json, JsonOptionsProvider.ReadOptions);
 
             Assert.NotNull(manifest);
-            Assert.Null(manifest.Category);
+            Assert.Empty(manifest.Categories);
         }
 
         [Fact]
-        public void Deserialize_Category_MultipleFlags()
+        public void Deserialize_Categories_PreserveOrder()
         {
-            var json = @"{ ""id"": ""multi_cat"", ""category"": ""library, gameplay"" }";
+            var json = @"{ ""id"": ""multi_cat"", ""categories"": [""library"", ""gameplay""] }";
 
             var manifest = JsonSerializer.Deserialize<ModManifest>(json, JsonOptionsProvider.ReadOptions);
 
             Assert.NotNull(manifest);
-            Assert.Equal(CategoryType.Library | CategoryType.Gameplay, manifest.Category);
+            Assert.Equal(new[] { "library", "gameplay" }, manifest.Categories);
         }
 
         [Fact]
@@ -177,7 +177,7 @@ namespace Engine.Tests.Mods
                 Author = "Tester",
                 Description = "Round-trip manifest",
                 Version = "1.2.3",
-                Category = CategoryType.Library | CategoryType.Tools | CategoryType.Editor | CategoryType.Debug,
+                Categories = new List<string> { "library", "tools", "editor", "debug" },
                 Sources = new List<string> { "src/*.cs" },
                 GdSources = new List<string> { "gd/*.gd" },
                 DependsNative = new List<string> { "native/*.dll" },
@@ -194,7 +194,7 @@ namespace Engine.Tests.Mods
             Assert.Equal(original.Author, restored.Author);
             Assert.Equal(original.Description, restored.Description);
             Assert.Equal(original.Version, restored.Version);
-            Assert.Equal(CategoryType.Library | CategoryType.Tools | CategoryType.Editor | CategoryType.Debug, restored.Category);
+            Assert.Equal(new[] { "library", "tools", "editor", "debug" }, restored.Categories);
             Assert.Equal(original.Sources, restored.Sources);
             Assert.Equal(original.GdSources, restored.GdSources);
             Assert.Equal(original.DependsNative, restored.DependsNative);

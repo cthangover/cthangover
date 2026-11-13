@@ -7,7 +7,7 @@ namespace Cthangover.Core.Mods
     /// <summary>
     /// A curated set of mods that together implement a game mechanic
     /// ("card novel", "developer tools") — the game-construction unit the mod
-    /// catalog is organized by. Unlike <see cref="CategoryType"/>, which labels
+    /// catalog is organized by. Unlike mod category codes, which label
     /// a single mod, a collection describes a composition: the same mod can be a
     /// required backbone in one collection and an optional layer in another.
     /// <para/>

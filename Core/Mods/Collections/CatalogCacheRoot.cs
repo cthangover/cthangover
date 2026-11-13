@@ -12,6 +12,7 @@ namespace Cthangover.Core.Mods
     {
         /// <summary>Merged mod entries, as produced by <see cref="CatalogMerger"/>.</summary>
         [JsonPropertyName("mods")]
+        [JsonConverter(typeof(CatalogEntryListConverter))]
         public List<CatalogExportEntry> Mods { get; set; }
 
         /// <summary>Merged collection definitions, as produced by <see cref="CatalogCollectionMerger"/>.</summary>

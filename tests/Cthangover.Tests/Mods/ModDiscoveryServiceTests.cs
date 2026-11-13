@@ -51,15 +51,31 @@ namespace Engine.Tests.Mods
             return false;
         }
 
-        [Fact]
-        public void ReadManifest_WrongCategory_SaysTheManifestIsInvalidAndWhy()
+        [Theory]
+        [InlineData("[\"gameplayy\"]", "gameplayy")]
+        [InlineData("""[" RPG ","rpg","Weap ons! 世界"]""", "RPG")]
+        public void ReadManifest_AllStringsAreCategories(string categories, string primary)
         {
-            var provider = new MockModFileProvider("broken");
-            provider.AddFile("manifest.json", """{ "id": "broken", "category": "gameplayy" }""");
+            var provider = new MockModFileProvider("custom");
+            provider.AddFile("manifest.json", "{\"id\":\"custom\",\"categories\":" + categories + "}");
+            var manifest = ModDiscoveryService.ReadManifest(provider, out var problem);
+            Assert.NotNull(manifest);
+            Assert.Null(problem);
+            Assert.Equal(primary, ModCategories.Primary(manifest.Categories));
+        }
 
-            Assert.Null(ModDiscoveryService.ReadManifest(provider, out var problem));
-            Assert.StartsWith("invalid manifest.json: ", problem);
-            Assert.Contains("category", problem);
+        [Theory]
+        [InlineData("\"RPG\"")]
+        [InlineData("42")]
+        [InlineData("null")]
+        [InlineData("[\"RPG\",false]")]
+        public void ReadManifest_CategoryJSONTypeErrorIsAManifestError(string categories)
+        {
+            var provider = new MockModFileProvider("wrong_json_type");
+            provider.AddFile("manifest.json", "{\"id\":\"wrong_json_type\",\"categories\":" + categories + "}");
+            Assert.Null(ModDiscoveryService.ReadManifest(provider,out var problem));
+            Assert.StartsWith("invalid manifest.json:",problem);
+            Assert.Contains("categories",problem);
         }
 
         [Fact]
@@ -87,7 +103,7 @@ namespace Engine.Tests.Mods
         public void ReadManifest_Valid_ReturnsItWithoutAProblem()
         {
             var provider = new MockModFileProvider("fine");
-            provider.AddFile("manifest.json", """{ "id": "fine", "category": "library, gameplay" }""");
+            provider.AddFile("manifest.json", """{ "id": "fine", "categories": ["library", "gameplay"] }""");
 
             var manifest = ModDiscoveryService.ReadManifest(provider, out var problem);
 

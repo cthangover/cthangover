@@ -25,6 +25,7 @@ namespace Cthangover.Core.Mods
 
         /// <summary>List of mod entries available in this catalog.</summary>
         [JsonPropertyName("mods")]
+        [JsonConverter(typeof(CatalogEntryListConverter))]
         public List<CatalogExportEntry> Mods { get; set; }
 
         /// <summary>Curated mod collections this catalog distributes; see <see cref="ModCollectionStore"/>.</summary>

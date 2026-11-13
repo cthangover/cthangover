@@ -46,12 +46,11 @@ namespace Cthangover.Core.Mods
         [JsonPropertyName("locale")]
         public List<CatalogLocaleEntry> Locale { get; set; }
 
-        /// <summary>Category (or comma-separated combination of
-        /// categories, e.g. "Library, Gameplay") for filtering and
-        /// grouping. Serialised as enum name(s).</summary>
-        [JsonPropertyName("category")]
-        [JsonConverter(typeof(JsonStringEnumConverter))]
-        public CategoryType Category { get; set; }
+        /// <summary>Open category codes; the first is primary. Empty or absent means Other in the UI.</summary>
+        [JsonPropertyName("categories")]
+        [JsonConverter(typeof(ModCategoryListConverter))]
+        public List<string> Categories { get; set; } = new();
+
 
         /// <summary>Search tags (e.g. ["cooking", "crafting"]).</summary>
         [JsonPropertyName("tags")]

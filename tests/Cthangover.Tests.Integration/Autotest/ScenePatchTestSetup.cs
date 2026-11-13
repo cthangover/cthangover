@@ -199,7 +199,7 @@ text = ""badge""
                 "  \"version\": \"0.1.0\",\n" +
                 "  \"author\": \"ct\",\n" +
                 "  \"description\": \"Temporary mod created by the scene patch integration test\",\n" +
-                "  \"category\": \"other\"\n" +
+                "  \"categories\": [\"other\"]\n" +
                 "}\n");
 
             File.WriteAllText(modDirectory + "/scenes/patch_target.tscn", TargetSceneText);

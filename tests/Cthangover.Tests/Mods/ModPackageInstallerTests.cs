@@ -43,7 +43,7 @@ namespace Engine.Tests.Mods
             archive = Path.Combine(root, "download.package");
             using (var zip = ZipFile.Open(archive, ZipArchiveMode.Create))
             {
-                WriteZip(zip, "wrapper/manifest.json", "{\"id\":\"test_sevenzip\",\"category\":\"library\"}");
+                WriteZip(zip, "wrapper/manifest.json", "{\"id\":\"test_sevenzip\",\"categories\": [\"library\"]}");
                 WriteZip(zip, "wrapper/data.txt", "new version");
             }
             ModPackageInstaller.Install(archive, Target, expectedId);

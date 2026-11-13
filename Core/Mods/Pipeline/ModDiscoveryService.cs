@@ -244,7 +244,7 @@ namespace Cthangover.Core.Mods.Pipeline
         /// <summary>
         /// The manifest of a mod entry, or null with <paramref name="problem"/> saying why: <c>no manifest found</c>
         /// when the file is missing, <c>invalid manifest.json: &lt;reason&gt;</c> when it is empty or does not
-        /// parse (a wrong <c>category</c> name, broken JSON) — the author must see that the file is there but wrong.
+        /// parse (broken JSON) — the author must see that the file is there but wrong.
         /// </summary>
         public static ModManifest ReadManifest(IModFileProvider provider, out string problem)
         {

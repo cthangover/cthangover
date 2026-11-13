@@ -17,7 +17,7 @@ namespace Engine.Tests.Mods
         public ModCatalogExporterTests()
         {
             Directory.CreateDirectory(Source);
-            File.WriteAllText(Path.Combine(Source, "manifest.json"), "{\"id\":\"export_test\",\"category\":\"library\"}");
+            File.WriteAllText(Path.Combine(Source, "manifest.json"), "{\"id\":\"export_test\",\"categories\": [\"library\"]}");
         }
 
         public void Dispose() => Directory.Delete(root, true);

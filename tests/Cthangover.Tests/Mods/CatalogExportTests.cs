@@ -26,7 +26,7 @@ namespace Engine.Tests.Mods
 				Author = "Tester",
 				Version = "2.0.0",
 				Description = "A test mod with all fields",
-				Category = CategoryType.Gameplay,
+				Categories = new List<string> { "gameplay" },
 				Tags = new List<string> { "test", "example" },
 				IconUrl = "https://example.com/icon.png",
 				Depends = new List<string> { "core>=1", "ui_base>=1?" },
@@ -65,7 +65,7 @@ namespace Engine.Tests.Mods
 			Assert.Equal(original.Author, restored.Author);
 			Assert.Equal(original.Version, restored.Version);
 			Assert.Equal(original.Description, restored.Description);
-			Assert.Equal(original.Category, restored.Category);
+			Assert.Equal(original.Categories, restored.Categories);
 			Assert.NotNull(restored.Tags);
 			Assert.Equal(original.Tags.Count, restored.Tags.Count);
 			Assert.Equal(original.Tags[0], restored.Tags[0]);
@@ -94,20 +94,20 @@ namespace Engine.Tests.Mods
 		}
 
 		[Fact]
-		public void JsonRoundTrip_CombinedCategory()
+		public void JsonRoundTrip_OrderedCategories()
 		{
 			var original = new CatalogExportEntry
 			{
 				Id = "multi_cat_mod",
 				Version = "1.0.0",
-				Category = CategoryType.Library | CategoryType.Gameplay,
+				Categories = new List<string> { "library", "gameplay" },
 			};
 
 			var json = JsonSerializer.Serialize(original);
 			var restored = JsonSerializer.Deserialize<CatalogExportEntry>(json);
 
 			Assert.NotNull(restored);
-			Assert.Equal(CategoryType.Library | CategoryType.Gameplay, restored.Category);
+			Assert.Equal(new[] { "library", "gameplay" }, restored.Categories);
 		}
 
 		[Fact]
