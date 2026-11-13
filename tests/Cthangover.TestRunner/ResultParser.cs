@@ -108,6 +108,8 @@ namespace Cthangover.TestRunner
                 SkippedChecks = parsed.Skipped, Core = parsed.Core, Coverage = parsed.Coverage,
                 Passed = !process.TimedOut && process.ExitCode == 0 && parsed.Problems.Count == 0,
                 LogFile = process.LogFile,
+                BootSeconds = process.BootSeconds, CpuSeconds = process.CpuSeconds,
+                PeakMemoryMb = process.PeakMemoryMb, LogLines = process.LogLines,
             };
             if (process.TimedOut) parsed.Problems.Insert(0, "process timeout");
             else if (process.ExitCode != 0) parsed.Problems.Insert(0, $"process exited with code {process.ExitCode}");

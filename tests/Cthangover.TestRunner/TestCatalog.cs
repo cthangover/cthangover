@@ -10,7 +10,8 @@ namespace Cthangover.TestRunner
             var entries = new List<IntegrationTestDefinition>
             {
                 new() { Name = "unit", Kind = "unit", Owners = new[] { "core" }, Profiles = new[] { "full", "fast", "headless" },
-                    Tags = new[] { "core", "xunit" }, Source = manifest.Unit.Project, TimeoutSeconds = manifest.Unit.TimeoutSeconds }
+                    Tags = new[] { "core", "xunit" }, Source = manifest.Unit.Project, TimeoutSeconds = manifest.Unit.TimeoutSeconds,
+                    Project = "read", Seconds = manifest.Unit.Seconds }
             };
             entries.AddRange(manifest.Integration);
             var sceneRoot = Path.Combine(root, "tests", "Cthangover.Tests.Integration", "Scenes");
@@ -24,10 +25,9 @@ namespace Cthangover.TestRunner
                     entries.Add(new IntegrationTestDefinition { Name = "manual:scene:" + Path.GetFileNameWithoutExtension(scene), Kind = "manual",
                         Source = relative, Scene = "res://" + relative, Owners = new[] { "core" }, Tags = new[] { "manual" }, ManualReason = reason });
                 }
-            var mods = Path.Combine(root, "mods");
-            if (!Directory.Exists(mods)) return entries;
             var policies = new HashSet<string>(manifest.ManualSuites.Keys, StringComparer.Ordinal);
-            foreach (var dir in Directory.EnumerateDirectories(mods).OrderBy(p => p, StringComparer.Ordinal))
+            foreach (var dir in ModFolders.Names.Select(folder => Path.Combine(root, folder)).Where(Directory.Exists)
+                .SelectMany(folder => Directory.EnumerateDirectories(folder).OrderBy(p => p, StringComparer.Ordinal)))
             {
                 var path = Path.Combine(dir, "manifest.json");
                 if (!File.Exists(path)) continue;
@@ -71,6 +71,8 @@ namespace Cthangover.TestRunner
                             entry.Renderer = native.Renderer;
                             entry.TimeoutSeconds = native.TimeoutSeconds;
                             entry.Profiles = native.Profiles;
+                            entry.Project = native.Project;
+                            entry.Seconds = native.Seconds;
                         }
                     }
                     if (!scheduled)

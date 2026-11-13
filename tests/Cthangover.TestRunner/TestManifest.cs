@@ -3,7 +3,8 @@ namespace Cthangover.TestRunner
     using System.Text.Json;
     using System.Text.RegularExpressions;
     /// <summary>
-    /// Deserialized <c>tests/tests.manifest.json</c> — the single source of
+    /// Deserialized <c>tests/tests.manifest.json</c> (with the parts of the mods
+    /// folders, see <see cref="LoadProject"/>) — the single source of
     /// truth for which tests the global runner executes and in what order.
     /// Previously the same list was duplicated across PowerShell scripts and
     /// the coverage map, which drifted; now scripts and code read this file.
@@ -18,6 +19,39 @@ namespace Cthangover.TestRunner
 
         public static TestManifest Load(string path)
         {
+            var manifest = Read(path);
+            manifest.Validate();
+            return manifest;
+        }
+
+        /// <summary>
+        /// The manifest of a whole project: <c>tests/tests.manifest.json</c> plus the part every
+        /// mods folder may keep at <c>&lt;folder&gt;/tests.manifest.json</c>
+        /// (<see cref="ModFolders"/>). A part contributes only <c>integration</c> entries and
+        /// <c>manualSuites</c> policies, appended after the project's own in folder order; its
+        /// other sections are ignored, so it needs no <c>unit</c> block. The merged result is
+        /// validated as one manifest: names stay unique across the parts and a part may depend
+        /// on tests of the project manifest.
+        /// </summary>
+        public static TestManifest LoadProject(string root)
+        {
+            var manifest = Read(Path.Combine(root, "tests", ModFolders.ManifestFile));
+            foreach (var folder in ModFolders.Names)
+            {
+                var path = Path.Combine(root, folder, ModFolders.ManifestFile);
+                if (!File.Exists(path)) continue;
+                var part = Read(path);
+                manifest.Integration.AddRange(part.Integration);
+                foreach (var policy in part.ManualSuites)
+                    if (!manifest.ManualSuites.TryAdd(policy.Key, policy.Value))
+                        throw new InvalidOperationException($"duplicate manual suite policy '{policy.Key}' in {path}");
+            }
+            manifest.Validate();
+            return manifest;
+        }
+
+        private static TestManifest Read(string path)
+        {
             if (!File.Exists(path))
                 throw new FileNotFoundException($"test manifest not found: {path}");
             var json = File.ReadAllText(path);
@@ -27,7 +61,6 @@ namespace Cthangover.TestRunner
             });
             if (manifest == null)
                 throw new InvalidOperationException($"test manifest is empty or invalid: {path}");
-            manifest.Validate();
             return manifest;
         }
 
@@ -37,6 +70,8 @@ namespace Cthangover.TestRunner
             if (SchemaVersion != 2) throw new InvalidOperationException("test manifest schemaVersion must be 2");
             if (string.IsNullOrWhiteSpace(Unit?.Project) || Unit.TimeoutSeconds <= 0)
                 throw new InvalidOperationException("unit project and positive timeout are required");
+            if (Unit.Seconds.HasValue && (!double.IsFinite(Unit.Seconds.Value) || Unit.Seconds <= 0))
+                throw new InvalidOperationException("unit seconds must be positive and finite");
             if (Path.IsPathRooted(Unit.Project) || Unit.Project.Replace('\\', '/').Split('/').Contains(".."))
                 throw new InvalidOperationException("unit project must stay inside the project workspace");
             var names = new HashSet<string>(StringComparer.Ordinal) { "unit" };
@@ -56,6 +91,7 @@ namespace Cthangover.TestRunner
                     throw new InvalidOperationException($"{test.Name}: owners and profiles are required");
                 if (test.DependsOn == null || test.Tags == null || test.Args == null)
                     throw new InvalidOperationException($"{test.Name}: args, tags and dependsOn cannot be null");
+                ProjectAccess.Validate(test);
                 if (test.Owners.Concat(test.Profiles).Concat(test.DependsOn).Concat(test.Tags).Concat(test.Args).Any(string.IsNullOrWhiteSpace))
                     throw new InvalidOperationException($"{test.Name}: metadata contains an empty value");
             }
@@ -67,6 +103,7 @@ namespace Cthangover.TestRunner
                         throw new InvalidOperationException($"{test.Name}: unknown dependency '{dependency}'");
             var done = new HashSet<string>(StringComparer.Ordinal);
             foreach (var test in Integration) Visit(test, definitions, done, new HashSet<string>(StringComparer.Ordinal));
+            ProjectAccess.ValidateOutputs(Integration);
         }
 
         private static void Visit(IntegrationTestDefinition test, Dictionary<string, IntegrationTestDefinition> definitions,

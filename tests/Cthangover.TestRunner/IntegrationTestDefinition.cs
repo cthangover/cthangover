@@ -25,6 +25,12 @@ namespace Cthangover.TestRunner
         public string[] Requirements { get; set; } = Array.Empty<string>();
         public ResultContract Result { get; set; }
 
+        /// <summary>Project access contract: read, declared output directories only, or an exclusive writable copy.</summary>
+        public string Project { get; set; } = "write";
+
+        /// <summary>Measured child duration used only for scheduling; absent hints use a quarter of the timeout.</summary>
+        public double? Seconds { get; set; }
+
         /// <summary>
         /// When true the scene runs with a real window instead of
         /// <c>--headless</c>. Headless uses a dummy rendering server, so

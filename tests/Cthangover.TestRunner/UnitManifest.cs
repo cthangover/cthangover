@@ -8,5 +8,7 @@ namespace Cthangover.TestRunner
     {
         public string Project { get; set; }
         public int TimeoutSeconds { get; set; } = 300;
+        /// <summary>Optional measured scheduling hint for the read-only xUnit launch.</summary>
+        public double? Seconds { get; set; }
     }
 }

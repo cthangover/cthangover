@@ -24,12 +24,24 @@ namespace Cthangover.TestRunner
         public string Environment { get; set; }
         public string SelectionReason { get; set; }
         public string[] DependsOn { get; set; } = Array.Empty<string>();
+        /// <summary>Potential sources of an aggregate infrastructure violation, allowing --failed to repeat their original selections.</summary>
+        public string[] CandidateLaunches { get; set; } = Array.Empty<string>();
         public List<TestCaseResult> Cases { get; set; } = new();
         public List<string> Artifacts { get; set; } = new();
         public string Status => Blocked ? "blocked" : TimedOut ? "timeout" : !Passed ? "fail"
             : PassedChecks == 0 && SkippedChecks > 0 ? "skipped" : "pass";
         [JsonIgnore] public TimeSpan Duration { get; set; }
         public double DurationSeconds { get => Duration.TotalSeconds; set => Duration = TimeSpan.FromSeconds(value); }
+        /// <summary>Project restore before this launch plus artifact collection afterwards; excludes report exports.</summary>
+        public double OverheadSeconds { get; set; }
+        /// <summary>Process start to first stdout TEST/MODTEST category; null when no driver category was observed.</summary>
+        public double? BootSeconds { get; set; }
+        /// <summary>Best-effort sampled CPU seconds of the launched root process, not an aggregate of descendants.</summary>
+        public double? CpuSeconds { get; set; }
+        /// <summary>Best-effort peak resident memory of that root process in MiB.</summary>
+        public double? PeakMemoryMb { get; set; }
+        /// <summary>Captured stdout/stderr lines, including runner-generated process diagnostics.</summary>
+        public long LogLines { get; set; }
         public string Core { get; set; }
         public string Coverage { get; set; }
         public string Note { get; set; }

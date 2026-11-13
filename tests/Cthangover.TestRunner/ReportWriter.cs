@@ -5,6 +5,7 @@ namespace Cthangover.TestRunner
     using System.Text;
     using System.Text.Json;
     using System.Xml.Linq;
+    using System.Diagnostics;
 
     /// <summary>Writes the same outcomes as durable JSON, portable JUnit and a browsable HTML report.</summary>
     public static class ReportWriter
@@ -14,12 +15,22 @@ namespace Cthangover.TestRunner
 
         public static void Write(string directory, RunReport report, string extraJson = null)
         {
+            var started = Stopwatch.GetTimestamp();
             Directory.CreateDirectory(directory);
-            var json = JsonSerializer.Serialize(report, JsonOptions);
-            AtomicWrite(Path.Combine(directory, "report.json"), json);
-            AtomicWrite(Path.Combine(directory, "report.junit.xml"), JUnit(report).ToString());
-            AtomicWrite(Path.Combine(directory, "report.html"), Html(report, directory));
-            if (extraJson != null) AtomicWrite(extraJson, json);
+            if (report.Complete)
+            {
+                AtomicWrite(Path.Combine(directory, "report.junit.xml"), JUnit(report).ToString());
+                AtomicWrite(Path.Combine(directory, "report.html"), Html(report, directory));
+            }
+            report.Phases.ReportWritingSeconds += Stopwatch.GetElapsedTime(started).TotalSeconds;
+            started = Stopwatch.GetTimestamp();
+            try
+            {
+                var json = JsonSerializer.Serialize(report, JsonOptions);
+                AtomicWrite(Path.Combine(directory, "report.json"), json);
+                if (extraJson != null) AtomicWrite(extraJson, json);
+            }
+            finally { report.Phases.ReportWritingSeconds += Stopwatch.GetElapsedTime(started).TotalSeconds; }
         }
 
         private static void AtomicWrite(string path, string text)
@@ -79,6 +90,7 @@ namespace Cthangover.TestRunner
                     .Append(WebUtility.HtmlEncode(result.Status + (result.FailureKind == null ? "" : " (" + result.FailureKind + ")"))).Append("</td><td>").Append(result.PassedChecks).Append(" / ").Append(result.FailedChecks).Append(" / ").Append(result.SkippedChecks)
                     .Append("</td><td>").Append(Number(result.DurationSeconds)).Append("</td></tr>");
             html.Append("</table>");
+            Timing(html, report);
             foreach (var result in Entries(report))
             {
                 html.Append("<h2 id=\"").Append(TestWorkspace.Key(result.Name)).Append("\">").Append(WebUtility.HtmlEncode(result.Name)).Append("</h2><pre>")
@@ -102,5 +114,34 @@ namespace Cthangover.TestRunner
         }
 
         private static IEnumerable<TestResult> Entries(RunReport report) => report.Build == null ? report.Results : report.Results.Prepend(report.Build);
+
+        private static void Timing(StringBuilder html, RunReport report)
+        {
+            var phases = report.Phases;
+            html.Append("<h2>Time breakdown / Затраты времени</h2><p>Wall / Всего: ").Append(Number(report.WallSeconds))
+                .Append(" s; children / процессы: ").Append(Number(report.ChildSeconds)).Append(" s</p><table>");
+            TimingRow(html, "Build / Сборка", phases.BuildSeconds);
+            TimingRow(html, "Workspace copy / Копирование", phases.WorkspaceCopySeconds);
+            TimingRow(html, "Restore / Восстановление (" + phases.RestoreCount + ")", phases.RestoreSeconds);
+            TimingRow(html, "Artifacts / Артефакты", phases.ArtifactCollectionSeconds);
+            TimingRow(html, "Reports / Отчёты", phases.ReportWritingSeconds);
+            TimingRow(html, "Cleanup / Очистка", phases.CleanupSeconds);
+            TimingRow(html, "Launch wall / Запуски", phases.LaunchSeconds);
+            html.Append("<tr><td>Copies / Копии</td><td>").Append(phases.Copies)
+                .Append("</td></tr><tr><td>Parallelism / Параллелизм</td><td>").Append(Number(phases.Parallelism)).Append("</td></tr>");
+            foreach (var lane in phases.LaneBusySeconds) TimingRow(html, "Lane / Копия " + lane.Key, lane.Value);
+            html.Append("</table><h3>Slowest launches / Самые долгие прогоны</h3><table><tr><th>Launch / Прогон</th><th>Process s</th><th>Overhead s</th><th>Boot s</th><th>CPU s</th><th>MiB</th><th>Log lines</th></tr>");
+            foreach (var result in report.Results.OrderByDescending(Duration).Take(10))
+                html.Append("<tr><td>").Append(WebUtility.HtmlEncode(result.Name)).Append("</td><td>").Append(Number(result.DurationSeconds))
+                    .Append("</td><td>").Append(Number(result.OverheadSeconds)).Append("</td><td>").Append(Optional(result.BootSeconds))
+                    .Append("</td><td>").Append(Optional(result.CpuSeconds)).Append("</td><td>").Append(Optional(result.PeakMemoryMb))
+                    .Append("</td><td>").Append(result.LogLines).Append("</td></tr>");
+            html.Append("</table>");
+        }
+
+        private static double Duration(TestResult result) => result.DurationSeconds;
+        private static string Optional(double? value) => value.HasValue ? Number(value.Value) : "—";
+        private static void TimingRow(StringBuilder html, string name, double seconds)
+            => html.Append("<tr><td>").Append(WebUtility.HtmlEncode(name)).Append("</td><td>").Append(Number(seconds)).Append(" s</td></tr>");
     }
 }

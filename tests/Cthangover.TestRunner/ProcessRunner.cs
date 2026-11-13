@@ -7,7 +7,8 @@ namespace Cthangover.TestRunner
     public static class ProcessRunner
     {
         public static ProcessResult Run(string fileName, IEnumerable<string> arguments, string workingDirectory, int timeoutSeconds,
-            string logFile = null, IReadOnlyDictionary<string, string> environment = null)
+            string logFile = null, IReadOnlyDictionary<string, string> environment = null,
+            string launchName = null, CancellationToken cancellationToken = default)
         {
             var startInfo = new ProcessStartInfo
             {
@@ -25,47 +26,69 @@ namespace Cthangover.TestRunner
             using var stdoutDone = new ManualResetEventSlim();
             using var stderrDone = new ManualResetEventSlim();
             using var process = new Process { StartInfo = startInfo };
-            process.OutputDataReceived += (_, e) => Append(result, writer, stdoutDone, e.Data);
-            process.ErrorDataReceived += (_, e) => Append(result, writer, stderrDone, e.Data);
+            var capture = new ProcessOutputCapture(result, writer, stopwatch, stdoutDone, stderrDone, launchName);
+            process.OutputDataReceived += capture.StandardOutput;
+            process.ErrorDataReceived += capture.StandardError;
             try
             {
-                process.Start();
+                RunnerLifetime.Start(process, cancellationToken);
+                Sample(process, result);
                 process.BeginOutputReadLine();
                 process.BeginErrorReadLine();
-                if (!process.WaitForExit(checked(timeoutSeconds * 1000)))
+                while (!process.WaitForExit(100))
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    RunnerLifetime.Token.ThrowIfCancellationRequested();
+                    Sample(process, result);
+                    if (stopwatch.Elapsed.TotalSeconds < timeoutSeconds) continue;
                     result.TimedOut = true;
                     process.Kill(entireProcessTree: true);
                     if (!process.WaitForExit(5000)) throw new IOException("timed-out process tree could not be stopped");
+                    break;
                 }
+                Sample(process, result);
                 result.ExitCode = result.TimedOut ? -1 : process.ExitCode;
                 if (!stdoutDone.Wait(5000) || !stderrDone.Wait(5000))
                 {
                     result.ExitCode = -1;
-                    Append(result, writer, stdoutDone, "ERROR: output capture did not finish; a descendant may still own the pipes");
+                    capture.Append("ERROR: output capture did not finish; a descendant may still own the pipes", true);
                 }
             }
             catch (Exception error)
             {
                 result.ExitCode = -1;
-                Append(result, writer, stdoutDone, "ERROR: process infrastructure: " + error.Message);
-                try { if (!process.HasExited) { process.Kill(true); process.WaitForExit(5000); } } catch { }
+                capture.Append("ERROR: process infrastructure: " + error.Message, true);
+                try
+                {
+                    if (!process.HasExited) { process.Kill(true); process.WaitForExit(5000); }
+                    stdoutDone.Wait(5000);
+                    stderrDone.Wait(5000);
+                }
+                catch (InvalidOperationException) { }
+                catch (System.ComponentModel.Win32Exception) { }
             }
+            finally { RunnerLifetime.Remove(process); }
             stopwatch.Stop();
             result.Duration = stopwatch.Elapsed;
+            cancellationToken.ThrowIfCancellationRequested();
+            RunnerLifetime.Token.ThrowIfCancellationRequested();
             return result;
         }
 
-        private static void Append(ProcessResult result, StreamWriter writer, ManualResetEventSlim done, string line)
+        private static void Sample(Process process, ProcessResult result)
         {
-            if (line == null) { done.Set(); return; }
-            lock (result.Output)
+            try
             {
-                result.Output.Add(line);
-                writer?.WriteLine(line);
+                process.Refresh();
+                result.CpuSeconds = Math.Max(result.CpuSeconds ?? 0, process.TotalProcessorTime.TotalSeconds);
             }
-            if (line.TrimStart().StartsWith("[", StringComparison.Ordinal) && (line.Contains("[TEST_RESULT]", StringComparison.Ordinal) || line.Contains("[FAIL]", StringComparison.Ordinal)))
-                Console.WriteLine("  " + line);
+            catch (Exception error) when (error is InvalidOperationException or System.ComponentModel.Win32Exception or NotSupportedException) { }
+            try
+            {
+                var memory = Math.Max(process.PeakWorkingSet64, process.WorkingSet64);
+                if (memory > 0) result.PeakMemoryMb = Math.Max(result.PeakMemoryMb ?? 0, memory / 1048576.0);
+            }
+            catch (Exception error) when (error is InvalidOperationException or System.ComponentModel.Win32Exception or NotSupportedException) { }
         }
     }
 }

@@ -3,9 +3,10 @@ namespace Cthangover.TestRunner
     /// <summary>Copies process-owned reports, sandboxes and images before the next component restores its workspace.</summary>
     public static class ArtifactCollector
     {
-        public static void Collect(TestWorkspace workspace, string directory, TestResult result)
+        public static void Collect(TestWorkspace workspace, string directory, TestResult result,
+            IntegrationTestDefinition test = null, bool shared = false)
         {
-            if (!result.Passed) result.Artifacts.AddRange(workspace.CaptureChanges(Path.Combine(directory, "changed-project")));
+            if (!result.Passed && !shared) result.Artifacts.AddRange(workspace.CaptureChanges(Path.Combine(directory, "changed-project")));
             var errors = Path.Combine(workspace.UserDirectory, "logs", "cthangover_errors.log");
             if (!result.Passed && File.Exists(errors))
                 result.Diagnostics = File.ReadLines(errors).Where(line => !string.IsNullOrWhiteSpace(line)).TakeLast(12)
@@ -13,7 +14,10 @@ namespace Cthangover.TestRunner
             CopyTree(Path.Combine(workspace.UserDirectory, "logs"), Path.Combine(directory, "game-logs"), result.Artifacts);
             CopyTree(Path.Combine(workspace.UserDirectory, "mod_tests"), Path.Combine(directory, "mod-tests"), result.Artifacts);
             CopyTree(Path.Combine(workspace.UserDirectory, "mod_test_sandbox"), Path.Combine(directory, "sandbox"), result.Artifacts);
-            CopyTree(Path.Combine(workspace.Root, "tests", "artifacts"), Path.Combine(directory, "outputs"), result.Artifacts);
+            if (!shared) CopyTree(Path.Combine(workspace.Root, "tests", "artifacts"), Path.Combine(directory, "outputs"), result.Artifacts);
+            else if (test != null)
+                foreach (var relative in ProjectAccess.OutputDirectories(test))
+                    CopyTree(Path.Combine(workspace.Root, relative), Path.Combine(directory, "outputs", relative.Substring("tests/artifacts/".Length)), result.Artifacts);
             foreach (var item in result.Cases)
                 item.Artifacts = item.Artifacts.Select(path => Relocate(path, workspace, directory)).ToList();
         }

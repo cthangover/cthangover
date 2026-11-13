@@ -18,12 +18,21 @@ namespace Cthangover.TestRunner
         public bool List { get; private set; }
         public string Godot { get; private set; }
         public bool NoBuild { get; private set; }
+        /// <summary>Uses a disposable per-run compilation cache instead of the persistent cache.</summary>
+        public bool FreshCache { get; private set; }
         public string Json { get; private set; }
         public string Switcher { get; private set; }
         public string Choices { get; private set; }
         public int TimeoutSeconds { get; private set; } = 60;
         public bool ShowHelp { get; private set; }
         public bool KeepWorkspace { get; private set; }
+
+        /// <summary>Global child limit; one explicitly selects the original sequential workspace protocol.</summary>
+        public int Jobs { get; private set; } = Math.Clamp(Environment.ProcessorCount / 2, 2, 8);
+        /// <summary>Windowed children also count against the global limit.</summary>
+        public int GuiJobs { get; private set; } = 2;
+        /// <summary>Maximum exclusive project copies; dependency components hold a copy until complete.</summary>
+        public int WriteJobs { get; private set; } = 2;
 
         public static RunnerOptions Parse(string[] args)
         {
@@ -47,7 +56,11 @@ namespace Cthangover.TestRunner
                     case "--list": options.List = true; break;
                     case "--godot": options.Godot = Next(args, ref i); break;
                     case "--no-build": options.NoBuild = true; break;
+                    case "--fresh-cache": options.FreshCache = true; break;
                     case "--keep-workspace": options.KeepWorkspace = true; break;
+                    case "--jobs": options.Jobs = Positive(args, ref i); break;
+                    case "--gui-jobs": options.GuiJobs = Positive(args, ref i); break;
+                    case "--write-jobs": options.WriteJobs = Positive(args, ref i); break;
                     case "--json": options.Json = Next(args, ref i); break;
                     case "--switcher": options.Switcher = Next(args, ref i); break;
                     case "--choices": options.Choices = Next(args, ref i); break;
@@ -72,6 +85,14 @@ namespace Cthangover.TestRunner
             return args[++i];
         }
 
+        private static int Positive(string[] args, ref int i)
+        {
+            var option = args[i];
+            if (!int.TryParse(Next(args, ref i), out var value) || value <= 0)
+                throw new ArgumentException(option + " expects a positive integer");
+            return value;
+        }
+
         public static string HelpText =>
 @"Cthangover — тесты ядра, модов и игровых сценариев.
   dotnet run --project tests/Cthangover.TestRunner -- [опции]
@@ -93,6 +114,10 @@ namespace Cthangover.TestRunner
   --json <path>        дополнительная копия общего JSON-отчёта
   --godot <path>       Godot .NET (иначе GODOT_BIN или PATH)
   --no-build           использовать существующую сборку игры
+  --fresh-cache        отдельный пустой кеш компиляции / private cold compilation cache
+  --jobs <N>           число процессов (по умолчанию половина ядер, 2..8); 1 — последовательный режим
+  --gui-jobs <G>       число окон одновременно (по умолчанию 2)
+  --write-jobs <W>     число копий для записи (по умолчанию 2)
   --keep-workspace    сохранить копию проекта после успеха (при сбое сохраняется всегда)
   --switcher <scene>   smoke-прогон сцены с авто-диалогами
   --choices <0,1,...>  выборы smoke-прогона

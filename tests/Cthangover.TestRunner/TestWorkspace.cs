@@ -11,13 +11,18 @@ namespace Cthangover.TestRunner
     {
         private static readonly HashSet<string> Excluded = new(StringComparer.OrdinalIgnoreCase)
         { ".git", ".git-template", ".idea", "node_modules", "__pycache__" };
-        private static readonly string[] Trees = { "Core", "mods", "scenes", "collections", "config", "tests", "docs", ".opencode", ".godot", "sdk" };
+        private static readonly string[] Trees = new[] { "Core", "scenes", "collections", "config", "tests", "docs", ".opencode", ".godot", "sdk" }
+            .Concat(ModFolders.Names).ToArray();
         private readonly Dictionary<string, string> originals = new(StringComparer.Ordinal);
         private readonly Dictionary<string, (long Length, DateTime Time, byte[] Text)> baseline = new(StringComparer.Ordinal);
         private readonly List<string> userDirectories = new();
         private readonly HashSet<string> directories = new(StringComparer.Ordinal);
         private readonly string runId;
         private bool first = true;
+        private TestWorkspace owner;
+        private string dataHome;
+        private bool shared;
+        private readonly Dictionary<string, byte[]> sharedHashes = new(StringComparer.Ordinal);
 
         public string Root { get; }
         public string UserDirectory { get; private set; }
@@ -25,15 +30,16 @@ namespace Cthangover.TestRunner
         public bool Keep { get; set; }
         public string CacheDirectory { get; }
 
-        public TestWorkspace(string source, string runId)
+        /// <summary>Copies project inputs; persistent compilation artifacts live outside the disposable run root.</summary>
+        public TestWorkspace(string source, string runId, bool freshCache = false, string cacheRunId = null)
         {
             this.runId = runId;
             Root = Path.Combine(Path.GetTempPath(), "cthangover-tests", runId, "project");
             if (Directory.Exists(Root)) throw new IOException("workspace already exists: " + Root);
-            CacheDirectory = Path.Combine(Path.GetDirectoryName(Root), "cache", "assemblies");
+            CacheDirectory = CompilationCachePolicy.Resolve(Path.GetTempPath(), cacheRunId ?? runId, freshCache);
             Directory.CreateDirectory(Root);
             foreach (var file in Directory.EnumerateFiles(source))
-                if (Path.GetExtension(file) is ".godot" or ".csproj" or ".sln" or ".cfg" or ".json" or ".md") Copy(file, Path.GetFileName(file));
+                if (Path.GetExtension(file) is ".godot" or ".csproj" or ".props" or ".targets" or ".sln" or ".cfg" or ".json" or ".md") Copy(file, Path.GetFileName(file));
             foreach (var tree in Trees)
                 if (Directory.Exists(Path.Combine(source, tree))) CopyTree(Path.Combine(source, tree), tree);
             PrepareOutputDirectories();
@@ -41,11 +47,50 @@ namespace Cthangover.TestRunner
                 directories.Add(Path.GetRelativePath(Root, directory).Replace('\\', '/'));
         }
 
+        private TestWorkspace(TestWorkspace owner, string component)
+        {
+            this.owner = owner;
+            runId = owner.runId;
+            Root = owner.Root;
+            CacheDirectory = owner.CacheDirectory;
+            shared = true;
+            dataHome = Path.Combine(Path.GetDirectoryName(Root), "homes", Key(component));
+            var applicationData = OperatingSystem.IsMacOS() ? Path.Combine(dataHome, "Library", "Application Support") : dataHome;
+            UserDirectory = Path.Combine(applicationData, "cthangover-tests", "data");
+            if (Directory.Exists(dataHome)) throw new IOException("data home already exists: " + dataHome);
+            Directory.CreateDirectory(Path.Combine(UserDirectory, "mods"));
+            TemporaryDirectory = Path.Combine(Path.GetDirectoryName(Root), "temp", Key(component));
+            Directory.CreateDirectory(TemporaryDirectory);
+            lock (owner.userDirectories) owner.userDirectories.Add(UserDirectory);
+        }
+
+        /// <summary>Writes the sole shared override before launches start and makes it part of the immutable baseline.</summary>
+        public void ConfigureShared()
+        {
+            shared = true;
+            var path = Path.Combine(Root, "override.cfg");
+            File.WriteAllText(path, "[application]\nconfig/use_custom_user_dir=true\nconfig/custom_user_dir_name=\"cthangover-tests/data\"\n", new UTF8Encoding(false));
+            var info = new FileInfo(path);
+            baseline["override.cfg"] = (info.Length, info.LastWriteTimeUtc, File.ReadAllBytes(path));
+            foreach (var entry in baseline)
+                if (entry.Value.Text == null && !IgnoredForVerification(entry.Key))
+                {
+                    using var stream = File.OpenRead(Path.Combine(Root, entry.Key));
+                    sharedHashes[entry.Key] = SHA256.HashData(stream);
+                }
+        }
+
+        /// <summary>Shares immutable project/cache inputs while owning a private OS data home and temp directory.</summary>
+        public TestWorkspace SharedComponent(string component)
+        {
+            if (!shared || owner != null) throw new InvalidOperationException("configure the shared owner before creating component data homes");
+            return new TestWorkspace(this, component);
+        }
+
         private void PrepareOutputDirectories()
         {
-            var path = Path.Combine(Root, "tests", "tests.manifest.json");
-            if (!File.Exists(path)) return;
-            var manifest = TestManifest.Load(path);
+            if (!File.Exists(Path.Combine(Root, "tests", ModFolders.ManifestFile))) return;
+            var manifest = TestManifest.LoadProject(Root);
             foreach (var argument in manifest.Integration.SelectMany(test => test.Args))
             {
                 var separator = argument.IndexOf('=');
@@ -64,9 +109,17 @@ namespace Cthangover.TestRunner
         }
 
         /// <summary>Prepares a component's fresh data root; calling this again starts a new independent component.</summary>
-        public void Begin(string component)
+        /// <param name="restore">Skip only when the caller proves the previous component did not mutate the project; user/temp roots are always fresh.</param>
+        public void Begin(string component, bool restore = true)
         {
-            if (!first) RestoreProject();
+            if (shared) throw new InvalidOperationException("a shared project must never be restored or have its override rewritten");
+            if (!first && restore)
+            {
+                var started = System.Diagnostics.Stopwatch.GetTimestamp();
+                RestoreCount++;
+                try { RestoreProject(); }
+                finally { RestoreSeconds += System.Diagnostics.Stopwatch.GetElapsedTime(started).TotalSeconds; }
+            }
             first = false;
             var relative = "cthangover-tests/" + runId + "/" + Key(component);
             var dataRoot = OperatingSystem.IsWindows() ? Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)
@@ -82,13 +135,32 @@ namespace Cthangover.TestRunner
                 "[application]\nconfig/use_custom_user_dir=true\nconfig/custom_user_dir_name=\"" + relative + "\"\n", new UTF8Encoding(false));
         }
 
-        public Dictionary<string, string> EnvironmentVariables() => new()
+        public Dictionary<string, string> EnvironmentVariables()
         {
+            var variables = new Dictionary<string, string>
+            {
             ["CTHANGOVER_TEST_DATA"] = UserDirectory,
             ["CTHANGOVER_TEST_CACHE"] = CacheDirectory,
             ["CTHANGOVER_TEST_PROJECT"] = Root,
             ["TMP"] = TemporaryDirectory, ["TEMP"] = TemporaryDirectory, ["TMPDIR"] = TemporaryDirectory,
-        };
+            };
+            if (dataHome != null)
+            {
+                var variable = OperatingSystem.IsWindows() ? "APPDATA" : OperatingSystem.IsMacOS() ? "HOME" : "XDG_DATA_HOME";
+                variables[variable] = dataHome;
+                // HOME isolation on macOS must not hide the installed NuGet/code-generator cache from dotnet or Godot.
+                variables["NUGET_PACKAGES"] = Environment.GetEnvironmentVariable("NUGET_PACKAGES")
+                    ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".nuget", "packages");
+                variables["DOTNET_CLI_HOME"] = Path.Combine(dataHome, "dotnet");
+                variables["DOTNET_SKIP_FIRST_TIME_EXPERIENCE"] = "1";
+            }
+            return variables;
+        }
+
+        /// <summary>Total time spent restoring this copy; unchanged-size/timestamp text still receives byte verification.</summary>
+        public double RestoreSeconds { get; private set; }
+        /// <summary>Actual restoration attempts; skipped restores and the first component are not counted.</summary>
+        public int RestoreCount { get; private set; }
 
         private void CopyTree(string source, string relative)
         {
@@ -122,7 +194,7 @@ namespace Cthangover.TestRunner
             var info = new FileInfo(destination);
             // Immutable in-memory baselines make even same-size/same-timestamp edits of authoring files visible.
             var text = info.Length <= 4 * 1024 * 1024 && Path.GetExtension(source).ToLowerInvariant() is
-                ".cs" or ".gd" or ".json" or ".tscn" or ".tres" or ".scenario" or ".properties" or ".md" or ".cfg" or ".godot"
+                ".cs" or ".gd" or ".json" or ".tscn" or ".tres" or ".scenario" or ".properties" or ".md" or ".cfg" or ".godot" or ".props" or ".targets"
                 ? File.ReadAllBytes(destination) : null;
             baseline.Add(relative.Replace('\\', '/'), (info.Length, info.LastWriteTimeUtc, text));
         }
@@ -155,6 +227,7 @@ namespace Cthangover.TestRunner
 
         public void Dispose()
         {
+            if (owner != null) return; // The shared owner disposes all component homes with its run directory.
             if (Keep) return;
             foreach (var directory in userDirectories)
                 if (Directory.Exists(directory)) Directory.Delete(directory, true);
@@ -163,6 +236,35 @@ namespace Cthangover.TestRunner
             var parent = Path.GetDirectoryName(Root);
             if (Directory.Exists(parent)) Directory.Delete(parent, true);
         }
+
+        /// <summary>Finds additions, deletions and metadata/byte changes without restoring a snapshot still used by readers.</summary>
+        public List<string> VerifyUnchanged()
+        {
+            var changes = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var file in Directory.EnumerateFiles(Root, "*", SearchOption.AllDirectories))
+            {
+                var relative = Path.GetRelativePath(Root, file).Replace('\\', '/');
+                if (IgnoredForVerification(relative)) continue;
+                if (baseline.TryGetValue(relative, out var original))
+                {
+                    var info = new FileInfo(file);
+                    if (info.Length == original.Length && info.LastWriteTimeUtc == original.Time &&
+                        (original.Text == null || File.ReadAllBytes(file).AsSpan().SequenceEqual(original.Text)))
+                    {
+                        if (!sharedHashes.TryGetValue(relative, out var hash)) continue;
+                        using var stream = File.OpenRead(file);
+                        if (SHA256.HashData(stream).AsSpan().SequenceEqual(hash)) continue;
+                    }
+                }
+                changes.Add(relative);
+            }
+            foreach (var relative in baseline.Keys)
+                if (!IgnoredForVerification(relative) && !File.Exists(Path.Combine(Root, relative))) changes.Add(relative);
+            return changes.OrderBy(name => name, StringComparer.Ordinal).ToList();
+        }
+
+        private static bool IgnoredForVerification(string relative) => relative.StartsWith(".godot/", StringComparison.Ordinal)
+            || relative.StartsWith("tests/artifacts/", StringComparison.Ordinal);
 
         /// <summary>Preserves failed authoring edits before a later independent component restores the working copy.</summary>
         public List<string> CaptureChanges(string destination)
@@ -177,7 +279,12 @@ namespace Cthangover.TestRunner
                 {
                     var info = new FileInfo(file);
                     if (info.Length == original.Length && info.LastWriteTimeUtc == original.Time &&
-                        (original.Text == null || File.ReadAllBytes(file).AsSpan().SequenceEqual(original.Text))) continue;
+                        (original.Text == null || File.ReadAllBytes(file).AsSpan().SequenceEqual(original.Text)))
+                    {
+                        if (!sharedHashes.TryGetValue(relative, out var hash)) continue;
+                        using var stream = File.OpenRead(file);
+                        if (SHA256.HashData(stream).AsSpan().SequenceEqual(hash)) continue;
+                    }
                 }
                 var copy = Path.GetFullPath(Path.Combine(destination, relative));
                 Directory.CreateDirectory(Path.GetDirectoryName(copy));

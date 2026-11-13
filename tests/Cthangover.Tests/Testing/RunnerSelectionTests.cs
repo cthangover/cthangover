@@ -7,8 +7,9 @@ namespace Cthangover.Tests.Testing
     using Cthangover.TestRunner;
 
     /// <summary>Selection preserves setup, isolates components and never turns an empty or invalid request green.</summary>
-    public class RunnerSelectionTests
+    public class RunnerSelectionTests : System.IDisposable
     {
+        private readonly string failureReport = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "selection_report_" + System.Guid.NewGuid().ToString("N") + ".json");
         private static List<IntegrationTestDefinition> Catalog() => new()
         {
             new() { Name = "unit", Kind = "unit", Profiles = new[] { "full", "fast" }, Owners = new[] { "core" } },
@@ -106,5 +107,56 @@ namespace Cthangover.Tests.Testing
             var copy = JsonSerializer.Deserialize<List<TestPlanEntry>>(json, ReportWriter.JsonOptions);
             Assert.Equal(json, JsonSerializer.Serialize(copy, ReportWriter.JsonOptions));
         }
+
+        [Fact]
+        public void OneJobKeepsTheOriginalPlanAndOrder()
+        {
+            var original = TestPlanner.Build(Catalog(), RunnerOptions.Parse(new[] { "--test", "play", "--test", "other" }));
+            var sequential = TestPlanner.Build(Catalog(), RunnerOptions.Parse(new[] { "--test", "play", "--test", "other", "--jobs", "1" }));
+            Assert.Equal(JsonSerializer.Serialize(original, ReportWriter.JsonOptions), JsonSerializer.Serialize(sequential, ReportWriter.JsonOptions));
+            Assert.Equal(new[] { "setup", "play", "other" }, sequential.Select(entry => entry.Test.Name));
+        }
+
+        [Theory]
+        [InlineData("--jobs", "0")]
+        [InlineData("--gui-jobs", "-1")]
+        [InlineData("--write-jobs", "no")]
+        public void ConcurrencyLimitsMustBePositive(string option, string value)
+            => Assert.Throws<ArgumentException>(() => RunnerOptions.Parse(new[] { option, value }));
+
+        [Fact]
+        public void UnselectedDependentCannotAuthorizeOverlappingOutputDirectories()
+        {
+            var catalog = Catalog();
+            catalog.Add(new IntegrationTestDefinition { Name = "unselected", DependsOn = new[] { "play", "other" } });
+            foreach (var name in new[] { "play", "other" })
+            {
+                var test = catalog.Single(entry => entry.Name == name);
+                test.Project = "output";
+                test.Args = new[] { "--shots=res://tests/artifacts/shared" };
+            }
+            ProjectAccess.ValidateOutputs(catalog);
+            Assert.Throws<InvalidOperationException>(() => TestPlanner.Build(catalog,
+                RunnerOptions.Parse(new[] { "--test", "play", "--test", "other" })));
+        }
+
+        [Fact]
+        public void SharedIntegrityFailureRepeatsCandidatesWithTheirFiltersAndPrerequisites()
+        {
+            var catalog = Catalog();
+            catalog.Single(test => test.Name == "mod_units:rpg").DependsOn = new[] { "setup" };
+            var report = new RunReport { Results = new()
+            {
+                new TestResult { Name = "mod_units:rpg", Passed = true, PassedChecks = 1, Filter = "followers/*" },
+                new TestResult { Name = "shared-project-integrity", Kind = "infrastructure", CandidateLaunches = new[] { "mod_units:rpg" } },
+            } };
+            System.IO.File.WriteAllText(failureReport, JsonSerializer.Serialize(report, ReportWriter.JsonOptions));
+            var plan = TestPlanner.Build(catalog, RunnerOptions.Parse(new[] { "--failed", failureReport }));
+            Assert.Equal(new[] { "setup", "mod_units:rpg" }, plan.Select(entry => entry.Test.Name));
+            Assert.Null(plan[0].Filter);
+            Assert.Equal("followers/*", plan[1].Filter);
+        }
+
+        public void Dispose() => System.IO.File.Delete(failureReport);
     }
 }

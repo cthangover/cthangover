@@ -25,8 +25,10 @@ namespace Cthangover.Core.Mods
         /// </summary>
         private static readonly object _fileLock = new();
 
-        /// <summary>Resolved storage path: globalised <c>user://mod_load_order.json</c> at runtime, relative fallback otherwise.</summary>
-        public static string Path => GameEnvironment.IsRuntime ? ProjectSettings.GlobalizePath(FilePath) : "mod_load_order.json";
+        /// <summary>Uses Godot user data at runtime and the runner's private data root in xUnit; direct callers retain the relative fallback.</summary>
+        public static string Path => GameEnvironment.IsRuntime ? ProjectSettings.GlobalizePath(FilePath)
+            : string.IsNullOrWhiteSpace(System.Environment.GetEnvironmentVariable("CTHANGOVER_TEST_DATA")) ? "mod_load_order.json"
+            : System.IO.Path.Combine(System.Environment.GetEnvironmentVariable("CTHANGOVER_TEST_DATA"), "mod_load_order.json");
         
         /// <summary>Reads the saved manual order; returns an empty list when the file is absent or broken.</summary>
         public static List<string> Load()

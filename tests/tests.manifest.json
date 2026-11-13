@@ -2,7 +2,8 @@
   "schemaVersion": 2,
   "unit": {
     "project": "tests/Cthangover.Tests/Cthangover.Tests.csproj",
-    "timeoutSeconds": 300
+    "timeoutSeconds": 300,
+    "seconds": 29.267
   },
   "integration": [
     {
@@ -37,7 +38,9 @@
       "game": "rpg_plus",
       "renderer": "topdown",
       "source": "mods/rpg_editor/test_suites/geometry/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "write",
+      "seconds": 27.69
     },
     {
       "name": "rpg_editor_geometry_iso",
@@ -72,7 +75,9 @@
       "game": "rpg_plus",
       "renderer": "isometric",
       "source": "mods/rpg_editor/test_suites/geometry/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "write",
+      "seconds": 9.221
     },
     {
       "name": "test_engine_contracts",
@@ -97,7 +102,9 @@
         "headless"
       ],
       "dependsOn": [],
-      "source": "tests/Cthangover.Tests.Integration/Autotest/ModTestRuntimeContractSetup.cs"
+      "source": "tests/Cthangover.Tests.Integration/Autotest/ModTestRuntimeContractSetup.cs",
+      "project": "read",
+      "seconds": 13.427
     },
     {
       "name": "dependency_setup_positive",
@@ -126,7 +133,9 @@
         "headless"
       ],
       "dependsOn": [],
-      "source": "tests/Cthangover.Tests.Integration/Autotest/DependencyContractSetup.cs"
+      "source": "tests/Cthangover.Tests.Integration/Autotest/DependencyContractSetup.cs",
+      "project": "write",
+      "seconds": 1.106
     },
     {
       "name": "dependency_child_positive",
@@ -157,7 +166,9 @@
       "dependsOn": [
         "dependency_setup_positive"
       ],
-      "source": "tests/Cthangover.Tests.Integration/Autotest/DependencyContractSetup.cs"
+      "source": "tests/Cthangover.Tests.Integration/Autotest/DependencyContractSetup.cs",
+      "project": "write",
+      "seconds": 1.111
     },
     {
       "name": "live2d_avatar",
@@ -166,7 +177,8 @@
       "timeoutSeconds": 120,
       "args": [
         "--",
-        "--itest=live2d_avatar"
+        "--itest=live2d_avatar",
+        "--shots=res://tests/artifacts/live2d_avatar"
       ],
       "result": {
         "name": "live2d_avatar",
@@ -188,7 +200,9 @@
       "game": null,
       "renderer": null,
       "source": "mods/live2d_base/test_suites/avatar/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "output",
+      "seconds": 7.228
     },
     {
       "name": "mod_units",
@@ -219,7 +233,9 @@
       "game": null,
       "renderer": null,
       "source": "tests/tests.manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 34.78
     },
     {
       "name": "resource_atlas",
@@ -227,7 +243,7 @@
       "args": [
         "--",
         "--resource-atlas",
-        "--atlas-out=res://tests/artifacts/resource_atlas",
+        "--atlas-out=res://tests/artifacts/resource_atlas/all",
         "--with-test-suites"
       ],
       "timeoutSeconds": 240,
@@ -250,7 +266,9 @@
       "game": null,
       "renderer": null,
       "source": "tests/tests.manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "output",
+      "seconds": 25.721
     },
     {
       "name": "locale_atlas",
@@ -281,7 +299,9 @@
       "game": null,
       "renderer": null,
       "source": "tests/tests.manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "output",
+      "seconds": 3.708
     },
     {
       "name": "game_novel_template",
@@ -313,7 +333,9 @@
       "game": "novel_template",
       "renderer": null,
       "source": "tests/tests.manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 2.502
     },
     {
       "name": "resource_atlas_novel_template",
@@ -345,7 +367,9 @@
       "game": "novel_template",
       "renderer": null,
       "source": "tests/tests.manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "output",
+      "seconds": 4.724
     },
     {
       "name": "rpg_walk",
@@ -378,7 +402,9 @@
       "game": "rpg_plus",
       "renderer": null,
       "source": "mods/rpg/test_suites/walk/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 12.703
     },
     {
       "name": "rpg_plain_walk",
@@ -413,7 +439,9 @@
       "game": "novel_template",
       "renderer": "topdown",
       "source": "mods/rpg/test_suites/plain_walk/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 3.702
     },
     {
       "name": "rpg_plus",
@@ -446,7 +474,9 @@
       "game": "rpg_plus",
       "renderer": null,
       "source": "mods/rpg_plus_game/test_suites/play/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 14.463
     },
     {
       "name": "items_editor_edit",
@@ -479,7 +509,9 @@
       "game": "rpg_plus",
       "renderer": null,
       "source": "mods/items_editor/test_suites/edit/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "write",
+      "seconds": 7.981
     },
     {
       "name": "editor_foreign_patch",
@@ -512,7 +544,9 @@
       "game": "rpg_plus",
       "renderer": null,
       "source": "mods/items_editor/test_suites/foreign_patch/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "write",
+      "seconds": 3.339
     },
     {
       "name": "rpg_object_editor_edit",
@@ -546,7 +580,9 @@
       "game": "rpg_plus",
       "renderer": null,
       "source": "mods/rpg_object_editor/test_suites/edit/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "write",
+      "seconds": 9.916
     },
     {
       "name": "schema_tools_edit",
@@ -579,7 +615,9 @@
       "game": "rpg_plus",
       "renderer": null,
       "source": "mods/schema_tools/test_suites/edit/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "write",
+      "seconds": 5.652
     },
     {
       "name": "trade",
@@ -612,7 +650,9 @@
       "game": "rpg_plus",
       "renderer": null,
       "source": "mods/trading/test_suites/trade/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 8.814
     },
     {
       "name": "site_shots",
@@ -646,7 +686,9 @@
       "game": "cthangover",
       "renderer": null,
       "source": "mods/cthangover_game/test_suites/site_shots/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 81.859
     },
     {
       "name": "game_rpg_plus",
@@ -678,7 +720,9 @@
       "game": "rpg_plus",
       "renderer": null,
       "source": "tests/tests.manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 4.443
     },
     {
       "name": "resource_atlas_rpg_plus",
@@ -710,7 +754,9 @@
       "game": "rpg_plus",
       "renderer": null,
       "source": "tests/tests.manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "output",
+      "seconds": 5.465
     },
     {
       "name": "menu_flow",
@@ -742,7 +788,9 @@
       "game": "frontend",
       "renderer": null,
       "source": "mods/menu_base/test_suites/menu_flow/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 16.039
     },
     {
       "name": "mod_documentation",
@@ -774,7 +822,9 @@
       "game": "frontend",
       "renderer": null,
       "source": "mods/mod_manager/test_suites/documentation/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 10.376
     },
     {
       "name": "collection_settings",
@@ -806,7 +856,9 @@
       "game": "frontend",
       "renderer": null,
       "source": "mods/mod_manager/test_suites/collection_settings/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 8.155
     },
     {
       "name": "new_mod",
@@ -838,7 +890,9 @@
       "game": "frontend",
       "renderer": null,
       "source": "mods/mod_manager/test_suites/new_mod/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "write",
+      "seconds": 6.492
     },
     {
       "name": "new_mod_check",
@@ -873,7 +927,8 @@
       "source": "mods/mod_manager/test_suites/new_mod_check/manifest.json",
       "dependsOn": [
         "new_mod"
-      ]
+      ],
+      "project": "write"
     },
     {
       "name": "locale_window",
@@ -906,7 +961,9 @@
       "game": "rpg_plus",
       "renderer": null,
       "source": "mods/locale_editor/test_suites/window/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "write",
+      "seconds": 4.458
     },
     {
       "name": "new_scenario",
@@ -939,7 +996,9 @@
       "game": "rpg_plus",
       "renderer": null,
       "source": "mods/scenario_editor/test_suites/new_scenario/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "write",
+      "seconds": 3.363
     },
     {
       "name": "mod_help",
@@ -971,7 +1030,9 @@
       "game": "frontend",
       "renderer": null,
       "source": "mods/mod_manager/test_suites/help/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 20.493
     },
     {
       "name": "display_settings",
@@ -1003,7 +1064,9 @@
       "game": "frontend",
       "renderer": null,
       "source": "mods/menu_base/test_suites/display_settings/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 7.443
     },
     {
       "name": "collection_edit",
@@ -1036,7 +1099,9 @@
       "game": "novel_template",
       "renderer": null,
       "source": "mods/menu_base/test_suites/collection_edit/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 3.834
     },
     {
       "name": "hot_reload",
@@ -1069,7 +1134,9 @@
       "game": "frontend",
       "renderer": null,
       "source": "mods/menu_base/test_suites/hot_reload/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 9.647
     },
     {
       "name": "new_game_cthangover",
@@ -1101,7 +1168,9 @@
       "game": "frontend",
       "renderer": null,
       "source": "mods/menu_base/test_suites/new_game/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 9.653
     },
     {
       "name": "game_cthangover",
@@ -1132,7 +1201,9 @@
       "game": "cthangover",
       "renderer": null,
       "source": "tests/tests.manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 3.528
     },
     {
       "name": "resource_atlas_cthangover",
@@ -1163,7 +1234,9 @@
       "game": "cthangover",
       "renderer": null,
       "source": "tests/tests.manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "output",
+      "seconds": 5.847
     },
     {
       "name": "resource_atlas_frontend",
@@ -1195,7 +1268,9 @@
       "game": "frontend",
       "renderer": null,
       "source": "tests/tests.manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "output",
+      "seconds": 5.1
     },
     {
       "name": "save_dormancy",
@@ -1228,7 +1303,9 @@
       "game": "novel_template",
       "renderer": null,
       "source": "mods/menu_base/test_suites/save_dormancy/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 4.736
     },
     {
       "name": "resettables",
@@ -1260,7 +1337,9 @@
       "game": "frontend",
       "renderer": null,
       "source": "mods/menu_base/test_suites/resettables/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 6.026
     },
     {
       "name": "interactives",
@@ -1292,7 +1371,9 @@
       "game": null,
       "renderer": null,
       "source": "mods/interactive_base/test_suites/interactives/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 3.161
     },
     {
       "name": "gdscript",
@@ -1323,7 +1404,9 @@
       "game": null,
       "renderer": null,
       "source": "mods/dialog_base/test_suites/gdscript/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 2.507
     },
     {
       "name": "property_patches",
@@ -1355,7 +1438,9 @@
       "game": null,
       "renderer": null,
       "source": "tests/tests.manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 3.804
     },
     {
       "name": "integrations",
@@ -1388,7 +1473,9 @@
       "game": null,
       "renderer": null,
       "source": "tests/tests.manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 4.073
     },
     {
       "name": "integrations_frontend",
@@ -1422,7 +1509,9 @@
       "game": "frontend",
       "renderer": null,
       "source": "tests/tests.manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 1.665
     },
     {
       "name": "inventory",
@@ -1454,7 +1543,9 @@
       "game": null,
       "renderer": null,
       "source": "mods/items_base/test_suites/inventory/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 6.211
     },
     {
       "name": "sheet_equip",
@@ -1487,7 +1578,9 @@
       "game": "rpg_plus",
       "renderer": null,
       "source": "mods/equipment/test_suites/sheet_equip/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 7.948
     },
     {
       "name": "cooking_walk",
@@ -1519,7 +1612,9 @@
       "game": null,
       "renderer": null,
       "source": "mods/cooking/test_suites/cooking_walk/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 12.803
     },
     {
       "name": "mod",
@@ -1545,7 +1640,9 @@
       "game": null,
       "renderer": null,
       "source": "tests/tests.manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "write",
+      "seconds": 4.166
     },
     {
       "name": "save_integrity",
@@ -1571,7 +1668,9 @@
       "game": null,
       "renderer": null,
       "source": "tests/tests.manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 2.216
     },
     {
       "name": "scene_context",
@@ -1597,7 +1696,9 @@
       "game": null,
       "renderer": null,
       "source": "tests/tests.manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 2.412
     },
     {
       "name": "event_bus",
@@ -1623,7 +1724,9 @@
       "game": null,
       "renderer": null,
       "source": "tests/tests.manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 2.038
     },
     {
       "name": "actioncontext",
@@ -1649,7 +1752,9 @@
       "game": null,
       "renderer": null,
       "source": "tests/tests.manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 2.037
     },
     {
       "name": "recruiting",
@@ -1675,7 +1780,9 @@
       "game": null,
       "renderer": null,
       "source": "tests/tests.manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 2.217
     },
     {
       "name": "map_zones",
@@ -1701,7 +1808,9 @@
       "game": null,
       "renderer": null,
       "source": "tests/tests.manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 2.13
     },
     {
       "name": "entities",
@@ -1727,7 +1836,9 @@
       "game": null,
       "renderer": null,
       "source": "tests/tests.manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 2.037
     },
     {
       "name": "skills_panel",
@@ -1753,7 +1864,9 @@
       "game": null,
       "renderer": null,
       "source": "tests/tests.manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 2.41
     },
     {
       "name": "tscn",
@@ -1779,7 +1892,9 @@
       "game": null,
       "renderer": null,
       "source": "tests/tests.manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 2.13
     },
     {
       "name": "scene_patch",
@@ -1805,7 +1920,9 @@
       "game": null,
       "renderer": null,
       "source": "tests/tests.manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "write",
+      "seconds": 4.353
     },
     {
       "name": "scene_builder",
@@ -1831,7 +1948,9 @@
       "game": null,
       "renderer": null,
       "source": "tests/tests.manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "write",
+      "seconds": 5.375
     },
     {
       "name": "studio_live",
@@ -1865,7 +1984,9 @@
       "game": null,
       "renderer": null,
       "source": "mods/scenario_studio/test_suites/live/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 19.581
     },
     {
       "name": "ingame_play",
@@ -1899,7 +2020,9 @@
       "game": "novel_template",
       "renderer": null,
       "source": "mods/scenario_editor/test_suites/ingame_play/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 18.529
     },
     {
       "name": "novel_flow",
@@ -1933,7 +2056,9 @@
       "game": "novel_template",
       "renderer": null,
       "source": "mods/editor_tools/test_suites/novel_flow/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "write",
+      "seconds": 7.72
     },
     {
       "name": "map_editor",
@@ -1959,7 +2084,9 @@
       "game": null,
       "renderer": null,
       "source": "tests/tests.manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 2.872
     },
     {
       "name": "coverage",
@@ -1985,7 +2112,9 @@
       "game": null,
       "renderer": null,
       "source": "tests/tests.manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 2.04
     },
     {
       "name": "coverage_subsystems",
@@ -2011,7 +2140,9 @@
       "game": null,
       "renderer": null,
       "source": "tests/tests.manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 2.035
     },
     {
       "name": "coverage_characters",
@@ -2037,7 +2168,9 @@
       "game": null,
       "renderer": null,
       "source": "tests/tests.manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 2.589
     },
     {
       "name": "coverage_quests",
@@ -2063,7 +2196,9 @@
       "game": null,
       "renderer": null,
       "source": "tests/tests.manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 2.315
     },
     {
       "name": "coverage_items",
@@ -2089,7 +2224,9 @@
       "game": null,
       "renderer": null,
       "source": "tests/tests.manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 2.493
     },
     {
       "name": "coverage_dialog",
@@ -2115,7 +2252,9 @@
       "game": null,
       "renderer": null,
       "source": "tests/tests.manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 2.036
     },
     {
       "name": "coverage_interactive",
@@ -2141,7 +2280,9 @@
       "game": null,
       "renderer": null,
       "source": "tests/tests.manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 2.409
     },
     {
       "name": "coverage_time",
@@ -2167,7 +2308,9 @@
       "game": null,
       "renderer": null,
       "source": "tests/tests.manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 2.044
     },
     {
       "name": "coverage_audio",
@@ -2193,7 +2336,9 @@
       "game": null,
       "renderer": null,
       "source": "tests/tests.manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 2.217
     },
     {
       "name": "coverage_map",
@@ -2219,7 +2364,9 @@
       "game": null,
       "renderer": null,
       "source": "tests/tests.manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 2.041
     },
     {
       "name": "coverage_effects",
@@ -2245,7 +2392,9 @@
       "game": null,
       "renderer": null,
       "source": "tests/tests.manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 2.043
     },
     {
       "name": "coverage_skills",
@@ -2271,7 +2420,9 @@
       "game": null,
       "renderer": null,
       "source": "tests/tests.manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 2.034
     },
     {
       "name": "battle",
@@ -2300,7 +2451,9 @@
       "game": null,
       "renderer": null,
       "source": "tests/tests.manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 7.322
     },
     {
       "name": "battle_ff",
@@ -2329,7 +2482,9 @@
       "game": null,
       "renderer": null,
       "source": "tests/tests.manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 4.82
     },
     {
       "name": "menu",
@@ -2358,7 +2513,9 @@
       "game": null,
       "renderer": null,
       "source": "tests/tests.manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 5.277
     },
     {
       "name": "mod_manager",
@@ -2387,7 +2544,9 @@
       "game": null,
       "renderer": null,
       "source": "tests/tests.manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 9.92
     },
     {
       "name": "mod_collections",
@@ -2416,7 +2575,9 @@
       "game": null,
       "renderer": null,
       "source": "tests/tests.manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 8.067
     },
     {
       "name": "woodland",
@@ -2449,7 +2610,9 @@
       "game": "rpg_plus",
       "renderer": null,
       "source": "mods/rpg_plus_game/test_suites/woodland/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 27.383
     },
     {
       "name": "woodland_pact",
@@ -2483,7 +2646,9 @@
       "game": "rpg_plus",
       "renderer": null,
       "source": "mods/rpg_plus_game/test_suites/woodland/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 27.551
     },
     {
       "name": "tile_render",
@@ -2517,7 +2682,9 @@
       "game": "rpg_plus",
       "renderer": null,
       "source": "mods/rpg/test_suites/render/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 7.421
     },
     {
       "name": "rpg_party_walk",
@@ -2550,7 +2717,9 @@
       "game": "rpg_plus",
       "renderer": null,
       "source": "mods/rpg/test_suites/party_walk/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 22.531
     },
     {
       "name": "rpg_party_walk_iso",
@@ -2585,7 +2754,9 @@
       "game": "rpg_plus",
       "renderer": "isometric",
       "source": "mods/rpg/test_suites/party_walk/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 22.535
     },
     {
       "name": "rpg_walk_iso",
@@ -2620,7 +2791,9 @@
       "game": "rpg_plus",
       "renderer": "isometric",
       "source": "mods/rpg/test_suites/walk/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 12.516
     },
     {
       "name": "rpg_plus_iso",
@@ -2655,7 +2828,9 @@
       "game": "rpg_plus",
       "renderer": "isometric",
       "source": "mods/rpg_plus_game/test_suites/play/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 14.477
     },
     {
       "name": "woodland_iso",
@@ -2690,7 +2865,9 @@
       "game": "rpg_plus",
       "renderer": "isometric",
       "source": "mods/rpg_plus_game/test_suites/woodland/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 27.548
     },
     {
       "name": "trade_iso",
@@ -2725,7 +2902,9 @@
       "game": "rpg_plus",
       "renderer": "isometric",
       "source": "mods/trading/test_suites/trade/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 9.0
     },
     {
       "name": "desert",
@@ -2758,7 +2937,9 @@
       "game": "rpg_plus",
       "renderer": null,
       "source": "mods/rpg_plus_game/test_suites/desert/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 15.675
     },
     {
       "name": "tools_isolation_tools_base",
@@ -2793,7 +2974,9 @@
       "game": "frontend",
       "renderer": null,
       "source": "mods/tools_base/test_suites/isolation/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 2.252
     },
     {
       "name": "tools_isolation_scenario_tools_base",
@@ -2828,7 +3011,9 @@
       "game": "frontend",
       "renderer": null,
       "source": "mods/tools_base/test_suites/isolation/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 2.3
     },
     {
       "name": "tools_isolation_scenario_editor",
@@ -2863,7 +3048,9 @@
       "game": "frontend",
       "renderer": null,
       "source": "mods/tools_base/test_suites/isolation/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 2.72
     },
     {
       "name": "tools_isolation_scene_editor",
@@ -2898,7 +3085,9 @@
       "game": "frontend",
       "renderer": null,
       "source": "mods/tools_base/test_suites/isolation/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 2.551
     },
     {
       "name": "tools_isolation_scene_builder",
@@ -2933,7 +3122,9 @@
       "game": "frontend",
       "renderer": null,
       "source": "mods/tools_base/test_suites/isolation/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 2.528
     },
     {
       "name": "tools_isolation_map_editor",
@@ -2968,7 +3159,9 @@
       "game": "frontend",
       "renderer": null,
       "source": "mods/tools_base/test_suites/isolation/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 2.709
     },
     {
       "name": "tools_isolation_interactive_editor",
@@ -3003,7 +3196,9 @@
       "game": "frontend",
       "renderer": null,
       "source": "mods/tools_base/test_suites/isolation/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 2.593
     },
     {
       "name": "tools_isolation_light_editor",
@@ -3038,7 +3233,9 @@
       "game": "frontend",
       "renderer": null,
       "source": "mods/tools_base/test_suites/isolation/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 2.676
     },
     {
       "name": "tools_isolation_catalog_export",
@@ -3073,7 +3270,9 @@
       "game": "frontend",
       "renderer": null,
       "source": "mods/tools_base/test_suites/isolation/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 2.706
     },
     {
       "name": "tools_isolation_items_editor",
@@ -3108,7 +3307,9 @@
       "game": "frontend",
       "renderer": null,
       "source": "mods/tools_base/test_suites/isolation/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 2.654
     },
     {
       "name": "tools_isolation_characters_editor",
@@ -3143,7 +3344,9 @@
       "game": "frontend",
       "renderer": null,
       "source": "mods/tools_base/test_suites/isolation/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 2.612
     },
     {
       "name": "tools_isolation_schema_tools",
@@ -3178,7 +3381,9 @@
       "game": "frontend",
       "renderer": null,
       "source": "mods/tools_base/test_suites/isolation/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 2.859
     },
     {
       "name": "tools_isolation_editor_tools",
@@ -3213,7 +3418,9 @@
       "game": "frontend",
       "renderer": null,
       "source": "mods/tools_base/test_suites/isolation/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 4.468
     },
     {
       "name": "tools_scenario_contract",
@@ -3250,7 +3457,9 @@
       "game": "novel_template",
       "renderer": null,
       "source": "mods/tools_base/test_suites/isolation/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 3.015
     },
     {
       "name": "winter",
@@ -3287,7 +3496,9 @@
       "game": "rpg_plus",
       "renderer": "topdown",
       "source": "mods/rpg_plus_game/test_suites/winter/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "output",
+      "seconds": 12.034
     },
     {
       "name": "winter_iso",
@@ -3324,7 +3535,9 @@
       "game": "rpg_plus",
       "renderer": "isometric",
       "source": "mods/rpg_plus_game/test_suites/winter/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "output",
+      "seconds": 12.037
     },
     {
       "name": "snow_enemies",
@@ -3361,7 +3574,9 @@
       "game": "rpg_plus",
       "renderer": "topdown",
       "source": "mods/village_pack/test_suites/snow_enemies/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "output",
+      "seconds": 23.325
     },
     {
       "name": "snow_enemies_iso",
@@ -3398,7 +3613,9 @@
       "game": "rpg_plus",
       "renderer": "isometric",
       "source": "mods/village_pack/test_suites/snow_enemies/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "output",
+      "seconds": 23.785
     },
     {
       "name": "biome_expansion",
@@ -3435,7 +3652,9 @@
       "game": "rpg_plus",
       "renderer": "topdown",
       "source": "mods/village_pack/test_suites/biome_expansion/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "output",
+      "seconds": 39.566
     },
     {
       "name": "biome_expansion_iso",
@@ -3472,7 +3691,9 @@
       "game": "rpg_plus",
       "renderer": "isometric",
       "source": "mods/village_pack/test_suites/biome_expansion/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "output",
+      "seconds": 40.113
     },
     {
       "name": "desert_surfaces",
@@ -3508,7 +3729,9 @@
       "game": "rpg_plus",
       "renderer": "topdown",
       "source": "mods/rpg_plus_game/test_suites/desert/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "output",
+      "seconds": 17.163
     },
     {
       "name": "desert_surfaces_iso",
@@ -3544,7 +3767,9 @@
       "game": "rpg_plus",
       "renderer": "isometric",
       "source": "mods/rpg_plus_game/test_suites/desert/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "output",
+      "seconds": 17.253
     },
     {
       "name": "characters_editor_edit",
@@ -3577,7 +3802,9 @@
       "game": "rpg_plus",
       "renderer": null,
       "source": "mods/characters_editor/test_suites/edit/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "write",
+      "seconds": 5.561
     },
     {
       "name": "tools_windows",
@@ -3610,7 +3837,9 @@
       "game": null,
       "renderer": null,
       "source": "mods/editor_tools/test_suites/windows/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "write",
+      "seconds": 45.987
     },
     {
       "name": "tools_windows_game",
@@ -3644,7 +3873,9 @@
       "game": "cthangover",
       "renderer": null,
       "source": "mods/editor_tools/test_suites/windows/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "write",
+      "seconds": 31.458
     },
     {
       "name": "rpg_editor_edit",
@@ -3677,7 +3908,9 @@
       "game": "rpg_plus",
       "renderer": null,
       "source": "mods/rpg_editor/test_suites/edit/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "write",
+      "seconds": 20.119
     },
     {
       "name": "rpg_editor_edit_iso",
@@ -3711,7 +3944,9 @@
       "game": "rpg_plus",
       "renderer": "isometric",
       "source": "mods/rpg_editor/test_suites/edit/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "write",
+      "seconds": 20.121
     },
     {
       "name": "rpg_companion_edit",
@@ -3744,7 +3979,9 @@
       "game": "rpg_plus",
       "renderer": null,
       "source": "mods/rpg_editor/test_suites/companion/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "write",
+      "seconds": 13.168
     },
     {
       "name": "tutorial_first_game",
@@ -3776,7 +4013,9 @@
       "game": "frontend",
       "renderer": null,
       "source": "mods/rpg_editor/test_suites/tutorial/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "write",
+      "seconds": 8.118
     },
     {
       "name": "tutorial_first_game_play",
@@ -3811,7 +4050,8 @@
       "source": "mods/rpg_editor/test_suites/tutorial_play/manifest.json",
       "dependsOn": [
         "tutorial_first_game"
-      ]
+      ],
+      "project": "write"
     },
     {
       "name": "effects_editor_edit",
@@ -3847,7 +4087,9 @@
       "game": "rpg_plus",
       "renderer": "topdown",
       "source": "mods/effects_editor/test_suites/edit/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "write",
+      "seconds": 13.147
     },
     {
       "name": "effects_editor_edit_iso",
@@ -3883,7 +4125,9 @@
       "game": "rpg_plus",
       "renderer": "isometric",
       "source": "mods/effects_editor/test_suites/edit/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "write",
+      "seconds": 11.937
     },
     {
       "name": "tools_isolation_rpg_editor",
@@ -3918,7 +4162,9 @@
       "game": "frontend",
       "renderer": null,
       "source": "mods/tools_base/test_suites/isolation/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 2.693
     },
     {
       "name": "avatar_contracts",
@@ -3954,7 +4200,9 @@
       "game": null,
       "renderer": null,
       "source": "mods/avatar_base/test_suites/contracts/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 3.356
     },
     {
       "name": "avatar_layers_contracts",
@@ -3990,7 +4238,9 @@
       "game": null,
       "renderer": null,
       "source": "mods/avatar_layers/test_suites/contracts/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 4.662
     },
     {
       "name": "marao_avatars",
@@ -4026,7 +4276,9 @@
       "game": null,
       "renderer": null,
       "source": "mods/cthangover_game/test_suites/marao_avatars/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "write",
+      "seconds": 8.811
     },
     {
       "name": "archive_password",
@@ -4058,7 +4310,9 @@
       "game": "frontend",
       "renderer": null,
       "source": "mods/mod_manager/test_suites/archive_password/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 4.64
     },
     {
       "name": "rpg_map_events_topdown",
@@ -4093,7 +4347,9 @@
       "game": "rpg_plus",
       "renderer": "topdown",
       "source": "mods/rpg_editor/test_suites/events/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "write",
+      "seconds": 19.522
     },
     {
       "name": "rpg_map_events_isometric",
@@ -4128,7 +4384,9 @@
       "game": "rpg_plus",
       "renderer": "isometric",
       "source": "mods/rpg_editor/test_suites/events/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "write",
+      "seconds": 19.165
     },
     {
       "name": "map_lights",
@@ -4163,7 +4421,9 @@
       "game": "rpg_plus",
       "renderer": null,
       "source": "mods/rpg_editor/test_suites/lighting/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "write",
+      "seconds": 8.126
     },
     {
       "name": "free_lights",
@@ -4198,7 +4458,9 @@
       "game": "rpg_plus",
       "renderer": null,
       "source": "mods/rpg_editor/test_suites/darkness/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "write",
+      "seconds": 10.468
     },
     {
       "name": "stas_lamp",
@@ -4232,7 +4494,9 @@
       "game": "junior_reaper_paper_grief",
       "renderer": null,
       "source": "mods/junior_reaper_paper_grief/test_suites/toolbar_lamp/manifest.json",
-      "dependsOn": []
+      "dependsOn": [],
+      "project": "read",
+      "seconds": 12.641
     },
     {
       "name": "dependency_setup_negative",
@@ -4259,7 +4523,8 @@
         "negative"
       ],
       "dependsOn": [],
-      "source": "tests/Cthangover.Tests.Integration/Autotest/DependencyContractSetup.cs"
+      "source": "tests/Cthangover.Tests.Integration/Autotest/DependencyContractSetup.cs",
+      "project": "write"
     },
     {
       "name": "dependency_child_negative",
@@ -4288,7 +4553,8 @@
       "dependsOn": [
         "dependency_setup_negative"
       ],
-      "source": "tests/Cthangover.Tests.Integration/Autotest/DependencyContractSetup.cs"
+      "source": "tests/Cthangover.Tests.Integration/Autotest/DependencyContractSetup.cs",
+      "project": "write"
     }
   ],
   "disabled_until_phase_8": {
@@ -4300,7 +4566,9 @@
       "reason": "Requires the sibling keyserver publishing harness with a temporary database and author keys.",
       "windowed": true,
       "game": null,
-      "requirements": ["cthangover-keyserver/tests/integration_windows.py --suite publishing"]
+      "requirements": [
+        "cthangover-keyserver/tests/integration_windows.py --suite publishing"
+      ]
     },
     "dialog_base__doc_shots": {
       "reason": "Requires an explicit steps file and screenshot destination; documentation capture, not a regression check.",

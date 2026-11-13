@@ -44,6 +44,8 @@ namespace Cthangover.TestRunner
             }
             if (result.Count == 0) throw new ArgumentException("selection matched no runnable tests");
             var chosen = result.Select(entry => entry.Test).ToList();
+            // A dependent excluded by selection cannot connect the output owners at execution time.
+            ProjectAccess.ValidateOutputs(chosen);
             foreach (var entry in result)
             {
                 var previous = failed != null && failed.TryGetValue(entry.Test.Name, out var prior) ? prior : default;
@@ -97,12 +99,26 @@ namespace Cthangover.TestRunner
         private static Dictionary<string, (string Filter, string Mod)> ReadFailed(string path)
         {
             using var document = JsonDocument.Parse(File.ReadAllText(path));
-            return document.RootElement.GetProperty("results").EnumerateArray()
+            var results = document.RootElement.GetProperty("results").EnumerateArray().ToArray();
+            var failures = results
                 .Where(r => r.GetProperty("status").GetString() is "fail" or "timeout" or "blocked" or "error")
-                .ToDictionary(r => r.GetProperty("name").GetString(), r => (
-                    Filter: r.TryGetProperty("filter", out var filter) ? filter.GetString() : null,
-                    Mod: r.TryGetProperty("modFilter", out var mod) ? mod.GetString() : null), StringComparer.Ordinal);
+                .ToDictionary(r => r.GetProperty("name").GetString(), ReadSelection, StringComparer.Ordinal);
+            foreach (var result in results)
+            {
+                if (!failures.ContainsKey(result.GetProperty("name").GetString()) || !result.TryGetProperty("candidateLaunches", out var candidates)) continue;
+                foreach (var candidate in candidates.EnumerateArray())
+                {
+                    var name = candidate.GetString();
+                    var source = results.FirstOrDefault(item => item.GetProperty("name").GetString() == name);
+                    if (source.ValueKind == JsonValueKind.Object) failures.TryAdd(name, ReadSelection(source));
+                }
+            }
+            return failures;
         }
+
+        private static (string Filter, string Mod) ReadSelection(JsonElement result) => (
+            result.TryGetProperty("filter", out var filter) ? filter.GetString() : null,
+            result.TryGetProperty("modFilter", out var mod) ? mod.GetString() : null);
 
         private static bool HasScheduledVariant(IReadOnlyList<IntegrationTestDefinition> catalog, IntegrationTestDefinition test, RunnerOptions options)
         {

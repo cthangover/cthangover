@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # ---------------------------------------------------------------------------
-# Full test run: core build -> xUnit unit tests -> mod unit tests (mod_units)
-# -> mod GUI test suites (--itest) -> autotest/coverage scenes -> summary.
+# Full test run: build once, then parallel xUnit/mod/scene launches -> summary.
+# --jobs N limits all children; --gui-jobs 2 limits windows; --write-jobs 2 limits writable copies.
+# --jobs 1 uses the sequential copy/restore protocol.
 # Windows twin: run_tests.bat.
 #
 # Usage:

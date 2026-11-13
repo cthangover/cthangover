@@ -17,6 +17,21 @@ namespace Cthangover.Tests.Testing
         private readonly ManualResetEventSlim start = new();
 
         [Fact]
+        public void Net10StagingDoesNotReuseTheLegacyNet8CachePath()
+        {
+            Directory.CreateDirectory(directory);
+            var legacyKey = Convert.ToHexString(SHA256.HashData(bytes)).Substring(0, 16).ToLowerInvariant();
+            var legacy = Path.Combine(directory, "probe_dll_" + legacyKey + "_library.dll");
+            File.WriteAllBytes(legacy, new byte[] { 8 });
+
+            var current = Stage();
+
+            Assert.NotEqual(legacy, current);
+            Assert.Equal(bytes, File.ReadAllBytes(current));
+            Assert.Equal(new byte[] { 8 }, File.ReadAllBytes(legacy));
+        }
+
+        [Fact]
         public void RepeatedStagingKeepsTheCompleteLibraryAndItsTimestamp()
         {
             var path = Stage();

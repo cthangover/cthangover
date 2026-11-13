@@ -20,22 +20,53 @@ namespace Cthangover.Tests.Testing
             {
                 Name = "play", Kind = "mod-unit", Passed = false, PassedChecks = 2, FailedChecks = 1, SkippedChecks = 3,
                 Duration = TimeSpan.FromSeconds(1.25), ExitCode = 1, Filter = "map/*", ModFilter = "rpg", Environment = "setup", SelectionReason = "selected",
+                OverheadSeconds = 0.23, BootSeconds = 0.4, CpuSeconds = 0.8, PeakMemoryMb = 123.5, LogLines = 47,
                 DependsOn = new[] { "setup" }, Note = "assertion", FailureKind = "assertion", Core = "ff_battle", Coverage = "2/2", LogFile = "process.log",
                 Diagnostics = new() { "failure" }, Artifacts = new() { "actual.png" },
+                CandidateLaunches = new[] { "source" },
                 Cases = new() { new TestCaseResult { Name = "map/roundtrip", Mod = "rpg", Status = "fail", Message = "expected 1, got 2",
                     StackTrace = "MapTests.cs:20", DurationSeconds = 0.3, Artifacts = new() { "diff.png" }, Log = new() { "step" } } },
             };
             var report = new RunReport { RunId = "roundtrip", Complete = true, Workspace = "workspace", FinishedAt = DateTimeOffset.UtcNow,
+                Workspaces = new() { "workspace" }, RetainedWorkspaces = new() { "workspace" },
+                Phases = new RunPhases { Copies = 3, LaunchSeconds = 4, Parallelism = 2,
+                    LaneBusySeconds = new() { ["shared"] = 5, ["write0"] = 3 }, BuildSeconds = 1, WorkspaceCopySeconds = 2, RestoreSeconds = 3, RestoreCount = 4,
+                    ArtifactCollectionSeconds = 5, ReportWritingSeconds = 6, CleanupSeconds = 7 },
                 UserDirectories = new() { "private-data" }, Results = new() { result } };
             var restored = JsonSerializer.Deserialize<RunReport>(JsonSerializer.Serialize(report, ReportWriter.JsonOptions), ReportWriter.JsonOptions);
             Assert.Equal(report.RunId, restored.RunId);
             Assert.Equal(report.StartedAt, restored.StartedAt);
             Assert.Equal(report.FinishedAt, restored.FinishedAt);
             Assert.Equal(report.Workspace, restored.Workspace);
+            Assert.Equal(report.Workspaces, restored.Workspaces);
+            Assert.Equal(report.RetainedWorkspaces, restored.RetainedWorkspaces);
             Assert.Equal(report.UserDirectories, restored.UserDirectories);
+            Assert.Equal(report.WallSeconds, restored.WallSeconds);
+            Assert.Equal(report.ChildSeconds, restored.ChildSeconds);
+            Assert.Equal(JsonSerializer.Serialize(report.Phases, ReportWriter.JsonOptions), JsonSerializer.Serialize(restored.Phases, ReportWriter.JsonOptions));
             var copy = Assert.Single(restored.Results);
             Assert.Equal(JsonSerializer.Serialize(result, ReportWriter.JsonOptions), JsonSerializer.Serialize(copy, ReportWriter.JsonOptions));
             Assert.False(restored.Success);
+        }
+
+        [Fact]
+        public void PartialCheckpointsWriteOnlyJsonAndKeepUnavailableMetricsNull()
+        {
+            var report = new RunReport { Results = new() { new TestResult { Name = "driverless" } } };
+            ReportWriter.Write(directory, report);
+            Assert.True(File.Exists(Path.Combine(directory, "report.json")));
+            Assert.False(File.Exists(Path.Combine(directory, "report.html")));
+            Assert.False(File.Exists(Path.Combine(directory, "report.junit.xml")));
+            var restored = JsonSerializer.Deserialize<RunReport>(File.ReadAllText(Path.Combine(directory, "report.json")), ReportWriter.JsonOptions);
+            var result = Assert.Single(restored.Results);
+            Assert.Null(result.BootSeconds);
+            Assert.Null(result.CpuSeconds);
+            Assert.Null(result.PeakMemoryMb);
+            Assert.Equal(0, result.LogLines);
+            report.Complete = true;
+            ReportWriter.Write(directory, report);
+            Assert.Contains("Time breakdown", File.ReadAllText(Path.Combine(directory, "report.html")));
+            Assert.True(File.Exists(Path.Combine(directory, "report.junit.xml")));
         }
 
         [Fact]

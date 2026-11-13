@@ -11,6 +11,14 @@ namespace Cthangover.TestRunner
         public bool TimedOut { get; set; }
         public string LogFile { get; set; }
         public TimeSpan Duration { get; set; }
+        /// <summary>Elapsed time to the first stdout driver category, or null for a driverless process.</summary>
+        public double? BootSeconds { get; set; }
+        /// <summary>Sampled root-process CPU time in seconds; unavailable values remain null.</summary>
+        public double? CpuSeconds { get; set; }
+        /// <summary>Largest sampled root-process working-set peak in MiB; unavailable values remain null.</summary>
+        public double? PeakMemoryMb { get; set; }
+        /// <summary>Number of captured log lines across both pipes.</summary>
+        public long LogLines { get; set; }
         public List<string> Output { get; set; } = new();
 
         public string OutputText => string.Join(Environment.NewLine, Output);
