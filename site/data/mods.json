@@ -1,17 +1,17 @@
 {
- "generated": "2026-11-10",
+ "generated": "2026-11-13",
  "stats": {
   "mods": 67,
   "dslCommands": 32,
-  "coreFiles": 539,
-  "coreLoc": 49833,
-  "modFiles": 1391,
-  "modLoc": 153175
+  "coreFiles": 551,
+  "coreLoc": 50692,
+  "modFiles": 1398,
+  "modLoc": 155589
  },
  "battle": [
   {
    "id": "turn_battle_base",
-   "version": "2.0.0",
+   "version": "0.1.0",
    "deps": [
     "characters_base",
     "ui_base",
@@ -21,7 +21,7 @@
   },
   {
    "id": "card_battle",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "deps": [
     "ui_base",
     "turn_battle_base"
@@ -29,7 +29,7 @@
   },
   {
    "id": "ff_battle",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "deps": [
     "ui_base",
     "turn_battle_base"
@@ -40,7 +40,7 @@
   {
    "id": "audio_base",
    "name": "Audio Engine",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "Audio engine: scene music, sound effects and ambience on separate buses with their own volume, and a music player that follows the current scene.",
    "cat": [
     "engine",
@@ -55,7 +55,7 @@
   {
    "id": "avatar_base",
    "name": "Avatar Engine",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "Reusable avatar definitions and independent preset state, with renderer-neutral composition for layered images and animated models.",
    "cat": [
     "engine",
@@ -67,7 +67,7 @@
   {
    "id": "avatar_layers",
    "name": "Layered Avatars",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "Layered PNG avatar renderer: preset-controlled images, ordering, placement, visibility and opacity.",
    "cat": [
     "engine",
@@ -81,7 +81,7 @@
   {
    "id": "battle_formulas",
    "name": "Battle Formulas",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "Battle skills written as data: damage and heal formulas over the participants' stats, resource costs, pierce and stun — no code, and the same skill works in every battle core.",
    "cat": [
     "gameplay"
@@ -96,7 +96,7 @@
   {
    "id": "card_battle",
    "name": "Card Battle",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "A battle system with cards: pick a character card and drag its action cards onto targets. Built on Turn Battle Base; the battle of Cthangover.",
    "cat": [
     "gameplay"
@@ -110,7 +110,7 @@
   {
    "id": "catalog_export",
    "name": "Catalog Export",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "Export mod catalog metadata and installable archives.",
    "cat": [
     "tools",
@@ -125,7 +125,7 @@
   {
    "id": "characters_base",
    "name": "Characters Engine",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "Characters engine: heroes, companions and enemies with their battle attributes and action cards, the character actions panel and dialog portraits.",
    "cat": [
     "engine",
@@ -140,7 +140,7 @@
   {
    "id": "characters_editor",
    "name": "Characters Editor",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "Edits a mod's characters while the game runs: names in every language, portrait, RPG walking sprite, battle numbers and actions. A save reaches the running game at once.",
    "cat": [
     "tools",
@@ -157,7 +157,7 @@
   {
    "id": "classic_rpg_pack",
    "name": "Classic RPG Rules",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "A ready set of classic fantasy rules as data: six attributes, three classes, equipment slots, gear and four formula skills. RPG Plus is built on it.",
    "cat": [
     "gameplay",
@@ -175,7 +175,7 @@
   {
    "id": "cooking",
    "name": "Cooking",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "The kitchen of Cthangover: learn recipes, cook at the home_kitchen workbench and keep an eye on the party's rations.",
    "cat": [
     "gameplay"
@@ -191,7 +191,7 @@
   {
    "id": "crafting",
    "name": "Crafting",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "Workbench stations that turn materials into items: stations and recipes are plain data, and any scenario opens a station with one command.",
    "cat": [
     "gameplay"
@@ -246,7 +246,7 @@
   {
    "id": "dialog_base",
    "name": "Dialog Engine",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "Dialog engine: the dialog box with portraits and answers, and the .scenario language in which every game of the collection tells its story.",
    "cat": [
     "engine",
@@ -265,7 +265,7 @@
   {
    "id": "editor_tools",
    "name": "Editor Tools",
-   "version": "1.1.0",
+   "version": "0.1.0",
    "desc": "Compatibility toolset: installs the individual scene, scenario, map, interactive, light, Godot scene and catalog tools.",
    "cat": [
     "tools",
@@ -285,7 +285,7 @@
   {
    "id": "effects_base",
    "name": "Effects Engine",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "Scene effects and continuous atmosphere: editable particle profiles and extensible emitters for leaves, fireflies, snow, rain and dust.",
    "cat": [
     "engine",
@@ -297,7 +297,7 @@
   {
    "id": "effects_editor",
    "name": "Effects Editor",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "Live atmosphere authoring: particle and ripple profiles, preview, map and cell placement.",
    "cat": [
     "tools",
@@ -315,7 +315,7 @@
   {
    "id": "equipment",
    "name": "Equipment",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "Wearable gear for any game with stats: slots as data, items become equipment by their JSON keys, and worn bonuses flow into sheets, battles, checks and conditions at once.",
    "cat": [
     "gameplay"
@@ -331,7 +331,7 @@
   {
    "id": "expressions_base",
    "name": "Expression Engine",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "Reusable numeric expressions with mod-defined function and operator strategies, strict runtime assignments and compatible game formulas.",
    "cat": [
     "engine",
@@ -343,7 +343,7 @@
   {
    "id": "ff_battle",
    "name": "FF Battle",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "A battle system in the style of classic console RPGs: the party, the enemies and a command menu — Attack, Items, Defend, Escape. The battle of RPG Plus.",
    "cat": [
     "gameplay"
@@ -357,7 +357,7 @@
   {
    "id": "interactive_base",
    "name": "Interactive Base",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "Clickable objects for picture scenes: a picture of its own over the background, a glow under the mouse, and a click that starts a scenario.",
    "cat": [
     "engine",
@@ -372,7 +372,7 @@
   {
    "id": "interactive_editor",
    "name": "Interactive Editor",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "Edit scene interactive objects and their placement on backgrounds.",
    "cat": [
     "tools",
@@ -389,7 +389,7 @@
   {
    "id": "items_base",
    "name": "Items Base",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "Items and the inventory: what an item is, the bag panel, what is saved, and scenario commands to give, take and check items.",
    "cat": [
     "gameplay"
@@ -403,7 +403,7 @@
   {
    "id": "items_editor",
    "name": "Items Editor",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "Edits a mod's items while the game runs: names and descriptions in every language, price, picture, types and the use action. The game shows a save at once.",
    "cat": [
     "tools",
@@ -440,7 +440,7 @@
   {
    "id": "light_editor",
    "name": "Light Editor",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "Edit scene lights and their placement on backgrounds.",
    "cat": [
     "tools",
@@ -457,7 +457,7 @@
   {
    "id": "live2d_base",
    "name": "Live2D Cubism",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "Live2D Cubism runtime for C#: drawn characters that breathe, blink and move with physics, playing the motions and expressions their artist made.",
    "cat": [
     "library",
@@ -483,7 +483,7 @@
   {
    "id": "locale_editor",
    "name": "Locale Editor",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "A translations window: lists every text a language lacks (from the locale atlas), and writes the translation into the locale file of the mod that owns the key, so the game shows it at once.",
    "cat": [
     "tools",
@@ -499,7 +499,7 @@
   {
    "id": "map_base",
    "name": "World Map Engine",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "World map engine: a full-screen picture of the world with places to travel between; scenarios open, close, hide and reveal them as the story goes.",
    "cat": [
     "engine",
@@ -513,7 +513,7 @@
   {
    "id": "map_editor",
    "name": "World Map Editor",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "Edit world map zones, polygons, labels and markers.",
    "cat": [
     "tools",
@@ -529,7 +529,7 @@
   {
    "id": "menu_base",
    "name": "Menu",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "The main menu: start or continue a game, pick one of the installed games, load a save and change the language, sound and display settings.",
    "cat": [
     "ui"
@@ -543,7 +543,7 @@
   {
    "id": "mod_manager",
    "name": "Mod Manager",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "The Mods & Collections screen: what is installed, what each mod does, installing and updating from the online catalog, and which mods make up each ready-made game.",
    "cat": [
     "tools",
@@ -557,7 +557,7 @@
   {
    "id": "music_pack",
    "name": "Music Pack",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "Shared music for any game: 22 tracks with exploration, combat and main menu playlists; a game can override playlists while keeping the track names.",
    "cat": [
     "audio"
@@ -604,7 +604,7 @@
   {
    "id": "quests_base",
    "name": "Quests Engine",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "Quests engine: quests with numbered steps that scenarios start, advance and finish, and the journal panel that shows them.",
    "cat": [
     "engine",
@@ -619,7 +619,7 @@
   {
    "id": "recruiting",
    "name": "Recruiting",
-   "version": "1.1.0",
+   "version": "0.1.0",
    "desc": "Defeated enemies can be captured after a victory and later fight on the player's side; while they wait in the recruits list, they live by rules of their own.",
    "cat": [
     "gameplay"
@@ -648,7 +648,7 @@
   {
    "id": "rpg",
    "name": "RPG World",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "A walkable tile world in the spirit of RPG Maker: grid movement with WASD, events on E/F, teleports; a map is an ordinary scene of the game. Battles and random encounters come with turn_battle_base through the battles integration, so the world runs without it.",
    "cat": [
     "gameplay"
@@ -666,7 +666,7 @@
   {
    "id": "rpg_editor",
    "name": "RPG Map Editor",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "RPG map editor for model v2 (plan 12.4): a palette by shape, the map in the game's own top-down and isometric projections, placements (own and foreign, as patches), strokes, collision, spawn, teleport links, undo and a byte-stable save; encounters when rpg__battles is mounted.",
    "cat": [
     "tools",
@@ -686,7 +686,7 @@
   {
    "id": "rpg_object_editor",
    "name": "RPG Object Editor",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "Edits RPG objects (model v2) while the game runs: surfaces, segments, sprites and actors in a form by shape, their pictures, footprint, anchor, interaction and extends, with a preview in the top-down and the isometric projection drawn by the game's own renderer. A foreign object is edited as a patch in the own mod; the source stays untouched.",
    "cat": [
     "tools",
@@ -730,7 +730,7 @@
   {
    "id": "scenario_editor",
    "name": "Scenario Editor",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "Edit scenario text and transition graphs, then play-test inside the current game.",
    "cat": [
     "tools",
@@ -763,7 +763,7 @@
   {
    "id": "scenario_tools_base",
    "name": "Scenario Authoring Base",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "Shared scenario file access, syntax and graph models for authoring tools. No tool windows.",
    "cat": [
     "engine",
@@ -778,7 +778,7 @@
   {
    "id": "scene_builder",
    "name": "Godot Scene Builder",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "Inspect and edit Godot scene nodes and their properties with a live preview.",
    "cat": [
     "tools",
@@ -793,7 +793,7 @@
   {
    "id": "scene_editor",
    "name": "Scene Editor",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "Create and edit logical scenes, backgrounds, ambient sound and scenario bindings.",
    "cat": [
     "tools",
@@ -810,7 +810,7 @@
   {
    "id": "schema_base",
    "name": "Schemas",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "Lets every mod describe its scenario actions, DSL commands and data fields as data; the tools build forms, pickers and checks from these descriptions.",
    "cat": [
     "engine",
@@ -824,7 +824,7 @@
   {
    "id": "schema_tools",
    "name": "Schema Tools",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "The Data Editor window and the command palette: edit any described entity in a form and assemble checked scenario lines from the mods' schemas.",
    "cat": [
     "tools",
@@ -840,7 +840,7 @@
   {
    "id": "shell2d_base",
    "name": "2D Shell",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "The frame every 2D game is drawn in: the background view box, the toolbar, panel slots and notifications that content mods fill.",
    "cat": [
     "engine",
@@ -855,7 +855,7 @@
   {
    "id": "skills_base",
    "name": "Skills Engine",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "The player's collection of skill cards: skills that open possibilities in other mechanics, grant battle action cards and add up into the collection effect.",
    "cat": [
     "engine",
@@ -869,7 +869,7 @@
   {
    "id": "stat_checks",
    "name": "Stat Checks",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "One scenario command, check: roll a character's stat plus dice against a difficulty and branch the story on success or failure.",
    "cat": [
     "gameplay"
@@ -883,7 +883,7 @@
   {
    "id": "stats_base",
    "name": "Stats Engine",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "A stats engine for any genre: stats, archetypes and traits as data, formulas for derived numbers, character sheets, levels and pools — handed to battles unchanged.",
    "cat": [
     "engine",
@@ -900,7 +900,7 @@
   {
    "id": "test_defaults_and_patches",
    "name": "Test Defaults and Patches",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "A test fixture, not content: property patches the property_patches test loads to check how patches of other mods' characters and items merge. Never part of a game.",
    "cat": [
     "other"
@@ -917,7 +917,7 @@
   {
    "id": "test_integrations",
    "name": "Test Integrations",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "A test fixture, not content: hosts the integration 'probe' that joins a mod set only together with quests_base, so the tests can check both the boot and the in-process mounting gate. Never part of a game.",
    "cat": [
     "other"
@@ -928,7 +928,7 @@
   {
    "id": "tile_isometric_base",
    "name": "Isometric Tiles",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "Draws tile maps at an angle, a grid of 2:1 diamonds, so buildings and trees stand up out of the ground. One of the two views of Tile Rendering.",
    "cat": [
     "visual",
@@ -942,7 +942,7 @@
   {
    "id": "tile_render_base",
    "name": "Tile Rendering",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "The shared engine behind tile maps: turns a prepared map description into a picture; the viewing angle is a small renderer mod on top.",
    "cat": [
     "visual",
@@ -957,7 +957,7 @@
   {
    "id": "tile_topdown_base",
    "name": "Top-down Tiles",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "Draws tile maps straight from above, on a square grid, in the style of classic 2D RPGs. One of the two views of Tile Rendering; RPG Plus uses it.",
    "cat": [
     "visual",
@@ -971,7 +971,7 @@
   {
    "id": "time_base",
    "name": "Time Engine",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "The in-game clock, day and night: scenes change their look with the time, lamps and windows light them, and a portable lamp helps after dark.",
    "cat": [
     "engine",
@@ -985,7 +985,7 @@
   {
    "id": "tools_base",
    "name": "Tool Authoring Base",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "Shared forms, file access, localization editing and UI components for authoring tools. No tool windows.",
    "cat": [
     "engine",
@@ -1000,7 +1000,7 @@
   {
    "id": "town_pack",
    "name": "Town Pack",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "Ready-made scenery for a small-town story: the town entrance, a home vestibule and an evening bar as backgrounds, with the bar's ambience. No story inside.",
    "cat": [
     "visual",
@@ -1012,7 +1012,7 @@
   {
    "id": "trading",
    "name": "Trading",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "Shops as data and a trade window of two inventories: the merchant's goods on one side, the player's bag on the other, and money as an ordinary item.",
    "cat": [
     "gameplay"
@@ -1026,7 +1026,7 @@
   {
    "id": "turn_battle_base",
    "name": "Turn Battle Base",
-   "version": "2.0.0",
+   "version": "0.1.0",
    "desc": "The platform under every turn-based battle: starting from a scenario, the battle scene, victory and defeat, experience and loot — how the player fights is a separate battle system.",
    "cat": [
     "engine",
@@ -1043,7 +1043,7 @@
   {
    "id": "ui_base",
    "name": "UI",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "The interface layer every game shares: the toolbar, the in-game menu, the save indicator, notifications and the common look of panels, buttons and lists.",
    "cat": [
     "ui"
@@ -1069,7 +1069,7 @@
   {
    "id": "village_pack",
    "name": "Village Pack",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "desc": "Reusable RPG objects and individual images: surfaces, vegetation, buildings, shared interiors, containers, walking sprites, battle artwork, snow enemies and editable atmosphere profiles.",
    "cat": [
     "visual",
