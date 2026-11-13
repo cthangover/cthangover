@@ -12,7 +12,7 @@ PASSWORD = "fixture-пароль"
 target = Path(__file__).resolve().parent
 with tempfile.TemporaryDirectory() as temporary:
     root = Path(temporary)
-    (root / "manifest.json").write_text('{"id":"test_sevenzip","version":"1.2.3","category":"library"}', encoding="utf-8")
+    (root / "manifest.json").write_text('{"id":"test_sevenzip","version":"1.2.3","categories":["library"]}', encoding="utf-8")
     (root / "Data").mkdir()
     (root / "Data" / "привет.txt").write_text("Привет из 7z!\n", encoding="utf-8")
     (root / "Data" / "payload.bin").write_bytes(bytes(range(256)) * 1024)
