@@ -209,6 +209,7 @@ namespace Cthangover.Core.Mods
 
                 if (!TryGetCollection(context.Collections, childId, out var child))
                 {
+                    if (!include.IsSelected) continue;
                     context.Graph.Problems.Add(new ModCollectionProblem
                     {
                         Kind = ModCollectionProblemKind.MissingCollection,
@@ -485,12 +486,16 @@ namespace Cthangover.Core.Mods
             for (var i = 0; i < graph.Nodes.Count; i++)
             {
                 var node = graph.Nodes[i];
-                if (!localMods.TryGetValue(node.ModId, out var info) || info is not ModInfo modInfo)
-                    continue;
-
-                var dependencies = modInfo.Manifest?.Depends;
-                if (dependencies == null)
-                    continue;
+                // A clean installation has no local manifest for the mods it
+                // needs. Catalog dependencies must grow the same transitive
+                // closure, across all merged sources. Installed manifests remain
+                // authoritative for the version actually on disk.
+                IEnumerable<ModDependency> dependencies = null;
+                if (localMods.TryGetValue(node.ModId, out var info) && info is ModInfo modInfo)
+                    dependencies = modInfo.Manifest?.Depends;
+                else if (catalogById.TryGetValue(node.ModId, out var entry))
+                    dependencies = entry.Depends?.Select(ModDependency.Parse);
+                if (dependencies == null) continue;
 
                 foreach (var dependency in dependencies)
                 {

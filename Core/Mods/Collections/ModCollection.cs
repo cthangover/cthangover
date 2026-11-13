@@ -29,6 +29,10 @@ namespace Cthangover.Core.Mods
         [JsonPropertyName("name")]
         public string Name { get; set; }
 
+        /// <summary>Versioned package releases supplied by a catalog; absent for ordinary local documents.</summary>
+        [JsonPropertyName("downloads")]
+        public List<CatalogEntryDownload> Downloads { get; set; }
+
         /// <summary>Author credit string.</summary>
         [JsonPropertyName("author")]
         public string Author { get; set; }

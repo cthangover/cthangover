@@ -111,9 +111,38 @@ namespace Engine.Tests.Mods
             Assert.Equal(0, summary.InstalledCount);
             Assert.Empty(summary.ReadyMods);
             Assert.Equal(1, summary.PlanEnableCount);
-            // The specified IsReady formula counts only missing/mismatched
-            // mods and graph problems — a merely disabled mod is an enable
-            // click away, surfaced through PlanEnableCount, not IsReady.
+            Assert.False(summary.IsReady);
+        }
+
+        [Fact]
+        public void Build_OneOfSixInstalled_AvailableDownloadsStillRequireInstallation()
+        {
+            var store = Collections(Game("partial", Mechanic("core", "local", "a", "b", "c", "d", "e")));
+            var summary = Assert.Single(ModCollectionGallery.Build(store, Mods(Local("local", "0.1.0")),
+                Disabled(), Catalog(CatalogEntry("a", "0.1.0"), CatalogEntry("b", "0.1.0"),
+                CatalogEntry("c", "0.1.0"), CatalogEntry("d", "0.1.0"), CatalogEntry("e", "0.1.0")), Session()));
+            Assert.Equal(6, summary.TotalMods);
+            Assert.Equal(1, summary.InstalledCount);
+            Assert.Equal(5, summary.PlanInstallCount);
+            Assert.Empty(summary.MissingIds);
+            Assert.False(summary.IsReady);
+        }
+
+        [Fact]
+        public void Build_EmptyCollection_IsNotPlayable()
+        {
+            var summary = Assert.Single(ModCollectionGallery.Build(Collections(Game("empty")), Mods(), Disabled(), Catalog(), Session()));
+            Assert.Equal(0, summary.TotalMods);
+            Assert.False(summary.IsReady);
+        }
+
+        [Fact]
+        public void Build_UnselectedUnavailableOptionalBlock_DoesNotBlockReadyGame()
+        {
+            var game = Game("optional", Mechanic("core", "app"));
+            game.Includes = new() { new() { Ref = "unavailable>=0.1.0", Optional = true, Selected = false } };
+            var summary = Assert.Single(ModCollectionGallery.Build(Collections(game), Mods(Local("app", "0.1.0")), Disabled(), Catalog(), Session()));
+            Assert.Equal(0, summary.ProblemsCount);
             Assert.True(summary.IsReady);
         }
 

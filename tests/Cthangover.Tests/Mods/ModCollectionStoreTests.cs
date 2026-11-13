@@ -51,6 +51,65 @@ namespace Engine.Tests.Mods
         }
 
         [Fact]
+        public void SaveCatalogSelection_PersistsSelectedBlocksAndPreservesPlayerPackages()
+        {
+            ModCollectionStore.SaveUser(new List<ModCollection>
+            {
+                new() { Id = "unrelated", Name = "Player document", Version = "0.1.0" },
+                new() { Id = "own", Name = "Player override", Version = "0.1.0" },
+            });
+            var game = new ModCollection
+            {
+                Id = "downloaded", Name = "Private game", Version = "0.1.0", Origin = ModCollectionOrigin.Catalog,
+                Settings = new() { ["private.setting"] = "value" },
+                Includes = new()
+                {
+                    new() { Ref = "block>=0.1.0" }, new() { Ref = "own>=0.1.0" },
+                    new() { Ref = "off>=0.1.0", Optional = true, Selected = false },
+                },
+            };
+            var block = new ModCollection
+            {
+                Id = "block", Version = "0.1.0", Origin = ModCollectionOrigin.Catalog,
+                Mechanics = new() { new() { Id = "world", Mods = new() { "world3d_editor>=0.1.0" } } },
+            };
+            var available = new Dictionary<string, ModCollection>
+            {
+                [game.Id] = game, [block.Id] = block,
+                ["own"] = new() { Id = "own", Name = "Catalog copy", Origin = ModCollectionOrigin.Catalog },
+                ["off"] = new() { Id = "off", Origin = ModCollectionOrigin.Catalog },
+            };
+
+            Assert.True(ModCollectionStore.SaveCatalogSelection(game, available));
+            var saved = ModCollectionStore.LoadUser();
+
+            Assert.Equal(4, saved.Count);
+            Assert.Equal("Player document", saved.Find(c => c.Id == "unrelated").Name);
+            Assert.Equal("Player override", saved.Find(c => c.Id == "own").Name);
+            var restored = saved.Find(c => c.Id == "downloaded");
+            Assert.Equal("Private game", restored.Name);
+            Assert.Equal("0.1.0", restored.Version);
+            Assert.Equal("value", restored.Settings["private.setting"]);
+            Assert.Equal(3, restored.Includes.Count);
+            Assert.False(restored.Includes[2].IsSelected);
+            Assert.Equal("world3d_editor>=0.1.0", saved.Find(c => c.Id == "block").Mechanics[0].Mods[0]);
+            Assert.DoesNotContain(saved, c => c.Id == "off");
+            Assert.True(ModCollectionStore.SaveCatalogSelection(game, available));
+            Assert.Equal(4, ModCollectionStore.LoadUser().Count);
+        }
+
+        [Theory]
+        [InlineData("../escape")]
+        [InlineData("..")]
+        [InlineData("nested/folder")]
+        [InlineData("nested\\folder")]
+        public void SaveCatalogSelection_RejectsPathEscapes(string id)
+        {
+            Assert.False(ModCollectionStore.SaveCatalogSelection(new ModCollection { Id = id, Origin = ModCollectionOrigin.Catalog }, null));
+            Assert.Empty(ModCollectionStore.LoadUser());
+        }
+
+        [Fact]
         public void LoadUser_NoFolder_ReturnsEmpty()
         {
             Assert.Empty(ModCollectionStore.LoadUser());

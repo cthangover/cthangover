@@ -59,6 +59,9 @@ namespace Cthangover.Core.Mods
         /// </summary>
         public bool IsReady
             => TotalMods > 0
+               && InstalledCount == TotalMods
+               && PlanInstallCount == 0
+               && PlanEnableCount == 0
                && MissingIds.Count == 0
                && MismatchIds.Count == 0
                && ProblemsCount == 0;

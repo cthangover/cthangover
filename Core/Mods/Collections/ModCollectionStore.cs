@@ -103,6 +103,49 @@ namespace Cthangover.Core.Mods
         }
 
         /// <summary>
+        /// Persists the selected catalog documents after their mod plan succeeds,
+        /// including selected catalog blocks. Existing player packages and built-in
+        /// documents keep their precedence. Private catalog cache entries remain
+        /// memory-only; explicitly installed collections become player packages.
+        /// </summary>
+        public static bool SaveCatalogSelection(ModCollection collection, IReadOnlyDictionary<string, ModCollection> available)
+        {
+            if (collection == null) return true;
+            var user = LoadUser();
+            var keep = new HashSet<string>(user.Select(c => c.Id), StringComparer.OrdinalIgnoreCase);
+            var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var added = new List<ModCollection>();
+            var pending = new Stack<ModCollection>();
+            pending.Push(collection);
+            while (pending.Count > 0)
+            {
+                var current = pending.Pop();
+                if (current == null || string.IsNullOrEmpty(current.Id) || !visited.Add(current.Id)) continue;
+                if (current.Origin == ModCollectionOrigin.Catalog && !keep.Contains(current.Id))
+                {
+                    var id = current.Id;
+                    if (id is "." or ".." || id.Contains('/') || id.Contains('\\') || id.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+                        return false;
+                    user.Add(current);
+                    added.Add(current);
+                    keep.Add(id);
+                }
+                foreach (var include in current.Includes ?? new List<ModCollectionInclude>())
+                {
+                    var dependency = ModDependency.Parse(include.Ref);
+                    if (include.IsSelected && dependency.IsValid && available != null
+                        && available.TryGetValue(dependency.ModId, out var child))
+                        pending.Push(child);
+                }
+            }
+            if (added.Count == 0) return true;
+            SaveUser(user);
+            var saved = LoadUser();
+            return added.All(document => saved.Any(c => string.Equals(c.Id, document.Id, StringComparison.OrdinalIgnoreCase)
+                && c.Version == document.Version));
+        }
+
+        /// <summary>
         /// Reads every package under <paramref name="root"/>: subfolders and
         /// <c>.zip</c> files holding a <see cref="DocumentName"/>. A broken
         /// package is logged and skipped so one bad collection cannot hide the

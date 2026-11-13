@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using Cthangover.Core.Mods;
 
 namespace Engine.Tests.Mods
@@ -13,6 +14,68 @@ namespace Engine.Tests.Mods
     /// </summary>
     public class ModCollectionResolverTests
     {
+        [Fact]
+        public void Resolve_CatalogOnlyChainUsesPrivateAndPublicDependencies()
+        {
+            var editor = Catalog("world3d_editor", "0.1.0");
+            editor.Depends = new List<string> { "world3d_base>=0.1.0", "tools_base>=0.1.0", "ui_base>=0.1.0" };
+            editor.SourceUrls = new List<string> { "https://private.test/v1/catalog" };
+            var foundation = Catalog("world3d_base", "0.1.0");
+            foundation.SourceUrls = editor.SourceUrls;
+            var tools = Catalog("tools_base", "0.1.0");
+            tools.Depends = new List<string> { "schema_base>=0.1.0", "ui_base>=0.1.0" };
+            var schema = Catalog("schema_base", "0.1.0");
+            schema.Depends = new List<string> { "expressions_base>=0.1.0" };
+            var raw = new List<CatalogExportEntry> { editor, foundation, tools, schema, Catalog("expressions_base", "0.1.0") };
+            var catalog = JsonSerializer.Deserialize<List<CatalogExportEntry>>(JsonSerializer.Serialize(raw));
+
+            var graph = ModCollectionResolver.Resolve(Collection(Mechanic("world", "world3d_editor>=0.1.0")),
+                Mods(Local("ui_base", "0.1.0")), new HashSet<string>(), catalog);
+            var plan = ModCollectionPlan.Build(graph, catalog);
+
+            Assert.Equal(6, graph.Nodes.Count);
+            Assert.Equal(6, graph.Edges.Count);
+            Assert.False(plan.HasProblems);
+            Assert.Equal(5, plan.Install.Count);
+            Assert.Equal("https://private.test/v1/catalog", plan.Install.Single(i => i.ModId == "world3d_base").SourceUrl);
+            Assert.Equal("https://catalog.test/catalog.json", plan.Install.Single(i => i.ModId == "tools_base").SourceUrl);
+            Assert.Equal(">=0.1.0", Node(graph, "schema_base").RequiredVersion);
+            Assert.Equal(ModCollectionNodeState.Installed, Node(graph, "ui_base").State);
+        }
+
+        [Fact]
+        public void Resolve_CatalogOptionalDependenciesRequireAnInstalledCopy()
+        {
+            var app = Catalog("app", "0.1.0");
+            app.Depends = new List<string> { "absent>=0.1.0?", "present>=0.1.0?", "required>=0.2.0" };
+            var catalog = new List<CatalogExportEntry> { app, Catalog("absent", "0.1.0"), Catalog("required", "0.1.0") };
+
+            var graph = ModCollectionResolver.Resolve(Collection(Mechanic("world", "app>=0.1.0")),
+                Mods(Local("present", "0.1.0")), new HashSet<string>(), catalog);
+            var plan = ModCollectionPlan.Build(graph, catalog);
+
+            Assert.DoesNotContain(graph.Nodes, n => n.ModId == "absent");
+            Assert.Equal(ModCollectionNodeState.Installed, Node(graph, "present").State);
+            Assert.Equal(new[] { "required" }, plan.Mismatches);
+            Assert.True(plan.HasProblems);
+        }
+
+        [Fact]
+        public void Resolve_CatalogDependencyCycleTerminatesAndKeepsBothRequirements()
+        {
+            var first = Catalog("first", "0.1.0");
+            first.Depends = new List<string> { "second>=0.1.0" };
+            var second = Catalog("second", "0.1.0");
+            second.Depends = new List<string> { "first>=0.1.0" };
+
+            var graph = ModCollectionResolver.Resolve(Collection(Mechanic("world", "first>=0.1.0")),
+                Mods(), new HashSet<string>(), new List<CatalogExportEntry> { first, second });
+
+            Assert.Equal(2, graph.Nodes.Count);
+            Assert.Equal(2, graph.Edges.Count);
+            Assert.All(graph.Nodes, n => Assert.Equal(ModCollectionNodeState.InCatalog, n.State));
+        }
+
         [Fact]
         public void Resolve_RepeatedModWithinOneGroup_RetainsEveryVersionConstraint()
         {
