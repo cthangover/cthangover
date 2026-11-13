@@ -452,6 +452,22 @@ h1 .amp{display:block;background:linear-gradient(100deg,var(--gold-bright),var(-
 .pv-checks.muted li{color:var(--body)}
 .pv-checks.muted li::before{color:var(--green)}
 .pv-buy{width:100%;justify-content:center}
+.pv-payment-preview{display:block;margin-top:12px;text-align:center;font-size:14px}
+.pv-payment-example{margin:24px 0;padding:24px;text-align:left;border:1px solid var(--gold-line);border-radius:16px;background:var(--surface);scroll-margin-top:90px}
+.pv-payment-badge{display:inline-block;margin-bottom:12px;font-family:var(--mono);font-size:12px;color:var(--gold)}
+.pv-payment-example h3{font-size:22px;color:var(--bright);margin-bottom:18px}
+.pv-payment-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:20px;list-style:none;margin:0;padding:0}
+.pv-payment-steps li{min-width:0;border-top:2px solid var(--gold-line);padding-top:14px}
+.pv-payment-steps h4{font-size:16px;color:var(--bright);margin-bottom:8px}
+.pv-payment-example .pv-payment-steps p,.pv-payment-example .pv-payment-notification p{font-size:14px;line-height:1.65;color:var(--body);margin:0}
+.pv-payment-notification{margin:20px 0 16px;padding:14px 16px;border:1px solid var(--line-card);border-radius:10px}
+.pv-payment-notification summary{cursor:pointer;color:var(--gold);font-size:14px}
+.pv-payment-example .pv-payment-notification p{margin-top:12px;color:var(--muted)}
+.pv-payment-notification dl{margin:12px 0 0;font-size:14px}
+.pv-payment-notification dl div{display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px 16px;padding:6px 0}
+.pv-payment-notification dt{color:var(--muted)}
+.pv-payment-notification dd{margin:0;overflow-wrap:anywhere;font-family:var(--mono);color:var(--bright)}
+.pv-payment-example>a{font-size:13px}
 .btn.is-soon{opacity:.6;cursor:default;pointer-events:none;box-shadow:none}
 .pv-plan-foot{margin-top:14px;font-size:13px;color:var(--muted)}
 .pv-accept{margin-top:12px;font-size:13px;color:var(--body);text-align:center}
