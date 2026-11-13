@@ -147,11 +147,11 @@
         }
       ],
       "mods": [
-        "rpg>=1",
-        "tile_isometric_base>=1",
-        "items_base>=1",
-        "quests_base>=1",
-        "tile_topdown_base>=1"
+        "rpg>=0.1.0",
+        "tile_isometric_base>=0.1.0",
+        "items_base>=0.1.0",
+        "quests_base>=0.1.0",
+        "tile_topdown_base>=0.1.0"
       ]
     },
     {
@@ -197,21 +197,21 @@
         }
       ],
       "mods": [
-        "rpg_editor>=1",
-        "rpg_object_editor>=1",
-        "characters_editor>=1",
-        "items_editor>=1",
-        "scenario_editor>=1",
-        "scenario_studio>=0.1",
-        "scene_editor>=1",
-        "scene_builder>=1",
-        "map_editor>=1",
-        "interactive_editor>=1",
-        "light_editor>=1",
-        "effects_editor>=1",
-        "schema_tools>=1",
-        "locale_editor>=1",
-        "catalog_export>=1"
+        "rpg_editor>=0.1.0",
+        "rpg_object_editor>=0.1.0",
+        "characters_editor>=0.1.0",
+        "items_editor>=0.1.0",
+        "scenario_editor>=0.1.0",
+        "scenario_studio>=0.1.0",
+        "scene_editor>=0.1.0",
+        "scene_builder>=0.1.0",
+        "map_editor>=0.1.0",
+        "interactive_editor>=0.1.0",
+        "light_editor>=0.1.0",
+        "effects_editor>=0.1.0",
+        "schema_tools>=0.1.0",
+        "locale_editor>=0.1.0",
+        "catalog_export>=0.1.0"
       ]
     }
   ]

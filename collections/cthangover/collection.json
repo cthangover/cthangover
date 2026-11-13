@@ -96,7 +96,7 @@
       "mods": [
         "cthangover_game>=0.1.0",
         "cthangover_murakami>=0.1.0",
-        "town_pack>=1"
+        "town_pack>=0.1.0"
       ]
     },
     {
@@ -137,12 +137,12 @@
         }
       ],
       "mods": [
-        "shell2d_base>=1",
-        "dialog_base>=1",
-        "interactive_base>=1",
-        "effects_base>=1",
-        "time_base>=1",
-        "map_base>=1"
+        "shell2d_base>=0.1.0",
+        "dialog_base>=0.1.0",
+        "interactive_base>=0.1.0",
+        "effects_base>=0.1.0",
+        "time_base>=0.1.0",
+        "map_base>=0.1.0"
       ]
     },
     {
@@ -183,8 +183,8 @@
         }
       ],
       "mods": [
-        "characters_base>=1",
-        "skills_base>=1"
+        "characters_base>=0.1.0",
+        "skills_base>=0.1.0"
       ]
     },
     {
@@ -225,7 +225,7 @@
         }
       ],
       "mods": [
-        "quests_base>=1"
+        "quests_base>=0.1.0"
       ]
     },
     {
@@ -266,8 +266,8 @@
         }
       ],
       "mods": [
-        "items_base>=1",
-        "cooking>=1"
+        "items_base>=0.1.0",
+        "cooking>=0.1.0"
       ]
     },
     {
@@ -308,8 +308,8 @@
         }
       ],
       "mods": [
-        "turn_battle_base>=2",
-        "card_battle>=1"
+        "turn_battle_base>=0.1.0",
+        "card_battle>=0.1.0"
       ]
     },
     {
@@ -351,7 +351,7 @@
       ],
       "optional": true,
       "mods": [
-        "ff_battle>=1"
+        "ff_battle>=0.1.0"
       ]
     },
     {
@@ -393,7 +393,7 @@
       ],
       "optional": true,
       "mods": [
-        "recruiting>=1"
+        "recruiting>=0.1.0"
       ]
     },
     {
@@ -435,7 +435,7 @@
       ],
       "optional": true,
       "mods": [
-        "live2d_base>=1"
+        "live2d_base>=0.1.0"
       ]
     },
     {
@@ -476,9 +476,9 @@
         }
       ],
       "mods": [
-        "ui_base>=1",
-        "menu_base>=1",
-        "audio_base>=1"
+        "ui_base>=0.1.0",
+        "menu_base>=0.1.0",
+        "audio_base>=0.1.0"
       ]
     },
     {
@@ -520,20 +520,20 @@
       ],
       "optional": true,
       "mods": [
-        "scenario_editor>=1",
-        "scene_editor>=1",
-        "scene_builder>=1",
-        "map_editor>=1",
-        "interactive_editor>=1",
-        "light_editor>=1",
-        "catalog_export>=1",
-        "items_editor>=1",
-        "characters_editor>=1",
-        "validator>=0.1",
-        "resource_atlas>=0.1",
-        "locale_atlas>=0.1",
-        "locale_editor>=1",
-        "mod_manager>=1"
+        "scenario_editor>=0.1.0",
+        "scene_editor>=0.1.0",
+        "scene_builder>=0.1.0",
+        "map_editor>=0.1.0",
+        "interactive_editor>=0.1.0",
+        "light_editor>=0.1.0",
+        "catalog_export>=0.1.0",
+        "items_editor>=0.1.0",
+        "characters_editor>=0.1.0",
+        "validator>=0.1.0",
+        "resource_atlas>=0.1.0",
+        "locale_atlas>=0.1.0",
+        "locale_editor>=0.1.0",
+        "mod_manager>=0.1.0"
       ]
     }
   ]

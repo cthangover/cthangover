@@ -133,8 +133,8 @@
         }
       ],
       "mods": [
-        "village_pack>=1",
-        "classic_rpg_pack>=1"
+        "village_pack>=0.1.0",
+        "classic_rpg_pack>=0.1.0"
       ]
     },
     {
@@ -175,8 +175,8 @@
         }
       ],
       "mods": [
-        "stats_base>=1",
-        "stat_checks>=1"
+        "stats_base>=0.1.0",
+        "stat_checks>=0.1.0"
       ]
     },
     {
@@ -217,7 +217,7 @@
         }
       ],
       "mods": [
-        "rpg>=1"
+        "rpg>=0.1.0"
       ]
     },
     {
@@ -258,10 +258,10 @@
         }
       ],
       "mods": [
-        "items_base>=1",
-        "equipment>=1",
-        "trading>=1",
-        "crafting>=1"
+        "items_base>=0.1.0",
+        "equipment>=0.1.0",
+        "trading>=0.1.0",
+        "crafting>=0.1.0"
       ]
     },
     {
@@ -302,10 +302,10 @@
         }
       ],
       "mods": [
-        "shell2d_base>=1",
-        "dialog_base>=1",
-        "characters_base>=1",
-        "audio_base>=1"
+        "shell2d_base>=0.1.0",
+        "dialog_base>=0.1.0",
+        "characters_base>=0.1.0",
+        "audio_base>=0.1.0"
       ]
     },
     {
@@ -346,9 +346,9 @@
         }
       ],
       "mods": [
-        "turn_battle_base>=2",
-        "ff_battle>=1",
-        "battle_formulas>=1"
+        "turn_battle_base>=0.1.0",
+        "ff_battle>=0.1.0",
+        "battle_formulas>=0.1.0"
       ]
     },
     {
@@ -390,7 +390,7 @@
       ],
       "optional": true,
       "mods": [
-        "card_battle>=1"
+        "card_battle>=0.1.0"
       ]
     },
     {
@@ -431,8 +431,8 @@
         }
       ],
       "mods": [
-        "ui_base>=1",
-        "menu_base>=1"
+        "ui_base>=0.1.0",
+        "menu_base>=0.1.0"
       ]
     },
     {
@@ -474,9 +474,9 @@
       ],
       "optional": true,
       "mods": [
-        "schema_tools>=1",
-        "items_editor>=1",
-        "characters_editor>=1"
+        "schema_tools>=0.1.0",
+        "items_editor>=0.1.0",
+        "characters_editor>=0.1.0"
       ]
     },
     {
@@ -522,7 +522,7 @@
         }
       ],
       "mods": [
-        "scenario_editor>=1"
+        "scenario_editor>=0.1.0"
       ],
       "optional": true,
       "selected": true
@@ -570,8 +570,8 @@
         }
       ],
       "mods": [
-        "locale_editor>=1",
-        "locale_atlas>=0.1"
+        "locale_editor>=0.1.0",
+        "locale_atlas>=0.1.0"
       ],
       "optional": true,
       "selected": true
@@ -581,8 +581,8 @@
       "name": "Tile renderer",
       "role": "engine",
       "mods": [
-        "tile_topdown_base>=1",
-        "tile_isometric_base>=1"
+        "tile_topdown_base>=0.1.0",
+        "tile_isometric_base>=0.1.0"
       ]
     },
     {
@@ -593,7 +593,7 @@
       "optional": true,
       "selected": true,
       "mods": [
-        "effects_editor>=1"
+        "effects_editor>=0.1.0"
       ],
       "locale": [
         {
@@ -611,8 +611,8 @@
       "optional": true,
       "selected": true,
       "mods": [
-        "rpg_editor>=1",
-        "rpg_object_editor>=1"
+        "rpg_editor>=0.1.0",
+        "rpg_object_editor>=0.1.0"
       ],
       "locale": [
         {
