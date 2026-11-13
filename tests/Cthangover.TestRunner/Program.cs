@@ -206,7 +206,7 @@ namespace Cthangover.TestRunner
         internal static TestResult RunUnit(TestWorkspace workspace, UnitManifest unit, TestPlanEntry entry, string directory,
             string launchName = null, CancellationToken cancellationToken = default)
         {
-            var assembly = Path.Combine(workspace.Root, Path.GetDirectoryName(unit.Project), "bin", "Debug", "net8.0", Path.GetFileNameWithoutExtension(unit.Project) + ".dll");
+            var assembly = Path.Combine(workspace.Root, Path.GetDirectoryName(unit.Project), "bin", "Debug", "net10.0", Path.GetFileNameWithoutExtension(unit.Project) + ".dll");
             if (!File.Exists(assembly)) throw new FileNotFoundException("built unit-test assembly not found", assembly);
             var args = new List<string> { "vstest", assembly, "--logger:trx;LogFileName=unit.trx", "--logger:console;verbosity=normal", "--ResultsDirectory:" + directory };
             var settings = launchName == null ? null : UnitRunSettings.Write(directory);

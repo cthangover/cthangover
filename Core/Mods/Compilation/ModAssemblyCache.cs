@@ -128,7 +128,7 @@ namespace Cthangover.Core.Mods.Compilation
             // could hide an undeclared dependency and must not be reused.
             var generationPath = Path.Combine(CacheRoot, modId + ".generation");
             var generation = ReadGeneration(generationPath);
-            var hash = ModHasher.ComputeHash(sourceList, (dependencySignature ?? string.Empty) + ";core=" + coreSignature + ";codegen=" + codegenMarker + ";pdb=named;refs=depends;generation=" + generation,
+            var hash = ModHasher.ComputeHash(sourceList, (dependencySignature ?? string.Empty) + ";core=" + coreSignature + ";codegen=" + codegenMarker + ";pdb=named;refs=depends;framework=" + FrameworkReferencePack.CacheSignature + ";generation=" + generation,
                 System.Environment.GetEnvironmentVariable("CTHANGOVER_TEST_PROJECT"));
             return Path.Combine(CacheRoot, $"{modId}_{hash}.dll");
         }

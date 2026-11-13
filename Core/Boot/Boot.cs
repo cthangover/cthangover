@@ -97,6 +97,8 @@ namespace Cthangover.Core.Bootstrap
         /// </summary>
         public static void RunSync(SceneManager sceneManager)
         {
+            if (!CheckRuntime(sceneManager))
+                return;
             if (!Begin(BootMode.HeadlessSync))
                 return;
 
@@ -145,6 +147,8 @@ namespace Cthangover.Core.Bootstrap
         /// </summary>
         public static async Task RunLauncherAsync(Node context, CancellationToken cancellationToken)
         {
+            if (!CheckRuntime(context))
+                return;
             if (!Begin(BootMode.LauncherAsync))
                 return;
 
@@ -221,6 +225,20 @@ namespace Cthangover.Core.Bootstrap
             }
 
             _ = data.Runtime;
+        }
+
+        private static bool CheckRuntime(Node context)
+        {
+            var problem = RuntimeRequirements.GetProblem(System.Environment.Version);
+            if (problem == null)
+            {
+                GameLogger.Log("BOOT", $".NET runtime {System.Environment.Version}; compilation target net10.0");
+                return true;
+            }
+            GameLogger.Log("BOOT", problem, LogLevel.Error);
+            if (GameEnvironment.IsRuntime && context != null)
+                ApplicationExit.Quit(context.GetTree(), 1);
+            return false;
         }
 
         /// <summary>Idempotence guard: exactly one boot per process.</summary>

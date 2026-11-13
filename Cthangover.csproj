@@ -1,6 +1,6 @@
 <Project Sdk="Godot.NET.Sdk/4.6.3">
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <EnableDynamicLoading>true</EnableDynamicLoading>
         <RootNamespace>Cthangover</RootNamespace>
         <AssemblyName>Cthangover</AssemblyName>
@@ -9,6 +9,10 @@
         <Nullable>disable</Nullable>
         <LangVersion>12</LangVersion>
         <SelfContained>true</SelfContained>
+        <!-- Keep player exports on the verified servicing release even when a
+             developer uses the minimum supported SDK 10.0.201. -->
+        <ReleaseRuntimeVersion>10.0.15</ReleaseRuntimeVersion>
+        <RuntimeFrameworkVersion Condition="'$(Configuration)' == 'ExportRelease' Or '$(Configuration)' == 'ExportDebug'">$(ReleaseRuntimeVersion)</RuntimeFrameworkVersion>
         <DefineConstants>$(DefineConstants);LOG_BATTLE_UI;LOG_SCENE_REGISTRY;LOG_MODS_COMPILE;LOG_MODS_REGISTRY;LOG_AI;LOG_AI_DEBUG;LOG_AUDIO;LOG_BATTLE;LOG_CACHE;LOG_CARD;LOG_CHAIN;LOG_COND;LOG_CONFIG;LOG_DIALOG;LOG_EVENT;LOG_GAME;LOG_GD_PLUGIN;LOG_ITEMS;LOG_LANG;LOG_LIGHT;LOG_QUEST;LOG_SAVE;LOG_SCENE;LOG_SCENE_REGISTRY;LOG_SERIALIZE;LOG_SHADER;LOG_STATUS;LOG_TEST;LOG_TOOLBOX;LOG_UI;LOG_VIEW;LOG_WIDGET</DefineConstants>
         <DefineConstants Condition="'$(OS)' == 'Windows_NT'">$(DefineConstants);WINDOWS</DefineConstants>
     </PropertyGroup>
@@ -16,7 +20,6 @@
         <PackageReference Include="SharpCompress" Version="0.50.7" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.11.0" />
         <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" Version="3.11.0" />
-        <PackageReference Include="System.Text.Json" Version="8.0.6" />
     </ItemGroup>
 
     <ItemGroup>
@@ -51,7 +54,7 @@
          the exported game does not depend on the developer's NuGet cache. -->
     <Target Name="ShipGodotSourceGenerators" AfterTargets="Build">
         <ItemGroup>
-            <GodotSourceGeneratorDll Include="$(NugetPackageRoot)godot.sourcegenerators\*\analyzers\dotnet\cs\Godot.SourceGenerators.dll" />
+            <GodotSourceGeneratorDll Include="$(NugetPackageRoot)/godot.sourcegenerators\*\analyzers\dotnet\cs\Godot.SourceGenerators.dll" />
         </ItemGroup>
         <Copy SourceFiles="@(GodotSourceGeneratorDll)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
     </Target>
@@ -60,7 +63,7 @@
          data_Cthangover_<platform> folder of the release. -->
     <Target Name="PublishGodotSourceGenerators" AfterTargets="Publish">
         <ItemGroup>
-            <GodotSourceGeneratorDll Include="$(NugetPackageRoot)godot.sourcegenerators\*\analyzers\dotnet\cs\Godot.SourceGenerators.dll" />
+            <GodotSourceGeneratorDll Include="$(NugetPackageRoot)/godot.sourcegenerators\*\analyzers\dotnet\cs\Godot.SourceGenerators.dll" />
         </ItemGroup>
         <Copy SourceFiles="@(GodotSourceGeneratorDll)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" />
     </Target>

@@ -133,7 +133,7 @@ namespace Cthangover.Core.Mods.Testing
             // key: a changed mod API must recompile the tests (a compile error
             // with file:line) instead of reusing a stale DLL that fails at run
             // time with MissingMethodException.
-            var hash = ModHasher.ComputeHash(sources, "tests;pdb=named;paths=abs;core=" + coreSignature + ";prod=" + ProductionSignature(mod));
+            var hash = ModHasher.ComputeHash(sources, "tests;pdb=named;paths=abs;framework=" + Compilation.FrameworkReferencePack.CacheSignature + ";core=" + coreSignature + ";prod=" + ProductionSignature(mod));
             var cachedPath = Path.Combine(testRoot, $"{mod.Id}__tests_{hash}.dll");
 
             // Missing PDB = pre-§9.2 cache entry: recompile once to gain symbols.

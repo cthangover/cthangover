@@ -4,6 +4,7 @@ namespace Cthangover.Core.Mods.Compilation
     using System.IO;
     using System.Security.Cryptography;
     using System.Threading;
+    using System.Text;
 
     /// <summary>Publishes mod-owned libraries atomically: a shared compiler cache must never expose a half-written mapped DLL.</summary>
     public static class PrecompiledAssemblyCache
@@ -14,7 +15,9 @@ namespace Cthangover.Core.Mods.Compilation
             if (string.IsNullOrWhiteSpace(modId) || modId.Contains('/') || modId.Contains('\\') || modId is "." or "..")
                 throw new ArgumentException("a library cache owner must be a mod id", nameof(modId));
             var hash = SHA256.HashData(bytes);
-            var key = Convert.ToHexString(hash).Substring(0, 16).ToLowerInvariant();
+            // Preserve immutable bytes while separating the old net8 cache namespace.
+            var targetHash = SHA256.HashData(Encoding.UTF8.GetBytes(FrameworkReferencePack.TargetFramework + ";" + Convert.ToHexString(hash)));
+            var key = Convert.ToHexString(targetHash).Substring(0, 16).ToLowerInvariant();
             var path = Path.Combine(cacheRoot, $"{modId}_dll_{key}_{Path.GetFileName(filePath)}");
             using var lease = AssemblyCacheEntry.Acquire(path, cancellationToken);
             if (File.Exists(path))

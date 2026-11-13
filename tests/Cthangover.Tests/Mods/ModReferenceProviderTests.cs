@@ -14,6 +14,27 @@ namespace Engine.Tests.Mods
     {
         private readonly string root = Path.Combine(Path.GetTempPath(), "mod_reference_roots_" + Guid.NewGuid().ToString("N"));
 
+        [Fact]
+        public void Collect_FrameworkReferencesComeFromTheShippedNet10Pack()
+        {
+            var references = new List<MetadataReference>();
+            ModReferenceProvider.Collect(references, "framework_probe", Array.Empty<string>(), Array.Empty<IModInfo>());
+            var paths = references.Select(ReferencePath).ToList();
+
+            Assert.StartsWith("net10.0;pack=10.", FrameworkReferencePack.CacheSignature);
+            Assert.NotEmpty(FrameworkReferencePack.AssemblyPaths);
+            foreach (var path in FrameworkReferencePack.AssemblyPaths)
+                Assert.Contains(path, paths);
+            foreach (var path in paths)
+            {
+                if (FrameworkReferencePack.IsFrameworkAssembly(Path.GetFileNameWithoutExtension(path)))
+                    Assert.StartsWith(FrameworkReferencePack.DirectoryPath + Path.DirectorySeparatorChar, path);
+            }
+            Assert.DoesNotContain(typeof(object).Assembly.Location, paths);
+        }
+
+        private static string ReferencePath(MetadataReference reference) => reference.Display;
+
         [Theory]
         [InlineData("mods")]
         [InlineData("mods_private")]

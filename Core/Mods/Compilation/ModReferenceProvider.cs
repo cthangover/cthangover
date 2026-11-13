@@ -43,6 +43,9 @@ namespace Cthangover.Core.Mods.Compilation
         /// </summary>
         public static string ProjectRoot => _resRoot;
 
+        /// <summary>Physical core output resolved on the main thread when Godot byte-loads its assembly.</summary>
+        public static string BuildOutputDirectory => _buildOutputDir;
+
         /// <summary>
         /// Resolves the Godot project root and Mono build output directory once
         /// on the main thread. Compilation may run on a background thread during
@@ -78,7 +81,7 @@ namespace Cthangover.Core.Mods.Compilation
 
         /// <summary>
         /// Builds the metadata reference set for one mod compilation:
-        /// the runtime and GodotSharp basics, every DLL next to a loaded
+        /// the shipped net10.0 reference pack and GodotSharp, non-framework DLLs next to a loaded
         /// assembly, the build output directory, precompiled mod DLLs and
         /// the compilation cache. <paramref name="currentModId"/> excludes
         /// the mod's own (possibly stale) cache artifacts from its own
@@ -90,25 +93,8 @@ namespace Cthangover.Core.Mods.Compilation
         /// </summary>
         public static void Collect(List<MetadataReference> references, string currentModId = null, IReadOnlyCollection<string> knownModIds = null, IEnumerable<IModInfo> referenceMods = null)
         {
-            AddAssemblyReference(references, typeof(object).Assembly);
-
-            var basePath = Path.GetDirectoryName(typeof(object).Assembly.Location);
-
-            var requiredAssemblies = new[]
-            {
-                "System.Runtime.dll",
-                "System.Collections.dll",
-                "System.Linq.dll",
-                "System.Text.Json.dll",
-                "GodotSharp.dll",
-            };
-
-            foreach (var asmName in requiredAssemblies)
-            {
-                var path = Path.Combine(basePath, asmName);
-                if (File.Exists(path))
-                    references.Add(MetadataReference.CreateFromFile(path));
-            }
+            foreach (var path in FrameworkReferencePack.AssemblyPaths)
+                references.Add(MetadataReference.CreateFromFile(path));
 
             AddAssemblyReference(references, typeof(Godot.Node).Assembly);
 
@@ -317,7 +303,7 @@ namespace Cthangover.Core.Mods.Compilation
 
         private static void TryAddReference(List<MetadataReference> references, string dllPath)
         {
-            if (!File.Exists(dllPath))
+            if (FrameworkReferencePack.IsFrameworkAssembly(Path.GetFileNameWithoutExtension(dllPath)) || !File.Exists(dllPath))
                 return;
             try
             {
@@ -336,7 +322,8 @@ namespace Cthangover.Core.Mods.Compilation
 
         private static void AddAssemblyReference(List<MetadataReference> references, Assembly assembly)
         {
-            if (assembly == null || assembly.IsDynamic || string.IsNullOrEmpty(assembly.Location))
+            if (assembly == null || assembly.IsDynamic || string.IsNullOrEmpty(assembly.Location)
+                || FrameworkReferencePack.IsFrameworkAssembly(assembly.GetName().Name))
                 return;
             try
             {

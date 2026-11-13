@@ -1,0 +1,31 @@
+<Project>
+    <!-- Keep the SDK's net10.0 compilation contract beside the core and in
+         player exports: runtime mod compilation must not require an SDK. -->
+    <Target Name="ShipModReferencePack"
+            Condition="'$(MSBuildProjectName)' == 'Cthangover'"
+            BeforeTargets="GetCopyToOutputDirectoryItems;GetCopyToPublishDirectoryItems"
+            DependsOnTargets="ResolveFrameworkReferences">
+        <ItemGroup>
+            <_ModFramework Include="@(ResolvedFrameworkReference)" Condition="'%(Identity)' == 'Microsoft.NETCore.App'" />
+        </ItemGroup>
+        <PropertyGroup>
+            <_ModReferenceRoot>@(_ModFramework->'%(TargetingPackPath)')</_ModReferenceRoot>
+        </PropertyGroup>
+        <ItemGroup>
+            <_ModReference Include="$(_ModReferenceRoot)/ref/net10.0/*.dll" />
+            <ContentWithTargetPath Include="@(_ModReference)"
+                                   TargetPath="mod_reference_assemblies/net10.0/%(Filename)%(Extension)"
+                                   CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+        </ItemGroup>
+        <Error Condition="'@(_ModReference)' == ''" Text="The .NET 10 reference pack is required for runtime mod compilation." />
+        <MakeDir Directories="$(IntermediateOutputPath)" />
+        <WriteLinesToFile File="$(IntermediateOutputPath)mod-reference-pack.version"
+                          Lines="@(_ModFramework->'%(TargetingPackVersion)')"
+                          Overwrite="true" WriteOnlyWhenDifferent="true" />
+        <ItemGroup>
+            <ContentWithTargetPath Include="$(IntermediateOutputPath)mod-reference-pack.version"
+                                   TargetPath="mod_reference_assemblies/net10.0/pack.version"
+                                   CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+        </ItemGroup>
+    </Target>
+</Project>

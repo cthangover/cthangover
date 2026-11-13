@@ -78,6 +78,10 @@ build() {
     "$GODOT" --headless --path . --export-release "$preset" "$out/$exe"
     [ -f "$out/$exe" ] || { echo "export of $platform produced no $exe" >&2; exit 1; }
 
+    local rid=linux-x64
+    [ "$platform" != windows ] || rid=win-x64
+    "${PYTHON_BIN:-python3}" tests/verify_release_runtime.py "$out" "$rid"
+
     echo "=== $platform: loose content ==="
     copy_tree mods        "$out/mods" --exclude="$natives_skip"
     copy_tree collections "$out/collections"

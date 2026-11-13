@@ -35,6 +35,7 @@ rem ---------------------------------------------------------------------------
 
 chcp 65001 >nul
 setlocal EnableExtensions
+if "%PYTHON_BIN%"=="" set PYTHON_BIN=python
 
 if "%GODOT_BIN%"=="" set GODOT_BIN=godot
 
@@ -112,10 +113,16 @@ echo === %PLATFORM%: export (%PRESET%) ===
 if exist "%OUT%" rmdir /s /q "%OUT%"
 mkdir "%OUT%"
 "%GODOT_BIN%" --headless --path . --export-release "%PRESET%" "%OUT%\%EXE%"
+if errorlevel 1 exit /b 1
 if not exist "%OUT%\%EXE%" (
     echo Export of %PLATFORM% produced no %EXE%.
     exit /b 1
 )
+
+set RID=linux-x64
+if "%PLATFORM%"=="windows" set RID=win-x64
+"%PYTHON_BIN%" tests\verify_release_runtime.py "%OUT%" "%RID%"
+if errorlevel 1 exit /b 1
 
 echo === %PLATFORM%: loose content ===
 if "%PLATFORM%"=="windows" (set NATIVE_SKIP=*.so) else (set NATIVE_SKIP=)
