@@ -85,7 +85,7 @@ The [action parameter catalog](catalog.md) lists every production action schema,
 | `quest.remove_tag` | `quest_id=Q tag=T` | Remove a tag |
 | `quest.send_notification` | `quest_id=Q` | Trigger "Quest Updated" UI popup |
 
-> **Note:** The `status` parameter is parsed as a case-insensitive `QuestStatus` **enum name** (`NotStarted` / `Progress` / `End`) via `Enums<QuestStatus>.Parse`. Use enum names in scenarios. Numeric strings such as `status=2` only happen to work because `Enum.Parse` aliases numbers to enum values — do not rely on this. For numeric progress use `quest.set_data_status` with `level=N` instead.
+> **Note:** The `status` parameter is parsed as a case-insensitive `QuestStatus` **enum name** (`NotStarted` / `Progress` / `End`) via `Enums<QuestStatus>.Parse`. Use enum names in scenarios. Numeric strings such as `status>=0.1.0` only happen to work because `Enum.Parse` aliases numbers to enum values — do not rely on this. For numeric progress use `quest.set_data_status` with `level=N` instead.
 
 ### `scene.*`
 

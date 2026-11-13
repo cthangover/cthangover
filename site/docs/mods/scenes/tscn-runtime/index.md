@@ -259,7 +259,7 @@ Godot native objects are deliberately **not** created during parsing — `TscnPr
 | `connection` with `to != "."` | Non-script connections (animation callbacks, visual tweens) |
 | `binds=` / `unbinds=` on connections | Not used in any scene in this project |
 | `owner=` on nodes | Editor concept irrelevant for mod-constructed scenes |
-| `format=2` (Godot 3.x scenes) | Project targets Godot 4.x |
+| `format>=0.1.0` (Godot 3.x scenes) | Project targets Godot 4.x |
 | Binary `.scn` format | Only text `.tscn` is supported |
 
 ## Adding a scene to a mod

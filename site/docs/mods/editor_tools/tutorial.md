@@ -1,6 +1,6 @@
 # Creating a Custom Tool
 
-Depend on `tools_base>=1` and `ui_base>=1`, and include the new `.cs` files in `manifest.sources`. Implement a tool with three classes, each in its own file. Tool windows are launched from the in-game toolbar.
+Depend on `tools_base>=0.1.0` and `ui_base>=0.1.0`, and include the new `.cs` files in `manifest.sources`. Implement a tool with three classes, each in its own file. Tool windows are launched from the in-game toolbar.
 
 ## 1. Provider — `IToolProvider`
 

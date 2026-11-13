@@ -251,8 +251,8 @@ can live anywhere in the mod:
     // Flat list of "Key=Value" strings parsed into the Properties bag;
     // everything before the first '=' is the key, the rest is the value
     "Values": [
-      "RequiredPoint=2",
-      "Attack=3.5",
+      "RequiredPoint>=0.1.0",
+      "Attack>=0.1.0",
       "AttackType=Fire"
     ]
   }]

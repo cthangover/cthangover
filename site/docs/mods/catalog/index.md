@@ -18,7 +18,7 @@ locally-installed mods.
       "id": "live2d_base",                                 // Canonical mod identifier (matches manifest.json id)
       "name": "Live2D Cubism",                             // Fallback display name (used when no locale matches)
       "author": "ct",                                      // Author credit string
-      "version": "1.0.0",                                  // Latest release version (semver)
+      "version": "0.1.0",                                  // Latest release version (semver)
       "description": "Live2D Cubism C# runtime: model loading, rendering, physics, animation, effects", // Fallback short description
       "locale": [                                          // Localized name and description entries
         {
@@ -35,13 +35,13 @@ locally-installed mods.
       "category": "library, visual",                       // Category slugs: story, characters, gameplay, visual, audio, ui, locale, library, engine, overhaul, tools, editor, debug, other
       "tags": ["live2d", "base", "library", "visual"],     // Search/filter tags
       "icon_url": "https://git.cthangover.ru/cthangover/mod_live2d_base/raw/branch/master/mod.jpg", // Full URL to preview icon (PNG or JPEG)
-      "depends": ["ui_base>=1"],                           // Versioned dependency strings
+      "depends": ["ui_base>=0.1.0"],                           // Versioned dependency strings
       "conflicts_with": [],                                // Mutually exclusive mod IDs
       "downloads": [                                       // Version-specific download entries with mirrors
         {
-          "version": "1.0.0",                              // Semver version of this download entry
+          "version": "0.1.0",                              // Semver version of this download entry
           "urls": [                                        // Mirror URLs tried in order
-            "https://git.cthangover.ru/cthangover/mod_live2d_base/releases/download/v1.0.0/mod_live2d_base-v1.0.0.zip"
+            "https://git.cthangover.ru/cthangover/mod_live2d_base/releases/download/v0.1.0/mod_live2d_base-v0.1.0.zip"
           ],
           "size_bytes": 48031383,                          // File size of the zip for progress display
           "archive_sha256": "9d20f4eda7a3ba7b380fefa5964098dc696b3c8399049614e4cd4a03cc6bb1d6", // SHA256 of the .zip file (integrity check after download)
@@ -74,13 +74,13 @@ locally-installed mods.
 | `id` | string | Canonical mod identifier (must match the mod's `manifest.json` `id`) |
 | `name` | string | Fallback display name (used when no `locale` entry matches the player's language) |
 | `author` | string | Author credit |
-| `version` | string | Semver version of the latest release (e.g. "1.0.0") |
+| `version` | string | Semver version of the latest release (e.g. "0.1.0") |
 | `description` | string | Fallback short description (used when no `locale` entry matches the player's language) |
 | `locale` | object[] | Localized name/description entries for different languages (see below) |
 | `category` | string | Category slug or comma-separated combination of slugs (e.g. `"library, gameplay"`): `story`, `characters`, `gameplay`, `visual`, `audio`, `ui`, `locale`, `library`, `engine`, `overhaul`, `tools`, `editor`, `debug`, `other` |
 | `tags` | string[] | Search/filter tags |
 | `icon_url` | string | Full URL to preview icon (PNG or JPEG) |
-| `depends` | string[] | Versioned dependency strings (e.g. `"cthangover_game>=1"`) |
+| `depends` | string[] | Versioned dependency strings (e.g. `"cthangover_game>=0.1.0"`) |
 | `conflicts_with` | string[] | Mutually exclusive mod IDs |
 | `downloads` | object[] | Version-specific download entries with mirrors |
 | `downloads[].version` | string | Semver version of this download entry |

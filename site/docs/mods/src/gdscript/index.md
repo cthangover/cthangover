@@ -15,9 +15,9 @@ Mods can include `.gd` (GDScript) files alongside or instead of C# source code. 
 {
   "id": "my_mod",                                          // Canonical mod identifier
   "name": "My GDScript Mod",                               // Human-readable mod name
-  "version": "1.0.0",                                      // Semver version
+  "version": "0.1.0",                                      // Semver version
   "gd_sources": ["scripts/*.gd"],                          // Glob patterns for .gd files
-  "depends": ["cthangover_game"]                                      // Versioned dependency strings
+  "depends": ["cthangover_game>=0.1.0"]                                      // Versioned dependency strings
 }
 ```
 

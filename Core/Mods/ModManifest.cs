@@ -164,7 +164,7 @@ namespace Cthangover.Core.Mods
         [JsonPropertyName("conflicts_with")]
         public List<string> ConflictsWith { get; set; }
 
-        /// <summary>Semver mod version (e.g. "1.0.0"). Used by the save
+        /// <summary>Semver mod version (e.g. "0.1.0"). Used by the save
         /// system to detect downgrades and trigger migrations.</summary>
         [JsonPropertyName("version")]
         public string Version { get; set; }

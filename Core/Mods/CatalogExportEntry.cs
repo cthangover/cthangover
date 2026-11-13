@@ -14,7 +14,7 @@ namespace Cthangover.Core.Mods
     ///
     /// <see cref="Depends"/> and <see cref="ConflictsWith"/> use the
     /// same string format as the local <c>manifest.json</c>
-    /// (e.g. <c>"cthangover_game>=1"</c>, <c>"ui_base>=1?"</c>).
+    /// (e.g. <c>"cthangover_game>=0.1.0"</c>, <c>"ui_base>=0.1.0?"</c>).
     /// </summary>
     public class CatalogExportEntry
     {
@@ -30,7 +30,7 @@ namespace Cthangover.Core.Mods
         [JsonPropertyName("author")]
         public string Author { get; set; }
 
-        /// <summary>Semver version string (e.g. "1.0.0").</summary>
+        /// <summary>Semver version string (e.g. "0.1.0").</summary>
         [JsonPropertyName("version")]
         public string Version { get; set; }
 
@@ -63,7 +63,7 @@ namespace Cthangover.Core.Mods
 
         /// <summary>
         /// Versioned dependency strings in the same format as local
-        /// manifest.json (e.g. "cthangover_game>=1", "ui_base>=2?").
+        /// manifest.json (e.g. "cthangover_game>=0.1.0", "ui_base>=0.1.0?").
         /// </summary>
         [JsonPropertyName("depends")]
         public List<string> Depends { get; set; }

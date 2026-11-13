@@ -34,7 +34,7 @@ mods/
   "name": "Marao Buff",             // Mod管理メニューに表示される名前
   "description": "初めてのMod！",    // Mod一覧とカタログに表示される説明
   "author": "player",               // Modの作者（任意の文字列）
-  "depends": ["cthangover_game"]  // 本編ゲームへの依存（ロード順を手動で並べる必要がなくなる）
+  "depends": ["cthangover_game>=0.1.0"]  // 本編ゲームへの依存（ロード順を手動で並べる必要がなくなる）
 }
 ```
 

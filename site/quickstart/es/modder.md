@@ -44,7 +44,7 @@ mods/
   "name": "Mi bar",                                  // Nombre del mod que se muestra en el menú de mods
   "description": "Añade una escena de bar al pueblo", // Descripción del mod que se muestra en el menú de mods
   "author": "modder",                                // Autor del mod
-  "depends": ["cthangover_game"]                   // Dependencia del juego principal (así no hay que ordenar a mano la carga del mod)
+  "depends": ["cthangover_game>=0.1.0"]                   // Dependencia del juego principal (así no hay que ordenar a mano la carga del mod)
 }
 ```
 

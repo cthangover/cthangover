@@ -36,7 +36,7 @@ Every battle system mod defines a class implementing `IBattleCore` (`mods/turn_b
 | `Init(Character[] playerChars, Character[] enemyChars, IBattleContext ctx)` | Called when battle starts — sets up UI, spawns enemies |
 | `Start()` | Called after Init — begins the battle loop |
 
-Cores are discovered by `TurnBattleSceneInitializer`: it rescans mod assemblies as they announce themselves and calls `BattleCoreRegistry.RegisterAssembly`. Mods that add a core should declare `"depends": ["turn_battle_base>=1"]` so their assembly compiles after the platform.
+Cores are discovered by `TurnBattleSceneInitializer`: it rescans mod assemblies as they announce themselves and calls `BattleCoreRegistry.RegisterAssembly`. Mods that add a core should declare `"depends": ["turn_battle_base>=0.1.0"]` so their assembly compiles after the platform.
 
 ### `IActionExecutor` — Ability resolution
 
@@ -177,7 +177,7 @@ flowchart LR
      "name": "MyBattle",                                   // Human-readable mod name
      "description": "Custom battle system",                // Short description
      "sources": ["src/**/*.cs"],                           // Glob patterns for C# source files
-     "depends": ["cthangover_game", "turn_battle_base"]  // Battle platform dependency
+     "depends": ["cthangover_game>=0.1.0", "turn_battle_base>=0.1.0"]  // Battle platform dependency
    }
 ```
 

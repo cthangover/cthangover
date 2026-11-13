@@ -4,7 +4,7 @@
 
 ## Definition and images
 
-Depend on `avatar_layers>=1`. Put images in `avatar_layers/<prefix>/` and an ordinary `Kind: avatar` entity in your mod, for example `avatars/hero.json`:
+Depend on `avatar_layers>=0.1.0`. Put images in `avatar_layers/<prefix>/` and an ordinary `Kind: avatar` entity in your mod, for example `avatars/hero.json`:
 
 ```json
 {

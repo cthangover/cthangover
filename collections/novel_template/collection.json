@@ -46,7 +46,7 @@
         { "lang": "ko", "name": "에셋", "description": "다른 게임과 함께 쓰는 재사용 가능한 배경과 소리: 마을, 집, 바." },
         { "lang": "vi", "name": "Tài nguyên", "description": "Phông nền và âm thanh dùng lại được, chung với các game khác: thị trấn, nhà, quán bar." }
       ],
-      "mods": ["town_pack>=1"]
+      "mods": ["town_pack>=0.1.0"]
     },
     {
       "id": "engine_2d",
@@ -61,7 +61,7 @@
         { "lang": "ko", "name": "2D 엔진", "description": "2D 셸, 대화와 시나리오 DSL, 오디오." },
         { "lang": "vi", "name": "Engine 2D", "description": "Vỏ 2D, hội thoại và DSL kịch bản, âm thanh." }
       ],
-      "mods": ["shell2d_base>=1", "dialog_base>=1", "audio_base>=1"]
+      "mods": ["shell2d_base>=0.1.0", "dialog_base>=0.1.0", "audio_base>=0.1.0"]
     }
   ]
 }

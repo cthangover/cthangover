@@ -46,7 +46,7 @@ From the mod's parent directory:
 
 ```bash
 # From mods/
-zip -r my_mod_v1.0.0.zip my_mod/
+zip -r my_mod_v0.1.0.zip my_mod/
 ```
 
 Or using the Python build script (add this to your mod's tooling):

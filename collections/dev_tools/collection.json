@@ -3,7 +3,7 @@
   "kind": "toolset",
   "name": "Developer Tools",
   "author": "ct",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Mod authoring toolset: the scenario graph editor, the in-game scenario studio, content validators and the mod manager.",
   "locale": [
     {
@@ -75,8 +75,8 @@
         }
       ],
       "mods": [
-        "scenario_editor>=1",
-        "scene_editor>=1"
+        "scenario_editor>=0.1.0",
+        "scene_editor>=0.1.0"
       ]
     },
     {
@@ -116,7 +116,7 @@
         }
       ],
       "mods": [
-        "scenario_studio>=0.1"
+        "scenario_studio>=0.1.0"
       ]
     },
     {
@@ -156,9 +156,9 @@
         }
       ],
       "mods": [
-        "validator>=0.1",
-        "resource_atlas>=0.1",
-        "locale_atlas>=0.1"
+        "validator>=0.1.0",
+        "resource_atlas>=0.1.0",
+        "locale_atlas>=0.1.0"
       ],
       "optional": true
     },
@@ -199,7 +199,7 @@
         }
       ],
       "mods": [
-        "locale_editor>=1"
+        "locale_editor>=0.1.0"
       ],
       "optional": true
     },
@@ -240,7 +240,7 @@
         }
       ],
       "mods": [
-        "mod_manager>=1"
+        "mod_manager>=0.1.0"
       ]
     },
     {
@@ -248,7 +248,7 @@
       "name": "World Map Editor",
       "description": "Edit world map zones, polygons, labels and markers.",
       "mods": [
-        "map_editor>=1"
+        "map_editor>=0.1.0"
       ],
       "locale": [
         {
@@ -289,7 +289,7 @@
       "name": "Interactive Editor",
       "description": "Edit scene interactive objects and their placement on backgrounds.",
       "mods": [
-        "interactive_editor>=1"
+        "interactive_editor>=0.1.0"
       ],
       "locale": [
         {
@@ -330,7 +330,7 @@
       "name": "Light Editor",
       "description": "Edit scene lights and their placement on backgrounds.",
       "mods": [
-        "light_editor>=1"
+        "light_editor>=0.1.0"
       ],
       "locale": [
         {
@@ -371,7 +371,7 @@
       "name": "Godot Scene Builder",
       "description": "Inspect and edit Godot scene nodes and their properties with a live preview.",
       "mods": [
-        "scene_builder>=1"
+        "scene_builder>=0.1.0"
       ],
       "locale": [
         {
@@ -412,7 +412,7 @@
       "name": "Catalog Export",
       "description": "Export mod catalog metadata and installable archives.",
       "mods": [
-        "catalog_export>=1"
+        "catalog_export>=0.1.0"
       ],
       "locale": [
         {
@@ -453,9 +453,9 @@
       "name": "Schema Tools / Items Editor / Characters Editor",
       "description": "The Data Editor window and the command palette: edit any described entity in a form and assemble checked scenario lines from the mods' schemas. Edits a mod's items while the game runs: names and descriptions in every language, price, picture, types and the use action. The game shows a save at once. Edits a mod's characters while the game runs: names in every language, portrait, RPG walking sprite, battle numbers and actions. A save reaches the running game at once.",
       "mods": [
-        "schema_tools>=1",
-        "items_editor>=1",
-        "characters_editor>=1"
+        "schema_tools>=0.1.0",
+        "items_editor>=0.1.0",
+        "characters_editor>=0.1.0"
       ],
       "locale": [
         {
@@ -497,8 +497,8 @@
       "name": "RPG Editors",
       "description": "The RPG map editor and the RPG object editor (plan 12.3, 12.4).",
       "mods": [
-        "rpg_editor>=1",
-        "rpg_object_editor>=1"
+        "rpg_editor>=0.1.0",
+        "rpg_object_editor>=0.1.0"
       ],
       "locale": [
         {
@@ -542,7 +542,7 @@
       "optional": true,
       "selected": true,
       "mods": [
-        "effects_editor>=1"
+        "effects_editor>=0.1.0"
       ],
       "locale": [
         {

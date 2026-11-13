@@ -34,7 +34,7 @@ Mỗi mod cần một manifest. Tạo `mods/quickstart_player/manifest.json`:
   "name": "Marao Buff",               // Tên hiển thị trong menu quản lý mod
   "description": "Mod đầu tiên của tôi!", // Mô tả hiển thị trong danh sách mod và danh mục
   "author": "player",                 // Tác giả mod (chuỗi tùy ý)
-  "depends": ["cthangover_game"]    // Phụ thuộc vào trò chơi chính (không cần tự sắp xếp thứ tự tải mod)
+  "depends": ["cthangover_game>=0.1.0"]    // Phụ thuộc vào trò chơi chính (không cần tự sắp xếp thứ tự tải mod)
 }
 ```
 

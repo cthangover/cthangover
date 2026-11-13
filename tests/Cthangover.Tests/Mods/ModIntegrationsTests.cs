@@ -52,7 +52,7 @@ namespace Engine.Tests.Mods
         [Fact]
         public void Mount_PartnerDeclaredInTheGluesManifest_IsNotDuplicated()
         {
-            var host = Host("""{ "depends": ["quests_base>=1"] }""");
+            var host = Host("""{ "depends": ["quests_base>=0.1.0"] }""");
             var mods = Set(host, Plain("quests_base"));
 
             ModIntegrations.Mount(mods);

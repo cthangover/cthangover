@@ -79,11 +79,11 @@ bonuses.
 
 ```jsonc
 { "Kind": "action", "Id": "classic/power_strike", "Type": "ToEnemy",
-  "Values": ["RequiredPoint=1", "Formula=a.atk * 1.5 + rand(0, a.str / 2)"] }
+  "Values": ["RequiredPoint>=0.1.0", "Formula=a.atk * 1.5 + rand(0, a.str / 2)"] }
 ```
 
 `a.*` is the one acting and `b.*` the target: their stats plus `hp`, `hp_max`, `attack`, `defence`, `point`.
-Other values: `Effect=damage|heal`, `Cost=mp:4`, `Pierce=1`, and `State=<status effect>` with
+Other values: `Effect=damage|heal`, `Cost=mp:4`, `Pierce>=0.1.0`, and `State=<status effect>` with
 `StateTurns`/`StateChance`. Both battle cores run these skills.
 
 ## In scenarios

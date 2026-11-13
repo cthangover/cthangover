@@ -51,7 +51,7 @@ namespace Engine.Tests.Mods
             provider.AddFile("items/sword.json", "{}");
             provider.AddFile("test_suites/stray/manifest.json", "{}");
             provider.AddFile("integrations/battles/manifest.json", "{}");
-            var manifest = new ModManifest { Id = "rpg", Version = "1.0.0" };
+            var manifest = new ModManifest { Id = "rpg", Version = "0.1.0" };
 
             var listed = NestedFolders.Visible(provider, manifest).ListFiles(string.Empty).ToList();
 
@@ -101,7 +101,7 @@ namespace Engine.Tests.Mods
                 Manifest = new ModManifest
                 {
                     Id = "rpg",
-                    Version = "1.0.0",
+                    Version = "0.1.0",
                     TestSuites = new List<ModTestSuite>
                     {
                         new() { Id = "walk", Activate = new List<string> { "--itest=walk" } },

@@ -36,7 +36,7 @@ namespace Engine.Tests.Mods
         {
             var host = Host(new MockModFileProvider("cooking"));
             var provider = (MockModFileProvider)host.FileProvider;
-            provider.AddFile("test_suites/walk/manifest.json", @"{ ""sources"": [""src/*.cs""], ""depends"": [""dialog_base>=1""] }");
+            provider.AddFile("test_suites/walk/manifest.json", @"{ ""sources"": [""src/*.cs""], ""depends"": [""dialog_base>=0.1.0""] }");
             provider.AddFile("test_suites/walk/src/Driver.cs", "class Driver {}");
 
             var suite = ModTestSuites.CreateSuiteMod(host, Suite);

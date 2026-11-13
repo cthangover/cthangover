@@ -54,14 +54,14 @@ is not read.
   "kind": "Game",                                          // Game | Component | Toolset — see "Collection kinds"
   "name": "My Novel",                                      // Display name (falls back to id; see Localization)
   "author": "ct",                                          // Author credit
-  "version": "1.0.0",                                      // Semver; picks the newest of same-id catalog collections
+  "version": "0.1.0",                                      // Semver; picks the newest of same-id catalog collections
   "description": "A visual novel with card battles.",      // Shown on the gallery card and in the details panel
   "tags": ["novel", "cards"],                              // Free-form search tags
   "provides": ["battle_system"],                           // Capability ids this collection implements
   "requires": ["character_system"],                        // Capability ids needed from sibling blocks
   "includes": [                                            // Child collections this one is assembled from
     {
-      "ref": "rpg_2d>=1",                                  // Versioned collection reference (same syntax as depends)
+      "ref": "rpg_2d>=0.1.0",                                  // Versioned collection reference (same syntax as depends)
       "role": "systems",                                   // Slot role; two required blocks cannot claim one slot
       "optional": false,                                   // True when the block may be excluded by the player
       "selected": null,                                    // Player's choice for an optional block (null = on)
@@ -75,7 +75,7 @@ is not read.
       "name": "Scenes and dialogues",                      // Frame title in the scheme
       "description": "Scenes, scenarios, dialogue.",       // Tooltip
       "role": "story",                                     // Slot role the mechanic fills in the scheme editor
-      "mods": ["cthangover_game>=1"],                    // Versioned mod references (same syntax as manifest depends)
+      "mods": ["cthangover_game>=0.1.0"],                    // Versioned mod references (same syntax as manifest depends)
       "optional": false,                                   // Marks the mechanic as skippable
       "selected": null,                                    // Player's choice for an optional mechanic (null = on)
       "locale": [                                          // Per-mechanic localized strings, same shape as below
@@ -113,7 +113,7 @@ is not read.
 | `mechanics[].optional` | No | Marks the mechanic as skippable (`false` by default). The install plan still includes it until the player turns it off |
 | `mechanics[].selected` | No | Player's choice for an optional mechanic. `null`/omitted means on — old documents behave as before |
 | `mechanics[].locale` | No | Localized name/description entries, same shape as the collection-level `locale` |
-| `includes[].ref` | Yes | Versioned collection reference, e.g. `"rpg_2d>=1"` |
+| `includes[].ref` | Yes | Versioned collection reference, e.g. `"rpg_2d>=0.1.0"` |
 | `includes[].role` | No | Slot role inside the parent; two *required* includes claiming one role is a problem |
 | `includes[].optional` | No | True when the block may be excluded without breaking the parent |
 | `includes[].selected` | No | Player's choice; `null`/omitted means the block is on |
@@ -158,8 +158,8 @@ Entries of `mechanics[].mods` and `includes[].ref` use the same format as
 ```jsonc
 "mods": [
   "cthangover_game",       // any version
-  "turn_battle_base>=1",     // at least 1.x
-  "card_battle=1.2.0"        // exactly this version
+  "turn_battle_base>=0.1.0",     // at least 1.x
+  "card_battle>=0.1.0"        // exactly this version
 ]
 ```
 
@@ -362,7 +362,7 @@ carries `locale[]` for the game picker:
   "name": "@collections/my_novel/name",              // resolved from locale/*.properties
   "description": "@collections/my_novel/description",
   "author": "you",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "entry": { "scene": "my_town" },
   "tags": ["novel", "cards"],
   "locale": [
@@ -375,7 +375,7 @@ carries `locale[]` for the game picker:
       "name": "@collections/my_novel/mechanic/story/name",
       "description": "@collections/my_novel/mechanic/story/description",
       "role": "story",
-      "mods": ["my_novel_story>=1", "shell2d_base>=1", "dialog_base>=1"]
+      "mods": ["my_novel_story>=0.1.0", "shell2d_base>=0.1.0", "dialog_base>=0.1.0"]
     },
     {
       "id": "cards",
@@ -383,7 +383,7 @@ carries `locale[]` for the game picker:
       "description": "@collections/my_novel/mechanic/cards/description",
       "role": "battle",
       "optional": true,
-      "mods": ["turn_battle_base>=1", "card_battle>=1"]
+      "mods": ["turn_battle_base>=0.1.0", "card_battle>=0.1.0"]
     }
   ]
 }
@@ -402,9 +402,9 @@ A catalog may publish collections in its root envelope:
       "id": "my_novel",
       "kind": "Game",
       "name": "My Novel",
-      "version": "1.0.0",
+      "version": "0.1.0",
       "mechanics": [
-        { "id": "story", "name": "Story", "mods": ["my_novel_story>=1"] }
+        { "id": "story", "name": "Story", "mods": ["my_novel_story>=0.1.0"] }
       ]
     }
   ]

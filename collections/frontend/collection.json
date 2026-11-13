@@ -3,7 +3,7 @@
   "kind": "frontend",
   "name": "Front-end",
   "author": "ct",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Loaded with every game and on its own without one: the main menu, settings, save browser and the mod manager.",
   "locale": [
     { "lang": "ru", "name": "Оболочка", "description": "Загружается с каждой игрой и без неё: главное меню, настройки, сохранения и менеджер модов." },
@@ -27,7 +27,7 @@
         { "lang": "ko", "name": "메인 메뉴", "description": "메인 메뉴, 설정, 저장/불러오기 패널." },
         { "lang": "vi", "name": "Menu chính", "description": "Menu chính, cài đặt và các bảng lưu/tải." }
       ],
-      "mods": ["menu_base>=1", "ui_base>=1", "audio_base>=1"]
+      "mods": ["menu_base>=0.1.0", "ui_base>=0.1.0", "audio_base>=0.1.0"]
     },
     {
       "id": "mods",
@@ -42,7 +42,7 @@
         { "lang": "ko", "name": "모드 관리자", "description": "카탈로그, 설치, 게임 구성기." },
         { "lang": "vi", "name": "Trình quản lý mod", "description": "Danh mục, cài đặt và trình tạo game." }
       ],
-      "mods": ["mod_manager>=1"]
+      "mods": ["mod_manager>=0.1.0"]
     }
   ]
 }

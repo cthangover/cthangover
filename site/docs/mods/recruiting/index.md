@@ -118,7 +118,7 @@ Because they live inside `recruiting`, disabling the mod disables the gate and t
 
 ## Custom recruit behaviour
 
-Implement `IRecruitBehaviour` to add custom logic on recruit lifecycle events. External mods that implement the interfaces declare `"depends": ["recruiting>=1"]` so their assembly compiles after the mod. Discovery is automatic. Because dispatch is cross-recruit — each behaviour receives every active recruit on each event — a behaviour can also introspect other recruits:
+Implement `IRecruitBehaviour` to add custom logic on recruit lifecycle events. External mods that implement the interfaces declare `"depends": ["recruiting>=0.1.0"]` so their assembly compiles after the mod. Discovery is automatic. Because dispatch is cross-recruit — each behaviour receives every active recruit on each event — a behaviour can also introspect other recruits:
 
 ```csharp
 public class MyRecruitBehaviour : IRecruitBehaviour

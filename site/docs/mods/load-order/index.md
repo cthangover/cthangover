@@ -19,7 +19,7 @@ Every mod may declare dependencies in `manifest.json` using **versioned dependen
 ```jsonc
 {
   "id": "cooking",                                         // Canonical mod identifier
-  "depends": ["cthangover_game>=1", "ui_base>=1"]                   // Versioned dependency strings
+  "depends": ["cthangover_game>=0.1.0", "ui_base>=0.1.0"]                   // Versioned dependency strings
 }
 ```
 
@@ -187,11 +187,11 @@ Declare dependencies with version constraints for safety:
 ```jsonc
 {
   "id": "my_mod",                                          // Canonical mod identifier
-  "depends": ["cthangover_game>=1", "ui_base>=1"],                  // Versioned dependency strings
-  "version": "1.0.0"                                       // Semver version of this mod
+  "depends": ["cthangover_game>=0.1.0", "ui_base>=0.1.0"],                  // Versioned dependency strings
+  "version": "0.1.0"                                       // Semver version of this mod
 }
 ```
 
-- Use `>=1` (not `>=1.0.0`) — trailing zeros are unnecessary due to zero-padding comparison.
+- Use `>=0.1.0` (not `>=0.1.0.0`) — trailing zeros are unnecessary due to zero-padding comparison.
 - Declare `conflicts_with` for documentation/catalog purposes if your mod is incompatible with another — remember it is informational only and not enforced.
 - Use `?` for optional soft dependencies.

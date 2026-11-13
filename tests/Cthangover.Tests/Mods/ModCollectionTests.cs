@@ -22,7 +22,7 @@ namespace Engine.Tests.Mods
                 Name = "Card Novel",
                 Author = "ct",
                 Description = "A visual novel with card battles.",
-                Version = "1.2.0",
+                Version = "0.1.0",
                 SourceUrls = new List<string> { "https://catalog.test/catalog.json" },
                 Mechanics = new List<ModCollectionMechanic>
                 {
@@ -31,13 +31,13 @@ namespace Engine.Tests.Mods
                         Id = "vn_core",
                         Name = "Novel Core",
                         Description = "Story engine.",
-                        Mods = new List<string> { "cthangover_game>=1" },
+                        Mods = new List<string> { "cthangover_game>=0.1.0" },
                     },
                     new()
                     {
                         Id = "cards",
                         Name = "Card Game",
-                        Mods = new List<string> { "card_battle>=1.1", "turn_battle_base>=1" },
+                        Mods = new List<string> { "card_battle>=0.1.0", "turn_battle_base>=0.1.0" },
                         Optional = true,
                     },
                 },
@@ -58,7 +58,7 @@ namespace Engine.Tests.Mods
             Assert.Equal("Novel Core", restored.Mechanics[0].Name);
             Assert.Equal("Story engine.", restored.Mechanics[0].Description);
             Assert.Single(restored.Mechanics[0].Mods);
-            Assert.Equal("cthangover_game>=1", restored.Mechanics[0].Mods[0]);
+            Assert.Equal("cthangover_game>=0.1.0", restored.Mechanics[0].Mods[0]);
             Assert.False(restored.Mechanics[0].Optional);
 
             Assert.Equal("cards", restored.Mechanics[1].Id);
@@ -117,7 +117,7 @@ namespace Engine.Tests.Mods
                 {
                     new()
                     {
-                        Ref = "rpg_2d>=1",
+                        Ref = "rpg_2d>=0.1.0",
                         Role = "systems",
                         Optional = true,
                         Selected = false,
@@ -136,7 +136,7 @@ namespace Engine.Tests.Mods
             Assert.Equal(original.Requires, restored.Requires);
 
             var include = Assert.Single(restored.Includes);
-            Assert.Equal("rpg_2d>=1", include.Ref);
+            Assert.Equal("rpg_2d>=0.1.0", include.Ref);
             Assert.Equal("systems", include.Role);
             Assert.True(include.Optional);
             Assert.False(include.Selected);
@@ -170,7 +170,7 @@ namespace Engine.Tests.Mods
                         Role = "ui_skin",
                         Optional = true,
                         Selected = false,
-                        Mods = new List<string> { "ui_skin_dark>=1" },
+                        Mods = new List<string> { "ui_skin_dark>=0.1.0" },
                     },
                 },
             };

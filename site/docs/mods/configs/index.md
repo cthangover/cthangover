@@ -11,7 +11,7 @@ Every mod needs a manifest and optionally a properties file. These define the mo
   // Human-readable name shown in the mod menu
   "name": "MyMod",
   // Semver version — used for saves and deduplication
-  "version": "1.0.0",
+  "version": "0.1.0",
   // Author identifier (arbitrary string)
   "author": "author_name",
   // Short description for the mod menu and catalog
@@ -25,7 +25,7 @@ Every mod needs a manifest and optionally a properties file. These define the mo
   // Glob patterns for native shared libraries (.dll / .so / .dylib)
   "depends_native": ["bin/*.dll"],
   // List of mod IDs that must be loaded before this mod (versioned strings allowed)
-  "depends": ["cthangover_game", "ui_base"],
+  "depends": ["cthangover_game>=0.1.0", "ui_base>=0.1.0"],
   // Mutually exclusive mod IDs — informational metadata, never enforced (see load-order)
   "conflicts_with": [],
   // Declarative GUI entries anchored to shell slots (panel / overlay)
@@ -45,7 +45,7 @@ Every mod needs a manifest and optionally a properties file. These define the mo
 |---|---|---|
 | `id` | No | Canonical mod identifier (falls back to folder/zip name) |
 | `name` | No | Human-readable mod name (a display value, not the dependency ID) |
-| `version` | No | Semver version string (e.g. "1.0.0"). Used by the save system and for deduplication |
+| `version` | No | Semver version string (e.g. "0.1.0"). Used by the save system and for deduplication |
 | `author` | No | Author identifier |
 | `description` | No | Short description |
 | `sources` | No | Glob patterns for C# files to compile via Roslyn |
@@ -75,7 +75,7 @@ GDScript files are compiled by Godot's GDScript engine (no Roslyn needed). A sin
 ### Dependencies
 
 ```jsonc
-"depends": ["cthangover_game"]
+"depends": ["cthangover_game>=0.1.0"]
 ```
 
 The kernel resolves the selected game or frontend mod set in topological order. `cthangover_game` is ordinary game content and is loaded only when selected or required; it has no privileged first position. C# compilation sees the transitive closure of the mod's declared dependencies. Circular dependencies are invalid.
@@ -120,7 +120,7 @@ From `mods/cooking/manifest.json`:
 {
   "id": "cooking",
   // The named dependencies load before this mod
-  "depends": [ "cthangover_game>=1", "ui_base>=1", "items_base>=1", "time_base>=1" ]
+  "depends": [ "cthangover_game>=0.1.0", "ui_base>=0.1.0", "items_base>=0.1.0", "time_base>=0.1.0" ]
 }
 ```
 
@@ -135,7 +135,7 @@ when a user arg starts with one of its `activate` prefixes (or `--with-test-suit
 "test_suites": [ { "id": "interactives", "activate": ["--itest=interactives"] } ]
 
 // mods/interactive_base/test_suites/interactives/manifest.json — depends on the host implicitly
-{ "sources": ["src/*.cs"], "depends": ["cthangover_game>=1", "dialog_base>=1"] }
+{ "sources": ["src/*.cs"], "depends": ["cthangover_game>=0.1.0", "dialog_base>=0.1.0"] }
 ```
 
 A suite may depend on mods its host must not (here the host sits below `cthangover_game`). A normal launch, a

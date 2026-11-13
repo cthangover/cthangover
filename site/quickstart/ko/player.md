@@ -34,7 +34,7 @@ mods/
   "name": "Marao Buff",             // 모드 관리 메뉴에 표시되는 이름
   "description": "나의 첫 모드!",    // 모드 목록과 카탈로그에 표시되는 설명
   "author": "player",               // 모드 작성자 (임의의 문자열)
-  "depends": ["cthangover_game"]  // 본편 게임에 대한 의존성 (모드 로드 순서를 직접 정할 필요가 없음)
+  "depends": ["cthangover_game>=0.1.0"]  // 본편 게임에 대한 의존성 (모드 로드 순서를 직접 정할 필요가 없음)
 }
 ```
 

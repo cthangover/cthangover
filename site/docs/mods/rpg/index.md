@@ -6,7 +6,7 @@ This is model v2. Pictures are individual PNGs in `rpg_images/`; maps do not use
 
 ## A minimal map
 
-Put this entity in `maps/meadow.json` in your own mod. Declare `rpg>=1`, a tile renderer and `village_pack>=1` in `depends` for this example.
+Put this entity in `maps/meadow.json` in your own mod. Declare `rpg>=0.1.0`, a tile renderer and `village_pack>=0.1.0` in `depends` for this example.
 
 ```json
 {

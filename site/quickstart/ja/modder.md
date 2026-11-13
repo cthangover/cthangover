@@ -44,7 +44,7 @@ mods/
   "name": "マイ酒場",                            // Modメニューに表示されるMod名
   "description": "町に酒場のシーンを追加する",     // Modメニューに表示されるModの説明
   "author": "modder",                           // Modの作者
-  "depends": ["cthangover_game"]              // 本編ゲームへの依存（ロード順を手動で並べる必要がなくなる）
+  "depends": ["cthangover_game>=0.1.0"]              // 本編ゲームへの依存（ロード順を手動で並べる必要がなくなる）
 }
 ```
 

@@ -196,7 +196,7 @@ text = ""badge""
                 "{\n" +
                 $"  \"id\": \"{TestModId}\",\n" +
                 "  \"name\": \"Scene Patch Test\",\n" +
-                "  \"version\": \"1.0.0\",\n" +
+                "  \"version\": \"0.1.0\",\n" +
                 "  \"author\": \"ct\",\n" +
                 "  \"description\": \"Temporary mod created by the scene patch integration test\",\n" +
                 "  \"category\": \"other\"\n" +

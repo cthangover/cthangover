@@ -44,7 +44,7 @@ mods/
   "name": "Quán bar của tôi",                     // Tên mod hiển thị trong menu mod
   "description": "Thêm cảnh quán bar vào thị trấn", // Mô tả mod hiển thị trong menu mod
   "author": "modder",                            // Tác giả mod
-  "depends": ["cthangover_game"]               // Phụ thuộc vào trò chơi chính (không cần tự sắp xếp thứ tự tải mod)
+  "depends": ["cthangover_game>=0.1.0"]               // Phụ thuộc vào trò chơi chính (không cần tự sắp xếp thứ tự tải mod)
 }
 ```
 

@@ -29,7 +29,7 @@ namespace Cthangover.Core.Mods
         /// </summary>
         public string LocalizedDescription { get; }
 
-    /// <summary>Semver mod version from manifest.json (e.g. "1.0.0").
+    /// <summary>Semver mod version from manifest.json (e.g. "0.1.0").
     /// Used by the save system to detect downgrades and trigger
     /// migrations when the installed version differs from the save.</summary>
     public string Version { get; }

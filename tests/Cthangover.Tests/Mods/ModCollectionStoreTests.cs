@@ -65,10 +65,10 @@ namespace Engine.Tests.Mods
                 {
                     Id = "my_novel",
                     Name = "My Novel",
-                    Version = "1.0.0",
+                    Version = "0.1.0",
                     Mechanics = new List<ModCollectionMechanic>
                     {
-                        new() { Id = "core", Name = "Core", Mods = new List<string> { "cthangover_game>=1" } },
+                        new() { Id = "core", Name = "Core", Mods = new List<string> { "cthangover_game>=0.1.0" } },
                         new() { Id = "cards", Mods = new List<string> { "card_battle" }, Optional = true },
                     },
                 },
@@ -82,10 +82,10 @@ namespace Engine.Tests.Mods
             var novel = loaded.Find(c => c.Id == "my_novel");
             Assert.NotNull(novel);
             Assert.Equal("My Novel", novel.Name);
-            Assert.Equal("1.0.0", novel.Version);
+            Assert.Equal("0.1.0", novel.Version);
             Assert.Equal(2, novel.Mechanics.Count);
             Assert.Equal("core", novel.Mechanics[0].Id);
-            Assert.Equal("cthangover_game>=1", novel.Mechanics[0].Mods[0]);
+            Assert.Equal("cthangover_game>=0.1.0", novel.Mechanics[0].Mods[0]);
             Assert.True(novel.Mechanics[1].Optional);
             Assert.All(loaded, c => Assert.Equal(ModCollectionOrigin.User, c.Origin));
             Assert.All(loaded, c => Assert.NotNull(c.Package));
@@ -145,7 +145,7 @@ namespace Engine.Tests.Mods
         [Fact]
         public void LoadPackages_ReadsFoldersAndZips()
         {
-            Package("folder_game", "{ \"id\": \"folder_game\", \"name\": \"Folder\", \"mechanics\": [ { \"id\": \"m\", \"mods\": [\"card_battle>=1\"] } ] }");
+            Package("folder_game", "{ \"id\": \"folder_game\", \"name\": \"Folder\", \"mechanics\": [ { \"id\": \"m\", \"mods\": [\"card_battle>=0.1.0\"] } ] }");
             using (var zip = ZipFile.Open(Path.Combine(_scratch, "zip_game.zip"), ZipArchiveMode.Create))
             {
                 using var writer = new StreamWriter(zip.CreateEntry(ModCollectionStore.DocumentName).Open());
@@ -156,7 +156,7 @@ namespace Engine.Tests.Mods
 
             Assert.Equal(2, result.Count);
             var folder = result.Find(c => c.Id == "folder_game");
-            Assert.Equal("card_battle>=1", folder.Mechanics[0].Mods[0]);
+            Assert.Equal("card_battle>=0.1.0", folder.Mechanics[0].Mods[0]);
             Assert.Equal(ModCollectionOrigin.BuiltIn, folder.Origin);
             Assert.Equal("Zip", result.Find(c => c.Id == "zip_game").Name);
         }

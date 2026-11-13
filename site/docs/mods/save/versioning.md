@@ -44,7 +44,7 @@ Every mod's `manifest.json` must include a semver version string:
 ```jsonc
 {
   "name": "My Mod",                                        // Human-readable mod name
-  "version": "1.0.0",                                      // Semver version — used for save validation and migration detection
+  "version": "0.1.0",                                      // Semver version — used for save validation and migration detection
   "author": "...",                                         // Author credit
   "description": "...",                                    // Short description
   "sources": ["src/**/*.cs"]                              // Glob patterns for C# source files
