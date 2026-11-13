@@ -1,6 +1,8 @@
 using Cthangover.Core.Mods;
 using Cthangover.Core.Mods.Resolvers;
 using Godot;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace Cthangover.Core.Utils
 {
@@ -14,6 +16,10 @@ namespace Cthangover.Core.Utils
     /// </summary>
 	public static class TextureUtils
 	{
+        // FileListResolver replaces its dictionary after invalidation. Weak keys let old
+        // mod sets/studio layers go away without a second invalidation protocol here.
+        private static readonly ConditionalWeakTable<Dictionary<string, FileEntry>, TextureFileIndex> indexes = new();
+
 		/// <summary>
 		/// Loads a texture identified by <paramref name="imagePath"/> from the
 		/// mod group named <paramref name="groupName"/>. The path is normalised
@@ -56,25 +62,7 @@ namespace Cthangover.Core.Utils
 		private static Texture2D LoadTextureFromModGroup(string groupName, string idWithoutGroup)
 		{
 			var files = Files.Collect(groupName);
-			var textureExts = ModConfig.Instance.GetTextureExtensionSet();
-
-            GameLogger.Log("MODS", $"LoadTextureFromModGroup: group='{groupName}' id='{idWithoutGroup}' files.Count={files.Count}", LogLevel.Debug);
-			foreach (var k in files.Keys)
-                GameLogger.Log("MODS", $"  file key='{k}' modId='{files[k].ModId}' fullPath='{files[k].FullPath}'", LogLevel.Debug);
-
-			string matchedKey = null;
-			foreach (var key in files.Keys)
-			{
-				var ext = System.IO.Path.GetExtension(key);
-				if (!textureExts.Contains(ext))
-					continue;
-				if (key == idWithoutGroup || key.StartsWith(idWithoutGroup + ".", System.StringComparison.OrdinalIgnoreCase))
-				{
-					matchedKey = key;
-					break;
-				}
-			}
-
+            var matchedKey = indexes.GetValue(files, CreateIndex).Find(idWithoutGroup);
 
 			if (matchedKey == null || !files.TryGetValue(matchedKey, out var entry))
 			{
@@ -91,6 +79,9 @@ namespace Cthangover.Core.Utils
 
 			return BytesToTexture(bytes, System.IO.Path.GetExtension(matchedKey));
 		}
+
+        private static TextureFileIndex CreateIndex(Dictionary<string, FileEntry> files)
+            => new(files.Keys, ModConfig.Instance.GetTextureExtensionSet());
 
 		private static Texture2D BytesToTexture(byte[] bytes, string extension)
 		{
