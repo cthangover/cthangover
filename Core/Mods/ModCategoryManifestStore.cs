@@ -32,6 +32,14 @@ public static class ModCategoryManifestStore
         var root = JsonNode.Parse(text, documentOptions: Cthangover.Core.Utils.JsonOptionsProvider.DocumentOptions) as JsonObject
             ?? throw new JsonException("manifest.json must be an object");
         var normalized = ModCategories.Normalize(categories);
+        // An unchanged publish/export must preserve manifest bytes and the ZIP timestamp.
+        // Compare authored spelling/order as well, so explicit category edits still persist.
+        if (root["categories"] is JsonArray current
+            && current.Select(value => value?.GetValue<string>()).SequenceEqual(normalized, StringComparer.Ordinal))
+        {
+            mod.Manifest.Categories = normalized;
+            return;
+        }
         root["categories"] = new JsonArray(normalized.Select(code => JsonValue.Create(code)).ToArray());
         var temporary = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
         try
