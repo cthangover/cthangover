@@ -38,6 +38,44 @@ namespace UnloadMod
         }
 
         [Fact]
+        public void Unload_CrossContextGenericBatch_ReleasesEveryContext()
+        {
+            for (var round = 0; round < 8; round++)
+            {
+                var ids = LoadGenericTriangle();
+                var ticket = ModUnloader.Unload(ids, null, Array.Empty<Assembly>());
+
+                Assert.Equal(ids, ticket.ModIds);
+                foreach (var id in ids)
+                    Assert.False(ModAssemblyLoader.IsModLoaded(id));
+                Assert.Empty(ticket.Collect(30));
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static string[] LoadGenericTriangle()
+        {
+            var suffix = Guid.NewGuid().ToString("N");
+            var ns = "UnloadProbe" + suffix;
+            var a = "test_argument_" + suffix;
+            var b = "test_consumer_" + suffix;
+            var c = "test_other_" + suffix;
+            TestMods.Compile(a, $"namespace {ns} {{ public class Argument {{ }} }}");
+            TestMods.Compile(c, $"namespace {ns} {{ public class Other {{ public int Value => 7; }} }}");
+            using (ModAssemblyLoader.BeginBatch())
+            {
+                var assembly = ModCompiler.Compile(b, new[]
+                {
+                    ("Generic.cs", $"namespace {ns} {{ public class Generic<T> {{ }} }}"),
+                    ("Entry.cs", $"namespace {ns} {{ public class Entry {{ public static int Read() {{ System.GC.KeepAlive(new Generic<Argument>()); return new Other().Value; }} }} }}")
+                });
+                Assert.NotNull(assembly);
+                Assert.Equal(7, assembly.GetType(ns + ".Entry").GetMethod("Read").Invoke(null, null));
+            }
+            return new[] { b, a, c };
+        }
+
+        [Fact]
         public void Unload_ReleasesAndCollectsTheContext()
         {
             var modId = TestMods.NewId("test_unload");
