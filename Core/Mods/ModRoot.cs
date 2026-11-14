@@ -1,6 +1,7 @@
 namespace Cthangover.Core.Mods
 {
     using System.Collections.Generic;
+    using Cthangover.Core.Bootstrap;
     using Cthangover.Core.Mods.Unload;
     using Cthangover.Core.Utils;
     using Godot;
@@ -24,11 +25,16 @@ namespace Cthangover.Core.Mods
         private static readonly List<Node> pending = new();
         private static bool flushQueued;
 
-        /// <summary>Adds <paramref name="node"/> to the tree root on the next deferred step.</summary>
+        /// <summary>Adds a detached node on the next deferred step; shutdown frees transferred nodes instead of starting them.</summary>
         public static void AddDeferred(Node node)
         {
             if (node == null)
                 return;
+            if (ApplicationExit.IsQuitting)
+            {
+                FreeDetached(node);
+                return;
+            }
             pending.Add(node);
             if (flushQueued)
                 return;
@@ -40,20 +46,41 @@ namespace Cthangover.Core.Mods
         public static int RemoveOwned(AssemblyOwnership ownership)
             => pending.RemoveAll(node => ownership.Owns(node.GetType()));
 
+        /// <summary>Releases detached nodes before exit handlers run; parented nodes remain borrowed from their tree.</summary>
+        internal static void DiscardPending()
+        {
+            while (pending.Count > 0)
+            {
+                var node = pending[0];
+                pending.RemoveAt(0);
+                FreeDetached(node);
+            }
+            flushQueued = false;
+        }
+
+        private static void FreeDetached(Node node)
+        {
+            if (GodotObject.IsInstanceValid(node) && node.GetParent() == null)
+                node.Free();
+        }
+
         private static void Flush()
         {
             flushQueued = false;
-            var nodes = new List<Node>(pending);
-            pending.Clear();
+            // Keep the unprocessed batch owned by pending: AddChild can request
+            // exit reentrantly from Ready, before the rest of this batch starts.
+            var count = pending.Count;
 
             var root = (Engine.GetMainLoop() as SceneTree)?.Root;
-            foreach (var node in nodes)
+            for (var index = 0; index < count && pending.Count > 0; index++)
             {
+                var node = pending[0];
+                pending.RemoveAt(0);
                 if (!GodotObject.IsInstanceValid(node) || node.GetParent() != null)
                     continue;
-                if (root == null)
+                if (ApplicationExit.IsQuitting || root == null)
                 {
-                    node.QueueFree();
+                    node.Free();
                     continue;
                 }
 

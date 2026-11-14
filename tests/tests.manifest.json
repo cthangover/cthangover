@@ -7,6 +7,56 @@
   },
   "integration": [
     {
+      "name": "shutdown_deferred_ready",
+      "scene": "res://tests/Cthangover.Tests.Integration/Scenes/deferred_shutdown_test.tscn",
+      "args": [],
+      "timeoutSeconds": 120,
+      "kind": "integration",
+      "owners": [
+        "core"
+      ],
+      "profiles": [
+        "full",
+        "headless"
+      ],
+      "tags": [
+        "headless",
+        "shutdown"
+      ],
+      "project": "read",
+      "dependsOn": [],
+      "result": {
+        "name": "shutdown_deferred_ready",
+        "expectedErrors": []
+      }
+    },    {
+      "name": "shutdown_deferred_flush",
+      "scene": "res://tests/Cthangover.Tests.Integration/Scenes/deferred_shutdown_test.tscn",
+      "args": [
+        "--",
+        "--shutdown-during-flush"
+      ],
+      "timeoutSeconds": 120,
+      "kind": "integration",
+      "owners": [
+        "core"
+      ],
+      "profiles": [
+        "full",
+        "headless"
+      ],
+      "tags": [
+        "headless",
+        "shutdown"
+      ],
+      "project": "read",
+      "dependsOn": [],
+      "result": {
+        "name": "shutdown_deferred_flush",
+        "expectedErrors": []
+      }
+    },
+    {
       "name": "rpg_editor_geometry",
       "scene": "res://scenes/menu/launcher.tscn",
       "windowed": true,

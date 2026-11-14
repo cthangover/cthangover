@@ -5,6 +5,7 @@ namespace Cthangover.Core.Bootstrap
     using System.Threading.Tasks;
     using Cthangover.Core.Utils;
     using Cthangover.Core.Games;
+    using Cthangover.Core.Mods;
     using Godot;
 
     /// <summary>Lets engine mods finish asynchronous cleanup before SceneTree and its servers are torn down.</summary>
@@ -43,6 +44,9 @@ namespace Cthangover.Core.Bootstrap
             var pending = new List<Task>();
             try
             {
+                // A short startup scene may quit before service nodes enter the tree.
+                // Close their owner before taking the Preparing handler snapshot.
+                ModRoot.DiscardPending();
                 pending.Add(GameSession.StopWarmUpAsync());
                 if (Preparing != null)
                     foreach (Func<SceneTree, Task> handler in Preparing.GetInvocationList())
