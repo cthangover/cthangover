@@ -11,14 +11,14 @@ import tempfile
 import time
 
 
-def snapshot(source, project):
+def snapshot(source, project, extra_mods=()):
     ignore=shutil.ignore_patterns('.git','.git-template','obj','bin','__pycache__','test_suites','tests','docs')
     for folder in ['Core','scenes','config']:
         shutil.copytree(source/folder,project/folder,ignore=ignore)
     shutil.copy2(source/'project.godot',project/'project.godot')
     shutil.copytree(source/'.godot/mono/temp/bin/Debug',project/'.godot/mono/temp/bin/Debug')
     for path in source.glob('*.csproj'):shutil.copy2(path,project/path.name)
-    names={'terrain_base','scene3d_base','menu_base','schema_tools'};pending=list(names);paths={}
+    names={'terrain_base','scene3d_base','menu_base','schema_tools',*extra_mods};pending=list(names);paths={}
     while pending:
         name=pending.pop()
         if '__' in name:
@@ -33,7 +33,7 @@ def snapshot(source, project):
     shutil.copytree(source/'mods_private/terrain_base/test_suites/contracts',project/'mods_private/terrain_base/test_suites/contracts')
     shutil.copytree(source/'mods_private/terrain_base/test_suites/patch',project/'mods_private/terrain_base/test_suites/patch')
     folder=project/'collections/frontend';folder.mkdir(parents=True)
-    (folder/'collection.json').write_text(json.dumps({'id':'frontend','kind':'frontend','version':'0.1.0','name':'3D terrain acceptance shell','mods':['ui_base','menu_base']}))
+    (folder/'collection.json').write_text(json.dumps({'id':'frontend','kind':'frontend','version':'0.1.0','name':'3D terrain acceptance shell','mechanics':[{'id':'menu','name':'Menu','role':'ui','mods':['menu_base>=0.1.0','ui_base>=0.1.0']}]}))
     return sorted(names)
 
 

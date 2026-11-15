@@ -25,6 +25,7 @@
     <ItemGroup>
         <Compile Remove="tests\Cthangover.Tests\**\*.cs" />
         <Compile Remove="tests\Cthangover.TestRunner\**\*.cs" />
+        <Compile Remove="tests\Cthangover.Terrain.Tests\**\*.cs" />
         <Compile Remove="sdk\**\*.cs" />
 
         <None Include="tests\Cthangover.Tests\**\*.cs" />
