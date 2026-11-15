@@ -114,6 +114,10 @@ verify_linux() {
     echo "=== linux: verify (menu -> New game -> prologue) ==="
     local dir game log from status
     dir="$(mktemp -d)"
+    # EXIT also covers verifier/display failures; signals terminate through the same cleanup.
+    trap "cleanup_verify_linux $(printf '%q' "$dir")" EXIT
+    trap 'exit 130' INT
+    trap 'exit 143' TERM
     game="$dir/game"
     mkdir -p "$game"
     # --no-archive must never select a leftover archive from an earlier build.
@@ -148,10 +152,21 @@ verify_linux() {
     if [ "$status" -eq 0 ] && [[ "$result" == *"failed=0"* ]]; then
         echo "verify: OK — ${result#*\] }"
         rm -rf "$dir"
+        trap - EXIT INT TERM
     else
         echo "verify: FAILED (exit $status) ${result:-no [TEST_RESULT] line}" >&2
         echo "game log: $log, stdout: $dir/stdout.log" >&2
         exit 1
+    fi
+}
+
+cleanup_verify_linux() {
+    # EXIT can run after verify_linux's local variables have left scope.
+    local cleanup_dir="$1"
+    if [ -d "$cleanup_dir" ]; then
+        mkdir -p releases/verify-logs || true
+        cp "$cleanup_dir/stdout.log" releases/verify-logs/linux-stdout.log 2>/dev/null || true
+        rm -rf "$cleanup_dir"
     fi
 }
 
