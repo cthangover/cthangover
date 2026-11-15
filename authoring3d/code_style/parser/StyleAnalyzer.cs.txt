@@ -1,0 +1,483 @@
+using System;
+using System.Collections.Generic;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Text;
+
+namespace Cthangover.Authoring.CodeStyle
+{
+    /// <summary>Reports syntax-backed style findings; string/comment contents cannot impersonate C# declarations or statements.</summary>
+    internal sealed class StyleAnalyzer
+    {
+        private static readonly HashSet<string> GuiTypes = new(StringComparer.Ordinal)
+        {
+            "Button",
+            "CheckButton",
+            "CheckBox",
+            "ColorPickerButton",
+            "OptionButton",
+            "MenuButton",
+            "Label",
+            "RichTextLabel",
+            "LineEdit",
+            "TextEdit",
+            "SpinBox",
+            "Slider",
+            "HSlider",
+            "VSlider",
+            "ItemList",
+            "Tree",
+            "TextureRect",
+            "ColorRect",
+            "Panel",
+            "PanelContainer",
+            "ProgressBar",
+            "TextureProgressBar",
+            "HBoxContainer",
+            "VBoxContainer",
+            "GridContainer",
+            "MarginContainer",
+            "ScrollContainer",
+            "TabContainer",
+            "HSplitContainer",
+            "VSplitContainer",
+            "Control",
+            "FileDialog",
+            "ConfirmationDialog",
+            "AcceptDialog",
+            "PopupMenu",
+        };
+        private readonly List<StyleIssue> issues = new();
+        private readonly HashSet<string> emitted = new(StringComparer.Ordinal);
+        internal List<StyleIssue> Analyze(ParserRequest request)
+        {
+            var sources = new List<ParsedSource>();
+            foreach (var input in request.Sources)
+            {
+                sources.Add(new ParsedSource(input));
+            }
+
+            var ancestry = new WidgetAncestry(sources);
+            foreach (var source in sources)
+            {
+                if (source.Input.Report)
+                {
+                    Check(source, request.MaxLineLength, ancestry);
+                }
+            }
+
+            issues.Sort(CompareIssues);
+            return issues;
+        }
+
+        private void Check(ParsedSource source, int maxLineLength, WidgetAncestry ancestry)
+        {
+            var text = source.Tree.GetText();
+            var literalInteriors = new HashSet<int>();
+            foreach (var token in source.Root.DescendantTokens())
+            {
+                if (token.IsKind(SyntaxKind.StringLiteralToken) || token.IsKind(SyntaxKind.MultiLineRawStringLiteralToken)
+                    || token.IsKind(SyntaxKind.InterpolatedStringTextToken))
+                {
+                    var span = source.Tree.GetLineSpan(token.Span);
+                    for (var line = span.StartLinePosition.Line + 1; line < span.EndLinePosition.Line; line++)
+                    {
+                        literalInteriors.Add(line);
+                    }
+                }
+            }
+
+            foreach (var line in text.Lines)
+            {
+                if (ExpandedLength(line.ToString()) > maxLineLength && !literalInteriors.Contains(line.LineNumber))
+                {
+                    Add(source, line.Start, "LINE_LENGTH", "Line exceeds " + maxLineLength + " columns.");
+                }
+            }
+
+            foreach (var diagnostic in source.Tree.GetDiagnostics())
+            {
+                if (diagnostic.Severity == DiagnosticSeverity.Error)
+                {
+                    Add(source, diagnostic.Location.SourceSpan.Start, "SYNTAX", diagnostic.GetMessage());
+                }
+            }
+
+            var types = new List<MemberDeclarationSyntax>();
+            var statementLines = new Dictionary<int, List<SyntaxNode>>();
+            var memberLines = new Dictionary<int, List<SyntaxNode>>();
+            foreach (var node in source.Root.DescendantNodes())
+            {
+                if (node is BaseTypeDeclarationSyntax or DelegateDeclarationSyntax)
+                {
+                    types.Add((MemberDeclarationSyntax)node);
+                }
+
+                if (node is MemberDeclarationSyntax member)
+                {
+                    CheckMember(source, member, ancestry);
+                    if (member is BaseFieldDeclarationSyntax or BasePropertyDeclarationSyntax or BaseMethodDeclarationSyntax)
+                    {
+                        CollectLine(memberLines, source, member);
+                    }
+                }
+
+                if (node is StatementSyntax statement && SyntaxContracts.IsStatement(statement))
+                {
+                    CollectLine(statementLines, source, statement);
+                }
+
+                CheckBody(source, node);
+                CheckInitializer(source, node);
+                CheckLogging(source, node);
+                CheckGui(source, node, ancestry);
+                if (node is LambdaExpressionSyntax or AnonymousMethodExpressionSyntax)
+                {
+                    Add(source, node.SpanStart, "ANONYMOUS_FUNCTION", "Use a named method instead of an anonymous function.");
+                }
+                else if (node is LocalFunctionStatementSyntax)
+                {
+                    Add(source, node.SpanStart, "LOCAL_FUNCTION", "Move the local function to a named class member.");
+                }
+                else if (node is AnonymousObjectCreationExpressionSyntax)
+                {
+                    Add(source, node.SpanStart, "ANONYMOUS_TYPE", "Use a named data type instead of an anonymous class.");
+                }
+                else if (node is UsingDirectiveSyntax && node.Parent is BaseNamespaceDeclarationSyntax)
+                {
+                    Add(source, node.SpanStart, "USING_PLACEMENT", "Place using directives outside the namespace, as required by cleanup.");
+                }
+            }
+
+            if (types.Count > 1)
+            {
+                Add(source, types[1].SpanStart, "ONE_TYPE_PER_FILE", "The file declares more than one type, including nested types.");
+            }
+
+            CheckCollectedLines(source, statementLines, "MULTIPLE_STATEMENTS", "Keep one statement per physical line.");
+            CheckCollectedLines(source, memberLines, "MULTIPLE_MEMBERS", "Keep separate member declarations on separate lines.");
+        }
+
+        private void CheckMember(ParsedSource source, MemberDeclarationSyntax member, WidgetAncestry ancestry)
+        {
+            if (SyntaxContracts.IsPublic(member) && !SyntaxContracts.HasDocumentation(member))
+            {
+                var documentedPartial = member is BaseTypeDeclarationSyntax type && ancestry.HasTypeDocumentation(type);
+                if (!documentedPartial)
+                {
+                    Add(source, member.SpanStart, "PUBLIC_DOCUMENTATION", "Document this public contract with XML comments.");
+                }
+            }
+
+            if (member is BaseFieldDeclarationSyntax field && field.Declaration.Variables.Count > 1)
+            {
+                Add(source, field.SpanStart, "SINGLE_FIELD", "Declare one field per declaration.");
+            }
+        }
+
+        private void CheckBody(ParsedSource source, SyntaxNode node)
+        {
+            BlockSyntax? body = node switch
+            {
+                BaseMethodDeclarationSyntax method => method.Body,
+                AccessorDeclarationSyntax accessor => accessor.Body,
+                LocalFunctionStatementSyntax local => local.Body,
+                _ => null,
+            };
+            if (body != null && SameLine(source, body.OpenBraceToken.SpanStart, body.CloseBraceToken.SpanStart))
+            {
+                Add(source, body.SpanStart, "ONE_LINE_BODY", "Expand the method/accessor body onto separate lines.");
+            }
+
+            if (node is ArrowExpressionClauseSyntax arrow && node.Parent is BaseMethodDeclarationSyntax or LocalFunctionStatementSyntax
+                && SameLine(source, arrow.SpanStart, arrow.Span.End))
+            {
+                Add(source, arrow.SpanStart, "ONE_LINE_BODY", "Expand the method expression into a readable block.");
+            }
+
+            if (node is BlockSyntax block)
+            {
+                var previous = block.OpenBraceToken.GetPreviousToken();
+                if (previous.RawKind != 0 && SameLine(source, previous.Span.End, block.OpenBraceToken.SpanStart))
+                {
+                    Add(source, block.OpenBraceToken.SpanStart, "ALLMAN_BRACES", "Put an opening block brace on its own line.");
+                }
+            }
+            else if (node is BaseTypeDeclarationSyntax type && type.OpenBraceToken.RawKind != 0)
+            {
+                CheckOpeningBrace(source, type.OpenBraceToken);
+            }
+            else if (node is NamespaceDeclarationSyntax space)
+            {
+                CheckOpeningBrace(source, space.OpenBraceToken);
+            }
+        }
+
+        private void CheckOpeningBrace(ParsedSource source, SyntaxToken brace)
+        {
+            if (SameLine(source, brace.GetPreviousToken().Span.End, brace.SpanStart))
+            {
+                Add(source, brace.SpanStart, "ALLMAN_BRACES", "Put an opening declaration brace on its own line.");
+            }
+        }
+
+        private void CheckInitializer(ParsedSource source, SyntaxNode node)
+        {
+            if (node is not InitializerExpressionSyntax initializer)
+            {
+                return;
+            }
+
+            if (!initializer.IsKind(SyntaxKind.ObjectInitializerExpression) && LiteralCollection(initializer))
+            {
+                // Compact data vectors and short label lists are readable as values;
+                // named object properties still require independent lines.
+                return;
+            }
+
+            var lines = new Dictionary<int, List<SyntaxNode>>();
+            foreach (var expression in initializer.Expressions)
+            {
+                CollectLine(lines, source, expression);
+            }
+
+            CheckCollectedLines(source, lines, "MULTIPLE_INITIALIZERS", "Put initializer entries on separate lines.");
+        }
+
+        private static bool LiteralCollection(InitializerExpressionSyntax initializer)
+        {
+            foreach (var expression in initializer.Expressions)
+            {
+                if (expression is LiteralExpressionSyntax)
+                {
+                    continue;
+                }
+
+                if (expression is PrefixUnaryExpressionSyntax unary && unary.Operand is LiteralExpressionSyntax)
+                {
+                    continue;
+                }
+
+                return false;
+            }
+
+            return true;
+        }
+
+        private void CheckLogging(ParsedSource source, SyntaxNode node)
+        {
+            if (!source.Input.GameCode || node is not InvocationExpressionSyntax call)
+            {
+                return;
+            }
+
+            var name = call.Expression.ToString().Replace("global::", string.Empty, StringComparison.Ordinal);
+            foreach (var directive in source.Root.Usings)
+            {
+                if (directive.Alias == null || directive.Name == null)
+                {
+                    continue;
+                }
+
+                var alias = directive.Alias.Name.Identifier.ValueText + ".";
+                if (name.StartsWith(alias, StringComparison.Ordinal))
+                {
+                    name = directive.Name + "." + name.Substring(alias.Length);
+                    break;
+                }
+            }
+
+            if (name == "GD.Print" || name == "GD.PrintErr" || name == "GD.PrintRaw" || name == "GD.PrintS" || name == "GD.PrintT"
+                || name.StartsWith("Godot.GD.Print", StringComparison.Ordinal) || name == "Console.Write" || name == "Console.WriteLine"
+                || name == "Console.Error.Write" || name == "Console.Error.WriteLine" || name.StartsWith("System.Console.Write",
+                 StringComparison.Ordinal) || name.StartsWith("System.Console.Error.Write", StringComparison.Ordinal))
+            {
+                Add(source, call.SpanStart, "GAME_LOGGER", "Game code logs only through GameLogger.Log.");
+            }
+        }
+
+        private void CheckGui(ParsedSource source, SyntaxNode node, WidgetAncestry ancestry)
+        {
+            if (!source.Input.CheckGui)
+            {
+                return;
+            }
+
+            if (node is BaseTypeDeclarationSyntax screen && screen.BaseList != null && !source.Input.UtilityGui
+                && !source.Input.HasScenePrefab)
+            {
+                foreach (var parent in screen.BaseList.Types)
+                {
+                    var name = SyntaxContracts.SimpleTypeName(parent.Type);
+                    if (GuiTypes.Contains(name) || name == "CanvasLayer")
+                    {
+                        Add(source, node.SpanStart, "GAME_UI_PREFAB", "Describe the game screen skeleton in an owning .tscn.");
+                        break;
+                    }
+                }
+            }
+
+            TypeSyntax? type = node switch
+            {
+                ObjectCreationExpressionSyntax creation => creation.Type,
+                ImplicitObjectCreationExpressionSyntax creation => TargetTypeOf(creation),
+                _ => null,
+            };
+            if (type == null || !GuiTypes.Contains(SyntaxContracts.SimpleTypeName(type)))
+            {
+                return;
+            }
+
+            BaseTypeDeclarationSyntax? owner = null;
+            foreach (var ancestor in node.Ancestors())
+            {
+                if (ancestor is BaseTypeDeclarationSyntax candidate)
+                {
+                    owner = candidate;
+                    break;
+                }
+            }
+
+            if (source.Input.UtilityGui)
+            {
+                if (owner == null || !ancestry.IsWidget(owner) && !BorrowsWidget(node, owner, ancestry))
+                {
+                    Add(source, node.SpanStart, "MOD_WIDGET", "Build utility controls through an owning ModWidget root.");
+                }
+            }
+            else if (!source.Input.HasScenePrefab || !InsideDataLoop(node))
+            {
+                Add(source, node.SpanStart, "GAME_UI_PREFAB", "Use a .tscn skeleton; code creates data-driven rows only.");
+            }
+        }
+
+        private static bool InsideDataLoop(SyntaxNode node)
+        {
+            foreach (var ancestor in node.Ancestors())
+            {
+                if (ancestor is ForStatementSyntax or ForEachStatementSyntax or WhileStatementSyntax)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool BorrowsWidget(SyntaxNode node, BaseTypeDeclarationSyntax owner, WidgetAncestry ancestry)
+        {
+            foreach (var ancestor in node.Ancestors())
+            {
+                if (ancestor is not MethodDeclarationSyntax method)
+                {
+                    continue;
+                }
+
+                foreach (var parameter in method.ParameterList.Parameters)
+                {
+                    if (parameter.Type != null && ancestry.IsWidgetType(parameter.Type, owner))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private static TypeSyntax? TargetTypeOf(ImplicitObjectCreationExpressionSyntax creation)
+        {
+            if (creation.Parent is EqualsValueClauseSyntax equals)
+            {
+                if (equals.Parent is VariableDeclaratorSyntax variable && variable.Parent is VariableDeclarationSyntax declaration)
+                {
+                    return declaration.Type;
+                }
+
+                if (equals.Parent is PropertyDeclarationSyntax property)
+                {
+                    return property.Type;
+                }
+            }
+
+            return null;
+        }
+
+        private void CheckCollectedLines(ParsedSource source, Dictionary<int, List<SyntaxNode>> lines, string rule, string message)
+        {
+            foreach (var pair in lines)
+            {
+                if (pair.Value.Count > 1)
+                {
+                    Add(source, pair.Value[1].SpanStart, rule, message);
+                }
+            }
+        }
+
+        private static void CollectLine(Dictionary<int, List<SyntaxNode>> lines, ParsedSource source, SyntaxNode node)
+        {
+            var number = source.Tree.GetLineSpan(node.Span).StartLinePosition.Line;
+            if (!lines.TryGetValue(number, out var nodes))
+            {
+                nodes = new List<SyntaxNode>();
+                lines[number] = nodes;
+            }
+
+            nodes.Add(node);
+        }
+
+        private void Add(ParsedSource source, int position, string rule, string message)
+        {
+            var point = source.Tree.GetLineSpan(new TextSpan(position, 0)).StartLinePosition;
+            var key = source.Input.Path + ":" + point.Line + ":" + rule;
+            if (!emitted.Add(key))
+            {
+                return;
+            }
+
+            issues.Add(new StyleIssue {
+                Path = source.Input.Path,
+                Line = point.Line + 1,
+                Column = point.Character + 1,
+                Rule = rule,
+                Message = message,
+            });
+        }
+
+        private static bool SameLine(ParsedSource source, int first, int second)
+        {
+            var text = source.Tree.GetText();
+            var end = Math.Min(second, text.Length);
+            return text.Lines.GetLineFromPosition(first).LineNumber == text.Lines.GetLineFromPosition(end).LineNumber;
+        }
+
+        private static int ExpandedLength(string line)
+        {
+            var length = 0;
+            foreach (var character in line)
+            {
+                length += character == '\t' ? 4 - length % 4 : 1;
+            }
+
+            return length;
+        }
+
+        private static int CompareIssues(StyleIssue first, StyleIssue second)
+        {
+            var path = StringComparer.Ordinal.Compare(first.Path, second.Path);
+            if (path != 0)
+            {
+                return path;
+            }
+
+            var line = first.Line.CompareTo(second.Line);
+            if (line != 0)
+            {
+                return line;
+            }
+
+            return StringComparer.Ordinal.Compare(first.Rule, second.Rule);
+        }
+    }
+}

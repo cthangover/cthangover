@@ -1,0 +1,163 @@
+using System;
+using System.Collections.Generic;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+
+namespace Cthangover.Authoring.CodeStyle
+{
+    /// <summary>Resolves ModWidget ancestry across explicit targets and non-reporting dependency context.</summary>
+    internal sealed class WidgetAncestry
+    {
+        private const string WidgetType = "Cthangover.Mods.Interface.Base.Lists.ModWidget";
+        private readonly Dictionary<string, List<BaseTypeDeclarationSyntax>> types = new(StringComparer.Ordinal);
+        private readonly Dictionary<string, HashSet<string>> bySimpleName = new(StringComparer.Ordinal);
+        internal WidgetAncestry(IEnumerable<ParsedSource> sources)
+        {
+            foreach (var source in sources)
+            {
+                foreach (var node in source.Root.DescendantNodes())
+                {
+                    if (node is not BaseTypeDeclarationSyntax type)
+                    {
+                        continue;
+                    }
+
+                    var name = SyntaxContracts.TypeName(type);
+                    if (!types.TryGetValue(name, out var parts))
+                    {
+                        parts = new List<BaseTypeDeclarationSyntax>();
+                        types[name] = parts;
+                    }
+
+                    parts.Add(type);
+                    var simple = type.Identifier.ValueText;
+                    if (!bySimpleName.TryGetValue(simple, out var matches))
+                    {
+                        matches = new HashSet<string>(StringComparer.Ordinal);
+                        bySimpleName[simple] = matches;
+                    }
+
+                    matches.Add(name);
+                }
+            }
+        }
+
+        internal bool IsWidget(BaseTypeDeclarationSyntax declaration)
+        {
+            return IsWidget(SyntaxContracts.TypeName(declaration), new HashSet<string>(StringComparer.Ordinal));
+        }
+
+        internal bool IsWidgetType(TypeSyntax syntax, BaseTypeDeclarationSyntax owner)
+        {
+            var name = Resolve(syntax, owner);
+            return name != null && IsWidget(name, new HashSet<string>(StringComparer.Ordinal));
+        }
+
+        internal bool HasTypeDocumentation(BaseTypeDeclarationSyntax declaration)
+        {
+            if (!types.TryGetValue(SyntaxContracts.TypeName(declaration), out var parts))
+            {
+                return false;
+            }
+
+            foreach (var part in parts)
+            {
+                if (SyntaxContracts.HasDocumentation(part))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool IsWidget(string name, HashSet<string> seen)
+        {
+            if (name == WidgetType)
+            {
+                return true;
+            }
+
+            if (!seen.Add(name) || !types.TryGetValue(name, out var parts))
+            {
+                return false;
+            }
+
+            foreach (var part in parts)
+            {
+                if (part.BaseList == null)
+                {
+                    continue;
+                }
+
+                foreach (var parent in part.BaseList.Types)
+                {
+                    var resolved = Resolve(parent.Type, part);
+                    if (resolved != null && IsWidget(resolved, seen))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private string? Resolve(TypeSyntax syntax, BaseTypeDeclarationSyntax owner)
+        {
+            var written = syntax.ToString().Replace("global::", string.Empty, StringComparison.Ordinal);
+            if (written == WidgetType || types.ContainsKey(written))
+            {
+                return written;
+            }
+
+            var simple = SyntaxContracts.SimpleTypeName(syntax);
+            foreach (var ancestor in owner.Ancestors())
+            {
+                if (ancestor is not BaseNamespaceDeclarationSyntax space)
+                {
+                    continue;
+                }
+
+                var local = space.Name + "." + simple;
+                if (types.ContainsKey(local))
+                {
+                    return local;
+                }
+            }
+
+            foreach (var node in owner.SyntaxTree.GetRoot().DescendantNodes())
+            {
+                if (node is not UsingDirectiveSyntax directive || directive.Name == null)
+                {
+                    continue;
+                }
+
+                var target = directive.Name.ToString();
+                if (directive.Alias?.Name.Identifier.ValueText == simple)
+                {
+                    return target;
+                }
+
+                if (directive.Alias == null)
+                {
+                    var qualified = target + "." + simple;
+                    if (qualified == WidgetType || types.ContainsKey(qualified))
+                    {
+                        return qualified;
+                    }
+                }
+            }
+
+            if (bySimpleName.TryGetValue(simple, out var matches) && matches.Count == 1)
+            {
+                foreach (var match in matches)
+                {
+                    return match;
+                }
+            }
+
+            return null;
+        }
+    }
+}

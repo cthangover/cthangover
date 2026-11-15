@@ -1,0 +1,35 @@
+using System;
+using System.Text.Json;
+
+namespace Cthangover.Authoring.CodeStyle
+{
+    /// <summary>Reads one JSON batch from stdin and writes findings only; the Python driver owns discovery and exit policy.</summary>
+    internal static class ParserProgram
+    {
+        private static int Main()
+        {
+            try
+            {
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true,
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                };
+                var request = JsonSerializer.Deserialize<ParserRequest>(Console.In.ReadToEnd(), options);
+                if (request == null)
+                {
+                    throw new ArgumentException("Missing parser request.");
+                }
+
+                var issues = new StyleAnalyzer().Analyze(request);
+                Console.WriteLine(JsonSerializer.Serialize(issues, options));
+                return 0;
+            }
+            catch (Exception error)
+            {
+                Console.Error.WriteLine("Style parser failed: " + error.Message);
+                return 2;
+            }
+        }
+    }
+}

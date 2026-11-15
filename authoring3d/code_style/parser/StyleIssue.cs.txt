@@ -1,0 +1,21 @@
+namespace Cthangover.Authoring.CodeStyle
+{
+    /// <summary>Machine-readable finding with one-based source coordinates and a stable rule identifier.</summary>
+    public sealed class StyleIssue
+    {
+        /// <summary>Source path from the request, so a report remains useful outside the parser's cache directory.</summary>
+        public string Path { get; set; } = string.Empty;
+
+        /// <summary>One-based line of the offending declaration or statement.</summary>
+        public int Line { get; set; }
+
+        /// <summary>One-based UTF-16 column, matching Roslyn/compiler diagnostics.</summary>
+        public int Column { get; set; }
+
+        /// <summary>Stable identifier used by tests and downstream validation.</summary>
+        public string Rule { get; set; } = string.Empty;
+
+        /// <summary>Explanation of the required change without copying potentially sensitive source literals.</summary>
+        public string Message { get; set; } = string.Empty;
+    }
+}

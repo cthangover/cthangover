@@ -1,0 +1,14 @@
+using System.Collections.Generic;
+
+namespace Cthangover.Authoring.CodeStyle
+{
+    /// <summary>Batch request keeps parsing and ancestry resolution in one process, including changed-path checks.</summary>
+    public sealed class ParserRequest
+    {
+        /// <summary>Explicit targets plus non-reporting dependency context supplied by the driver.</summary>
+        public List<SourceInput> Sources { get; set; } = new();
+
+        /// <summary>Maximum expanded line length; tabs advance to four-column stops.</summary>
+        public int MaxLineLength { get; set; } = 140;
+    }
+}

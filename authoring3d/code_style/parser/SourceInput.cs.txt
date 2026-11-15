@@ -1,0 +1,29 @@
+using System;
+
+namespace Cthangover.Authoring.CodeStyle
+{
+    /// <summary>One parsed file, with repository metadata supplied by the Python driver rather than inferred from class names.</summary>
+    public sealed class SourceInput
+    {
+        /// <summary>Stable display path used by reports; no source text is printed in diagnostics.</summary>
+        public string Path { get; set; } = string.Empty;
+
+        /// <summary>UTF-8 source decoded by the driver; Roslyn supplies syntax and line positions.</summary>
+        public string Text { get; set; } = string.Empty;
+
+        /// <summary>False for ancestry context: such files may resolve a base class but never emit findings.</summary>
+        public bool Report { get; set; } = true;
+
+        /// <summary>Enables game logging rules only for core/mod code, not for standalone authoring command-line tools.</summary>
+        public bool GameCode { get; set; }
+
+        /// <summary>Enables mod GUI ownership checks; test-suite setup code is checked for style but is not a player screen.</summary>
+        public bool CheckGui { get; set; }
+
+        /// <summary>Tools/editor manifests permit code-built ModWidget controls without a game-screen prefab.</summary>
+        public bool UtilityGui { get; set; }
+
+        /// <summary>Whether the owning production mod supplies a .tscn outside its inactive test suites.</summary>
+        public bool HasScenePrefab { get; set; }
+    }
+}
