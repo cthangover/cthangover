@@ -7,9 +7,44 @@ namespace Cthangover.Tests.Testing
     using Cthangover.TestRunner;
 
     /// <summary>Selection preserves setup, isolates components and never turns an empty or invalid request green.</summary>
+    [Collection("runner-infrastructure")]
     public class RunnerSelectionTests : System.IDisposable
     {
         private readonly string failureReport = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "selection_report_" + System.Guid.NewGuid().ToString("N") + ".json");
+
+        [Fact]
+        public void RetentionEnvironmentAndCliHaveDocumentedDefaultsAndPrecedence()
+        {
+            var names = new[] { "CTHANGOVER_TEST_RETENTION_DAYS", "CTHANGOVER_TEST_RETENTION_COUNT", "CTHANGOVER_TEST_RETENTION_GIB" };
+            var previous = names.Select(Environment.GetEnvironmentVariable).ToArray();
+            try
+            {
+                foreach (var name in names) Environment.SetEnvironmentVariable(name, null);
+                var defaults = RunnerOptions.Parse(Array.Empty<string>());
+                Assert.Equal(3, defaults.RetentionCount); Assert.Equal(3, defaults.RetentionDays);
+                Assert.Equal(20L * 1024 * 1024 * 1024, defaults.RetentionBytes);
+                Environment.SetEnvironmentVariable(names[0], "2.5");
+                Environment.SetEnvironmentVariable(names[1], "7");
+                Environment.SetEnvironmentVariable(names[2], "0.5");
+                var environment = RunnerOptions.Parse(Array.Empty<string>());
+                Assert.Equal(2.5, environment.RetentionDays); Assert.Equal(7, environment.RetentionCount);
+                Assert.Equal(512L * 1024 * 1024, environment.RetentionBytes);
+                var cli = RunnerOptions.Parse(new[] { "--retention-days", "1", "--retention-count", "2", "--retention-gib", "3" });
+                Assert.Equal(1, cli.RetentionDays); Assert.Equal(2, cli.RetentionCount);
+                Assert.Equal(3L * 1024 * 1024 * 1024, cli.RetentionBytes);
+            }
+            finally { for (var i = 0; i < names.Length; i++) Environment.SetEnvironmentVariable(names[i], previous[i]); }
+        }
+
+        [Theory]
+        [InlineData("--retention-days", "NaN")]
+        [InlineData("--retention-days", "-1")]
+        [InlineData("--retention-count", "-1")]
+        [InlineData("--retention-count", "2.5")]
+        [InlineData("--retention-gib", "Infinity")]
+        [InlineData("--retention-gib", "1e30")]
+        public void InvalidRetentionValuesAreRejected(string option, string value)
+            => Assert.Throws<ArgumentException>(() => RunnerOptions.Parse(new[] { option, value }));
         private static List<IntegrationTestDefinition> Catalog() => new()
         {
             new() { Name = "unit", Kind = "unit", Profiles = new[] { "full", "fast" }, Owners = new[] { "core" } },

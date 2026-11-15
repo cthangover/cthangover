@@ -80,7 +80,7 @@ namespace Cthangover.TestRunner
             copyRoots[lane] = Path.Combine(Path.GetTempPath(), "cthangover-tests", copyId, "project");
             try
             {
-                var workspace = new TestWorkspace(root, copyId, options.FreshCache, runId) { Keep = true };
+                var workspace = new TestWorkspace(root, copyId, options.FreshCache, runId, artifacts) { Keep = true };
                 lanes[lane] = workspace;
                 if (lane == -1) workspace.ConfigureShared();
             }

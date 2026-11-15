@@ -54,6 +54,7 @@ namespace Cthangover.TestRunner
             ParallelExecution parallel = null;
             try
             {
+                WorkspaceRetention.Prune(Path.GetTempPath(), options.RetentionCount, options.RetentionDays, options.RetentionBytes);
                 CompilationCachePolicy.Prune(CompilationCachePolicy.Resolve(Path.GetTempPath(), runId, false), DateTime.UtcNow);
                 var unit = plan.Any(e => e.Test.Kind == "unit");
                 if (!options.NoBuild || unit)
@@ -79,7 +80,7 @@ namespace Cthangover.TestRunner
                 }
                 Console.WriteLine("Подготовка отдельной копии проекта...");
                 var copyStarted = Stopwatch.GetTimestamp();
-                try { workspace = new TestWorkspace(root, runId, options.FreshCache); }
+                try { workspace = new TestWorkspace(root, runId, options.FreshCache, artifactsDirectory: artifacts); }
                 finally { report.Phases.WorkspaceCopySeconds = Stopwatch.GetElapsedTime(copyStarted).TotalSeconds; }
                 report.Workspace = workspace.Root;
                 report.Workspaces.Add(workspace.Root);
@@ -195,6 +196,10 @@ namespace Cthangover.TestRunner
             }
             report.Complete = complete;
             report.FinishedAt = DateTimeOffset.UtcNow;
+            ReportWriter.Write(directory, report, options.Json);
+            WorkspaceRetention.Prune(Path.GetTempPath(), options.RetentionCount, options.RetentionDays, options.RetentionBytes);
+            report.RetainedWorkspaces.RemoveAll(path => !Directory.Exists(path));
+            report.WorkspaceRetained = report.RetainedWorkspaces.Count > 0;
             ReportWriter.Write(directory, report, options.Json);
             SummaryPrinter.Print(report.Build == null ? report.Results : report.Results.Prepend(report.Build).ToList());
             SummaryPrinter.PrintTiming(report);

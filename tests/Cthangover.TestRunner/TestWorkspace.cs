@@ -18,6 +18,7 @@ namespace Cthangover.TestRunner
         private readonly List<string> userDirectories = new();
         private readonly HashSet<string> directories = new(StringComparer.Ordinal);
         private readonly string runId;
+        private readonly WorkspaceOwner workspaceOwner;
         private bool first = true;
         private TestWorkspace owner;
         private string dataHome;
@@ -31,20 +32,25 @@ namespace Cthangover.TestRunner
         public string CacheDirectory { get; }
 
         /// <summary>Copies project inputs; persistent compilation artifacts live outside the disposable run root.</summary>
-        public TestWorkspace(string source, string runId, bool freshCache = false, string cacheRunId = null)
+        public TestWorkspace(string source, string runId, bool freshCache = false, string cacheRunId = null, string artifactsDirectory = null)
         {
             this.runId = runId;
             Root = Path.Combine(Path.GetTempPath(), "cthangover-tests", runId, "project");
             if (Directory.Exists(Root)) throw new IOException("workspace already exists: " + Root);
             CacheDirectory = CompilationCachePolicy.Resolve(Path.GetTempPath(), cacheRunId ?? runId, freshCache);
-            Directory.CreateDirectory(Root);
-            foreach (var file in Directory.EnumerateFiles(source))
-                if (Path.GetExtension(file) is ".godot" or ".csproj" or ".props" or ".targets" or ".sln" or ".cfg" or ".json" or ".md") Copy(file, Path.GetFileName(file));
-            foreach (var tree in Trees)
-                if (Directory.Exists(Path.Combine(source, tree))) CopyTree(Path.Combine(source, tree), tree);
-            PrepareOutputDirectories();
-            foreach (var directory in Directory.EnumerateDirectories(Root, "*", SearchOption.AllDirectories))
-                directories.Add(Path.GetRelativePath(Root, directory).Replace('\\', '/'));
+            workspaceOwner = new WorkspaceOwner(Path.GetDirectoryName(Root), runId, cacheRunId ?? runId, artifactsDirectory);
+            try
+            {
+                Directory.CreateDirectory(Root);
+                foreach (var file in Directory.EnumerateFiles(source))
+                    if (Path.GetExtension(file) is ".godot" or ".csproj" or ".props" or ".targets" or ".sln" or ".cfg" or ".json" or ".md") Copy(file, Path.GetFileName(file));
+                foreach (var tree in Trees)
+                    if (Directory.Exists(Path.Combine(source, tree))) CopyTree(Path.Combine(source, tree), tree);
+                PrepareOutputDirectories();
+                foreach (var directory in Directory.EnumerateDirectories(Root, "*", SearchOption.AllDirectories))
+                    directories.Add(Path.GetRelativePath(Root, directory).Replace('\\', '/'));
+            }
+            catch { workspaceOwner.Dispose(); throw; }
         }
 
         private TestWorkspace(TestWorkspace owner, string component)
@@ -128,6 +134,7 @@ namespace Cthangover.TestRunner
             UserDirectory = Path.GetFullPath(Path.Combine(dataRoot, relative));
             if (Directory.Exists(UserDirectory)) throw new IOException("user-data directory already exists: " + UserDirectory);
             userDirectories.Add(UserDirectory);
+            workspaceOwner.TrackUserDirectory(UserDirectory);
             Directory.CreateDirectory(Path.Combine(UserDirectory, "mods"));
             TemporaryDirectory = Path.Combine(Path.GetDirectoryName(Root), "temp", Key(component));
             Directory.CreateDirectory(TemporaryDirectory);
@@ -228,13 +235,18 @@ namespace Cthangover.TestRunner
         public void Dispose()
         {
             if (owner != null) return; // The shared owner disposes all component homes with its run directory.
-            if (Keep) return;
-            foreach (var directory in userDirectories)
-                if (Directory.Exists(directory)) Directory.Delete(directory, true);
-            foreach (var directory in userDirectories.Select(Path.GetDirectoryName).Distinct())
-                if (Directory.Exists(directory) && !Directory.EnumerateFileSystemEntries(directory).Any()) Directory.Delete(directory);
-            var parent = Path.GetDirectoryName(Root);
-            if (Directory.Exists(parent)) Directory.Delete(parent, true);
+            try
+            {
+                if (Keep) return;
+                foreach (var directory in userDirectories)
+                    if (Directory.Exists(directory)) Directory.Delete(directory, true);
+                foreach (var directory in userDirectories.Select(Path.GetDirectoryName).Distinct())
+                    if (Directory.Exists(directory) && !Directory.EnumerateFileSystemEntries(directory).Any()) Directory.Delete(directory);
+                var parent = Path.GetDirectoryName(Root);
+                workspaceOwner.ReleaseLease();
+                if (Directory.Exists(parent)) Directory.Delete(parent, true);
+            }
+            finally { workspaceOwner.Dispose(); }
         }
 
         /// <summary>Finds additions, deletions and metadata/byte changes without restoring a snapshot still used by readers.</summary>

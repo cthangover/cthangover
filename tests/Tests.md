@@ -202,6 +202,28 @@ exit=0 недостаточно. Пропуски `NotExecuted` сохраняю
 При Ctrl+C или сбое координатора деревья всех процессов останавливаются,
 копии сохраняются, JSON остаётся частичным (`complete=false`).
 
+Сохранённые копии ограничены retention: при старте и после завершения удаляются неактивные
+логические запуски старше 3 дней, сверх последних 3 запусков либо сверх 20 ГиБ суммарных файловых
+данных (сначала старые). Все write/shared lanes считаются одним запуском. Параметры:
+`--retention-days D`, `--retention-count N`, `--retention-gib G`; переменные окружения
+`CTHANGOVER_TEST_RETENTION_DAYS`, `CTHANGOVER_TEST_RETENTION_COUNT`, `CTHANGOVER_TEST_RETENTION_GIB`;
+CLI имеет приоритет. Ноль допустим и снимает соответствующий запас сохранения.
+Открытый `.owner.lock` и `.owner.json` с PID/временем старта процесса защищают живого владельца;
+маркер освобождается в finally, после SIGKILL определяется мёртвый PID. Постоянный `cache/` не участвует.
+Перед удалением пользовательские logs/`.result`/mod reports попадают в
+`retained-diagnostics/<copy-id>/` внутри отчёта; проект туда не копируется. У длинного лога сохраняются
+последние 8 МиБ, общий бюджет дополнительных диагностик 64 МиБ на копию; при ошибке архивации
+копия остаётся и причина выводится. Основные stdout/stderr уже пишутся непосредственно в отчёт.
+Старые каталоги без owner-маркера runner не присваивает себе: их убирает контейнерный очиститель
+с проверкой процессов. `--keep-workspace` также подчиняется retention, не даёт бессрочного хранения.
+
+English: inactive retained runs default to 3 days, newest 3 logical runs and 20 GiB of file data;
+all lanes count together, oldest runs are removed first. CLI `--retention-days/count/gib` overrides
+`CTHANGOVER_TEST_RETENTION_DAYS/COUNT/GIB`. Zero is allowed. Owner leases plus PID/start-time markers
+protect active runs and recognise dead owners after SIGKILL. Reports survive eviction; bounded log
+tails/results are archived before project removal. Archive failures preserve the workspace and print
+the reason. Persistent assembly caches and unmarked legacy trees are outside this policy.
+
 ## Модовые тесты и восстановление
 
 `[ModTest("group/case")]` разрешён у статического метода с возвратом `void` или

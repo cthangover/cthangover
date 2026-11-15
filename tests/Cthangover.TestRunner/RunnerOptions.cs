@@ -26,6 +26,10 @@ namespace Cthangover.TestRunner
         public int TimeoutSeconds { get; private set; } = 60;
         public bool ShowHelp { get; private set; }
         public bool KeepWorkspace { get; private set; }
+        /// <summary>Inactive logical runs expire by age, count or total bytes; CLI overrides the corresponding CTHANGOVER_TEST_RETENTION_* environment values.</summary>
+        public double RetentionDays { get; private set; } = 3;
+        public int RetentionCount { get; private set; } = 3;
+        public long RetentionBytes { get; private set; } = 20L * 1024 * 1024 * 1024;
 
         /// <summary>Global child limit; one explicitly selects the original sequential workspace protocol.</summary>
         public int Jobs { get; private set; } = Math.Clamp(Environment.ProcessorCount / 2, 2, 8);
@@ -37,6 +41,9 @@ namespace Cthangover.TestRunner
         public static RunnerOptions Parse(string[] args)
         {
             var options = new RunnerOptions();
+            options.RetentionDays = Nonnegative(Environment.GetEnvironmentVariable("CTHANGOVER_TEST_RETENTION_DAYS") ?? "3", "CTHANGOVER_TEST_RETENTION_DAYS");
+            options.RetentionCount = RetainedCount(Environment.GetEnvironmentVariable("CTHANGOVER_TEST_RETENTION_COUNT") ?? "3");
+            options.RetentionBytes = RetainedBytes(Environment.GetEnvironmentVariable("CTHANGOVER_TEST_RETENTION_GIB") ?? "20");
             for (var i = 0; i < args.Length; i++)
             {
                 switch (args[i])
@@ -58,6 +65,9 @@ namespace Cthangover.TestRunner
                     case "--no-build": options.NoBuild = true; break;
                     case "--fresh-cache": options.FreshCache = true; break;
                     case "--keep-workspace": options.KeepWorkspace = true; break;
+                    case "--retention-days": options.RetentionDays = Nonnegative(Next(args, ref i), "--retention-days"); break;
+                    case "--retention-count": options.RetentionCount = RetainedCount(Next(args, ref i)); break;
+                    case "--retention-gib": options.RetentionBytes = RetainedBytes(Next(args, ref i)); break;
                     case "--jobs": options.Jobs = Positive(args, ref i); break;
                     case "--gui-jobs": options.GuiJobs = Positive(args, ref i); break;
                     case "--write-jobs": options.WriteJobs = Positive(args, ref i); break;
@@ -93,6 +103,26 @@ namespace Cthangover.TestRunner
             return value;
         }
 
+        private static double Nonnegative(string text, string option)
+        {
+            if (!double.TryParse(text, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var value)
+                || !double.IsFinite(value) || value < 0) throw new ArgumentException(option + " expects a finite nonnegative number");
+            return value;
+        }
+
+        private static int RetainedCount(string text)
+        {
+            if (!int.TryParse(text, out var count) || count < 0) throw new ArgumentException("retention count expects a nonnegative integer");
+            return count;
+        }
+
+        private static long RetainedBytes(string text)
+        {
+            var gib = Nonnegative(text, "retention GiB");
+            if (gib >= long.MaxValue / (double)(1024L * 1024 * 1024)) throw new ArgumentException("retention GiB is too large");
+            return (long)(gib * (1024L * 1024 * 1024));
+        }
+
         public static string HelpText =>
 @"Cthangover — тесты ядра, модов и игровых сценариев.
   dotnet run --project tests/Cthangover.TestRunner -- [опции]
@@ -119,6 +149,9 @@ namespace Cthangover.TestRunner
   --gui-jobs <G>       число окон одновременно (по умолчанию 2)
   --write-jobs <W>     число копий для записи (по умолчанию 2)
   --keep-workspace    сохранить копию проекта после успеха (при сбое сохраняется всегда)
+  --retention-days <D> возраст неактивных копий / inactive age (default 3; CTHANGOVER_TEST_RETENTION_DAYS)
+  --retention-count <N> последние N логических запусков / newest runs (default 3; CTHANGOVER_TEST_RETENTION_COUNT)
+  --retention-gib <G> суммарный лимит / total budget (default 20; CTHANGOVER_TEST_RETENTION_GIB)
   --switcher <scene>   smoke-прогон сцены с авто-диалогами
   --choices <0,1,...>  выборы smoke-прогона
   --timeout <seconds>  таймаут авто-диалогов (60 по умолчанию)
