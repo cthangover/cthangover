@@ -5,12 +5,18 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'actor3d'))
 from capture_window import save_client
 
 CASES={
+ 'land_assets':['--with-mods=proto_land_pack','--itest=proto_land_contracts','--run-tests','--mod=proto_land_pack__contracts','--test-filter=proto_land/load_assets_*'],
+ 'land_clips':['--with-mods=proto_land_pack','--itest=proto_land_contracts','--run-tests','--mod=proto_land_pack__contracts','--test-filter=proto_land/all_clips_*'],
  'contact_pose':['--with-mods=proto_land_pack','--itest=proto_land_contracts','--run-tests','--mod=proto_land_pack__contracts','--test-filter=proto_land/contact_pose_*'],
  'navigation_contacts':['--with-mods=interactive3d_editor,combat3d_base,navigation3d_base','--itest=interactive3d_contracts','--run-tests','--mod=interactive3d_base__contracts','--test-filter=interactive3d/contact_actor_*'],
  'land_lifecycle':['--with-mods=proto_land_pack','--itest=proto_land_contracts','--run-tests','--mod=proto_land_pack__contracts','--test-filter=proto_land/contact_lifecycle_*'],
- 'physical_contacts':['--with-mods=proto_land_pack','--itest=proto_land_contracts','--run-tests','--mod=proto_land_pack__contracts','--test-filter=proto_land/contact_physical_*'],
+ 'physical_contacts':['--with-mods=proto_land_pack','--itest=proto_land_contracts','--run-tests','--mod=proto_land_pack__contracts','--test-filter=proto_land/contact_physical_calibration'],
+ 'land_acceptance':['--with-mods=proto_land_pack','--itest=proto_land_contracts','--run-tests','--mod=proto_land_pack__contracts','--test-filter=proto_land/contact_physical_acceptance'],
  'action_units':['--with-mods=actor3d_base','--run-tests','--mod=actor3d_base','--test-filter=actor3d/action_*'],
  'action_contracts':['--with-mods=actor3d_base,proto_sea_pack','--itest=actor3d_contracts','--run-tests','--mod=actor3d_base__contracts','--test-filter=actor3d/action_*'],
+ 'legacy_actor_units':['--with-mods=actor3d_base','--run-tests','--mod=actor3d_base','--test-filter=actor3d/orders_*'],
+ 'legacy_actor_navigation':['--with-mods=actor3d_base,proto_sea_pack','--itest=actor3d_contracts','--run-tests','--mod=actor3d_base__contracts','--test-filter=actor3d/npc_move_follow_distance_manual_priority_unreachable'],
+ 'legacy_actor_activity':['--with-mods=actor3d_base,proto_sea_pack','--itest=actor3d_contracts','--run-tests','--mod=actor3d_base__contracts','--test-filter=actor3d/external_role_seek_facing_and_release'],
  'anim_seek_contract':['--with-mods=anim3d_base','--itest=anim3d_base_contracts','--run-tests','--mod=anim3d_base__contracts','--test-filter=anim3d/blend_interrupt_seek*'],
  'contact_draft':['--with-mods=proto_land_pack','--itest=proto_land_contracts','--run-tests','--mod=proto_land_pack__contracts','--test-filter=proto_land/contact_draft*'],
  'editor_contact_contracts':['--with-mods=interactive3d_editor','--itest=interactive3d_contracts','--itest=interactive3d_editor_contracts','--run-tests','--mod=interactive3d_editor__contracts','--test-filter=interactive3d/editor_contact_*'],
