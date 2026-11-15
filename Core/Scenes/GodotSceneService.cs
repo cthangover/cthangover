@@ -144,7 +144,7 @@ namespace Cthangover.Core.Scenes
 			transitionOverlay.GrowVertical = Control.GrowDirection.Both;
 			transitionLayer.AddChild(transitionOverlay);
 
-			var blackImage = Image.CreateEmpty(1, 1, false, Image.Format.Rgba8);
+			using var blackImage = Image.CreateEmpty(1, 1, false, Image.Format.Rgba8);
 			blackImage.Fill(new Color(0, 0, 0, 1));
 			transitionOverlay.Texture = ImageTexture.CreateFromImage(blackImage);
 
@@ -356,7 +356,11 @@ namespace Cthangover.Core.Scenes
 		/// </summary>
 		public void LoadShell()
 		{
-			LoadScene(GetScenePath(GodotSceneType.BaseScene));
+            var kind = sceneManager?.ShellKind(sceneManager.PendingSceneName) ?? "2d";
+            var path = AppServices.Current.SceneRoutes.GetShellPath(kind);
+            pendingSubscriptionSceneName = null;
+            currentGodotSceneName = null;
+            LoadScene(path);
 		}
 
 		/// <summary>

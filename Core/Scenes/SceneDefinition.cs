@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using Cthangover.Core.Utils;
 
@@ -23,6 +23,12 @@ namespace Cthangover.Core.Scenes
         /// The identifier of the mod that defines this scene configuration.
         /// </summary>
         public string ModId { get; set; }
+
+        /// <summary>Optional shell kind registered by an engine mod; absent means the existing 2D shell.</summary>
+        public string Shell { get; set; }
+
+        /// <summary>Allows saving in event-less locations; scenario save permissions still apply independently.</summary>
+        public bool? SaveAllowed { get; set; }
 
         /// <summary>
         /// One or more background texture IDs. When the scene is entered, a random entry

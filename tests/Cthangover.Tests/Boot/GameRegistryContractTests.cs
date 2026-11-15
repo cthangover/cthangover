@@ -22,6 +22,25 @@ namespace Engine.Tests.Boot
     [Collection("appservices")]
     public class GameRegistryContractTests
     {
+        [Fact]
+        public void ShellKindsAreDataDrivenAndClearedWithRoutes()
+        {
+            var routes = new AppServices().SceneRoutes;
+            Assert.Equal("scenes/ui/base_scene.tscn", routes.GetShellPath(null));
+            Assert.Equal("scenes/ui/base_scene.tscn", routes.GetShellPath("2d"));
+            routes.RegisterShell("volume", "scenes/sample/volume.tscn");
+            Assert.Equal("scenes/sample/volume.tscn", routes.GetShellPath("VOLUME"));
+            routes.Rebuild();
+            Assert.Equal("scenes/sample/volume.tscn", routes.GetShellPath("volume"));
+            routes.UnregisterShell("volume");
+            try { routes.GetShellPath("volume"); Assert.Fail("Unloaded shell still resolves"); }
+            catch (KeyNotFoundException) { }
+            routes.RegisterShell("volume", "scenes/sample/volume.tscn");
+            routes.Reset();
+            try { routes.GetShellPath("volume"); Assert.Fail("Cleared shell still resolves"); }
+            catch (KeyNotFoundException) { }
+        }
+
         // ---- IGameRegistry contract (fake implementations) -----------------
 
         [Fact]

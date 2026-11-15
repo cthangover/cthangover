@@ -28,6 +28,8 @@ namespace Cthangover.Core.Scenes
         private readonly Dictionary<string, SceneRoute> routes =
             new(StringComparer.OrdinalIgnoreCase);
 
+        private readonly Dictionary<string, string> shells = new(StringComparer.OrdinalIgnoreCase);
+
         /// <summary>Shared instance the static facade delegates to.</summary>
         private static SceneRouteRegistry Owned => AppServices.Current.SceneRoutes;
 
@@ -49,7 +51,9 @@ namespace Cthangover.Core.Scenes
         /// </summary>
         public void Rebuild()
         {
-            Reset();
+            // Data-only rebuilds (including test recovery) do not unload shell owners.
+            // Mod-set replacement calls Clear first and initializers register fresh paths.
+            routes.Clear();
         }
 
         /// <summary>
@@ -93,6 +97,25 @@ namespace Cthangover.Core.Scenes
         public void Reset()
         {
             routes.Clear();
+            shells.Clear();
+        }
+
+        /// <summary>Registers a logical scene shell without coupling the player to its dimensionality or mechanics.</summary>
+        public void RegisterShell(string kind, string scenePath)
+        {
+            if (string.IsNullOrWhiteSpace(kind) || string.IsNullOrWhiteSpace(scenePath)) throw new ArgumentException("Shell kind/path required");
+            shells[kind] = scenePath;
+        }
+
+        /// <summary>Removes a shell when its owning mod unloads, including unloads without a full registry clear.</summary>
+        public void UnregisterShell(string kind) => shells.Remove(kind);
+
+        /// <summary>2D retains its established path; additional kinds must be registered by their owning mod.</summary>
+        public string GetShellPath(string kind)
+        {
+            if (string.IsNullOrWhiteSpace(kind) || string.Equals(kind, "2d", StringComparison.OrdinalIgnoreCase))
+                return GodotSceneService.GetScenePath(GodotSceneType.BaseScene);
+            return shells.TryGetValue(kind, out var path) ? path : throw new KeyNotFoundException("Unknown shell: " + kind);
         }
 
         /// <summary>Direct instance access for core consumers migrating off the static facade.</summary>

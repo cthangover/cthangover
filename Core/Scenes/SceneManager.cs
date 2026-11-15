@@ -67,6 +67,7 @@ namespace Cthangover.Core.Scenes
             if (string.IsNullOrEmpty(sceneName))
                 return false;
 
+            if (instance.allScenes?.GetValueOrDefault(sceneName)?[0].SaveAllowed == true) return true;
             var allScenarios = ScenarioDefs.CollectDefinitions();
             if (allScenarios == null || !allScenarios.TryGetValue(sceneName, out var scenarios))
                 return false;
@@ -275,6 +276,18 @@ namespace Cthangover.Core.Scenes
                 var sceneService = GetNode<GodotSceneService>("/root/GodotSceneService");
                 sceneService?.SwitchScene(GodotSceneType.MainMenu);
                 return;
+            }
+
+            if (GameEnvironment.IsRuntime && GetTree()?.CurrentScene != null)
+            {
+                var kind = ShellKind(sceneName);
+                var currentKind = GetTree().CurrentScene.GetMeta("shell_kind", "").AsString();
+                if (!string.Equals(kind, currentKind, StringComparison.OrdinalIgnoreCase) && (kind != "2d" || !string.IsNullOrEmpty(currentKind)))
+                {
+                    PendingSceneName = sceneName;
+                    GetNodeOrNull<GodotSceneService>("/root/GodotSceneService")?.LoadShell();
+                    return;
+                }
             }
 
             if (!string.IsNullOrEmpty(currentSceneName))
@@ -545,6 +558,9 @@ namespace Cthangover.Core.Scenes
                 return true;
             return allScenes != null && allScenes.ContainsKey(sceneName);
         }
+
+        /// <summary>Resolves only the presentation kind; location data and native scene construction remain in mods.</summary>
+        public string ShellKind(string sceneName) => string.IsNullOrEmpty(sceneName) ? "2d" : allScenes?.GetValueOrDefault(sceneName)?[0].Shell ?? "2d";
 
         private static readonly Random _bgRandom = new();
 

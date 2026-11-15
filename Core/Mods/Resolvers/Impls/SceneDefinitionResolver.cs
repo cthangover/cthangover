@@ -118,6 +118,8 @@ namespace Cthangover.Core.Mods.Resolvers
 
         private static void MergeSceneDef(SceneDefinition baseDef, SceneDefinition incoming)
         {
+            if (!string.IsNullOrWhiteSpace(incoming.Shell)) baseDef.Shell = incoming.Shell;
+            if (incoming.SaveAllowed.HasValue) baseDef.SaveAllowed = incoming.SaveAllowed;
             if (!string.IsNullOrEmpty(incoming.DefaultAmbient))
                 baseDef.DefaultAmbient = incoming.DefaultAmbient;
             if (!string.IsNullOrEmpty(incoming.DefaultScenario))

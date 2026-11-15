@@ -3,7 +3,7 @@ using Godot;
 namespace Cthangover.Core.Events
 {
     /// <summary>
-    /// Published by the base shell (<c>ExecutableMainEventChain._Ready</c>) once the
+    /// Published by the base shell (the shared shell session, independently of dialog support) once the
     /// in-game UI shell is instantiated and its children are ready. <c>UiHost</c>
     /// uses it as the single "build the mod GUI now" trigger: it attaches cached
     /// panel instances to the new shell and <c>UiBuilder</c> creates the toolbar
