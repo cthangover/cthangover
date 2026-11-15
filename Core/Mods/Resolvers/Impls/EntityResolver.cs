@@ -45,15 +45,19 @@ namespace Cthangover.Core.Mods.Resolvers
         private bool _scanned;
         private readonly Dictionary<string, List<EntityFile>> _filesByKind = new();
         private readonly Dictionary<string, object> _collected = new();
+        private readonly HashSet<string> _reportedEmpty = new();
 
         /// <summary>
         /// Returns all entities of the DTO <typeparamref name="T"/>. The kind
         /// is read from the DTO's <see cref="EntityKindAttribute"/>, files are
         /// matched during the shared scan, and each file is deserialised as
         /// <see cref="FileData{T}"/>. The resulting dictionary is cached per
-        /// kind and returned as-is; callers treat entries as immutable.
+        /// kind and returned as-is; callers treat entries as immutable. An optional
+        /// catalogue (<paramref name="required"/> false) may be empty; malformed
+        /// definitions still report errors. A later required read reports cached
+        /// absence once, so an optional editor lookup cannot hide missing data.
         /// </summary>
-        public Dictionary<string, T> Collect<T>() where T : class, IIdentifiable
+        public Dictionary<string, T> Collect<T>(bool required = true) where T : class, IIdentifiable
         {
             Context.Initialize();
 
@@ -67,7 +71,11 @@ namespace Cthangover.Core.Mods.Resolvers
             }
 
             if (_collected.TryGetValue(kind, out var cached))
-                return (Dictionary<string, T>)cached;
+            {
+                var entries = (Dictionary<string, T>)cached;
+                ReportEmpty<T>(kind, entries.Count, required);
+                return entries;
+            }
 
             EnsureScanned();
 
@@ -83,13 +91,17 @@ namespace Cthangover.Core.Mods.Resolvers
 
             result = new EntityExtendsResolution<T>(kind, result, written, Context.GetResolver<PatchResolver>()).ResolveAll();
 
-            GameLogger.Log("MODS", result.Count > 0
-                ? $"CollectEntities<{typeof(T).Name}>('{kind}') → {result.Count} item(s)"
-                : $"CollectEntities<{typeof(T).Name}>('{kind}') — no data found",
-                result.Count > 0 ? LogLevel.Debug : LogLevel.Error);
+            GameLogger.Log("MODS", $"CollectEntities<{typeof(T).Name}>('{kind}') → {result.Count} item(s)", LogLevel.Debug);
+            ReportEmpty<T>(kind, result.Count, required);
 
             _collected[kind] = result;
             return result;
+        }
+
+        private void ReportEmpty<T>(string kind, int count, bool required)
+        {
+            if (required && count == 0 && _reportedEmpty.Add(kind))
+                GameLogger.Log("MODS", $"CollectEntities<{typeof(T).Name}>('{kind}') — no data found", LogLevel.Error);
         }
 
         private void ReadFile<T>(EntityFile file, string kind, Dictionary<string, T> result, Dictionary<string, JsonObject> written) where T : class, IIdentifiable
@@ -319,6 +331,7 @@ namespace Cthangover.Core.Mods.Resolvers
             _scanned = false;
             _filesByKind.Clear();
             _collected.Clear();
+            _reportedEmpty.Clear();
             EntityKindRegistry.Refresh();
         }
     }
@@ -329,8 +342,8 @@ namespace Cthangover.Core.Mods.Resolvers
     /// </summary>
     public static class Entities
     {
-        /// <summary>Collects every entity of the DTO's kind from all loaded mods (later mods override by id).</summary>
-        public static Dictionary<string, T> Collect<T>() where T : class, IIdentifiable
-            => ModManager.Instance.GetResolver<EntityResolver>()?.Collect<T>() ?? new Dictionary<string, T>();
+        /// <summary>Collects the DTO's kind in mod order. Optional empty catalogues are valid; invalid definitions still report errors.</summary>
+        public static Dictionary<string, T> Collect<T>(bool required = true) where T : class, IIdentifiable
+            => ModManager.Instance.GetResolver<EntityResolver>()?.Collect<T>(required) ?? new Dictionary<string, T>();
     }
 }
