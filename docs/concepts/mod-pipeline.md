@@ -70,6 +70,14 @@ match), and a trailing `?` for optional.
   closure** only (`DependencyClosure`), so an undeclared C# dependency is a compile error.
 - Godot source generators run through `GodotGeneratorHost` when available. Without them, mod
   lifecycle callbacks silently never fire, and a `MODS_COMPILE` warning says so.
+- Runtime mod assemblies use Release optimization when no managed debugger is attached.
+  Attaching a C# debugger before compilation selects Debug; `--wait-for-debugger` offers that
+  choice before boot. Portable PDBs and real source documents are emitted in both modes.
+  Optimization joins the cache identity, so a Debug artifact cannot satisfy a Release request
+  or vice versa. Attaching after a mod has loaded leaves that assembly as compiled; reload it
+  or restart with the debugger attached to inspect unoptimized locals. Ad-hoc `CompileString`
+  and mod test assemblies retain their existing Debug policy. This choice is pure .NET and
+  does not query Godot from the background compilation phase.
 - English: installed user folders and ZIP/7z packages have no project C# resource path.
   Their compilation keeps Godot's method, property and signal generators, but omits
   `ScriptPathAttributeGenerator`. Godot creates a managed script bridge directly from
