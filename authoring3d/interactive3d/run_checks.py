@@ -5,6 +5,17 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'actor3d'))
 from capture_window import save_client
 
 CASES={
+ 'action_units':['--with-mods=actor3d_base','--run-tests','--mod=actor3d_base','--test-filter=actor3d/action_*'],
+ 'action_contracts':['--with-mods=actor3d_base,proto_sea_pack','--itest=actor3d_contracts','--run-tests','--mod=actor3d_base__contracts','--test-filter=actor3d/action_*'],
+ 'anim_seek_contract':['--with-mods=anim3d_base','--itest=anim3d_base_contracts','--run-tests','--mod=anim3d_base__contracts','--test-filter=anim3d/blend_interrupt_seek*'],
+ 'contact_draft':['--with-mods=proto_land_pack','--itest=proto_land_contracts','--run-tests','--mod=proto_land_pack__contracts','--test-filter=proto_land/contact_draft*'],
+ 'editor_contact_contracts':['--with-mods=interactive3d_editor','--itest=interactive3d_contracts','--itest=interactive3d_editor_contracts','--run-tests','--mod=interactive3d_editor__contracts','--test-filter=interactive3d/editor_contact_*'],
+ 'contact_contracts':['--with-mods=interactive3d_editor,combat3d_base','--itest=interactive3d_contracts','--run-tests','--mod=interactive3d_base__contracts','--test-filter=interactive3d/contact_*'],
+ 'pose_contracts':['--with-mods=characters3d_base,proto_sea_pack','--itest=anim3d_base_contracts','--itest=characters3d_base_contracts','--run-tests','--mod=characters3d_base__contracts','--test-filter=characters3d/contact_*'],
+ 'contact_probe':['--with-mods=proto_land_pack','--itest=proto_land_contracts','--run-tests','--mod=proto_land_pack__contracts','--test-filter=proto_land/contact_calibration*'],
+ 'contact_units':['--with-mods=interactive3d_editor,combat3d_base','--run-tests','--mod=interactive3d_base','--test-filter=interactive3d/contact_*'],
+ 'characters_units':['--with-mods=characters3d_base','--run-tests','--mod=characters3d_base'],
+ 'fitting_contracts':['--with-mods=characters3d_base,proto_sea_pack','--itest=anim3d_base_contracts','--itest=characters3d_base_contracts','--run-tests','--mod=characters3d_base__contracts','--test-filter=characters3d/exclusive_fitting*'],
  'units':['--with-mods=interactive3d_editor,combat3d_base','--run-tests','--mod=interactive3d_base'],
  'editor_units':['--with-mods=interactive3d_editor','--run-tests','--mod=interactive3d_editor'],
  'contracts':['--with-mods=interactive3d_editor,combat3d_base','--itest=interactive3d_contracts','--run-tests','--mod=interactive3d_base__contracts'],
@@ -18,7 +29,7 @@ def snapshot(root,target):
  for folder in ['Core','scenes','config']:shutil.copytree(root/folder,target/folder,ignore=ignore)
  for name in ['Cthangover.csproj','global.json','Directory.Build.props','Directory.Build.targets','project.godot']:shutil.copy2(root/name,target/name)
  shutil.copytree(root/'.godot/mono/temp/bin/Debug',target/'.godot/mono/temp/bin/Debug')
- names={'menu_base','interactive3d_editor','combat3d_base','proto_sea_pack','dialog_base','items_base','schema_tools','mod_manager'};pending=list(names)
+ names={'proto_land_pack','menu_base','interactive3d_editor','combat3d_base','proto_sea_pack','dialog_base','items_base','schema_tools','mod_manager'};pending=list(names)
  while pending:
   name=pending.pop();source=next(p for p in [root/'mods'/name,root/'mods_private'/name] if p.exists());shutil.copytree(source,target/source.parent.name/name,ignore=ignore)
   for dep in json.loads((source/'manifest.json').read_text(encoding='utf-8-sig')).get('depends',[]):
@@ -36,7 +47,7 @@ def main():
   for case in args.case or ['units','editor_units','contracts','editor_contracts']:
    directory=out/case;directory.mkdir();env=os.environ.copy()
    for name,part in [('APPDATA','roaming'),('LOCALAPPDATA','local'),('XDG_DATA_HOME','data')]:env[name]=str(Path(scratch)/case/part);Path(env[name]).mkdir(parents=True)
-   env['INTERACTIVE3D_SHOTS']=str(directory/'captures');command=[args.godot,'--path',str(project),'--verbose','--','--frontend',*CASES[case]]
+   env['INTERACTIVE3D_SHOTS']=str(directory/'captures');env['LAND_PACK_EVIDENCE']=str(directory);command=[args.godot,'--path',str(project),'--verbose','--','--frontend',*CASES[case]]
    if args.filter:command.append('--test-filter='+args.filter)
    with (directory/'stdout.log').open('wb') as log:
     process=subprocess.Popen(command,cwd=scratch,env=env,stdout=log,stderr=subprocess.STDOUT)
@@ -59,5 +70,5 @@ def main():
    matches=re.findall(r'\[TEST_RESULT\] name=mod_units passed=(\d+) failed=(\d+)',text)
    if not matches or int(matches[-1][0])<1 or int(matches[-1][1])!=0:bad.append('Missing successful nonempty terminal marker: '+str(matches))
    row=dict(case=case,exit_code=code,terminal=matches,errors=list(dict.fromkeys(bad)),command=command);report.append(row);dump(out/'checks.json',report);print(json.dumps(row,ensure_ascii=False),flush=True)
-   if code or bad:raise RuntimeError(case+' failed; see '+str(directory))
+  if any(row['exit_code'] or row['errors'] for row in report):raise RuntimeError('Selected components failed; see '+str(out/'checks.json'))
 if __name__=='__main__':main()
