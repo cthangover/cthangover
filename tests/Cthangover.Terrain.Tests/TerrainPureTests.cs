@@ -21,7 +21,7 @@ namespace Cthangover.TerrainPureTests
             var region=new TerrainRegion{ID="r",X=-4,Z=3,Tiles=new(){new(){Id="t",Asset="test/t",X=32,Z=64}}};Assert.Equal(JsonSerializer.Serialize(region),JsonSerializer.Serialize(RoundTrip(region)));
             var tile=new TerrainTile{ID="t",Heights="test/r.raw",Encoding="r32",Origin=-4,Step=.05f,Holes="test/h",Weights="test/w",Density="test/d",Layers=new[]{4,5,6,7}};Assert.Equal(JsonSerializer.Serialize(tile),JsonSerializer.Serialize(RoundTrip(tile)));
             var material=new TerrainMaterial{ID="m",TextureSize=128,UvScale=.23f,TriplanarSlope=.7f,FarDistance=63,Layers=new(){new(){Id="rock",Albedo="a.png",Normal="n.png",Orm="o.png"}}};material.Layers[0].Extra["future"]=JsonSerializer.SerializeToElement(true);Assert.Equal(JsonSerializer.Serialize(material),JsonSerializer.Serialize(RoundTrip(material)));
-            var scatter=new TerrainScatter{ID="s",Model="m.glb",Seed=4,Density=.4f,MaxInstances=30,MinSlope=.2f,MaxSlope=.9f,ScaleMin=.3f,ScaleMax=2,MeshDistance=10,EndDistance=40,Wind=.3f,ImpostorSize=64};Assert.Equal(JsonSerializer.Serialize(scatter),JsonSerializer.Serialize(RoundTrip(scatter)));
+            var scatter=new TerrainScatter{ID="s",Model="m.glb",Seed=4,Density=.4f,MaxInstances=30,MinSlope=.2f,MaxSlope=.9f,ScaleMin=.3f,ScaleMax=2,MeshDistance=10,EndDistance=40,Wind=.3f,ImpostorSize=64,GroundCover=true,Flexibility=.7f,MinHeight=-3,MaxHeight=8,MaterialLayers=new[]{1,3}};Assert.Equal(JsonSerializer.Serialize(scatter),JsonSerializer.Serialize(RoundTrip(scatter)));
         }
         private static T RoundTrip<T>(T value)=>JsonSerializer.Deserialize<T>(JsonSerializer.Serialize(value));
         [Fact]
@@ -92,6 +92,27 @@ namespace Cthangover.TerrainPureTests
             var data=Data();var definition=new TerrainScatter{ID="test/grass",Model="one.glb",Density=.3f,Seed=3,MaxInstances=60};var a=TerrainScatterPoints.Generate(data,definition);var b=TerrainScatterPoints.Generate(data,definition);Assert.NotEmpty(a);Assert.Equal(a,b);Assert.InRange(a.Count,1,60);
             definition.Density=0;Assert.Empty(TerrainScatterPoints.Generate(data,definition));definition.Density=1;definition.MaxInstances=0;Assert.Empty(TerrainScatterPoints.Generate(data,definition));
             definition.MaxInstances=60;foreach(var tile in data.Tiles)Array.Fill(tile.Density,(byte)0);Assert.Empty(TerrainScatterPoints.Generate(data,definition));
+        }
+        [Fact]
+        public void SpeciesMasksUseGlobalLayersAndHeightSlopeAndAreaStayAuthoritative()
+        {
+            var data=new TerrainData(World());var tile=Tile(0,0);Array.Copy(new[]{4,5,6,7},tile.Layers,4);data.Add(tile);
+            var species=new TerrainScatter{Density=2,MaxInstances=10000,MaterialLayers=new[]{4},MinHeight=-1,MaxHeight=6,MaxSlope=.5f};
+            var full=TerrainScatterPoints.Generate(data,species);Assert.NotEmpty(full);
+            var area=TerrainScatterPoints.GenerateArea(data,species,0,0,8,8);Assert.NotEmpty(area);
+            foreach(var item in area){Assert.Contains(item,full);Assert.InRange(item.Origin.X,0,8);Assert.InRange(item.Origin.Z,0,8);}
+            species.MaterialLayers=new[]{0};Assert.Empty(TerrainScatterPoints.Generate(data,species));
+            species.MaterialLayers=new[]{4};species.MinHeight=20;species.MaxHeight=30;Assert.Empty(TerrainScatterPoints.Generate(data,species));
+            species.MinHeight=-1;species.MaxHeight=6;species.MaxSlope=0;Assert.Empty(TerrainScatterPoints.Generate(data,species));
+            species.MaxSlope=.5f;Array.Fill(tile.Holes,(byte)1);Assert.Empty(TerrainScatterPoints.Generate(data,species));
+        }
+        [Fact]
+        public void GroundCoverBudgetKeepsTheSamePlacementsAcrossLoadedDatasetExtents()
+        {
+            var small=new TerrainData(World());small.Add(Tile(0,0));var large=Data();
+            var species=new TerrainScatter{GroundCover=true,Density=16,MaxInstances=1000,MeshDistance=10,EndDistance=30,Seed=3};
+            var first=TerrainScatterPoints.GenerateArea(small,species,0,0,16,16);var second=TerrainScatterPoints.GenerateArea(large,species,0,0,16,16);
+            Assert.NotEmpty(first);Assert.Equal(first,second);Assert.InRange(first.Count,1,species.MaxInstances);
         }
         [Fact]
         public void BulkInstanceBufferPreservesRotationScaleAndCellRelativeOrigin()

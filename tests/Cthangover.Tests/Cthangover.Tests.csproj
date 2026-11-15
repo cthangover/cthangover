@@ -8,6 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Compile Include="../../mods/perf_overlay/src/PerfFrameWindow.cs;../../mods/perf_overlay/src/PerfFrameSummary.cs;../../mods/perf_overlay/src/PerfRunContext.cs" LinkBase="PerfOverlay" />
         <Compile Include="../../mods/mod_manager/src/Publishing/PublishDestination.cs" Link="Publishing/PublishDestination.cs" />
         <Compile Include="../../mods/mod_manager/src/Publishing/PublishAvailability.cs" Link="Publishing/PublishAvailability.cs" />
         <Compile Include="../../mods/mod_manager/src/Publishing/PublishingPermissions.cs" Link="Publishing/PublishingPermissions.cs" />

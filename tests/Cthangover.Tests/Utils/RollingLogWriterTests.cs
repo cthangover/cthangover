@@ -1,26 +1,46 @@
+using System;
+using System.IO;
+using System.Text;
+using Cthangover.Core.Utils;
+
 namespace Engine.Tests.Utils
 {
-    using System;
-    using System.IO;
-    using System.Text;
-    using Cthangover.Core.Utils;
-
+    /// <summary>
+    /// File-backed contracts for exact UTF-8/LF rotation, retention and recoverable failures; each instance
+    /// owns and removes its isolated temporary directory.
+    /// </summary>
     public sealed class RollingLogWriterTests : IDisposable
     {
         private readonly string directory = Path.Combine(Path.GetTempPath(), "cthangover-rolling-" + Guid.NewGuid().ToString("N"));
-        private string LogPath => Path.Combine(directory, "sample.log");
+        private string LogPath
+        {
+            get
+            {
+                return Path.Combine(directory, "sample.log");
+            }
+        }
 
+        /// <summary>
+        /// Checks active/newest archive order and the total retained file budget after repeated rotation.
+        /// </summary>
         [Fact]
         public void RotationKeepsNewestThreeFilesInOrder()
         {
             using var sink = new RollingLogWriter(LogPath, 2, 3);
-            for (var i = 1; i <= 5; i++) sink.WriteLine(i.ToString());
+            for (var i = 1; i <= 5; i++)
+            {
+                sink.WriteLine(i.ToString());
+            }
+
             Assert.Equal("5\n", File.ReadAllText(LogPath));
             Assert.Equal("4\n", File.ReadAllText(LogPath + ".1"));
             Assert.Equal("3\n", File.ReadAllText(LogPath + ".2"));
             Assert.Equal(3, Directory.GetFiles(directory).Length);
         }
 
+        /// <summary>
+        /// Checks startup rotation preserves existing active/archive order before accepting another record.
+        /// </summary>
         [Fact]
         public void ExistingOversizedFileRotatesDuringConstruction()
         {
@@ -37,6 +57,9 @@ namespace Engine.Tests.Utils
             Assert.Equal(3, Directory.GetFiles(directory).Length);
         }
 
+        /// <summary>
+        /// Checks append semantics and inclusion of preexisting bytes in the next rotation boundary.
+        /// </summary>
         [Fact]
         public void ExistingSmallFileAppendsAndItsBytesCountTowardLimit()
         {
@@ -51,6 +74,10 @@ namespace Engine.Tests.Utils
             Assert.Equal("c\n", File.ReadAllText(LogPath));
         }
 
+        /// <summary>
+        /// Checks exact multibyte UTF-8 and LF bytes, including the boundary and absence of a byte-order
+        /// marker.
+        /// </summary>
         [Fact]
         public void Utf8BytesAndLfDetermineTheExactBoundaryWithoutBom()
         {
@@ -61,9 +88,16 @@ namespace Engine.Tests.Utils
             Assert.False(File.Exists(LogPath + ".1"));
             sink.WriteLine("a");
             Assert.Equal(Encoding.UTF8.GetBytes("Ж\n€\n"), File.ReadAllBytes(LogPath + ".1"));
-            Assert.Equal(new byte[] { 97, 10 }, File.ReadAllBytes(LogPath));
+            Assert.Equal(new byte[]
+            {
+                97,
+                10
+            }, File.ReadAllBytes(LogPath));
         }
 
+        /// <summary>
+        /// Checks oversized records are never split, with rotation deferred until the following record.
+        /// </summary>
         [Theory]
         [InlineData(1)]
         [InlineData(2)]
@@ -78,6 +112,9 @@ namespace Engine.Tests.Utils
             Assert.Equal("x\n", File.ReadAllText(LogPath));
         }
 
+        /// <summary>
+        /// Checks a one-file budget replaces old content without producing archives.
+        /// </summary>
         [Fact]
         public void SingleFileBudgetRetainsOnlyCurrentRecords()
         {
@@ -88,12 +125,28 @@ namespace Engine.Tests.Utils
             Assert.Single(Directory.GetFiles(directory));
         }
 
+        /// <summary>
+        /// Checks pruning of excess numeric archives while preserving unrelated files and nonnumeric suffixes.
+        /// </summary>
         [Fact]
         public void LoweredRetentionPrunesOnlyNumericArchivesOfThisSink()
         {
             Directory.CreateDirectory(directory);
-            foreach (var name in new[] { "sample.log.1", "sample.log.2", "sample.log.3", "sample.log.10", "sample.log.notes", "other.log.3" })
+            foreach (var name in new[]
+            {
+                "sample.log.1",
+                "sample.log.2",
+                "sample.log.3",
+                "sample.log.10",
+                "sample.log.notes",
+                "other.log.3"
+            }
+
+            )
+            {
                 File.WriteAllText(Path.Combine(directory, name), name);
+            }
+
             using var sink = new RollingLogWriter(LogPath, 100, 2);
             Assert.True(File.Exists(LogPath + ".1"));
             Assert.False(File.Exists(LogPath + ".2"));
@@ -103,6 +156,10 @@ namespace Engine.Tests.Utils
             Assert.True(File.Exists(Path.Combine(directory, "other.log.3")));
         }
 
+        /// <summary>
+        /// Checks continued append after a blocked archive rename and recovery on the next record after the
+        /// obstruction is removed.
+        /// </summary>
         [Fact]
         public void FailedRenameContinuesCurrentFileAndLaterRotationRecovers()
         {
@@ -117,6 +174,10 @@ namespace Engine.Tests.Utils
             Assert.Equal("c\n", File.ReadAllText(LogPath));
         }
 
+        /// <summary>
+        /// Checks a failed initial archive rename keeps the current sink writable without dropping existing
+        /// content.
+        /// </summary>
         [Fact]
         public void FailedStartupRotationStillAppendsCurrentFile()
         {
@@ -128,6 +189,10 @@ namespace Engine.Tests.Utils
             Assert.Equal("old\nnew\n", File.ReadAllText(LogPath));
         }
 
+        /// <summary>
+        /// Checks failed opening does not throw and the next record opens the sink after the filesystem
+        /// obstruction is removed.
+        /// </summary>
         [Fact]
         public void FailedOpenIsSilentAndCanRecoverOnNextRecord()
         {
@@ -139,6 +204,10 @@ namespace Engine.Tests.Utils
             Assert.Equal("available\n", File.ReadAllText(LogPath));
         }
 
+        /// <summary>
+        /// Checks the owned append handle permits live readers and rename, continuing writes through the same
+        /// moved file.
+        /// </summary>
         [Fact]
         public void PersistentHandleAllowsLiveReadsAndRename()
         {
@@ -149,12 +218,16 @@ namespace Engine.Tests.Utils
                 Assert.Equal(6, reader.Length);
                 Assert.Equal((byte)'f', reader.ReadByte());
             }
+
             File.Move(LogPath, LogPath + ".moved");
             sink.WriteLine("second");
             Assert.Equal("first\nsecond\n", File.ReadAllText(LogPath + ".moved"));
             Assert.False(File.Exists(LogPath));
         }
 
+        /// <summary>
+        /// Checks repeated disposal and late writes, then proves exclusive file access after handle release.
+        /// </summary>
         [Fact]
         public void DisposeIsFinalAndReleasesTheHandle()
         {
@@ -167,6 +240,9 @@ namespace Engine.Tests.Utils
             Assert.Equal(6, exclusive.Length);
         }
 
+        /// <summary>
+        /// Checks independent record/archive contents for ordinary, error and nested custom log paths.
+        /// </summary>
         [Fact]
         public void MainErrorsAndCustomPathsRotateIndependently()
         {
@@ -176,7 +252,11 @@ namespace Engine.Tests.Utils
             using var a = new RollingLogWriter(main, 2, 3);
             using var b = new RollingLogWriter(errors, 2, 3);
             using var c = new RollingLogWriter(custom, 2, 3);
-            a.WriteLine("a"); a.WriteLine("b"); b.WriteLine("x"); c.WriteLine("c"); c.WriteLine("d");
+            a.WriteLine("a");
+            a.WriteLine("b");
+            b.WriteLine("x");
+            c.WriteLine("c");
+            c.WriteLine("d");
             Assert.Equal("a\n", File.ReadAllText(main + ".1"));
             Assert.Equal("b\n", File.ReadAllText(main));
             Assert.Equal("x\n", File.ReadAllText(errors));
@@ -185,9 +265,16 @@ namespace Engine.Tests.Utils
             Assert.Equal("d\n", File.ReadAllText(custom));
         }
 
+        /// <summary>
+        /// Removes this test instance’s temporary directory after all scoped sink/file handles have been
+        /// released.
+        /// </summary>
         public void Dispose()
         {
-            if (Directory.Exists(directory)) Directory.Delete(directory, true);
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, true);
+            }
         }
     }
 }

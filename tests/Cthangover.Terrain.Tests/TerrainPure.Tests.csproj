@@ -11,6 +11,6 @@
     <Compile Include="../../mods_private/terrain_base/src/Data/*.cs" />
     <Compile Include="../../mods_private/terrain_base/src/Runtime/TerrainData.cs;../../mods_private/terrain_base/src/Runtime/TerrainTileData.cs;../../mods_private/terrain_base/src/Runtime/TerrainFile.cs;../../mods_private/terrain_base/src/Runtime/TerrainReader.cs;../../mods_private/terrain_base/src/Runtime/TerrainCacheLease.cs;../../mods_private/terrain_base/src/Runtime/TerrainCacheBudget.cs;../../mods_private/terrain_base/src/Runtime/TerrainExrHeader.cs;../../mods_private/terrain_base/src/Runtime/TerrainGeometryCache.cs" />
     <Compile Include="../../mods_private/terrain_base/src/Rendering/TerrainGeometry.cs;../../mods_private/terrain_base/src/Rendering/TerrainSelection.cs;../../mods_private/terrain_base/src/Rendering/TerrainPatchData.cs;../../mods_private/terrain_base/src/Rendering/TerrainPatchSpec.cs" />
-    <Compile Include="../../mods_private/terrain_base/src/Scatter/TerrainScatterPoints.cs;../../mods_private/terrain_base/src/Scatter/TerrainInstanceBuffer.cs" />
+    <Compile Include="../../mods_private/terrain_base/src/Scatter/TerrainVegetationGrid.cs;../../mods_private/terrain_base/src/Scatter/TerrainVegetationQuality.cs;../../mods_private/terrain_base/src/Scatter/TerrainScatterPoints.cs;../../mods_private/terrain_base/src/Scatter/TerrainInstanceBuffer.cs" />
   </ItemGroup>
 </Project>

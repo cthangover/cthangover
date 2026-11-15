@@ -111,11 +111,15 @@ namespace Cthangover.Core.Mods.Testing
             PrepareSandbox(sandboxDir);
 
             var swTotal = System.Diagnostics.Stopwatch.StartNew();
+            using var progressScope = new ModTestProgressScope();
+            var caseIndex = 0;
             foreach (var test in tests)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
+                ModTestProgress.Publish(new ModTestProgress(modId, test.Name, ++caseIndex, tests.Count, swTotal.Elapsed.TotalSeconds));
                 var entry = await RunOneAsync(modId, test, CaseSandbox(sandboxDir, test.Name), cancellationToken);
+                ModTestProgress.Publish(null);
                 summary.Tests.Add(entry);
                 ledger.Add(entry);
 

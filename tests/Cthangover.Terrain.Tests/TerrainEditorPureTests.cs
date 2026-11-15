@@ -56,6 +56,15 @@ namespace Cthangover.TerrainPureTests
             Apply(world,new TerrainBrush{Mode="density",Radius=.5f,Strength=1});Assert.Equal(255,world.Data.Density(0,0));world.Data.ValidateSeams();
         }
         [Fact]
+        public void SpeciesBrushRestoresDensityAndMasksAcrossSeamsInOneUndo()
+        {
+            var input=Data();using var world=new TerrainEditableWorld(input,Path.Combine(directory,"species"));var before=TerrainTileBytes.Fingerprint(world.Tiles.Values);
+            var brush=new TerrainBrush{Mode="vegetation",SpeciesLayer=2,Density=.7f,Radius=3,Strength=1,Falloff=0};world.BeginStroke();brush.Dab(world,0,0);brush.Dab(world,2,0);world.EndStroke();
+            var after=TerrainTileBytes.Fingerprint(world.Tiles.Values);Assert.NotEqual(before,after);Assert.Equal(1,world.History.UndoCount);Assert.Equal(255,world.Point(0,0).W2);Assert.Equal(178,world.Point(0,0).Density);world.Data.ValidateSeams();
+            Assert.True(world.Undo());Assert.Equal(before,TerrainTileBytes.Fingerprint(world.Tiles.Values));Assert.True(world.Redo());Assert.Equal(after,TerrainTileBytes.Fingerprint(world.Tiles.Values));
+            brush.Erase=true;Apply(world,brush);Assert.Equal(0,world.Point(0,0).W2);Assert.Equal(178,world.Point(0,0).Density);Assert.True(world.Undo());Assert.Equal(after,TerrainTileBytes.Fingerprint(world.Tiles.Values));Assert.Equal(before,TerrainTileBytes.Fingerprint(input.Tiles));
+        }
+        [Fact]
         public void ResetRetainsExactPerTileValuesWhenEncodingsDifferWithinSeamTolerance()
         {
             var input=Data();foreach(var tile in input.Tiles)if(tile.X==0&&tile.Z==0)tile.Heights[0]=.000001f;input.ValidateSeams();
