@@ -2,6 +2,7 @@
 import ctypes
 from ctypes import wintypes
 from pathlib import Path
+import time
 
 _windows = []
 
@@ -22,6 +23,9 @@ def save_client(pid: int, destination: Path):
     user = ctypes.windll.user32
     user.SetProcessDpiAwarenessContext(ctypes.c_void_p(-4))
     user.SetForegroundWindow.argtypes = [wintypes.HWND]
+    user.GetForegroundWindow.restype = wintypes.HWND
+    user.ShowWindow.argtypes = [wintypes.HWND, ctypes.c_int]
+    user.BringWindowToTop.argtypes = [wintypes.HWND]
     user.GetClientRect.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.RECT)]
     user.ClientToScreen.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.POINT)]
     _windows.clear()
@@ -32,7 +36,17 @@ def save_client(pid: int, destination: Path):
     if not _windows:
         raise RuntimeError('Demo client window not found')
     handle = _windows[0]
+    foreground = user.GetForegroundWindow()
+    thread = ctypes.windll.kernel32.GetCurrentThreadId()
+    foreground_thread = user.GetWindowThreadProcessId(foreground, None) if foreground else 0
+    if foreground_thread: user.AttachThreadInput(thread, foreground_thread, True)
+    user.ShowWindow(handle, 9)
+    user.BringWindowToTop(handle)
     user.SetForegroundWindow(handle)
+    if foreground_thread: user.AttachThreadInput(thread, foreground_thread, False)
+    time.sleep(0.2)
+    if user.GetForegroundWindow() != handle:
+        raise RuntimeError('Game window is occluded; refusing a desktop capture')
     rect = wintypes.RECT()
     origin = wintypes.POINT()
     user.GetClientRect(handle, ctypes.byref(rect))

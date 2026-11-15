@@ -22,7 +22,7 @@ CASES = {
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--godot',required=True);p.add_argument('--out',type=Path,required=True)
-    p.add_argument('--case',action='append',choices=CASES);args=p.parse_args()
+    p.add_argument('--case',action='append',choices=CASES);p.add_argument('--filter');args=p.parse_args()
     project=Path.cwd();out=args.out.resolve();out.mkdir(parents=True,exist_ok=True);report=[]
     for case in args.case or CASES:
         directory=out/case;directory.mkdir(exist_ok=False)
@@ -33,6 +33,7 @@ def main():
                 env[name]=str(Path(home)/part);Path(env[name]).mkdir()
             env['ACTOR3D_SHOTS']=str(directory/'captures')
             command=[args.godot,'--path',str(project),'--verbose','--','--frontend',*CASES[case]]
+            if args.filter:command.append('--test-filter='+args.filter)
             with (directory/'stdout.log').open('wb') as log:
                 process=subprocess.Popen(command,cwd=home,env=env,stdout=log,stderr=subprocess.STDOUT)
                 try:
