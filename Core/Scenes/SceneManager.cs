@@ -784,7 +784,8 @@ namespace Cthangover.Core.Scenes
             {
                 var root = GetTree()?.Root;
                 if (root != null)
-                    dialogBox = SceneContextNode.FindNode<Node>("DialogBox") as IDialogBox;
+                    // A shell may omit dialog UI; resolve present components without a required-node diagnostic.
+                    dialogBox = root.FindChild("DialogBox", true, false) as IDialogBox;
             }
         }
     }
