@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net10.0</TargetFramework><IsTestProject>true</IsTestProject><EnableDefaultCompileItems>false</EnableDefaultCompileItems><Nullable>disable</Nullable></PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageReference Include="xunit" Version="2.6.6" /><PackageReference Include="xunit.runner.visualstudio" Version="2.5.6" />
+    <Reference Include="Cthangover"><HintPath>../../../../.godot/mono/temp/bin/Debug/Cthangover.dll</HintPath></Reference>
+    <Reference Include="GodotSharp"><HintPath>../../../../.godot/mono/temp/bin/Debug/GodotSharp.dll</HintPath></Reference>
+    <Compile Include="*.cs" />
+    <Compile Include="../../../../mods_private/terrain_base/src/Data/*.cs" />
+    <Compile Include="../../../../mods_private/terrain_base/src/Runtime/TerrainData.cs;../../../../mods_private/terrain_base/src/Runtime/TerrainTileData.cs;../../../../mods_private/terrain_base/src/Runtime/TerrainFile.cs;../../../../mods_private/terrain_base/src/Runtime/TerrainReader.cs;../../../../mods_private/terrain_base/src/Runtime/TerrainCacheLease.cs;../../../../mods_private/terrain_base/src/Runtime/TerrainCacheBudget.cs;../../../../mods_private/terrain_base/src/Runtime/TerrainExrHeader.cs;../../../../mods_private/terrain_base/src/Runtime/TerrainGeometryCache.cs" />
+    <Compile Include="../../../../mods_private/terrain_base/src/Rendering/TerrainGeometry.cs;../../../../mods_private/terrain_base/src/Rendering/TerrainSelection.cs;../../../../mods_private/terrain_base/src/Rendering/TerrainPatchData.cs;../../../../mods_private/terrain_base/src/Rendering/TerrainPatchSpec.cs" />
+    <Compile Include="../../../../mods_private/terrain_base/src/Scatter/TerrainScatterPoints.cs;../../../../mods_private/terrain_base/src/Scatter/TerrainInstanceBuffer.cs" />
+  </ItemGroup>
+</Project>
