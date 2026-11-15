@@ -22,7 +22,11 @@ namespace Cthangover.TestRunner
                 foreach (var file in Files(sources[index]))
                 {
                     var name = Path.GetFileName(file);
-                    if (!(name.EndsWith(".log", StringComparison.OrdinalIgnoreCase)
+                    var extension = Path.GetExtension(name);
+                    var archive = Path.GetFileNameWithoutExtension(name).EndsWith(".log", StringComparison.OrdinalIgnoreCase)
+                        && extension.Length > 1 && int.TryParse(extension.AsSpan(1), System.Globalization.NumberStyles.None,
+                            System.Globalization.CultureInfo.InvariantCulture, out var indexNumber) && indexNumber > 0;
+                    if (!(archive || name.EndsWith(".log", StringComparison.OrdinalIgnoreCase)
                         || name.EndsWith(".result", StringComparison.OrdinalIgnoreCase)
                         || name.EndsWith(".result.json", StringComparison.OrdinalIgnoreCase)
                         || name.EndsWith("report.json", StringComparison.OrdinalIgnoreCase))) continue;

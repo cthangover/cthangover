@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
@@ -31,5 +31,16 @@ namespace Cthangover.Core.Settings.Configs
         /// with one of these categories are recorded.</summary>
         [JsonPropertyName("enabled_categories")]
         public List<string> EnabledCategories { get; set; } = new();
+
+        private int maxFileSizeMb = 10;
+        private int maxFiles = 3;
+
+        /// <summary>Rotation budget per file, in MiB; values below one are clamped to one.</summary>
+        [JsonPropertyName("max_file_size_mb")]
+        public int MaxFileSizeMb { get => maxFileSizeMb; set => maxFileSizeMb = Math.Max(1, value); }
+
+        /// <summary>Total retained files per sink, including the active file; minimum one.</summary>
+        [JsonPropertyName("max_files")]
+        public int MaxFiles { get => maxFiles; set => maxFiles = Math.Max(1, value); }
     }
 }

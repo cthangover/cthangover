@@ -31,6 +31,23 @@ namespace Cthangover.Tests.Testing
             Assert.Contains("truncated", File.ReadAllText(files.Single(path => path.EndsWith("manifest.json"))));
         }
 
+        [Fact]
+        public void RollingLogArchivesSurviveDiagnosticCollection()
+        {
+            var run = Path.Combine(root, "rolling-run");
+            var home = Path.Combine(run, "homes", "logs");
+            var report = Path.Combine(root, "rolling-reports");
+            Directory.CreateDirectory(home);
+            var names = new[] { "cthangover.log", "cthangover.log.1", "cthangover.log.2", "cthangover_errors.log.1", "custom.LOG.12" };
+            foreach (var name in names) File.WriteAllText(Path.Combine(home, name), "record:" + name);
+            File.WriteAllText(Path.Combine(home, "cthangover.log.notes"), "unrelated");
+            RetainedDiagnostics.Save(run, new WorkspaceOwnerInfo { RunId = "rolling", ArtifactsDirectory = report }, Array.Empty<string>());
+            var copied = Path.Combine(report, "retained-diagnostics", "rolling", "0", "logs");
+            foreach (var name in names) Assert.Equal("record:" + name, File.ReadAllText(Path.Combine(copied, name)));
+            Assert.False(File.Exists(Path.Combine(copied, "cthangover.log.notes")));
+            Assert.Equal(names.Length, Directory.GetFiles(copied).Length);
+        }
+
         public void Dispose() { if (Directory.Exists(root)) Directory.Delete(root, true); }
     }
 }

@@ -481,6 +481,25 @@ Russian lives only in `scenarios_ru.properties`. An empty `select ""` is written
 Line format: `[2026-05-31 12:00:00.000] [CATEGORY] message`. Output goes to stdout and to
 `user://logs/cthangover.log` (errors also to `cthangover_errors.log`).
 
+Each file sink retains at most three files by default: active `cthangover.log`,
+`cthangover.log.1` (newer archive), `cthangover.log.2` (older archive). The errors
+sink and `--log-file=<path>` use the same suffix scheme and independent budgets.
+`LoggingSection.MaxFileSizeMb=10` (`max_file_size_mb`, MiB) and `MaxFiles=3`
+(`max_files`, including active) are configurable; values below 1 clamp to 1.
+An existing full/oversized file rotates at startup. Later checks use a UTF-8 byte
+counter and rotate before the next record exceeds the budget. A single oversized
+record stays intact, then rotates before the following record; failed rotation
+continues in the current file. I/O failures never abort gameplay.
+
+`RollingLogWriter` owns a persistent UTF-8 writer without BOM, LF, AutoFlush and
+`FileShare.ReadWrite | FileShare.Delete`. GameLogger serializes both sinks with
+its lock and closes them on `ProcessExit` or explicit `Shutdown()` (idempotent).
+The full log includes `.1`/`.2`: read `.2`, `.1`, then the active file for chronology.
+TestRunner copies the entire `logs` directory; failure diagnostics take recent
+errors from the current errors file. RetainedDiagnostics also includes `.log.N`
+archives when evicting retained workspaces, subject to its existing tail/budget limits.
+
+
 The category is mandatory and is a free-form UPPER_SNAKE tag. Reuse the existing tag of the subsystem you touch
 (grep `GameLogger.Log("` in its mod) instead of inventing a new one. Frequent ones: `TEST`, `MODS`, `MODS_REGISTRY`,
 `MODS_COMPILE`, `MODTEST`, `BOOT`, `SCENE`, `DIALOG`, `CHAIN`, `EVENT`, `INTERACTIVE`, `BATTLE`, `FF_BATTLE`,

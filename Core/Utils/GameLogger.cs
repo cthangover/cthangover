@@ -3,7 +3,6 @@ using Godot;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 #if WINDOWS
 using System.Runtime.InteropServices;
@@ -56,7 +55,9 @@ namespace Cthangover.Core.Utils
 
         private static string _logPath;
         private static string _errorLogPath;
-        private static bool _initialized;
+        private static RollingLogWriter _fileWriter;
+        private static RollingLogWriter _errorWriter;
+        private static volatile bool _initialized;
         private static bool _enabled = true;
         private static bool _consoleAllocated;
         private static LogLevel _minimumLevel = LogLevel.Debug;
@@ -101,64 +102,73 @@ namespace Cthangover.Core.Utils
         /// </summary>
         public static void Init()
         {
-            if (_initialized)
-                return;
-
-            _initialized = true;
-
-            try
+            lock (_lock)
             {
-                if (!IsGodotAvailable())
+                if (_initialized) return;
+                // Configuration errors can log recursively on this thread.
+                _initialized = true;
+                try
                 {
-                    _enabled = false;
-                    return;
-                }
-
-                _enabled = GameConfig.Instance.Logging.Enabled;
-
-                _minimumLevel = ParseLogLevel(GameConfig.Instance.Logging.MinimumLevel);
-                var enabledCategories = GameConfig.Instance.Logging.EnabledCategories;
-                if (enabledCategories != null && enabledCategories.Count > 0)
-                    _enabledCategories = new HashSet<string>(enabledCategories, StringComparer.OrdinalIgnoreCase);
-
-                var userDir = OS.GetUserDataDir();
-                var logsDir = Path.Combine(userDir, "logs");
-                DirAccess.MakeDirRecursiveAbsolute(logsDir);
-
-                _logPath = Path.Combine(logsDir, "cthangover.log");
-                _errorLogPath = Path.Combine(logsDir, "cthangover_errors.log");
-
-                var args = OS.GetCmdlineArgs();
-                foreach (var arg in args)
-                {
-                    if (arg.StartsWith("--log-file="))
+                    if (!IsGodotAvailable())
                     {
-                        _logPath = arg.Substring("--log-file=".Length);
-                        break;
+                        _enabled = false;
+                        return;
                     }
-                }
+                    var config = GameConfig.Instance.Logging;
+                    _enabled = config.Enabled;
+                    _minimumLevel = ParseLogLevel(config.MinimumLevel);
+                    var enabledCategories = config.EnabledCategories;
+                    if (enabledCategories != null && enabledCategories.Count > 0)
+                        _enabledCategories = new HashSet<string>(enabledCategories, StringComparer.OrdinalIgnoreCase);
 
-                if (GameConfig.Instance.Logging.ConsoleEnabled)
-                {
+                    var logsDir = Path.Combine(OS.GetUserDataDir(), "logs");
+                    _logPath = Path.Combine(logsDir, "cthangover.log");
+                    _errorLogPath = Path.Combine(logsDir, "cthangover_errors.log");
+                    foreach (var arg in OS.GetCmdlineArgs())
+                        if (arg.StartsWith("--log-file=", StringComparison.Ordinal))
+                        {
+                            _logPath = arg.Substring("--log-file=".Length);
+                            break;
+                        }
+                    if (_enabled)
+                    {
+                        var maxBytes = (long)config.MaxFileSizeMb * 1024 * 1024;
+                        _fileWriter = new RollingLogWriter(_logPath, maxBytes, config.MaxFiles);
+                        _errorWriter = new RollingLogWriter(_errorLogPath, maxBytes, config.MaxFiles);
+                        AppDomain.CurrentDomain.ProcessExit += OnProcessExit;
+                    }
+                    if (config.ConsoleEnabled)
+                    {
 #if WINDOWS
-                    try
-                    {
-                        _consoleAllocated = AllocConsole();
-                    }
-                    catch
-                    {
-                        _consoleAllocated = false;
-                    }
+                        try { _consoleAllocated = AllocConsole(); }
+                        catch { _consoleAllocated = false; }
 #else
-                    _consoleAllocated = true;
+                        _consoleAllocated = true;
 #endif
+                    }
+                    Log("LOGGER", $"Logger initialized, path={_logPath}");
                 }
-
-                Log("LOGGER", $"Logger initialized, path={_logPath}");
+                catch
+                {
+                    Shutdown();
+                }
             }
-            catch
+        }
+
+        private static void OnProcessExit(object sender, EventArgs args) => Shutdown();
+
+        /// <summary>Flushes and closes both file sinks under the logging lock. Idempotent; late log calls cannot reopen files.</summary>
+        public static void Shutdown()
+        {
+            lock (_lock)
             {
+                _initialized = true;
                 _enabled = false;
+                _fileWriter?.Dispose();
+                _errorWriter?.Dispose();
+                _fileWriter = null;
+                _errorWriter = null;
+                AppDomain.CurrentDomain.ProcessExit -= OnProcessExit;
             }
         }
 
@@ -299,11 +309,8 @@ namespace Cthangover.Core.Utils
 
             lock (_lock)
             {
-                if (_logPath != null)
-                    writeToFile(_logPath, line);
-                
-                if (_errorLogPath != null && level == LogLevel.Error)
-                    writeToFile(_errorLogPath, line);
+                _fileWriter?.WriteLine(line);
+                if (level == LogLevel.Error) _errorWriter?.WriteLine(line);
             }
         }
 
@@ -326,18 +333,5 @@ namespace Cthangover.Core.Utils
             }
         }
 
-        private static void writeToFile(string fileName, string line)
-        {
-            try
-            {
-                using var stream = new FileStream(fileName, FileMode.Append, System.IO.FileAccess.Write, FileShare.Read);
-                using var writer = new StreamWriter(stream, Encoding.UTF8);
-                writer.WriteLine(line);
-            }
-            catch
-            {
-            }
-        }
-        
     }
 }
