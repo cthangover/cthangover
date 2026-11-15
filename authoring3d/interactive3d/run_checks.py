@@ -5,6 +5,10 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'actor3d'))
 from capture_window import save_client
 
 CASES={
+ 'contact_pose':['--with-mods=proto_land_pack','--itest=proto_land_contracts','--run-tests','--mod=proto_land_pack__contracts','--test-filter=proto_land/contact_pose_*'],
+ 'navigation_contacts':['--with-mods=interactive3d_editor,combat3d_base,navigation3d_base','--itest=interactive3d_contracts','--run-tests','--mod=interactive3d_base__contracts','--test-filter=interactive3d/contact_actor_*'],
+ 'land_lifecycle':['--with-mods=proto_land_pack','--itest=proto_land_contracts','--run-tests','--mod=proto_land_pack__contracts','--test-filter=proto_land/contact_lifecycle_*'],
+ 'physical_contacts':['--with-mods=proto_land_pack','--itest=proto_land_contracts','--run-tests','--mod=proto_land_pack__contracts','--test-filter=proto_land/contact_physical_*'],
  'action_units':['--with-mods=actor3d_base','--run-tests','--mod=actor3d_base','--test-filter=actor3d/action_*'],
  'action_contracts':['--with-mods=actor3d_base,proto_sea_pack','--itest=actor3d_contracts','--run-tests','--mod=actor3d_base__contracts','--test-filter=actor3d/action_*'],
  'anim_seek_contract':['--with-mods=anim3d_base','--itest=anim3d_base_contracts','--run-tests','--mod=anim3d_base__contracts','--test-filter=anim3d/blend_interrupt_seek*'],
@@ -29,7 +33,7 @@ def snapshot(root,target):
  for folder in ['Core','scenes','config']:shutil.copytree(root/folder,target/folder,ignore=ignore)
  for name in ['Cthangover.csproj','global.json','Directory.Build.props','Directory.Build.targets','project.godot']:shutil.copy2(root/name,target/name)
  shutil.copytree(root/'.godot/mono/temp/bin/Debug',target/'.godot/mono/temp/bin/Debug')
- names={'proto_land_pack','menu_base','interactive3d_editor','combat3d_base','proto_sea_pack','dialog_base','items_base','schema_tools','mod_manager'};pending=list(names)
+ names={'navigation3d_base','proto_land_pack','menu_base','interactive3d_editor','combat3d_base','proto_sea_pack','dialog_base','items_base','schema_tools','mod_manager'};pending=list(names)
  while pending:
   name=pending.pop();source=next(p for p in [root/'mods'/name,root/'mods_private'/name] if p.exists());shutil.copytree(source,target/source.parent.name/name,ignore=ignore)
   for dep in json.loads((source/'manifest.json').read_text(encoding='utf-8-sig')).get('depends',[]):
@@ -49,22 +53,29 @@ def main():
    for name,part in [('APPDATA','roaming'),('LOCALAPPDATA','local'),('XDG_DATA_HOME','data')]:env[name]=str(Path(scratch)/case/part);Path(env[name]).mkdir(parents=True)
    env['INTERACTIVE3D_SHOTS']=str(directory/'captures');env['LAND_PACK_EVIDENCE']=str(directory);command=[args.godot,'--path',str(project),'--verbose','--','--frontend',*CASES[case]]
    if args.filter:command.append('--test-filter='+args.filter)
+   capture_errors=[]
    with (directory/'stdout.log').open('wb') as log:
     process=subprocess.Popen(command,cwd=scratch,env=env,stdout=log,stderr=subprocess.STDOUT)
+    dump(directory/'process.json',dict(pid=process.pid,command=command))
     try:
      started=time.monotonic();compared=False
      while process.poll() is None:
       if time.monotonic()-started>300:raise subprocess.TimeoutExpired(command,300)
       if (directory/'captures/display-check.ready').exists() and not compared:
-       save_client(process.pid,directory/'captures/display-client.png');(directory/'captures/display-check.done').write_text('captured');compared=True
+       try:save_client(process.pid,directory/'captures/display-client.png')
+       except Exception as error:capture_errors.append('Display comparison failed: '+str(error))
+       (directory/'captures/display-check.done').write_text('failed' if capture_errors else 'captured');compared=True
       try:process.wait(timeout=.1)
       except subprocess.TimeoutExpired:pass
      code=process.returncode
     except subprocess.TimeoutExpired:subprocess.run(['taskkill','/PID',str(process.pid),'/T','/F'],capture_output=True);process.wait(timeout=20);code=124
+    except BaseException:
+     if process.poll() is None:subprocess.run(['taskkill','/PID',str(process.pid),'/T','/F'],capture_output=True);process.wait(timeout=20)
+     raise
    for source,name in [(Path(env['APPDATA'])/'cthangover/logs','game-logs'),(Path(env['APPDATA'])/'cthangover/mod_tests','mod-tests')]:
     if source.exists():shutil.copytree(source,directory/name)
    text=(directory/'stdout.log').read_text(encoding='utf-8',errors='replace');complete=text+'\n'+'\n'.join(q.read_text(encoding='utf-8',errors='replace') for q in (directory/'game-logs').glob('*.log'));lines=complete.splitlines()
-   bad=[line for line in lines if any(t in line.lower() for t in ['error cs','lack lifecycle binding','leaked at exit','still in use at exit','objectdb instances leaked','was leaked','were leaked','rid allocations','leaked instance'])]
+   bad=capture_errors+[line for line in lines if any(t in line.lower() for t in ['error cs','lack lifecycle binding','leaked at exit','still in use at exit','objectdb instances leaked','was leaked','were leaked','rid allocations','leaked instance'])]
    for i,line in enumerate(lines):
     if line.startswith('ERROR:') and not (line.startswith('ERROR: GENERAL - Message Id Number: 0 | Message Id Name: Loader Message') and i+1<len(lines) and 'EOSOverlayVkLayer-Win64.json' in lines[i+1]):bad.append(line)
    matches=re.findall(r'\[TEST_RESULT\] name=mod_units passed=(\d+) failed=(\d+)',text)

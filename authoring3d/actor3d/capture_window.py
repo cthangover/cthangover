@@ -29,7 +29,7 @@ def window_state(user, handle):
     return dict(handle=handle, pid=process.value, window_class=name.value, enabled=bool(user.IsWindowEnabled(handle)))
 
 
-def save_client(pid: int, destination: Path, window_handle=None):
+def save_client(pid: int, destination: Path, window_handle=None, hide_diagnostics=True):
     from PIL import ImageGrab
     user = ctypes.windll.user32
     user.SetProcessDpiAwarenessContext(ctypes.c_void_p(-4))
@@ -75,8 +75,17 @@ def save_client(pid: int, destination: Path, window_handle=None):
         user.SetForegroundWindow(handle)
         if foreground_thread: user.AttachThreadInput(thread, foreground_thread, False)
     time.sleep(0.2)
+    unlocked = False
+    if user.GetForegroundWindow() != handle:
+        # Windows can reject ordinary activation after an unattended child launch.
+        # A balanced Alt press releases the foreground lock; no text or pointer event is sent.
+        user.keybd_event(0x12, 0, 0, 0)
+        user.keybd_event(0x12, 0, 2, 0)
+        user.SetForegroundWindow(handle)
+        unlocked = True
+        time.sleep(0.2)
     destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.with_suffix('.window.json').write_text(json.dumps(dict(selected=window_state(user, handle), foreground_before=window_state(user, foreground), foreground=window_state(user, user.GetForegroundWindow()), focus_requested=foreground != handle), indent=2))
+    destination.with_suffix('.window.json').write_text(json.dumps(dict(selected=window_state(user, handle), foreground_before=window_state(user, foreground), foreground=window_state(user, user.GetForegroundWindow()), focus_requested=foreground != handle, focus_unlock_requested=unlocked), indent=2))
     if user.GetForegroundWindow() != handle:
         raise RuntimeError('Game window is occluded; refusing a desktop capture')
     rect = wintypes.RECT()
@@ -84,5 +93,11 @@ def save_client(pid: int, destination: Path, window_handle=None):
     user.GetClientRect(handle, ctypes.byref(rect))
     user.ClientToScreen(handle, ctypes.byref(origin))
     destination.parent.mkdir(parents=True, exist_ok=True)
-    with ImageGrab.grab(bbox=(origin.x, origin.y, origin.x + rect.right, origin.y + rect.bottom), all_screens=True) as capture:
-        capture.save(destination)
+    import sys
+    bridge_folder = str(Path(__file__).resolve().parents[1] / 'perf_overlay')
+    if bridge_folder not in sys.path:
+        sys.path.insert(0, bridge_folder)
+    from capture_overlay import hidden_overlay
+    with hidden_overlay(pid, hide_diagnostics):
+        with ImageGrab.grab(bbox=(origin.x, origin.y, origin.x + rect.right, origin.y + rect.bottom), all_screens=True) as capture:
+            capture.save(destination)

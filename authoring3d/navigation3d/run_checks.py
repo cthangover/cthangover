@@ -10,6 +10,10 @@ CASES={
  'actor_units':['--with-mods=navigation3d_base','--itest=navigation3d_data','--run-tests','--mod=actor3d_base','--test-filter=actor3d/orders_manual_priority_copy_and_json_roundtrip,actor3d/definition_json_roundtrip_and_physical_validation'],
  'routine_units':['--with-mods=npc_routines_base,navigation3d_base','--itest=navigation3d_data','--run-tests','--mod=npc_routines_base'],
  'combat_units':['--with-mods=combat3d_base,navigation3d_base','--itest=navigation3d_data','--run-tests','--mod=combat3d_base'],
+ 'stream_units':['--with-mods=world_stream3d_base,npc_routines_base,navigation3d_base','--itest=navigation3d_data','--run-tests','--mod=navigation3d_base'],
+ 'interactive_units':['--with-mods=interactive3d_base,navigation3d_base','--itest=navigation3d_data','--run-tests','--mod=interactive3d_base'],
+ 'stream_native':['--with-mods=world_stream3d_base,npc_routines_base,navigation3d_base,test_stream_island','--itest=interactive3d_contracts','--itest=npc_routines_base_contracts','--itest=navigation3d_contracts','--itest=navigation3d_streaming','--run-tests','--mod=navigation3d_base__streaming'],
+ 'diagnostic':['--with-mods=npc_routines_base,navigation3d_base','--itest=interactive3d_contracts','--itest=npc_routines_base_contracts','--itest=navigation3d_contracts','--itest=navigation3d_diagnostics','--run-tests','--mod=navigation3d_base__diagnostics'],
 }
 
 def dump(path,value):path.write_text(json.dumps(value,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
@@ -19,7 +23,7 @@ def snapshot(root,target):
  for name in ['Cthangover.csproj','global.json','Directory.Build.props','Directory.Build.targets','project.godot']:shutil.copy2(root/name,target/name)
  shutil.copytree(root/'collections/frontend',target/'collections/frontend')
  shutil.copytree(root/'.godot/mono/temp/bin/Debug',target/'.godot/mono/temp/bin/Debug')
- names={'menu_base','npc_routines_base','navigation3d_base','combat3d_base','dialog_base','schema_tools','mod_manager','items_base'}
+ names={'menu_base','npc_routines_base','navigation3d_base','combat3d_base','dialog_base','schema_tools','mod_manager','items_base','world_stream3d_base'}
  pending=list(names)
  while pending:
   name=pending.pop();source=next(p for p in [root/'mods'/name,root/'mods_private'/name] if p.exists());shutil.copytree(source,target/source.parent.name/name,ignore=ignore)
@@ -36,7 +40,11 @@ def main():
  p=argparse.ArgumentParser(description=__doc__);p.add_argument('--out',type=Path,required=True);p.add_argument('--case',action='append',choices=CASES);p.add_argument('--filter');p.add_argument('--physics',choices=['default','jolt'],default='jolt');p.add_argument('--compare-display',action='store_true',help='Require an unobscured host window for an additional colour-pipeline comparison');p.add_argument('--godot',default=r'C:\godot\godot.exe');args=p.parse_args()
  root=Path.cwd();out=args.out.resolve();out.mkdir(parents=True,exist_ok=False);checks=[]
  with tempfile.TemporaryDirectory(prefix='cthangover-navigation-') as temp:
-  project=Path(temp)/'source';mods=snapshot(root,project);dump(out/'inputs.json',dict(mods=mods,fixture_preparation=['empty partner production sources remain data-only; its tests are not selected'],hashes={str(f.relative_to(project)):hashlib.sha256(f.read_bytes()).hexdigest() for part in ['Core','mods','mods_private'] for f in (project/part).rglob('*') if f.is_file() and f.suffix in ['.cs','.json','.glb','.properties','.tscn']}))
+  project=Path(temp)/'source';mods=snapshot(root,project)
+  if 'stream_native' in (args.case or []):
+   from streaming_fixture import prepare
+   prepare(project,out/'provenance');mods.append('test_stream_island')
+  dump(out/'inputs.json',dict(mods=mods,source_config_hashes={name:hashlib.sha256((project/name).read_bytes()).hexdigest() for name in ['project.godot','Cthangover.csproj','global.json','Directory.Build.props','Directory.Build.targets']},fixture_preparation=['empty partner production sources remain data-only; its tests are not selected'],hashes={str(f.relative_to(project)):hashlib.sha256(f.read_bytes()).hexdigest() for part in ['Core','mods','mods_private'] for f in (project/part).rglob('*') if f.is_file() and f.suffix in ['.cs','.json','.glb','.properties','.tscn','.r16','.density','.holes','.gdshader','.png']}))
   (project/'override.cfg').write_text('[physics]\n3d/physics_engine="'+('Jolt Physics' if args.physics=='jolt' else 'Godot Physics')+'"\n[display]\nwindow/vsync/vsync_mode=0\n[application]\nrun/max_fps=0\n',encoding='utf-8')
   with (out/'build.log').open('wb') as log:subprocess.run(['dotnet','build','Cthangover.csproj','--nologo','-v','minimal'],cwd=project,stdout=log,stderr=subprocess.STDOUT,timeout=180,check=True)
   for case in args.case or ['units']:
