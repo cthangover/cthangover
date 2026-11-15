@@ -14,6 +14,10 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"actor3d"))
 from capture_window import save_client
 
 CASES = {
+ 'actor3d': ['--with-mods=actor3d_base,proto_sea_pack','--itest=actor3d_contracts','--run-tests','--mod=actor3d_base__contracts'],
+ 'anim3d': ['--with-mods=anim3d_base,characters3d_base,proto_sea_pack','--itest=anim3d_base_contracts','--run-tests','--mod=anim3d_base__contracts'],
+ 'characters3d': ['--with-mods=characters3d_base,proto_sea_pack','--itest=anim3d_base_contracts','--itest=characters3d_base_contracts','--run-tests','--mod=characters3d_base__contracts'],
+ 'asset3d': ['--with-mods=asset3d_base','--itest=asset3d_contracts','--run-tests','--mod=asset3d_base__contracts'],
  'ships3d_capture': ['--with-mods=ships3d_base,proto_sea_pack','--itest=combat3d_base_contracts','--itest=ships3d_contracts','--ships3d-demo'],
  'ships3d_crowd': ['--with-mods=ships3d_base,proto_sea_pack','--itest=combat3d_base_contracts','--itest=ships3d_contracts','--ships3d-demo'],
  'ships3d_demo': ['--with-mods=ships3d_base,proto_sea_pack','--itest=combat3d_base_contracts','--itest=ships3d_contracts','--ships3d-demo'],

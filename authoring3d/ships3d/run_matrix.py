@@ -40,7 +40,9 @@ def copy_project(source,dest):
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--godot',required=True);parser.add_argument('--out',required=True,type=Path)
-    parser.add_argument('--scenario',choices=['boarding','crowd'],default='boarding')
+    parser.add_argument('--scenario',choices=['boarding','crowd','camera'],default='boarding')
+    parser.add_argument('--camera-regression',action='store_true',help='Thirty-second isolated camera budget and swept-sphere collision regression; no desktop capture handshake or crowd initialization.')
+    parser.add_argument('--measure-spawn',action='store_true',help='Measure character creation separately after a successful isolated camera regression.')
     parser.add_argument('--physics-engine',choices=['default','jolt'],action='append')
     parser.add_argument('--waves',choices=['low','high'],action='append')
     args=parser.parse_args();source=Path.cwd();out=args.out.resolve();out.mkdir(parents=True,exist_ok=False);report=[]
@@ -62,6 +64,8 @@ def main():
                     env=os.environ.copy()
                     for key,part in [('APPDATA','roaming'),('LOCALAPPDATA','local'),('XDG_DATA_HOME','data'),('TEMP','temp'),('TMP','temp')]:env[key]=str(home/part);Path(env[key]).mkdir(parents=True,exist_ok=True)
                     env['CTHANGOVER_TEST_CACHE']=str(scratch/'compile-cache');env['SHIPS3D_SHOTS']=str(captures);env['SHIPS3D_WAVES']=tier;env['SHIPS3D_CASE']=args.scenario;env['SHIPS3D_CAPTURE_ONLY']='false'
+                    env['SHIPS3D_CAMERA_REGRESSION']='true' if args.camera_regression else 'false'
+                    env['SHIPS3D_MEASURE_SPAWN']='true' if args.measure_spawn else 'false'
                     command=[args.godot,'--path',str(project),'--verbose','--resolution','1280x720','--','--frontend','--with-mods=ships3d_base,combat3d_base,proto_sea_pack','--itest=combat3d_base_contracts','--itest=ships3d_contracts','--ships3d-demo']
                     started=time.monotonic();comparison_error=None
                     with (directory/'stdout.log').open('wb') as log:
@@ -102,14 +106,18 @@ def main():
                     if args.scenario=='boarding' and not row.get('boarding_route_complete'):row['harness_errors'].append('Complete route onto the deck not verified')
                     if physics=='jolt' and not row.get('physics_space_class','').startswith('Jolt'):row['harness_errors'].append('Native Jolt server not verified')
                     if physics=='default' and (not row.get('physics_space_class') or 'Jolt' in row['physics_space_class']):row['harness_errors'].append('Native default server not verified')
-                    if row.get('fighters')!=50:row['harness_errors'].append('Not 50 actual fighters')
+                    if args.scenario!='camera' and row.get('fighters')!=50:row['harness_errors'].append('Not 50 actual fighters')
                     if row.get('status')!='OK':row['harness_errors'].append('Incomplete native acceptance')
-                    for key in ['wall_ms','main_thread_cpu_ms','render_cpu_ms','gpu_ms','physics_ms']:
-                        if row.get(key,{}).get('n',0)<1000 or 'p99' not in row.get(key,{}):row['harness_errors'].append('Incomplete percentiles: '+key)
+                    if args.scenario=='camera':
+                        if row.get('camera_frames',0)<1 or not row.get('camera_groups'):row['harness_errors'].append('Camera measurements missing')
+                    else:
+                        for key in ['wall_ms','main_thread_cpu_ms','render_cpu_ms','gpu_ms','physics_ms']:
+                            if row.get(key,{}).get('n',0)<1000 or 'p99' not in row.get(key,{}):row['harness_errors'].append('Incomplete percentiles: '+key)
                     report.append(row);(out/'matrix.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps({k:v for k,v in row.items() if k!='fighter_states'}),flush=True)
-                    if row['harness_errors']:raise RuntimeError(name+' failed; inspect '+str(directory))
+                    if row['harness_errors'] and args.scenario!='camera':raise RuntimeError(name+' failed; inspect '+str(directory))
                     shutil.rmtree(home)
     if (source/'project.godot').read_bytes()!=original_config:raise RuntimeError('Source project configuration changed during probe')
+    if any(row['harness_errors'] for row in report):raise RuntimeError('One or more camera variants failed; measurements retained for every independent backend')
 
 
 if __name__=='__main__':main()
