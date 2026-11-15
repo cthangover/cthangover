@@ -1,0 +1,18 @@
+namespace Cthangover.Probes.Graphics
+{
+    using System;using System.Collections.Generic;using System.Text.Json.Nodes;using Cthangover.Core.Mods;
+    /// <summary>Data-only experiment for proposed owner-scoped quality handles: a preset patch cannot change gameplay, unknown handles survive, unsupported GPU handles are deferred.</summary>
+    public static class GraphicsRegistry
+    {
+        public static JsonObject Run(string renderer)
+        {
+            var raw=ModManager.Instance.GetMod("test_graphics_probe").FileProvider.ReadFileText("quality_presets.json");var source=JsonNode.Parse(raw).AsObject();var restored=JsonNode.Parse(source.ToJsonString()).AsObject();if(!JsonNode.DeepEquals(source,restored))throw new InvalidOperationException("Preset round trip lost data");
+            var handles=new Dictionary<string,JsonObject>(StringComparer.Ordinal);foreach(var item in restored["handles"].AsArray()){var handle=item.AsObject();var id=handle["id"].ToString();if(!id.StartsWith(handle["owner"]+"/",StringComparison.Ordinal)||!handles.TryAdd(id,handle))throw new InvalidOperationException("Owner/key collision");}
+            var duplicateRejected=!handles.TryAdd("characters3d/animation_hz",handles["characters3d/animation_hz"]);if(!duplicateRejected)throw new InvalidOperationException("Collision accepted");
+            var effective=restored["presets"]["medium"].DeepClone().AsObject();foreach(var pair in restored["user_patch"].AsObject())effective[pair.Key]=pair.Value?.DeepClone();var immediate=new JsonObject();var pending=new JsonObject();var unsupported=new JsonObject();var unknown=new JsonObject();
+            foreach(var pair in effective){if(!handles.TryGetValue(pair.Key,out var handle)){unknown[pair.Key]=pair.Value?.DeepClone();continue;}if(handle["capability"]?.ToString()=="forward_plus"&&renderer!="forward_plus"){unsupported[pair.Key]=pair.Value?.DeepClone();continue;}var target=handle["apply"].ToString()=="restart"?pending:immediate;target[pair.Key]=pair.Value?.DeepClone();}
+            if(effective["terrain/grass_density"].GetValue<double>()!=.5||unknown["future/option"].GetValue<int>()!=7)throw new InvalidOperationException("Sparse patch/unknown data lost");
+            return new(){["prototype_only"]=true,["round_trip"]=true,["duplicate_rejected"]=duplicateRejected,["immediate"]=immediate,["pending_restart"]=pending,["unsupported"]=unsupported,["preserved_unknown"]=unknown,["gameplay_handles_registered"]=false};
+        }
+    }
+}

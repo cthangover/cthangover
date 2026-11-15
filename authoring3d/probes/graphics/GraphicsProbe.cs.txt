@@ -1,0 +1,181 @@
+namespace Cthangover.Probes.Graphics
+{
+    using System;using System.IO;using System.Diagnostics;using System.Collections.Generic;using System.Text.Json;using System.Text.Json.Nodes;using System.Threading.Tasks;
+    using Godot;using Cthangover.Core.Bootstrap;using Cthangover.Core.Utils;using Cthangover.Core.Mods.Resolvers;using Cthangover.Mods.Terrain;using Cthangover.Mods.Characters3d;using Cthangover.Mods.Interface.View;
+    /// <summary>Host-only 1080p terrain/50-character experiment. Raw samples distinguish wall, engine CPU monitor and measured renderer CPU/GPU; synthetic motion is not combat acceptance.</summary>
+    public partial class GraphicsProbe:Node
+    {
+        private SubViewport viewport;private World3D ownedWorld;private CanvasLayer overlay;private Godot.Environment environment;private DirectionalLight3D sun;private Camera3D camera;private TerrainSession terrain;private CapsuleShape3D capsule;private VoxelGI voxel;private VoxelGIData voxelData;
+        private readonly List<Character3dPresentation> actors=new();private readonly List<CharacterBody3D> bodies=new();private readonly List<MultiMesh> grass=new();
+        private readonly JsonObject row=new();private JsonArray entrance=new();private readonly Stopwatch lifetime=Stopwatch.StartNew();private double lastFrame,elapsed;private Exception updateError;private int physicsFrame,simulationStride=1;
+        private string output,mode;private bool active;private readonly GraphicsStats move=new(),animation=new();
+        public static string Arg(string prefix){foreach(var a in OS.GetCmdlineUserArgs())if(a.StartsWith(prefix,StringComparison.Ordinal))return a[prefix.Length..];return "";}
+        public override async void _Ready()
+        {
+            output=Arg("--graphics-out=");mode=Arg("--graphics-case=");var code=0;
+            try
+            {
+                Directory.CreateDirectory(output);row["case"]=mode;row["pid"]=OS.GetProcessId();row["godot"]=Engine.GetVersionInfo()["string"].AsString();row["debug_build"]=OS.IsDebugBuild();row["executable"]=OS.GetExecutablePath();row["runtime"]=System.Environment.Version.ToString();
+                row["driver"]=RenderingServer.GetCurrentRenderingDriverName();row["method"]=RenderingServer.GetCurrentRenderingMethod();row["adapter"]=RenderingServer.GetVideoAdapterName();row["vendor"]=RenderingServer.GetVideoAdapterVendor();row["physics_before"]=PhysicsServer3D.GetProcessInfo(PhysicsServer3D.ProcessInfo.ActiveObjects).ToString();
+                row["root_window_mode"]=DisplayServer.WindowGetMode().ToString();row["root_window_size"]=DisplayServer.WindowGetSize().ToString();row["root_hdr2d"]=GetViewport().UseHdr2D;row["startup_settings"]=Settings();row["registry_prototype"]=GraphicsRegistry.Run(RenderingServer.GetCurrentRenderingMethod());row["user_dir"]=OS.GetUserDataDir();
+                if(mode=="settings"||mode=="resume"||mode=="restart"||mode=="restart_user")await SettingsProbe();
+                else if(mode=="aa_proof")await AaProof();
+                else if(mode=="crash_marker"){File.WriteAllText(Path.Combine(OS.GetUserDataDir(),"graphics_starting.marker"),"starting");File.WriteAllText(Path.Combine(output,"crash-ready.json"),row.ToJsonString());return;}
+                else
+                {
+                    row["compute"]=GraphicsCompute.Run();row["compute_cpu_forced"]=GraphicsCompute.Run(true);await Build();await Sample("first_entry",.5,30);entrance=new JsonArray();await Frames(1);
+                    await Sample("baseline",4,300);var measured=row["baseline"]["wall_ms"]["p95"].GetValue<double>();row["preset_suggestion"]=new JsonObject{["preset"]=measured<=33.3?"medium":"low",["requires_player_confirmation"]=true,["based_on_short_probe_only"]=true,["measured_p95_ms"]=measured};row["baseline_state"]=State();row["move_50_ms"]=move.Json();row["animation_50_ms"]=animation.Json();
+                    active=false;await Frames(3);await ToSignal(RenderingServer.Singleton,RenderingServer.SignalName.FramePostDraw);ViewportCapture.SavePng(viewport,Path.Combine(output,"colour-viewport.png"));using(var raw=viewport.GetTexture().GetImage()){row["viewport_image_format"]=raw.GetFormat().ToString();row["viewport_hdr2d_requested"]=viewport.UseHdr2D;var pixel=raw.GetPixel(20,20);row["raw_sky_pixel"]=new JsonArray(pixel.R,pixel.G,pixel.B);}
+                    File.WriteAllText(Path.Combine(output,"scene-ready.json"),"{}");await Sample("desktop_comparison_wait",1,30);active=true;
+                    if(mode=="toggles"){await Toggles();await FeatureProof();}
+                    await ToSignal(RenderingServer.Singleton,RenderingServer.SignalName.FramePostDraw);ViewportCapture.SavePng(viewport,Path.Combine(output,"scene.png"));
+                    row["video_memory_used_mib"]=RenderingServer.GetRenderingInfo(RenderingServer.RenderingInfo.VideoMemUsed)/1048576.0;
+                }
+                row["status"]="OK";
+            }
+            catch(Exception e){row["status"]="FAIL";row["error"]=e.ToString();code=1;}
+            finally
+            {
+                if(mode!="crash_marker")
+                {
+                    active=false;SetProcess(false);SetPhysicsProcess(false);foreach(var actor in actors)actor.Release();actors.Clear();bodies.Clear();grass.Clear();
+                    if(terrain!=null){try{await terrain.ShutdownAsync();}catch(Exception cleanup){row["cleanup_error"]=cleanup.ToString();code=1;}terrain=null;}if(overlay!=null)overlay.Free();if(viewport!=null)viewport.Free();voxel=null;voxelData?.Dispose();voxelData=null;environment?.Dispose();ownedWorld?.Dispose();capsule?.Dispose();
+                }
+            }
+            row["lifetime_ms"]=lifetime.Elapsed.TotalMilliseconds;using(var p=Process.GetCurrentProcess()){p.Refresh();row["peak_mib"]=p.PeakWorkingSet64/1048576.0;}
+            if(mode=="restart"||mode=="restart_user")
+            {
+                Directory.CreateDirectory(Path.Combine(output,"resumed"));var arguments=new List<string>();
+                if(mode=="restart_user"){using var cfg=new ConfigFile();cfg.SetValue("rendering","renderer/rendering_method","gl_compatibility");cfg.SetValue("rendering","gl_compatibility/driver.windows","opengl3");var saved=cfg.Save("user://graphics_override.cfg");row["engine_override_saved"]=saved.ToString();if(saved!=Error.Ok)throw new IOException("Cannot save engine override");}
+                else arguments.AddRange(new[]{"--rendering-driver","opengl3","--rendering-method","gl_compatibility"});
+                arguments.AddRange(new[]{"--","--frontend","--with-mods=test_graphics_probe","--graphics-case=resume","--graphics-out="+Path.Combine(output,"resumed")});OS.SetRestartOnExit(true,arguments.ToArray());
+            }
+            File.WriteAllText(Path.Combine(output,"row.json"),row.ToJsonString());GameLogger.Log("TEST","[GRAPHICS_PROBE] "+row.ToJsonString());GameLogger.Log("TEST","[TEST_RESULT] name=graphics_probe passed="+(code==0?"1 failed=0":"0 failed=1"));
+            if(mode=="resume"){var handshake=Stopwatch.StartNew();while(!File.Exists(Path.Combine(output,"parent-ack"))&&handshake.Elapsed.TotalSeconds<5)await Frames(1);}
+            await Frames(3);ApplicationExit.Quit(GetTree(),code);
+        }
+        private JsonObject Settings()
+        {
+            var data=new JsonObject();foreach(var key in new[]{"rendering/renderer/rendering_method","rendering/renderer/rendering_method.mobile","rendering/rendering_device/driver","rendering/rendering_device/driver.windows","rendering/gl_compatibility/driver.windows","rendering/rendering_device/fallback_to_vulkan","rendering/rendering_device/fallback_to_d3d12","rendering/rendering_device/fallback_to_opengl3","application/config/project_settings_override","physics/3d/physics_engine"})data[key]=ProjectSettings.HasSetting(key)?ProjectSettings.GetSettingWithOverride(key).ToString():"<absent>";return data;
+        }
+        private async Task SettingsProbe()
+        {
+            row["live_method_before"]=RenderingServer.GetCurrentRenderingMethod();row["live_driver_before"]=RenderingServer.GetCurrentRenderingDriverName();row["physics_server_class"]=PhysicsServer3D.Singleton.GetClass().ToString();
+            ProjectSettings.SetSetting("rendering/renderer/rendering_method","gl_compatibility");ProjectSettings.SetSetting("rendering/rendering_device/driver.windows","opengl3");ProjectSettings.SetSetting("physics/3d/physics_engine","Jolt Physics");await Frames(4);
+            row["live_method_after"]=RenderingServer.GetCurrentRenderingMethod();row["live_driver_after"]=RenderingServer.GetCurrentRenderingDriverName();row["physics_server_class_after"]=PhysicsServer3D.Singleton.GetClass().ToString();
+            // A bounded body drop produces observable physics output for each startup backend.
+            var space=new Node3D();AddChild(space);using var floorShape=new BoxShape3D{Size=new Vector3(10,1,10)};using var ballShape=new SphereShape3D{Radius=.5f};var floor=new StaticBody3D{Position=new Vector3(0,-.5f,0)};floor.AddChild(new CollisionShape3D{Shape=floorShape});space.AddChild(floor);var ball=new RigidBody3D{Position=new Vector3(0,2,0)};ball.AddChild(new CollisionShape3D{Shape=ballShape});space.AddChild(ball);
+            for(var i=0;i<90;i++)await ToSignal(GetTree(),SceneTree.SignalName.PhysicsFrame);row["drop_y_after_90_ticks"]=ball.Position.Y;row["drop_velocity_y"]=ball.LinearVelocity.Y;space.Free();
+            var save=Path.Combine(OS.GetUserDataDir(),"graphics_resume.json");if(mode=="resume"&&File.Exists(save)){var place=JsonNode.Parse(File.ReadAllText(save));row["resume_loaded"]=place;var p=place["position"].AsArray();var restored=new Marker3D{Name="probe_player",Position=new Vector3(p[0].GetValue<float>(),p[1].GetValue<float>(),p[2].GetValue<float>())};AddChild(restored);row["restored_native_position"]=new JsonArray(restored.GlobalPosition.X,restored.GlobalPosition.Y,restored.GlobalPosition.Z);if(restored.GlobalPosition!=new Vector3(12.5f,4,-8))throw new InvalidOperationException("Native bookmark position not restored");restored.Free();}
+            else{var place=new JsonObject{["scene"]="terrain_fixture/location",["actor_id"]="probe/player",["position"]=new JsonArray(12.5,4.0,-8.0),["slot"]="probe_slot"};File.WriteAllText(save,place.ToJsonString());row["resume_saved"]=place;}
+            var marker=Path.Combine(OS.GetUserDataDir(),"graphics_starting.marker");row["unclean_start_detected"]=File.Exists(marker);File.WriteAllText(marker,"starting");File.Delete(marker);row["clean_marker_removed"]=!File.Exists(marker);
+        }
+        private async Task AaProof()
+        {
+            DisplayServer.WindowSetVsyncMode(DisplayServer.VSyncMode.Disabled);Engine.MaxFps=0;
+            viewport=new SubViewport{Size=new Vector2I(640,360),OwnWorld3D=true,UseHdr2D=true,RenderTargetUpdateMode=SubViewport.UpdateMode.Always};AddChild(viewport);ownedWorld=viewport.FindWorld3D();
+            using var mesh=new QuadMesh{Size=new Vector2(2.4f,1.8f)};using var shader=new Shader{Code="shader_type spatial; render_mode unshaded; void fragment(){float p=step(0.5,fract(UV.x*83.0))*step(0.5,fract(UV.y*61.0));ALBEDO=vec3(p);}"};using var material=new ShaderMaterial{Shader=shader};viewport.AddChild(new MeshInstance3D{Mesh=mesh,MaterialOverride=material,Rotation=new Vector3(0,.2f,.13f)});var view=new Camera3D{Position=new Vector3(0,0,3)};viewport.AddChild(view);view.LookAt(Vector3.Zero);view.Current=true;
+            try
+            {
+                var images=new Dictionary<string,byte[]>();var items=new JsonArray();
+                foreach(var key in new[]{"baseline","control","taa","fxaa","bilinear","fsr1","fsr2"})
+                {
+                    viewport.UseTaa=key=="taa";viewport.ScreenSpaceAA=key=="fxaa"?Viewport.ScreenSpaceAAEnum.Fxaa:Viewport.ScreenSpaceAAEnum.Disabled;viewport.Scaling3DScale=key is "bilinear" or "fsr1" or "fsr2"?.67f:1;viewport.Scaling3DMode=key=="fsr1"?Viewport.Scaling3DModeEnum.Fsr:key=="fsr2"?Viewport.Scaling3DModeEnum.Fsr2:Viewport.Scaling3DModeEnum.Bilinear;
+                    await Frames(40);await ToSignal(RenderingServer.Singleton,RenderingServer.SignalName.FramePostDraw);byte[] pixels;using(var image=ViewportCapture.Take(viewport))pixels=image.GetData();images[key]=pixels;var diffs=new JsonObject();foreach(var prior in images){var different=0;for(var i=0;i<pixels.Length;i++)if(pixels[i]!=prior.Value[i])different++;diffs[prior.Key]=different;}
+                    items.Add(new JsonObject{["key"]=key,["differences"]=diffs,["upscale_requested_getter"]=viewport.Scaling3DMode.ToString(),["taa_requested_getter"]=viewport.UseTaa,["fxaa_requested_getter"]=viewport.ScreenSpaceAA.ToString()});ViewportCapture.SavePng(viewport,Path.Combine(output,"aa_"+key+".png"));
+                }
+                row["aa_readback"]=items;
+            }
+            finally{viewport.Free();viewport=null;}
+        }
+        private async Task Build()
+        {
+            var timer=Stopwatch.StartNew();DisplayServer.WindowSetVsyncMode(DisplayServer.VSyncMode.Disabled);Engine.MaxFps=0;
+            viewport=new SubViewport{Size=new Vector2I(1920,1080),OwnWorld3D=true,UseHdr2D=true,RenderTargetUpdateMode=SubViewport.UpdateMode.Always};AddChild(viewport);ownedWorld=viewport.FindWorld3D();overlay=new CanvasLayer{Layer=120};AddChild(overlay);
+            var texture=viewport.GetTexture();var rect=new TextureRect{Texture=texture,ExpandMode=TextureRect.ExpandModeEnum.IgnoreSize,StretchMode=TextureRect.StretchModeEnum.KeepAspectCentered,MouseFilter=Control.MouseFilterEnum.Ignore};overlay.AddChild(rect);rect.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);texture.Dispose();
+            environment=new Godot.Environment{BackgroundMode=Godot.Environment.BGMode.Color,BackgroundColor=new Color(.34f,.48f,.64f),AmbientLightSource=Godot.Environment.AmbientSource.Color,AmbientLightColor=Colors.White,AmbientLightEnergy=.6f,FogEnabled=true,FogDensity=.002f};viewport.AddChild(new WorldEnvironment{Environment=environment});
+            sun=new DirectionalLight3D{RotationDegrees=new Vector3(-45,-35,0),ShadowEnabled=true,DirectionalShadowMode=DirectionalLight3D.ShadowMode.Parallel2Splits,DirectionalShadowMaxDistance=100};viewport.AddChild(sun);
+            camera=new Camera3D{Position=new Vector3(22,20,36),Far=500};viewport.AddChild(camera);camera.LookAt(new Vector3(-4,3,-6));camera.Current=true;
+            RenderingServer.ViewportSetMeasureRenderTime(viewport.GetViewportRid(),true);RenderingServer.ViewportSetMeasureRenderTime(GetViewport().GetViewportRid(),true);
+            terrain=new TerrainSession();viewport.AddChild(terrain);await terrain.Initialize(Entities.Collect<TerrainWorld>()["terrain_fixture/world"],camera.Position,1);
+            capsule=new CapsuleShape3D{Radius=.3f,Height=1.8f};
+            for(var i=0;i<50;i++)
+            {
+                var body=new CharacterBody3D{Position=new Vector3((i%10)*2-14,8,(i/10)*2-10),CollisionLayer=2,CollisionMask=3};viewport.AddChild(body);body.AddChild(new CollisionShape3D{Shape=capsule,Position=new Vector3(0,.9f,0)});bodies.Add(body);terrain.Collision.Track("probe/"+i,body);
+                var actor=Character3dPresentation.Create("probe/"+i,i%2==0?"proto_sea/sailor_man":"proto_sea/townswoman");body.AddChild(actor);actor.SetDistance(0);actor.Animation.PlayState(i%3==0?"sword_slash":i%5==0?"pistol_fire":"run");actors.Add(actor);await Frames(1);
+            }
+            StaticTerrain(terrain);CollectGrass(viewport);row["actors"]=actors.Count;row["terrain_patches"]=terrain.PatchCount;row["scatter_instances"]=terrain.ScatterInstances;row["build_ms"]=timer.Elapsed.TotalMilliseconds;row["entrance_frames_ms"]=entrance;active=true;await Frames(3);
+        }
+        private void StaticTerrain(Node node){if(node is MeshInstance3D mesh)mesh.GIMode=GeometryInstance3D.GIModeEnum.Static;foreach(var child in node.GetChildren())StaticTerrain(child);}
+        private void CollectGrass(Node node){if(node is MultiMeshInstance3D instance&&instance.Multimesh!=null){for(var p=node.GetParent();p!=null;p=p.GetParent())if(p.Name.ToString()=="Scatter_terrain_fixture_grass"){grass.Add(instance.Multimesh);break;}}foreach(var child in node.GetChildren())CollectGrass(child);}
+        public override void _Process(double delta)
+        {
+            var now=lifetime.Elapsed.TotalMilliseconds;if(lastFrame>0&&entrance!=null)entrance.Add(now-lastFrame);lastFrame=now;if(!active)return;
+            try{elapsed+=delta;var watch=Stopwatch.StartNew();foreach(var actor in actors){actor.Advance(delta);if(actor.Animation.Clock.Position>=actor.Animation.Clips.Clips[actor.Animation.CurrentState].Animation.Length)actor.Animation.PlayState(actor.Animation.CurrentState);}animation.Add(watch.Elapsed.TotalMilliseconds);var t=(float)elapsed;camera.Position=new Vector3(22+5*Mathf.Sin(t*.5f),20,36+3*Mathf.Cos(t*.5f));camera.LookAt(new Vector3(-4,3,-6));terrain.Morph(camera.Position);}
+            catch(Exception e){updateError=e;active=false;}
+        }
+        public override void _PhysicsProcess(double delta)
+        {
+            if(!active||++physicsFrame%simulationStride!=0)return;var watch=Stopwatch.StartNew();for(var i=0;i<bodies.Count;i++){var body=bodies[i];var direction=new Vector3(Mathf.Sin((float)elapsed*.5f+i),0,Mathf.Cos((float)elapsed*.5f+i));var v=direction*1.2f;v.Y=body.IsOnFloor()?-.1f:body.Velocity.Y-9.8f*(float)delta;body.Velocity=v;body.MoveAndSlide();}move.Add(watch.Elapsed.TotalMilliseconds);
+        }
+        private async Task Sample(string name,double seconds,int minimum)
+        {
+            var wall=new GraphicsStats();var main=new GraphicsStats();var render=new GraphicsStats();var gpu=new GraphicsStats();var physics=new GraphicsStats();var samples=new JsonArray();var timer=Stopwatch.StartNew();var previous=timer.Elapsed.TotalMilliseconds;
+            do{await Frames(1);if(updateError!=null)throw updateError;var now=timer.Elapsed.TotalMilliseconds;var dt=now-previous;previous=now;var m=Performance.GetMonitor(Performance.Monitor.TimeProcess)*1000;var r=RenderingServer.ViewportGetMeasuredRenderTimeCpu(viewport.GetViewportRid())+RenderingServer.ViewportGetMeasuredRenderTimeCpu(GetViewport().GetViewportRid())+RenderingServer.GetFrameSetupTimeCpu();var g=RenderingServer.ViewportGetMeasuredRenderTimeGpu(viewport.GetViewportRid())+RenderingServer.ViewportGetMeasuredRenderTimeGpu(GetViewport().GetViewportRid());var p=Performance.GetMonitor(Performance.Monitor.TimePhysicsProcess)*1000;wall.Add(dt);main.Add(m);render.Add(r);gpu.Add(g);physics.Add(p);samples.Add(new JsonArray(dt,m,r,g,p));}while((timer.Elapsed.TotalSeconds<seconds||samples.Count<minimum)&&samples.Count<4000);
+            row[name]=new JsonObject{["wall_ms"]=wall.Json(),["process_monitor_ms"]=main.Json(),["render_cpu_ms"]=render.Json(),["gpu_ms"]=gpu.Json(),["physics_monitor_ms"]=physics.Json(),["sample_seconds"]=timer.Elapsed.TotalSeconds};File.WriteAllText(Path.Combine(output,name+"-samples.json"),samples.ToJsonString());
+        }
+        private async Task Toggles()
+        {
+            var changes=new JsonArray();foreach(var key in new[]{"scale_bilinear","fsr1","fsr2","msaa","fxaa","taa","shadows","ssao","ssil","sdfgi","volumetric_fog","voxelgi","mesh_lod","distance","grass","animation_hz","simulation_lod","vsync","fps_cap"})
+            {
+                var timer=Stopwatch.StartNew();Apply(key,true);var setter=timer.Elapsed.TotalMilliseconds;await Sample("toggle_"+key,.65,45);var item=new JsonObject{["key"]=key,["setter_ms"]=setter,["state"]=State(),["method"]=RenderingServer.GetCurrentRenderingMethod()};item["measurements"]=row["toggle_"+key].DeepClone();changes.Add(item);Apply(key,false);await Frames(3);
+            }
+            row["toggles"]=changes;
+        }
+        private void StopWind(Node node)
+        {
+            if(node is MultiMeshInstance3D mm&&mm.Multimesh?.Mesh!=null)for(var i=0;i<mm.Multimesh.Mesh.GetSurfaceCount();i++)if(mm.Multimesh.Mesh.SurfaceGetMaterial(i) is ShaderMaterial material)material.SetShaderParameter("wind",0);
+            foreach(var child in node.GetChildren())StopWind(child);
+        }
+        private async Task FeatureProof()
+        {
+            // This separate frozen readback pass is excluded from animated-frame timing.
+            active=false;StopWind(terrain);await Frames(12);await ToSignal(RenderingServer.Singleton,RenderingServer.SignalName.FramePostDraw);
+            byte[] baseline;using(var image=ViewportCapture.Take(viewport))baseline=image.GetData();ViewportCapture.SavePng(viewport,Path.Combine(output,"proof_baseline.png"));
+            var proofs=new JsonArray();foreach(var key in new[]{"control","ssao","ssil","sdfgi","volumetric_fog","voxelgi"})
+            {
+                if(key!="control")Apply(key,true);await Frames(20);await ToSignal(RenderingServer.Singleton,RenderingServer.SignalName.FramePostDraw);byte[] pixels;using(var image=ViewportCapture.Take(viewport))pixels=image.GetData();var changed=0;var n=Math.Min(baseline.Length,pixels.Length);for(var i=0;i<n;i++)if(baseline[i]!=pixels[i])changed++;
+                proofs.Add(new JsonObject{["feature"]=key,["changed_bytes"]=changed,["total_bytes"]=n,["state"]=State()});ViewportCapture.SavePng(viewport,Path.Combine(output,"proof_"+key+".png"));if(key!="control")Apply(key,false);await Frames(8);
+            }
+            row["frozen_feature_readback"]=proofs;
+        }
+        private void Apply(string key,bool on)
+        {
+            switch(key)
+            {
+                case "scale_bilinear":viewport.Scaling3DScale=on?.67f:1;break;
+                case "fsr1":viewport.Scaling3DMode=on?Viewport.Scaling3DModeEnum.Fsr:Viewport.Scaling3DModeEnum.Bilinear;viewport.Scaling3DScale=on?.67f:1;break;
+                case "fsr2":viewport.Scaling3DMode=on?Viewport.Scaling3DModeEnum.Fsr2:Viewport.Scaling3DModeEnum.Bilinear;viewport.Scaling3DScale=on?.67f:1;break;
+                case "msaa":viewport.Msaa3D=on?Viewport.Msaa.Msaa4X:Viewport.Msaa.Disabled;break;
+                case "fxaa":viewport.ScreenSpaceAA=on?Viewport.ScreenSpaceAAEnum.Fxaa:Viewport.ScreenSpaceAAEnum.Disabled;break;
+                case "taa":viewport.UseTaa=on;break;
+                case "shadows":sun.ShadowEnabled=!on;break;
+                case "ssao":environment.SsaoEnabled=on;break;
+                case "ssil":environment.SsilEnabled=on;break;
+                case "sdfgi":environment.SdfgiMinCellSize=4;environment.SdfgiCascades=1;environment.SdfgiEnabled=on;break;
+                case "volumetric_fog":environment.VolumetricFogEnabled=on;environment.VolumetricFogDensity=.01f;break;
+                case "voxelgi":if(on){voxel=new VoxelGI{Size=new Vector3(48,24,48),Subdiv=VoxelGI.SubdivEnum.Subdiv64};viewport.AddChild(voxel);voxel.Bake(viewport,false);voxelData=voxel.Data;}else if(voxel!=null){voxel.Visible=false;voxel.Data=null;voxel.Free();voxel=null;voxelData?.Dispose();voxelData=null;}break;
+                case "mesh_lod":viewport.MeshLodThreshold=on?8:1;break;
+                case "distance":camera.Far=on?60:500;break;
+                case "grass":foreach(var mesh in grass)mesh.VisibleInstanceCount=on?mesh.InstanceCount/2:-1;break;
+                case "animation_hz":foreach(var actor in actors)actor.SetDistance(on?30:0);break;
+                case "simulation_lod":simulationStride=on?3:1;break;
+                case "vsync":DisplayServer.WindowSetVsyncMode(on?DisplayServer.VSyncMode.Enabled:DisplayServer.VSyncMode.Disabled);break;
+                case "fps_cap":Engine.MaxFps=on?30:0;break;
+            }
+        }
+        private long GrassInstances(){long total=0;foreach(var mesh in grass)total+=mesh.VisibleInstanceCount<0?mesh.InstanceCount:mesh.VisibleInstanceCount;return total;}
+        private JsonObject State()=>new(){["render_primitives"]=viewport.GetRenderInfo(Viewport.RenderInfoType.Visible,Viewport.RenderInfo.PrimitivesInFrame),["draw_calls"]=viewport.GetRenderInfo(Viewport.RenderInfoType.Visible,Viewport.RenderInfo.DrawCallsInFrame),["grass_render_groups"]=grass.Count,["grass_instances_across_groups"]=GrassInstances(),["scale"]=viewport.Scaling3DScale,["upscale"]=viewport.Scaling3DMode.ToString(),["msaa"]=viewport.Msaa3D.ToString(),["fxaa"]=viewport.ScreenSpaceAA.ToString(),["taa"]=viewport.UseTaa,["shadow"]=sun.ShadowEnabled,["ssao"]=environment.SsaoEnabled,["ssil"]=environment.SsilEnabled,["sdfgi"]=environment.SdfgiEnabled,["volumetric_fog"]=environment.VolumetricFogEnabled,["voxel_data"]=voxel?.Data!=null,["mesh_lod_threshold"]=viewport.MeshLodThreshold,["camera_far"]=camera.Far,["simulation_stride"]=simulationStride,["vsync"]=DisplayServer.WindowGetVsyncMode().ToString(),["fps_cap"]=Engine.MaxFps};
+        private async Task Frames(int count){for(var i=0;i<count;i++)await ToSignal(GetTree(),SceneTree.SignalName.ProcessFrame);}
+    }
+}

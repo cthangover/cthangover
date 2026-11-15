@@ -1,0 +1,29 @@
+namespace Cthangover.Probes.Graphics
+{
+    using System;using System.Diagnostics;using System.Text.Json.Nodes;using Godot;using Cthangover.Core.Mods;
+    /// <summary>Compiles raw mod-provider text in the running binary and verifies a GPU storage-buffer result against a CPU result. Owns all local-device RIDs.</summary>
+    public static class GraphicsCompute
+    {
+        public static JsonObject Run(bool forceCpu=false)
+        {
+            var row=new JsonObject();var global=RenderingServer.GetRenderingDevice();row["global_rd"]=global!=null;
+            var expected=new float[]{2,4,6,8};var cpu=new float[]{1,2,3,4};for(var i=0;i<cpu.Length;i++)cpu[i]*=2;row["cpu_result"]=System.Text.Json.JsonSerializer.SerializeToNode(cpu);
+            if(global==null||forceCpu){row["path"]="cpu";row["forced"]=forceCpu;return row;}
+            row["rd_total_memory_bytes"]=global.GetDeviceTotalMemory();
+            var rd=RenderingServer.CreateLocalRenderingDevice();if(rd==null)throw new InvalidOperationException("Global RD exists but no local device");
+            Rid shader=default,pipeline=default,buffer=default,set=default;
+            try
+            {
+                var source=ModManager.Instance.GetMod("test_graphics_probe").FileProvider.ReadFileText("compute.glsl");row["source_from_mod_provider"]=true;
+                using var text=new RDShaderSource{SourceCompute=source};var timer=Stopwatch.StartNew();using var spirv=rd.ShaderCompileSpirVFromSource(text,false);row["spirv_compile_ms"]=timer.Elapsed.TotalMilliseconds;row["compile_error"]=spirv.CompileErrorCompute;
+                if(!string.IsNullOrEmpty(spirv.CompileErrorCompute))throw new InvalidOperationException(spirv.CompileErrorCompute);
+                shader=rd.ShaderCreateFromSpirV(spirv);pipeline=rd.ComputePipelineCreate(shader);
+                var bytes=new byte[16];Buffer.BlockCopy(new float[]{1,2,3,4},0,bytes,0,16);buffer=rd.StorageBufferCreate(16,bytes);
+                using var uniform=new RDUniform{UniformType=RenderingDevice.UniformType.StorageBuffer,Binding=0};uniform.AddId(buffer);var uniforms=new Godot.Collections.Array<RDUniform>{uniform};try{set=rd.UniformSetCreate(uniforms,shader,0);}finally{((Godot.Collections.Array)uniforms).Dispose();}
+                var list=rd.ComputeListBegin();rd.ComputeListBindComputePipeline(list,pipeline);rd.ComputeListBindUniformSet(list,set,0);rd.ComputeListDispatch(list,1,1,1);rd.ComputeListEnd();timer.Restart();rd.Submit();rd.Sync();var output=rd.BufferGetData(buffer);row["submit_sync_read_ms"]=timer.Elapsed.TotalMilliseconds;
+                var values=new float[4];Buffer.BlockCopy(output,0,values,0,16);for(var i=0;i<4;i++)if(values[i]!=expected[i])throw new InvalidOperationException("Compute mismatch");row["gpu_result"]=System.Text.Json.JsonSerializer.SerializeToNode(values);row["path"]="gpu_verified";return row;
+            }
+            finally{if(set.IsValid)rd.FreeRid(set);if(buffer.IsValid)rd.FreeRid(buffer);if(pipeline.IsValid)rd.FreeRid(pipeline);if(shader.IsValid)rd.FreeRid(shader);rd.Free();}
+        }
+    }
+}

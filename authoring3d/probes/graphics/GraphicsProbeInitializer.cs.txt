@@ -1,0 +1,11 @@
+namespace Cthangover.Probes.Graphics
+{
+    using Cthangover.Core.Mods;using Cthangover.Core.Utils;using Godot;
+    /// <summary>Only a disposable host snapshot installs this initializer; normal mods and core are never changed.</summary>
+    public sealed class GraphicsProbeInitializer:IModInitializer
+    {
+        private static bool started;
+        public void OnModLoaded(string id){}
+        public void OnModResourcesReady(){if(!GameEnvironment.IsRuntime||started)return;foreach(var a in OS.GetCmdlineUserArgs())if(a.StartsWith("--graphics-case=")){started=true;ModRoot.AddDeferred(new GraphicsProbe());return;}}
+    }
+}
