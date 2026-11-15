@@ -65,7 +65,13 @@ namespace Cthangover.Core.Mods
         /// historical <c>ModCompiler.CacheRoot</c> access path for the
         /// assembly loader and the mod test engine.
         /// </summary>
-        public static string CacheRoot => ModAssemblyCache.CacheRoot;
+        public static string CacheRoot
+        {
+            get
+            {
+                return ModAssemblyCache.CacheRoot;
+            }
+        }
 
         /// <summary>
         /// Compiles all mods that declare source files in their manifest and
@@ -82,18 +88,24 @@ namespace Cthangover.Core.Mods
         /// </summary>
         /// <returns>A list of <c>(modId, assembly, sourceFiles)</c> tuples for
         /// every successfully compiled mod, in dependency order.</returns>
-        public static List<(string ModId, Assembly Assembly, List<(string FilePath, string Source)> Sources)> CompileAll(IDictionary<string, IModInfo> mods, CancellationToken cancellationToken = default)
+        public static List<(string ModId, Assembly Assembly, List<(string FilePath,
+             string Source)> Sources)> CompileAll(IDictionary<string, IModInfo> mods, CancellationToken cancellationToken = default)
         {
             var result = new List<(string ModId, Assembly Assembly, List<(string FilePath, string Source)> Sources)>();
             foreach (var compiled in PrepareAll(mods, cancellationToken))
             {
-                var assembly = ModAssemblyLoader.LoadFromPath(compiled.ArtifactPath, compiled.ModId)
-                    ?? ModAssemblyLoader.LoadFromBytes(File.ReadAllBytes(compiled.ArtifactPath));
+                var assembly = ModAssemblyLoader.LoadFromPath(compiled.ArtifactPath,
+                     compiled.ModId) ?? ModAssemblyLoader.LoadFromBytes(File.ReadAllBytes(compiled.ArtifactPath));
                 if (assembly == null)
+                {
                     continue;
+                }
+
                 result.Add((compiled.ModId, assembly, compiled.Sources));
-                GameLogger.Log("MODS_COMPILE", $"ModCompiler.CompileAll: Compiled mod '{compiled.ModId}', {compiled.Sources.Count} source file(s)");
+                GameLogger.Log("MODS_COMPILE",
+                     $"ModCompiler.CompileAll: Compiled mod '{compiled.ModId}', {compiled.Sources.Count} source file(s)");
             }
+
             return result;
         }
 
@@ -109,13 +121,12 @@ namespace Cthangover.Core.Mods
         public static List<ModCompileArtifact> PrepareAll(IDictionary<string, IModInfo> mods, CancellationToken cancellationToken = default)
         {
             var result = new List<ModCompileArtifact>();
-
             cancellationToken.ThrowIfCancellationRequested();
-
             GameLogger.CompilationErrors.Clear();
-
-            if(!Directory.Exists(CacheRoot))
+            if (!Directory.Exists(CacheRoot))
+            {
                 Directory.CreateDirectory(CacheRoot);
+            }
 
             // Sorted over the whole set, then filtered: a dependency without code
             // (shell2d_base) still orders its own dependencies (time_base) before the
@@ -124,38 +135,49 @@ namespace Cthangover.Core.Mods
             foreach (var mod in mods.Values)
             {
                 if (mod is ModInfo { Manifest: not null } info)
+                {
                     infos.Add(info);
+                }
             }
+
             var sorted = new List<ModInfo>();
             foreach (var info in ModCompileOrder.TopologicalSort(infos))
             {
                 if (HasSources(info))
+                {
                     sorted.Add(info);
+                }
             }
+
             if (sorted.Count == 0)
+            {
                 return result;
+            }
+
             var done = 0;
             foreach (var modInfo in sorted)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-
                 // Fine-grained progress for the launcher boot bar: every mod is
                 // one step of the Discovering phase, cache hits included.
                 BootProgress.ReportSub(done++ / (float)sorted.Count);
-
                 try
                 {
                     var sourceFiles = ModSourceCollector.CollectSourceFiles(modInfo, cancellationToken);
                     if (sourceFiles.Count == 0)
+                    {
                         continue;
+                    }
 
-                    GameLogger.Log("MODS_COMPILE", $"ModCompiler.CompileAll: compiling mod '{modInfo.Id}' with {sourceFiles.Count} source file(s):");
-                    foreach (var (path, _) in sourceFiles)
+                    GameLogger.Log("MODS_COMPILE",
+                         $"ModCompiler.CompileAll: compiling mod '{modInfo.Id}' with {sourceFiles.Count} source file(s):");
+                    foreach (var(path, _)in sourceFiles)
                         GameLogger.Log("MODS_COMPILE", $"  {path}", LogLevel.Debug);
-
                     var dependencySignature = ModAssemblyCache.BuildDependencySignature(modInfo, mods);
                     if (!string.IsNullOrEmpty(dependencySignature))
+                    {
                         GameLogger.Log("MODS_COMPILE", $"  dependencies: {dependencySignature}", LogLevel.Debug);
+                    }
 
                     // A mod whose dependency failed to compile would only produce
                     // cascading errors against a stale dependency artifact.
@@ -163,23 +185,29 @@ namespace Cthangover.Core.Mods
                     if (failedDependency != null)
                     {
                         GameLogger.CompilationErrors.Add($"Mod '{modInfo.Id}': dependency '{failedDependency}' did not compile");
-                        GameLogger.Log("MODS_COMPILE", $"ModCompiler.CompileAll: skipped '{modInfo.Id}': dependency '{failedDependency}' did not compile", LogLevel.Error);
+                        GameLogger.Log("MODS_COMPILE",
+                             $"ModCompiler.CompileAll: skipped '{modInfo.Id}': dependency '{failedDependency}' did not compile",
+                             LogLevel.Error);
                         continue;
                     }
 
                     var visibleModIds = DependencyClosure(modInfo, mods);
-                    var artifact = EnsureCompiled(modInfo.Id, sourceFiles, dependencySignature, cancellationToken, visibleModIds, modInfo.FileProvider?.RootPath, mods.Values);
+                    var artifact = EnsureCompiled(modInfo.Id, sourceFiles, dependencySignature, cancellationToken, visibleModIds,
+                         modInfo.FileProvider?.RootPath, mods.Values);
                     if (artifact != null)
+                    {
                         result.Add(new ModCompileArtifact(modInfo.Id, artifact, sourceFiles));
+                    }
                 }
-                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                catch (OperationCanceledException)when (cancellationToken.IsCancellationRequested)
                 {
                     throw;
                 }
                 catch (Exception ex)
                 {
                     GameLogger.CompilationErrors.Add($"Mod '{modInfo.Id}': {ex.Message}");
-                    GameLogger.Log("MODS_COMPILE", $"ModCompiler.CompileAll: Failed to compile mod '{modInfo.Id}': {ex.Message}\n{ex.StackTrace}", LogLevel.Error);
+                    GameLogger.Log("MODS_COMPILE",
+                         $"ModCompiler.CompileAll: Failed to compile mod '{modInfo.Id}': {ex.Message}\n{ex.StackTrace}", LogLevel.Error);
                 }
             }
 
@@ -187,15 +215,23 @@ namespace Cthangover.Core.Mods
         }
 
         private static bool HasSources(IModInfo mod)
-            => mod is ModInfo { Manifest.Sources.Count: > 0 };
+        {
+            return mod is ModInfo { Manifest.Sources.Count: > 0 };
+        }
 
-        /// <summary>A dependency (transitive) of <paramref name="modInfo"/> that has sources but is not among the compiled <paramref name="compiled"/>; null when all compiled.</summary>
+        /// <summary>
+        /// Finds a transitive source dependency absent from the prepared artifacts; content-only dependencies
+        /// do not require an assembly and cannot block preparation.
+        /// </summary>
         private static string FailedDependency(ModInfo modInfo, IDictionary<string, IModInfo> mods, List<ModCompileArtifact> compiled)
         {
             foreach (var id in DependencyClosure(modInfo, mods))
             {
                 if (!mods.TryGetValue(id, out var dependency) || !HasSources(dependency))
+                {
                     continue;
+                }
+
                 var found = false;
                 foreach (var artifact in compiled)
                 {
@@ -205,9 +241,13 @@ namespace Cthangover.Core.Mods
                         break;
                     }
                 }
+
                 if (!found)
+                {
                     return id;
+                }
             }
+
             return null;
         }
 
@@ -226,12 +266,16 @@ namespace Cthangover.Core.Mods
             {
                 var id = pending.Pop();
                 if (!visible.Add(id))
+                {
                     continue;
+                }
 
                 if (mods != null && mods.TryGetValue(id, out var dependency) && dependency is ModInfo dependencyInfo)
                 {
                     foreach (var next in dependencyInfo.Manifest?.DependencyIds ?? new List<string>())
+                    {
                         pending.Push(next);
+                    }
                 }
             }
 
@@ -243,13 +287,14 @@ namespace Cthangover.Core.Mods
         /// First checks the SHA-256 output cache; skips compilation
         /// if a cached DLL exists and <c>UseAssemblyCache</c> is true.
         /// </summary>
-        public static Assembly Compile(string modId, IEnumerable<(string FilePath, string Source)> sources, CancellationToken cancellationToken = default)
+        public static Assembly Compile(string modId, IEnumerable<(string FilePath, string Source)> sources,
+             CancellationToken cancellationToken = default)
         {
             return Compile(modId, sources, null, cancellationToken);
         }
 
         /// <summary>
-        /// Same as <see cref="Compile(string, IEnumerable{(string FilePath, string Source)}, CancellationToken)"/>,
+        /// Same as <see cref="Compile(string, IEnumerable{ ( string  FilePath ,  string  Source ) } ,  CancellationToken )"/>,
         /// but mixes <paramref name="dependencySignature"/> into the cache key. The
         /// signature describes the mod's dependencies (id + resolved version), so a
         /// renamed or version-bumped dependency invalidates the cached assembly even
@@ -260,23 +305,24 @@ namespace Cthangover.Core.Mods
         /// DLL per known mod id and ignores artifacts of unknown origin
         /// (e.g. <c>&lt;id&gt;_compile_test_&lt;hash&gt;.dll</c> from the compile guard).
         /// </summary>
-        public static Assembly Compile(string modId, IEnumerable<(string FilePath, string Source)> sources, string dependencySignature, CancellationToken cancellationToken = default, IReadOnlyCollection<string> knownModIds = null)
+        public static Assembly Compile(string modId, IEnumerable<(string FilePath, string Source)> sources, string dependencySignature,
+             CancellationToken cancellationToken = default, IReadOnlyCollection<string> knownModIds = null)
         {
             var cachedPath = EnsureCompiled(modId, sources, dependencySignature, cancellationToken, knownModIds);
             if (cachedPath == null)
+            {
                 return null;
+            }
 
             // Disk load keeps the module file-backed so the adjacent PDB binds;
             // byte load stays the fallback (plan §9.2). The modId overload
             // routes the load into the mod's collectible context so a later
             // unload can release it.
-            return ModAssemblyLoader.LoadFromPath(cachedPath, modId)
-                ?? ModAssemblyLoader.LoadFromBytes(File.ReadAllBytes(cachedPath));
+            return ModAssemblyLoader.LoadFromPath(cachedPath, modId) ?? ModAssemblyLoader.LoadFromBytes(File.ReadAllBytes(cachedPath));
         }
 
         /// <summary>
-        /// The compile half of <see cref="Compile(string, IEnumerable{(string FilePath, string Source)}, string, CancellationToken, IReadOnlyCollection{string})"/>
-        /// without the load: makes sure the cache holds the assembly for these
+        /// Prepares an assembly without loading it: makes sure the cache holds the assembly for these
         /// sources and returns its path (null on a compile error, which is logged
         /// and added to <see cref="GameLogger.CompilationErrors"/>). An in-process
         /// mod reload compiles every changed mod this way first and touches
@@ -287,22 +333,31 @@ namespace Cthangover.Core.Mods
         /// are parsed with paths under it so the Godot generator emits a correct
         /// <c>[ScriptPath]</c> (see <see cref="ModReferenceProvider.ResolveSourcePath"/>).
         /// <paramref name="referenceMods"/> supplies the selected providers for precompiled
-        /// references, so duplicate installations cannot contribute conflicting DLLs.
+        /// references, so duplicate installations cannot contribute conflicting DLLs. Runtime mods are optimized
+        /// without a managed debugger; an attached C# debugger selects Debug before compilation. Both modes keep
+        /// portable source PDBs and use separate cache identities. Attach before boot (or before reloading a mod)
+        /// when inspecting unoptimized locals; CompileString keeps its existing Debug policy.
         /// </summary>
-        public static string EnsureCompiled(string modId, IEnumerable<(string FilePath, string Source)> sources, string dependencySignature, CancellationToken cancellationToken = default, IReadOnlyCollection<string> knownModIds = null, string modRoot = null, IEnumerable<IModInfo> referenceMods = null)
+        public static string EnsureCompiled(string modId, IEnumerable<(string FilePath, string Source)> sources,
+             string dependencySignature, CancellationToken cancellationToken = default, IReadOnlyCollection<string> knownModIds = null,
+             string modRoot = null, IEnumerable<IModInfo> referenceMods = null)
         {
             var sourceList = sources.ToList();
             if (sourceList.Count == 0)
+            {
                 return null;
+            }
 
             cancellationToken.ThrowIfCancellationRequested();
-
             var generators = GodotGeneratorHost.GetGodotGenerators();
             var scriptRoot = ModReferenceProvider.GetScriptResourceRoot(modRoot);
             // A project copy and an identical user/archive installation need
             // different bindings; never reuse res:// attributes outside res://.
-            var bindingSignature = (dependencySignature ?? string.Empty) + ";script-root=" + (scriptRoot ?? "managed");
-            var cachedPath = ModAssemblyCache.BuildCachePath(modId, sourceList, bindingSignature, generators != null && generators.Length > 0);
+            var optimization = System.Diagnostics.Debugger.IsAttached ? OptimizationLevel.Debug : OptimizationLevel.Release;
+            var bindingSignature = (dependencySignature ?? string.Empty) + ";script-root=" + (scriptRoot ?? "managed") 
+                + ";optimization=" + optimization;
+            var cachedPath = ModAssemblyCache.BuildCachePath(modId, sourceList, bindingSignature, generators != null 
+                && generators.Length > 0);
             using var cacheEntry = AssemblyCacheEntry.Acquire(cachedPath, cancellationToken);
             if (ModAssemblyCache.IsUsableHit(cacheEntry, cachedPath))
             {
@@ -315,25 +370,20 @@ namespace Cthangover.Core.Mods
             // Encoding is mandatory for PDB emission: source strings read from
             // mod providers carry no BOM, and Roslyn refuses to emit debug
             // information for trees without an explicit encoding.
-            var syntaxTrees = sourceList
-                .Select(s => CSharpSyntaxTree.ParseText(s.Source, options: parseOptions, path: ModReferenceProvider.ResolveSourcePath(modId, s.FilePath, modRoot), encoding: System.Text.Encoding.UTF8, cancellationToken: cancellationToken))
-                .ToList();
+            var syntaxTrees = new List<SyntaxTree>();
+            foreach (var source in sourceList)
+            {
+                syntaxTrees.Add(CSharpSyntaxTree.ParseText(source.Source, options: parseOptions,
+                     path: ModReferenceProvider.ResolveSourcePath(modId, source.FilePath, modRoot), encoding: System.Text.Encoding.UTF8,
+                     cancellationToken: cancellationToken));
+            }
 
             var metadataReferences = new List<MetadataReference>();
             ModReferenceProvider.Collect(metadataReferences, modId, knownModIds, referenceMods);
-
-            var compilation = CSharpCompilation.Create(
-                assemblyName: modId,
-                syntaxTrees: syntaxTrees,
-                references: metadataReferences,
-                options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
-                    .WithOptimizationLevel(OptimizationLevel.Debug)
-            );
-
+            var compilation = CSharpCompilation.Create(assemblyName: modId, syntaxTrees: syntaxTrees, references: metadataReferences,
+                 options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary).WithOptimizationLevel(optimization));
             compilation = GodotGeneratorHost.RunGodotGenerators(generators, compilation, modId, useScriptPaths: scriptRoot != null);
-
             cancellationToken.ThrowIfCancellationRequested();
-
             using var ms = new MemoryStream();
             // Portable PDB alongside the DLL: with the module file-backed on
             // disk, the debugger resolves symbols by naming convention and
@@ -345,35 +395,38 @@ namespace Cthangover.Core.Mods
             // to the DLL: by default Roslyn records "<assemblyName>.pdb", but the
             // cache stores "<id>_<hash>.pdb", so neither the runtime (file:line
             // in stack traces) nor a debugger would find the symbols.
-            var result = compilation.Emit(ms, pdb, options: new Microsoft.CodeAnalysis.Emit.EmitOptions(
-                debugInformationFormat: Microsoft.CodeAnalysis.Emit.DebugInformationFormat.PortablePdb,
-                pdbFilePath: Path.ChangeExtension(cachedPath, ".pdb")));
-
+            var result = compilation.Emit(ms, pdb,
+                options: new Microsoft.CodeAnalysis.Emit.EmitOptions(
+                    debugInformationFormat: Microsoft.CodeAnalysis.Emit.DebugInformationFormat.PortablePdb,
+                    pdbFilePath: Path.ChangeExtension(cachedPath, ".pdb")));
             cancellationToken.ThrowIfCancellationRequested();
-
             if (!result.Success)
             {
-                var errors = result.Diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error).Take(20).Select(FormatDiagnostic).ToList();
-                GameLogger.CompilationErrors.Add($"Mod '{modId}' failed with {result.Diagnostics.Count(d => d.Severity == DiagnosticSeverity.Error)} error(s):\n  " + string.Join("\n  ", errors));
-
+                var errors = result.Diagnostics.Where(IsError).Take(20).Select(FormatDiagnostic).ToList();
+                GameLogger.CompilationErrors.Add($"Mod '{modId}' failed with {result.Diagnostics.Count(IsError)} error(s):\n  " 
+                    + string.Join("\n  ", errors));
                 var errCount = 0;
-                foreach (var d in result.Diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error).Take(20))
+                foreach (var d in result.Diagnostics.Where(IsError).Take(20))
                 {
                     GameLogger.Log("MODS_COMPILE", $"  ERR{++errCount}: {FormatDiagnostic(d)}", LogLevel.Debug);
                 }
-                GameLogger.Log("MODS_COMPILE", $"ModCompiler.Compile: '{modId}' FAILED with {result.Diagnostics.Count(d => d.Severity == DiagnosticSeverity.Error)} error(s)", LogLevel.Error);
 
+                GameLogger.Log("MODS_COMPILE",
+                     $"ModCompiler.Compile: '{modId}' FAILED with {result.Diagnostics.Count(IsError)} error(s)", LogLevel.Error);
                 return null;
             }
 
             cacheEntry.Publish(ms, pdb);
-
-            GameLogger.Log("MODS_COMPILE", $"ModCompiler.Compile: Compilation of mod '{modId}' with {sourceList.Count} source files - success -> {cachedPath}");
-
+            GameLogger.Log("MODS_COMPILE",
+                 $"ModCompiler.Compile: Compilation of mod '{modId}' with {sourceList.Count} source files - success -> {cachedPath}");
             ModAssemblyCache.CurrentArtifacts[modId] = cachedPath;
             return cachedPath;
         }
 
+        private static bool IsError(Diagnostic diagnostic)
+        {
+            return diagnostic.Severity == DiagnosticSeverity.Error;
+        }
 
         /// <summary>
         /// Formats a Roslyn diagnostic the way IDEs and terminals link it:
@@ -385,7 +438,10 @@ namespace Cthangover.Core.Mods
         {
             var severity = d.Severity.ToString().ToLowerInvariant();
             if (!d.Location.IsInSource)
+            {
                 return $"{severity} {d.Id}: {d.GetMessage()}";
+            }
+
             var span = d.Location.GetLineSpan();
             var start = span.StartLinePosition;
             return $"{span.Path}({start.Line + 1},{start.Character + 1}): {severity} {d.Id}: {d.GetMessage()}";
@@ -399,41 +455,41 @@ namespace Cthangover.Core.Mods
         /// </summary>
         public static CompileResult CompileString(string code, string scriptId)
         {
-            var syntaxTree = CSharpSyntaxTree.ParseText(code,
-                options: new CSharpParseOptions(
-                    preprocessorSymbols: new[]
-                    {
-                        "TOOLS", "DEBUG",
-                        "LOG_MODS_COMPILE"
-                    }),
-                path: $"{scriptId}.cs");
-
+            var syntaxTree = CSharpSyntaxTree.ParseText(code, options: new CSharpParseOptions(preprocessorSymbols: new[] { 
+                "TOOLS", 
+                "DEBUG", 
+                "LOG_MODS_COMPILE" 
+            }), path: $"{scriptId}.cs");
             var references = new List<MetadataReference>();
             AddCoreReferences(references);
-
-            var compilation = CSharpCompilation.Create(
-                assemblyName: scriptId,
-                syntaxTrees: new[] { syntaxTree },
-                references: references,
-                options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
-                    .WithOptimizationLevel(OptimizationLevel.Debug));
-
+            var compilation = CSharpCompilation.Create(assemblyName: scriptId, syntaxTrees: new[] { syntaxTree }, references: references,
+                 options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary).WithOptimizationLevel(OptimizationLevel.Debug));
             using var ms = new MemoryStream();
             var result = compilation.Emit(ms);
-
             if (!result.Success)
             {
                 var errors = new List<string>();
                 foreach (var d in result.Diagnostics)
                 {
                     if (d.Severity == DiagnosticSeverity.Error)
+                    {
                         errors.Add(d.GetMessage());
+                    }
                 }
-                return new CompileResult { Success = false, Errors = errors };
+
+                return new CompileResult
+                {
+                    Success = false,
+                    Errors = errors
+                };
             }
 
             var assembly = ModAssemblyLoader.LoadFromBytes(ms.ToArray());
-            return new CompileResult { Success = true, Assembly = assembly };
+            return new CompileResult
+            {
+                Success = true,
+                Assembly = assembly
+            };
         }
 
         /// <summary>
@@ -445,7 +501,8 @@ namespace Cthangover.Core.Mods
         /// <see cref="ModReferenceProvider.Collect"/>; the parameter shape
         /// must stay reflection-callable.
         /// </summary>
-        private static void AddCoreReferences(List<MetadataReference> references, string currentModId = null, IReadOnlyCollection<string> knownModIds = null)
+        private static void AddCoreReferences(List<MetadataReference> references, string currentModId = null,
+             IReadOnlyCollection<string> knownModIds = null)
         {
             ModReferenceProvider.Collect(references, currentModId, knownModIds);
         }

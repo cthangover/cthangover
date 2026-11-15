@@ -7,7 +7,6 @@ using System.IO;
 #if WINDOWS
 using System.Runtime.InteropServices;
 #endif
-
 namespace Cthangover.Core.Utils
 {
     /// <summary>
@@ -38,6 +37,11 @@ namespace Cthangover.Core.Utils
     /// </list>
     /// </para>
     /// <para>
+    /// A standalone redirected stdout receives complete plain records without the native print bridge.
+    /// An attached engine debugger retains that bridge so its editor Output panel still receives records.
+    /// File flushing, recent history, severity filtering and LogEmitted delivery use the same path in both cases.
+    /// </para>
+    /// <para>
     /// Initialisation is lazy and implicit: the first call to <see cref="Log"/>
     /// triggers <see cref="Init"/> automatically, which reads configuration from
     /// <see cref="Cthangover.Core.Settings.GameConfig.Instance"/>.
@@ -52,7 +56,6 @@ namespace Cthangover.Core.Utils
         [DllImport("kernel32.dll")]
         private static extern bool FreeConsole();
 #endif
-
         private static string _logPath;
         private static string _errorLogPath;
         private static RollingLogWriter _fileWriter;
@@ -63,7 +66,6 @@ namespace Cthangover.Core.Utils
         private static LogLevel _minimumLevel = LogLevel.Debug;
         private static HashSet<string> _enabledCategories;
         private static readonly object _lock = new();
-
         /// <summary>
         /// Fixed-size ring buffer of the most recent formatted log lines
         /// (category + message, no timestamp). Written under <see cref="_lock"/>
@@ -73,10 +75,8 @@ namespace Cthangover.Core.Utils
         private static readonly string[] _recentLines = new string[RecentLineCount];
         private static int _recentWriteIndex;
         private static int _recentCount;
-
         /// <summary>Capacity of the <see cref="_recentLines"/> ring buffer.</summary>
         private const int RecentLineCount = 128;
-
         /// <summary>
         /// Fired for every log line that passes the level filter. Raised on the
         /// thread that called <see cref="Log"/> — a background loader will fire
@@ -84,14 +84,12 @@ namespace Cthangover.Core.Utils
         /// directly and must marshal to the main thread themselves.
         /// </summary>
         public static event Action<string, string, LogLevel> LogEmitted;
-        
         /// <summary>
         /// Accumulates compilation errors emitted by the scenario scripting
         /// subsystem during source parsing. Other modules may inspect this list
         /// after a batch compile to surface diagnostics to the user.
         /// </summary>
         public static readonly List<string> CompilationErrors = new();
-        
         /// <summary>
         /// Explicit initialisation entry point. Reads logging configuration
         /// from <see cref="Cthangover.Core.Settings.GameConfig.Instance"/>,
@@ -104,7 +102,11 @@ namespace Cthangover.Core.Utils
         {
             lock (_lock)
             {
-                if (_initialized) return;
+                if (_initialized)
+                {
+                    return;
+                }
+
                 // Configuration errors can log recursively on this thread.
                 _initialized = true;
                 try
@@ -114,22 +116,28 @@ namespace Cthangover.Core.Utils
                         _enabled = false;
                         return;
                     }
+
                     var config = GameConfig.Instance.Logging;
                     _enabled = config.Enabled;
                     _minimumLevel = ParseLogLevel(config.MinimumLevel);
                     var enabledCategories = config.EnabledCategories;
                     if (enabledCategories != null && enabledCategories.Count > 0)
+                    {
                         _enabledCategories = new HashSet<string>(enabledCategories, StringComparer.OrdinalIgnoreCase);
+                    }
 
                     var logsDir = Path.Combine(OS.GetUserDataDir(), "logs");
                     _logPath = Path.Combine(logsDir, "cthangover.log");
                     _errorLogPath = Path.Combine(logsDir, "cthangover_errors.log");
                     foreach (var arg in OS.GetCmdlineArgs())
+                    {
                         if (arg.StartsWith("--log-file=", StringComparison.Ordinal))
                         {
                             _logPath = arg.Substring("--log-file=".Length);
                             break;
                         }
+                    }
+
                     if (_enabled)
                     {
                         var maxBytes = (long)config.MaxFileSizeMb * 1024 * 1024;
@@ -137,6 +145,7 @@ namespace Cthangover.Core.Utils
                         _errorWriter = new RollingLogWriter(_errorLogPath, maxBytes, config.MaxFiles);
                         AppDomain.CurrentDomain.ProcessExit += OnProcessExit;
                     }
+
                     if (config.ConsoleEnabled)
                     {
 #if WINDOWS
@@ -146,7 +155,9 @@ namespace Cthangover.Core.Utils
                         _consoleAllocated = true;
 #endif
                     }
-                    Log("LOGGER", $"Logger initialized, path={_logPath}");
+
+                    Log("LOGGER", $"Logger initialized, path={_logPath}, console={_consoleAllocated}, "
+                        + $"redirected={Console.IsOutputRedirected}");
                 }
                 catch
                 {
@@ -155,7 +166,10 @@ namespace Cthangover.Core.Utils
             }
         }
 
-        private static void OnProcessExit(object sender, EventArgs args) => Shutdown();
+        private static void OnProcessExit(object sender, EventArgs args)
+        {
+            Shutdown();
+        }
 
         /// <summary>Flushes and closes both file sinks under the logging lock. Idempotent; late log calls cannot reopen files.</summary>
         public static void Shutdown()
@@ -185,9 +199,15 @@ namespace Cthangover.Core.Utils
         private static LogLevel ParseLogLevel(string value)
         {
             if (string.IsNullOrEmpty(value))
+            {
                 return LogLevel.Debug;
+            }
+
             if (Enum.TryParse<LogLevel>(value, true, out var result))
+            {
                 return result;
+            }
+
             return LogLevel.Debug;
         }
 
@@ -215,7 +235,6 @@ namespace Cthangover.Core.Utils
             Console.WriteLine($" {message}");
         }
 #endif
-
         private static string GetAnsiColorCode(string category, LogLevel level)
         {
             return level switch
@@ -236,34 +255,36 @@ namespace Cthangover.Core.Utils
 
         /// <summary>
         /// Writes a timestamped, categorised entry to all active sinks (console,
-        /// Godot output, and log files) provided the entry's <paramref name="level"/>
+        /// Godot output, and log files) provided the entry's <paramref name = "level"/>
         /// meets the configured <c>MinimumLevel</c> threshold. Thread-safe: file
         /// I/O is synchronised with a private lock object.
         /// </summary>
-        /// <param name="category">
+        /// <param name = "category">
         /// A short label identifying the source subsystem. Conventionally
         /// uppercase (e.g. <c>"MODS"</c>, <c>"SCENE"</c>). Displayed in
         /// colour on the console.
         /// </param>
-        /// <param name="message">The free-form diagnostic text.</param>
-        /// <param name="level">
+        /// <param name = "message">The free-form diagnostic text.</param>
+        /// <param name = "level">
         /// Severity classification. Defaults to <see cref="LogLevel.Message"/>.
         /// Errors are duplicated to the dedicated error log.
         /// </param>
         public static void Log(string category, string message, LogLevel level = LogLevel.Message)
         {
             if (!_initialized)
+            {
                 Init();
+            }
 
             if (level < _minimumLevel || !IsGodotAvailable())
+            {
                 return;
+            }
 
             //if (_enabledCategories != null && !_enabledCategories.Contains(category))
             //    return;
-
             var timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
             var line = $"[{timestamp}] [{category}] {message}";
-
             if (_consoleAllocated)
             {
                 try
@@ -282,10 +303,20 @@ namespace Cthangover.Core.Utils
             {
                 try
                 {
-                    GD.Print(line);
+                    // Standalone pipe consumers already receive stdout. Keep the engine bridge for an
+                    // attached debugger, where GD.Print also forwards records to the editor's Output panel.
+                    if (Console.IsOutputRedirected && !EngineDebugger.IsActive())
+                    {
+                        Console.WriteLine(line);
+                    }
+                    else
+                    {
+                        GD.Print(line);
+                    }
                 }
                 catch
-                { }
+                {
+                }
             }
 
             lock (_lock)
@@ -293,7 +324,9 @@ namespace Cthangover.Core.Utils
                 _recentLines[_recentWriteIndex] = $"[{category}] {message}";
                 _recentWriteIndex = (_recentWriteIndex + 1) % RecentLineCount;
                 if (_recentCount < RecentLineCount)
+                {
                     _recentCount++;
+                }
             }
 
             try
@@ -305,18 +338,23 @@ namespace Cthangover.Core.Utils
             }
 
             if (!_initialized || !_enabled)
+            {
                 return;
+            }
 
             lock (_lock)
             {
                 _fileWriter?.WriteLine(line);
-                if (level == LogLevel.Error) _errorWriter?.WriteLine(line);
+                if (level == LogLevel.Error)
+                {
+                    _errorWriter?.WriteLine(line);
+                }
             }
         }
 
         /// <summary>
         /// Returns a snapshot of the most recent formatted log lines (newest
-        /// first, at most <paramref name="maxCount"/> entries). Thread-safe.
+        /// first, at most <paramref name = "maxCount"/> entries). Thread-safe.
         /// </summary>
         public static List<string> GetRecentLines(int maxCount)
         {
@@ -329,9 +367,9 @@ namespace Cthangover.Core.Utils
                     var idx = (_recentWriteIndex - 1 - i + RecentLineCount * 2) % RecentLineCount;
                     result.Add(_recentLines[idx]);
                 }
+
                 return result;
             }
         }
-
     }
 }

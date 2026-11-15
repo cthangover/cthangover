@@ -1,7 +1,9 @@
 """Host-only ship boarding matrix. Every physics/preset combination uses a disposable minimal physical project; source project settings are never changed."""
 import argparse
+from collections import Counter
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import re
@@ -45,7 +47,16 @@ def main():
     parser.add_argument('--measure-spawn',action='store_true',help='Measure character creation separately after a successful isolated camera regression.')
     parser.add_argument('--physics-engine',choices=['default','jolt'],action='append')
     parser.add_argument('--waves',choices=['low','high'],action='append')
-    args=parser.parse_args();source=Path.cwd();out=args.out.resolve();out.mkdir(parents=True,exist_ok=False);report=[]
+    parser.add_argument('--p95-ms', type=float,
+                        help='Fail boarding acceptance when measured wall-frame p95 exceeds this millisecond budget.')
+    args = parser.parse_args()
+    if args.p95_ms is not None:
+        if not math.isfinite(args.p95_ms) or args.p95_ms <= 0 or args.scenario != 'boarding':
+            parser.error('--p95-ms requires a finite positive budget and --scenario boarding')
+    source = Path.cwd()
+    out = args.out.resolve()
+    out.mkdir(parents=True, exist_ok=False)
+    report = []
     original_config=(source/'project.godot').read_bytes();source_signature={str(p.relative_to(source)):hashlib.sha256(p.read_bytes()).hexdigest() for p in (source/'mods_private/ships3d_base').rglob('*.cs') if '.git' not in p.parts}
     with tempfile.TemporaryDirectory(prefix='cthangover-ships-matrix-') as temp:
         scratch=Path(temp);project=scratch/'project';project.mkdir();mods=copy_project(source,project)
@@ -89,7 +100,9 @@ def main():
                             subprocess.run(['taskkill','/PID',str(process.pid),'/T','/F'],capture_output=True);process.wait(timeout=20);code=124
                     logs=home/'roaming/cthangover/logs'
                     if logs.exists():shutil.copytree(logs,directory/'game-logs')
-                    text=(directory/'stdout.log').read_text(encoding='utf-8-sig',errors='replace');complete=text+'\n'+'\n'.join(p.read_text(encoding='utf-8-sig',errors='replace') for p in (directory/'game-logs').glob('*.log'))
+                    text=(directory/'stdout.log').read_text(encoding='utf-8-sig',errors='replace')
+                    log_files = sorted((directory / 'game-logs').glob('*.log*'))
+                    complete = text + '\n' + '\n'.join(p.read_text(encoding='utf-8-sig', errors='replace') for p in log_files)
                     errors=[]
                     if code or text.count('[TEST_RESULT] name=ships3d_demo passed=1 failed=0')!=1:errors.append('Exit or terminal marker failed')
                     if comparison_error:errors.append(comparison_error)
@@ -99,6 +112,20 @@ def main():
                         if line.startswith('ERROR:') and not (line.startswith('ERROR: GENERAL - Message Id Number: 0 | Message Id Name: Loader Message') and number+1<len(all_lines) and 'EOSOverlayVkLayer-Win64.json' in all_lines[number+1]):errors.append(line)
                     row=json.loads((captures/'row.json').read_text()) if (captures/'row.json').exists() else {'status':'MISSING'}
                     row.update(name=name,exit_code=code,host_seconds=time.monotonic()-started,harness_errors=list(dict.fromkeys(errors)),log=str(directory/'stdout.log'))
+                    if args.scenario != 'camera':
+                        # Combat records are emitted on the simulation thread. Compare complete records,
+                        # including multiplicity, so a faster stdout path cannot silently drop hit logs.
+                        battle_pattern = r'^\[\d{4}-\d{2}-\d{2} [\d:.]+\] \[BATTLE\] .*$'
+                        stdout_records = Counter(re.findall(battle_pattern, text, re.MULTILINE))
+                        file_records = Counter()
+                        for log_file in log_files:
+                            if log_file.name == 'cthangover.log' or log_file.name.startswith('cthangover.log.'):
+                                file_records.update(re.findall(battle_pattern, log_file.read_text(
+                                    encoding='utf-8-sig', errors='replace'), re.MULTILINE))
+                        row['battle_log_records'] = sum(file_records.values())
+                        row['battle_stdout_matches_file'] = stdout_records == file_records and bool(file_records)
+                        if not row['battle_stdout_matches_file']:
+                            row['harness_errors'].append('Battle stdout/file record mismatch or missing records')
                     expected='Jolt Physics' if physics=='jolt' else 'Godot Physics'
                     if row.get('physics')!=expected:row['harness_errors'].append('Physics A/B mismatch: '+str(row.get('physics')))
                     if row.get('case')!=args.scenario:row['harness_errors'].append('Scenario mismatch')
@@ -113,6 +140,11 @@ def main():
                     else:
                         for key in ['wall_ms','main_thread_cpu_ms','render_cpu_ms','gpu_ms','physics_ms']:
                             if row.get(key,{}).get('n',0)<1000 or 'p99' not in row.get(key,{}):row['harness_errors'].append('Incomplete percentiles: '+key)
+                    if args.p95_ms is not None:
+                        row['p95_budget_ms'] = args.p95_ms
+                        measured = row.get('wall_ms', {}).get('p95')
+                        if not isinstance(measured, (int, float)) or not math.isfinite(measured) or measured > args.p95_ms:
+                            row['harness_errors'].append('Wall-frame p95 budget exceeded: ' + str(measured))
                     report.append(row);(out/'matrix.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps({k:v for k,v in row.items() if k!='fighter_states'}),flush=True)
                     if row['harness_errors'] and args.scenario!='camera':raise RuntimeError(name+' failed; inspect '+str(directory))
                     shutil.rmtree(home)

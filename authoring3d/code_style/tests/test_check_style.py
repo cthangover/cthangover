@@ -164,6 +164,31 @@ public class Sample
         self.assertEqual({"GAME_LOGGER"}, rules)
         self.assertEqual(2, len(payload["issues"]))
 
+    def test_only_canonical_logger_implementation_owns_direct_output(self):
+        code = '''namespace Cthangover.Core.Utils
+{
+    internal static class GameLogger
+    {
+        internal static void Write()
+        {
+            Console.WriteLine("record");
+            GD.Print("record");
+        }
+    }
+}
+'''
+        self.write("Core/Utils/GameLogger.cs", code)
+        self.run_check("Core/Utils/GameLogger.cs", expected=0)
+        self.write("mods/demo_base/manifest.json", '{"id":"demo_base"}')
+        self.write("mods/demo_base/GameLogger.cs", code)
+        payload, rules = self.run_check("mods/demo_base/GameLogger.cs", expected=1)
+        self.assertEqual({"GAME_LOGGER"}, rules)
+        self.assertEqual(2, len(payload["issues"]))
+        self.write("Core/Utils/GameLogger.cs", code.replace("class GameLogger", "class OtherSink"))
+        payload, rules = self.run_check("Core/Utils/GameLogger.cs", expected=1)
+        self.assertEqual({"GAME_LOGGER"}, rules)
+        self.assertEqual(2, len(payload["issues"]))
+
     def test_widget_inheritance_uses_unselected_context(self):
         self.write("mods/ui_base/src/Base/Lists/ModWidget.cs", "namespace Cthangover.Mods.Interface.Base.Lists { internal class ModWidget {} }")
         self.write("mods/ui_base/widget.cs", "using Cthangover.Mods.Interface.Base.Lists; internal class ToolWindow : ModWidget {}")

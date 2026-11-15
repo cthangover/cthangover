@@ -1,3 +1,9 @@
+using System;
+using System.Diagnostics;
+using System.Reflection;
+using System.Reflection.Metadata;
+using System.Reflection.PortableExecutable;
+using Cthangover.Core.Mods.Compilation;
 using System.Collections.Generic;
 using System.IO;
 using Cthangover.Core.Mods;
@@ -5,8 +11,18 @@ using Cthangover.Core.Utils;
 
 namespace Engine.Tests.Mods
 {
-    public class ModCompilerTests
+    /// <summary>
+    /// Compiler artifacts are checked through emitted assemblies, portable symbols and cache identities;
+    /// cancellation and dependency failures must preserve the existing prepare-before-load boundary.
+    /// </summary>
+    public class ModCompilerTests : IDisposable
     {
+        private readonly List<string> ownedArtifacts = new();
+        private readonly List<string> ownedModIds = new();
+
+        private System.Threading.CancellationToken cancelledToken;
+
+        private List<(string, string)> cancelledSources;
         private const string ValidClassCode = @"
 using Cthangover.Core.Mods;
 public class TestModInit : IModInitializer
@@ -15,41 +31,47 @@ public class TestModInit : IModInitializer
     public void OnModResourcesReady() { }
 }
 ";
-
+        /// <summary>
+        /// Ad-hoc valid code remains executable without entering the persistent mod artifact cache.
+        /// </summary>
         [Fact]
         public void CompileString_ValidCode_ReturnsAssembly()
         {
             var result = ModCompiler.CompileString(ValidClassCode, "test_script");
-
             Assert.NotNull(result);
             Assert.True(result.Success);
             Assert.NotNull(result.Assembly);
             Assert.Empty(result.Errors);
         }
 
+        /// <summary>
+        /// Ad-hoc syntax errors return diagnostics and no partially usable assembly.
+        /// </summary>
         [Fact]
         public void CompileString_InvalidCode_ReturnsErrors()
         {
             var code = "broken csharp code {{{";
-
             var result = ModCompiler.CompileString(code, "bad_script");
-
             Assert.False(result.Success);
             Assert.Null(result.Assembly);
             Assert.NotNull(result.Errors);
             Assert.NotEmpty(result.Errors);
         }
 
+        /// <summary>
+        /// A content-only mod creates no empty assembly artifact.
+        /// </summary>
         [Fact]
         public void Compile_EmptySources_ReturnsNull()
         {
             var sources = new List<(string, string)>();
-
             var result = ModCompiler.Compile("test_mod", sources);
-
             Assert.Null(result);
         }
 
+        /// <summary>
+        /// A normal source mod produces a usable assembly through the public load path.
+        /// </summary>
         [Fact]
         public void Compile_ValidSingleFile_ReturnsAssembly()
         {
@@ -57,12 +79,13 @@ public class TestModInit : IModInitializer
             {
                 ("TestClass.cs", ValidClassCode)
             };
-
             var result = ModCompiler.Compile("test_mod_valid", sources);
-
             Assert.NotNull(result);
         }
 
+        /// <summary>
+        /// A broken normal mod cannot return a runnable assembly.
+        /// </summary>
         [Fact]
         public void Compile_SyntaxError_ReturnsNull()
         {
@@ -70,20 +93,23 @@ public class TestModInit : IModInitializer
             {
                 ("Broken.cs", "totally broken code @@@")
             };
-
             var result = ModCompiler.Compile("test_mod_broken", sources);
-
             Assert.Null(result);
         }
 
+        /// <summary>
+        /// Invalidating an absent identity does not report that live artifacts were replaced.
+        /// </summary>
         [Fact]
         public void InvalidateCache_NoDir_ReturnsFalse()
         {
             var result = ModCompiler.InvalidateCache("nonexistent_mod");
-
             Assert.False(result);
         }
 
+        /// <summary>
+        /// A valid runtime mod can be compiled and invalidated under its unique cache identity.
+        /// </summary>
         [Fact]
         public void Compile_CachesToDisk()
         {
@@ -92,61 +118,73 @@ public class TestModInit : IModInitializer
             {
                 ("Test.cs", ValidClassCode)
             };
-
             var result = ModCompiler.Compile(modId, sources);
             Assert.NotNull(result);
-
             try
             {
                 ModCompiler.InvalidateCache(modId);
             }
-            catch { }
+            catch
+            {
+            }
         }
 
+        /// <summary>
+        /// Independent source identities compile without sharing or overwriting their artifacts.
+        /// </summary>
         [Fact]
         public void Compile_DifferentSource_DifferentHash()
         {
             var modId1 = "test_hash_a_" + System.Guid.NewGuid().ToString("N").Substring(0, 6);
             var modId2 = "test_hash_b_" + System.Guid.NewGuid().ToString("N").Substring(0, 6);
-
             var codeA = @"using Cthangover.Core.Mods;
 public class TestA : IModInitializer { public void OnModLoaded(string m) { } public void OnModResourcesReady() { } }";
-
             var codeB = @"using Cthangover.Core.Mods;
 public class TestB : IModInitializer { public void OnModLoaded(string m) { } public void OnModResourcesReady() { } }";
-
             var sources1 = new List<(string, string)>
             {
                 ("Test.cs", codeA)
             };
-
             var sources2 = new List<(string, string)>
             {
                 ("Test.cs", codeB)
             };
-
             var r1 = ModCompiler.Compile(modId1, sources1);
             var r2 = ModCompiler.Compile(modId2, sources2);
-
             Assert.NotNull(r1);
             Assert.NotNull(r2);
+            try
+            {
+                ModCompiler.InvalidateCache(modId1);
+            }
+            catch
+            {
+            }
 
-            try { ModCompiler.InvalidateCache(modId1); } catch { }
-            try { ModCompiler.InvalidateCache(modId2); } catch { }
+            try
+            {
+                ModCompiler.InvalidateCache(modId2);
+            }
+            catch
+            {
+            }
         }
 
+        /// <summary>
+        /// Cancellation before a preparation batch prevents compilation instead of reporting success.
+        /// </summary>
         [Fact]
         public void CompileAll_PreCancelledToken_Throws()
         {
             using var cts = new System.Threading.CancellationTokenSource();
             cts.Cancel();
-
-            Assert.Throws<OperationCanceledException>(() =>
-            {
-                ModCompiler.CompileAll(new Dictionary<string, IModInfo>(), cts.Token);
-            });
+            cancelledToken = cts.Token;
+            Assert.Throws<OperationCanceledException>(CompileAllCancelled);
         }
 
+        /// <summary>
+        /// Cancellation before a single compilation prevents artifact creation.
+        /// </summary>
         [Fact]
         public void Compile_PreCancelledToken_Throws()
         {
@@ -154,26 +192,28 @@ public class TestB : IModInitializer { public void OnModLoaded(string m) { } pub
             {
                 ("TestClass.cs", ValidClassCode)
             };
-
             using var cts = new System.Threading.CancellationTokenSource();
             cts.Cancel();
-
-            Assert.Throws<OperationCanceledException>(() =>
-            {
-                ModCompiler.Compile("test_mod_cancelled", sources, cts.Token);
-            });
+            cancelledToken = cts.Token;
+            cancelledSources = sources;
+            Assert.Throws<OperationCanceledException>(CompileCancelled);
         }
 
+        /// <summary>
+        /// Repeated preparation reuses the same artifact and records it without loading a mod assembly.
+        /// </summary>
         [Fact]
         public void EnsureCompiled_CompilesIntoTheCacheWithoutLoading()
         {
             var modId = "test_ensure_" + System.Guid.NewGuid().ToString("N").Substring(0, 8);
-            var sources = new List<(string, string)> { ("TestClass.cs", ValidClassCode) };
+            var sources = new List<(string, string)>
+            {
+                ("TestClass.cs", ValidClassCode)
+            };
             try
             {
                 var first = ModCompiler.EnsureCompiled(modId, sources, null);
                 var second = ModCompiler.EnsureCompiled(modId, sources, null);
-
                 Assert.NotNull(first);
                 Assert.Equal(first, second);
                 Assert.True(File.Exists(first));
@@ -188,15 +228,20 @@ public class TestB : IModInitializer { public void OnModLoaded(string m) { } pub
             }
         }
 
+        /// <summary>
+        /// Both malformed sources and a content-only selection refuse to produce a prepared artifact.
+        /// </summary>
         [Fact]
         public void EnsureCompiled_CompileErrorOrNoSources_ReturnsNull()
         {
             var modId = "test_ensure_bad_" + System.Guid.NewGuid().ToString("N").Substring(0, 8);
-
             Assert.Null(ModCompiler.EnsureCompiled(modId, new List<(string, string)> { ("Bad.cs", "public class {") }, null));
             Assert.Null(ModCompiler.EnsureCompiled(modId, new List<(string, string)>(), null));
         }
 
+        /// <summary>
+        /// A changed provider prepares first and changes its dependent artifact before either assembly loads.
+        /// </summary>
         [Fact]
         public void PrepareAll_CompilesInDependencyOrder_DependentFollowsTheDependencyArtifact()
         {
@@ -210,16 +255,18 @@ public class TestB : IModInitializer { public void OnModLoaded(string m) { } pub
                     [app] = SourceMod(root, app, "public class AppUser { public string Use() => new LibApi().Hello(); }", lib),
                     [lib] = SourceMod(root, lib, "public class LibApi { public string Hello() => \"v1\"; }"),
                 };
-
                 var first = ModCompiler.PrepareAll(mods);
-
-                Assert.Equal(new[] { lib, app }, new[] { first[0].ModId, first[1].ModId });
+                Assert.Equal(new[] { 
+                    lib, 
+                    app 
+                }, new[] { 
+                    first[0].ModId, 
+                    first[1].ModId 
+                });
                 Assert.NotEmpty(first[1].Sources);
                 Assert.False(ModAssemblyLoader.IsModLoaded(app));
-
                 File.WriteAllText(Path.Combine(root, lib, "src", "Code.cs"), "public class LibApi { public string Hello() => \"v2\"; }");
                 var second = ModCompiler.PrepareAll(mods);
-
                 Assert.NotEqual(first[0].ArtifactPath, second[0].ArtifactPath);
                 Assert.NotEqual(first[1].ArtifactPath, second[1].ArtifactPath);
                 Assert.Empty(GameLogger.CompilationErrors);
@@ -230,6 +277,9 @@ public class TestB : IModInitializer { public void OnModLoaded(string m) { } pub
             }
         }
 
+        /// <summary>
+        /// A failed provider prevents its dependent from compiling against stale output and names that dependency.
+        /// </summary>
         [Fact]
         public void PrepareAll_DependencyFails_DependentIsSkippedWithAnError()
         {
@@ -243,9 +293,7 @@ public class TestB : IModInitializer { public void OnModLoaded(string m) { } pub
                     [lib] = SourceMod(root, lib, "public class LibApi {"),
                     [app] = SourceMod(root, app, "public class AppUser { }", lib),
                 };
-
                 var result = ModCompiler.PrepareAll(mods);
-
                 Assert.Empty(result);
                 Assert.Contains(GameLogger.CompilationErrors, NamesSkippedDependent(lib));
             }
@@ -255,17 +303,168 @@ public class TestB : IModInitializer { public void OnModLoaded(string m) { } pub
             }
         }
 
-        private static System.Predicate<string> NamesSkippedDependent(string lib) => new SkippedDependentMatcher(lib).Matches;
+        /// <summary>
+        /// Runtime output permits JIT optimization without an attached debugger, retains portable source documents,
+        /// and cannot reuse the former cache identity that omitted compilation optimization.
+        /// </summary>
+        [Fact]
+        public void EnsureCompiled_OptimizationMetadataAndPortableSymbolsMatchRuntimePolicy()
+        {
+            var id = "test_optimized_" + Guid.NewGuid().ToString("N");
+            ownedModIds.Add(id);
+            var sources = new List<(string FilePath, string Source)>
+            {
+                ("TestClass.cs", ValidClassCode)
+            };
+            var generators = GodotGeneratorHost.GetGodotGenerators();
+            var legacy = ModAssemblyCache.BuildCachePath(id, sources, ";script-root=managed", generators != null && generators.Length > 0);
+            var artifact = ModCompiler.EnsureCompiled(id, sources, null);
+            Assert.NotNull(artifact);
+            ownedArtifacts.Add(artifact);
+            Assert.NotEqual(legacy, artifact);
+            Assert.Equal(Debugger.IsAttached, (ReadDebugModes(artifact) & DebuggableAttribute.DebuggingModes.DisableOptimizations) != 0);
+            Assert.False(ModAssemblyLoader.IsArtifactLoaded(artifact));
+            var symbols = Path.ChangeExtension(artifact, ".pdb");
+            Assert.True(File.Exists(symbols));
+            using var stream = File.OpenRead(symbols);
+            using var provider = MetadataReaderProvider.FromPortablePdbStream(stream);
+            var reader = provider.GetMetadataReader();
+            var sourceFound = false;
+            foreach (var handle in reader.Documents)
+            {
+                var document = reader.GetDocument(handle);
+                sourceFound |= reader.GetString(document.Name).EndsWith("TestClass.cs", StringComparison.Ordinal);
+            }
+
+            Assert.True(sourceFound, "optimized artifacts retain their portable source documents");
+            Assert.Equal(artifact, ModCompiler.EnsureCompiled(id, sources, null));
+        }
+
+        /// <summary>
+        /// Source authors can still request an explicitly unoptimized assembly; the runtime compiler does not
+        /// overwrite their Debuggable attribute while optimizing ordinary mods.
+        /// </summary>
+        [Fact]
+        public void EnsureCompiled_AuthoredDebugAttributeRemainsEffective()
+        {
+            var id = "test_authored_debug_" + Guid.NewGuid().ToString("N");
+            ownedModIds.Add(id);
+            var code = "using System.Diagnostics; " + "[assembly: Debuggable(DebuggableAttribute.DebuggingModes.DisableOptimizations)] " 
+                + "public sealed class DebugSample {}";
+            var artifact = ModCompiler.EnsureCompiled(id, new[] { ("DebugSample.cs", code) }, null);
+            Assert.NotNull(artifact);
+            ownedArtifacts.Add(artifact);
+            Assert.True((ReadDebugModes(artifact) & DebuggableAttribute.DebuggingModes.DisableOptimizations) != 0);
+        }
+
+        /// <summary>
+        /// The in-game script editor keeps its existing unoptimized compilation path for local inspection.
+        /// </summary>
+        [Fact]
+        public void CompileString_KeepsDebuggableLocalsPolicy()
+        {
+            var result = ModCompiler.CompileString(ValidClassCode, "test_script_debug_policy");
+            Assert.True(result.Success);
+            var attribute = result.Assembly.GetCustomAttribute<DebuggableAttribute>();
+            Assert.NotNull(attribute);
+            Assert.True(attribute.IsJITOptimizerDisabled);
+        }
+
+        private static DebuggableAttribute.DebuggingModes ReadDebugModes(string path)
+        {
+            using var stream = File.OpenRead(path);
+            using var image = new PEReader(stream);
+            var reader = image.GetMetadataReader();
+            foreach (var handle in reader.GetAssemblyDefinition().GetCustomAttributes())
+            {
+                var attribute = reader.GetCustomAttribute(handle);
+                if (attribute.Constructor.Kind != HandleKind.MemberReference)
+                {
+                    continue;
+                }
+
+                var constructor = reader.GetMemberReference((MemberReferenceHandle)attribute.Constructor);
+                if (constructor.Parent.Kind != HandleKind.TypeReference)
+                {
+                    continue;
+                }
+
+                var type = reader.GetTypeReference((TypeReferenceHandle)constructor.Parent);
+                if (reader.GetString(type.Namespace) != "System.Diagnostics" || reader.GetString(type.Name) != "DebuggableAttribute")
+                {
+                    continue;
+                }
+
+                var value = reader.GetBlobReader(attribute.Value);
+                Assert.Equal((ushort)1, value.ReadUInt16());
+                return (DebuggableAttribute.DebuggingModes)value.ReadInt32();
+            }
+
+            throw new InvalidDataException("Compiled assembly has no Debuggable attribute");
+        }
+
+        private void CompileAllCancelled()
+        {
+            ModCompiler.CompileAll(new Dictionary<string, IModInfo>(), cancelledToken);
+        }
+
+        private void CompileCancelled()
+        {
+            ModCompiler.Compile("test_mod_cancelled", cancelledSources, cancelledToken);
+        }
+
+        /// <summary>
+        /// Removes this case's unique, never-loaded optimization fixtures after releasing their cache bindings;
+        /// existing dependency fixtures retain their own try/finally cleanup.
+        /// </summary>
+        public void Dispose()
+        {
+            foreach (var id in ownedModIds)
+            {
+                ModAssemblyCache.CurrentArtifacts.TryRemove(id, out _);
+                ModCompiler.InvalidateCache(id);
+            }
+
+            foreach (var artifact in ownedArtifacts)
+            {
+                File.Delete(artifact);
+                File.Delete(Path.ChangeExtension(artifact, ".pdb"));
+            }
+        }
+
+        private static System.Predicate<string> NamesSkippedDependent(string lib)
+        {
+            return new SkippedDependentMatcher(lib).Matches;
+        }
 
         private static ModInfo SourceMod(string root, string id, string code, params string[] depends)
         {
             var dir = Path.Combine(root, id);
             Directory.CreateDirectory(Path.Combine(dir, "src"));
             File.WriteAllText(Path.Combine(dir, "src", "Code.cs"), code);
-            var manifest = new ModManifest { Id = id, Name = id, Version = "1.0.0", Sources = new List<string> { "src/*.cs" }, Depends = new List<ModDependency>() };
+            var manifest = new ModManifest
+            {
+                Id = id,
+                Name = id,
+                Version = "1.0.0",
+                Sources = new List<string>
+                {
+                    "src/*.cs"
+                },
+                Depends = new List<ModDependency>()
+            };
             foreach (var dependency in depends)
+            {
                 manifest.Depends.Add(ModDependency.Parse(dependency + ">=1"));
-            return new ModInfo { Id = id, Name = id, Manifest = manifest, FileProvider = new Cthangover.Core.Mods.Providers.FolderModFileProvider(dir, id) };
+            }
+
+            return new ModInfo
+            {
+                Id = id,
+                Name = id,
+                Manifest = manifest,
+                FileProvider = new Cthangover.Core.Mods.Providers.FolderModFileProvider(dir, id)
+            };
         }
 
         private static void Cleanup(string root, params string[] modIds)
@@ -275,8 +474,11 @@ public class TestB : IModInitializer { public void OnModLoaded(string m) { } pub
                 Cthangover.Core.Mods.Compilation.ModAssemblyCache.CurrentArtifacts.TryRemove(id, out _);
                 ModCompiler.InvalidateCache(id);
             }
+
             if (Directory.Exists(root))
+            {
                 Directory.Delete(root, recursive: true);
+            }
         }
     }
 }

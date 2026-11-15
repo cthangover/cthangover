@@ -272,6 +272,16 @@ namespace Cthangover.Authoring.CodeStyle
                 return;
             }
 
+            // Only the canonical sink implements direct output. A similarly named mod type or a
+            // neighbouring core type must still use that sink like every other game caller.
+            var owner = call.FirstAncestorOrSelf<ClassDeclarationSyntax>();
+            if (source.Input.Path.Replace('\\', '/') == "Core/Utils/GameLogger.cs"
+                && owner?.Identifier.ValueText == "GameLogger"
+                && owner.Parent is NamespaceDeclarationSyntax space && space.Name.ToString() == "Cthangover.Core.Utils")
+            {
+                return;
+            }
+
             var name = call.Expression.ToString().Replace("global::", string.Empty, StringComparison.Ordinal);
             foreach (var directive in source.Root.Usings)
             {
