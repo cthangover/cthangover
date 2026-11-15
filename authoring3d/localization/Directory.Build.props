@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)../../../art_sources/cthangover/editors3d_localization/checker-obj/</BaseIntermediateOutputPath>
+    <BaseOutputPath>$(MSBuildThisFileDirectory)../../../art_sources/cthangover/editors3d_localization/checker-bin/</BaseOutputPath>
+  </PropertyGroup>
+</Project>
