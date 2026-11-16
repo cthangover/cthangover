@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using System.Linq;
 using System.Text.Json;
 using Cthangover.Core.Bootstrap;
+using Cthangover.Core.Games;
 using Cthangover.Core.Scenes;
 using Cthangover.Core.Utils;
 
@@ -20,7 +20,7 @@ namespace Cthangover.Core.Mods.Resolvers
     /// </summary>
     public class SceneDefinitionResolver : ModAssetResolver
     {
-        /// <inheritdoc />
+        /// <summary>Resolver key used by the mod manager's registration and lookup pipeline.</summary>
         public override string Id => "scene_definitions";
 
         private Dictionary<string, List<SceneDefinition>> _cache;
@@ -29,7 +29,8 @@ namespace Cthangover.Core.Mods.Resolvers
         /// Collects all scene definitions from every loaded mod. The first
         /// mod that defines a scene name becomes the base; subsequent mods
         /// merge extra backgrounds and override the default ambient and
-        /// scenario via <c>MergeSceneDef</c>. Caches the result.
+        /// scenario via <c>MergeSceneDef</c>. Caches the result. Frontend-only
+        /// launches may have no playable scenes; other modes retain the empty-catalogue error.
         /// </summary>
         public Dictionary<string, List<SceneDefinition>> Collect()
         {
@@ -50,7 +51,7 @@ namespace Cthangover.Core.Mods.Resolvers
             foreach (var overlay in ModOverlays.All)
                 CollectSceneDefsRecursive(overlay.Value, overlay.Key, "scenes", result, ref foundAny);
 
-            if (!foundAny)
+            if (!foundAny && GameLaunchArgs.Current.Mode != GameLaunchMode.Frontend)
             {
                 GameLogger.Log("MODS", "CollectSceneDefinitions — no scene definitions found", LogLevel.Error);
             }
@@ -60,13 +61,14 @@ namespace Cthangover.Core.Mods.Resolvers
             return result;
         }
 
-        /// <inheritdoc />
+        /// <summary>Drops the collected scene table before a content or mod-set replacement.</summary>
         public override void ClearCache()
         {
             _cache = null;
         }
 
-        private void CollectSceneDefsRecursive(IModFileProvider provider, string modId, string dir, Dictionary<string, List<SceneDefinition>> result, ref bool foundAny)
+        private void CollectSceneDefsRecursive(IModFileProvider provider, string modId, string dir,
+            Dictionary<string, List<SceneDefinition>> result, ref bool foundAny)
         {
             foreach (var entry in provider.ListFiles(dir))
             {
@@ -133,76 +135,4 @@ namespace Cthangover.Core.Mods.Resolvers
         }
     }
 
-    /// <summary>
-    /// Mod-derived registry of scene definitions. The collection itself is
-    /// delegated to <see cref="SceneDefinitionResolver"/> through
-    /// <see cref="ModManager.Instance.GetResolver{T}"/>; this class adds an
-    /// instance-level cache so repeated collects do not re-resolve.
-    /// <para/>
-    /// The registry instance lives in <see cref="AppServices.Current"/>
-    /// (AppServices.SceneDefs) and participates in the data-driven rebuild loop;
-    /// the static members below are a facade delegating to it, so existing
-    /// callers keep working unchanged.
-    /// </summary>
-    public class SceneDefinitions : IGameRegistry
-    {
-        private Dictionary<string, List<SceneDefinition>> cache;
-
-        /// <summary>Shared instance the static facade delegates to.</summary>
-        private static SceneDefinitions Owned => AppServices.Current.SceneDefs;
-
-        /// <summary>
-        /// Creates an empty registry: cheap and side-effect free per the
-        /// IGameRegistry contract.
-        /// </summary>
-        internal SceneDefinitions()
-        {
-        }
-
-        /// <inheritdoc />
-        public string Id => "scene_defs";
-
-        /// <summary>
-        /// Re-collects all scene definitions from every loaded mod, dropping the
-        /// cached result first so a hot-reloaded mod set is picked up. The
-        /// resolver re-reads only if its own cache was flushed (ModManager.Reload
-        /// does that before the registries are rebuilt).
-        /// </summary>
-        public void Rebuild()
-        {
-            Clear();
-            CollectAll();
-        }
-
-        /// <summary>Drops the cached collection; the next collect re-resolves.</summary>
-        public void Clear()
-        {
-            cache = null;
-        }
-
-        /// <summary>
-        /// Collects all scene definitions from every loaded mod, caching the
-        /// result. The first mod that defines a scene name becomes the base;
-        /// subsequent mods merge their values on top. Returns null when no
-        /// <see cref="SceneDefinitionResolver"/> is registered.
-        /// </summary>
-        public Dictionary<string, List<SceneDefinition>> CollectAll()
-        {
-            if (cache != null)
-                return cache;
-
-            var collected = ModManager.Instance.GetResolver<SceneDefinitionResolver>()?.Collect();
-            if (collected == null)
-                return null;
-
-            cache = collected;
-            return cache;
-        }
-
-        // ---- Static facade (legacy API, unchanged for callers) ------------
-
-        /// <summary>Legacy entry point; delegates to the shared instance.</summary>
-        public static Dictionary<string, List<SceneDefinition>> Collect()
-            => Owned.CollectAll();
-    }
 }
