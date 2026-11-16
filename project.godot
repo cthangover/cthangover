@@ -17,6 +17,7 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 [application]
 
 config/name="cthangover"
+config/project_settings_override="user://graphics_override.cfg"
 config/description="Visual Novel / RPG"
 config/version="0.1.0"
 run/main_scene="res://scenes/menu/launcher.tscn"

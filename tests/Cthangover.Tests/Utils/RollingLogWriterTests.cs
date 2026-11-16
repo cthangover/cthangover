@@ -32,9 +32,9 @@ namespace Engine.Tests.Utils
                 sink.WriteLine(i.ToString());
             }
 
-            Assert.Equal("5\n", File.ReadAllText(LogPath));
-            Assert.Equal("4\n", File.ReadAllText(LogPath + ".1"));
-            Assert.Equal("3\n", File.ReadAllText(LogPath + ".2"));
+            Assert.Equal("5\n", ReadText(LogPath));
+            Assert.Equal("4\n", ReadText(LogPath + ".1"));
+            Assert.Equal("3\n", ReadText(LogPath + ".2"));
             Assert.Equal(3, Directory.GetFiles(directory).Length);
         }
 
@@ -49,11 +49,11 @@ namespace Engine.Tests.Utils
             File.WriteAllText(LogPath + ".1", "previous\n");
             File.WriteAllText(LogPath + ".2", "oldest\n");
             using var sink = new RollingLogWriter(LogPath, 4, 3);
-            Assert.Equal(string.Empty, File.ReadAllText(LogPath));
-            Assert.Equal("old-active\n", File.ReadAllText(LogPath + ".1"));
-            Assert.Equal("previous\n", File.ReadAllText(LogPath + ".2"));
+            Assert.Equal(string.Empty, ReadText(LogPath));
+            Assert.Equal("old-active\n", ReadText(LogPath + ".1"));
+            Assert.Equal("previous\n", ReadText(LogPath + ".2"));
             sink.WriteLine("new");
-            Assert.Equal("new\n", File.ReadAllText(LogPath));
+            Assert.Equal("new\n", ReadText(LogPath));
             Assert.Equal(3, Directory.GetFiles(directory).Length);
         }
 
@@ -67,11 +67,11 @@ namespace Engine.Tests.Utils
             File.WriteAllText(LogPath, "a\n");
             using var sink = new RollingLogWriter(LogPath, 4, 3);
             sink.WriteLine("b");
-            Assert.Equal("a\nb\n", File.ReadAllText(LogPath));
+            Assert.Equal("a\nb\n", ReadText(LogPath));
             Assert.False(File.Exists(LogPath + ".1"));
             sink.WriteLine("c");
-            Assert.Equal("a\nb\n", File.ReadAllText(LogPath + ".1"));
-            Assert.Equal("c\n", File.ReadAllText(LogPath));
+            Assert.Equal("a\nb\n", ReadText(LogPath + ".1"));
+            Assert.Equal("c\n", ReadText(LogPath));
         }
 
         /// <summary>
@@ -84,15 +84,15 @@ namespace Engine.Tests.Utils
             using var sink = new RollingLogWriter(LogPath, 7, 3);
             sink.WriteLine("Ж");
             sink.WriteLine("€");
-            Assert.Equal(Encoding.UTF8.GetBytes("Ж\n€\n"), File.ReadAllBytes(LogPath));
+            Assert.Equal(Encoding.UTF8.GetBytes("Ж\n€\n"), ReadBytes(LogPath));
             Assert.False(File.Exists(LogPath + ".1"));
             sink.WriteLine("a");
-            Assert.Equal(Encoding.UTF8.GetBytes("Ж\n€\n"), File.ReadAllBytes(LogPath + ".1"));
+            Assert.Equal(Encoding.UTF8.GetBytes("Ж\n€\n"), ReadBytes(LogPath + ".1"));
             Assert.Equal(new byte[]
             {
                 97,
                 10
-            }, File.ReadAllBytes(LogPath));
+            }, ReadBytes(LogPath));
         }
 
         /// <summary>
@@ -105,11 +105,11 @@ namespace Engine.Tests.Utils
         {
             using var sink = new RollingLogWriter(LogPath, limit, 3);
             sink.WriteLine("long record");
-            Assert.Equal("long record\n", File.ReadAllText(LogPath));
+            Assert.Equal("long record\n", ReadText(LogPath));
             Assert.False(File.Exists(LogPath + ".1"));
             sink.WriteLine("x");
-            Assert.Equal("long record\n", File.ReadAllText(LogPath + ".1"));
-            Assert.Equal("x\n", File.ReadAllText(LogPath));
+            Assert.Equal("long record\n", ReadText(LogPath + ".1"));
+            Assert.Equal("x\n", ReadText(LogPath));
         }
 
         /// <summary>
@@ -121,7 +121,7 @@ namespace Engine.Tests.Utils
             using var sink = new RollingLogWriter(LogPath, 2, 1);
             sink.WriteLine("a");
             sink.WriteLine("b");
-            Assert.Equal("b\n", File.ReadAllText(LogPath));
+            Assert.Equal("b\n", ReadText(LogPath));
             Assert.Single(Directory.GetFiles(directory));
         }
 
@@ -167,11 +167,11 @@ namespace Engine.Tests.Utils
             sink.WriteLine("a");
             Directory.CreateDirectory(LogPath + ".1");
             sink.WriteLine("b");
-            Assert.Equal("a\nb\n", File.ReadAllText(LogPath));
+            Assert.Equal("a\nb\n", ReadText(LogPath));
             Directory.Delete(LogPath + ".1");
             sink.WriteLine("c");
-            Assert.Equal("a\nb\n", File.ReadAllText(LogPath + ".1"));
-            Assert.Equal("c\n", File.ReadAllText(LogPath));
+            Assert.Equal("a\nb\n", ReadText(LogPath + ".1"));
+            Assert.Equal("c\n", ReadText(LogPath));
         }
 
         /// <summary>
@@ -186,7 +186,7 @@ namespace Engine.Tests.Utils
             Directory.CreateDirectory(LogPath + ".1");
             using var sink = new RollingLogWriter(LogPath, 2, 3);
             sink.WriteLine("new");
-            Assert.Equal("old\nnew\n", File.ReadAllText(LogPath));
+            Assert.Equal("old\nnew\n", ReadText(LogPath));
         }
 
         /// <summary>
@@ -201,7 +201,7 @@ namespace Engine.Tests.Utils
             sink.WriteLine("unavailable");
             Directory.Delete(LogPath);
             sink.WriteLine("available");
-            Assert.Equal("available\n", File.ReadAllText(LogPath));
+            Assert.Equal("available\n", ReadText(LogPath));
         }
 
         /// <summary>
@@ -221,7 +221,7 @@ namespace Engine.Tests.Utils
 
             File.Move(LogPath, LogPath + ".moved");
             sink.WriteLine("second");
-            Assert.Equal("first\nsecond\n", File.ReadAllText(LogPath + ".moved"));
+            Assert.Equal("first\nsecond\n", ReadText(LogPath + ".moved"));
             Assert.False(File.Exists(LogPath));
         }
 
@@ -257,12 +257,32 @@ namespace Engine.Tests.Utils
             b.WriteLine("x");
             c.WriteLine("c");
             c.WriteLine("d");
-            Assert.Equal("a\n", File.ReadAllText(main + ".1"));
-            Assert.Equal("b\n", File.ReadAllText(main));
-            Assert.Equal("x\n", File.ReadAllText(errors));
+            Assert.Equal("a\n", ReadText(main + ".1"));
+            Assert.Equal("b\n", ReadText(main));
+            Assert.Equal("x\n", ReadText(errors));
             Assert.False(File.Exists(errors + ".1"));
-            Assert.Equal("c\n", File.ReadAllText(custom + ".1"));
-            Assert.Equal("d\n", File.ReadAllText(custom));
+            Assert.Equal("c\n", ReadText(custom + ".1"));
+            Assert.Equal("d\n", ReadText(custom));
+        }
+
+        /// <summary>
+        /// Live readers must allow the sink's existing write handle on Windows; sharing permissions are
+        /// checked in both directions. Content assertions still run before the sink is disposed.
+        /// </summary>
+        private static string ReadText(string path)
+        {
+            using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            using var reader = new StreamReader(stream);
+            return reader.ReadToEnd();
+        }
+
+        /// <summary>Reads exact flushed bytes while retaining the same live-writer sharing contract.</summary>
+        private static byte[] ReadBytes(string path)
+        {
+            using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            var bytes = new byte[checked((int)stream.Length)];
+            stream.ReadExactly(bytes);
+            return bytes;
         }
 
         /// <summary>
