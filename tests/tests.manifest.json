@@ -5048,6 +5048,88 @@
         "Native pixel assertions await FramePostDraw; a real windowed renderer is required.",
         "Uses an owned viewport/textures and leaves no content or save changes."
       ]
+    },
+    {
+      "name": "map_battle_editor_topdown",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--game=rpg_plus",
+        "--new",
+        "--with-mods=map_battle_editor",
+        "--itest=map_battle_editor",
+        "--tile-renderer=topdown"
+      ],
+      "timeoutSeconds": 240,
+      "result": {
+        "name": "map_battle_editor",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "map_battle_editor",
+        "map_battle_editor__gui"
+      ],
+      "profiles": [
+        "full",
+        "2d",
+        "gui"
+      ],
+      "tags": [
+        "2d",
+        "editor",
+        "windowed"
+      ],
+      "game": "rpg_plus",
+      "renderer": "topdown",
+      "source": "mods/map_battle_editor/test_suites/gui/manifest.json",
+      "dependsOn": [],
+      "windowed": true,
+      "project": "write",
+      "requirements": [
+        "RPG Plus supplies both ordinary 2D projections; the activated suite owns and restores its temporary editor document."
+      ]
+    },
+    {
+      "name": "map_battle_editor_isometric",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--game=rpg_plus",
+        "--new",
+        "--with-mods=map_battle_editor",
+        "--itest=map_battle_editor",
+        "--tile-renderer=isometric"
+      ],
+      "timeoutSeconds": 240,
+      "result": {
+        "name": "map_battle_editor",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "map_battle_editor",
+        "map_battle_editor__gui"
+      ],
+      "profiles": [
+        "full",
+        "2d",
+        "gui"
+      ],
+      "tags": [
+        "2d",
+        "editor",
+        "windowed"
+      ],
+      "game": "rpg_plus",
+      "renderer": "isometric",
+      "source": "mods/map_battle_editor/test_suites/gui/manifest.json",
+      "dependsOn": [],
+      "windowed": true,
+      "project": "write",
+      "requirements": [
+        "RPG Plus supplies both ordinary 2D projections; the activated suite owns and restores its temporary editor document."
+      ]
     }
   ],
   "disabled_until_phase_8": {
