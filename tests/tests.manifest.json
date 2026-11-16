@@ -5057,7 +5057,7 @@
         "--game=rpg_plus",
         "--new",
         "--with-mods=map_battle_editor",
-        "--itest=map_battle_editor",
+        "--itest=editor_map_encounters",
         "--tile-renderer=topdown"
       ],
       "timeoutSeconds": 240,
@@ -5071,7 +5071,6 @@
         "map_battle_editor__gui"
       ],
       "profiles": [
-        "full",
         "2d",
         "gui"
       ],
@@ -5087,7 +5086,8 @@
       "windowed": true,
       "project": "write",
       "requirements": [
-        "RPG Plus supplies both ordinary 2D projections; the activated suite owns and restores its temporary editor document."
+        "RPG Plus supplies both ordinary 2D projections; the activated suite owns and restores its temporary editor document.",
+        "New editor development acceptance: explicit 2d selection; promote to full only after both GUI projections pass. Production/mod-unit compatibility remains in full."
       ]
     },
     {
@@ -5098,7 +5098,7 @@
         "--game=rpg_plus",
         "--new",
         "--with-mods=map_battle_editor",
-        "--itest=map_battle_editor",
+        "--itest=editor_map_encounters",
         "--tile-renderer=isometric"
       ],
       "timeoutSeconds": 240,
@@ -5112,7 +5112,6 @@
         "map_battle_editor__gui"
       ],
       "profiles": [
-        "full",
         "2d",
         "gui"
       ],
@@ -5128,8 +5127,138 @@
       "windowed": true,
       "project": "write",
       "requirements": [
-        "RPG Plus supplies both ordinary 2D projections; the activated suite owns and restores its temporary editor document."
+        "RPG Plus supplies both ordinary 2D projections; the activated suite owns and restores its temporary editor document.",
+        "New editor development acceptance: explicit 2d selection; promote to full only after both GUI projections pass. Production/mod-unit compatibility remains in full."
       ]
+    },
+    {
+      "scene": "res://scenes/menu/launcher.tscn",
+      "timeoutSeconds": 300,
+      "result": {
+        "name": "mod_units",
+        "expectedErrors": [],
+        "childPrefix": "mod_units:"
+      },
+      "kind": "mod-unit",
+      "profiles": [
+        "full",
+        "2d"
+      ],
+      "tags": [
+        "2d",
+        "contracts",
+        "headless"
+      ],
+      "game": "rpg_plus",
+      "renderer": null,
+      "dependsOn": [],
+      "windowed": false,
+      "requirements": [
+        "Only data and CPU image decoding; no RenderingServer.FramePostDraw or GPU assertions."
+      ],
+      "name": "rpg_data_validation",
+      "args": [
+        "--",
+        "--game=rpg_plus",
+        "--new",
+        "--run-tests",
+        "--mod=rpg",
+        "--test-filter=data_validation/*,data_quad/*"
+      ],
+      "owners": [
+        "rpg"
+      ],
+      "source": "mods/rpg/manifest.json",
+      "project": "read"
+    },
+    {
+      "scene": "res://scenes/menu/launcher.tscn",
+      "timeoutSeconds": 300,
+      "result": {
+        "name": "mod_units",
+        "expectedErrors": [],
+        "childPrefix": "mod_units:"
+      },
+      "kind": "mod-unit",
+      "profiles": [
+        "full",
+        "2d"
+      ],
+      "tags": [
+        "2d",
+        "contracts",
+        "headless"
+      ],
+      "game": "rpg_plus",
+      "renderer": null,
+      "dependsOn": [],
+      "windowed": false,
+      "requirements": [
+        "Only data and CPU image decoding; no RenderingServer.FramePostDraw or GPU assertions."
+      ],
+      "name": "rpg_content_data_audit",
+      "args": [
+        "--",
+        "--game=rpg_plus",
+        "--new",
+        "--with-mods=rpg_editor",
+        "--itest=rpg_data_validation",
+        "--run-tests",
+        "--mod=rpg_editor__data_validation",
+        "--validation-out=res://tests/artifacts/f11_data",
+        "--test-filter=data_inventory/*"
+      ],
+      "owners": [
+        "rpg_editor",
+        "rpg_editor__data_validation"
+      ],
+      "source": "mods/rpg_editor/test_suites/data_validation/manifest.json",
+      "project": "output"
+    },
+    {
+      "scene": "res://scenes/menu/launcher.tscn",
+      "timeoutSeconds": 300,
+      "result": {
+        "name": "mod_units",
+        "expectedErrors": [],
+        "childPrefix": "mod_units:"
+      },
+      "kind": "mod-unit",
+      "profiles": [
+        "full",
+        "2d",
+        "gui"
+      ],
+      "tags": [
+        "2d",
+        "contracts",
+        "windowed"
+      ],
+      "game": "rpg_plus",
+      "renderer": null,
+      "dependsOn": [],
+      "windowed": true,
+      "requirements": [
+        "Native GUI and pixels, ru/en, both tile projections; isolated workshop fixtures."
+      ],
+      "name": "rpg_data_validation_gui",
+      "args": [
+        "--",
+        "--game=rpg_plus",
+        "--new",
+        "--with-mods=rpg_editor",
+        "--itest=rpg_data_validation",
+        "--run-tests",
+        "--mod=rpg_editor__data_validation",
+        "--validation-out=res://tests/artifacts/f11_gui_gui",
+        "--test-filter=data_gui/*"
+      ],
+      "owners": [
+        "rpg_editor",
+        "rpg_editor__data_validation"
+      ],
+      "source": "mods/rpg_editor/test_suites/data_validation/manifest.json",
+      "project": "output"
     }
   ],
   "disabled_until_phase_8": {
