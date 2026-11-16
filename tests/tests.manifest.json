@@ -4909,6 +4909,98 @@
         "Each launch constructs and restores its own fixture; no preceding test launch required.",
         "Stamp GUI cases write and remove probe map/library files in rpg_plus_game; require a disposable writable RPG Plus project and the ordinary game collection."
       ]
+    },
+    {
+      "name": "rpg_editor_context_links_full",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--game=rpg_plus",
+        "--new",
+        "--with-mods=rpg_object_editor,characters_editor,scenario_editor",
+        "--itest=rpg_context_links_contracts",
+        "--run-tests",
+        "--mod=rpg_editor__context_links",
+        "--test-filter=context_links/full*"
+      ],
+      "timeoutSeconds": 600,
+      "result": {
+        "name": "mod_units",
+        "expectedErrors": [],
+        "childPrefix": "mod_units:"
+      },
+      "kind": "mod-unit",
+      "owners": [
+        "rpg_editor",
+        "rpg_editor__context_links"
+      ],
+      "profiles": [
+        "full",
+        "2d",
+        "gui"
+      ],
+      "tags": [
+        "2d",
+        "contracts",
+        "windowed"
+      ],
+      "game": "rpg_plus",
+      "renderer": null,
+      "source": "mods/rpg_editor/test_suites/context_links/manifest.json",
+      "dependsOn": [],
+      "windowed": true,
+      "project": "write",
+      "requirements": [
+        "Required mod/suite closure: characters_base, dialog_base, effects_base, expressions_base, interactive_base, items_base, rpg, rpg_editor, rpg_editor__context_links, scenario_tools_base, schema_base, shell2d_base, tile_render_base, time_base, tools_base, ui_base, rpg_plus_game, rpg_object_editor, characters_editor, scenario_editor",
+        "Each launch constructs and restores its own fixture; no preceding test launch required.",
+        "Links open the object, character and scenario editors; needs a disposable writable RPG Plus project."
+      ]
+    },
+    {
+      "name": "rpg_editor_context_links_absent",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--game=novel_template",
+        "--new",
+        "--with-mods=rpg_editor,village_pack",
+        "--itest=rpg_context_links_contracts",
+        "--run-tests",
+        "--mod=rpg_editor__context_links",
+        "--test-filter=context_links/absent*"
+      ],
+      "timeoutSeconds": 600,
+      "result": {
+        "name": "mod_units",
+        "expectedErrors": [],
+        "childPrefix": "mod_units:"
+      },
+      "kind": "mod-unit",
+      "owners": [
+        "rpg_editor",
+        "rpg_editor__context_links"
+      ],
+      "profiles": [
+        "full",
+        "2d",
+        "gui"
+      ],
+      "tags": [
+        "2d",
+        "contracts",
+        "windowed"
+      ],
+      "game": "novel_template",
+      "renderer": null,
+      "source": "mods/rpg_editor/test_suites/context_links/manifest.json",
+      "dependsOn": [],
+      "windowed": true,
+      "project": "write",
+      "requirements": [
+        "Required mod/suite closure: characters_base, dialog_base, effects_base, expressions_base, interactive_base, items_base, rpg, rpg_editor, rpg_editor__context_links, scenario_tools_base, schema_base, shell2d_base, tile_render_base, time_base, tools_base, ui_base, village_pack",
+        "Runs without the optional editors: links must be disabled with an explanation.",
+        "Each launch constructs and restores its own fixture; no preceding test launch required."
+      ]
     }
   ],
   "disabled_until_phase_8": {
