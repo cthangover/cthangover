@@ -29,7 +29,8 @@
         "name": "shutdown_deferred_ready",
         "expectedErrors": []
       }
-    },    {
+    },
+    {
       "name": "shutdown_deferred_flush",
       "scene": "res://tests/Cthangover.Tests.Integration/Scenes/deferred_shutdown_test.tscn",
       "args": [
@@ -4605,6 +4606,309 @@
       ],
       "source": "tests/Cthangover.Tests.Integration/Autotest/DependencyContractSetup.cs",
       "project": "write"
+    },
+    {
+      "name": "rpg_click_walk",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--game=rpg_plus",
+        "--new",
+        "--with-mods=rpg",
+        "--itest=rpg_click_walk"
+      ],
+      "timeoutSeconds": 240,
+      "result": {
+        "name": "rpg_click_walk",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "rpg",
+        "rpg__click_walk"
+      ],
+      "profiles": [
+        "full",
+        "2d",
+        "gui"
+      ],
+      "tags": [
+        "2d",
+        "contracts",
+        "windowed"
+      ],
+      "game": "rpg_plus",
+      "renderer": null,
+      "source": "mods/rpg/test_suites/click_walk/manifest.json",
+      "dependsOn": [],
+      "windowed": true,
+      "project": "read",
+      "requirements": [
+        "Required mod/suite closure: audio_base, battle_formulas, characters_base, classic_rpg_pack, crafting, dialog_base, effects_base, equipment, expressions_base, interactive_base, items_base, music_pack, quests_base, rpg, rpg__click_walk, rpg_editor, rpg_plus_game, scenario_tools_base, schema_base, shell2d_base, stat_checks, stats_base, tile_render_base, time_base, tools_base, trading, turn_battle_base, ui_base, village_pack",
+        "Each launch constructs and restores its own fixture; no preceding test launch required.",
+        "Exercises ru/en and topdown/isometric in one driver; screenshots and desktop acknowledgement are opt-in."
+      ]
+    },
+    {
+      "name": "rpg_editor_catalog",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--frontend",
+        "--with-mods=rpg_editor",
+        "--itest=rpg_editor_catalog",
+        "--run-tests",
+        "--mod=rpg_editor__catalog"
+      ],
+      "timeoutSeconds": 120,
+      "result": {
+        "name": "mod_units",
+        "expectedErrors": [],
+        "childPrefix": "mod_units:"
+      },
+      "kind": "mod-unit",
+      "owners": [
+        "rpg_editor",
+        "rpg_editor__catalog"
+      ],
+      "profiles": [
+        "full",
+        "2d",
+        "headless"
+      ],
+      "tags": [
+        "2d",
+        "contracts",
+        "headless"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "mods/rpg_editor/test_suites/catalog/manifest.json",
+      "dependsOn": [],
+      "windowed": false,
+      "project": "read",
+      "requirements": [
+        "Required mod/suite closure: characters_base, dialog_base, effects_base, expressions_base, interactive_base, items_base, rpg, rpg_editor, rpg_editor__catalog, scenario_tools_base, schema_base, shell2d_base, tile_render_base, time_base, tools_base, ui_base",
+        "Each launch constructs and restores its own fixture; no preceding test launch required.",
+        "Intentional required/malformed catalogue diagnostics are asserted by the suite; no render frames required."
+      ]
+    },
+    {
+      "name": "rpg_editor_palette",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--frontend",
+        "--with-mods=rpg_editor",
+        "--itest=rpg_palette_contracts",
+        "--run-tests",
+        "--mod=rpg_editor__palette"
+      ],
+      "timeoutSeconds": 180,
+      "result": {
+        "name": "mod_units",
+        "expectedErrors": [],
+        "childPrefix": "mod_units:"
+      },
+      "kind": "mod-unit",
+      "owners": [
+        "rpg_editor",
+        "rpg_editor__palette"
+      ],
+      "profiles": [
+        "full",
+        "2d",
+        "gui"
+      ],
+      "tags": [
+        "2d",
+        "contracts",
+        "windowed"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "mods/rpg_editor/test_suites/palette/manifest.json",
+      "dependsOn": [],
+      "windowed": true,
+      "project": "read",
+      "requirements": [
+        "Required mod/suite closure: characters_base, dialog_base, effects_base, expressions_base, interactive_base, items_base, rpg, rpg_editor, rpg_editor__palette, scenario_tools_base, schema_base, shell2d_base, tile_render_base, time_base, tools_base, ui_base",
+        "Each launch constructs and restores its own fixture; no preceding test launch required."
+      ]
+    },
+    {
+      "name": "rpg_editor_preview",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--frontend",
+        "--with-mods=rpg_editor",
+        "--itest=rpg_editor_preview",
+        "--run-tests",
+        "--mod=rpg_editor__preview"
+      ],
+      "timeoutSeconds": 180,
+      "result": {
+        "name": "mod_units",
+        "expectedErrors": [],
+        "childPrefix": "mod_units:"
+      },
+      "kind": "mod-unit",
+      "owners": [
+        "rpg_editor",
+        "rpg_editor__preview"
+      ],
+      "profiles": [
+        "full",
+        "2d",
+        "gui"
+      ],
+      "tags": [
+        "2d",
+        "contracts",
+        "windowed"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "mods/rpg_editor/test_suites/preview/manifest.json",
+      "dependsOn": [],
+      "windowed": true,
+      "project": "read",
+      "requirements": [
+        "Required mod/suite closure: characters_base, dialog_base, effects_base, expressions_base, interactive_base, items_base, rpg, rpg_editor, rpg_editor__preview, scenario_tools_base, schema_base, shell2d_base, tile_render_base, time_base, tools_base, ui_base",
+        "Each launch constructs and restores its own fixture; no preceding test launch required."
+      ]
+    },
+    {
+      "name": "rpg_editor_depth_probe",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--frontend",
+        "--with-mods=rpg_editor",
+        "--itest=rpg_depth_probe_contracts",
+        "--run-tests",
+        "--mod=rpg_editor__depth_probe"
+      ],
+      "timeoutSeconds": 240,
+      "result": {
+        "name": "mod_units",
+        "expectedErrors": [],
+        "childPrefix": "mod_units:"
+      },
+      "kind": "mod-unit",
+      "owners": [
+        "rpg_editor",
+        "rpg_editor__depth_probe"
+      ],
+      "profiles": [
+        "full",
+        "2d",
+        "gui"
+      ],
+      "tags": [
+        "2d",
+        "contracts",
+        "windowed"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "mods/rpg_editor/test_suites/depth_probe/manifest.json",
+      "dependsOn": [],
+      "windowed": true,
+      "project": "read",
+      "requirements": [
+        "Required mod/suite closure: characters_base, dialog_base, effects_base, expressions_base, interactive_base, items_base, rpg, rpg_editor, rpg_editor__depth_probe, scenario_tools_base, schema_base, shell2d_base, tile_render_base, time_base, tools_base, ui_base",
+        "Each launch constructs and restores its own fixture; no preceding test launch required."
+      ]
+    },
+    {
+      "name": "rpg_editor_cell_rules",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--frontend",
+        "--with-mods=rpg_editor",
+        "--itest=rpg_cell_rules_contracts",
+        "--run-tests",
+        "--mod=rpg_editor__cell_rules"
+      ],
+      "timeoutSeconds": 300,
+      "result": {
+        "name": "mod_units",
+        "expectedErrors": [],
+        "childPrefix": "mod_units:"
+      },
+      "kind": "mod-unit",
+      "owners": [
+        "rpg_editor",
+        "rpg_editor__cell_rules"
+      ],
+      "profiles": [
+        "full",
+        "2d",
+        "gui"
+      ],
+      "tags": [
+        "2d",
+        "contracts",
+        "windowed"
+      ],
+      "game": null,
+      "renderer": null,
+      "source": "mods/rpg_editor/test_suites/cell_rules/manifest.json",
+      "dependsOn": [],
+      "windowed": true,
+      "project": "read",
+      "requirements": [
+        "Required mod/suite closure: characters_base, dialog_base, effects_base, expressions_base, interactive_base, items_base, rpg, rpg_editor, rpg_editor__cell_rules, scenario_tools_base, schema_base, shell2d_base, tile_render_base, time_base, tools_base, ui_base",
+        "Each launch constructs and restores its own fixture; no preceding test launch required."
+      ]
+    },
+    {
+      "name": "rpg_editor_paint_regions",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--game=rpg_plus",
+        "--new",
+        "--with-mods=rpg_editor",
+        "--itest=rpg_paint_regions_contracts",
+        "--run-tests",
+        "--mod=rpg_editor__paint_regions"
+      ],
+      "timeoutSeconds": 600,
+      "result": {
+        "name": "mod_units",
+        "expectedErrors": [],
+        "childPrefix": "mod_units:"
+      },
+      "kind": "mod-unit",
+      "owners": [
+        "rpg_editor",
+        "rpg_editor__paint_regions"
+      ],
+      "profiles": [
+        "full",
+        "2d",
+        "gui"
+      ],
+      "tags": [
+        "2d",
+        "contracts",
+        "windowed"
+      ],
+      "game": "rpg_plus",
+      "renderer": null,
+      "source": "mods/rpg_editor/test_suites/paint_regions/manifest.json",
+      "dependsOn": [],
+      "windowed": true,
+      "project": "write",
+      "requirements": [
+        "Required mod/suite closure: characters_base, dialog_base, effects_base, expressions_base, interactive_base, items_base, rpg, rpg_editor, rpg_editor__paint_regions, rpg_plus_game, scenario_tools_base, schema_base, shell2d_base, tile_render_base, time_base, tools_base, ui_base",
+        "Each launch constructs and restores its own fixture; no preceding test launch required.",
+        "Stamp GUI cases write and remove probe map/library files in rpg_plus_game; require a disposable writable RPG Plus project and the ordinary game collection."
+      ]
     }
   ],
   "disabled_until_phase_8": {
@@ -4693,6 +4997,20 @@
       "game": "junior_reaper_paper_grief",
       "requirements": [
         "explicit visual-editor fixture setup"
+      ]
+    },
+    "perf_overlay__contracts": {
+      "reason": "The monitor contract crosses 2D and 3D shells and requires a host clipboard/native-window capture acknowledgement; it is not a standalone 2D suite.",
+      "windowed": true,
+      "game": null,
+      "requirements": [
+        "Owner: perf_overlay; 3D-only, excluded from the 2D regression.",
+        "Host watchdog timeoutSeconds=240; this manual policy never launches a process.",
+        "Required mod/suite closure: asset3d_base, dialog_base, effects_base, expressions_base, interactive_base, perf_overlay, perf_overlay__contracts, scene3d_base, shell2d_base, time_base, ui_base, world3d_base",
+        "Activate required suites together: --itest=perf_overlay_contracts",
+        "Windows host watcher, isolated physical project/user data, normal renderer and unchanged HDR.",
+        "Use authoring3d/perf_overlay host orchestration with --perf-out=<absolute external directory>.",
+        "The host must handle display-check.ready/display-check.done and inspect the monitor capture pipe; the driver emits name=perf_overlay."
       ]
     }
   },
