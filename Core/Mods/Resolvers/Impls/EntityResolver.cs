@@ -52,12 +52,19 @@ namespace Cthangover.Core.Mods.Resolvers
         /// is read from the DTO's <see cref="EntityKindAttribute"/>, files are
         /// matched during the shared scan, and each file is deserialised as
         /// <see cref="FileData{T}"/>. The resulting dictionary is cached per
-        /// kind and returned as-is; callers treat entries as immutable. An optional
-        /// catalogue (<paramref name="required"/> false) may be empty; malformed
-        /// definitions still report errors. A later required read reports cached
-        /// absence once, so an optional editor lookup cannot hide missing data.
+        /// kind and returned as-is; callers treat entries as immutable. This parameterless
+        /// required lookup preserves the original API, including reflection consumers;
+        /// optional callers use the explicit required overload.
         /// </summary>
-        public Dictionary<string, T> Collect<T>(bool required = true) where T : class, IIdentifiable
+        public Dictionary<string, T> Collect<T>() where T : class, IIdentifiable
+        {
+            return Collect<T>(required: true);
+        }
+
+        /// <summary>
+        /// Collects a required or optional catalogue while retaining malformed-data diagnostics and cached absence checks.
+        /// </summary>
+        public Dictionary<string, T> Collect<T>(bool required) where T : class, IIdentifiable
         {
             Context.Initialize();
 
@@ -343,7 +350,15 @@ namespace Cthangover.Core.Mods.Resolvers
     public static class Entities
     {
         /// <summary>Collects the DTO's kind in mod order. Optional empty catalogues are valid; invalid definitions still report errors.</summary>
-        public static Dictionary<string, T> Collect<T>(bool required = true) where T : class, IIdentifiable
+        public static Dictionary<string, T> Collect<T>() where T : class, IIdentifiable
+        {
+            return Collect<T>(required: true);
+        }
+
+        /// <summary>
+        /// Allows optional catalogues without suppressing diagnostics from a later required lookup.
+        /// </summary>
+        public static Dictionary<string, T> Collect<T>(bool required) where T : class, IIdentifiable
             => ModManager.Instance.GetResolver<EntityResolver>()?.Collect<T>(required) ?? new Dictionary<string, T>();
     }
 }

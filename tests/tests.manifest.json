@@ -2072,7 +2072,7 @@
       "renderer": null,
       "source": "mods/scenario_editor/test_suites/ingame_play/manifest.json",
       "dependsOn": [],
-      "project": "read",
+      "project": "write",
       "seconds": 18.529
     },
     {
@@ -4741,7 +4741,8 @@
       "scene": "res://scenes/menu/launcher.tscn",
       "args": [
         "--",
-        "--frontend",
+        "--game=rpg_plus",
+        "--new",
         "--with-mods=rpg_editor",
         "--itest=rpg_editor_preview",
         "--run-tests",
@@ -4768,14 +4769,14 @@
         "contracts",
         "windowed"
       ],
-      "game": null,
+      "game": "rpg_plus",
       "renderer": null,
       "source": "mods/rpg_editor/test_suites/preview/manifest.json",
       "dependsOn": [],
       "windowed": true,
       "project": "read",
       "requirements": [
-        "Required mod/suite closure: characters_base, dialog_base, effects_base, expressions_base, interactive_base, items_base, rpg, rpg_editor, rpg_editor__preview, scenario_tools_base, schema_base, shell2d_base, tile_render_base, time_base, tools_base, ui_base",
+        "Game rpg_plus supplies its ordinary scene, character and content closure plus both tile projections; required editor/suite closure: characters_base, dialog_base, effects_base, expressions_base, interactive_base, items_base, rpg, rpg_editor, rpg_editor__preview, scenario_tools_base, schema_base, shell2d_base, tile_render_base, time_base, tools_base, ui_base",
         "Each launch constructs and restores its own fixture; no preceding test launch required."
       ]
     },
@@ -4784,7 +4785,8 @@
       "scene": "res://scenes/menu/launcher.tscn",
       "args": [
         "--",
-        "--frontend",
+        "--game=rpg_plus",
+        "--new",
         "--with-mods=rpg_editor",
         "--itest=rpg_depth_probe_contracts",
         "--run-tests",
@@ -4811,14 +4813,14 @@
         "contracts",
         "windowed"
       ],
-      "game": null,
+      "game": "rpg_plus",
       "renderer": null,
       "source": "mods/rpg_editor/test_suites/depth_probe/manifest.json",
       "dependsOn": [],
       "windowed": true,
       "project": "read",
       "requirements": [
-        "Required mod/suite closure: characters_base, dialog_base, effects_base, expressions_base, interactive_base, items_base, rpg, rpg_editor, rpg_editor__depth_probe, scenario_tools_base, schema_base, shell2d_base, tile_render_base, time_base, tools_base, ui_base",
+        "Game rpg_plus supplies its ordinary scene, character and content closure plus both tile projections; required editor/suite closure: characters_base, dialog_base, effects_base, expressions_base, interactive_base, items_base, rpg, rpg_editor, rpg_editor__depth_probe, scenario_tools_base, schema_base, shell2d_base, tile_render_base, time_base, tools_base, ui_base",
         "Each launch constructs and restores its own fixture; no preceding test launch required."
       ]
     },
@@ -4827,7 +4829,8 @@
       "scene": "res://scenes/menu/launcher.tscn",
       "args": [
         "--",
-        "--frontend",
+        "--game=rpg_plus",
+        "--new",
         "--with-mods=rpg_editor",
         "--itest=rpg_cell_rules_contracts",
         "--run-tests",
@@ -4854,14 +4857,14 @@
         "contracts",
         "windowed"
       ],
-      "game": null,
+      "game": "rpg_plus",
       "renderer": null,
       "source": "mods/rpg_editor/test_suites/cell_rules/manifest.json",
       "dependsOn": [],
       "windowed": true,
       "project": "read",
       "requirements": [
-        "Required mod/suite closure: characters_base, dialog_base, effects_base, expressions_base, interactive_base, items_base, rpg, rpg_editor, rpg_editor__cell_rules, scenario_tools_base, schema_base, shell2d_base, tile_render_base, time_base, tools_base, ui_base",
+        "Game rpg_plus supplies its ordinary scene, character and content closure plus both tile projections; required editor/suite closure: characters_base, dialog_base, effects_base, expressions_base, interactive_base, items_base, rpg, rpg_editor, rpg_editor__cell_rules, scenario_tools_base, schema_base, shell2d_base, tile_render_base, time_base, tools_base, ui_base",
         "Each launch constructs and restores its own fixture; no preceding test launch required."
       ]
     },
@@ -5000,6 +5003,50 @@
         "Required mod/suite closure: characters_base, dialog_base, effects_base, expressions_base, interactive_base, items_base, rpg, rpg_editor, rpg_editor__context_links, scenario_tools_base, schema_base, shell2d_base, tile_render_base, time_base, tools_base, ui_base, village_pack",
         "Runs without the optional editors: links must be disabled with an explanation.",
         "Each launch constructs and restores its own fixture; no preceding test launch required."
+      ]
+    },
+    {
+      "name": "tile_depth_order",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--game=rpg_plus",
+        "--new",
+        "--itest=tile_depth_contracts",
+        "--run-tests",
+        "--mod=tile_render_base__depth_contracts"
+      ],
+      "timeoutSeconds": 180,
+      "result": {
+        "name": "mod_units",
+        "childPrefix": "mod_units:",
+        "expectedErrors": []
+      },
+      "kind": "mod-unit",
+      "owners": [
+        "tile_render_base",
+        "tile_render_base__depth_contracts"
+      ],
+      "profiles": [
+        "full",
+        "2d",
+        "gui"
+      ],
+      "tags": [
+        "2d",
+        "contracts",
+        "windowed",
+        "pixels"
+      ],
+      "game": "rpg_plus",
+      "renderer": null,
+      "source": "mods/tile_render_base/test_suites/depth_contracts/manifest.json",
+      "dependsOn": [],
+      "windowed": true,
+      "project": "read",
+      "requirements": [
+        "Native pixel assertions await FramePostDraw; a real windowed renderer is required.",
+        "Uses an owned viewport/textures and leaves no content or save changes."
       ]
     }
   ],
