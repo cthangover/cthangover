@@ -23,7 +23,7 @@ def main():
     parser.add_argument('--godot', required=True)
     parser.add_argument('--project', type=Path, required=True)
     parser.add_argument('--fixtures', type=Path, required=True)
-    parser.add_argument('--external', type=Path, required=True)
+    parser.add_argument('--external', type=Path, help='Legacy argument; packed large-model probes need no external directory')
     parser.add_argument('--out', type=Path, required=True)
     parser.add_argument('--runtime', choices=['editor-runtime', 'export-release'], required=True)
     parser.add_argument('--case', action='append', dest='cases')
@@ -55,9 +55,9 @@ def main():
             command = [args.godot]
             if args.runtime == 'editor-runtime':
                 command += ['--path', str(args.project.resolve())]
-            command += ['--verbose', '--', '--frontend', '--with-mods=world3d_base', '--itest=asset3d_probe',
+            command += ['--verbose', '--', '--frontend', '--with-mods=world3d_base,proto_land_pack,proto_sea_pack', '--itest=asset3d_probe',
                         '--probe-case=' + case, '--probe-fixtures=' + str(args.fixtures.resolve()),
-                        '--probe-external=' + str(args.external.resolve()), '--probe-output=' + str(row_path),
+                        '--probe-output=' + str(row_path),
                         '--probe-runtime=' + args.runtime]
             started = time.monotonic()
             with (directory / 'stdout.log').open('wb') as stream:
