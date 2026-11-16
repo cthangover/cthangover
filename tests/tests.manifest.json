@@ -5071,6 +5071,7 @@
         "map_battle_editor__gui"
       ],
       "profiles": [
+        "full",
         "2d",
         "gui"
       ],
@@ -5086,8 +5087,7 @@
       "windowed": true,
       "project": "write",
       "requirements": [
-        "RPG Plus supplies both ordinary 2D projections; the activated suite owns and restores its temporary editor document.",
-        "New editor development acceptance: explicit 2d selection; promote to full only after both GUI projections pass. Production/mod-unit compatibility remains in full."
+        "RPG Plus supplies both ordinary 2D projections; the activated suite owns and restores its temporary editor document."
       ]
     },
     {
@@ -5112,6 +5112,7 @@
         "map_battle_editor__gui"
       ],
       "profiles": [
+        "full",
         "2d",
         "gui"
       ],
@@ -5127,8 +5128,7 @@
       "windowed": true,
       "project": "write",
       "requirements": [
-        "RPG Plus supplies both ordinary 2D projections; the activated suite owns and restores its temporary editor document.",
-        "New editor development acceptance: explicit 2d selection; promote to full only after both GUI projections pass. Production/mod-unit compatibility remains in full."
+        "RPG Plus supplies both ordinary 2D projections; the activated suite owns and restores its temporary editor document."
       ]
     },
     {
@@ -5258,7 +5258,85 @@
         "rpg_editor__data_validation"
       ],
       "source": "mods/rpg_editor/test_suites/data_validation/manifest.json",
-      "project": "output"
+      "project": "write"
+    },
+    {
+      "name": "rpg_visual_parts",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--game=junior_reaper_paper_grief",
+        "--new",
+        "--with-mods=rpg_object_editor",
+        "--scene=jrp_bureau_hall",
+        "--itest=rpg_visual_parts"
+      ],
+      "timeoutSeconds": 180,
+      "result": {
+        "name": "rpg_visual_parts",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "rpg_object_editor",
+        "rpg_object_editor__visual"
+      ],
+      "profiles": [
+        "explicit"
+      ],
+      "tags": [
+        "2d",
+        "gui",
+        "explicit"
+      ],
+      "windowed": true,
+      "game": "junior_reaper_paper_grief",
+      "renderer": null,
+      "source": "mods/rpg_object_editor/test_suites/visual/manifest.json",
+      "dependsOn": [],
+      "project": "write",
+      "requirements": [
+        "Explicit visual workspace fixture; opt-in regression, not added to a full profile."
+      ]
+    },
+    {
+      "scene": "res://scenes/menu/launcher.tscn",
+      "timeoutSeconds": 300,
+      "result": {
+        "name": "mod_units",
+        "expectedErrors": [],
+        "childPrefix": "mod_units:"
+      },
+      "kind": "mod-unit",
+      "profiles": [
+        "explicit"
+      ],
+      "tags": [
+        "2d",
+        "contracts",
+        "headless"
+      ],
+      "game": "rpg_plus",
+      "renderer": null,
+      "dependsOn": [],
+      "windowed": false,
+      "requirements": [
+        "Only data and CPU image decoding; no RenderingServer.FramePostDraw or GPU assertions."
+      ],
+      "name": "rpg_object_data_validation",
+      "args": [
+        "--",
+        "--game=rpg_plus",
+        "--new",
+        "--with-mods=rpg_object_editor",
+        "--run-tests",
+        "--mod=rpg_object_editor"
+      ],
+      "owners": [
+        "rpg_object_editor"
+      ],
+      "source": "mods/rpg_object_editor/manifest.json",
+      "project": "read"
     }
   ],
   "disabled_until_phase_8": {
@@ -5339,14 +5417,6 @@
       "game": "rpg_plus",
       "requirements": [
         "explicit map/editor fixture setup"
-      ]
-    },
-    "rpg_object_editor__visual": {
-      "reason": "Standalone suite: requires explicit game/fixture setup; not part of the automated full profile.",
-      "windowed": true,
-      "game": "junior_reaper_paper_grief",
-      "requirements": [
-        "explicit visual-editor fixture setup"
       ]
     },
     "perf_overlay__contracts": {
