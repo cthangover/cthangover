@@ -15,6 +15,19 @@ from capture_window import save_client
 
 
 CASES = {
+    "handoff": [
+        "--with-mods=proto_land_pack,navigation3d_base,world_stream3d_base,npc_routines_base",
+        "--itest=interactive3d_contracts", "--itest=npc_routines_base_contracts",
+        "--itest=navigation3d_contracts", "--itest=navigation3d_streaming",
+        "--run-tests", "--mod=navigation3d_base__streaming",
+        "--test-filter=navigation3d/native_composite_item_action_region_save_roundtrip",
+    ],
+    "clearance": [
+        "--with-mods=proto_land_pack,navigation3d_base,npc_routines_base",
+        "--itest=interactive3d_contracts", "--itest=npc_routines_base_contracts",
+        "--itest=navigation3d_contracts", "--run-tests", "--mod=navigation3d_base__contracts",
+        "--test-filter=navigation3d/clearance_*",
+    ],
     "pack_calibration": [
         "--with-mods=proto_land_pack", "--itest=proto_land_contracts",
         "--run-tests", "--mod=proto_land_pack__contracts",
@@ -181,10 +194,12 @@ CASES = {
 }
 
 EXPECTED = {
+    "handoff": 1,
+    "clearance": 4,
     "pack_calibration": 1,
     "pack_all": 10,
     "anim_units": 10, "anim_contracts": 15,
-    "editor_anim_units": 1, "editor_anim_contracts": 2,
+    "editor_anim_units": 1, "editor_anim_contracts": 3,
     "data": 3, "poses": 1, "water": 3, "climb": 6, "navigation": 1,
     "reload": 2, "editor": 2, "contacts": 1, "npc": 2, "ships": 1, "arrival": 1, "combat": 1,
     "actor_units": 6, "actor_contracts": 15, "interactive_units": 24, "interactive_contracts": 12, "pack": 2,
@@ -262,7 +277,7 @@ def main():
         hashes = {}
         for group in ["Core", "mods", "mods_private"]:
             for path in (project / group).rglob("*"):
-                if path.is_file() and (path.suffix in [".cs", ".json", ".tscn", ".glb", ".properties"]
+                if path.is_file() and (path.suffix in [".cs", ".json", ".tscn", ".glb", ".properties", ".r16", ".gdshader", ".scenario"]
                                        or path.name.endswith(".cs.txt")):
                     hashes[path.relative_to(project).as_posix()] = hashlib.sha256(path.read_bytes()).hexdigest()
         write_json(output / "inputs.json", {"mods": mods, "hashes": hashes, "physics": engine})
