@@ -5337,6 +5337,49 @@
       ],
       "source": "mods/rpg_object_editor/manifest.json",
       "project": "read"
+    },
+    {
+      "name": "studio_projection_review",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "windowed": true,
+      "requiresExplicitSelection": true,
+      "args": [
+        "--",
+        "--game=cthangover",
+        "--new",
+        "--with-mods=scenario_studio",
+        "--itest=studio_projection",
+        "--studio-write=layer",
+        "--studio-layer=user://studio_projection_case"
+      ],
+      "timeoutSeconds": 180,
+      "result": {
+        "name": "studio_projection",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "scenario_studio",
+        "scenario_studio__projection"
+      ],
+      "profiles": [
+        "review"
+      ],
+      "tags": [
+        "integration",
+        "windowed",
+        "review",
+        "studio_projection"
+      ],
+      "game": "cthangover",
+      "source": "mods/scenario_studio/test_suites/projection/manifest.json",
+      "dependsOn": [],
+      "project": "write",
+      "requirements": [
+        "Exact NEW Studio projection driver/53facts/3HDRcaptures only; no old studio_live replay.",
+        "Admission required for global existing TestRunner suite coverage; explicit-only, NOT selected/executed by controls review.",
+        "RAW root/include layer roundtrip, active event/queue provenance and first actual include action mapping per ROOT1805; all unexpected diagnostics strict."
+      ]
     }
   ],
   "disabled_until_phase_8": {
