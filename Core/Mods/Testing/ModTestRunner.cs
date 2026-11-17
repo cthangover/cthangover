@@ -1,17 +1,17 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.ExceptionServices;
-using System.Threading;
-using System.Threading.Tasks;
-using Cthangover.Core.Bootstrap;
-using Cthangover.Core.Utils;
-using Godot;
-
 namespace Cthangover.Core.Mods.Testing
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
+    using System.Reflection;
+    using System.Runtime.ExceptionServices;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Cthangover.Core.Bootstrap;
+    using Cthangover.Core.Utils;
+    using Godot;
+
     /// <summary>
     /// Executes the discovered tests of one mod and applies the automatic
     /// recovery cycle after every test (plan §6.3). The author never cleans
@@ -358,6 +358,11 @@ namespace Cthangover.Core.Mods.Testing
 
         private static string GetSandboxDir(string modId)
         {
+            if (TestExecutionContextRuntime.Current is { } execution)
+            {
+                return Path.Combine(execution.SandboxDirectory, modId);
+            }
+
             if (GameEnvironment.IsRuntime)
             {
                 try { return ProjectSettings.GlobalizePath($"user://mod_test_sandbox/{modId}"); }

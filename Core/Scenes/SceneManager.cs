@@ -145,6 +145,11 @@ namespace Cthangover.Core.Scenes
         /// <summary>Runs the synchronous boot pipeline on non-launcher entries; launcher boots invoke the same phases through <see cref="Boot"/>.</summary>
         public override void _Ready()
         {
+            if (Cthangover.Core.Mods.Testing.TestRuntimeEnvironment.StartupRejected)
+            {
+                return;
+            }
+
             if (!BootController.IsLauncherBoot)
                 Boot.RunSync(this);
         }

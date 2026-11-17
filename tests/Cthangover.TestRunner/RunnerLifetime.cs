@@ -7,10 +7,24 @@ namespace Cthangover.TestRunner
     {
         private static readonly object Gate = new();
         private static readonly HashSet<Process> Children = new();
+        private static readonly HashSet<IDisposable> Retained = new();
+        private static bool unsafeOwnership;
         private static CancellationTokenSource cancellation;
 
         /// <summary>The command token also covers initial builds and the legacy sequential execution path.</summary>
         public static CancellationToken Token => cancellation?.Token ?? CancellationToken.None;
+
+        /// <summary>Unsafe process or terminal-publication ownership blocks later starts until outer process exit.</summary>
+        public static bool HasUnprovenChildren
+        {
+            get
+            {
+                lock (Gate)
+                {
+                    return unsafeOwnership;
+                }
+            }
+        }
 
         /// <summary>Installs a cooperative Ctrl+C handler; running children are always registered under the same gate.</summary>
         public RunnerLifetime()
@@ -25,22 +39,70 @@ namespace Cthangover.TestRunner
             {
                 token.ThrowIfCancellationRequested();
                 Token.ThrowIfCancellationRequested();
+                if (unsafeOwnership)
+                {
+                    throw new IOException("An earlier process has unproven termination or unfinished pipes");
+                }
+
                 process.Start();
                 Children.Add(process);
             }
         }
 
-        internal static void Remove(Process process) { lock (Gate) Children.Remove(process); }
+        internal static void Complete(Process process, bool cleanupSafe, params IDisposable[] resources)
+        {
+            lock (Gate)
+            {
+                if (cleanupSafe)
+                {
+                    Children.Remove(process);
+                }
+                else
+                {
+                    // Keep handles, callbacks and their streams alive: disposing them would fabricate completed capture.
+                    unsafeOwnership = true;
+                    if (process != null)
+                    {
+                        Children.Add(process);
+                    }
 
-        /// <summary>Prevents further starts and stops active descendants; retained workspaces remain available to diagnose interruption.</summary>
+                    foreach (var resource in resources)
+                    {
+                        if (resource != null)
+                        {
+                            Retained.Add(resource);
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>Stops registered child trees after cancellation; unsafe ownership remains retained for diagnosis.</summary>
         public static void Cancel()
         {
             lock (Gate)
             {
                 cancellation?.Cancel();
                 foreach (var process in Children)
-                    try { if (!process.HasExited) process.Kill(entireProcessTree: true); } catch (InvalidOperationException) { }
-                    catch (System.ComponentModel.Win32Exception) { }
+                {
+                    try
+                    {
+                        if (!process.HasExited)
+                        {
+                            process.Kill(entireProcessTree: true);
+                        }
+                    }
+                    catch (InvalidOperationException)
+                    {
+                    }
+                    catch (System.ComponentModel.Win32Exception)
+                    {
+                    }
+                    catch (AggregateException)
+                    {
+                        // ProcessRunner still owns bounded observation and must not infer success from this request.
+                    }
+                }
             }
         }
 
@@ -50,7 +112,7 @@ namespace Cthangover.TestRunner
             Cancel();
         }
 
-        /// <summary>Unhooks the process-wide handler after all execution tasks have drained.</summary>
+        /// <summary>Unhooks cancellation after workers drain; unsafe handles/streams remain owned until outer OS process exit.</summary>
         public void Dispose()
         {
             Console.CancelKeyPress -= CancelKeyPress;

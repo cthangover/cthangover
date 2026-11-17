@@ -1,28 +1,48 @@
 namespace Cthangover.Core.Mods.Testing
 {
     using System;
-    using System.IO;
+    using System.Threading;
     using Cthangover.Core.Utils;
-    using Godot;
 
-    /// <summary>Verifies the runner's private user and project roots before settings, caches or game files are touched.</summary>
+    /// <summary>
+    /// Early native bootstrap guard. The static GameData hook calls it before instance settings initialization;
+    /// the logger repeats the idempotent check before reading configuration or opening any game sink.
+    /// </summary>
     public static class TestRuntimeEnvironment
     {
+        private static int rejected;
+
+        /// <summary>
+        /// A rejected early context prevents settings, logging and boot from starting while Godot performs its native exit.
+        /// The flag is process-local and sticky; a later caller cannot fall back to ordinary production paths.
+        /// </summary>
+        public static bool StartupRejected => Volatile.Read(ref rejected) != 0;
+
+        /// <summary>
+        /// Verifies legacy data isolation or initializes the complete launch context. A real runtime mismatch
+        /// latches rejection through the stderr-only bootstrap sink. The first autoload requests native exit78
+        /// without shutting down the embedded CLR underneath Godot.
+        /// </summary>
         public static void Verify()
         {
-            var expected = System.Environment.GetEnvironmentVariable("CTHANGOVER_TEST_DATA");
-            if (expected == null || !GameEnvironment.IsRuntime) return;
-            Check(expected, OS.GetUserDataDir(), "user data");
-            var project = System.Environment.GetEnvironmentVariable("CTHANGOVER_TEST_PROJECT");
-            if (project == null) throw new InvalidOperationException("test project root is missing");
-            Check(project, ProjectSettings.GlobalizePath("res://"), "project");
+            if (StartupRejected)
+            {
+                return;
+            }
+
+            try
+            {
+                TestExecutionContextRuntime.Verify();
+            }
+            catch (Exception error)
+            {
+                GameLogger.FailTestStartup(error);
+            }
         }
 
-        private static void Check(string expected, string actual, string name)
+        internal static bool RejectStartup()
         {
-            var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
-            if (!string.Equals(Path.GetFullPath(expected).TrimEnd('/', '\\'), Path.GetFullPath(actual).TrimEnd('/', '\\'), comparison))
-                throw new InvalidOperationException($"Test {name} isolation mismatch: expected '{expected}', actual '{actual}'");
+            return Interlocked.Exchange(ref rejected, 1) == 0;
         }
     }
 }

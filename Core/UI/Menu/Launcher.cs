@@ -44,6 +44,11 @@ namespace Cthangover.Core.UI.Menu
         /// <summary>Applies the theme, then branches into boot overlay, skip-to-main-menu or the interactive launcher depending on boot state.</summary>
         public override void _Ready()
         {
+            if (Cthangover.Core.Mods.Testing.TestRuntimeEnvironment.StartupRejected)
+            {
+                return;
+            }
+
             CthangoverTheme.Apply(this);
 
             if (BootController.IsLauncherBoot)

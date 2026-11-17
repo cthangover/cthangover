@@ -1,11 +1,11 @@
-using Cthangover.Core.Bootstrap;
-using Cthangover.Core.Utils;
-using Godot;
-
 namespace Cthangover.Core.Settings
 {
+    using Cthangover.Core.Bootstrap;
+    using Cthangover.Core.Utils;
+    using Godot;
+
     /// <summary>
-    /// Unity-style Godot autoload that serves as the single entry point
+    /// Godot autoload that serves as the single entry point
     /// for the game state subsystem. Holds the <see cref="SettingsData"/>
     /// (persisted user preferences) and <see cref="RuntimeData"/> (session
     /// state). On <c>_Ready</c> it loads saved settings. In-game time
@@ -20,20 +20,30 @@ namespace Cthangover.Core.Settings
         {
             GameEnvironment.IsRuntime = true;
             GameEnvironment.MarkMainThread();
+            Mods.Testing.TestRuntimeEnvironment.Verify();
+            if (Mods.Testing.TestRuntimeEnvironment.StartupRejected)
+            {
+                return;
+            }
+
+            GameLogger.Init();
         }
 
         /// <summary>Global singleton, set once during <c>_EnterTree</c>.</summary>
         public static GameData Instance { get; private set; }
 
         /// <summary>
-        /// Constructs the game data root and performs the earliest
-        /// initialization pass: <see cref="GameLogger.Init"/> must run before
-        /// any subsystem logs, and this constructor is the first point where
-        /// that is guaranteed.
+        /// Constructs the game data root after its static bootstrap has verified isolation and initialized logging.
+        /// Rejected contexts leave settings unconstructed; accepted contexts receive defaults before the idempotent logger entry.
         /// </summary>
         public GameData()
         {
-            Mods.Testing.TestRuntimeEnvironment.Verify();
+            if (Mods.Testing.TestRuntimeEnvironment.StartupRejected)
+            {
+                return;
+            }
+
+            Settings = new SettingsData();
             GameLogger.Init();
         }
 
@@ -43,22 +53,32 @@ namespace Cthangover.Core.Settings
         /// without proper cleanup), logs a diagnostic warning before
         /// overwriting.
         /// </summary>
-		public override void _EnterTree()
-		{
-			if (Instance != null && GodotObject.IsInstanceValid(Instance))
-			{
-				var scene = GetTree()?.CurrentScene?.Name ?? "?";
-				var existingPath = Instance.GetPath().ToString();
-				var myPath = GetPath().ToString();
-				GameLogger.Log("DUPLICATE", $"GameData._EnterTree: Instance ALREADY SET by '{existingPath}', overwriting with duplicate at '{myPath}' on scene '{scene}'", LogLevel.Error);
-			}
-			Instance = this;
-            ApplicationExit.Attach(GetTree());
-			GameLogger.Init();
-		}
+        public override void _EnterTree()
+        {
+            if (Mods.Testing.TestRuntimeEnvironment.StartupRejected)
+            {
+                Instance = this;
+                ApplicationExit.Attach(GetTree());
+                ApplicationExit.Quit(GetTree(), 78);
+                return;
+            }
 
-        /// <summary>Persisted user-facing settings (audio, display, language, etc.).</summary>
-        public SettingsData Settings { get; private set; } = new();
+            if (Instance != null && GodotObject.IsInstanceValid(Instance))
+            {
+                var scene = GetTree()?.CurrentScene?.Name ?? "?";
+                var existingPath = Instance.GetPath().ToString();
+                var myPath = GetPath().ToString();
+                GameLogger.Log("DUPLICATE",
+                    $"GameData._EnterTree: Instance ALREADY SET by '{existingPath}', "
+                    + $"overwriting with duplicate at '{myPath}' on scene '{scene}'", LogLevel.Error);
+            }
+            Instance = this;
+            ApplicationExit.Attach(GetTree());
+            GameLogger.Init();
+        }
+
+        /// <summary>Persisted preferences; unavailable only after a rejected bootstrap that is exiting before settings creation.</summary>
+        public SettingsData Settings { get; private set; }
 
         private RuntimeData _runtime;
 
@@ -92,7 +112,8 @@ namespace Cthangover.Core.Settings
                     {
                         _runtimeCreatedPrematurely = true;
                         GameLogger.Log("GAME",
-                            $"RuntimeData created before boot finished (phase={Boot.Phase}) — starter inventory may be empty; the boot pipeline is supposed to create it first",
+                            $"RuntimeData created before boot finished (phase={Boot.Phase}) — starter inventory may be empty; "
+                            + "the boot pipeline is supposed to create it first",
                             LogLevel.Error);
                     }
                     _runtime = new RuntimeData();
@@ -165,6 +186,11 @@ namespace Cthangover.Core.Settings
         /// </summary>
         public override void _Ready()
         {
+            if (Mods.Testing.TestRuntimeEnvironment.StartupRejected)
+            {
+                return;
+            }
+
             Settings.Load();
             GameLogger.Log("GAME", $"Game initialized, version={ProjectSettings.GetSetting("application/config/version")}");
         }

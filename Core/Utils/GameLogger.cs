@@ -1,14 +1,16 @@
-using Cthangover.Core.Settings;
-using Godot;
-using System;
-using System.Collections.Generic;
-using System.IO;
-
-#if WINDOWS
-using System.Runtime.InteropServices;
-#endif
 namespace Cthangover.Core.Utils
 {
+    using Cthangover.Core.Settings;
+    using Cthangover.Core.Mods.Testing;
+    using Godot;
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+
+#if WINDOWS
+    using System.Runtime.InteropServices;
+#endif
+
     /// <summary>
     /// Central logging sink for the entire project. Every subsystem — the scenario
     /// engine, mod loader, UI framework, and AI behaviours — routes diagnostic
@@ -102,7 +104,7 @@ namespace Cthangover.Core.Utils
         {
             lock (_lock)
             {
-                if (_initialized)
+                if (_initialized || TestRuntimeEnvironment.StartupRejected)
                 {
                     return;
                 }
@@ -117,6 +119,23 @@ namespace Cthangover.Core.Utils
                         return;
                     }
 
+                    TestRuntimeEnvironment.Verify();
+                    if (TestRuntimeEnvironment.StartupRejected)
+                    {
+                        return;
+                    }
+
+                    var context = TestExecutionContextRuntime.Current;
+                    if (context != null)
+                    {
+                        _logPath = context.MainLogPath;
+                        _errorLogPath = context.ErrorLogPath;
+                        // Configuration parsing can itself log. Bootstrap both private sinks before reading it.
+                        _fileWriter = new RollingLogWriter(_logPath, 10L * 1024 * 1024, 3);
+                        _errorWriter = new RollingLogWriter(_errorLogPath, 10L * 1024 * 1024, 3);
+                        TestExecutionContextRuntime.LogReady();
+                    }
+
                     var config = GameConfig.Instance.Logging;
                     _enabled = config.Enabled;
                     _minimumLevel = ParseLogLevel(config.MinimumLevel);
@@ -126,21 +145,36 @@ namespace Cthangover.Core.Utils
                         _enabledCategories = new HashSet<string>(enabledCategories, StringComparer.OrdinalIgnoreCase);
                     }
 
-                    var logsDir = Path.Combine(OS.GetUserDataDir(), "logs");
-                    _logPath = Path.Combine(logsDir, "cthangover.log");
-                    _errorLogPath = Path.Combine(logsDir, "cthangover_errors.log");
-                    foreach (var arg in OS.GetCmdlineArgs())
+                    if (context == null)
                     {
-                        if (arg.StartsWith("--log-file=", StringComparison.Ordinal))
+                        var logsDir = Path.Combine(OS.GetUserDataDir(), "logs");
+                        _logPath = Path.Combine(logsDir, "cthangover.log");
+                        _errorLogPath = Path.Combine(logsDir, "cthangover_errors.log");
+                        foreach (var arg in OS.GetCmdlineArgs())
                         {
-                            _logPath = arg.Substring("--log-file=".Length);
-                            break;
+                            if (arg.StartsWith("--log-file=", StringComparison.Ordinal))
+                            {
+                                _logPath = arg["--log-file=".Length..];
+                                break;
+                            }
+                        }
+
+                        foreach (var arg in OS.GetCmdlineUserArgs())
+                        {
+                            if (arg.StartsWith("--log-file=", StringComparison.Ordinal))
+                            {
+                                _logPath = arg["--log-file=".Length..];
+                                break;
+                            }
                         }
                     }
 
-                    if (_enabled)
+                    if (_enabled || context != null)
                     {
+                        _enabled = true;
                         var maxBytes = (long)config.MaxFileSizeMb * 1024 * 1024;
+                        _fileWriter?.Dispose();
+                        _errorWriter?.Dispose();
                         _fileWriter = new RollingLogWriter(_logPath, maxBytes, config.MaxFiles);
                         _errorWriter = new RollingLogWriter(_errorLogPath, maxBytes, config.MaxFiles);
                         AppDomain.CurrentDomain.ProcessExit += OnProcessExit;
@@ -159,10 +193,29 @@ namespace Cthangover.Core.Utils
                     Log("LOGGER", $"Logger initialized, path={_logPath}, console={_consoleAllocated}, "
                         + $"redirected={Console.IsOutputRedirected}");
                 }
-                catch
+                catch (Exception error)
                 {
                     Shutdown();
+                    if (TestExecutionContextRuntime.Current != null)
+                    {
+                        FailTestStartup(error);
+                    }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Reports an isolation/bootstrap failure without configuration, Godot calls or shared file writes.
+        /// Latches rejection so later autoloads cannot initialize normal sinks/settings. GameData routes the
+        /// failure through ApplicationExit/native exit78; Environment.Exit would destroy Godot's embedded CLR.
+        /// </summary>
+        internal static void FailTestStartup(Exception error)
+        {
+            var first = TestRuntimeEnvironment.RejectStartup();
+            Shutdown();
+            if (first)
+            {
+                Console.Error.WriteLine("[TEST_EXECUTION_FAILURE] " + error);
             }
         }
 
@@ -271,6 +324,11 @@ namespace Cthangover.Core.Utils
         /// </param>
         public static void Log(string category, string message, LogLevel level = LogLevel.Message)
         {
+            if (TestRuntimeEnvironment.StartupRejected)
+            {
+                return;
+            }
+
             if (!_initialized)
             {
                 Init();
@@ -284,15 +342,17 @@ namespace Cthangover.Core.Utils
             //if (_enabledCategories != null && !_enabledCategories.Contains(category))
             //    return;
             var timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
-            var line = $"[{timestamp}] [{category}] {message}";
+            var identity = TestExecutionContextRuntime.Current?.LogIdentity;
+            var attributed = (identity == null ? "" : "[" + identity + "] ") + message;
+            var line = $"[{timestamp}] [{category}] " + attributed;
             if (_consoleAllocated)
             {
                 try
                 {
 #if WINDOWS
-                    WriteColoredWindows(timestamp, category, message, level);
+                    WriteColoredWindows(timestamp, category, attributed, level);
 #else
-                    WriteColoredAnsi(timestamp, category, message, level);
+                    WriteColoredAnsi(timestamp, category, attributed, level);
 #endif
                 }
                 catch

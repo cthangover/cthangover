@@ -1,14 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using Cthangover.Core.Utils;
-using Godot;
-
 namespace Cthangover.Core.Mods.Testing
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
+    using System.Text.Json;
+    using System.Text.Json.Serialization;
+    using Cthangover.Core.Utils;
+    using Godot;
+
     /// <summary>
     /// The only writer of mod test results (plan §7.3). Produces three
     /// channels:
@@ -35,6 +35,11 @@ namespace Cthangover.Core.Mods.Testing
         {
             get
             {
+                if (TestExecutionContextRuntime.Current is { } execution)
+                {
+                    return execution.ReportDirectory + Path.DirectorySeparatorChar;
+                }
+
                 if (GameEnvironment.IsRuntime)
                 {
                     try { return ProjectSettings.GlobalizePath("user://mod_tests/"); }
