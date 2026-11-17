@@ -417,6 +417,30 @@ never expire by time/LRU. Unique instances remain individual native views,
 excluded from any future immutable aggregation. The optional existing-inventory
 adapter now preserves unique identity through pickup/drop and validated two-owner
 commits. Ordinary item-count APIs exclude protected rows; no parallel bag is
-created. Quantity lineage and full rejected-slot recovery remain separate work.
+created. Rejected identity slots stay opaque/inert while ordinary stock changes
+survive; [current-dispatch availability](#current-dispatch-availability-and-opaque-retained-owner-records) defines
+that owner boundary. Quantity lineage remains separate work.
 See [runtime API](../../mods_private/scene3d_base/docs/en.md#persistent-mutable-world-objects)
 and [author forms](../../mods_private/scene3d_editor/docs/en.md#live-world-instance-forms).
+
+## Current-dispatch availability and opaque retained owner records
+
+`SaveService.ApplyingDormancy` exists only during one `ApplyPackage`. The read-only view is installed before reset callbacks and includes owner rejections before `OnJoinedExistingGame`. `LastLoadDormancy` remains a historical report and cannot establish current availability. An expired view refuses queries; retaining that view keeps its classification object alive, so consumers should not store it.
+
+Both nested `ApplyPackage` and `BuildPackage` during application refuse before another reset or collection. The outer finally clears the view and reentrancy guard even when restoring core data throws. This is a load boundary, not a general asynchronous transaction or a change to live/dormant precedence.
+
+`TryRetainDormantSlot` borrows the exact Core-owned record through an opaque owner/epoch token with a weak record reference. `TryCopyTo` requires a newly allocated, detached same-owner output slot; it is not a sandbox against arbitrary caller aliases. It clones metadata, dictionaries, blob versions and raw byte payloads without flushing DataBlob caches or mutating the rejected record. A new game, later load or record replacement invalidates the token; stale emission refuses.
+
+The optional items/scene identity owners mark unsupported slots unavailable. Items keep ordinary stock/recipes usable and merge their changes only into the new emitted slot, retaining opaque identity evidence. Unknown raw identity payloads are never parsed to reconstruct a replacement occurrence. Missing, rejected and shadowed slots are distinct: genuine absence uses new-game defaults, while opaque dormant history keeps affected unique operations inert. Ordinary scene DTO rollback keeps that binding; a supported owner load or new game clears it.
+
+The scene initializer registers exactly one scene reset owner through AppServices;
+central mod unload removes it by assembly ownership. New-game reset clears both
+logical records and unavailable-owner bindings.
+
+The native contract `scene3d_inventory/full_dispatch_dormancy_and_reentrancy`
+covers both owner orders, single/both rejection, opaque raw/metadata retention,
+ordinary stock changes, missing counterparts, empty/null legacy shadows,
+reentrant save/load refusal, finally after a core restoration exception and
+new-game reset with a stale historical report. It does not prove fungible
+lineage, arbitrary caller alias safety, cross-thread snapshots or ALC reclamation.
+No general save-format classifier precedence changes are made.

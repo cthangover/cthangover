@@ -1,16 +1,17 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text.Json;
-using Cthangover.Core.Mods;
-using Cthangover.Core.Scenes;
-using Cthangover.Core.UI.Executable;
-using Cthangover.Core.Utils;
-using Godot;
-
 namespace Cthangover.Core.Settings
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
+    using System.Text.Json;
+    using System.Threading;
+    using Cthangover.Core.Mods;
+    using Cthangover.Core.Scenes;
+    using Cthangover.Core.UI.Executable;
+    using Cthangover.Core.Utils;
+    using Godot;
+
     /// <summary>
     /// Save/load dispatcher for the game core. Serialises game state into
     /// a <see cref="SavePackage"/> (JSON) and drives a <b>three-phase</b>
@@ -67,6 +68,16 @@ namespace Cthangover.Core.Settings
         /// <summary>Slots carried forward for mods the current game runs without; see <see cref="SaveDormancy"/>.</summary>
         private static Dictionary<string, ModSlot> _dormant = new();
 
+        private static object dormantGeneration = new();
+        private static int applyingPackage;
+
+        /// <summary>
+        /// Read-only classification for the current dispatch, including owner rejections before Joined callbacks.
+        /// Null outside ApplyPackage; stale LastLoadDormancy is never a current-load availability signal.
+        /// </summary>
+        public static SaveLoadContext ApplyingDormancy { get; private set; }
+
+
         /// <summary>Scene stored in the last successfully loaded save (null before any load).</summary>
         public static string LastLoadedSceneName { get; private set; }
 
@@ -74,7 +85,27 @@ namespace Cthangover.Core.Settings
         public static SaveDormancy.Result LastLoadDormancy { get; private set; }
 
         /// <summary>Forgets dormant slots; called when a new game starts.</summary>
-        public static void ClearDormant() => _dormant = new Dictionary<string, ModSlot>();
+        public static void ClearDormant()
+        {
+            dormantGeneration = new object();
+            _dormant = new Dictionary<string, ModSlot>();
+        }
+
+        internal static bool OwnsRetainedSlot(object generation, string modId, ModSlot slot)
+        {
+            if (!ReferenceEquals(dormantGeneration, generation))
+            {
+                return false;
+            }
+
+            if (ApplyingDormancy != null)
+            {
+                return ApplyingDormancy.MatchesDormant(modId, slot);
+            }
+
+            return _dormant.TryGetValue(modId, out var current) && ReferenceEquals(current, slot);
+        }
+
 
         /// <summary>Directory of the active game's saves (Godot path).</summary>
         public static string SaveDirectory => SaveDir;
@@ -261,6 +292,11 @@ namespace Cthangover.Core.Settings
         /// </summary>
         public static SavePackage BuildPackage(string saveId)
         {
+            if (Volatile.Read(ref applyingPackage) != 0)
+            {
+                throw new InvalidOperationException("Cannot collect a save during package application");
+            }
+
             var gameData = GameData.Instance;
             var pkg = new SavePackage
             {
@@ -355,6 +391,25 @@ namespace Cthangover.Core.Settings
         /// </summary>
         public static bool ApplyPackage(SavePackage pkg, string sourceName)
         {
+            if (Interlocked.CompareExchange(ref applyingPackage, 1, 0) != 0)
+            {
+                throw new InvalidOperationException("Cannot apply a save during package application");
+            }
+
+            try
+            {
+                dormantGeneration = new object();
+                return ApplyPackageCore(pkg, sourceName);
+            }
+            finally
+            {
+                ApplyingDormancy = null;
+                Volatile.Write(ref applyingPackage, 0);
+            }
+        }
+
+        private static bool ApplyPackageCore(SavePackage pkg, string sourceName)
+        {
             var fileName = sourceName;
             GameLogger.Log("SAVE", $"Loading '{fileName}' (core={pkg.CoreVersion}, mods={pkg.ModData?.Count ?? 0})");
 
@@ -386,6 +441,8 @@ namespace Cthangover.Core.Settings
                 GameLogger.Log("SAVE", $"Mod '{modId}' data kept dormant ({reason}) — it returns when the mod is back", LogLevel.Warning);
             foreach (var modId in dormancy.Revived)
                 GameLogger.Log("SAVE", $"Mod '{modId}' is back — restoring its dormant data");
+
+            ApplyingDormancy = new SaveLoadContext(dormantGeneration, dormancy);
 
             // ─── Phase 2: fresh state, then core state ───
             // Every state owner resets first, so a mod without a slot in this
