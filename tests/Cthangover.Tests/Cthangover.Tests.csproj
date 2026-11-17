@@ -13,6 +13,9 @@
         <Compile Include="../../mods/mod_manager/src/Publishing/PublishAvailability.cs" Link="Publishing/PublishAvailability.cs" />
         <Compile Include="../../mods/mod_manager/src/Publishing/PublishingPermissions.cs" Link="Publishing/PublishingPermissions.cs" />
         <Compile Include="../../mods/mod_manager/src/Publishing/AuthorConsentPermissions.cs" Link="Publishing/AuthorConsentPermissions.cs" />
+        <Compile Include="../../mods/scenario_studio/src/Runtime/StudioSourceSave.cs" Link="Studio/StudioSourceSave.cs" />
+        <Compile Include="../../mods/scenario_studio/src/Runtime/StudioTextOverlayProvider.cs" Link="Studio/StudioTextOverlayProvider.cs" />
+        <Compile Include="../../mods/scenario_studio/src/Runtime/StudioWorkingCopy.cs" Link="Studio/StudioWorkingCopy.cs" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0"/>
         <PackageReference Include="xunit" Version="2.6.6"/>
         <PackageReference Include="xunit.runner.visualstudio" Version="2.5.6">
