@@ -1,0 +1,5 @@
+# Runtime logs this generator diagnostic as a warning and continues compilation.
+# Keep the IDE policy equivalent while retaining the diagnostic for authors.
+is_global = true
+global_level = 100
+dotnet_diagnostic.GD0001.severity = warning

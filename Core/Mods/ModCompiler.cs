@@ -1,17 +1,17 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Threading;
-using Cthangover.Core.Bootstrap;
-using Cthangover.Core.Utils;
-using Cthangover.Core.Mods.Compilation;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-
 namespace Cthangover.Core.Mods
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
+    using System.Reflection;
+    using System.Threading;
+    using Cthangover.Core.Bootstrap;
+    using Cthangover.Core.Utils;
+    using Cthangover.Core.Mods.Compilation;
+    using Microsoft.CodeAnalysis;
+    using Microsoft.CodeAnalysis.CSharp;
+
     /// <summary>
     /// Roslyn-based C# compiler for mod source files. The compilation
     /// pipeline is:
@@ -174,6 +174,7 @@ namespace Cthangover.Core.Mods
                     foreach (var(path, _)in sourceFiles)
                         GameLogger.Log("MODS_COMPILE", $"  {path}", LogLevel.Debug);
                     var dependencySignature = ModAssemblyCache.BuildDependencySignature(modInfo, mods);
+                    dependencySignature += ";managed=" + ModManagedReferences.BuildSignature(modInfo, mods);
                     if (!string.IsNullOrEmpty(dependencySignature))
                     {
                         GameLogger.Log("MODS_COMPILE", $"  dependencies: {dependencySignature}", LogLevel.Debug);

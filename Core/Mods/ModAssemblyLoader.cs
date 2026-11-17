@@ -1,22 +1,22 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Threading;
-using Cthangover.Core.Factories.Impls;
-using Cthangover.Core.Items;
-using Cthangover.Core.Mods.Consumers;
-using Cthangover.Core.Mods.Compilation;
-using Cthangover.Core.Mods.Discovery;
-using Cthangover.Core.Scenes.TscnBuild;
-using Cthangover.Core.Scenes.TscnParsing;
-using Cthangover.Core.Bootstrap;
-using Cthangover.Core.Utils;
-using Godot;
-
 namespace Cthangover.Core.Mods
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
+    using System.Reflection;
+    using System.Threading;
+    using Cthangover.Core.Factories.Impls;
+    using Cthangover.Core.Items;
+    using Cthangover.Core.Mods.Consumers;
+    using Cthangover.Core.Mods.Compilation;
+    using Cthangover.Core.Mods.Discovery;
+    using Cthangover.Core.Scenes.TscnBuild;
+    using Cthangover.Core.Scenes.TscnParsing;
+    using Cthangover.Core.Bootstrap;
+    using Cthangover.Core.Utils;
+    using Godot;
+
     /// <summary>
     /// Loads compiled assemblies (DLLs) from mods and registers their types
     /// into every reflection-driven subsystem in the game.
@@ -423,7 +423,7 @@ namespace Cthangover.Core.Mods
         }
 
         /// <summary>
-        /// Scans each loaded mod's <c>dll/</c> directory for precompiled
+        /// Resolves each selected mod's implicit <c>dll/</c> tree and explicit managed references for precompiled
         /// <c>.dll</c> files, copies them to the assembly cache, and loads
         /// each as an <see cref="Assembly"/> WITHOUT registering it.
         /// Registration fan-out (see <see cref="RegisterAssembly"/>) must be
@@ -437,7 +437,7 @@ namespace Cthangover.Core.Mods
             => LoadStagedDlls(StagePrecompiledDlls(mods, cancellationToken), cancellationToken);
 
         /// <summary>
-        /// Copies each mod's <c>dll/*.dll</c> into the assembly cache under a
+        /// Copies each mod's managed libraries into the assembly cache under a
         /// content-addressed name (<c>&lt;mod&gt;_dll_&lt;hash&gt;_&lt;file&gt;</c>)
         /// without loading anything. The hash makes the path the identity of the
         /// library: an unchanged DLL keeps its path (an in-process reload keeps
@@ -455,7 +455,17 @@ namespace Cthangover.Core.Mods
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var dllFiles = CollectDllFiles(mod.FileProvider, mod.Id);
+                List<(string FilePath, byte[] Bytes)> dllFiles;
+                try
+                {
+                    dllFiles = ModManagedReferences.Collect(mod);
+                }
+                catch (Exception exception)
+                {
+                    GameLogger.CompilationErrors.Add($"Mod '{mod.Id}': {exception.Message}");
+                    GameLogger.Log("MODS_ASSEMBLY", $"Managed references of '{mod.Id}': {exception.Message}", LogLevel.Error);
+                    continue;
+                }
                 if (dllFiles.Count == 0)
                     continue;
 
@@ -506,31 +516,6 @@ namespace Cthangover.Core.Mods
                 }
             }
             return result;
-        }
-
-        private static List<(string FilePath, byte[] Bytes)> CollectDllFiles(IModFileProvider provider, string modId)
-        {
-            var result = new List<(string, byte[])>();
-            CollectDllFilesRecursive(provider, "dll", result);
-            return result;
-        }
-
-        private static void CollectDllFilesRecursive(IModFileProvider provider, string directory, List<(string, byte[])> result)
-        {
-            foreach (var entry in provider.ListFiles(directory))
-            {
-                if (entry.EndsWith("/"))
-                {
-                    var subDir = entry.TrimEnd('/');
-                    CollectDllFilesRecursive(provider, subDir, result);
-                }
-                else if (entry.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
-                {
-                    var bytes = provider.ReadFileBinary(entry);
-                    if (bytes != null)
-                        result.Add((entry, bytes));
-                }
-            }
         }
 
         private static Assembly OnModAssemblyResolve(object sender, ResolveEventArgs args)

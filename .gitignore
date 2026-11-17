@@ -1,6 +1,7 @@
 # Godot 4.x
 .godot/
 .idea/
+.ide/
 .git/
 .git-template/
 sdk/

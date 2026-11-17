@@ -1,9 +1,9 @@
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.Json.Serialization;
-
 namespace Cthangover.Core.Mods
 {
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text.Json.Serialization;
+
     /// <summary>
     /// JSON DTO for the <c>manifest.json</c> file required inside every
     /// mod.
@@ -117,6 +117,14 @@ namespace Cthangover.Core.Mods
         /// </summary>
         [JsonPropertyName("depends_native")]
         public List<string> DependsNative { get; set; }
+
+        /// <summary>
+        /// Required mod-relative patterns for additional managed DLLs, such as lib/*.dll.
+        /// Both runtime compilation/loading and generated IDE projects consume these declarations;
+        /// the historical dll/ directory remains implicit. Native libraries use depends_native instead.
+        /// </summary>
+        [JsonPropertyName("references")]
+        public List<string> References { get; set; }
 
         /// <summary>
         /// Versioned dependencies. Each entry is a string in format

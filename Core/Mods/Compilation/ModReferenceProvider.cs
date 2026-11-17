@@ -1,22 +1,22 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using Cthangover.Core.Actions;
-using Cthangover.Core.Utils;
-using Godot;
-using Microsoft.CodeAnalysis;
-
 namespace Cthangover.Core.Mods.Compilation
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
+    using System.Reflection;
+    using Cthangover.Core.Actions;
+    using Cthangover.Core.Utils;
+    using Godot;
+    using Microsoft.CodeAnalysis;
+
     /// <summary>
     /// Assembly-reference discovery for mod compilations plus the warmed
     /// Godot path state the rest of the pipeline reads.
     ///
     /// <see cref="Collect"/> scans, in order: the runtime directories of
     /// every loaded assembly, the Godot build output directory, precompiled
-    /// selected providers' <c>dll/</c> folders and the compilation cache (newest
+    /// selected providers' <c>dll/</c> folders, declared managed references and the compilation cache (newest
     /// artifact per known mod id). The scan is deliberately filtered — the
     /// inline comments explain why — because a naive directory scan would
     /// resurrect stale copies of mod assemblies and break dependent
@@ -165,6 +165,29 @@ namespace Cthangover.Core.Mods.Compilation
 
                 foreach (var dll in Directory.GetFiles(precompiledDir, "*.dll"))
                     TryAddReference(references, dll);
+            }
+
+            // Declared references may live outside dll/ or inside an archive. Stage the same
+            // selected bytes as the loader; an unrelated installation cannot supply these types.
+            foreach (var mod in referenceMods ?? ModRegistry.Instance.Mods.Values)
+            {
+                if (mod is not ModInfo { Manifest.References.Count: > 0 })
+                {
+                    continue;
+                }
+
+                if (knownModIds != null && !string.Equals(mod.Id, currentModId, StringComparison.OrdinalIgnoreCase)
+                    && !knownModIds.Contains(mod.Id, StringComparer.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                foreach (var library in ModManagedReferences.Collect(mod))
+                {
+                    var path = PrecompiledAssemblyCache.Stage(ModAssemblyCache.CacheRoot, mod.Id,
+                        library.FilePath, library.Bytes);
+                    TryAddReference(references, path);
+                }
             }
 
             if (searchedDirs.Add(ModAssemblyCache.CacheRoot) && Directory.Exists(ModAssemblyCache.CacheRoot))

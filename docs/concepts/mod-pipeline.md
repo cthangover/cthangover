@@ -110,6 +110,15 @@ match), and a trailing `?` for optional.
 
 ## CLR requirement / Требование CLR
 
+Managed library declarations use optional manifest `references` patterns in addition
+to the implicit `dll/` tree. `ModManagedReferences` resolves selected provider bytes
+for staging, metadata and cache identity, including archive providers. Explicit
+patterns are required and cannot escape the mod; nested mods retain file ownership.
+Library content hashes join the producer and transitive consumer signatures.
+The IDE generator in `authoring3d/ide` emits separate projects from those same
+manifest boundaries; see `../ide_mod_projects.en.md` and `../ide_mod_projects.ru.md`.
+Generated projects do not participate in runtime source selection.
+
 Compilation and execution use SDK 10/net10.0. The SDK reference pack is shipped
 beside the core (`mod_reference_assemblies/net10.0`), including exports and xUnit
 outputs. `FrameworkReferencePack` keeps framework implementation DLLs out of
