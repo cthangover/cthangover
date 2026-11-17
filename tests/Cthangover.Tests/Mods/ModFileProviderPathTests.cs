@@ -8,6 +8,8 @@ using Cthangover.Core.Mods.Resolvers;
 
 namespace Engine.Tests.Mods
 {
+    using Cthangover.Core.Mods;
+
     public class ModFileProviderPathTests : IDisposable
     {
         private const string MainContent = "Hello ${../shared/data.txt}";
@@ -207,6 +209,155 @@ namespace Engine.Tests.Mods
             using var zip = CreateZipProvider();
 
             Assert.Null(zip.GetFileSystemPath("dir/main.txt"));
+        }
+
+        /// <summary>Real storage providers preserve runtime data through named resolution and nested JSON fallback.</summary>
+        [Fact]
+        public void ExplicitScenario_FolderAndZip_NamedOverrideReturnsIdenticalBytes()
+        {
+            var files = ScenarioFiles();
+            using var folder = CreateScenarioFolder(files);
+            using var zip = CreateScenarioZip(files);
+            const string expected = "scene: explicit_provider_probe\ninclude_syntax: explicit-v1\n---\n"
+                + "set parent ${reference}\nset child ${value}\n{\"Runtime\":\"${reference}\",\"Value\":[1,2]}";
+
+            Assert.Null(zip.GetFileSystemPath("scenarios/main.scenario"));
+            Assert.Equal(expected, ScenarioDefs.Resolve("main", folder));
+            Assert.Equal(expected, ScenarioDefs.Resolve("main", zip));
+        }
+
+        /// <summary>Explicit directives retain exact-case lookup, missing-file refusal and the logical root boundary.</summary>
+        [Fact]
+        public void ExplicitScenario_FolderAndZip_RefuseWrongCaseMissingAndOutsideIncludes()
+        {
+            var files = ScenarioFiles();
+            files["scenarios/wrong.scenario"] = "include_syntax: explicit-v1\n---\n$include{Parts/body.txt}";
+            files["scenarios/missing.scenario"] = "include_syntax: explicit-v1\n---\n$include{absent.txt}";
+            files["scenarios/outside.scenario"] = "include_syntax: explicit-v1\n---\n$include{../../outside.txt}";
+            File.WriteAllText(Path.Combine(_testDir, "outside.txt"), "outside secret");
+            using var folder = CreateScenarioFolder(files);
+            using var zip = CreateScenarioZip(files);
+
+            foreach (var provider in new IModFileProvider[]
+            {
+                folder,
+                zip
+            })
+            {
+                Assert.Null(ModManager.Instance.ReadResolvedText(provider.Mod, "scenarios/Main.scenario", provider));
+                Assert.Null(ModManager.Instance.ReadResolvedText(provider.Mod, "scenarios/wrong.scenario", provider));
+                Assert.Null(ModManager.Instance.ReadResolvedText(provider.Mod, "scenarios/missing.scenario", provider));
+                Assert.Null(ModManager.Instance.ReadResolvedText(provider.Mod, "scenarios/outside.scenario", provider));
+            }
+        }
+
+        /// <summary>A mounted suite resolves against its projected root even when its host contains matching secrets.</summary>
+        [Fact]
+        public void ExplicitScenario_FolderAndZip_SubdirKeepsIncludesInsideSuiteRoot()
+        {
+            var files = new Dictionary<string, string>
+            {
+                ["suite/scenarios/main.scenario"] = "scene: suite_probe\ninclude_syntax: explicit-v1\n---\n"
+                    + "$include{../../shared.txt}\n${reference}",
+                ["suite/shared.txt"] = "suite data",
+                ["shared.txt"] = "host secret",
+                ["suite/scenarios/reference.json"] = "wrong substitution"
+            };
+            using var folder = CreateScenarioFolder(files);
+            using var zip = CreateScenarioZip(files);
+            using var folderSuite = new SubdirModFileProvider(folder, "suite", "folder_suite");
+            using var zipSuite = new SubdirModFileProvider(zip, "suite", "zip_suite");
+            const string expected = "scene: suite_probe\ninclude_syntax: explicit-v1\n---\nsuite data\n${reference}";
+
+            Assert.Equal(expected, ScenarioDefs.Resolve("main", folderSuite));
+            Assert.Equal(expected, ScenarioDefs.Resolve("main", zipSuite));
+            Assert.Null(zipSuite.GetFileSystemPath("scenarios/main.scenario"));
+        }
+
+        /// <summary>Explicit provider selection cannot reuse another provider's content or capture runtime values in a cache.</summary>
+        [Fact]
+        public void ExplicitScenario_OverrideReadsFreshProviderContentAfterCacheClear()
+        {
+            var files = ScenarioFiles();
+            using var folder = CreateScenarioFolder(files);
+            using var zip = CreateScenarioZip(files);
+            var original = ScenarioDefs.Resolve("main", zip);
+            File.WriteAllText(Path.Combine(folder.RootPath, "scenarios", "parts", "body.txt"), "set changed ${reference}");
+
+            var changed = "scene: explicit_provider_probe\ninclude_syntax: explicit-v1\n---\n"
+                + "set parent ${reference}\nset changed ${reference}";
+            Assert.Equal(changed, ScenarioDefs.Resolve("main", folder));
+            ModManager.Instance.GetResolver<ScenarioResolver>().ClearCache();
+            Assert.Equal(original, ScenarioDefs.Resolve("main", zip));
+            Assert.Equal(changed, ScenarioDefs.Resolve("main", folder));
+        }
+
+        /// <summary>The selected overlay id follows remounts and resolves every include through that overlay's provider.</summary>
+        [Fact]
+        public void ExplicitScenario_OverlayRemountUsesSelectedProviderAfterInvalidation()
+        {
+            var files = ScenarioFiles();
+            using var folder = CreateScenarioFolder(files);
+            using var zip = CreateScenarioZip(files);
+            File.WriteAllText(Path.Combine(folder.RootPath, "scenarios", "parts", "body.txt"), "set overlay ${reference}");
+            var id = "explicit_overlay_" + System.Guid.NewGuid().ToString("N");
+            const string expected = "scene: explicit_provider_probe\ninclude_syntax: explicit-v1\n---\n"
+                + "set parent ${reference}\nset overlay ${reference}";
+            try
+            {
+                ModOverlays.Mount(id, zip);
+                Assert.Equal(ScenarioDefs.Resolve("main", zip), ScenarioDefs.ReadText(id, "scenarios/main.scenario"));
+                ModOverlays.Mount(id, folder);
+                ScenarioDefs.Invalidate();
+                Assert.Equal(expected, ScenarioDefs.ReadText(id, "scenarios/main.scenario"));
+                Assert.Null(ScenarioDefs.ReadText(id, "scenarios/Main.scenario"));
+            }
+            finally
+            {
+                ModOverlays.Unmount(id);
+                ScenarioDefs.Invalidate();
+            }
+        }
+
+        private static Dictionary<string, string> ScenarioFiles()
+        {
+            return new Dictionary<string, string>
+            {
+                ["scenarios/main.scenario"] = "scene: explicit_provider_probe\ninclude_syntax: explicit-v1\n---\n"
+                    + "set parent ${reference}\n$include{parts/body.txt}",
+                ["scenarios/parts/body.txt"] = "set child ${value}\n$include{../data}",
+                ["scenarios/data.json"] = "{\"Runtime\":\"${reference}\",\"Value\":${piece}}",
+                ["scenarios/piece.json"] = "[1,2]",
+                ["scenarios/reference.json"] = "wrong substitution",
+                ["scenarios/parts/value.json"] = "wrong substitution"
+            };
+        }
+
+        private FolderModFileProvider CreateScenarioFolder(Dictionary<string, string> files)
+        {
+            var root = Path.Combine(_testDir, "scenario_folder");
+            foreach (var file in files)
+            {
+                var path = Path.Combine(root, file.Key.Replace('/', Path.DirectorySeparatorChar));
+                Directory.CreateDirectory(Path.GetDirectoryName(path));
+                File.WriteAllText(path, file.Value, new UTF8Encoding(false));
+            }
+
+            return new FolderModFileProvider(root, "scenario_folder");
+        }
+
+        private ZipModFileProvider CreateScenarioZip(Dictionary<string, string> files)
+        {
+            var path = Path.Combine(_testDir, "scenario_zip.zip");
+            using (var archive = ZipFile.Open(path, ZipArchiveMode.Create))
+            {
+                foreach (var file in files)
+                {
+                    WriteEntry(archive, file.Key, file.Value);
+                }
+            }
+
+            return new ZipModFileProvider(path, "scenario_zip");
         }
 
         private FolderModFileProvider CreateFolderProvider()
