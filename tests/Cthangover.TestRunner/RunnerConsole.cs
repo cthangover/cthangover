@@ -1,14 +1,28 @@
 namespace Cthangover.TestRunner
 {
-    /// <summary>All concurrent launch messages, including live pipe echoes, share one whole-line console lock.</summary>
+    /// <summary>Serializes standalone runner command output without loading the game kernel into the orchestration tool.</summary>
     public static class RunnerConsole
     {
         private static readonly object Gate = new();
 
-        /// <summary>A null name preserves sequential output; parallel launch names make interleaved lines attributable.</summary>
+        /// <summary>Attributes parallel progress lines while preserving unprefixed sequential command output.</summary>
         public static void WriteLine(string message, string name = null)
         {
-            lock (Gate) Console.WriteLine(name == null ? message : "[" + name + "] " + message);
+            Write(Console.Out, name == null ? message : "[" + name + "] " + message);
+        }
+
+        /// <summary>Keeps invocation failures on stderr, independently of structured child-game logs.</summary>
+        public static void WriteError(string message)
+        {
+            Write(Console.Error, message);
+        }
+
+        private static void Write(TextWriter destination, string message)
+        {
+            lock (Gate)
+            {
+                destination.WriteLine(message);
+            }
         }
     }
 }

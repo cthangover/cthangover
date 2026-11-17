@@ -28,6 +28,12 @@ namespace Cthangover.TestRunner
                     var marker = Path.Combine(directory, ".owner.json");
                     if (!File.Exists(marker)) continue;
                     var group = System.Text.RegularExpressions.Regex.Replace(Path.GetFileName(directory), "_(shared|write[0-9]+)$", "");
+                    if (File.Exists(Path.Combine(directory, ".process-unconfirmed.json")))
+                    {
+                        // Root exit does not prove inherited-pipe descendants released component DATA.
+                        active.Add(group);
+                        continue;
+                    }
                     FileStream lease = null;
                     try
                     {

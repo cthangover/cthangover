@@ -58,8 +58,20 @@ limitation requiring its standalone stress reproduction.
 Фильтр в прямом запуске Godot: `--run-tests --mod=rpg --test-filter=followers/*`.
 Пустой выбор, неизвестный тест/мод/профиль и фильтр без совпадений — ошибка.
 
-`--no-build` пропускает сборку ядра для интеграционных запусков. При выборе
-xUnit его проект всё равно собирается перед копированием в окружение.
+Сборка выполняется в подготовленной версии входов один раз для совпадающего compile identity.
+`--no-build` проверяет receipt и хеши всех объявленных бинарных outputs, включая xUnit,
+если он выбран. Отсутствующая или устаревшая сборка даёт явный отказ, а не запуск старого DLL.
+
+В host-задаче можно собрать runner заранее и вызвать его DLL без неявной сборки `dotnet run`:
+
+```powershell
+dotnet tests/Cthangover.TestRunner/bin/Debug/net10.0/Cthangover.TestRunner.dll --test inventory --input-cache <cache> --artifacts <outputs>
+```
+
+Обёртка не должна перед этим заново копировать весь проект. `--input-cache` находится вне
+исходного проекта; по умолчанию это `<temp>/cthangover-tests/cache`. Он хранит проверенные
+входы отдельно от per-launch результатов. English: invoke the built runner from the designated
+source root with a stable input cache; do not add a full-project copy in the host wrapper.
 `--fresh-cache` даёт запуску отдельный пустой кеш компиляции; без него используется
 постоянный `<temp>/cthangover-tests/cache/assemblies` и соседний `test_assemblies`.
 Кеш сохраняется после очистки окружения; при старте удаляются пары, не использованные 14 дней.
@@ -91,7 +103,9 @@ in `ModFolders.Names` order (`mods`, `mods_private`). Each part contributes only
 Names and manual-suite policy keys must be unique across all files. Dependencies may refer to tests
 in other parts or the base manifest; the merged dependency graph and result contracts are validated
 before execution. Keep private mods' tests in their folder's part. The runner discovers suites and
-mod unit tests in every configured folder and copies those folders into its isolated workspace.
+mod unit tests in every configured folder and includes those folders in the content-fenced prepared inputs.
+A suite with `requiresExplicitSelection: true` runs only under its exact `--test <name>` selector;
+default/profile/glob selection does not admit it, including through a prerequisite.
 
 ## Контракт результата
 
@@ -155,7 +169,7 @@ exit=0 недостаточно. Пропуски `NotExecuted` сохраняю
 данными. Независимые компоненты получают разные пользовательские каталоги.
 
 По умолчанию `--jobs N` равно половине логических ядер, с ограничением 2..8.
-`--gui-jobs G` ограничивает окна (2), `--write-jobs W` — копии для записи (2).
+`--gui-jobs G` ограничивает окна (2), `--write-jobs W` — постоянные изолированные write lanes (2).
 Окно занимает и общий слот процесса. Компоненты стартуют от долгих к коротким
 по `seconds` в манифесте; без оценки используется четверть таймаута.
 Порядок результатов остаётся порядком плана. xUnit занимает обычный слот процесса.
@@ -169,59 +183,82 @@ exit=0 недостаточно. Пропуски `NotExecuted` сохраняю
 при отсутствии поля). Пересекающиеся выходные каталоги разрешены только внутри
 одного компонента зависимостей. Неизвестное значение и `output` без каталога — ошибка.
 
-При `N > 1` общая физическая копия обслуживает `read`/`output`, а до W отдельных
-копий — компоненты с `write`. Копии готовятся одновременно; готовая копия сразу
-может запускать процессы. Цепочка целиком занимает одну копию. Общая копия не
-восстанавливается во время работы; в конце проверяются добавления, удаления и
-изменения вне `.godot` и `tests/artifacts`. Ошибка называет файлы и возможные
-запуски-источники. Выходные артефакты собираются только из каталогов самого запуска.
+Во всех режимах, включая `--jobs 1`, `read`/`output` используют подготовленное неизменяемое
+дерево под межпроцессными read leases. `--jobs 1` меняет расписание, а не способ изоляции.
+Fingerprint включает содержимое выбранных исходных файлов/каталогов, preparation policy и toolchain.
+Исходники проверяются до/после materialization и перед seal: текущие правки агентов не смешиваются
+в одной опубликованной версии. Изменение версии при живом читателе даёт `prepared-revision-busy`.
+Первая подготовка засчитывает реальное заполнение baseline; следующая синхронизирует только
+отличающиеся файлы и удаления. Повтор той же версии проверяет хеши и не копирует входы.
 
-`--jobs 1` сохраняет последовательный режим с одной копией и `override.cfg`
-на компонент. Во всех режимах ссылки на изменяемые исходники отсутствуют.
-Не копируются `.git`, старые артефакты, `node_modules` и служебные деревья.
-В копиях для записи перед следующим компонентом файлы восстанавливаются,
-добавленные файлы удаляются.
-Файлы авторских форматов дополнительно сверяются по сохранённым байтам,
-поэтому изменение с прежними размером и временем тоже обнаруживается.
+`ready.json` описывает transformed prepared inputs, включая фиксированный `override.cfg`,
+и отдельно build outputs. Не копируются `.git`, developer SDK executables, старые артефакты,
+`node_modules` и общее состояние редактора Godot. Native imported resources и выбранные
+UID/class/scene/extension metadata входят в хеши; бинарные outputs сборки тоже проверяются.
+Исключён только именованный build `obj` scratch, а не всё `.godot` или `tests/artifacts`.
+Изменение с прежними длиной/mtime обнаруживается по содержимому. Неожиданные пустые каталоги
+также видны fence; объявленные каталоги и родители build outputs сохраняются.
 
-В последовательной копии и копиях для записи `override.cfg` задаёт Godot отдельный `user://` под
-`cthangover-tests/<run-id>/<component>` в системном каталоге данных.
-Общая копия имеет единственный неизменный `override.cfg` с именем
-`cthangover-tests/data`. Каждый компонент получает свой системный корень данных:
-`XDG_DATA_HOME` на Linux/BSD, `APPDATA` на Windows, `HOME` на macOS.
-`TestRuntimeEnvironment` проверяет совпадение путей до загрузки настроек;
-несовпадение считается ошибкой инфраструктуры с подсказкой `--jobs 1`. Дочерние процессы
-получают `CTHANGOVER_TEST_DATA`, `CTHANGOVER_TEST_PROJECT`, собственные TEMP/TMP
-и постоянный кеш компиляции (либо отдельный кеш с `--fresh-cache`). Не-Godot кеши также используют
-тестовый корень. xUnit запускается из копии сборки с отдельным рабочим каталогом.
-Прямой `godot` или `dotnet test` вне раннера этой изоляции не создаёт.
+`write` занимает ограниченный persistent physical slot до конца компонента. Его файлы физически
+независимы от source/baseline; writable hardlinks не создаются. Первое заполнение учитывается
+явно. На следующем Acquire/границе компонента восстанавливаются только изменённые/удалённые
+файлы, а добавления и посторонние пустые каталоги удаляются. Legacy объявленные каталоги вывода
+допустимы пустыми только в write workspace; их содержимое и посторонние дочерние каталоги
+не исключаются из проверки. Цепочка зависимостей сохраняет свой DATA между запусками.
 
-При успехе окружение удаляется; `--keep-workspace` сохраняет его. При сбое оно
-сохраняется автоматически, пути есть в отчёте. Ошибка очистки делает запуск
-неуспешным. Артефакты отчёта сохраняются независимо от удаления окружения.
-При Ctrl+C или сбое координатора деревья всех процессов останавливаются,
-копии сохраняются, JSON остаётся частичным (`complete=false`).
+Quarantine не исправляется молча: обычный Acquire отказывает `prepared-input-mutated`.
+`--repair-inputs` явно восстанавливает generation под exclusive lease и сохраняет причину/счётчики
+исправления. Repair с `--no-build` по-прежнему отказывает при несовпадении бинарных outputs.
 
-Сохранённые копии ограничены retention: при старте и после завершения удаляются неактивные
-логические запуски старше 3 дней, сверх последних 3 запусков либо сверх 20 ГиБ суммарных файловых
-данных (сначала старые). Все write/shared lanes считаются одним запуском. Параметры:
-`--retention-days D`, `--retention-count N`, `--retention-gib G`; переменные окружения
-`CTHANGOVER_TEST_RETENTION_DAYS`, `CTHANGOVER_TEST_RETENTION_COUNT`, `CTHANGOVER_TEST_RETENTION_GIB`;
-CLI имеет приоритет. Ноль допустим и снимает соответствующий запас сохранения.
-Открытый `.owner.lock` и `.owner.json` с PID/временем старта процесса защищают живого владельца;
-маркер освобождается в finally, после SIGKILL определяется мёртвый PID. Постоянный `cache/` не участвует.
+Подготовленный `override.cfg` один раз задаёт `cthangover-tests/data`; его не переписывают
+перед каждым запуском. Компоненты получают разные OS homes: `XDG_DATA_HOME` на Linux/BSD,
+`APPDATA` на Windows, `HOME` на macOS. `CTHANGOVER_TEST_DATA` — последовательный DATA компонента,
+`CTHANGOVER_TEST_PROJECT` — настоящий res-root, `CTHANGOVER_TEST_CACHE` — runtime compilation cache.
+Каждый launch получает `CTHANGOVER_TEST_RUN_ID`, `CTHANGOVER_TEST_ID`,
+`CTHANGOVER_TEST_ATTEMPT_ID`, `CTHANGOVER_TEST_LAUNCH_ID`, `CTHANGOVER_TEST_WORKER_ID`,
+а также `CTHANGOVER_TEST_ARTIFACTS`, `CTHANGOVER_TEST_LOGS`, `CTHANGOVER_TEST_PREPARED_REVISION`,
+`CTHANGOVER_TEST_INPUT_IDENTITY`, `CTHANGOVER_TEST_LEASE_ID`, `CTHANGOVER_TEST_ACCESS`
+и свои TEMP/TMP/TMPDIR. Core проверяет фактические res://, user:// и temp до Settings.
+Неполный/несовпадающий контекст — отказ до пользовательских записей; собственного `--jobs 1`
+обхода этой проверки нет. Прямой Godot/dotnet test вне runner такой контекст не создаёт.
+
+`--log-file <launch>/logs/godot.log` передаётся Godot до `--`. Предстартовый `launch.json`
+фиксирует реальные engine arguments; Core либо видит native flag, либо проверяет этот receipt.
+Core main/error, native log, stdout/stderr, mod-test JSON, screens, sandbox и temp принадлежат
+конкретному launch. Аргументные `res://tests/artifacts/...` outputs отображаются наружу в его
+пространство. ArtifactCollector перечисляет только этот namespace, не соседние запуски.
+
+Успех удаляет run-owned homes/temp; `--keep-workspace` и ошибка сохраняют их. Prepared baseline
+и write lanes живут по отдельному cache retention. Отчёты/launch outputs сохраняются независимо.
+Ctrl+C останавливает дочерние деревья и оставляет частичный `complete=false` report; успешный
+marker не отменяет timeout, native exit, context или immutable fence failure.
+
+Retention ограничивает неактивные логические run homes и self-marked prepared stores по возрасту,
+количеству и байтам. Defaults:3 дня,3 владельца,20 ГиБ; `--retention-days/count/gib` перекрывают
+`CTHANGOVER_TEST_RETENTION_DAYS/COUNT/GIB`. Ноль допустим. Подготовленные stores рассматриваются
+только в выбранном `--input-cache`, run homes — в корне temp runner. Активные OS leases и PID/start
+markers защищают чтение/запись/компоненты; чужие неразмеченные каталоги не присваиваются.
+`--keep-workspace` не отменяет retention. `retentionDecisions` сохраняет причины сохранения/удаления.
+
+English: all scheduler modes reuse leased content-verified inputs; warm same-revision launches copy
+zero input files/bytes. Writes use bounded independent physical lanes with delta restoration.
+One fixed prepared override combines with private component OS homes and per-launch artifact/log/temp
+namespaces. Core verifies actual native paths before Settings. NoBuild checks receipts and hashes;
+quarantine requires explicit repair. Scoped retention never removes an active leased input/run.
+
 Файловые логи GameLogger включают текущий файл и архивы: `cthangover.log`,
-`cthangover.log.1`, `cthangover.log.2`; errors-лог и `--log-file=` используют ту же
-схему. По умолчанию 10 МиБ на файл и 3 файла на лог, включая текущий;
+`cthangover.log.1`, `cthangover.log.2`; errors-лог использует ту же
+схему. Native Godot `--log-file` — отдельный engine sink, не writer GameLogger. По умолчанию 10 МиБ на файл и 3 файла на лог, включая текущий;
 `logging.max_file_size_mb` / `logging.max_files` имеют минимум 1. При старте
 большой файл сразу ротируется; далее размер учитывается счётчиком байт UTF-8.
 Ротация происходит перед следующей строкой, превышающей бюджет; одна слишком
 длинная строка остаётся целой. Ошибка ротации не мешает дописывать текущий файл.
 Writer постоянный, UTF-8 без BOM, LF, AutoFlush; закрывается на ProcessExit или
 Shutdown. Для хронологии читайте `.2`, затем `.1`, затем текущий файл.
-ArtifactCollector копирует весь каталог `logs`, включая архивы; последние
-ошибки берёт из текущего `cthangover_errors.log`. RetainedDiagnostics также сохраняет
-архивы `.log.N` при удалении старой копии, с обычным лимитом хвоста 8 МиБ.
+Контекстный ArtifactCollector сохраняет ссылки на собственные launch logs, включая архивы,
+и берёт последние ошибки из своего `cthangover_errors.log`, не копируя соседние namespaces.
+Legacy RetainedDiagnostics сохраняет архивы `.log.N` из удаляемого run-owned состояния
+с обычным лимитом хвоста 8 МиБ.
 Проверки чистого writer и
 конфигурации: `--filter "FullyQualifiedName~RollingLogWriterTests|FullyQualifiedName~LoggingSectionTests|FullyQualifiedName~RetainedDiagnosticsTests.RollingLogArchives"`.
 
@@ -236,8 +273,9 @@ English: inactive retained runs default to 3 days, newest 3 logical runs and 20 
 all lanes count together, oldest runs are removed first. CLI `--retention-days/count/gib` overrides
 `CTHANGOVER_TEST_RETENTION_DAYS/COUNT/GIB`. Zero is allowed. Owner leases plus PID/start-time markers
 protect active runs and recognise dead owners after SIGKILL. Reports survive eviction; bounded log
-tails/results are archived before project removal. Archive failures preserve the workspace and print
-the reason. Persistent assembly caches and unmarked legacy trees are outside this policy.
+tails/results are archived before run-home removal. Archive failures preserve the run state and print
+the reason. Persistent assembly caches and unmarked legacy trees are outside this run-home policy;
+prepared input stores have their own self-marked lease-aware retention decisions.
 
 ## Модовые тесты и восстановление
 
@@ -285,15 +323,23 @@ interrupted runs retain a partial JSON, and HTML/JUnit are complete-run exports.
 |---|---|
 | `wallSeconds` | Полное время до снимка результата / elapsed run time to the final snapshot |
 | `childSeconds` | Сумма длительностей тестовых процессов без начальной сборки / sum of test subprocess durations, excluding initial build |
-| `phases.buildSeconds`, `workspaceCopySeconds` | Начальная сборка и физическая копия / initial build and project snapshot |
+| `phases.buildSeconds`, `workspaceCopySeconds` | Проверенная сборка и подготовка baseline/lanes / checked build and input/lane preparation |
 | `phases.restoreSeconds`, `restoreCount` | Восстановление проекта и число попыток / project restoration time and attempt count |
-| `phases.copies`, `laneBusySeconds` | Число физических копий и сумма времени детей на каждой / physical copy count and per-lane child time |
+| `phases.copies`, `laneBusySeconds` | Число первых полных заполнений и время детей на lane / initial full populations and per-lane child time |
 | `phases.launchSeconds`, `parallelism` | От подготовки первого запуска до последнего сбора артефактов и childSeconds / launchSeconds; фазы могут перекрываться / first-launch preparation through final collection and achieved concurrency, overlapping phases |
 | `phases.artifactCollectionSeconds`, `reportWritingSeconds`, `cleanupSeconds` | Сбор артефактов, отчёты, очистка / collection, reporting and cleanup |
 | `results[].overheadSeconds` | Восстановление перед запуском плюс сбор артефактов после / preceding restore plus following collection |
 | `results[].bootSeconds` | До первой категории `[TEST]` или `[MODTEST]` в stdout; иначе `null` / first stdout driver category, otherwise null |
 | `results[].cpuSeconds`, `peakMemoryMb` | CPU и пиковая резидентная память корневого дочернего процесса, MiB; `null`, если недоступны / best-effort root-process CPU and peak resident MiB, not descendant totals |
 | `results[].logLines` | Число строк stdout/stderr / captured line count |
+| `inputPreparation.sourceFingerprint`, `preparedInputId`, `buildIdentity` | Проверенная source/preparation/build версия / checked input and compilation identities |
+| `inputPreparation.filesCopied/bytesCopied/reusedInputs/fullProjectCopies` | Реальные input transfers; warm той же версии0/0 / actual transfers, same-revision warm0/0 |
+| `inputPreparation.prepareSeconds/cpuSeconds/peakMemoryMb` | Подготовка и root-process ресурсы / preparation and sampled root resources |
+| `workspaceMetrics[]` | Действительные transfer/removal/restore counters каждого prepared-read/write workspace |
+| `results[].execution.inputsCopied` | Input transfers конкретного launch, отдельно от baseline/restore / per-launch transfers |
+| `results[].execution` | Run/test/attempt/launch/lease IDs и реальные output/log/data/temp roots |
+| `launch.json.fenceChanges`, `immutableFenceChanges`, `fenceClassification` | Write-lane delta отдельно от нарушения immutable baseline |
+| `retentionDecisions[]` | Область, владелец, leases и причина retention / scoped retention ownership/reasons |
 
 `reportWritingSeconds` в снимке не включает последнюю запись самого этого JSON;
 HTML/консоль показывают ту же разбивку и десять самых долгих запусков. Сборка

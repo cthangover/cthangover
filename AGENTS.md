@@ -148,10 +148,27 @@ dotnet run --project tests/Cthangover.TestRunner -- --no-build --test inventory 
 - Exit code `0` requires a nonempty valid result, the expected terminal name/core, matching counters and process exit 0. Schema-2 contracts are explicit in `tests/tests.manifest.json`; a missing or duplicate marker never passes.
 - `--test` accepts repeated name globs. `--mod rpg --filter "followers/*"` selects individual mod cases; `--test unit --filter <VSTest expression>` selects xUnit cases. Other selectors: `--profile`, `--kind`, `--tag`, `--game`, `--renderer`.
 - `--list` / `--catalog <path>` expose the catalogue, including manual-suite reasons. `--plan` prints dependency closure without running tests. `--failed <report.json>` repeats unsuccessful launches with fresh prerequisite preparation.
-- Every run uses a physical project copy and private user/temp data. `dependsOn` chains share their component's data; failed setup blocks its dependents. Successful environments are removed unless `--keep-workspace` is used; failed ones are retained.
-- `--jobs N` defaults to half the logical cores, clamped to 2..8; `--gui-jobs G` and `--write-jobs W` default to 2. With N > 1, read/output entries share one verified snapshot; write components hold exclusive copies. Copies prepare concurrently, components schedule longest first, and results stay in plan order. `--jobs 1` retains the sequential restore/override protocol.
+- Every scheduler mode reuses content-fenced prepared inputs under OS leases (`--input-cache`, outside the source tree).
+  The first baseline population is counted; later revisions synchronize changed files/removals, and warm same-revision
+  read runs copy zero input files/bytes. No full project copy belongs in each host wrapper. `dependsOn` chains share
+  sequential component DATA; failed setup blocks dependents. Run-owned homes/temp are removed on success unless kept;
+  reusable inputs have separate retention. Failed run state is retained.
+- `--jobs N` defaults to half the logical cores, clamped to 2..8; `--gui-jobs G` and `--write-jobs W` default to 2.
+  Read/output entries share sealed inputs; write components lease bounded independent physical lanes with delta
+  restoration and no writable hardlinks to source/baseline. Components schedule longest first; results stay in
+  plan order. `--jobs 1` changes scheduling only; the prepared override is fixed, never rewritten per launch.
 - In parallel outer runs, xUnit collections run sequentially inside their one child job (saved `unit.runsettings`), preserving all assertions and avoiding nested scheduling starvation. `--jobs 1` retains the original xUnit settings.
-- Manifest `project` is `read`, `output` (only argument-declared `res://tests/artifacts/...` directories) or `write` (conservative default). Shared-copy children have private OS data homes (`XDG_DATA_HOME` / Windows `APPDATA` / macOS `HOME`); a data-path mismatch fails with a `--jobs 1` hint. Ctrl+C stops child trees and retains a partial JSON and workspaces.
+- Manifest `project` is `read`, `output` (only argument-declared `res://tests/artifacts/...` directories) or `write`
+  (conservative default). Component OS homes are private (`XDG_DATA_HOME` / Windows `APPDATA` / macOS `HOME`).
+  Each launch has unique logs/native stdout/stderr/JSON/screens/sandbox/temp outside prepared inputs. Native
+  `--log-file` precedes `--`; Core validates actual res/user/temp before Settings. Mismatch fails closed.
+  Ctrl+C stops child trees and retains partial JSON/run state. `requiresExplicitSelection: true` admits a suite
+  only through its exact `--test <name>`, including prerequisites; ordinary default/profile/glob runs exclude it.
+- Build outputs are reused only with matching compilation identity, receipt and actual hashes; `--no-build` verifies
+  those artifacts and refuses stale/missing ones. Unexpected immutable changes quarantine the generation;
+  `--repair-inputs` is explicit recovery under the exclusive gate. Named build scratch is separate from inputs;
+  there is no blanket `.godot`/`tests/artifacts` integrity exemption. Retention is scoped to owned inactive stores
+  and run homes; active leases prevent deletion.
 - Reports and streamed logs are unique per run: `tests/artifacts/runs/<run-id>/` (`report.json`, `report.html`, `report.junit.xml`, original TRX/mod reports and per-case results). Partial reports cannot claim success. Details and examples: `tests/Tests.md`.
 - Shutdown joins background owners and drains finalizers before engine teardown. Menu warm-up
   is cancelled when its menu leaves and joined before starting/loading gameplay. This does not
@@ -166,7 +183,9 @@ dotnet run --project tests/Cthangover.TestRunner -- --no-build --test inventory 
   invalidation advances a generation instead of deleting artifacts another process may load.
 - JSON checkpoints remain atomic after each launch; HTML/JUnit export only at completion or handled abort.
   Reports include phase totals, wall/child seconds and per-launch overhead, first-driver boot time,
-  sampled root-process CPU/peak memory and log-line counts. Cached PDBs retain their producer's absolute paths.
+  sampled root-process CPU/peak memory and log-line counts. `inputPreparation`, `workspaceMetrics` and launch
+  `execution.inputsCopied` expose actual file/byte transfers, identities, conflicts and scoped retention reasons;
+  `cacheHit` alone never proves warm zero-copy behavior. Cached PDBs retain their producer's absolute paths.
 - Scene paths in the manifest are checked with exact case before Godot starts (Windows forgives wrong case,
   Linux/CI and `.pck` do not).
 - Unit tests (xUnit, pure C# without Godot): `tests/Cthangover.Tests/`. Integration scenes and their setups

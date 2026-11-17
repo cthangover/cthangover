@@ -70,6 +70,7 @@ namespace Cthangover.TestRunner
                             entry.Game = native.Game;
                             entry.Renderer = native.Renderer;
                             entry.TimeoutSeconds = native.TimeoutSeconds;
+                            entry.RequiresExplicitSelection = native.RequiresExplicitSelection;
                             entry.Profiles = native.Profiles;
                             entry.Project = native.Project;
                             entry.Seconds = native.Seconds;
