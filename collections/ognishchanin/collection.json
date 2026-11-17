@@ -1,0 +1,63 @@
+{
+  "id": "ognishchanin",
+  "kind": "game",
+  "name": "Ognishchanin",
+  "author": "ct",
+  "version": "0.1.0",
+  "description": "A 3D game in development.",
+  "entry": {
+    "scene": "proto_land_yard"
+  },
+  "tags": [
+    "3d",
+    "development",
+    "prototype"
+  ],
+  "locale": [
+    {
+      "lang": "en",
+      "name": "Ognishchanin",
+      "description": "A 3D game in development."
+    },
+    {
+      "lang": "ru",
+      "name": "Огнищанин",
+      "description": "Огнищанин — трёхмерная игра в разработке."
+    }
+  ],
+  "mechanics": [
+    {
+      "id": "engine_3d",
+      "name": "3D runtime",
+      "description": "3D locations and actor controls.",
+      "role": "engine",
+      "mods": [
+        "scene3d_base>=0.1.0",
+        "actor3d_base>=0.1.0"
+      ],
+      "locale": [
+        {
+          "lang": "ru",
+          "name": "3D-движок",
+          "description": "3D-локации и управление персонажами."
+        }
+      ]
+    },
+    {
+      "id": "prototype_entry",
+      "name": "Development location",
+      "description": "Temporary development location.",
+      "role": "content",
+      "mods": [
+        "proto_land_pack>=0.1.0"
+      ],
+      "locale": [
+        {
+          "lang": "ru",
+          "name": "Локация для разработки",
+          "description": "Временная локация для разработки."
+        }
+      ]
+    }
+  ]
+}
