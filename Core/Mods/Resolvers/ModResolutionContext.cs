@@ -169,10 +169,11 @@ namespace Cthangover.Core.Mods.Resolvers
             {
                 var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { path };
                 var inputs = new StringBuilder();
+                var snapshots = new List<KeyValuePair<string, string>>();
                 var expanded = ExpandModIncludes(provider, content, path, visited,
-                    UsesExplicitScenarioIncludes(content, path), inputs, 0, 0);
+                    UsesExplicitScenarioIncludes(content, path), inputs, snapshots, 0, 0);
                 return new ResolvedModText(provider, ModPath.Normalize(path), content, expanded.Text, expanded.Origins,
-                    expanded.RootIncludeLines,
+                    expanded.RootIncludeLines, snapshots.ToArray(),
                     Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(inputs.ToString()))));
             }
             catch (Exception ex)
@@ -227,7 +228,8 @@ namespace Cthangover.Core.Mods.Resolvers
         public static string ExpandModIncludes(IModFileProvider provider, string content, string currentPath, HashSet<string> visited)
         {
             return ExpandModIncludes(provider, content, currentPath, visited,
-                UsesExplicitScenarioIncludes(content, currentPath), new StringBuilder(), 0, 0).Text;
+                UsesExplicitScenarioIncludes(content, currentPath), new StringBuilder(),
+                new List<KeyValuePair<string, string>>(), 0, 0).Text;
         }
 
         private static bool UsesExplicitScenarioIncludes(string content, string path)
@@ -252,9 +254,11 @@ namespace Cthangover.Core.Mods.Resolvers
         }
 
         private static ModTextBuilder ExpandModIncludes(IModFileProvider provider, string content, string currentPath,
-            HashSet<string> visited, bool explicitSyntax, StringBuilder inputs, int rootLine, int rootIncludeOffset)
+            HashSet<string> visited, bool explicitSyntax, StringBuilder inputs, List<KeyValuePair<string, string>> snapshots,
+            int rootLine, int rootIncludeOffset)
         {
             var canonicalPath = ModPath.Normalize(currentPath);
+            snapshots.Add(new KeyValuePair<string, string>(canonicalPath, content));
             inputs.Append(canonicalPath.Length).Append(':').Append(canonicalPath)
                 .Append(Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(content))));
             var json = string.Equals(Path.GetExtension(currentPath), ".json", StringComparison.OrdinalIgnoreCase);
@@ -301,7 +305,7 @@ namespace Cthangover.Core.Mods.Resolvers
                     }
 
                     result.AppendTrimmed(ExpandInclude(provider, match.Groups[1].Value.Trim(), currentPath, visited,
-                        explicitSyntax, inputs, rootIncludeOffset == 0 ? sourceLine : rootLine,
+                        explicitSyntax, inputs, snapshots, rootIncludeOffset == 0 ? sourceLine : rootLine,
                         rootIncludeOffset == 0 ? match.Index + 1 : rootIncludeOffset));
                     foreach (var character in match.Value)
                     {
@@ -319,7 +323,8 @@ namespace Cthangover.Core.Mods.Resolvers
         }
 
         private static ModTextBuilder ExpandInclude(IModFileProvider provider, string includePath, string currentPath,
-            HashSet<string> visited, bool explicitSyntax, StringBuilder inputs, int rootLine, int rootIncludeOffset)
+            HashSet<string> visited, bool explicitSyntax, StringBuilder inputs, List<KeyValuePair<string, string>> snapshots,
+            int rootLine, int rootIncludeOffset)
         {
             var directive = explicitSyntax && !string.Equals(Path.GetExtension(currentPath), ".json", StringComparison.OrdinalIgnoreCase)
                 ? "$include{" : "${";
@@ -344,7 +349,8 @@ namespace Cthangover.Core.Mods.Resolvers
             }
             try
             {
-                return ExpandModIncludes(provider, loaded, resolvedPath, visited, explicitSyntax, inputs, rootLine, rootIncludeOffset);
+                return ExpandModIncludes(provider, loaded, resolvedPath, visited, explicitSyntax, inputs, snapshots,
+                    rootLine, rootIncludeOffset);
             }
             finally
             {

@@ -15,7 +15,7 @@ namespace Cthangover.Core.Mods.Resolvers
         private readonly Dictionary<int, int> rootDirectives = new();
 
         internal ResolvedModText(IModFileProvider provider, string path, string rawText, string expandedText,
-            ModTextOrigin[] origins, int[] rootIncludeLines, string inputSignature)
+            ModTextOrigin[] origins, int[] rootIncludeLines, KeyValuePair<string, string>[] inputSnapshots, string inputSignature)
         {
             this.provider = provider;
             this.inputSignature = inputSignature;
@@ -24,6 +24,7 @@ namespace Cthangover.Core.Mods.Resolvers
             ExpandedText = expandedText;
             Origins = Array.AsReadOnly(origins);
             RootIncludeLines = Array.AsReadOnly(rootIncludeLines);
+            InputSnapshots = Array.AsReadOnly(inputSnapshots);
             foreach (var origin in origins)
             {
                 var meaningful = false;
@@ -75,6 +76,12 @@ namespace Cthangover.Core.Mods.Resolvers
 
         /// <summary>Authored include rows in encounter order, including empty fragments that emit no action or text.</summary>
         public IReadOnlyList<int> RootIncludeLines { get; }
+
+        /// <summary>
+        /// Every successful provider read in consumption order, including the raw root, empty fragments and repeated paths.
+        /// Editors validate duplicate-path consistency and planned destination resolution before copying any raw dependency.
+        /// </summary>
+        public IReadOnlyList<KeyValuePair<string, string>> InputSnapshots { get; }
 
         /// <summary>
         /// Refuses empty rows and mixed direct/include or multiple-directive rows rather than choosing an arbitrary target.

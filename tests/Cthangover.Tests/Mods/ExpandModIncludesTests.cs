@@ -213,6 +213,30 @@ namespace Engine.Tests.Mods
             return ModManager.Instance;
         }
 
+        /// <summary>
+        /// Raw input snapshots preserve empty and repeated reads; the destination can validate their complete
+        /// actual closure.
+        /// </summary>
+        [Fact]
+        public void ReadSource_InputSnapshots_PreserveEmptyRepeatedRawInputs()
+        {
+            var provider = new MockModFileProvider("input_snapshots");
+            const string raw = "include_syntax: explicit-v1\n---\n$include{empty.txt}$include{part.txt}$include{part.txt}";
+            const string part = "\r\nset value ${runtime}\r\n";
+            provider.AddFile("main.scenario", raw);
+            provider.AddFile("empty.txt", " \r\n\t");
+            provider.AddFile("part.txt", part);
+
+            var result = ScenarioDefs.ReadSource("input_snapshots", "main.scenario", provider);
+
+            Assert.Equal(4, result.InputSnapshots.Count);
+            Assert.Equal(new System.Collections.Generic.KeyValuePair<string, string>("main.scenario", raw), result.InputSnapshots[0]);
+            Assert.Equal(new System.Collections.Generic.KeyValuePair<string, string>("empty.txt", " \r\n\t"), result.InputSnapshots[1]);
+            Assert.Equal(new System.Collections.Generic.KeyValuePair<string, string>("part.txt", part), result.InputSnapshots[2]);
+            Assert.Equal(result.InputSnapshots[2], result.InputSnapshots[3]);
+            Assert.Equal("include_syntax: explicit-v1\n---\nset value ${runtime}set value ${runtime}", result.ExpandedText);
+        }
+
         /// <summary>Explicit scenario syntax cannot resolve runtime names through either extensionless or JSON siblings.</summary>
         [Fact]
         public void ReadResolvedText_ExplicitScenario_RuntimeNamesIgnoreSiblingFiles()
