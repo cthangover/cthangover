@@ -25,6 +25,12 @@
       "description": "Огнищанин — трёхмерная игра в разработке."
     }
   ],
+  "includes": [
+    {
+      "ref": "dev_tools>=0.1.0",
+      "role": "tools"
+    }
+  ],
   "mechanics": [
     {
       "id": "engine_3d",
@@ -56,6 +62,34 @@
           "lang": "ru",
           "name": "Локация для разработки",
           "description": "Временная локация для разработки."
+        }
+      ]
+    },
+    {
+      "id": "editors_3d",
+      "name": "3D editors",
+      "description": "Editors for the 3D world, characters, animation and interactions.",
+      "role": "tools_3d",
+      "mods": [
+        "scene3d_editor>=0.1.0",
+        "world3d_editor>=0.1.0",
+        "terrain_editor>=0.1.0",
+        "characters3d_editor>=0.1.0",
+        "anim3d_editor>=0.1.0",
+        "interactive3d_editor>=0.1.0",
+        "map3d_editor>=0.1.0",
+        "sky3d_editor>=0.1.0",
+        "water3d_editor>=0.1.0",
+        "world_stream3d_editor>=0.1.0",
+        "effects3d_editor>=0.1.0",
+        "combat3d_editor>=0.1.0",
+        "npc_routines_editor>=0.1.0"
+      ],
+      "locale": [
+        {
+          "lang": "ru",
+          "name": "3D-редакторы",
+          "description": "Редакторы трёхмерного мира, персонажей, анимаций и взаимодействий."
         }
       ]
     }
