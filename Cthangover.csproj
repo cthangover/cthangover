@@ -26,10 +26,12 @@
         <Compile Remove="tests\Cthangover.Tests\**\*.cs" />
         <Compile Remove="tests\Cthangover.TestRunner\**\*.cs" />
         <Compile Remove="tests\Cthangover.Terrain.Tests\**\*.cs" />
+        <Compile Remove="tests\fixtures\**\*.cs" />
         <Compile Remove="sdk\**\*.cs" />
 
         <None Include="tests\Cthangover.Tests\**\*.cs" />
         <None Include="tests\Cthangover.TestRunner\**\*.cs" />
+        <None Include="tests\fixtures\**\*.cs" />
         <None Include="sdk\**\*.cs" />
         <Compile Remove="mods\**\*" />
         <None Include="mods\**\*" />
