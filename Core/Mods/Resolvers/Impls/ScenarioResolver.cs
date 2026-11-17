@@ -175,9 +175,17 @@ namespace Cthangover.Core.Mods.Resolvers
         /// </summary>
         public string ReadText(string modId, string path)
         {
+            return ReadSource(modId, path)?.ExpandedText;
+        }
+
+        /// <summary>Reads raw root, expanded program and immutable origins through the same winning provider.</summary>
+        public ResolvedModText ReadSource(string modId, string path, IModFileProvider providerOverride = null)
+        {
+            if (providerOverride != null)
+                return Context.ReadResolvedSource(modId, path, providerOverride);
             if (ModOverlays.TryGet(modId, out var overlay))
-                return Context.ReadResolvedText(modId, path, overlay);
-            return Context.ReadResolvedText(modId, path);
+                return Context.ReadResolvedSource(modId, path, overlay);
+            return Context.ReadResolvedSource(modId, path);
         }
 
         /// <inheritdoc />
@@ -300,6 +308,14 @@ namespace Cthangover.Core.Mods.Resolvers
         /// <summary>Reads a scenario file of a mod or an overlay with includes expanded; null when missing.</summary>
         public static string ReadText(string modId, string path)
             => ModManager.Instance.GetResolver<ScenarioResolver>()?.ReadText(modId, path);
+
+        /// <summary>
+        /// Captures authored source and the exact shared-reader expansion/provenance, including overlay/provider overrides.
+        /// </summary>
+        public static ResolvedModText ReadSource(string modId, string path, IModFileProvider providerOverride = null)
+        {
+            return ModManager.Instance.GetResolver<ScenarioResolver>()?.ReadSource(modId, path, providerOverride);
+        }
 
         /// <summary>
         /// Drops the collected definitions so edited scenario files (headers,

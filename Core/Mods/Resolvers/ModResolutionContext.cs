@@ -4,6 +4,7 @@ namespace Cthangover.Core.Mods.Resolvers
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Security.Cryptography;
     using System.Text;
     using System.Text.Json;
     using System.Text.RegularExpressions;
@@ -141,22 +142,7 @@ namespace Cthangover.Core.Mods.Resolvers
         /// </summary>
         public string ReadResolvedText(string modId, string path)
         {
-            var provider = ProviderOf(modId);
-            if (provider == null)
-                return null;
-            var content = provider.ReadFileText(path);
-            if (content == null)
-                return null;
-            try
-            {
-                var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { path };
-                return ExpandModIncludes(provider, content, path, visited);
-            }
-            catch (Exception ex)
-            {
-                GameLogger.Log("MODS", $"Include resolution failed for '{modId}/{path}': {ex.Message}", LogLevel.Error);
-                return null;
-            }
+            return ReadResolvedSource(modId, path)?.ExpandedText;
         }
 
         /// <summary>
@@ -166,13 +152,28 @@ namespace Cthangover.Core.Mods.Resolvers
         /// </summary>
         public string ReadResolvedText(string modId, string path, IModFileProvider providerOverride)
         {
-            var content = providerOverride.ReadFileText(path);
+            return ReadResolvedSource(modId, path, providerOverride)?.ExpandedText;
+        }
+
+        /// <summary>
+        /// Captures authored root text and the exact expansion/provenance from one selected provider.
+        /// A provider override never falls back to another mod; include failures return null as in expanded reads.
+        /// </summary>
+        public ResolvedModText ReadResolvedSource(string modId, string path, IModFileProvider providerOverride = null)
+        {
+            var provider = providerOverride ?? ProviderOf(modId);
+            var content = provider?.ReadFileText(path);
             if (content == null)
                 return null;
             try
             {
                 var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { path };
-                return ExpandModIncludes(providerOverride, content, path, visited);
+                var inputs = new StringBuilder();
+                var expanded = ExpandModIncludes(provider, content, path, visited,
+                    UsesExplicitScenarioIncludes(content, path), inputs, 0, 0);
+                return new ResolvedModText(provider, ModPath.Normalize(path), content, expanded.Text, expanded.Origins,
+                    expanded.RootIncludeLines,
+                    Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(inputs.ToString()))));
             }
             catch (Exception ex)
             {
@@ -225,7 +226,8 @@ namespace Cthangover.Core.Mods.Resolvers
         /// </summary>
         public static string ExpandModIncludes(IModFileProvider provider, string content, string currentPath, HashSet<string> visited)
         {
-            return ExpandModIncludes(provider, content, currentPath, visited, UsesExplicitScenarioIncludes(content, currentPath));
+            return ExpandModIncludes(provider, content, currentPath, visited,
+                UsesExplicitScenarioIncludes(content, currentPath), new StringBuilder(), 0, 0).Text;
         }
 
         private static bool UsesExplicitScenarioIncludes(string content, string path)
@@ -249,13 +251,17 @@ namespace Cthangover.Core.Mods.Resolvers
             return true;
         }
 
-        private static string ExpandModIncludes(IModFileProvider provider, string content, string currentPath,
-            HashSet<string> visited, bool explicitSyntax)
+        private static ModTextBuilder ExpandModIncludes(IModFileProvider provider, string content, string currentPath,
+            HashSet<string> visited, bool explicitSyntax, StringBuilder inputs, int rootLine, int rootIncludeOffset)
         {
+            var canonicalPath = ModPath.Normalize(currentPath);
+            inputs.Append(canonicalPath.Length).Append(':').Append(canonicalPath)
+                .Append(Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(content))));
             var json = string.Equals(Path.GetExtension(currentPath), ".json", StringComparison.OrdinalIgnoreCase);
             var pattern = explicitSyntax && !json ? explicitIncludePattern : _includePattern;
-            var result = new StringBuilder(content.Length);
+            var result = new ModTextBuilder();
             var previous = 0;
+            var sourceLine = 1;
             var scanned = 0;
             var quoted = false;
             var escaped = false;
@@ -280,17 +286,40 @@ namespace Cthangover.Core.Mods.Resolvers
                         }
                     }
                 }
-                result.Append(content, previous, match.Index - previous);
-                result.Append(json && quoted ? match.Value
-                    : ExpandInclude(provider, match.Groups[1].Value.Trim(), currentPath, visited, explicitSyntax));
+                sourceLine = result.Append(content, previous, match.Index - previous, currentPath,
+                    sourceLine, rootLine, rootIncludeOffset);
+                if (json && quoted)
+                {
+                    sourceLine = result.Append(content, match.Index, match.Length, currentPath,
+                        sourceLine, rootLine, rootIncludeOffset);
+                }
+                else
+                {
+                    if (rootIncludeOffset == 0)
+                    {
+                        result.AddRootInclude(sourceLine);
+                    }
+
+                    result.AppendTrimmed(ExpandInclude(provider, match.Groups[1].Value.Trim(), currentPath, visited,
+                        explicitSyntax, inputs, rootIncludeOffset == 0 ? sourceLine : rootLine,
+                        rootIncludeOffset == 0 ? match.Index + 1 : rootIncludeOffset));
+                    foreach (var character in match.Value)
+                    {
+                        if (character == '\n')
+                        {
+                            sourceLine++;
+                        }
+                    }
+                }
+
                 previous = match.Index + match.Length;
             }
-            result.Append(content, previous, content.Length - previous);
-            return result.ToString();
+            result.Append(content, previous, content.Length - previous, currentPath, sourceLine, rootLine, rootIncludeOffset);
+            return result;
         }
 
-        private static string ExpandInclude(IModFileProvider provider, string includePath, string currentPath,
-            HashSet<string> visited, bool explicitSyntax)
+        private static ModTextBuilder ExpandInclude(IModFileProvider provider, string includePath, string currentPath,
+            HashSet<string> visited, bool explicitSyntax, StringBuilder inputs, int rootLine, int rootIncludeOffset)
         {
             var directive = explicitSyntax && !string.Equals(Path.GetExtension(currentPath), ".json", StringComparison.OrdinalIgnoreCase)
                 ? "$include{" : "${";
@@ -315,7 +344,7 @@ namespace Cthangover.Core.Mods.Resolvers
             }
             try
             {
-                return ExpandModIncludes(provider, loaded, resolvedPath, visited, explicitSyntax).Trim();
+                return ExpandModIncludes(provider, loaded, resolvedPath, visited, explicitSyntax, inputs, rootLine, rootIncludeOffset);
             }
             finally
             {

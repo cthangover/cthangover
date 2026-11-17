@@ -2,11 +2,212 @@ namespace Engine.Tests.Mods
 {
     using System.Text.Json;
     using Cthangover.Core.Mods;
+    using Cthangover.Core.Mods.Resolvers;
     using Engine.Tests.Mods.Mocks;
 
     /// <summary>Checks provider-relative expansion separately from runtime scenario interpolation and JSON string data.</summary>
     public class ExpandModIncludesTests
     {
+        /// <summary>Text, physical origins and root anchors are emitted together across nested trimming and original CRLF text.</summary>
+        [Fact]
+        public void ReadSource_Projection_NestedTrimmedOriginsAndCrLfRoot()
+        {
+            var provider = new MockModFileProvider("projection");
+            const string raw = "scene: test\r\ninclude_syntax: explicit-v1\r\n---\r\nset top ${v}\r\n"
+                + "$include{parts/first.txt}\r\nend\r\n";
+            provider.AddFile("scenarios/main.scenario", raw);
+            provider.AddFile("scenarios/parts/first.txt", " \r\nset child ${v}\r\n$include{../tail.txt}\r\n ");
+            provider.AddFile("scenarios/tail.txt", "\n\nset leaf ${v}\n");
+
+            var result = ScenarioDefs.ReadSource("projection", "scenarios/main.scenario", provider);
+
+            Assert.NotNull(result);
+            Assert.Equal(raw, result.RawText);
+            Assert.Equal("scenarios/main.scenario", result.Path);
+            Assert.Equal("scene: test\r\ninclude_syntax: explicit-v1\r\n---\r\nset top ${v}\r\n"
+                + "set child ${v}\r\nset leaf ${v}\r\nend\r\n", result.ExpandedText);
+            Assert.Equal(4, result.OriginOfLine(4).RootLine);
+            Assert.Equal(0, result.OriginOfLine(4).RootIncludeOffset);
+            var child = result.OriginOfLine(5);
+            Assert.Equal("scenarios/parts/first.txt", child.Path);
+            Assert.Equal(2, child.Line);
+            Assert.Equal(5, child.RootLine);
+            Assert.Equal(raw.IndexOf("$include", StringComparison.Ordinal) + 1, child.RootIncludeOffset);
+            var leaf = result.OriginOfLine(6);
+            Assert.Equal("scenarios/tail.txt", leaf.Path);
+            Assert.Equal(3, leaf.Line);
+            Assert.Equal(5, leaf.RootLine);
+            Assert.Equal(child.RootIncludeOffset, leaf.RootIncludeOffset);
+            Assert.True(result.CanProjectRootLine(5));
+            Assert.Equal(new[] { 5 }, result.RootIncludeLines);
+            Assert.Equal(6, result.OriginOfLine(7).RootLine);
+            Assert.Null(result.OriginOfLine(0));
+            Assert.Null(result.OriginOfLine(8));
+            Assert.Null(result.OriginOfLine(90));
+        }
+
+        /// <summary>
+        /// The mapped result is exactly the expanded API's program, preserving JSON quote shielding and fallback provenance.
+        /// </summary>
+        [Fact]
+        public void ReadSource_Projection_JsonFallbackMatchesExpandedApi()
+        {
+            var provider = new MockModFileProvider("projection");
+            provider.AddFile("main.scenario", "include_syntax: explicit-v1\n---\n$include{data}");
+            provider.AddFile("data.json", "{\n\"Runtime\":\"${v}\",\n\"Values\":${piece}\n}");
+            provider.AddFile("piece.json", "[1,2]");
+            provider.AddFile("v.json", "wrong substitution");
+
+            var result = ScenarioDefs.ReadSource("projection", "main.scenario", provider);
+
+            Assert.Equal("include_syntax: explicit-v1\n---\n{\n\"Runtime\":\"${v}\",\n\"Values\":[1,2]\n}",
+                result.ExpandedText);
+            Assert.Equal(result.ExpandedText, ModManager.Instance.ReadResolvedText("projection", "main.scenario", provider));
+            Assert.Equal("data.json", result.OriginOfLine(4).Path);
+            Assert.Equal(2, result.OriginOfLine(4).Line);
+            Assert.Equal(3, result.OriginOfLine(5).RootLine);
+            Assert.Contains(result.Origins, IsPieceOrigin);
+            Assert.True(result.CanProjectRootLine(3));
+        }
+
+        /// <summary>Inline composite and multiple-directive rows explicitly refuse navigation instead of guessing coordinates.</summary>
+        [Fact]
+        public void ReadSource_Projection_AmbiguousInlineAndMultipleDirectivesRefuse()
+        {
+            var provider = new MockModFileProvider("projection");
+            provider.AddFile("main.scenario", "include_syntax: explicit-v1\n---\nptext $include{a.txt}\n$include{a.txt}$include{b.txt}");
+            provider.AddFile("a.txt", "one\ntwo");
+            provider.AddFile("b.txt", "three");
+
+            var result = ScenarioDefs.ReadSource("projection", "main.scenario", provider);
+
+            Assert.Equal("include_syntax: explicit-v1\n---\nptext one\ntwo\none\ntwothree", result.ExpandedText);
+            Assert.Null(result.OriginOfLine(3));
+            Assert.Null(result.OriginOfLine(6));
+            Assert.False(result.CanProjectRootLine(3));
+            Assert.False(result.CanProjectRootLine(4));
+        }
+
+        /// <summary>A whitespace-only fragment creates neither a pretend source row nor an executable projection target.</summary>
+        [Fact]
+        public void ReadSource_Projection_EmptyFragmentHasNoTarget()
+        {
+            var provider = new MockModFileProvider("projection");
+            provider.AddFile("main.scenario", "include_syntax: explicit-v1\n---\n$include{empty.txt}\nend");
+            provider.AddFile("empty.txt", " \r\n\t");
+
+            var result = ScenarioDefs.ReadSource("projection", "main.scenario", provider);
+
+            Assert.Equal("include_syntax: explicit-v1\n---\n\nend", result.ExpandedText);
+            Assert.Null(result.OriginOfLine(3));
+            Assert.False(result.CanProjectRootLine(3));
+            Assert.Equal(4, result.OriginOfLine(4).RootLine);
+            Assert.Equal(new[] { 3 }, result.RootIncludeLines);
+        }
+
+        /// <summary>
+        /// A retained snapshot is immutable and detects even trimmed-away source edits without relying on expanded equality.
+        /// </summary>
+        [Fact]
+        public void ReadSource_Projection_SnapshotDetectsSourceChangesWithIdenticalExpansion()
+        {
+            var provider = new MockModFileProvider("projection");
+            const string raw = "include_syntax: explicit-v1\n---\n$include{part.txt}";
+            provider.AddFile("main.scenario", raw);
+            provider.AddFile("part.txt", "end");
+            var before = ScenarioDefs.ReadSource("projection", "main.scenario", provider);
+            var same = ScenarioDefs.ReadSource("projection", "main.scenario", provider);
+            Assert.True(before.HasSameSource(same));
+            provider.AddFile("part.txt", "\nend\n");
+
+            var after = ScenarioDefs.ReadSource("projection", "main.scenario", provider);
+
+            Assert.Equal(before.ExpandedText, after.ExpandedText);
+            Assert.False(before.HasSameSource(after));
+            Assert.Equal(raw, before.RawText);
+            Assert.Equal(1, before.OriginOfLine(3).Line);
+            Assert.Equal(2, after.OriginOfLine(3).Line);
+            Assert.False(before.HasSameSource(null));
+            Assert.Throws<NotSupportedException>(ClearOrigins);
+        }
+
+        /// <summary>
+        /// Replacing a provider cannot silently reuse provenance even when every returned byte and logical path is identical.
+        /// </summary>
+        [Fact]
+        public void ReadSource_Projection_ProviderReplacementInvalidatesIdentity()
+        {
+            var first = new MockModFileProvider("projection");
+            var second = new MockModFileProvider("projection");
+            first.AddFile("main.scenario", "end");
+            second.AddFile("main.scenario", "end");
+
+            var before = ScenarioDefs.ReadSource("projection", "main.scenario", first);
+            var after = ScenarioDefs.ReadSource("projection", "main.scenario", second);
+
+            Assert.Equal(before.ExpandedText, after.ExpandedText);
+            Assert.False(before.HasSameSource(after));
+        }
+
+        private static bool IsPieceOrigin(ModTextOrigin origin)
+        {
+            return origin.Path == "piece.json" && origin.Line == 1 && origin.RootLine == 3;
+        }
+
+        /// <summary>The new result API retains null refusal for missing resources and unsupported root syntax.</summary>
+        [Fact]
+        public void ReadSource_Projection_MissingAndUnsupportedSourcesRefuse()
+        {
+            var provider = new MockModFileProvider("projection");
+            provider.AddFile("unknown.scenario", "include_syntax: future-v9\n---\nend");
+            provider.AddFile("broken.scenario", "include_syntax: explicit-v1\n---\n$include{missing.txt}");
+
+            Assert.Null(ScenarioDefs.ReadSource("projection", "absent.scenario", provider));
+            Assert.Null(ScenarioDefs.ReadSource("projection", "unknown.scenario", provider));
+            Assert.Null(ScenarioDefs.ReadSource("projection", "broken.scenario", provider));
+        }
+
+        /// <summary>
+        /// Overlay identity follows the actual remounted provider, retaining raw directives and rejecting old provenance.
+        /// </summary>
+        [Fact]
+        public void ReadSource_Projection_OverlayRemountRetainsRawAndInvalidatesIdentity()
+        {
+            var first = new MockModFileProvider("projection");
+            var second = new MockModFileProvider("projection");
+            const string raw = "include_syntax: explicit-v1\n---\n$include{part.txt}";
+            first.AddFile("main.scenario", raw);
+            first.AddFile("part.txt", "end");
+            second.AddFile("main.scenario", raw);
+            second.AddFile("part.txt", "end");
+            var id = "projection_" + Guid.NewGuid().ToString("N");
+            try
+            {
+                ModOverlays.Mount(id, first);
+                var before = ScenarioDefs.ReadSource(id, "main.scenario");
+                ModOverlays.Mount(id, second);
+                var after = ScenarioDefs.ReadSource(id, "main.scenario");
+
+                Assert.Equal(raw, before.RawText);
+                Assert.Equal(raw, after.RawText);
+                Assert.Equal(before.ExpandedText, after.ExpandedText);
+                Assert.False(before.HasSameSource(after));
+                Assert.Equal(3, after.OriginOfLine(3).RootLine);
+            }
+            finally
+            {
+                ModOverlays.Unmount(id);
+            }
+        }
+
+        private static void ClearOrigins()
+        {
+            var provider = new MockModFileProvider("projection");
+            provider.AddFile("main.scenario", "end");
+            var result = ScenarioDefs.ReadSource("projection", "main.scenario", provider);
+            ((System.Collections.Generic.IList<ModTextOrigin>)result.Origins).Clear();
+        }
+
         private static ModManager CreateModManagerWith(MockModFileProvider provider)
         {
             return ModManager.Instance;

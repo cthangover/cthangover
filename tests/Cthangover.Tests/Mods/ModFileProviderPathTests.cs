@@ -333,6 +333,40 @@ namespace Engine.Tests.Mods
             };
         }
 
+        /// <summary>Physical folder and pathless ZIP reads emit equivalent source coordinates through the new shared result API.</summary>
+        [Fact]
+        public void ReadSource_Projection_FolderAndZipKeepExactRawAndLogicalOrigins()
+        {
+            var files = ScenarioFiles();
+            using var folder = CreateScenarioFolder(files);
+            using var zip = CreateScenarioZip(files);
+
+            var first = ScenarioDefs.ReadSource("projection", "scenarios/main.scenario", folder);
+            var second = ScenarioDefs.ReadSource("projection", "scenarios/main.scenario", zip);
+
+            Assert.NotNull(first);
+            Assert.NotNull(second);
+            Assert.Equal(files["scenarios/main.scenario"], first.RawText);
+            Assert.Equal(first.RawText, second.RawText);
+            Assert.Equal(first.ExpandedText, second.ExpandedText);
+            Assert.Equal(first.Origins.Count, second.Origins.Count);
+            for (var i = 0; i < first.Origins.Count; i++)
+            {
+                var left = first.Origins[i];
+                var right = second.Origins[i];
+                Assert.Equal(left.Start, right.Start);
+                Assert.Equal(left.Length, right.Length);
+                Assert.Equal(left.Path, right.Path);
+                Assert.Equal(left.Line, right.Line);
+                Assert.Equal(left.RootLine, right.RootLine);
+                Assert.Equal(left.RootIncludeOffset, right.RootIncludeOffset);
+            }
+
+            Assert.False(first.HasSameSource(second));
+            Assert.True(first.CanProjectRootLine(5));
+            Assert.Equal("scenarios/parts/body.txt", first.OriginOfLine(5).Path);
+        }
+
         private FolderModFileProvider CreateScenarioFolder(Dictionary<string, string> files)
         {
             var root = Path.Combine(_testDir, "scenario_folder");
