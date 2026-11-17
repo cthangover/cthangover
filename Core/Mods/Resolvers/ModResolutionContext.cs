@@ -1,14 +1,15 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text.Json;
-using System.Text.RegularExpressions;
-using Cthangover.Core.Utils;
-
 namespace Cthangover.Core.Mods.Resolvers
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
     using System.Text;
+    using System.Text.Json;
+    using System.Text.RegularExpressions;
+    using Cthangover.Core.Scenarios;
+    using Cthangover.Core.Utils;
+
     /// <summary>
     /// Provides resolvers with a unified API for accessing the mod
     /// registry, reading files from mod providers, resolving JSON with
@@ -64,7 +65,9 @@ namespace Cthangover.Core.Mods.Resolvers
 
         /// <summary>Returns mod IDs in dependency-respecting order.</summary>
         public IReadOnlyList<string> GetOrderedModIds(bool filterDisabled = true)
-            => _registry.GetOrderedModIds(filterDisabled);
+        {
+            return _registry.GetOrderedModIds(filterDisabled);
+        }
 
         /// <summary>Looks up a mod by ID from the registry.</summary>
         public IModInfo GetMod(string id)
@@ -132,10 +135,9 @@ namespace Cthangover.Core.Mods.Resolvers
         }
 
         /// <summary>
-        /// Reads a text file and recursively resolves all
-        /// <c>${ path/to/include }</c> directives within it, returning
-        /// the fully-expanded text. Circular includes are detected and
-        /// reported as errors.
+        /// Reads through the selected provider and expands includes. The root scenario may opt into
+        /// <c>include_syntax: explicit-v1</c>: only <c>$include{path}</c> expands in non-JSON fragments,
+        /// preserving runtime <c>${name}</c> independently of files. Other roots retain legacy syntax.
         /// </summary>
         public string ReadResolvedText(string modId, string path)
         {
@@ -214,46 +216,88 @@ namespace Cthangover.Core.Mods.Resolvers
 
         private static readonly Regex _includePattern = new Regex(@"\$\s*\{\s*([^{}]+)\s*\}", RegexOptions.Compiled);
 
+        private static readonly Regex explicitIncludePattern = new(@"\$include\{\s*([^{}]*)\s*\}", RegexOptions.Compiled);
+
         /// <summary>
-        /// Recursively processes <c>${ path }</c> include directives. In JSON,
-        /// tokens inside strings remain literal so embedded scenario variables
-        /// are substituted at execution rather than mistaken for file paths.
-        /// Detects circular includes and missing files.
-        /// Shared statically so that it can be used in tests without a
-        /// full <see cref="ModResolutionContext"/>.
+        /// Selects syntax once from a root scenario's existing metadata grammar, then propagates it through
+        /// provider-relative fragments. JSON keeps legacy includes outside strings and literal tokens inside
+        /// strings. Expansion never rescans caller/runtime substitutions; missing files and cycles refuse.
         /// </summary>
         public static string ExpandModIncludes(IModFileProvider provider, string content, string currentPath, HashSet<string> visited)
         {
+            return ExpandModIncludes(provider, content, currentPath, visited, UsesExplicitScenarioIncludes(content, currentPath));
+        }
+
+        private static bool UsesExplicitScenarioIncludes(string content, string path)
+        {
+            if (!string.Equals(Path.GetExtension(path), ".scenario", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            var (metadata, _) = ScenarioMetadata.ParseMetadata(content);
+            if (!metadata.TryGetValue("include_syntax", out var syntax))
+            {
+                return false;
+            }
+
+            if (syntax != "explicit-v1")
+            {
+                throw new InvalidOperationException($"Unsupported scenario include_syntax '{syntax}' in '{path}'.");
+            }
+
+            return true;
+        }
+
+        private static string ExpandModIncludes(IModFileProvider provider, string content, string currentPath,
+            HashSet<string> visited, bool explicitSyntax)
+        {
             var json = string.Equals(Path.GetExtension(currentPath), ".json", StringComparison.OrdinalIgnoreCase);
+            var pattern = explicitSyntax && !json ? explicitIncludePattern : _includePattern;
             var result = new StringBuilder(content.Length);
             var previous = 0;
             var scanned = 0;
             var quoted = false;
             var escaped = false;
-            foreach (Match match in _includePattern.Matches(content))
+            foreach (Match match in pattern.Matches(content))
             {
                 if (json)
                 {
                     for (; scanned < match.Index; scanned++)
                     {
                         var character = content[scanned];
-                        if (escaped) escaped = false;
-                        else if (quoted && character == '\\') escaped = true;
-                        else if (character == '"') quoted = !quoted;
+                        if (escaped)
+                        {
+                            escaped = false;
+                        }
+                        else if (quoted && character == '\\')
+                        {
+                            escaped = true;
+                        }
+                        else if (character == '"')
+                        {
+                            quoted = !quoted;
+                        }
                     }
                 }
                 result.Append(content, previous, match.Index - previous);
-                result.Append(json && quoted ? match.Value : ExpandInclude(provider, match.Groups[1].Value.Trim(), currentPath, visited));
+                result.Append(json && quoted ? match.Value
+                    : ExpandInclude(provider, match.Groups[1].Value.Trim(), currentPath, visited, explicitSyntax));
                 previous = match.Index + match.Length;
             }
             result.Append(content, previous, content.Length - previous);
             return result.ToString();
         }
 
-        private static string ExpandInclude(IModFileProvider provider, string includePath, string currentPath, HashSet<string> visited)
+        private static string ExpandInclude(IModFileProvider provider, string includePath, string currentPath,
+            HashSet<string> visited, bool explicitSyntax)
         {
+            var directive = explicitSyntax && !string.Equals(Path.GetExtension(currentPath), ".json", StringComparison.OrdinalIgnoreCase)
+                ? "$include{" : "${";
             if (string.IsNullOrEmpty(includePath))
-                throw new InvalidOperationException("Empty include path in ${}.");
+            {
+                throw new InvalidOperationException("Empty include path in " + directive + "}.");
+            }
             var resolvedPath = provider.ResolveIncludePath(includePath, currentPath);
             var loaded = provider.ReadFileText(resolvedPath);
             if (loaded == null)
@@ -262,12 +306,16 @@ namespace Cthangover.Core.Mods.Resolvers
                 loaded = provider.ReadFileText(resolvedPath);
             }
             if (loaded == null)
-                throw new InvalidOperationException($"Include not found: '{resolvedPath}' (from '${{{includePath}}}').");
+            {
+                throw new InvalidOperationException($"Include not found: '{resolvedPath}' (from '{directive}{includePath}}}').");
+            }
             if (!visited.Add(resolvedPath))
+            {
                 throw new InvalidOperationException($"Circular include detected: {resolvedPath}");
+            }
             try
             {
-                return ExpandModIncludes(provider, loaded, resolvedPath, visited).Trim();
+                return ExpandModIncludes(provider, loaded, resolvedPath, visited, explicitSyntax).Trim();
             }
             finally
             {
