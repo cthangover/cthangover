@@ -356,11 +356,11 @@ namespace Cthangover.Core.Scenes
 		/// </summary>
 		public void LoadShell()
 		{
-            var kind = sceneManager?.ShellKind(sceneManager.PendingSceneName) ?? "2d";
-            var path = AppServices.Current.SceneRoutes.GetShellPath(kind);
-            pendingSubscriptionSceneName = null;
-            currentGodotSceneName = null;
-            LoadScene(path);
+			var kind = sceneManager?.ShellKind(sceneManager.PendingSceneName) ?? "2d";
+			var path = AppServices.Current.SceneRoutes.GetShellPath(kind);
+			pendingSubscriptionSceneName = null;
+			currentGodotSceneName = null;
+			LoadScene(path);
 		}
 
 		/// <summary>
