@@ -12,7 +12,7 @@ import time
 from make_fixture import generate
 
 
-def snapshot(source,target,editor=False,water=False):
+def snapshot(source,target,editor=False,water=False,actors=False):
     ignore=shutil.ignore_patterns('.git','.git-template','__pycache__','test_suites','tests','docs','bin','obj')
     target.mkdir(parents=True,exist_ok=False)
     for folder in ['Core','scenes','config']:
@@ -22,6 +22,7 @@ def snapshot(source,target,editor=False,water=False):
     for f in source.glob('*.csproj'):shutil.copy2(f,target/f.name)
     names=set();pending=['world_stream3d_editor' if editor else 'world_stream3d_base']
     if water:pending.append('water3d_base')
+    if actors:pending+=['actor3d_base','navigation3d_base']
     while pending:
         name=pending.pop()
         if name in names:continue
@@ -38,6 +39,7 @@ def snapshot(source,target,editor=False,water=False):
         (work/'manifest.json').write_text(json.dumps(dict(id='test_stream_edit_work',name='Region editor destination',version='0.1.0',depends=['world_stream3d_editor>=0.1.0','test_stream_island>=0.1.0'])))
     folder=target/'collections/frontend';folder.mkdir(parents=True)
     collection_mods=['world_stream3d_base>=0.1.0','test_stream_island>=0.1.0']
+    if actors:collection_mods+=['actor3d_base>=0.1.0','navigation3d_base>=0.1.0']
     if water:collection_mods+=['water3d_base>=0.1.0']
     if editor:collection_mods+=['world_stream3d_editor>=0.1.0','test_stream_edit_work>=0.1.0']
     (folder/'collection.json').write_text(json.dumps(dict(id='frontend',kind='frontend',version='0.1.0',name='Continuous world acceptance',mechanics=[dict(id='world',role='engine',mods=collection_mods)])))
@@ -63,7 +65,7 @@ def diagnostics(text):
 
 
 def main():
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--editor',action='store_true');p.add_argument('--editor-play',action='store_true');p.add_argument('--water',action='store_true');p.add_argument('--reuse-project',type=Path);p.add_argument('--monitor-host',action='store_true');p.add_argument('--godot',required=True);p.add_argument('--out',required=True,type=Path);p.add_argument('--seconds',type=float,default=30);p.add_argument('--backends',nargs='+',choices=['DEFAULT','Jolt'],default=['DEFAULT','Jolt']);a=p.parse_args();a.editor=a.editor or a.editor_play
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--editor',action='store_true');p.add_argument('--editor-play',action='store_true');p.add_argument('--water',action='store_true');p.add_argument('--actors',action='store_true',help='Load the optional actor admission and managed navigation integrations');p.add_argument('--reuse-project',type=Path);p.add_argument('--monitor-host',action='store_true');p.add_argument('--godot',required=True);p.add_argument('--out',required=True,type=Path);p.add_argument('--seconds',type=float,default=30);p.add_argument('--backends',nargs='+',choices=['DEFAULT','Jolt'],default=['DEFAULT','Jolt']);a=p.parse_args();a.editor=a.editor or a.editor_play
     source=Path.cwd();out=a.out.resolve();out.mkdir(parents=True,exist_ok=False)
     if a.reuse_project:
         shutil.copytree(a.reuse_project,out/'project',ignore=shutil.ignore_patterns('.git','__pycache__'))
@@ -71,7 +73,14 @@ def main():
         record=json.loads(original.read_text(encoding='utf-8-sig'))
         record['reused_physical_project']=str(a.reuse_project.resolve())
     else:
-        record=snapshot(source,out/'project',a.editor,a.water);generate(out/'project',out/'provenance',hole=a.water)
+        record=snapshot(source,out/'project',a.editor,a.water,a.actors);generate(out/'project',out/'provenance',hole=a.water)
+    if a.actors:
+        # This original route remains an independent probe. Keep its optional actor
+        # catalogue nonempty without spawning another body at the probe's arrival.
+        actor_file=out/'project/mods_private/test_stream_island/actors3d/inert.json';actor_file.parent.mkdir(exist_ok=True)
+        actor_file.write_text(json.dumps(dict(Kind='actor3d',Items=[dict(Id='stream_fixture/inert_actor',Location='stream_fixture/inert',Presentation='stream_fixture/unused',Point='spawn')]),indent=2))
+    record['source_config_hashes']={name:hashlib.sha256((out/'project'/name).read_bytes()).hexdigest() for name in ['project.godot','Cthangover.csproj']}
+    record['generated_fixture_hashes']={str(f.relative_to(out/'project')):hashlib.sha256(f.read_bytes()).hexdigest() for f in (out/'project/mods_private/test_stream_island').rglob('*') if f.is_file()}
     (out/'source.json').write_text(json.dumps(record,indent=2))
     from stream_capture import save_client
     report=[]

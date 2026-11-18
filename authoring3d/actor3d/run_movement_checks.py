@@ -15,8 +15,43 @@ from capture_window import save_client
 
 
 CASES = {
+    "editor_character_fields": [
+        "--with-mods=proto_land_pack,proto_sea_pack,characters3d_editor",
+        "--itest=anim3d_base_contracts", "--itest=characters3d_editor_contracts",
+        "--run-tests", "--mod=characters3d_editor__contracts",
+        "--test-filter=characters3d_editor/authoring_*",
+    ],
+    "editor_character_layers": [
+        "--with-mods=proto_land_pack,proto_sea_pack,characters3d_editor",
+        "--itest=anim3d_base_contracts", "--itest=characters3d_editor_contracts",
+        "--run-tests", "--mod=characters3d_editor__contracts", "--test-filter=characters3d_editor/layers_*",
+    ],
+    "editor_actor_layers": [
+        "--with-mods=proto_land_pack,actor3d_base,scene3d_editor,characters3d_editor",
+        "--itest=actor3d_movement", "--itest=actor3d_movement_editor", "--run-tests",
+        "--mod=actor3d_base__movement_editor", "--test-filter=actor3d/layers_editor_*",
+    ],
+    "editor_traversal": [
+        "--with-mods=proto_land_pack,actor3d_base,scene3d_editor,characters3d_editor",
+        "--itest=actor3d_movement", "--itest=actor3d_movement_editor", "--run-tests",
+        "--mod=actor3d_base__movement_editor", "--test-filter=actor3d/traversal_editor_*",
+    ],
+    "editor_dialog_units": [
+        "--with-mods=dialog3d_base,proto_land_pack,scene3d_editor,characters3d_editor",
+        "--run-tests", "--mod=dialog3d_base", "--test-filter=dialog3d/actor_binding_complete_json",
+    ],
+    "editor_dialog_actor": [
+        "--with-mods=dialog3d_base,proto_land_pack,scene3d_editor,characters3d_editor",
+        "--itest=actor3d_movement", "--itest=dialog3d_actor_editor", "--run-tests",
+        "--mod=dialog3d_base__actor_editor", "--test-filter=dialog3d/editor_*",
+    ],
+    "editor_placement": [
+        "--with-mods=proto_land_pack,actor3d_base,scene3d_editor,characters3d_editor,combat3d_editor",
+        "--itest=actor3d_movement", "--itest=actor3d_placement_editor", "--run-tests",
+        "--mod=actor3d_base__placement_editor", "--test-filter=actor3d/placement_editor_*",
+    ],
     "handoff": [
-        "--with-mods=proto_land_pack,navigation3d_base,world_stream3d_base,npc_routines_base",
+        "--with-mods=proto_land_pack,navigation3d_base,world_stream3d_base,npc_routines_base,effects3d_base",
         "--itest=interactive3d_contracts", "--itest=npc_routines_base_contracts",
         "--itest=navigation3d_contracts", "--itest=navigation3d_streaming",
         "--run-tests", "--mod=navigation3d_base__streaming",
@@ -40,6 +75,24 @@ CASES = {
     "anim_units": [
         "--with-mods=proto_land_pack,anim3d_base", "--run-tests", "--mod=anim3d_base",
     ],
+    "anim_override_units": [
+        "--with-mods=proto_land_pack,anim3d_base", "--run-tests", "--mod=anim3d_base",
+        "--test-filter=anim3d/override_*",
+    ],
+    "anim_layers": [
+        "--with-mods=proto_land_pack,characters3d_base", "--itest=anim3d_base_contracts",
+        "--run-tests", "--mod=anim3d_base__contracts", "--test-filter=anim3d/layer_*",
+    ],
+    "character_layers": [
+        "--with-mods=proto_land_pack,proto_sea_pack,characters3d_base",
+        "--itest=anim3d_base_contracts", "--itest=characters3d_base_contracts",
+        "--run-tests", "--mod=characters3d_base__contracts", "--test-filter=characters3d/layer_*",
+    ],
+    "actor_layers": [
+        "--with-mods=proto_land_pack,actor3d_base,water3d_base,stats_base,navigation3d_base",
+        "--itest=actor3d_movement", "--run-tests", "--mod=actor3d_base__movement",
+        "--test-filter=actor3d/layers_*",
+    ],
     "editor_anim_units": [
         "--with-mods=proto_land_pack,anim3d_editor", "--run-tests", "--mod=anim3d_editor",
     ],
@@ -47,6 +100,11 @@ CASES = {
         "--with-mods=proto_land_pack,anim3d_editor,characters3d_base",
         "--itest=anim3d_base_contracts", "--itest=anim3d_editor_contracts",
         "--run-tests", "--mod=anim3d_editor__contracts",
+    ],
+    "editor_anim_fields": [
+        "--with-mods=proto_land_pack,anim3d_editor,characters3d_base",
+        "--itest=anim3d_base_contracts", "--itest=anim3d_editor_contracts",
+        "--run-tests", "--mod=anim3d_editor__contracts", "--test-filter=anim3d_editor/*_ru_en",
     ],
     "anim_contracts": [
         "--with-mods=proto_land_pack,characters3d_base", "--itest=anim3d_base_contracts",
@@ -131,7 +189,7 @@ CASES = {
         "--with-mods=proto_land_pack,interactive3d_base,combat3d_base", "--run-tests", "--mod=interactive3d_base",
     ],
     "interactive_contracts": [
-        "--with-mods=proto_land_pack,interactive3d_base,combat3d_base",
+        "--with-mods=proto_land_pack,interactive3d_base,combat3d_base,effects3d_base",
         "--itest=interactive3d_contracts", "--itest=combat3d_base_contracts",
         "--itest=actor3d_movement", "--itest=actor3d_movement_combat",
         "--run-tests", "--mod=interactive3d_base__contracts",
@@ -140,7 +198,7 @@ CASES = {
         "--with-mods=proto_land_pack,interactive3d_editor", "--run-tests", "--mod=interactive3d_editor",
     ],
     "editor_interactive_contracts": [
-        "--with-mods=proto_land_pack,interactive3d_editor,combat3d_base",
+        "--with-mods=proto_land_pack,interactive3d_editor,combat3d_base,effects3d_base",
         "--itest=interactive3d_contracts", "--itest=interactive3d_editor_contracts",
         "--itest=combat3d_base_contracts", "--itest=actor3d_movement", "--itest=actor3d_movement_combat",
         "--run-tests", "--mod=interactive3d_editor__contracts",
@@ -169,6 +227,11 @@ CASES = {
         "--itest=anim3d_base_contracts", "--itest=characters3d_editor_contracts",
         "--run-tests", "--mod=characters3d_editor__contracts",
     ],
+    "editor_character_locale": [
+        "--with-mods=proto_land_pack,proto_sea_pack,characters3d_editor",
+        "--itest=anim3d_base_contracts", "--itest=characters3d_editor_contracts",
+        "--run-tests", "--mod=characters3d_editor__contracts", "--test-filter=editors3d/*",
+    ],
     "pack": [
         "--with-mods=proto_land_pack", "--itest=proto_land_contracts", "--run-tests",
         "--mod=proto_land_pack__contracts", "--test-filter=proto_land/load_assets_*,proto_land/all_clips_*",
@@ -194,24 +257,30 @@ CASES = {
 }
 
 EXPECTED = {
+    "editor_character_fields": 2,
+    "editor_character_layers": 1, "editor_actor_layers": 1,
+    "editor_traversal": 2,
+    "editor_dialog_units": 1, "editor_dialog_actor": 2,
+    "editor_placement": 3,
     "handoff": 1,
     "clearance": 4,
     "pack_calibration": 1,
     "pack_all": 10,
-    "anim_units": 10, "anim_contracts": 15,
-    "editor_anim_units": 1, "editor_anim_contracts": 3,
+    "anim_units": 12, "anim_contracts": 19, "anim_override_units": 2, "anim_layers": 4,
+    "editor_anim_units": 1, "editor_anim_contracts": 7, "editor_anim_fields": 2,
     "data": 3, "poses": 1, "water": 3, "climb": 6, "navigation": 1,
-    "reload": 2, "editor": 2, "contacts": 1, "npc": 2, "ships": 1, "arrival": 1, "combat": 1,
-    "actor_units": 6, "actor_contracts": 15, "interactive_units": 24, "interactive_contracts": 12, "pack": 2,
+    "reload": 2, "editor": 4, "contacts": 1, "npc": 2, "ships": 1, "arrival": 1, "combat": 1,
+    "actor_units": 8, "actor_contracts": 15, "interactive_units": 24, "interactive_contracts": 13, "pack": 2,
     "stats_policy": 1,
     "template_policy": 1,
     "drop": 1,
     "ledge_drop": 5,
     "editor_marker": 1, "restore_descend": 2,
-    "editor_interactive_units": 2, "editor_interactive_contracts": 2,
-    "characters_units": 9, "characters_contracts": 17, "characters_shutdown": 1,
+    "editor_interactive_units": 3, "editor_interactive_contracts": 3,
+    "characters_units": 10, "characters_contracts": 19, "characters_shutdown": 1,
+    "character_layers": 2, "actor_layers": 2,
     "characters_lod_fitting": 1,
-    "editor_characters": 9,
+    "editor_characters": 12, "editor_character_locale": 1,
 }
 
 
