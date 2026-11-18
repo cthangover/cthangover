@@ -7,6 +7,141 @@
   },
   "integration": [
     {
+      "name": "test_execution_editor_write",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--frontend",
+        "--with-mods=test_execution,rpg_object_editor,rpg_plus_game",
+        "--itest=test_execution_editor_write"
+      ],
+      "timeoutSeconds": 300,
+      "windowed": true,
+      "requiresExplicitSelection": true,
+      "result": {
+        "name": "test_execution_editor_write",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "owners": [
+        "test_execution"
+      ],
+      "profiles": [
+        "test-execution"
+      ],
+      "tags": [
+        "windowed",
+        "editor",
+        "test-execution"
+      ],
+      "source": "mods/test_execution/test_suites/editor_write/manifest.json",
+      "dependsOn": [],
+      "project": "write"
+    },
+    {
+      "name": "test_execution_probe_read",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--frontend",
+        "--with-mods=test_execution",
+        "--itest=test_execution_probe",
+        "--run-tests",
+        "--mod=test_execution__probe",
+        "--execution-probe-mode=read"
+      ],
+      "timeoutSeconds": 120,
+      "windowed": true,
+      "result": {
+        "name": "mod_units",
+        "childPrefix": "mod_units:",
+        "expectedErrors": []
+      },
+      "kind": "mod-unit",
+      "owners": [
+        "test_execution"
+      ],
+      "profiles": [
+        "test-execution"
+      ],
+      "tags": [
+        "windowed",
+        "test-execution"
+      ],
+      "source": "mods/test_execution/test_suites/probe/manifest.json",
+      "dependsOn": [],
+      "project": "read"
+    },
+    {
+      "name": "test_execution_probe_gated",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--frontend",
+        "--with-mods=test_execution",
+        "--itest=test_execution_probe",
+        "--run-tests",
+        "--mod=test_execution__probe",
+        "--execution-probe-mode=gate"
+      ],
+      "timeoutSeconds": 120,
+      "windowed": true,
+      "requiresExplicitSelection": true,
+      "result": {
+        "name": "mod_units",
+        "childPrefix": "mod_units:",
+        "expectedErrors": []
+      },
+      "kind": "mod-unit",
+      "owners": [
+        "test_execution"
+      ],
+      "profiles": [
+        "test-execution"
+      ],
+      "tags": [
+        "windowed",
+        "test-execution"
+      ],
+      "source": "mods/test_execution/test_suites/probe/manifest.json",
+      "dependsOn": [],
+      "project": "read"
+    },
+    {
+      "name": "test_execution_probe_fixture",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--frontend",
+        "--with-mods=test_execution",
+        "--itest=test_execution_probe",
+        "--run-tests",
+        "--mod=test_execution__probe",
+        "--execution-probe-mode=fixture"
+      ],
+      "timeoutSeconds": 120,
+      "windowed": true,
+      "result": {
+        "name": "mod_units",
+        "childPrefix": "mod_units:",
+        "expectedErrors": []
+      },
+      "kind": "mod-unit",
+      "owners": [
+        "test_execution"
+      ],
+      "profiles": [
+        "test-execution"
+      ],
+      "tags": [
+        "windowed",
+        "test-execution"
+      ],
+      "source": "mods/test_execution/test_suites/probe/manifest.json",
+      "dependsOn": [],
+      "project": "read"
+    },
+    {
       "name": "shutdown_deferred_ready",
       "scene": "res://tests/Cthangover.Tests.Integration/Scenes/deferred_shutdown_test.tscn",
       "args": [],
@@ -5339,6 +5474,453 @@
       "project": "read"
     },
     {
+      "scene": "res://scenes/menu/launcher.tscn",
+      "timeoutSeconds": 300,
+      "result": {
+        "name": "mod_units",
+        "expectedErrors": [],
+        "childPrefix": "mod_units:"
+      },
+      "kind": "mod-unit",
+      "profiles": [
+        "explicit"
+      ],
+      "tags": [
+        "2d",
+        "contracts",
+        "windowed"
+      ],
+      "game": "rpg_plus",
+      "renderer": null,
+      "dependsOn": [],
+      "windowed": true,
+      "requirements": [
+        "Native GUI and pixels, ru/en, both tile projections; isolated workshop fixtures."
+      ],
+      "name": "rpg_object_save_validation",
+      "args": [
+        "--",
+        "--game=rpg_plus",
+        "--new",
+        "--with-mods=rpg_editor",
+        "--itest=rpg_data_validation",
+        "--run-tests",
+        "--mod=rpg_editor__data_validation",
+        "--validation-out=res://tests/artifacts/f11_object_save",
+        "--test-filter=data_gui/object_*,data_gui/import_*"
+      ],
+      "owners": [
+        "rpg_object_editor",
+        "rpg_editor__data_validation"
+      ],
+      "source": "mods/rpg_editor/test_suites/data_validation/manifest.json",
+      "project": "write"
+    },
+    {
+      "name": "exploration_units",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--frontend",
+        "--with-mods=exploration_base",
+        "--run-tests",
+        "--mod=exploration_base"
+      ],
+      "timeoutSeconds": 120,
+      "kind": "mod-unit",
+      "owners": [
+        "exploration_base"
+      ],
+      "profiles": [
+        "2d",
+        "full",
+        "headless"
+      ],
+      "tags": [
+        "mod-unit",
+        "headless",
+        "contracts",
+        "exploration"
+      ],
+      "project": "read",
+      "dependsOn": [],
+      "source": "mods/exploration_base/manifest.json",
+      "result": {
+        "name": "mod_units",
+        "childPrefix": "mod_units:",
+        "expectedErrors": []
+      }
+    },
+    {
+      "scene": "res://scenes/menu/launcher.tscn",
+      "timeoutSeconds": 300,
+      "result": {
+        "name": "mod_units",
+        "expectedErrors": [],
+        "childPrefix": "mod_units:"
+      },
+      "kind": "mod-unit",
+      "profiles": [
+        "full",
+        "2d",
+        "gui"
+      ],
+      "tags": [
+        "2d",
+        "contracts",
+        "windowed"
+      ],
+      "game": "rpg_plus",
+      "renderer": null,
+      "dependsOn": [],
+      "windowed": true,
+      "requirements": [
+        "Native GUI and pixels, ru/en, both tile projections; isolated workshop fixtures."
+      ],
+      "name": "items_pickup_picture",
+      "args": [
+        "--",
+        "--game=rpg_plus",
+        "--new",
+        "--with-mods=items_editor,rpg_editor",
+        "--itest=items_pickup",
+        "--run-tests",
+        "--mod=items_editor__pickup"
+      ],
+      "owners": [
+        "items_editor",
+        "items_editor__pickup"
+      ],
+      "source": "mods/items_editor/test_suites/pickup/manifest.json",
+      "project": "write"
+    },
+    {
+      "name": "fog2d_data",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "timeoutSeconds": 180,
+      "result": {
+        "name": "mod_units",
+        "expectedErrors": [],
+        "childPrefix": "mod_units:"
+      },
+      "kind": "mod-unit",
+      "profiles": [
+        "full",
+        "2d"
+      ],
+      "tags": [
+        "2d",
+        "contracts",
+        "headless"
+      ],
+      "game": "rpg_plus",
+      "renderer": null,
+      "dependsOn": [],
+      "windowed": false,
+      "requirements": [
+        "Pure FOV/profile/shared exploration contracts; no rendered pixels or GPU frame waits."
+      ],
+      "args": [
+        "--",
+        "--game=rpg_plus",
+        "--new",
+        "--with-mods=fog2d_base",
+        "--run-tests",
+        "--mod=fog2d_base"
+      ],
+      "owners": [
+        "fog2d_base"
+      ],
+      "source": "mods/fog2d_base/manifest.json",
+      "project": "read"
+    },
+    {
+      "name": "fog2d_pixels",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "timeoutSeconds": 180,
+      "result": {
+        "name": "mod_units",
+        "expectedErrors": [],
+        "childPrefix": "mod_units:"
+      },
+      "kind": "mod-unit",
+      "profiles": [
+        "full",
+        "2d",
+        "gui"
+      ],
+      "tags": [
+        "2d",
+        "contracts",
+        "windowed"
+      ],
+      "game": "rpg_plus",
+      "renderer": null,
+      "dependsOn": [],
+      "windowed": true,
+      "requirements": [
+        "Native shared material mask and upright anchors, both projections, HDR capture helper and renderer replacement."
+      ],
+      "args": [
+        "--",
+        "--game=rpg_plus",
+        "--new",
+        "--with-mods=fog2d_base",
+        "--itest=fog2d_pixels",
+        "--run-tests",
+        "--mod=fog2d_base__pixels"
+      ],
+      "owners": [
+        "fog2d_base",
+        "fog2d_base__pixels"
+      ],
+      "source": "mods/fog2d_base/test_suites/pixels/manifest.json",
+      "project": "read"
+    },
+    {
+      "name": "fog2d_editor_data",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "timeoutSeconds": 180,
+      "result": {
+        "name": "mod_units",
+        "expectedErrors": [],
+        "childPrefix": "mod_units:"
+      },
+      "kind": "mod-unit",
+      "profiles": [
+        "full",
+        "2d"
+      ],
+      "tags": [
+        "2d",
+        "contracts",
+        "headless"
+      ],
+      "game": "rpg_plus",
+      "renderer": null,
+      "dependsOn": [],
+      "windowed": false,
+      "requirements": [
+        "Pure authoring document, stroke history, unknown fields and sparse foreign patches; no pixels."
+      ],
+      "args": [
+        "--",
+        "--game=rpg_plus",
+        "--new",
+        "--with-mods=fog2d_editor",
+        "--run-tests",
+        "--mod=fog2d_editor"
+      ],
+      "owners": [
+        "fog2d_editor"
+      ],
+      "source": "mods/fog2d_editor/manifest.json",
+      "project": "read"
+    },
+    {
+      "name": "fog2d_editor_gui",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "timeoutSeconds": 180,
+      "result": {
+        "name": "mod_units",
+        "expectedErrors": [],
+        "childPrefix": "mod_units:"
+      },
+      "kind": "mod-unit",
+      "profiles": [
+        "full",
+        "2d"
+      ],
+      "tags": [
+        "2d",
+        "gui",
+        "contracts"
+      ],
+      "game": "rpg_plus",
+      "renderer": null,
+      "dependsOn": [],
+      "windowed": true,
+      "requirements": [
+        "Real ModWidget forms, paint/erase/undo/save/reopen and preview isolation in ru/en and both projections. Captures use ViewportCapture."
+      ],
+      "args": [
+        "--",
+        "--game=rpg_plus",
+        "--new",
+        "--with-mods=fog2d_editor",
+        "--itest=fog2d_editor_gui",
+        "--run-tests",
+        "--mod=fog2d_editor__gui"
+      ],
+      "owners": [
+        "fog2d_editor"
+      ],
+      "source": "mods/fog2d_editor/manifest.json",
+      "project": "write"
+    },
+    {
+      "name": "map2d_data",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "timeoutSeconds": 180,
+      "result": {
+        "name": "mod_units",
+        "expectedErrors": [],
+        "childPrefix": "mod_units:"
+      },
+      "kind": "mod-unit",
+      "profiles": [
+        "full",
+        "2d"
+      ],
+      "tags": [
+        "2d",
+        "contracts",
+        "headless"
+      ],
+      "game": "rpg_plus",
+      "renderer": null,
+      "dependsOn": [],
+      "windowed": false,
+      "requirements": [
+        "Prepared-layer and marker validation/JSON round trips, shared exploration and stale-handle isolation; no rendered pixels."
+      ],
+      "args": [
+        "--",
+        "--game=rpg_plus",
+        "--new",
+        "--with-mods=map2d_base",
+        "--run-tests",
+        "--mod=map2d_base"
+      ],
+      "owners": [
+        "map2d_base"
+      ],
+      "source": "mods/map2d_base/manifest.json",
+      "project": "read"
+    },
+    {
+      "name": "map2d_pixels",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "timeoutSeconds": 180,
+      "result": {
+        "name": "mod_units",
+        "expectedErrors": [],
+        "childPrefix": "mod_units:"
+      },
+      "kind": "mod-unit",
+      "profiles": [
+        "full",
+        "2d"
+      ],
+      "tags": [
+        "2d",
+        "gui",
+        "contracts"
+      ],
+      "game": "rpg_plus",
+      "renderer": null,
+      "dependsOn": [],
+      "windowed": true,
+      "requirements": [
+        "Actual prepared-layer pixels, common fog mask, marker disclosure, borrowed author previews, native hit testing and exact world-memory selection in both projections."
+      ],
+      "args": [
+        "--",
+        "--game=rpg_plus",
+        "--new",
+        "--with-mods=map2d_base",
+        "--itest=map2d_pixels",
+        "--run-tests",
+        "--mod=map2d_base__pixels"
+      ],
+      "owners": [
+        "map2d_base"
+      ],
+      "source": "mods/map2d_base/manifest.json",
+      "project": "read"
+    },
+    {
+      "name": "map2d_editor_data",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "timeoutSeconds": 180,
+      "result": {
+        "name": "mod_units",
+        "expectedErrors": [],
+        "childPrefix": "mod_units:"
+      },
+      "kind": "mod-unit",
+      "profiles": [
+        "full",
+        "2d"
+      ],
+      "tags": [
+        "2d",
+        "contracts",
+        "headless"
+      ],
+      "game": "rpg_plus",
+      "renderer": null,
+      "dependsOn": [],
+      "windowed": false,
+      "requirements": [
+        "Terrain-map authoring file preservation, titles, layers, named point forms, one-step move/undo, sparse foreign patches and complete JSON round trips."
+      ],
+      "args": [
+        "--",
+        "--game=rpg_plus",
+        "--new",
+        "--with-mods=map2d_editor",
+        "--run-tests",
+        "--mod=map2d_editor"
+      ],
+      "owners": [
+        "map2d_editor"
+      ],
+      "source": "mods/map2d_editor/manifest.json",
+      "project": "read"
+    },
+    {
+      "name": "map2d_editor_gui",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "timeoutSeconds": 240,
+      "result": {
+        "name": "mod_units",
+        "expectedErrors": [],
+        "childPrefix": "mod_units:"
+      },
+      "kind": "mod-unit",
+      "profiles": [
+        "full",
+        "2d"
+      ],
+      "tags": [
+        "2d",
+        "gui",
+        "contracts"
+      ],
+      "game": "rpg_plus",
+      "renderer": null,
+      "dependsOn": [],
+      "windowed": true,
+      "requirements": [
+        "Normal-renderer bounded layer export/cancellation, ru/en form authoring without JSON, named point clicks/undo/save/reopen and terrain-map gameplay button, modal input/pause claims, actual keys, both world projections and save/load."
+      ],
+      "args": [
+        "--",
+        "--game=rpg_plus",
+        "--new",
+        "--with-mods=map2d_editor",
+        "--itest=map2d_editor_gui",
+        "--run-tests",
+        "--mod=map2d_editor__gui"
+      ],
+      "owners": [
+        "map2d_editor"
+      ],
+      "source": "mods/map2d_editor/manifest.json",
+      "project": "write"
+    },
+    {
       "name": "studio_projection_review",
       "scene": "res://scenes/menu/launcher.tscn",
       "windowed": true,
@@ -5387,6 +5969,16 @@
     "integration": []
   },
   "manualSuites": {
+    "test_execution__bootstrap": {
+      "reason": "External parameterized actual-runtime normal/early-refusal probe deliberately strips runner context; requires isolated OS home, TEMP, output/token/data args and native exit78/zero-managed-write verification.",
+      "windowed": true,
+      "game": null,
+      "requirements": [
+        "E closure bootstrap orchestration",
+        "isolated OS home and TEMP",
+        "absolute output/data paths and safe token"
+      ]
+    },
     "mod_manager__publishing": {
       "reason": "Requires the sibling keyserver publishing harness with a temporary database and author keys.",
       "windowed": true,
