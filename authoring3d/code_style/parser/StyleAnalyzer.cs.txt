@@ -1,12 +1,12 @@
-using System;
-using System.Collections.Generic;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
-
 namespace Cthangover.Authoring.CodeStyle
 {
+    using System;
+    using System.Collections.Generic;
+    using Microsoft.CodeAnalysis;
+    using Microsoft.CodeAnalysis.CSharp;
+    using Microsoft.CodeAnalysis.CSharp.Syntax;
+    using Microsoft.CodeAnalysis.Text;
+
     /// <summary>Reports syntax-backed style findings; string/comment contents cannot impersonate C# declarations or statements.</summary>
     internal sealed class StyleAnalyzer
     {
@@ -144,9 +144,9 @@ namespace Cthangover.Authoring.CodeStyle
                 {
                     Add(source, node.SpanStart, "ANONYMOUS_TYPE", "Use a named data type instead of an anonymous class.");
                 }
-                else if (node is UsingDirectiveSyntax && node.Parent is BaseNamespaceDeclarationSyntax)
+                else if (node is UsingDirectiveSyntax && node.Parent is not BaseNamespaceDeclarationSyntax)
                 {
-                    Add(source, node.SpanStart, "USING_PLACEMENT", "Place using directives outside the namespace, as required by cleanup.");
+                    Add(source, node.SpanStart, "USING_PLACEMENT", "Place using directives inside the namespace, as required by AGENTS.md.");
                 }
             }
 
@@ -282,21 +282,7 @@ namespace Cthangover.Authoring.CodeStyle
                 return;
             }
 
-            var name = call.Expression.ToString().Replace("global::", string.Empty, StringComparison.Ordinal);
-            foreach (var directive in source.Root.Usings)
-            {
-                if (directive.Alias == null || directive.Name == null)
-                {
-                    continue;
-                }
-
-                var alias = directive.Alias.Name.Identifier.ValueText + ".";
-                if (name.StartsWith(alias, StringComparison.Ordinal))
-                {
-                    name = directive.Name + "." + name.Substring(alias.Length);
-                    break;
-                }
-            }
+            var name = LoggingName(call);
 
             if (name == "GD.Print" || name == "GD.PrintErr" || name == "GD.PrintRaw" || name == "GD.PrintS" || name == "GD.PrintT"
                 || name.StartsWith("Godot.GD.Print", StringComparison.Ordinal) || name == "Console.Write" || name == "Console.WriteLine"
@@ -305,6 +291,35 @@ namespace Cthangover.Authoring.CodeStyle
             {
                 Add(source, call.SpanStart, "GAME_LOGGER", "Game code logs only through GameLogger.Log.");
             }
+        }
+
+        private static string LoggingName(InvocationExpressionSyntax call)
+        {
+            var name = call.Expression.ToString().Replace("global::", string.Empty, StringComparison.Ordinal);
+            foreach (var scope in call.Ancestors())
+            {
+                var directives = scope switch
+                {
+                    BaseNamespaceDeclarationSyntax space => space.Usings,
+                    CompilationUnitSyntax unit => unit.Usings,
+                    _ => default,
+                };
+                foreach (var directive in directives)
+                {
+                    if (directive.Alias == null || directive.Name == null)
+                    {
+                        continue;
+                    }
+
+                    var alias = directive.Alias.Name.Identifier.ValueText + ".";
+                    if (name.StartsWith(alias, StringComparison.Ordinal))
+                    {
+                        return directive.Name + "." + name.Substring(alias.Length);
+                    }
+                }
+            }
+
+            return name;
         }
 
         private void CheckGui(ParsedSource source, SyntaxNode node, WidgetAncestry ancestry)

@@ -36,8 +36,7 @@ class CheckStyleTests(unittest.TestCase):
         return payload, {item["rule"] for item in payload["issues"]}
 
     def test_clean_code_and_literal_semicolons(self):
-        self.write("sample.cs", '''using System;
-/// <summary>Returns literal delimiters without executing any game code.</summary>
+        self.write("sample.cs", '''/// <summary>Returns literal delimiters without executing any game code.</summary>
 public class Sample
 {
     /// <summary>Retains delimiters in text passed to callers.</summary>
@@ -107,10 +106,10 @@ public class Sample
         self.assertEqual(2, len(payload["issues"]))
 
     def test_multiple_types_using_placement_and_fields(self):
-        self.write("sample.cs", '''namespace Demo
-{
-    using System;
+        self.write("sample.cs", '''using System;
 
+namespace Demo
+{
     internal class First
     {
         int a, b;
@@ -123,6 +122,19 @@ public class Sample
 ''')
         _, rules = self.run_check("sample.cs", expected=1)
         self.assertEqual({"ONE_TYPE_PER_FILE", "USING_PLACEMENT", "SINGLE_FIELD"}, rules)
+
+    def test_using_placement_matches_project_namespace_rule(self):
+        self.write("outside.cs", "using System;\n\nnamespace Demo\n{\n    internal class Outside\n    {\n    }\n}\n")
+        self.write("block.cs", "namespace Demo\n{\n    using System;\n\n    internal class Inside\n    {\n    }\n}\n")
+        self.write("scoped.cs", "namespace Demo;\n\nusing System;\n\ninternal class Scoped\n{\n}\n")
+        self.write("global.cs", "global using Output = System.Console;\n\nnamespace Demo\n{\n    internal class Global\n    {\n    }\n}\n")
+        payload, rules = self.run_check("outside.cs", "global.cs", expected=1)
+        self.assertEqual({"USING_PLACEMENT"}, rules)
+        self.assertEqual({("outside.cs", 1), ("global.cs", 1)},
+                         {(item["path"], item["line"]) for item in payload["issues"]})
+        payload, rules = self.run_check("block.cs", "scoped.cs", expected=0)
+        self.assertEqual(2, payload["checkedFiles"])
+        self.assertEqual(set(), rules)
 
     def test_lambdas_anonymous_delegates_and_local_functions(self):
         self.write("sample.cs", '''internal class Sample
@@ -252,7 +264,7 @@ public class Sample
     def test_utility_builder_accepts_borrowed_widget_parameter(self):
         self.write("mods/demo_editor/manifest.json", '{"id":"demo_editor","depends":["ui_base"]}')
         self.write("mods/ui_base/src/Base/Lists/ModWidget.cs", "namespace Cthangover.Mods.Interface.Base.Lists { internal class ModWidget {} }")
-        self.write("mods/demo_editor/sample.cs", "using Cthangover.Mods.Interface.Base.Lists;\ninternal class Sample\n{\n    void Build(ModWidget root)\n    {\n        var label = new Label();\n        root.AddChild(label);\n    }\n}\n")
+        self.write("mods/demo_editor/sample.cs", "namespace Demo\n{\n    using Cthangover.Mods.Interface.Base.Lists;\n\n    internal class Sample\n    {\n        void Build(ModWidget root)\n        {\n            var label = new Label();\n            root.AddChild(label);\n        }\n    }\n}\n")
         self.run_check("mods/demo_editor", expected=0)
 
     def test_syntax_error_is_a_finding(self):
@@ -272,9 +284,17 @@ public class Sample
 
     def test_logging_alias_cannot_bypass_game_logger(self):
         self.write("mods/demo_base/manifest.json", '{"id":"demo_base"}')
-        self.write("mods/demo_base/sample.cs", "using Output = System.Console;\ninternal class Sample\n{\n    void Log()\n    {\n        Output.WriteLine(1);\n    }\n}\n")
+        self.write("mods/demo_base/sample.cs", "namespace Demo\n{\n    using Output = System.Console;\n\n    internal class Sample\n    {\n        void Log()\n        {\n            Output.WriteLine(1);\n        }\n    }\n}\n")
         _, rules = self.run_check("mods/demo_base", expected=1)
         self.assertEqual({"GAME_LOGGER"}, rules)
+
+    def test_logging_alias_uses_nearest_namespace_scope(self):
+        self.write("mods/demo_base/manifest.json", '{"id":"demo_base"}')
+        self.write("mods/demo_base/sample.cs", "namespace Outer\n{\n    using Output = System.Console;\n\n    namespace Inner\n    {\n        using Output = Service;\n\n        internal class Sample\n        {\n            void Log()\n            {\n                Output.WriteLine(1);\n            }\n        }\n    }\n}\n")
+        self.run_check("mods/demo_base", expected=0)
+        self.write("mods/demo_base/sample.cs", "using Output = System.Console;\n\nnamespace Demo\n{\n    internal class Sample\n    {\n        void Log()\n        {\n            Output.WriteLine(1);\n        }\n    }\n}\n")
+        _, rules = self.run_check("mods/demo_base", expected=1)
+        self.assertEqual({"GAME_LOGGER", "USING_PLACEMENT"}, rules)
 
     def test_game_screen_needs_prefab_even_without_control_creation(self):
         self.write("mods/demo_base/manifest.json", '{"id":"demo_base"}')
@@ -307,7 +327,7 @@ public class Sample
         self.write("mods/ui_base/src/Base/Lists/ModWidget.cs", "namespace Cthangover.Mods.Interface.Base.Lists { internal class ModWidget {} }")
         self.write("mods/demo_base/manifest.json", '{"id":"demo_base","categories":["engine"],"depends":["ui_base"]}')
         self.write("mods/demo_base/integrations/editor/manifest.json", '{"id":"demo_base__editor"}')
-        self.write("mods/demo_base/integrations/editor/sample.cs", "using Cthangover.Mods.Interface.Base.Lists;\ninternal class Panel : ModWidget\n{\n    void Build()\n    {\n        var label = new Label();\n    }\n}\n")
+        self.write("mods/demo_base/integrations/editor/sample.cs", "namespace Demo\n{\n    using Cthangover.Mods.Interface.Base.Lists;\n\n    internal class Panel : ModWidget\n    {\n        void Build()\n        {\n            var label = new Label();\n        }\n    }\n}\n")
         self.run_check("mods/demo_base", expected=0)
 
     def test_missing_changed_list_is_invocation_error(self):
