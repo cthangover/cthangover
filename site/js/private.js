@@ -35,41 +35,10 @@
     for (var k = 0; k < els.length; k++) io.observe(els[k]);
   }
 
-  function initPurchase() {
-    var buy = document.getElementById("pvBuy");
-    var pd = document.getElementById("pvConsentPd");
-    var ads = document.getElementById("pvConsentAds");
-    if (!buy || !pd || !ads) return;
-    var payment = buy.getAttribute("href");
-    function updatePurchase() {
-      var soon = buy.classList.contains("is-soon");
-      // Consents are optional and never block payment (152-FZ art. 9 p. 1).
-      var disabled = soon;
-      buy.setAttribute("aria-disabled", disabled ? "true" : "false");
-      if (soon) return;
-      if (disabled) {
-        buy.removeAttribute("href");
-        return;
-      }
-      var url = new URL(payment, document.baseURI);
-      url.searchParams.set("consent_pd", pd.checked ? "2026-11-09" : "0");
-      url.searchParams.set("consent_ads", ads.checked ? "2026-11-09" : "0");
-      buy.href = url.href;
-    }
-    buy.addEventListener("click", function (event) {
-      updatePurchase();
-      if (buy.getAttribute("aria-disabled") === "true") event.preventDefault();
-    });
-    pd.addEventListener("change", updatePurchase);
-    ads.addEventListener("change", updatePurchase);
-    updatePurchase();
-  }
-
   document.addEventListener("DOMContentLoaded", function () {
     initHeaderChrome("private");
     updateFallback();
     initReveal();
-    initPurchase();
     document.addEventListener("langchange", updateFallback);
   });
 })();

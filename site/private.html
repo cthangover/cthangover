@@ -16,15 +16,9 @@
 <link rel="icon" type="image/png" href="/img/favicon-16.png" sizes="16x16">
 <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
 <link rel="stylesheet" href="/css/fonts.css?v=20261105">
-<link rel="stylesheet" href="/css/style.css?v=20261112-payment">
+<link rel="stylesheet" href="/css/style.css?v=20261120">
 <script>document.documentElement.classList.add("js");</script>
 </head>
-
-<!--
-  Тексты страницы — в js/private-i18n.js (ключи pv_*), разметка здесь — только
-  структура и русский текст для показа без JavaScript. Новый язык: скопировать
-  блок ru в private-i18n.js под нужный код языка и перевести значения.
--->
 
 <body class="private">
 
@@ -64,7 +58,6 @@
   <div class="wrap"><span data-i18n="pv_fallback">Эта страница пока переведена не на все языки: показан русский текст.</span></div>
 </div>
 
-<!-- ============ 1. Вступление ============ -->
 <section class="hero pv-hero">
   <div class="hero-bg" aria-hidden="true"></div>
   <div class="wrap pv-hero-in">
@@ -78,7 +71,6 @@
   </div>
 </section>
 
-<!-- ============ 2. Что такое приватный каталог ============ -->
 <section id="what">
   <div class="wrap">
     <div class="sechead reveal">
@@ -108,7 +100,6 @@
   </div>
 </section>
 
-<!-- ============ 3. Что даёт подписка ============ -->
 <section id="benefits">
   <div class="wrap">
     <div class="sechead reveal">
@@ -156,7 +147,6 @@
   </div>
 </section>
 
-<!-- ============ 4. Тариф ============ -->
 <section id="pricing">
   <div class="wrap">
     <div class="sechead reveal">
@@ -186,12 +176,7 @@
           <li data-i18n="pv_inc_4">Поддержка по архитектуре cthangover, проблемам ядра и вашим модам</li>
           <li data-i18n="pv_inc_5">Персональный ключ доступа, который можно перевыпустить при утере</li>
         </ul>
-        <!-- ОПЛАТА: когда появится способ оплаты, заменить href="#pay" на ссылку
-             и убрать класс is-soon и aria-disabled у кнопки ниже.
-             Факт, дата, время, объём и редакция согласий должны сохраниться у продавца
-             в записи заказа платёжного агрегатора; статичный сайт этого не умеет. -->
-        <a class="btn btn-gold pv-buy is-soon" id="pvBuy" href="#pay" aria-disabled="true"><span data-i18n="pv_buy_soon">Оплата скоро появится</span></a>
-        <a class="pv-payment-preview" href="#pay" data-i18n="pv_payment_preview">Посмотреть пример оплаты через Robokassa →</a>
+        <a class="btn btn-gold pv-buy" id="pvBuy" href="https://yookassa.ru/my/i/awBb4ThKUzBU/l" target="_blank" rel="noopener"><span data-i18n="pv_pay_btn">Оплатить подписку</span><span class="arr">→</span></a>
         <p class="pv-plan-foot" data-i18n="pv_key_delivery">Ключ выпускается вручную и отправляется на e-mail, указанный при оплате, не позднее 3 рабочих дней с момента поступления оплаты Исполнителю. Срок подписки — 6 месяцев с даты выдачи ключа.</p>
         <label class="pv-consent" for="pvConsentPd"><input type="checkbox" id="pvConsentPd"><span><span data-i18n="pv_consent_pd">Я даю согласие на обработку персональных данных</span> — <a href="/consent-pd.html" data-i18n="pv_consent_text">текст согласия</a> <span data-i18n="pv_consent_optional">(необязательно)</span></span></label>
         <label class="pv-consent" for="pvConsentAds"><input type="checkbox" id="pvConsentAds"><span><span data-i18n="pv_consent_ads">Я согласен получать информационные и рекламные сообщения по электронной почте</span> — <a href="/consent-ads.html" data-i18n="pv_consent_text">текст согласия</a> <span data-i18n="pv_consent_optional">(необязательно)</span></span></label>
@@ -213,7 +198,6 @@
   </div>
 </section>
 
-<!-- ============ 5. Почему платно ============ -->
 <section id="why">
   <div class="wrap">
     <div class="sechead reveal">
@@ -232,7 +216,6 @@
   </div>
 </section>
 
-<!-- ============ 6. Пределы поддержки ============ -->
 <section id="support">
   <div class="wrap">
     <div class="sechead reveal">
@@ -267,7 +250,6 @@
   </div>
 </section>
 
-<!-- ============ 7. Вопросы ============ -->
 <section id="faq">
   <div class="wrap">
     <div class="sechead reveal">
@@ -283,52 +265,6 @@
       <details><summary data-i18n="pv_q6">Насколько безопасны моды из приватного каталога?</summary><p data-i18n="pv_a6">Публикуют только авторы с персональными ключами, игра проверяет хеш каждого архива и содержимого, а конфликтующие копии помечает «Небезопасно». Но мод — это код без песочницы: проверка хеша подтверждает, что файл тот самый, а не то, что код безвреден. Поэтому доступ к публикации и ограничен.</p></details>
       <details><summary data-i18n="pv_q8">Можно вернуть деньги?</summary><p data-i18n="pv_a8">Да. В течение 14 календарных дней после оплаты вернём всю сумму по письму на e-mail, указанный внизу страницы, без объяснения причин; ключ при этом отзывается. Подробные условия — в публичной оферте.</p></details>
       <details><summary data-i18n="pv_q7">Если я потерял ключ?</summary><p data-i18n="pv_a7">Напишите разработчику: старый ключ будет отозван, а для вас выпущен новый на оставшийся срок. Ваши моды и ID останутся за вами.</p></details>
-    </div>
-  </div>
-</section>
-
-<!-- ============ 8. Оплата и связь ============ -->
-<!-- Payment preview only. Connect a hosted Robokassa link/widget after merchant
-     setup. Configure E-mail notifications (ResultURL) to the seller, and verify
-     buyer EMail is collected and included in a real payment notification.
-     No issuer, access tokens or merchant passwords belong in the site. -->
-<section class="cta" id="pay">
-  <div class="wrap">
-    <div class="cta-card reveal">
-      <h2 data-i18n="pv_pay_title">Оплата и связь</h2>
-      <p data-i18n="pv_pay_p">Способ оплаты появится здесь в ближайшее время. После покупки вы получите ключ, который достаточно ввести в вашем менеджере модов.</p>
-      <div class="pv-payment-example" aria-labelledby="pvPaymentTitle">
-        <span class="pv-payment-badge" data-i18n="pv_payment_badge">Пример · приём платежей ещё не подключён</span>
-        <h3 id="pvPaymentTitle" data-i18n="pv_payment_title">От оплаты до персонального ключа</h3>
-        <ol class="pv-payment-steps">
-          <li><h4 data-i18n="pv_payment_step1">1. Оплата в Robokassa</h4><p data-i18n="pv_payment_step1_p">Вы переходите с сайта в платёжную форму Robokassa, указываете e-mail для получения ключа и оплачиваете 300 ₽ за 6 месяцев. Автоматических повторных списаний нет.</p></li>
-          <li><h4 data-i18n="pv_payment_step2">2. Уведомление продавцу</h4><p data-i18n="pv_payment_step2_p">После успешной оплаты Robokassa отправляет продавцу уведомление с номером платежа, суммой и вашим e-mail.</p></li>
-          <li><h4 data-i18n="pv_payment_step3">3. Ключ на вашу почту</h4><p data-i18n="pv_key_delivery">Ключ выпускается вручную и отправляется на e-mail, указанный при оплате, не позднее 3 рабочих дней с момента поступления оплаты Исполнителю. Срок подписки — 6 месяцев с даты выдачи ключа.</p></li>
-        </ol>
-        <details class="pv-payment-notification">
-          <summary data-i18n="pv_payment_notification">Пример данных в уведомлении продавцу</summary>
-          <p data-i18n="pv_payment_sample_note">Вымышленные данные для примера. Это не настоящий платёж и не точный шаблон письма Robokassa.</p>
-          <dl>
-            <div><dt data-i18n="pv_payment_order">Номер платежа</dt><dd>DEMO-001</dd></div>
-            <div><dt data-i18n="pv_payment_amount">Сумма</dt><dd data-seller="price_rub">300 ₽</dd></div>
-            <div><dt data-i18n="pv_payment_email">E-mail для отправки ключа</dt><dd>buyer@example.com</dd></div>
-          </dl>
-        </details>
-        <a href="/offer.html" data-i18n="pv_payment_terms">Сроки выдачи ключа — пункты 7.1–7.2 публичной оферты</a>
-      </div>
-      <p class="pv-pay-warn"><span data-i18n="pv_notice_p1a">Убедитесь, что у вас есть беспрепятственный доступ к</span> <a href="https://cthangover.ru/">https://cthangover.ru/</a><span data-i18n="pv_notice_p1b">, иначе могут возникнуть проблемы с доступом к приватному каталогу.</span></p>
-      <dl class="pv-contacts">
-        <div><dt data-i18n="pv_c_seller">Продавец</dt><dd><span data-seller="name">Исаев Илья Викторович</span>, <span data-i18n="pv_c_status">самозанятый</span></dd></div>
-        <div><dt data-i18n="ft_inn">ИНН</dt><dd data-seller="inn">673206026792</dd></div>
-        <div><dt data-i18n="ft_email">E-mail</dt><dd><a data-seller="email" href="mailto:vpcoder@ya.ru">vpcoder@ya.ru</a></dd></div>
-        <div><dt data-i18n="ft_phone">Телефон</dt><dd><a data-seller="phone" href="tel:+79203323347">+7 920 332-33-47</a></dd></div>
-        <div><dt data-i18n="ft_community">Сообщество</dt><dd><a data-seller="telegram" target="_blank" rel="noopener" href="https://t.me/cthangover">t.me/cthangover</a></dd></div>
-        <div><dt data-i18n="pv_c_city">Город</dt><dd data-seller="city">г. Смоленск, Смоленская область</dd></div>
-      </dl>
-      <div class="row" id="pvPayRow">
-        <span class="btn btn-ghost is-soon" aria-disabled="true" data-i18n="pv_pay_soon">Скоро</span>
-        <a class="btn btn-ghost" href="/offer.html" data-i18n="pv_pay_offer">Публичная оферта</a>
-      </div>
     </div>
   </div>
 </section>
@@ -356,7 +292,8 @@
 
 <script src="/js/seller.js?v=20261110"></script>
 <script src="/js/i18n.js?v=20261110"></script>
-<script src="/js/private-i18n.js?v=20261112-payment"></script>
-<script src="/js/private.js?v=20261110"></script>
+<script src="/js/private-i18n.js?v=20261120"></script>
+<script src="/js/private.js?v=20261119-yookassa"></script>
+<script src="/js/private-pay.js?v=20261119-yookassa"></script>
 </body>
 </html>
