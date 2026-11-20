@@ -1,12 +1,12 @@
 {
- "generated": "2026-11-13",
+ "generated": "2026-11-20",
  "stats": {
-  "mods": 67,
+  "mods": 76,
   "dslCommands": 32,
-  "coreFiles": 551,
-  "coreLoc": 50692,
-  "modFiles": 1398,
-  "modLoc": 155589
+  "coreFiles": 564,
+  "coreLoc": 52776,
+  "modFiles": 1690,
+  "modLoc": 196090
  },
  "battle": [
   {
@@ -329,6 +329,18 @@
    "test": false
   },
   {
+   "id": "exploration_base",
+   "name": "Exploration Memory",
+   "version": "0.1.0",
+   "desc": "Projection-independent explored cells and transient visibility with ordinary game saves.",
+   "cat": [
+    "engine",
+    "library"
+   ],
+   "deps": [],
+   "test": false
+  },
+  {
    "id": "expressions_base",
    "name": "Expression Engine",
    "version": "0.1.0",
@@ -351,6 +363,39 @@
    "deps": [
     "ui_base",
     "turn_battle_base"
+   ],
+   "test": false
+  },
+  {
+   "id": "fog2d_base",
+   "name": "2D Visibility",
+   "version": "0.1.0",
+   "desc": "Wall-aware field of view and remembered exploration for tile worlds.",
+   "cat": [
+    "engine",
+    "library"
+   ],
+   "deps": [
+    "rpg",
+    "exploration_base"
+   ],
+   "test": false
+  },
+  {
+   "id": "fog2d_editor",
+   "name": "2D Visibility Editor",
+   "version": "0.1.0",
+   "desc": "Map-based forms and painting for visibility profiles and initial exploration.",
+   "cat": [
+    "tools",
+    "editor"
+   ],
+   "deps": [
+    "fog2d_base",
+    "tools_base",
+    "rpg_editor",
+    "tile_topdown_base",
+    "tile_isometric_base"
    ],
    "test": false
   },
@@ -497,6 +542,35 @@
    "test": false
   },
   {
+   "id": "map2d_base",
+   "name": "2D Terrain Map",
+   "version": "0.1.0",
+   "desc": "Prepared terrain map layers with shared exploration, player heading and authored points.",
+   "cat": [
+    "engine",
+    "library"
+   ],
+   "deps": [
+    "fog2d_base"
+   ],
+   "test": false
+  },
+  {
+   "id": "map2d_editor",
+   "name": "2D Terrain Map Editor",
+   "version": "0.1.0",
+   "desc": "Forms for prepared terrain maps, image generation, named points and initial exploration.",
+   "cat": [
+    "tools",
+    "editor"
+   ],
+   "deps": [
+    "map2d_base",
+    "fog2d_editor"
+   ],
+   "test": false
+  },
+  {
    "id": "map_base",
    "name": "World Map Engine",
    "version": "0.1.0",
@@ -507,6 +581,36 @@
    ],
    "deps": [
     "ui_base"
+   ],
+   "test": false
+  },
+  {
+   "id": "map_battle",
+   "name": "Map Battle",
+   "version": "0.1.0",
+   "desc": "Turn-based encounters on the current 2D map, with shared character stats and formulas.",
+   "cat": [
+    "gameplay"
+   ],
+   "deps": [
+    "rpg",
+    "battle_formulas"
+   ],
+   "test": false
+  },
+  {
+   "id": "map_battle_editor",
+   "name": "Map Battle Editor",
+   "version": "0.1.0",
+   "desc": "Authors turn-based 2D encounters with participants, map placement and isolated play tests.",
+   "cat": [
+    "tools",
+    "editor"
+   ],
+   "deps": [
+    "map_battle",
+    "tools_base",
+    "rpg_editor"
    ],
    "test": false
   },
@@ -602,6 +706,20 @@
    "test": false
   },
   {
+   "id": "perf_overlay",
+   "name": "Resource monitor",
+   "version": "0.1.0",
+   "desc": "",
+   "cat": [
+    "tools",
+    "debug"
+   ],
+   "deps": [
+    "ui_base"
+   ],
+   "test": false
+  },
+  {
    "id": "quests_base",
    "name": "Quests Engine",
    "version": "0.1.0",
@@ -649,7 +767,7 @@
    "id": "rpg",
    "name": "RPG World",
    "version": "0.1.0",
-   "desc": "A walkable tile world in the spirit of RPG Maker: grid movement with WASD, events on E/F, teleports; a map is an ordinary scene of the game. Battles and random encounters come with turn_battle_base through the battles integration, so the world runs without it.",
+   "desc": "A walkable tile world with keyboard and optional cardinal click movement, interactions and map scenes. Battles and encounters are supplied by an optional integration.",
    "cat": [
     "gameplay"
    ],
@@ -912,6 +1030,17 @@
     "characters_base",
     "items_base"
    ],
+   "test": true
+  },
+  {
+   "id": "test_execution",
+   "name": "Execution fixture",
+   "version": "0.1.0",
+   "desc": "Inert process isolation fixture; only its explicitly activated suite exercises test outputs.",
+   "cat": [
+    "other"
+   ],
+   "deps": [],
    "test": true
   },
   {
