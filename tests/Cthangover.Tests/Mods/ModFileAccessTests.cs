@@ -4,7 +4,6 @@ namespace Engine.Tests.Mods
     using System.IO;
     using Cthangover.Core.Mods;
     using Cthangover.Core.Mods.Providers;
-    using Engine.Tests.Mods.Mocks;
 
     /// <summary>Consumers can request seekability or a real file without extracting the entire package.</summary>
     public class ModFileAccessTests : IDisposable
@@ -43,14 +42,27 @@ namespace Engine.Tests.Mods
         }
 
         [Fact]
-        public void MockProviderStreamsBinaryFilesWithoutTextConversion()
+        public void ZipProviderStreamsBinaryFilesWithoutTextConversion()
         {
-            var provider = new MockModFileProvider("stream_contract");
-            var bytes = new byte[] { 0, 255, 128, 65 };
-            provider.AddBinaryFile("data.bin", bytes);
+            // A real provider must stream binary payload bytes through
+            // OpenStream unchanged (no text decoding, no encoding round trip):
+            // the byte set deliberately contains values that differ between a
+            // raw byte stream and any text-mangled variant.
+            var bytes = new byte[] { 0, 255, 128, 65, 10, 13 };
+            var zipPath = Path.Combine(root, "binary_stream_mod.zip");
+            using (var archive = new System.IO.Compression.ZipArchive(
+                System.IO.File.Open(zipPath, System.IO.FileMode.Create),
+                System.IO.Compression.ZipArchiveMode.Create))
+            {
+                var entry = archive.CreateEntry("data.bin");
+                using var entryStream = entry.Open();
+                entryStream.Write(bytes, 0, bytes.Length);
+            }
+
+            using var provider = new ZipModFileProvider(zipPath, "binary_stream_mod");
             using var stream = provider.OpenStream("data.bin");
-            using var copy = new MemoryStream();
             Assert.NotNull(stream);
+            using var copy = new MemoryStream();
             stream.CopyTo(copy);
             Assert.Equal(bytes, copy.ToArray());
             Assert.Null(provider.OpenStream("missing.bin"));

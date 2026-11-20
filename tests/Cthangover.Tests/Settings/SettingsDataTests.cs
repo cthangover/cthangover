@@ -137,7 +137,16 @@ namespace Engine.Tests.Settings
         {
             File.WriteAllText(TestFile, "{broken json /////");
             var s = new SettingsData();
+            var musicBefore = s.MusicsVolume;
+            var battleSpeedBefore = s.BattleSpeed;
+
             s.Load();
+
+            // Malformed input is silently ignored: every value must keep the
+            // constructor default (production swallows the exception, so a
+            // half-applied garbage state would otherwise go unnoticed).
+            Assert.Equal(musicBefore, s.MusicsVolume);
+            Assert.Equal(battleSpeedBefore, s.BattleSpeed);
         }
 
         [Fact]

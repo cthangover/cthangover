@@ -7,11 +7,21 @@ using Xunit;
 namespace Engine.Tests.Live2D
 {
     /// <summary>
-    /// Unit tests for the pure physics math core against independent transcriptions
-    /// of the Cubism SDK 5-r.5 C++ sources (Framework/src/Physics/CubismPhysics.cpp
-    /// and Framework/src/Math/CubismMath.cpp). The particle update deliberately
-    /// reproduces the native quirk that the Y component is rotated using the
-    /// already-updated X (bug-compatible behavior preserved by the mod).
+    /// Unit tests for the pure physics math core against the Cubism SDK 5-r.5
+    /// C++ sources (Framework/src/Physics/CubismPhysics.cpp and
+    /// Framework/src/Math/CubismMath.cpp). SDK fidelity is anchored by the
+    /// hardcoded known-answer tests below (NormalizeParameterValue_*,
+    /// UpdateOutputParameterValue_*, UpdateParticles_ZeroDelay, RadiusInvariant)
+    /// whose expectations were hand-computed from the C++ formulas, independent
+    /// of the C# implementation.
+    /// <para/>
+    /// The UpdateParticles_*_RegressionPin tests compare the implementation
+    /// against an in-file transcription of the SAME algorithm. They are NOT an
+    /// independent oracle: a transcription error made when porting the C++ would
+    /// be mirrored in both copies. Their sole purpose is to freeze the current
+    /// behavior (the bug-compatible rotation order and the velocity/delay quirk)
+    /// against accidental drift. The transcription may only ever be updated
+    /// from the SDK C++ source — never from CubismPhysics.cs.
     /// </summary>
     public class CubismPhysicsMathTests
     {
@@ -97,12 +107,14 @@ namespace Engine.Tests.Live2D
         // ------------------------------------------------------------------
 
         /// <summary>
-        /// A four-particle strand follows the C++ transcription step by step,
-        /// including the bug-compatible rotation order (Y computed from the
-        /// updated X) and the velocity update divided by the delay.
+        /// Regression pin (NOT an independent oracle): the in-file transcription
+        /// mirrors the current implementation, so this only freezes the
+        /// bug-compatible update loop — including the Y-from-updated-X rotation
+        /// order and the velocity update divided by the delay — against drift.
+        /// SDK fidelity is anchored by the known-answer tests in this file.
         /// </summary>
         [Fact]
-        public void UpdateParticles_MatchesCppTranscription()
+        public void UpdateParticles_RegressionPin_MatchesInFileTranscription()
         {
             var modStrand = MakeStrand();
             var referenceStrand = MakeStrand();
@@ -178,9 +190,9 @@ namespace Engine.Tests.Live2D
         // UpdateParticlesForStabilization (CubismPhysics.cpp lines 354-396)
         // ------------------------------------------------------------------
 
-        /// <summary>Stabilization zeroes velocities and snaps to normalized-force radii.</summary>
+        /// <summary>Regression pin (see the class remark): freezes the stabilization semantics against drift.</summary>
         [Fact]
-        public void UpdateParticlesForStabilization_MatchesTranscription()
+        public void UpdateParticlesForStabilization_RegressionPin_MatchesTranscription()
         {
             var modStrand = MakeStrand();
             var referenceStrand = MakeStrand();
@@ -434,9 +446,12 @@ namespace Engine.Tests.Live2D
     }
 
     /// <summary>
-    /// Independent transcription of the SDK 5-r.5 physics update math
-    /// (CubismPhysics.cpp). Kept in a separate static class so the test methods
-    /// stay free of support noise.
+    /// In-file transcription of the SDK 5-r.5 physics update math
+    /// (CubismPhysics.cpp) used by the regression-pin tests. Kept in a separate
+    /// static class so the test methods stay free of support noise.
+    /// WARNING: this must stay a transcription of the SDK C++, never a copy of
+    /// CubismPhysics.cs — otherwise the pin tests degenerate into a self-check
+    /// with zero discriminating power against porting mistakes.
     /// </summary>
     internal static class PhysicsTranscription
     {

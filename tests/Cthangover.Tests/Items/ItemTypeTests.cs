@@ -17,13 +17,9 @@ namespace Engine.Tests.Items
             Assert.Equal(0x80000000u, (uint)ItemType.CantDrop);
         }
 
-        [Fact]
-        public void ItemType_CombinedFlags_Works()
-        {
-            var combined = ItemType.Food | ItemType.Used;
-            Assert.True(combined.HasFlag(ItemType.Food));
-            Assert.True(combined.HasFlag(ItemType.Used));
-            Assert.False(combined.HasFlag(ItemType.Quest));
-        }
+        // There is deliberately no "CombinedFlags_Works" test: ItemType is a
+        // bare [Flags] enum without methods, so combining and HasFlag belong to
+        // the BCL. A test of Enum.HasFlag semantics stays green even if two
+        // flag values collide — the value pinning above is the real guard.
     }
 }

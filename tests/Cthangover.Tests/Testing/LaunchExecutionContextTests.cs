@@ -120,10 +120,18 @@ namespace Cthangover.Tests.Testing
             using var launch = Launch(workspace, "probe");
             var context = Parse(launch);
             launch.EngineArguments("res://scenes/probe.tscn", true);
+            // A timeout the supervisor observed end-to-end: root exit confirmed
+            // and both pipes drained, so CleanupSafe holds and the receipt keeps
+            // the observed "timed_out" status instead of the supervised
+            // "unproven-exit"/"unfinished-pipes" fallbacks.
             launch.WriteTerminal(new ProcessResult
             {
                 ExitCode = 124,
+                ObservedExitCode = 124,
                 ProcessId = 12345,
+                ExitConfirmed = true,
+                StdoutCompleted = true,
+                StderrCompleted = true,
                 TimedOut = true,
                 Duration = TimeSpan.FromSeconds(2.5),
                 CpuSeconds = 0.25,
@@ -133,6 +141,8 @@ namespace Cthangover.Tests.Testing
                 File.ReadAllText(Path.Combine(context.ArtifactRoot, "launch.json")), ReportWriter.JsonOptions);
             Assert.NotNull(receipt);
             Assert.Equal("timed_out", receipt.Status);
+            Assert.True(receipt.ExitConfirmed);
+            Assert.Equal(124, receipt.ObservedExitCode);
             Assert.Equal(124, receipt.ExitCode);
             Assert.Equal(12345, receipt.ProcessId);
             Assert.Equal(2.5, receipt.ElapsedSeconds);

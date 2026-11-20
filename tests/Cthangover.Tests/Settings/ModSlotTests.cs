@@ -13,17 +13,10 @@ namespace Engine.Tests.Settings
             Assert.Empty(slot.Data);
         }
 
-        [Fact]
-        public void DataBlob_stored_in_slot_is_read_back_with_same_values()
-        {
-            var slot = new ModSlot();
-            var blob = new DataBlob(2);
-            blob.SetInt("x", 10);
-            blob.SetString("y", "test");
-            slot.Data["block1"] = blob;
-
-            Assert.Equal(10, slot.Data["block1"].GetInt("x"));
-            Assert.Equal("test", slot.Data["block1"].GetString("y"));
-        }
+        // ModSlot is a plain data holder (two auto-properties, no logic): the
+        // DataBlob key-value contract it stores is covered by DataBlobTests and
+        // its persistence path by RuntimeSerializerTests, so a test that puts a
+        // DataBlob into the dictionary and reads the same instance back would
+        // only re-verify those suites plus the BCL dictionary.
     }
 }

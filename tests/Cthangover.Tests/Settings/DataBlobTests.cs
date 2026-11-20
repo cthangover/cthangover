@@ -84,14 +84,26 @@ namespace Engine.Tests.Settings
             Assert.True(blob.GetBool("nope", true));
         }
 
+        private sealed class RoundtripPayload
+        {
+            public int X { get; set; }
+            public string Y { get; set; }
+        }
+
         [Fact]
         public void WriteJson_ThenReadJson_Roundtrip()
         {
             var blob = new DataBlob();
-            var original = new { X = 42, Y = "test" };
-            blob.WriteJson(original);
-            var restored = blob.ReadJson<object>();
+            blob.WriteJson(new RoundtripPayload { X = 42, Y = "test" });
+
+            var restored = blob.ReadJson<RoundtripPayload>();
+
+            // The values themselves must survive: ReadJson contractually never
+            // returns null (empty or broken payload yields a fresh T), so only
+            // a field comparison can catch a lost or corrupted payload.
             Assert.NotNull(restored);
+            Assert.Equal(42, restored.X);
+            Assert.Equal("test", restored.Y);
         }
 
         [Fact]

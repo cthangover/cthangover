@@ -243,12 +243,17 @@ namespace Engine.Tests.Utils
         }
 
         [Fact]
-        public void DocumentOptions_StructIsReturnedByValue()
+        public void DocumentOptions_SkipsComments_AndReturnsTheSameCachedSnapshot()
         {
-            var opts1 = JsonOptionsProvider.DocumentOptions;
-            var opts2 = JsonOptionsProvider.DocumentOptions;
+            // The contract is the configuration itself: every consumer of
+            // JsonDocument parsing must tolerate comments, and repeated reads
+            // must hand out the identical option snapshot (struct equality
+            // compares every field, so a drifting re-init fails here).
+            var first = JsonOptionsProvider.DocumentOptions;
+            var second = JsonOptionsProvider.DocumentOptions;
 
-            Assert.Equal(opts1.CommentHandling, opts2.CommentHandling);
+            Assert.Equal(JsonCommentHandling.Skip, first.CommentHandling);
+            Assert.Equal(first, second);
         }
 
         [Fact]

@@ -20,17 +20,25 @@ namespace Engine.Tests.Mods
     /// (<c>"fixture": true</c>) are compiled too (plan 14.B5): they are left out of
     /// the game, not out of this check. Integrations (<c>integrations/&lt;id&gt;/src</c>)
     /// are compiled as the virtual mods <c>&lt;host&gt;__&lt;id&gt;</c> against their host and
-    /// partners, as ModIntegrations mounts them. Mods without sources are skipped,
-    /// and the whole check is skipped when the checkout has no mods.
+    /// partners, as ModIntegrations mounts them. Mods without sources are skipped.
+    /// An unresolvable repository root or zero discovered manifests fails loudly —
+    /// a guard that silently passes when it ran against nothing pins nothing.
     /// </summary>
     public class ToolsModCompileTests
     {
         [Fact]
         public void Compile_RealMods_InDependencyOrder_Succeeds()
         {
+            // A guard that silently passes when the repository layout cannot be
+            // resolved would pin nothing: an unfound repo root or zero
+            // discovered mods must fail loudly instead of returning green.
+            var repoRoot = FindRepoRoot();
+            Assert.True(repoRoot != null,
+                "repository root (Cthangover.csproj) not found above the test binaries — the compile guard ran against nothing");
+
             var mods = DiscoverMods();
-            if (mods.Count == 0)
-                return;
+            Assert.True(mods.Count > 0,
+                "no mod manifests discovered under " + repoRoot + " — the compile guard ran against nothing");
 
             LoadPrecompiledLibraries();
             var runtimeMods = new Dictionary<string, IModInfo>(StringComparer.OrdinalIgnoreCase);

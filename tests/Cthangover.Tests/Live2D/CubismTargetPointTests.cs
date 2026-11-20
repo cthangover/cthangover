@@ -72,11 +72,14 @@ namespace Engine.Tests.Live2D
         }
 
         /// <summary>
-        /// Two hundred frames with target changes and irregular frame times follow
-        /// the C++ transcription frame by frame (tolerance 1e-5).
+        /// Regression pin (NOT an independent oracle): TargetPointSim below
+        /// mirrors the current implementation, so this only freezes the velocity
+        /// follower frame by frame (including irregular frame times) against
+        /// accidental drift. Update only from the SDK C++ source, never from
+        /// CubismTargetPoint.cs.
         /// </summary>
         [Fact]
-        public void Lockstep_MatchesCppTranscription()
+        public void Lockstep_RegressionPin_MatchesInFileTranscription()
         {
             var point = new CubismTargetPoint();
             var reference = new TargetPointSim();
@@ -113,8 +116,10 @@ namespace Engine.Tests.Live2D
     }
 
     /// <summary>
-    /// Exact transcription of CubismTargetPoint.cpp (SDK 5-r.5) used as the
-    /// independent reference implementation in the lockstep test.
+    /// In-file transcription of CubismTargetPoint.cpp (SDK 5-r.5) used by the
+    /// regression-pin lockstep test. WARNING: this must stay a transcription of
+    /// the SDK C++, never a copy of CubismTargetPoint.cs — otherwise the pin
+    /// test degenerates into a self-check with zero discriminating power.
     /// </summary>
     internal sealed class TargetPointSim
     {

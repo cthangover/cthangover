@@ -26,6 +26,10 @@ namespace Engine.Tests.Actions
 
             new CharacterAddSkillAction().Run(ctx);
 
+            // AddSkill(null) would leave LastSkillId null as well, so only the
+            // call counter distinguishes "guard returned early" from a skipped
+            // guard that granted a null skill.
+            Assert.Equal(0, characterService.AddSkillCalls);
             Assert.Null(characterService.LastSkillId);
             Assert.Contains(ctx.Logs, entry => entry.Category == "EVENT");
         }

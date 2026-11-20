@@ -57,8 +57,13 @@ namespace Engine.Tests.Actions
         [Fact]
         public void Factory_Get_ReturnsCorrectType()
         {
+            // The kernel registration of "scene.instantiate" must resolve to
+            // the concrete SceneInstantiateAction: a name-to-implementation mix
+            // up would still return an IScenarioAction-typed object, so only
+            // the concrete type catches it.
             var action = ScenarioActionFactory.Instance.Get("scene.instantiate");
-            Assert.IsAssignableFrom<IScenarioAction>(action);
+
+            Assert.IsType<SceneInstantiateAction>(action);
         }
 
         [Fact]

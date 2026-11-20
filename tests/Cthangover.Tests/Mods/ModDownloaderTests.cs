@@ -25,19 +25,9 @@ namespace Engine.Tests.Mods
 			Assert.False(result);
 		}
 
-		[Fact]
-		public void InstallProgress_AllFieldsSet()
-		{
-			var progress = new InstallProgress
-			{
-				Step = InstallStep.Downloading,
-				Progress = 0.5f,
-				Message = "Downloading... 50%",
-			};
-
-			Assert.Equal(InstallStep.Downloading, progress.Step);
-			Assert.Equal(0.5f, progress.Progress);
-			Assert.Equal("Downloading... 50%", progress.Message);
-		}
+		// InstallProgress is a plain DTO with auto-properties and no logic:
+		// assigning fields and reading them back verifies only the test's own
+		// arrange block, so no test pins it here. Its real usage is covered by
+		// the downloader install flows.
 	}
 }

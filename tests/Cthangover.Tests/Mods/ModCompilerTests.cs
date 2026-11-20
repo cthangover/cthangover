@@ -108,7 +108,9 @@ public class TestModInit : IModInitializer
         }
 
         /// <summary>
-        /// A valid runtime mod can be compiled and invalidated under its unique cache identity.
+        /// A valid runtime mod is compiled through the persistent cache: the
+        /// artifact pair (DLL + named PDB) must exist on disk under the cache
+        /// identity, and invalidation must report the artifacts it retires.
         /// </summary>
         [Fact]
         public void Compile_CachesToDisk()
@@ -118,56 +120,52 @@ public class TestModInit : IModInitializer
             {
                 ("Test.cs", ValidClassCode)
             };
-            var result = ModCompiler.Compile(modId, sources);
-            Assert.NotNull(result);
-            try
-            {
-                ModCompiler.InvalidateCache(modId);
-            }
-            catch
-            {
-            }
+            var assembly = ModCompiler.Compile(modId, sources);
+            Assert.NotNull(assembly);
+
+            Assert.True(ModAssemblyCache.CurrentArtifacts.TryGetValue(modId, out var artifact),
+                "compiled mod must be registered in the artifact map");
+            Assert.True(File.Exists(artifact), $"cache DLL missing on disk: {artifact}");
+            Assert.True(File.Exists(Path.ChangeExtension(artifact, ".pdb")),
+                "portable PDB must be stored next to the cached DLL");
+            Assert.True(ModAssemblyCache.IsSelfCacheDll(Path.GetFileName(artifact), modId),
+                $"artifact name must follow <modId>_<hash>.dll, was: {Path.GetFileName(artifact)}");
+
+            Assert.True(ModCompiler.InvalidateCache(modId),
+                "invalidation must report retiring the artifacts it just wrote");
         }
 
         /// <summary>
-        /// Independent source identities compile without sharing or overwriting their artifacts.
+        /// Under the SAME cache identity, a changed source must produce a
+        /// different content hash — a distinct artifact file, with both pairs
+        /// preserved on disk — otherwise hot reload would keep loading the
+        /// stale assembly. Using two different mod ids would hide exactly that
+        /// regression, because the id itself is part of the cache path.
         /// </summary>
         [Fact]
         public void Compile_DifferentSource_DifferentHash()
         {
-            var modId1 = "test_hash_a_" + System.Guid.NewGuid().ToString("N").Substring(0, 6);
-            var modId2 = "test_hash_b_" + System.Guid.NewGuid().ToString("N").Substring(0, 6);
+            var modId = "test_hash_" + System.Guid.NewGuid().ToString("N").Substring(0, 8);
             var codeA = @"using Cthangover.Core.Mods;
 public class TestA : IModInitializer { public void OnModLoaded(string m) { } public void OnModResourcesReady() { } }";
             var codeB = @"using Cthangover.Core.Mods;
 public class TestB : IModInitializer { public void OnModLoaded(string m) { } public void OnModResourcesReady() { } }";
-            var sources1 = new List<(string, string)>
-            {
-                ("Test.cs", codeA)
-            };
-            var sources2 = new List<(string, string)>
-            {
-                ("Test.cs", codeB)
-            };
-            var r1 = ModCompiler.Compile(modId1, sources1);
-            var r2 = ModCompiler.Compile(modId2, sources2);
-            Assert.NotNull(r1);
-            Assert.NotNull(r2);
-            try
-            {
-                ModCompiler.InvalidateCache(modId1);
-            }
-            catch
-            {
-            }
 
-            try
-            {
-                ModCompiler.InvalidateCache(modId2);
-            }
-            catch
-            {
-            }
+            var first = ModCompiler.Compile(modId, new List<(string, string)> { ("Test.cs", codeA) });
+            Assert.NotNull(first);
+            Assert.True(ModAssemblyCache.CurrentArtifacts.TryGetValue(modId, out var artifactA));
+            Assert.True(File.Exists(artifactA));
+
+            var second = ModCompiler.Compile(modId, new List<(string, string)> { ("Test.cs", codeB) });
+            Assert.NotNull(second);
+            Assert.True(ModAssemblyCache.CurrentArtifacts.TryGetValue(modId, out var artifactB));
+
+            Assert.NotEqual(artifactA, artifactB);
+            Assert.NotEqual(Path.GetFileName(artifactA), Path.GetFileName(artifactB));
+            Assert.True(File.Exists(artifactB));
+            Assert.True(File.Exists(artifactA), "the earlier artifact pair must not be deleted by the recompile");
+
+            Assert.True(ModCompiler.InvalidateCache(modId));
         }
 
         /// <summary>

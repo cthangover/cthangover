@@ -502,17 +502,36 @@ namespace Engine.Tests.Mods
 		[Fact]
 		public void ComputeInstallSha256_IgnoresDotFiles()
 		{
-			var dir = Path.Combine(_testDir, "mod");
-			var subDir = Path.Combine(dir, ".godot");
-			Directory.CreateDirectory(subDir);
+			// Differential contract of ShouldIgnore: identical content except
+			// that one tree carries the extra file under a dot-directory and
+			// the other under a normal one. The dot copy must not change the
+			// hash; the control copy must — that second assertion is what
+			// catches an over-broad ignore (hashing nothing at all would make
+			// every hash equal).
+			var baseDir = Path.Combine(_testDir, "mod");
+			var withDot = Path.Combine(baseDir, "with_dot");
+			var withoutDot = Path.Combine(baseDir, "without_dot");
+			var control = Path.Combine(baseDir, "control");
+			foreach (var dir in new[] { withDot, withoutDot, control })
+				Directory.CreateDirectory(dir);
 
-			File.WriteAllText(Path.Combine(dir, "manifest.json"), "{}");
-			File.WriteAllText(Path.Combine(subDir, "cache.txt"), "cached");
+			const string manifest = "{ \"id\": \"mod\" }";
+			File.WriteAllText(Path.Combine(withDot, "manifest.json"), manifest);
+			Directory.CreateDirectory(Path.Combine(withDot, ".godot"));
+			File.WriteAllText(Path.Combine(withDot, ".godot", "cache.txt"), "cached");
 
-			var hash = ModHasher.ComputeInstallSha256(dir);
+			File.WriteAllText(Path.Combine(withoutDot, "manifest.json"), manifest);
 
-			Assert.NotNull(hash);
-			Assert.Equal(64, hash.Length);
+			File.WriteAllText(Path.Combine(control, "manifest.json"), manifest);
+			Directory.CreateDirectory(Path.Combine(control, "godot_cache"));
+			File.WriteAllText(Path.Combine(control, "godot_cache", "cache.txt"), "cached");
+
+			Assert.Equal(
+				ModHasher.ComputeInstallSha256(withoutDot),
+				ModHasher.ComputeInstallSha256(withDot));
+			Assert.NotEqual(
+				ModHasher.ComputeInstallSha256(withoutDot),
+				ModHasher.ComputeInstallSha256(control));
 		}
 
 		[Fact]
@@ -563,9 +582,10 @@ namespace Engine.Tests.Mods
 
 			var hash = ModHasher.ComputeArchiveSha256(filePath);
 
-			Assert.NotNull(hash);
-			Assert.Equal(64, hash.Length);
-			Assert.Matches("^[0-9a-f]+$", hash);
+			// Known-answer vector: SHA-256 over the exact file bytes pins that
+			// the digest is computed from the file content itself — not from
+			// its name, length or a truncated read.
+			Assert.Equal("41277d8d0b0610e58f13bdc06b732c629a2fd3ff93c382f40af3f60cfe5e5c9e", hash);
 		}
 
 		private static void WriteZipEntry(ZipArchive archive, string path, string content)
