@@ -328,7 +328,12 @@ def project_guid(value: str) -> str:
     return "{" + str(uuid.uuid5(GUID_NAMESPACE, value)).upper() + "}"
 
 
-def generate_solution(projects: dict[str, ModProject], root: Path) -> str:
+def generate_solution(projects: dict[str, ModProject], root: Path, solution_dir: Path) -> str:
+    # The solution lives under ide/ so the game root keeps the single Cthangover.sln:
+    # Godot resolves the project solution by scanning the project root for *.sln
+    # containing Cthangover.csproj and rejects a second match. Project GUIDs stay
+    # derived from root-relative paths, so they survive the move from the old
+    # root location.
     lines = ["Microsoft Visual Studio Solution File, Format Version 12.00", "# Visual Studio Version 17"]
     folders = ("engine", "tests", "mods", "mods_private", "source_projects")
     all_projects = []
@@ -347,7 +352,7 @@ def generate_solution(projects: dict[str, ModProject], root: Path) -> str:
                       "EndProject"])
     for name, path, _ in all_projects:
         guid = project_guid(path.as_posix())
-        windows_path = path.as_posix().replace("/", "\\")
+        windows_path = relative(root / path, solution_dir).replace("/", "\\")
         lines.extend([f'Project("{PROJECT_TYPE}") = "{name}", "{windows_path}", "{guid}"', "EndProject"])
     lines.extend(["Global", "\tGlobalSection(SolutionConfigurationPlatforms) = preSolution",
                   "\t\tDebug|Any CPU = Debug|Any CPU", "\t\tRelease|Any CPU = Release|Any CPU", "\tEndGlobalSection",
@@ -389,7 +394,8 @@ def update(root: Path) -> dict:
         outputs[project.path] = generate_project(project, projects, root, framework, language, godot_version)
         for source in library_projects(project):
             outputs[source.parent / "Directory.Build.props"] = source_output_props(project, root, source.parent)
-    outputs[root / "Cthangover.All.sln"] = generate_solution(projects, root)
+    solution_path = root / "ide" / "Cthangover.All.sln"
+    outputs[solution_path] = generate_solution(projects, root, solution_path.parent)
     statuses = {"added": [], "updated": [], "removed": [], "unchanged": []}
     # Only our marker grants ownership. A human project is never removed.
     for path in generated_candidates(root):

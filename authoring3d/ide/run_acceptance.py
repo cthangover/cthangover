@@ -117,7 +117,7 @@ def main():
               "newModBinObjDirectories": [], "solutionBuild": False}
     out.joinpath("acceptance.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
     if args.solution:
-        run(["dotnet", "build", str(root / "Cthangover.All.sln"), "-maxcpucount:2", "-v:quiet",
+        run(["dotnet", "build", str(root / "ide" / "Cthangover.All.sln"), "-maxcpucount:2", "-v:quiet",
              "-p:UseSharedCompilation=false"], out / "solution-build.log")
         assert not bin_obj_directories(root).difference(before)
         result["solutionBuild"] = True
