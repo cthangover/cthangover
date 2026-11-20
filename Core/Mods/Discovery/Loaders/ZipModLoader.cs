@@ -6,7 +6,10 @@ namespace Cthangover.Core.Mods.Discovery
 
     /// <summary>
     /// Loads mods stored as <c>.zip</c> archives. <see cref="IsCanProvide"/>
-    /// matches any path ending with <c>.zip</c> (case-insensitive).
+    /// matches any path ending with <c>.zip</c> (case-insensitive) that is not
+    /// an existing directory (same guard as <see cref="SevenZipModLoader"/>:
+    /// a folder that merely carries a <c>.zip</c> name is a folder mod, not an
+    /// archive).
     /// Creates a <see cref="ZipModFileProvider"/> which builds an O(1)
     /// lookup of all zip entries on construction.
     ///
@@ -22,11 +25,15 @@ namespace Cthangover.Core.Mods.Discovery
 
         /// <summary>
         /// Returns <c>true</c> for any path that ends with <c>.zip</c>
-        /// (case-insensitive comparison).
+        /// (case-insensitive comparison) unless the path is an existing
+        /// directory — a folder named <c>mod.zip</c> is a folder mod, and
+        /// opening it as an archive would throw on discovery.
         /// </summary>
         public bool IsCanProvide(string url)
         {
-            return url.EndsWith(".zip", StringComparison.OrdinalIgnoreCase);
+            return url != null
+                   && url.EndsWith(".zip", StringComparison.OrdinalIgnoreCase)
+                   && !Directory.Exists(url);
         }
 
         /// <summary>

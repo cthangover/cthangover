@@ -61,7 +61,9 @@ namespace Engine.Tests.Mods
 
             var result = loader.IsCanProvide(dirPath);
 
-            Assert.True(result);
+            // A folder that carries a .zip name is a folder mod, not an
+            // archive (same guard as SevenZipModLoader.IsCanProvide).
+            Assert.False(result);
         }
 
         [Fact]
