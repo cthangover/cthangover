@@ -8,6 +8,9 @@
   "entry": {
     "scene": "proto_land_yard"
   },
+  "settings": {
+    "inventory.profile": "inventory/slots"
+  },
   "tags": [
     "3d",
     "development",
@@ -32,6 +35,22 @@
     }
   ],
   "mechanics": [
+    {
+      "id": "inventory",
+      "name": "Inventory",
+      "description": "Equal inventory slots without a volume limit.",
+      "role": "gameplay",
+      "mods": [
+        "items_base>=0.1.0"
+      ],
+      "locale": [
+        {
+          "lang": "ru",
+          "name": "Инвентарь",
+          "description": "Одинаковые ячейки без ограничения по объёму."
+        }
+      ]
+    },
     {
       "id": "engine_3d",
       "name": "3D runtime",
