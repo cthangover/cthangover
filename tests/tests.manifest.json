@@ -5962,6 +5962,45 @@
         "Admission required for global existing TestRunner suite coverage; explicit-only, NOT selected/executed by controls review.",
         "RAW root/include layer roundtrip, active event/queue provenance and first actual include action mapping per ROOT1805; all unexpected diagnostics strict."
       ]
+    },
+    {
+      "name": "inventory_storage_gui",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--",
+        "--frontend",
+        "--with-mods=items_base",
+        "--itest=inventory_storage_gui",
+        "--run-tests",
+        "--mod=items_base__storage_gui"
+      ],
+      "timeoutSeconds": 180,
+      "windowed": true,
+      "requiresExplicitSelection": true,
+      "result": {
+        "name": "mod_units",
+        "childPrefix": "mod_units:",
+        "expectedErrors": []
+      },
+      "kind": "mod-unit",
+      "owners": [
+        "items_base",
+        "items_editor",
+        "items_base__storage_gui"
+      ],
+      "profiles": [
+        "inventory"
+      ],
+      "tags": [
+        "windowed",
+        "inventory",
+        "grid"
+      ],
+      "dependsOn": [],
+      "project": "read",
+      "requirements": [
+        "Select exact inventory/storage_ui_real_grid_drag_split_and_capture. Uses actual prefab, selection signals, drag callbacks, split and shared HDR capture helper; no physical OS mouse claim."
+      ]
     }
   ],
   "disabled_until_phase_8": {
