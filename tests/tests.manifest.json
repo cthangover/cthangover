@@ -5999,7 +5999,7 @@
       "dependsOn": [],
       "project": "read",
       "requirements": [
-        "Select exact inventory/storage_ui_real_grid_drag_split_and_capture. Uses actual prefab, selection signals, drag callbacks, split and shared HDR capture helper; no physical OS mouse claim."
+        "Select inventory/storage_ui_real_grid_drag_split_and_capture and/or inventory/profiles_ui_slots_list_grid_and_mod_patches. Actual prefab, selection signals, drag callbacks, policy form, split, inherited/patched profiles and shared HDR captures; no physical OS mouse claim."
       ]
     }
   ],
