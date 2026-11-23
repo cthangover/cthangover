@@ -119,6 +119,10 @@ namespace Cthangover.Core.Mods
         /// Pure .NET, safe on a background thread.
         /// </summary>
         public static List<ModCompileArtifact> PrepareAll(IDictionary<string, IModInfo> mods, CancellationToken cancellationToken = default)
+            => PrepareAll(mods, cancellationToken, null);
+
+        internal static List<ModCompileArtifact> PrepareAll(IDictionary<string, IModInfo> mods,
+            CancellationToken cancellationToken, IReadOnlySet<string> scope)
         {
             var result = new List<ModCompileArtifact>();
             cancellationToken.ThrowIfCancellationRequested();
@@ -158,6 +162,12 @@ namespace Cthangover.Core.Mods
             foreach (var modInfo in sorted)
             {
                 cancellationToken.ThrowIfCancellationRequested();
+                if (scope != null && !scope.Contains(modInfo.Id))
+                {
+                    if (ModAssemblyCache.CurrentArtifacts.TryGetValue(modInfo.Id, out var reused))
+                        result.Add(new ModCompileArtifact(modInfo.Id, reused, new()));
+                    continue;
+                }
                 // Fine-grained progress for the launcher boot bar: every mod is
                 // one step of the Discovering phase, cache hits included.
                 BootProgress.ReportSub(done++ / (float)sorted.Count);

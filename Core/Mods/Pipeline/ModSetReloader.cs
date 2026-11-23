@@ -32,7 +32,7 @@ namespace Cthangover.Core.Mods.Pipeline
     /// locale, scenes, runtime) is rebuilt by the caller,
     /// <see cref="ModManager"/>, around <see cref="Apply"/>.
     /// </summary>
-    public sealed class ModSetReloader
+    public sealed partial class ModSetReloader
     {
         private readonly ModRegistry registry;
         private readonly ModBootPipeline pipeline;
@@ -158,8 +158,11 @@ namespace Cthangover.Core.Mods.Pipeline
         {
             if (mod.FileProvider == null || !disposed.Add(mod.FileProvider))
                 return;
-            if (!mods.TryGetValue(mod.Id, out var running) || !ReferenceEquals(running.FileProvider, mod.FileProvider))
-                mod.FileProvider.Dispose();
+            if (mods.TryGetValue(mod.Id, out var running) && ReferenceEquals(running.FileProvider, mod.FileProvider))
+                return;
+            if (allDiscoveredMods.TryGetValue(mod.Id, out var known) && ReferenceEquals(known.FileProvider, mod.FileProvider))
+                return;
+            mod.FileProvider.Dispose();
         }
 
         /// <summary>
@@ -172,19 +175,19 @@ namespace Cthangover.Core.Mods.Pipeline
             lock (pipeline.PipelineLock)
             {
                 var targetOrder = TargetOrder(prep);
-                var loadedOrder = LoadedOrder();
-                var plan = ModReloadPlan.Compute(loadedOrder, LoadedArtifacts(loadedOrder), targetOrder, TargetArtifacts(prep), TargetDependencies(prep), prep.Force);
+                var plan = Plan(prep, targetOrder);
                 GameLogger.Log("MODS_RELOAD", $"Plan: unload [{string.Join(", ", plan.Unload)}], keep [{string.Join(", ", plan.Keep)}], load [{string.Join(", ", plan.Load)}]");
 
                 var ticket = ModUnloader.Unload(plan.Unload, tree);
                 var keptInUnloadOrder = new List<string>(plan.Keep);
                 keptInUnloadOrder.Reverse();
-                ModUnloader.UnregisterKept(keptInUnloadOrder);
+                if (prep.CompileScope == null)
+                    ModUnloader.UnregisterKept(keptInUnloadOrder);
                 SwapMods(prep);
 
                 var load = new HashSet<string>(plan.Load, StringComparer.OrdinalIgnoreCase);
                 var loaded = LoadNewContexts(prep, load);
-                RegisterInOrder(prep, targetOrder, load, loaded);
+                RegisterInOrder(prep, prep.CompileScope == null ? targetOrder : plan.Load, load, loaded);
                 LoadNewGdScripts(prep);
 
                 registry.InvalidateOrder();
@@ -220,7 +223,8 @@ namespace Cthangover.Core.Mods.Pipeline
                 existingPriorities[kvp.Key] = kvp.Value;
 
             GameLaunchArgs.SetCurrent(prep.Selection);
-            prep.Choice.Apply();
+            if (prep.CompileScope == null)
+                prep.Choice.Apply();
             registry.InvalidateOrder();
         }
 
@@ -262,7 +266,7 @@ namespace Cthangover.Core.Mods.Pipeline
         }
 
         /// <summary>Fans every target assembly out in dependency order: fresh ones from <paramref name="loaded"/>, kept ones from their live contexts.</summary>
-        private static void RegisterInOrder(ModReloadPreparation prep, List<string> targetOrder, HashSet<string> load, Dictionary<string, List<Assembly>> loaded)
+        private static void RegisterInOrder(ModReloadPreparation prep, IReadOnlyList<string> targetOrder, HashSet<string> load, Dictionary<string, List<Assembly>> loaded)
         {
             var sources = new Dictionary<string, List<(string FilePath, string Source)>>(StringComparer.OrdinalIgnoreCase);
             foreach (var compiled in prep.Compiled)

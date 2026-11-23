@@ -49,5 +49,7 @@ namespace Cthangover.Core.Mods.Pipeline
 
         /// <summary><see cref="Compilation.ModAssemblyCache.CurrentArtifacts"/> before the compile, restored when the preparation is discarded.</summary>
         internal Dictionary<string, string> PreviousArtifacts { get; set; } = new();
+
+        internal HashSet<string> CompileScope { get; set; }
     }
 }

@@ -119,10 +119,21 @@ namespace Cthangover.Core.Mods.Resolvers
                 }
             }
 
+            using var image = Decode(entry);
+            if (image == null)
+                return null;
+            var texture = ImageTexture.CreateFromImage(image);
+            if (texture != null)
+                _resolvedCache[textureName] = texture;
+            return texture;
+        }
+
+        private Image Decode(FileEntry entry)
+        {
             var data = Context.ReadFileBinary(entry.ModId, entry.FullPath);
             if (data == null)
             {
-                GameLogger.Log("MODS", $"ResolveTexture: '{textureName}' could not be read from mod '{entry.ModId}'", LogLevel.Error);
+                GameLogger.Log("MODS", $"ResolveTexture: '{entry.FullPath}' could not be read from mod '{entry.ModId}'", LogLevel.Error);
                 return null;
             }
 
@@ -137,23 +148,42 @@ namespace Cthangover.Core.Mods.Resolvers
                 loadError = image.LoadWebpFromBuffer(data);
             else
             {
-                GameLogger.Log("MODS", $"ResolveTexture: unsupported extension '{ext}' for '{textureName}'", LogLevel.Error);
+                image.Dispose();
+                GameLogger.Log("MODS", $"ResolveTexture: unsupported extension '{ext}' for '{entry.FullPath}'", LogLevel.Error);
                 return null;
             }
 
             if (loadError != Error.Ok)
             {
-                GameLogger.Log("MODS", $"ResolveTexture: image decode failed for '{textureName}' ({loadError})", LogLevel.Error);
+                image.Dispose();
+                GameLogger.Log("MODS", $"ResolveTexture: image decode failed for '{entry.FullPath}' ({loadError})", LogLevel.Error);
                 return null;
             }
 
-            var texture = ImageTexture.CreateFromImage(image);
-            image.Dispose();
-            if (texture != null)
-                _resolvedCache[textureName] = texture;
-
-            return texture;
+            return image;
         }
+
+        internal int RefreshImage(string mod, string path)
+        {
+            var textures = Collect();
+            var live = new HashSet<ImageTexture>(ReferenceEqualityComparer.Instance);
+            foreach (var pair in _resolvedCache)
+            {
+                if (!textures.TryGetValue(pair.Key, out var entry))
+                    entry = FindByPathOrBasename(textures, pair.Key);
+                if (entry.ModId == mod && entry.FullPath == path && pair.Value is ImageTexture texture
+                    && GodotObject.IsInstanceValid(texture))
+                    live.Add(texture);
+            }
+            using var image = Decode(new FileEntry(mod, path));
+            if (image == null)
+                throw new InvalidOperationException("Image import failed: " + path);
+            foreach (var texture in live)
+                texture.SetImage(image);
+            return live.Count;
+        }
+
+        internal void RefreshIndex() => _fileCache = null;
 
         /// <summary>
         /// Locates a texture entry when the exact basename lookup misses.

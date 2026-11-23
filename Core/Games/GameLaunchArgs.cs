@@ -141,6 +141,14 @@ namespace Cthangover.Core.Games
                || arg.StartsWith(LoadPrefix, StringComparison.Ordinal)
                || arg == NewFlag || arg == AllModsFlag || arg == FrontendFlag;
 
+        /// <summary>Adds a mod to this process's selection without changing the saved collection.</summary>
+        internal GameLaunchArgs WithAdditionalMod(string id)
+        {
+            var args = new List<string>(UserArgs.Where(arg => !arg.StartsWith(WithModsPrefix, StringComparison.Ordinal)));
+            args.Add(WithModsPrefix + string.Join(",", WithMods.Append(id).Distinct(StringComparer.OrdinalIgnoreCase)));
+            return Parse(args);
+        }
+
         /// <summary>User args that start <paramref name="gameId"/> fresh or from <paramref name="loadSave"/>.</summary>
         public static List<string> Build(string gameId, string loadSave)
         {

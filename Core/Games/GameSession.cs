@@ -197,7 +197,7 @@ namespace Cthangover.Core.Games
         {
             var tree = host.GetTree();
             var manager = ModManager.Instance;
-            if (IsSwitching || manager.IsReloading)
+            if (IsSwitching || manager.IsReloading || Mods.HotReload.ModHotReloadService.IsReloadRunning)
             {
                 GameLogger.Log("GAME", $"Switch into '{gameId}' ignored: a mod-set switch is already running", LogLevel.Warning);
                 return false;

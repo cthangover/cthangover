@@ -156,6 +156,31 @@ namespace Cthangover.Core.Mods
         public ModReloadResult ApplyReload(ModReloadPreparation prep, SceneTree tree)
             => ApplyPrepared(prep, tree, requireSuccess: true);
 
+        internal int RefreshDevelopmentAssets(string modId, string path)
+        {
+            var textures = GetResolver<TextureResolver>();
+            var refreshed = 0;
+            var image = path != null && ModConfig.Instance.GetTextureExtensionSet().Contains(Path.GetExtension(path));
+            if (image && registry.GetMod(modId)?.FileProvider?.FileExists(path) == true)
+                refreshed = textures?.RefreshImage(modId, path) ?? 0;
+            GetResolver<FileListResolver>()?.ClearCache();
+            GetResolver<PatchResolver>()?.ClearCache();
+            GetResolver<EntityResolver>()?.ClearCache();
+            if (image)
+                textures?.RefreshIndex();
+            else
+                textures?.ClearCache();
+            GetResolver<ShaderResolver>()?.ClearCache();
+            AppServices.Current.SceneDefs.Clear();
+            SceneManager.ReloadContent();
+            Cthangover.Core.Events.ModEventBus.Publish(new Cthangover.Core.Events.ModAssetsRefreshedEvent
+            {
+                ModId = modId,
+                Path = path
+            });
+            return refreshed;
+        }
+
         /// <summary>
         /// Waits (engine frames) until the contexts released by
         /// <paramref name="result"/> are collected, logs survivors as errors,
@@ -203,6 +228,14 @@ namespace Cthangover.Core.Mods
             }
 
             IsReloading = true;
+            if (prep.CompileScope != null)
+            {
+                var selective = registry.Reloader.Apply(prep, tree);
+                RefreshDevelopmentAssets(null, null);
+                ModInitializerRegistry.NotifyResourcesReady(selective.Plan.Load);
+                return LastReload = selective;
+            }
+
             foreach (var resolver in resolvers.Values)
                 resolver.ClearCache();
             AppServices.Current.ClearRegistries();

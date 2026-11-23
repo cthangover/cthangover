@@ -83,6 +83,10 @@ namespace Cthangover.Core.Mods
         [JsonPropertyName("use_assembly_cache")]
         public bool UseAssemblyCache { get; set; } = true;
 
+        /// <summary>Enables the same-user development command pipe in this game process.</summary>
+        [JsonPropertyName("development_control")]
+        public bool DevelopmentControl { get; set; }
+
         /// <summary>Per-factory cache configuration (root path, size overrides).</summary>
         [JsonPropertyName("cache")]
         public CacheConfig Cache { get; set; } = new();
@@ -192,6 +196,7 @@ namespace Cthangover.Core.Mods
                 ShaderExtensions = parsed.ShaderExtensions ?? new List<string>();
                 TextureGroups = parsed.TextureGroups ?? new List<string>();
                 UseAssemblyCache = parsed.UseAssemblyCache;
+                DevelopmentControl = parsed.DevelopmentControl;
                 Cache = parsed.Cache ?? new CacheConfig();
                 CatalogIgnorePatterns = parsed.CatalogIgnorePatterns ?? new List<string> { ".*" };
                 CatalogUrls = parsed.CatalogUrls ?? new List<string>();

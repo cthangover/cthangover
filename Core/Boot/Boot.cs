@@ -122,6 +122,7 @@ namespace Cthangover.Core.Bootstrap
 
                 Phase = BootPhase.Ready;
                 Mods.HotReload.ModHotReloadService.InstallIfEnabled(sceneManager?.GetTree());
+                Mods.HotReload.ModDevelopmentControl.InstallIfEnabled(sceneManager?.GetTree());
                 GameLogger.Log("BOOT", "Boot (sync) complete");
                 Mods.Testing.ItestCompileGuard.FailIfBroken(sceneManager?.GetTree());
             }
@@ -187,6 +188,7 @@ namespace Cthangover.Core.Bootstrap
                 Phase = BootPhase.Ready;
                 BootProgress.EnterPhase(BootPhase.Ready);
                 Mods.HotReload.ModHotReloadService.InstallIfEnabled(context.GetTree());
+                Mods.HotReload.ModDevelopmentControl.InstallIfEnabled(context.GetTree());
                 GameLogger.Log("BOOT", "Boot (launcher) complete");
                 Mods.Testing.ItestCompileGuard.FailIfBroken(context.GetTree());
             }

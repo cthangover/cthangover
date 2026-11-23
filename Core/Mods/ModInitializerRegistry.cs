@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using Cthangover.Core.Events;
 using Cthangover.Core.Utils;
@@ -157,5 +158,20 @@ namespace Cthangover.Core.Mods
 
             ModEventBus.Publish(new ModResourcesReadyEvent());
         }
+
+        internal static void NotifyResourcesReady(IReadOnlyCollection<string> mods)
+        {
+            foreach (var initializer in _initializers.ToArray())
+            {
+                if (!mods.Contains(initializer.GetType().Assembly.GetName().Name, StringComparer.OrdinalIgnoreCase))
+                    continue;
+                try { initializer.OnModResourcesReady(); }
+                catch (Exception ex)
+                {
+                    GameLogger.Log("MODS_INIT", $"OnModResourcesReady failed: {ex.Message}", LogLevel.Error);
+                }
+            }
+        }
+
     }
 }
