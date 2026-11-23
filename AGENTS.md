@@ -36,6 +36,10 @@ For future cthangover / Ogneshchanin optimization requests, read the
 The author requires mass battles and defines **50 enemies as the reference large battle**, not merely an
 optional stress case. Investigate GPU Gems 3 animated crowd rendering alongside existing animation and simulation LOD.
 
+For future Ogneshchanin rendering, physics, vegetation, and effects work, consult the
+[technical debt register](../art_sources/cthangover/ogneshchanin/TECH_DEBT_RU.md).
+It links the GPU Gems 3 research to the current modules, existing measurements, and acceptance criteria.
+
 For RPG art generation or changes to RPG pictures, **read `comfy/rpg_life/ART_GUIDE.md` first**.
 For creating, repairing or extending animated charsets, also **read
 [`CHARSET_GUIDE.md`](CHARSET_GUIDE.md)**. It records the
