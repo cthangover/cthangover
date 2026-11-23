@@ -70,8 +70,8 @@
     },
     {
       "id": "prototype_entry",
-      "name": "Development location",
-      "description": "Temporary development location.",
+      "name": "Open countryside",
+      "description": "Explore a continuous terrain with a lakeside camp, wooded hills, meadows and coast.",
       "role": "content",
       "mods": [
         "proto_land_pack>=0.1.0"
@@ -79,8 +79,8 @@
       "locale": [
         {
           "lang": "ru",
-          "name": "Локация для разработки",
-          "description": "Временная локация для разработки."
+          "name": "Открытый мир",
+          "description": "Открытый ландшафт: лагерь у озера, лесистые холмы, луга и побережье."
         }
       ]
     },
