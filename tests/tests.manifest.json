@@ -7,6 +7,30 @@
   },
   "integration": [
     {
+      "scene": "res://scenes/menu/launcher.tscn",
+      "timeoutSeconds": 360,
+      "owners": ["vegetation3d_base", "terrain_base", "water3d_base"],
+      "profiles": ["3d"],
+      "tags": ["nature", "vegetation", "terrain", "water", "benchmark"],
+      "source": "mods_private/vegetation3d_base/test_suites/biomes/manifest.json",
+      "requiresExplicitSelection": true,
+      "name": "nature_biomes_reference",
+      "args": [
+        "--",
+        "--game=nature_biomes_demo",
+        "--new",
+        "--itest=nature_biomes",
+        "--biome-out=res://tests/artifacts/nature_biomes"
+      ],
+      "windowed": true,
+      "result": {
+        "name": "nature_biomes",
+        "expectedErrors": []
+      },
+      "kind": "integration",
+      "project": "output"
+    },
+    {
       "name": "test_execution_editor_write",
       "scene": "res://scenes/menu/launcher.tscn",
       "args": [

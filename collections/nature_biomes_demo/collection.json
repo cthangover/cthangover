@@ -1,0 +1,33 @@
+{
+  "id": "nature_biomes_demo",
+  "kind": "game",
+  "name": "Temperate biomes",
+  "version": "0.1.0",
+  "author": "ct",
+  "description": "A temperate landscape with three forests, a meadow, a lake, a river and a bog.",
+  "entry": { "scene": "nature_biomes" },
+  "tags": ["development", "3d"],
+  "mechanics": [
+    {
+      "id": "nature",
+      "name": "Temperate nature",
+      "role": "content",
+      "mods": [
+        "vegetation3d_base>=0.1.0",
+        "temperate_plants_pack>=0.1.0",
+        "water3d_base>=0.1.0",
+        "terrain_base>=0.1.0",
+        "sky3d_base>=0.1.0",
+        "graphics3d_base>=0.1.0",
+        "gloom>=0.1.0"
+      ]
+    }
+  ],
+  "locale": [
+    {
+      "lang": "ru",
+      "name": "Леса и водоёмы",
+      "description": "Лиственный, сосновый и еловый леса, поляна, озеро, река и болото."
+    }
+  ]
+}
