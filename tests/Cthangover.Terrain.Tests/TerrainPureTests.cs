@@ -21,7 +21,32 @@ namespace Cthangover.TerrainPureTests
             var region=new TerrainRegion{ID="r",X=-4,Z=3,Tiles=new(){new(){Id="t",Asset="test/t",X=32,Z=64}}};Assert.Equal(JsonSerializer.Serialize(region),JsonSerializer.Serialize(RoundTrip(region)));
             var tile=new TerrainTile{ID="t",Heights="test/r.raw",Encoding="r32",Origin=-4,Step=.05f,Holes="test/h",Weights="test/w",Density="test/d",Layers=new[]{4,5,6,7}};Assert.Equal(JsonSerializer.Serialize(tile),JsonSerializer.Serialize(RoundTrip(tile)));
             var material=new TerrainMaterial{ID="m",TextureSize=128,UvScale=.23f,TriplanarSlope=.7f,FarDistance=63,Layers=new(){new(){Id="rock",Albedo="a.png",Normal="n.png",Orm="o.png"}}};material.Layers[0].Extra["future"]=JsonSerializer.SerializeToElement(true);Assert.Equal(JsonSerializer.Serialize(material),JsonSerializer.Serialize(RoundTrip(material)));
-            var scatter=new TerrainScatter{ID="s",Model="m.glb",Seed=4,Density=.4f,MaxInstances=30,MinSlope=.2f,MaxSlope=.9f,ScaleMin=.3f,ScaleMax=2,MeshDistance=10,EndDistance=40,Wind=.3f,ImpostorSize=64,GroundCover=true,Flexibility=.7f,MinHeight=-3,MaxHeight=8,MaterialLayers=new[]{1,3}};Assert.Equal(JsonSerializer.Serialize(scatter),JsonSerializer.Serialize(RoundTrip(scatter)));
+            var scatter=new TerrainScatter{ID="s",Model="m.glb",Seed=4,Density=.4f,MaxInstances=30,MinSlope=.2f,MaxSlope=.9f,ScaleMin=.3f,ScaleMax=2,MeshDistance=10,EndDistance=40,Wind=.3f,ImpostorSize=64,GroundCover=true,Flexibility=.7f,CollisionRadius=.28f,CollisionHeight=4,MinHeight=-3,MaxHeight=8,MaterialLayers=new[]{1,3}};Assert.Equal(JsonSerializer.Serialize(scatter),JsonSerializer.Serialize(RoundTrip(scatter)));
+        }
+        private TerrainScatter collisionDefinition;
+        [Theory]
+        [InlineData(-1,4)]
+        [InlineData(0,4)]
+        [InlineData(.3f,0)]
+        [InlineData(.3f,.5f)]
+        [InlineData(float.NaN,4)]
+        [InlineData(.3f,float.PositiveInfinity)]
+        public void InvalidTrunkDimensionsAreRejected(float radius,float height)
+        {
+            collisionDefinition=new TerrainScatter{CollisionRadius=radius,CollisionHeight=height};
+            Assert.Throws<ArgumentException>(ValidateCollision);
+        }
+        private void ValidateCollision()=>TerrainScatterPoints.Validate(collisionDefinition);
+        [Theory]
+        [InlineData(0,0)]
+        [InlineData(.3f,.6f)]
+        [InlineData(.42f,2.8f)]
+        public void OptionalTrunkDimensionsRoundTrip(float radius,float height)
+        {
+            var restored=RoundTrip(new TerrainScatter{CollisionRadius=radius,CollisionHeight=height});
+            TerrainScatterPoints.Validate(restored);
+            Assert.Equal(radius,restored.CollisionRadius);
+            Assert.Equal(height,restored.CollisionHeight);
         }
         private static T RoundTrip<T>(T value)=>JsonSerializer.Deserialize<T>(JsonSerializer.Serialize(value));
         [Fact]
