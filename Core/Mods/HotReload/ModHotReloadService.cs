@@ -135,7 +135,9 @@ namespace Cthangover.Core.Mods.HotReload
                     return await manager.VerifyReloadAsync(rejected, tree);
                 }
 
-                var inGame = tree.CurrentScene?.IsInGroup("main_event_chain") == true && SceneManager.GetCurrentSceneName() != null;
+                var scene = tree.CurrentScene;
+                var inGame = (scene?.HasMeta("shell_kind") == true || scene?.IsInGroup("main_event_chain") == true)
+                    && SceneManager.GetCurrentSceneName() != null;
                 if (inGame)
                     SaveService.Save(SaveService.HotReloadSlot, rememberSession: false);
 
@@ -190,7 +192,14 @@ namespace Cthangover.Core.Mods.HotReload
 
         // Watcher callbacks run on thread-pool threads: they only flip the
         // dirty flag; the reload itself starts from _Process on the main thread.
-        private void OnFileEvent(object sender, FileSystemEventArgs e) => MarkDirty(e.FullPath);
+        private void OnFileEvent(object sender, FileSystemEventArgs e)
+        {
+            // Creating/removing editor staging can also update the containing mod directory's timestamp.
+            // File events still report real content edits; directory creation/removal/rename remains relevant.
+            if (e.ChangeType == WatcherChangeTypes.Changed && Directory.Exists(e.FullPath))
+                return;
+            MarkDirty(e.FullPath);
+        }
 
         private void OnFileRenamed(object sender, RenamedEventArgs e) => MarkDirty(e.FullPath);
 

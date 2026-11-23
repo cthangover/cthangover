@@ -32,7 +32,7 @@ namespace Cthangover.Core.Mods.HotReload
 
         private static readonly string[] IgnoredSegments =
         {
-            "/.godot/", "/.git/", "/.vs/", "/.idea/", "/bin/", "/obj/",
+            "/.godot/", "/.git/", "/.vs/", "/.idea/", "/.terrain_editor/", "/bin/", "/obj/",
         };
 
         /// <summary>Decides whether the watcher runs for this process.</summary>
@@ -59,7 +59,7 @@ namespace Cthangover.Core.Mods.HotReload
         /// <summary>
         /// True for a change that can alter the mod set: sources, manifests,
         /// data, scenes, locale, assets. Editor bookkeeping (<c>.uid</c>,
-        /// <c>.import</c>), editor swap files and build folders are ignored.
+        /// <c>.import</c>), terrain transaction staging/leases, editor swap files and build folders are ignored.
         /// </summary>
         public static bool IsRelevantChange(string path)
         {
