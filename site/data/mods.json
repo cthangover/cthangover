@@ -1,12 +1,12 @@
 {
- "generated": "2026-11-20",
+ "generated": "2026-11-22",
  "stats": {
   "mods": 76,
   "dslCommands": 32,
   "coreFiles": 564,
   "coreLoc": 52776,
-  "modFiles": 1690,
-  "modLoc": 196090
+  "modFiles": 1696,
+  "modLoc": 196503
  },
  "battle": [
   {
