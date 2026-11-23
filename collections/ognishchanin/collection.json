@@ -111,6 +111,15 @@
           "description": "Редакторы трёхмерного мира, персонажей, анимаций и взаимодействий."
         }
       ]
+    },
+    {
+      "id": "world_gloom",
+      "name": "World Gloom",
+      "description": "Oaths and rituals affect the vitality and harvest of nature.",
+      "role": "gameplay",
+      "mods": [
+        "gloom>=0.1.0"
+      ]
     }
   ]
 }

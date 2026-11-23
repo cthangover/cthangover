@@ -1,0 +1,38 @@
+{
+  "id": "aquatic_demo",
+  "kind": "game",
+  "name": "Aquatic Plants Demo",
+  "version": "0.1.0",
+  "author": "ct",
+  "description": "Lake and swamp vegetation generator review.",
+  "entry": {
+    "scene": "aquatic_demo"
+  },
+  "tags": [
+    "development",
+    "3d"
+  ],
+  "mechanics": [
+    {
+      "id": "aquatic",
+      "name": "Aquatic vegetation",
+      "role": "content",
+      "mods": [
+        "vegetation3d_base>=0.1.0",
+        "temperate_plants_pack>=0.1.0",
+        "water3d_base>=0.1.0",
+        "terrain_base>=0.1.0",
+        "sky3d_base>=0.1.0",
+        "graphics3d_base>=0.1.0",
+        "gloom>=0.1.0"
+      ]
+    }
+  ],
+  "locale": [
+    {
+      "lang": "ru",
+      "name": "Водные растения — демо",
+      "description": "Кувшинки, озеро с течением и подводные заросли, мелкое болото."
+    }
+  ]
+}

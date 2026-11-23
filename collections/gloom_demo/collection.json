@@ -1,0 +1,34 @@
+{
+  "id": "gloom_demo",
+  "kind": "game",
+  "name": "World Gloom Demo",
+  "version": "0.1.0",
+  "author": "ct",
+  "description": "Development visual review: use run_gloom_demo.bat.",
+  "entry": {
+    "scene": "gloom_demo"
+  },
+  "tags": [
+    "development",
+    "prototype",
+    "3d"
+  ],
+  "mechanics": [
+    {
+      "id": "nature_demo",
+      "name": "Nature demo",
+      "role": "content",
+      "mods": [
+        "proto_land_pack>=0.1.0",
+        "gloom>=0.1.0"
+      ]
+    }
+  ],
+  "locale": [
+    {
+      "lang": "ru",
+      "name": "Мрачность мира — демо",
+      "description": "Показ природы: два цикла Мрачности за одни сутки. Запуск через run_gloom_demo.bat."
+    }
+  ]
+}

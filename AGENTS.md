@@ -31,6 +31,11 @@ Godot reference: https://docs.godotengine.org/en/4.6/classes/class_viewporttextu
 System concepts (how each engine system works, its invariants and traps) are in `docs/concepts/` — read the one
 for the system you change; larger rewrite proposals are in `docs/analysis/rewrite-proposals.md`.
 
+For future cthangover / Ogneshchanin optimization requests, read the
+[battle optimization research note](../art_sources/cthangover/ogneshchanin/concept_20261122/OPTIMIZATION_RESEARCH_RU.md).
+The author requires mass battles and defines **50 enemies as the reference large battle**, not merely an
+optional stress case. Investigate GPU Gems 3 animated crowd rendering alongside existing animation and simulation LOD.
+
 For RPG art generation or changes to RPG pictures, **read `comfy/rpg_life/ART_GUIDE.md` first**.
 For creating, repairing or extending animated charsets, also **read
 [`CHARSET_GUIDE.md`](CHARSET_GUIDE.md)**. It records the

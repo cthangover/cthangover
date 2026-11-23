@@ -1,0 +1,38 @@
+{
+  "id": "nature_demo",
+  "kind": "game",
+  "name": "Forest and Lake — Nature Generator",
+  "version": "0.1.0",
+  "author": "ct",
+  "description": "Dense forest, lake, deadwood and rock generator review.",
+  "entry": {
+    "scene": "nature_demo"
+  },
+  "tags": [
+    "development",
+    "3d"
+  ],
+  "mechanics": [
+    {
+      "id": "nature",
+      "name": "Nature generator",
+      "role": "content",
+      "mods": [
+        "vegetation3d_base>=0.1.0",
+        "temperate_plants_pack>=0.1.0",
+        "water3d_base>=0.1.0",
+        "terrain_base>=0.1.0",
+        "sky3d_base>=0.1.0",
+        "graphics3d_base>=0.1.0",
+        "gloom>=0.1.0"
+      ]
+    }
+  ],
+  "locale": [
+    {
+      "lang": "ru",
+      "name": "Генератор природы — лес и озеро",
+      "description": "Густой лес, озеро, пни, сломанные деревья, валежник и камни."
+    }
+  ]
+}
