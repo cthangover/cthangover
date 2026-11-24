@@ -1,0 +1,25 @@
+namespace Cthangover.Core.Mods.Memory
+{
+    using System;
+    using System.Collections.Generic;
+
+    /// <summary>A dictionary for rebuildable values with explicit invalidation and lookup counters.</summary>
+    public sealed class DictionaryCache<TKey, TValue> : ObservableDictionary<TKey, TValue>, ICache where TKey : notnull
+    {
+        private long hits;
+        private long misses;
+
+        internal DictionaryCache(IEqualityComparer<TKey> comparer, Func<TKey, TValue, MemoryPreviewEntry> preview)
+            : base(comparer, preview) { }
+
+        private protected override void RecordLookup(bool found)
+        {
+            if (found)
+                hits++;
+            else
+                misses++;
+        }
+
+        private protected override CacheMetrics? ReadCacheMetrics() => new CacheMetrics(hits, misses);
+    }
+}

@@ -1,26 +1,43 @@
 namespace Cthangover.Core.Mods.Providers
 {
-    using System;
     using System.Collections.Generic;
     using System.IO;
+    using Cthangover.Core.Mods.Memory;
 
     /// <summary>A process-wide plaintext budget shared by all mounted archives, released per provider on unload.</summary>
-    internal static class ArchiveContentCache
+    internal sealed class ArchiveContentCache : ICache
     {
         private const int MaximumBytes = 16 * 1024 * 1024;
         private const int MaximumFileBytes = 4 * 1024 * 1024;
-        private static readonly object gate = new();
-        private static readonly Dictionary<(object Owner, string Path), byte[]> values = new();
-        private static readonly Queue<(object Owner, string Path)> order = new();
-        private static int bytes;
+        private readonly object gate = new();
+        private readonly Dictionary<(object Owner, string Path), byte[]> values = new();
+        private readonly Queue<(object Owner, string Path)> order = new();
+        private int bytes;
+        private long hits;
+        private long misses;
+        private long evictions;
 
-        internal static Stream Open(object owner, string path)
+        internal static ArchiveContentCache Instance { get; } = new();
+
+        private ArchiveContentCache()
+            => ModMemoryService.Shared.Core.Track("mods.archive_content", this);
+
+        internal Stream Open(object owner, string path)
         {
             lock (gate)
-                return values.TryGetValue((owner, path), out var data) ? new MemoryStream(data, false) : null;
+            {
+                if (values.TryGetValue((owner, path), out var data))
+                {
+                    hits++;
+                    return new MemoryStream(data, false);
+                }
+
+                misses++;
+                return null;
+            }
         }
 
-        internal static void Remember(object owner, string path, byte[] data)
+        internal void Remember(object owner, string path, byte[] data)
         {
             if (data.Length > MaximumFileBytes)
                 return;
@@ -34,6 +51,7 @@ namespace Cthangover.Core.Mods.Providers
                     var oldest = order.Dequeue();
                     bytes -= values[oldest].Length;
                     values.Remove(oldest);
+                    evictions++;
                 }
                 values[key] = (byte[])data.Clone();
                 order.Enqueue(key);
@@ -41,7 +59,7 @@ namespace Cthangover.Core.Mods.Providers
             }
         }
 
-        internal static void Release(object owner)
+        internal void Release(object owner)
         {
             lock (gate)
             {
@@ -57,6 +75,25 @@ namespace Cthangover.Core.Mods.Providers
                     else
                         order.Enqueue(key);
                 }
+            }
+        }
+
+        /// <inheritdoc />
+        public StorageMetrics GetMetrics()
+        {
+            lock (gate)
+                return new StorageMetrics(values.Count, values.Capacity, bytes,
+                    new CacheMetrics(hits, misses, evictions, MaximumBytes));
+        }
+
+        /// <inheritdoc />
+        public void Clear()
+        {
+            lock (gate)
+            {
+                values.Clear();
+                order.Clear();
+                bytes = 0;
             }
         }
     }

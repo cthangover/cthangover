@@ -114,7 +114,7 @@ namespace Cthangover.Core.Mods.Providers
             var bytes = output.ToArray();
             lock (gate)
                 if (!disposed)
-                    ArchiveContentCache.Remember(cacheOwner, ModPath.Normalize(path), bytes);
+                    ArchiveContentCache.Instance.Remember(cacheOwner, ModPath.Normalize(path), bytes);
             return bytes;
         }
 
@@ -127,7 +127,7 @@ namespace Cthangover.Core.Mods.Providers
             lock (gate)
             {
                 ObjectDisposedException.ThrowIf(disposed, this);
-                var cached = ArchiveContentCache.Open(cacheOwner, name);
+                var cached = ArchiveContentCache.Instance.Open(cacheOwner, name);
                 if (cached != null)
                     return cached;
             }
@@ -207,7 +207,7 @@ namespace Cthangover.Core.Mods.Providers
             lock (gate)
             {
                 disposed = true;
-                ArchiveContentCache.Release(cacheOwner);
+                ArchiveContentCache.Instance.Release(cacheOwner);
             }
         }
 

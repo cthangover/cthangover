@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Cthangover.Core.Events;
+using Cthangover.Core.Mods.Memory;
 using Cthangover.Core.Quests;
 using Cthangover.Core.Settings;
 using Cthangover.Core.Utils;
@@ -27,9 +28,12 @@ namespace Cthangover.Core.Scenes
 
         private static Dictionary<string, string> Flags
             => GameEnvironment.IsRuntime && GameData.Instance is { } data ? data.Runtime.Flags : DetachedFlags;
-        private static readonly Dictionary<string, ConditionNode> AstCache = new();
+        private static readonly DictionaryCache<string, ConditionNode> AstCache =
+            ModMemoryService.Shared.Core.CreateCache<string, ConditionNode>("scenario.conditions", preview: PreviewCondition);
         private static readonly object AstLock = new();
 
+        private static MemoryPreviewEntry PreviewCondition(string expression, ConditionNode node)
+            => new(expression, node.GetType().Name);
 
         /// <summary>
         /// Sets a story flag of the running game (the scenario <c>flag</c> command

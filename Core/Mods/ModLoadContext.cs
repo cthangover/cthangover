@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
 using System.Threading;
+using Cthangover.Core.Mods.Memory;
 
 namespace Cthangover.Core.Mods
 {
@@ -55,10 +56,17 @@ namespace Cthangover.Core.Mods
         {
             this.modId = modId;
             this.dependencyResolver = dependencyResolver;
+            Memory = ModMemoryService.Shared.CreateScope(modId);
+            Unloading += ReleaseMemory;
         }
 
         /// <summary>Mod id this context belongs to; also the context name suffix.</summary>
         public string ModId => modId;
+
+        internal ModMemoryScope Memory { get; }
+
+        private static void ReleaseMemory(AssemblyLoadContext context)
+            => ModMemoryService.Shared.Release(((ModLoadContext)context).Memory);
 
         /// <summary>
         /// True once <see cref="TryUnload"/> released the context. Its assemblies
