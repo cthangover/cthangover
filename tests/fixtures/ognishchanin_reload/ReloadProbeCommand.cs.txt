@@ -1,0 +1,143 @@
+using System;
+using System.Collections.Generic;
+using System.Text.Json.Nodes;
+using System.Threading;
+using System.Threading.Tasks;
+using Cthangover.Core.Bootstrap;
+using Cthangover.Core.Games;
+using Cthangover.Core.Mods.HotReload;
+using Cthangover.Core.Settings;
+using Cthangover.Mods.Actor3d;
+using Cthangover.Mods.Navigation3d;
+using Cthangover.Mods.Scene3d;
+using Godot;
+
+public sealed class ReloadProbeCommand : IModDevelopmentCommand
+{
+    private const string Actor = "proto_land_actor";
+    private const string Slot = "__p0_replay";
+    private const int Revision = 1;
+
+    public IReadOnlyCollection<string> Commands { get; } = new[] { "inspect", "checkpoint", "restore", "measure-idle", "shore-cancel", "finish" };
+
+    public async Task<JsonNode> ExecuteAsync(ModDevelopmentContext context, string command, CancellationToken token)
+    {
+        if (command == "finish")
+        {
+            ApplicationExit.Quit(context.Tree, 0);
+            return new JsonObject();
+        }
+
+        if (command == "restore")
+        {
+            if (!GameSession.LoadAndEnter(context.Tree.Root.GetNode("SceneManager"), Slot))
+                throw new InvalidOperationException("The replay checkpoint could not be restored.");
+            context.MarkChanged();
+            return new JsonObject();
+        }
+
+        if (Scene3dHost.Current?.Error is { } error)
+            throw new InvalidOperationException(error);
+
+        var actor = Actor3dSession.Current?.Find(Actor);
+        if (actor?.Host?.Ready != true || !actor.IsOnFloor())
+            return new JsonObject { ["ready"] = false, ["actor_exists"] = actor != null, ["location_ready"] = actor?.Host?.Ready };
+
+        if (command == "checkpoint")
+        {
+            SaveService.Save("p0_manual");
+            SaveService.Save(Slot, rememberSession: false);
+            context.MarkChanged();
+        }
+
+        if (command == "shore-cancel")
+        {
+            var result = await CancelAtShore(actor, context.Tree, token);
+            context.MarkChanged();
+            return result;
+        }
+
+        var visual = actor.Presentation.Visual;
+        if (command == "measure-idle")
+        {
+            var clock = visual.Animation.Clock;
+            if (clock.Role != "idle")
+                throw new InvalidOperationException("Expected the live idle role, found " + clock.Role);
+            var before = clock.Position;
+            visual.Advance(.1);
+            context.MarkChanged();
+            return new JsonObject { ["speed"] = (clock.Position - before) / .1 };
+        }
+
+        var dock = actor.Host.LocalNode("ogn_dock");
+        var collision = dock.FindChild("ImportCollision", true, false);
+        var path = Navigation3dRuntime.Current?.Query(actor.Host, Actor, actor.GlobalPosition,
+            actor.GlobalPosition + Vector3.Right * 2, null, 1);
+        var offset = context.Request["patched"]?.GetValue<bool>() == true
+            ? visual.Socket("p0_probe").Position.X : 0;
+        return new JsonObject
+        {
+            ["ready"] = true,
+            ["revision"] = Revision,
+            ["host"] = actor.Host.GetInstanceId(),
+            ["body"] = actor.GetInstanceId(),
+            ["collider"] = actor.GetNode<CollisionShape3D>("Capsule").Shape.GetInstanceId(),
+            ["dock_collision"] = collision?.GetInstanceId(),
+            ["dock_position"] = Vector(dock.GlobalPosition),
+            ["model"] = visual.Model.GetInstanceId(),
+            ["animation"] = visual.Animation.GetInstanceId(),
+            ["action"] = visual.Animation.Clock.ActionId,
+            ["position"] = Vector(actor.GlobalPosition),
+            ["radius"] = actor.EffectiveActionProfile.Radius,
+            ["socket_x"] = offset,
+            ["lod"] = visual.LodId,
+            ["nav_status"] = path?.Status,
+            ["nav_points"] = path?.Points.Length
+        };
+    }
+
+    private static async Task<JsonObject> CancelAtShore(Actor3dBody actor, SceneTree tree, CancellationToken token)
+    {
+        var site = new Vector3(-4.57659f, 0, -30.648985f);
+        using var query = PhysicsRayQueryParameters3D.Create(site + Vector3.Up * 2, site + Vector3.Down * 2,
+            actor.CollisionMask, new Godot.Collections.Array<Rid> { actor.GetRid() });
+        using var hit = actor.GetWorld3D().DirectSpaceState.IntersectRay(query);
+        if (hit.Count == 0)
+            throw new InvalidOperationException("The reported shore position has no physical floor.");
+
+        var floor = hit["position"].AsVector3();
+        var ground = (hit["collider"].AsGodotObject() as Node)?.GetPath().ToString();
+        actor.UseInput = false;
+        actor.Drive(Vector2.Zero);
+        actor.GlobalPosition = floor + Vector3.Up * .04f;
+        actor.Velocity = Vector3.Zero;
+        if (!actor.Traversal.TryLink("p0/shore_grab"))
+            throw new InvalidOperationException("Cannot stage test grab: " + actor.Traversal.Reason);
+
+        var capsule = actor.EffectiveActionProfile;
+        var gap = capsule.Centre[1] - capsule.Height * .5f;
+        actor.GlobalPosition = floor + Vector3.Up * (.04f - gap);
+        var before = actor.GlobalPosition.Y;
+        actor.Drive(Vector2.Zero, jump: true);
+        var end = actor.FixedSteps + 24;
+        while (actor.FixedSteps < end)
+        {
+            token.ThrowIfCancellationRequested();
+            await tree.ToSignal(tree, SceneTree.SignalName.PhysicsFrame);
+        }
+
+        return new JsonObject
+        {
+            ["ground"] = ground,
+            ["floor"] = floor.Y,
+            ["before"] = before,
+            ["after"] = actor.GlobalPosition.Y,
+            ["on_floor"] = actor.IsOnFloor(),
+            ["standing"] = Math.Abs(actor.EffectiveActionProfile.Height - actor.Definition.Height) < .001f,
+            ["released"] = actor.Activity == null && actor.ActionControl == null,
+            ["mode"] = actor.Traversal.Mode.ToString()
+        };
+    }
+
+    private static JsonArray Vector(Vector3 value) => new(value.X, value.Y, value.Z);
+}
