@@ -9,6 +9,7 @@ using Cthangover.Core.Factories;
 using Cthangover.Core.Interactive;
 using Cthangover.Core.Localization;
 using Cthangover.Core.Scenes;
+using Cthangover.Core.Scenes.Patching;
 using Cthangover.Core.UI;
 using Cthangover.Core.Mods.Patches;
 using Cthangover.Core.Mods.Pipeline;
@@ -230,6 +231,10 @@ namespace Cthangover.Core.Mods
             IsReloading = true;
             if (prep.CompileScope != null)
             {
+                // The resolver owns detached prototypes. Unloading can free their native nodes
+                // while its cache still holds wrappers of the old script types.
+                GetResolver<TscnSceneResolver>()?.ClearCache();
+                GetResolver<ScenePatchResolver>()?.ClearCache();
                 var selective = registry.Reloader.Apply(prep, tree);
                 RefreshDevelopmentAssets(null, null);
                 ModInitializerRegistry.NotifyResourcesReady(selective.Plan.Load);

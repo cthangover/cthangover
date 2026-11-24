@@ -25,13 +25,14 @@ using Cthangover.Core.Bootstrap;
 using Cthangover.Core.Mods;
 using Cthangover.Core.Mods.HotReload;
 using Cthangover.Core.Mods.Resolvers;
+using Cthangover.Core.Scenes;
 using Cthangover.Core.Settings;
 using Godot;
 
 public sealed class ProbeCommand : IModDevelopmentCommand, IModSaveable
 {
     public IReadOnlyCollection<string> Commands { get; } =
-        new[] { "probe", "texture", "finish", "save-player-slot", "fail-save", "read-state", EXTRA };
+        new[] { "probe", "texture", "finish", "save-player-slot", "fail-save", "read-state", "build-scene", EXTRA };
     private static int state;
     private static bool failSave;
     private Texture2D texture;
@@ -62,6 +63,18 @@ public sealed class ProbeCommand : IModDevelopmentCommand, IModSaveable
         }
         if (command == "read-state")
             return Task.FromResult<JsonNode>(JsonValue.Create(state));
+        if (command == "build-scene")
+        {
+            var node = TscnScenes.LoadAndBuild("scenes/dev_control_checkpoint.tscn");
+            try
+            {
+                return Task.FromResult<JsonNode>(JsonValue.Create(node?.GetType().Assembly == typeof(ProbeCommand).Assembly));
+            }
+            finally
+            {
+                node?.Free();
+            }
+        }
         if (command == "finish")
         {
             context.Tree.CreateTimer(0.5).Timeout += Stop;
@@ -88,6 +101,17 @@ public sealed class ProbeCommand : IModDevelopmentCommand, IModSaveable
 
 def write_probe(path, value, extra):
     path.write_text(SOURCE.replace("VALUE", json.dumps(value)).replace("EXTRA", json.dumps(extra)), encoding="utf-8")
+
+
+def install_checkpoint_scene(fixture):
+    (fixture / "scenes").mkdir()
+    (fixture / "src/CheckpointScene.cs").write_text(
+        "namespace DevelopmentProbe { public partial class CheckpointScene : Godot.Node { } }\n", encoding="utf-8"
+    )
+    (fixture / "scenes/dev_control_checkpoint.tscn").write_text(
+        f'[gd_scene format=3]\n\n[ext_resource type="Script" path="res://mods/{MOD}/src/CheckpointScene.cs" id="1"]\n'
+        '\n[node name="CheckpointScene" type="Node"]\nscript = ExtResource("1")\n', encoding="utf-8"
+    )
 
 
 def chunk(kind, data):
@@ -158,6 +182,8 @@ def run(project, output, godot, checkpoint_only=False):
             texture = fixture / "ui" / "cthangover_dev_probe.png"
             write_probe(code, "first", "old-routine")
             write_texture(texture, 1, 255)
+            if checkpoint_only:
+                install_checkpoint_scene(fixture)
 
             attached = cli(process, "mod.attach", f"--mod={MOD}", "--checkpoint=false")
             assert attached["loaded"] == [MOD] and attached["unloaded"] == [] and attached["kept"], attached
@@ -219,6 +245,7 @@ def run(project, output, godot, checkpoint_only=False):
 
 
 def verify_checkpoint(process, before, code, home):
+    assert command(process, "build-scene", provider=MOD) is True
     command(process, "save-player-slot", provider=MOD)
     session = next(home.rglob("last_session.json"))
     continue_entry = session.read_bytes()
@@ -258,6 +285,7 @@ def verify_checkpoint(process, before, code, home):
         raise RuntimeError("The reloaded gameplay scene did not become active.")
     assert status["pid"] == before["pid"]
     assert command(process, "checkpoint-routine", provider=MOD) == "checkpoint"
+    assert command(process, "build-scene", provider=MOD) is True
     assert command(process, "read-state", provider=MOD) == 42
     assert session.read_bytes() == continue_entry
     assert not list(saves.glob("__hot_reload*"))
