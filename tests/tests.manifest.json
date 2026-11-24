@@ -7,6 +7,42 @@
   },
   "integration": [
     {
+      "name": "ognishchanin_battle_field",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--", "--game=ognishchanin", "--new", "--itest=ognishchanin_battle_profile",
+        "--battle-profile-route=field", "--battle-profile-out=res://tests/artifacts/ognishchanin_battle_field"
+      ],
+      "timeoutSeconds": 250,
+      "kind": "integration",
+      "owners": ["proto_land_pack", "combat3d_base"],
+      "profiles": ["3d"],
+      "tags": ["ognishchanin", "benchmark", "combat"],
+      "source": "mods_private/proto_land_pack/test_suites/battle_profile/manifest.json",
+      "requiresExplicitSelection": true,
+      "windowed": true,
+      "project": "output",
+      "result": { "name": "ognishchanin_battle_profile", "expectedErrors": [] }
+    },
+    {
+      "name": "ognishchanin_battle_forest",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--", "--game=ognishchanin", "--new", "--itest=ognishchanin_battle_profile",
+        "--battle-profile-route=forest", "--battle-profile-out=res://tests/artifacts/ognishchanin_battle_forest"
+      ],
+      "timeoutSeconds": 250,
+      "kind": "integration",
+      "owners": ["proto_land_pack", "combat3d_base"],
+      "profiles": ["3d"],
+      "tags": ["ognishchanin", "benchmark", "combat"],
+      "source": "mods_private/proto_land_pack/test_suites/battle_profile/manifest.json",
+      "requiresExplicitSelection": true,
+      "windowed": true,
+      "project": "output",
+      "result": { "name": "ognishchanin_battle_profile", "expectedErrors": [] }
+    },
+    {
       "name": "cthangover_story_references",
       "scene": "res://scenes/menu/launcher.tscn",
       "windowed": true,
