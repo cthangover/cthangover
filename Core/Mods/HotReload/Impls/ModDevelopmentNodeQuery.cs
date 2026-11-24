@@ -1,4 +1,4 @@
-namespace Cthangover.Core.Mods.HotReload
+namespace Cthangover.Core.Mods.HotReload.Impls
 {
     using System;
     using System.Collections.Generic;
@@ -13,14 +13,17 @@ namespace Cthangover.Core.Mods.HotReload
     /// <summary>Reads explicitly requested Godot properties and managed instance fields on a live node.</summary>
     public sealed class ModDevelopmentNodeQuery : IModDevelopmentCommand
     {
-        /// <inheritdoc />
+        /// <summary>Exposes a property and field snapshot of one live node.</summary>
         public IReadOnlyCollection<string> Commands { get; } = new[] { "node.inspect" };
 
-        /// <inheritdoc />
+        /// <summary>Identifies the tree path and available reflection selectors.</summary>
+        public string Description { get; } = "node.inspect: reads requested Godot properties and managed instance fields of a live node by tree path.";
+
+        /// <summary>Reads the selected node through the development command registry.</summary>
         public Task<JsonNode> ExecuteAsync(ModDevelopmentContext context, string command, CancellationToken token)
             => Task.FromResult<JsonNode>(InspectNode(context));
 
-        private static JsonObject InspectNode(ModDevelopmentContext context)
+        internal static JsonObject InspectNode(ModDevelopmentContext context)
         {
             using var path = new NodePath(context.Require("path"));
             var request = context.Request;

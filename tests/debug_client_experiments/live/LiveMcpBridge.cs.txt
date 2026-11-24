@@ -1,0 +1,32 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Cthangover.Core.Mods;
+using Cthangover.Core.Utils;
+
+/// <summary>Runs one MCP session, backed by the real boot diagnostic snapshot.</summary>
+public sealed class LiveMcpBridge : IModInitializer, IModUnloadAware
+{
+    private CancellationTokenSource stop;
+    private Task session;
+
+    public void OnModLoaded(string modId) { }
+
+    public void OnModResourcesReady()
+    {
+        stop = new CancellationTokenSource();
+        session = McpProbeService.RunAsync("ct-mcp-live-" + Environment.ProcessId,
+            GameLogger.CompilationErrors.ToArray(), stop.Token);
+    }
+
+    public void OnModUnloading()
+    {
+        if (stop == null)
+            return;
+        stop.Cancel();
+        session.WaitAsync(TimeSpan.FromSeconds(2)).GetAwaiter().GetResult();
+        stop.Dispose();
+    }
+
+    public void OnModUnloaded(string modId) { }
+}

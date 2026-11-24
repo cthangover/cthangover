@@ -1,0 +1,25 @@
+using System.Collections.Generic;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Threading;
+using System.Threading.Tasks;
+using Cthangover.Core.Mods.HotReload;
+using Cthangover.Core.Mods.Unload;
+
+/// <summary>Exercises the engine's unload path independently of the MCP connection.</summary>
+public sealed class UnloadBridgeCommand : IModDevelopmentCommand
+{
+    public IReadOnlyCollection<string> Commands { get; } = new[] { "unload_mcp_fixture" };
+    public string Description => "Unload the bridge and report surviving contexts";
+
+    public async Task<JsonNode> ExecuteAsync(ModDevelopmentContext context, string command, CancellationToken token)
+    {
+        var ticket = ModUnloader.Unload(new[] { "test_mcp_live_bridge" }, context.Tree);
+        var alive = await ticket.CollectAsync(context.Tree, cancellationToken: token);
+        return new JsonObject
+        {
+            ["released"] = JsonSerializer.SerializeToNode(ticket.ModIds),
+            ["alive"] = JsonSerializer.SerializeToNode(alive)
+        };
+    }
+}

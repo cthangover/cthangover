@@ -1,0 +1,119 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Runtime.Loader;
+using System.Text.Json;
+using System.Threading;
+using Cthangover.Core.Mods;
+using Cthangover.Core.Mods.Compilation;
+using Cthangover.Core.Mods.HotReload;
+using Cthangover.Core.Mods.Providers;
+using Cthangover.Core.Utils;
+
+/// <summary>Compiles and unloads an experimental MCP command through the production mod pipeline.</summary>
+internal static class ManagedMcpProbe
+{
+    private const string ModId = "test_mcp_managed_probe";
+
+    private static int Main(string[] args)
+    {
+        if (args.Length != 1 || !Directory.Exists(args[0]))
+        {
+            Console.Error.WriteLine("Pass the directory containing the built MCP dependency DLLs.");
+            return 2;
+        }
+
+        var workspace = Directory.CreateTempSubdirectory("cthangover-mcp-managed-");
+        return Run(workspace.FullName, args[0]);
+    }
+
+    private static int Run(string workspace, string dependencies)
+    {
+        var root = Path.Combine(workspace, ModId);
+        try
+        {
+            Environment.SetEnvironmentVariable("CTHANGOVER_TEST_CACHE", Path.Combine(workspace, "cache"));
+            Directory.CreateDirectory(Path.Combine(root, "lib"));
+            Directory.CreateDirectory(Path.Combine(root, "src"));
+            var manifest = JsonSerializer.Deserialize<ModManifest>("""
+                {"id":"test_mcp_managed_probe","version":"1.0.0","sources":["src/*.cs"],"references":["lib/*.dll"]}
+                """);
+            using var provider = new FolderModFileProvider(root, ModId);
+            var mod = new ModInfo { Id = ModId, Manifest = manifest, FileProvider = provider };
+            var mods = new Dictionary<string, IModInfo> { [ModId] = mod };
+            File.Copy(Path.Combine(AppContext.BaseDirectory, "BridgeCommand.cs.txt"), Path.Combine(root, "src", "BridgeCommand.cs"));
+
+            var missing = ModCompiler.PrepareAll(mods);
+            Require(missing.Count == 0 && GameLogger.CompilationErrors.Any(IsMissingLibrary),
+                "A missing managed SDK declaration was expected to fail: " + string.Join("\n", GameLogger.CompilationErrors));
+            Console.WriteLine("PASS declared but missing SDK produces a compiler diagnostic");
+
+            foreach (var dll in Directory.EnumerateFiles(dependencies, "*.dll"))
+            {
+                if (Path.GetFileName(dll) != "McpDependencies.dll")
+                    File.Copy(dll, Path.Combine(root, "lib", Path.GetFileName(dll)));
+            }
+
+            var context = CompileAndRun(mods, out var artifactPath);
+            VerifyUnloaded(context);
+            Console.WriteLine("PASS mod and SDK load together, execute a development command, and unload");
+
+            Require(ModAssemblyCache.IsUsableHit(artifactPath), "The mod did not publish a reusable compile artifact.");
+            var reloaded = CompileAndRun(mods, out var reloadedPath);
+            Require(artifactPath == reloadedPath, "Re-enabling changed the mod artifact with unchanged sources.");
+            VerifyUnloaded(reloaded);
+            Console.WriteLine("PASS bridge loads again from the same compile cache and unloads again");
+            return 0;
+        }
+        finally
+        {
+            ModAssemblyLoader.UnloadMod(ModId);
+            Directory.Delete(workspace, recursive: true);
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static WeakReference CompileAndRun(Dictionary<string, IModInfo> mods, out string artifactPath)
+    {
+        var artifact = ModCompiler.PrepareAll(mods).SingleOrDefault();
+        Require(artifact != null && GameLogger.CompilationErrors.Count == 0, string.Join("\n", GameLogger.CompilationErrors));
+        artifactPath = artifact.ArtifactPath;
+        using var batch = ModAssemblyLoader.BeginBatch();
+        var staged = ModAssemblyLoader.StagePrecompiledDlls(mods.Values);
+        Require(staged.Count > 0, "No managed SDK libraries were staged.");
+        var stagedAssemblies = ModAssemblyLoader.LoadStagedDlls(staged);
+        Require(stagedAssemblies.Count == staged.Count && GameLogger.CompilationErrors.Count == 0,
+            "Managed SDK dependencies did not all load: " + string.Join("\n", GameLogger.CompilationErrors));
+        var assembly = ModAssemblyLoader.LoadFromPath(artifactPath, ModId);
+        Require(assembly != null && assembly.IsCollectible, "The compiled mod did not load into a collectible context.");
+        var context = AssemblyLoadContext.GetLoadContext(assembly);
+        var strategy = Reflections.FindAndCreate<IModDevelopmentCommand>(assembly).Single();
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        var report = strategy.ExecuteAsync(null, "mcp.probe", deadline.Token)
+            .WaitAsync(deadline.Token).GetAwaiter().GetResult();
+        Require(report?["sdk"]?.GetValue<string>() == "ModelContextProtocol.Core" &&
+            report["collectible"]?.GetValue<bool>() == true &&
+            report["context"]?.GetValue<string>() == context?.Name,
+            "The command did not exercise a mod-owned MCP SDK: " + report?.ToJsonString());
+        Console.WriteLine(report.ToJsonString());
+        return new WeakReference(context);
+    }
+
+    private static void VerifyUnloaded(WeakReference context)
+    {
+        var leak = ModAssemblyLoader.UnloadMod(ModId);
+        Require(leak == null, "The mod loader could not retire its mod context: " + leak);
+        leak = ModLoadContext.CollectAndVerify(context, ModId);
+        Require(leak == null, "The MCP dependency or command retained its mod context: " + leak);
+    }
+
+    private static bool IsMissingLibrary(string diagnostic) => diagnostic.Contains("lib/*.dll") && diagnostic.Contains("matched no DLL");
+
+    private static void Require(bool condition, string message)
+    {
+        if (!condition)
+            throw new InvalidOperationException(message);
+    }
+}

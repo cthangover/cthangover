@@ -87,6 +87,14 @@ namespace Cthangover.Core.Mods
         [JsonPropertyName("development_control")]
         public bool DevelopmentControl { get; set; }
 
+        /// <summary>
+        /// Discovery pointer the debug host publishes (all transports, identity, pid). Host-level knob only:
+        /// the value is passed through untouched, and the discovery implementation owns validation and its
+        /// default path.
+        /// </summary>
+        [JsonPropertyName("development_discovery")]
+        public string DevelopmentDiscovery { get; set; }
+
         /// <summary>Per-factory cache configuration (root path, size overrides).</summary>
         [JsonPropertyName("cache")]
         public CacheConfig Cache { get; set; } = new();
@@ -197,6 +205,7 @@ namespace Cthangover.Core.Mods
                 TextureGroups = parsed.TextureGroups ?? new List<string>();
                 UseAssemblyCache = parsed.UseAssemblyCache;
                 DevelopmentControl = parsed.DevelopmentControl;
+                DevelopmentDiscovery = parsed.DevelopmentDiscovery;
                 Cache = parsed.Cache ?? new CacheConfig();
                 CatalogIgnorePatterns = parsed.CatalogIgnorePatterns ?? new List<string> { ".*" };
                 CatalogUrls = parsed.CatalogUrls ?? new List<string>();

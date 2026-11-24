@@ -1,0 +1,10 @@
+using ModelContextProtocol.Protocol;
+
+/// <summary>Tests whether the game's runtime compiler supports SDK required-member constructors.</summary>
+public static class DirectSdkTypes
+{
+    public static Implementation ReadIdentity()
+    {
+        return new Implementation { Name = "direct_sdk_probe", Version = "1" };
+    }
+}

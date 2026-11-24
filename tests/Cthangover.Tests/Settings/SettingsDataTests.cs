@@ -31,6 +31,7 @@ namespace Engine.Tests.Settings
             s2.CurrentScreen = 1;
             s2.VsyncEnabled = true;
             s2.MaxFps = 144;
+            s2.RenderScale3D = 0.75f;
 
             s1.Set(s2);
 
@@ -45,6 +46,7 @@ namespace Engine.Tests.Settings
             Assert.Equal(1, s1.CurrentScreen);
             Assert.True(s1.VsyncEnabled);
             Assert.Equal(144, s1.MaxFps);
+            Assert.Equal(s2.RenderScale3D, s1.RenderScale3D);
         }
 
         [Fact]
@@ -96,6 +98,7 @@ namespace Engine.Tests.Settings
             saved.CurrentScreen = 1;
             saved.VsyncEnabled = true;
             saved.MaxFps = 60;
+            saved.RenderScale3D = 0.75f;
             saved.LauncherShown = true;
 
             saved.Save();
@@ -117,6 +120,7 @@ namespace Engine.Tests.Settings
             Assert.Equal(saved.CurrentScreen, loaded.CurrentScreen);
             Assert.Equal(saved.VsyncEnabled, loaded.VsyncEnabled);
             Assert.Equal(saved.MaxFps, loaded.MaxFps);
+            Assert.Equal(saved.RenderScale3D, loaded.RenderScale3D);
             Assert.Equal(saved.LauncherShown, loaded.LauncherShown);
         }
 
@@ -152,7 +156,7 @@ namespace Engine.Tests.Settings
         [Fact]
         public void Save_overwrites_existing_file()
         {
-            var s1 = new SettingsData { BattleSpeed = 5 };
+            var s1 = new SettingsData { BattleSpeed = 5, RenderScale3D = 0.75f };
             s1.Save();
 
             var s2 = new SettingsData { BattleSpeed = 8 };
@@ -161,6 +165,7 @@ namespace Engine.Tests.Settings
             var loaded = new SettingsData();
             loaded.Load();
             Assert.Equal(8, loaded.BattleSpeed);
+            Assert.Null(loaded.RenderScale3D);
         }
     }
 }

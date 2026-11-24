@@ -65,6 +65,9 @@ if "%VERSION%"=="" (
     goto :fail
 )
 
+dotnet build mods\debug_client\source_code\DebugClient.Mcp.csproj -c Release -p:RestoreLockedMode=true --nologo
+if errorlevel 1 goto :fail
+
 rem Without it Godot scans earlier builds as project files and packs them.
 if not exist releases mkdir releases
 type nul > releases\.gdignore
@@ -132,6 +135,8 @@ call :copy_tree collections "%OUT%\collections"
 if errorlevel 1 exit /b 1
 call :copy_tree config "%OUT%\config"
 if errorlevel 1 exit /b 1
+call :copy_tree DebugClient "%OUT%\DebugClient"
+if errorlevel 1 exit /b 1
 if "%PLATFORM%"=="linux" (
     for /d %%m in ("%OUT%\mods\*") do if exist "%%m\native\*.dll" del /q "%%m\native\*.dll"
 )
@@ -158,7 +163,7 @@ rem ---------------------------------------------------------------------------
 :copy_tree
 set FIXTURE_SKIP=
 if /i "%~1"=="mods" set FIXTURE_SKIP=test_*
-robocopy "%~1" "%~2" /E /XJ /XD .git .git-template test_suites source_code %FIXTURE_SKIP% /XF *.pdb *.lib *.zip %3 /NFL /NDL /NJH /NJS /NP >nul
+robocopy "%~1" "%~2" /E /XJ /XD .git .git-template test_suites source_code __pycache__ %FIXTURE_SKIP% /XF *.pdb *.lib *.zip %3 /NFL /NDL /NJH /NJS /NP >nul
 if errorlevel 8 (
     echo Copying %~1 failed.
     exit /b 1

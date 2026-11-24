@@ -49,6 +49,8 @@ for arg in "$@"; do
 done
 [ ${#PLATFORMS[@]} -eq 0 ] && PLATFORMS=(windows linux)
 
+dotnet build mods/debug_client/source_code/DebugClient.Mcp.csproj -c Release -p:RestoreLockedMode=true --nologo
+
 # Without it Godot scans earlier builds as project files and packs them.
 mkdir -p releases
 touch releases/.gdignore
@@ -86,6 +88,7 @@ build() {
     copy_tree mods        "$out/mods" --exclude='./test_*' --exclude="$natives_skip"
     copy_tree collections "$out/collections"
     copy_tree config      "$out/config"
+    copy_tree DebugClient "$out/DebugClient" --exclude='__pycache__'
     "${PYTHON_BIN:-python3}" tests/verify_release_runtime.py "$out" "$rid"
 
     if [ "$ARCHIVE" -eq 1 ]; then

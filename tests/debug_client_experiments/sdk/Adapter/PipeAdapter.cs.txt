@@ -1,0 +1,74 @@
+using System.IO.Pipes;
+using System.Text.Json;
+using ModelContextProtocol.Protocol;
+using ModelContextProtocol.Server;
+
+namespace Cthangover.DebugClientExperiment;
+
+/// <summary>Owns a single MCP session and forwards diagnostic commands to the in-process host.</summary>
+public sealed class PipeAdapter(Func<string, CancellationToken, Task<string>> dispatch)
+{
+    private const string ToolSchema =
+        """{"type":"object","properties":{"mod":{"type":"string"}},"required":["mod"]}""";
+
+    /// <summary>Test entry point invoked inside the adapter's collectible load context.</summary>
+    public static Task RunAsync(string name, Func<string, CancellationToken, Task<string>> dispatch, TaskCompletionSource ready,
+        CancellationToken cancellation)
+    {
+        return new PipeAdapter(dispatch).ServeAsync(name, ready, cancellation);
+    }
+
+    private async Task ServeAsync(string name, TaskCompletionSource ready, CancellationToken cancellation)
+    {
+        using var pipe = new NamedPipeServerStream(name, PipeDirection.InOut, 1, PipeTransmissionMode.Byte,
+            PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
+        using var registration = cancellation.Register(pipe.Dispose);
+        ready.SetResult();
+
+        try
+        {
+            await pipe.WaitForConnectionAsync(cancellation);
+            var transport = new StreamServerTransport(pipe, pipe, "debug_client_probe");
+            await using var mcp = McpServer.Create(transport, new McpServerOptions
+            {
+                ServerInfo = new Implementation { Name = "debug_client_probe", Version = "1.0" },
+                Handlers = new McpServerHandlers { ListToolsHandler = ListTools, CallToolHandler = CallTool }
+            });
+            await mcp.RunAsync(cancellation);
+        }
+        catch (Exception error) when (cancellation.IsCancellationRequested &&
+            error is OperationCanceledException or IOException or ObjectDisposedException)
+        {
+        }
+    }
+
+    private static ValueTask<ListToolsResult> ListTools(RequestContext<ListToolsRequestParams> context,
+        CancellationToken cancellation)
+    {
+        using var schema = JsonDocument.Parse(ToolSchema);
+        return ValueTask.FromResult(new ListToolsResult
+        {
+            Tools = [new Tool { Name = "diagnose", InputSchema = schema.RootElement.Clone() }]
+        });
+    }
+
+    private async ValueTask<CallToolResult> CallTool(RequestContext<CallToolRequestParams> context,
+        CancellationToken cancellation)
+    {
+        var request = context.Params;
+        if (request?.Name != "diagnose" || request.Arguments is null ||
+            !request.Arguments.TryGetValue("mod", out var argument) || argument.ValueKind != JsonValueKind.String)
+        {
+            return new CallToolResult
+            {
+                IsError = true, Content = [new TextContentBlock { Text = "diagnose requires a mod name" }]
+            };
+        }
+
+        var text = await dispatch(argument.GetString()!, cancellation);
+        return new CallToolResult
+        {
+            Content = [new TextContentBlock { Text = text }]
+        };
+    }
+}

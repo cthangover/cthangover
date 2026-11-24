@@ -1,0 +1,29 @@
+using Cthangover.Core.Bootstrap;
+using Cthangover.Core.Mods;
+using Cthangover.Core.Utils;
+using Godot;
+
+/// <summary>Leaves a proof of readiness and exits even when the diagnostic channel is disabled.</summary>
+public sealed class BootInitializer : IModInitializer
+{
+    public void OnModLoaded(string modId) { }
+
+    public void OnModResourcesReady()
+    {
+        if (!GameEnvironment.IsRuntime || Engine.GetMainLoop() is not SceneTree tree)
+        {
+            return;
+        }
+
+        GameLogger.Log("MCP_BOOT_PROBE", "healthy fixture initialized");
+        tree.CreateTimer(6.0).Timeout += Quit;
+    }
+
+    private static void Quit()
+    {
+        if (GameEnvironment.IsRuntime && Engine.GetMainLoop() is SceneTree tree)
+        {
+            ApplicationExit.Quit(tree);
+        }
+    }
+}

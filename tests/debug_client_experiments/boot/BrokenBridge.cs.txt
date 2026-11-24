@@ -1,0 +1,17 @@
+using System.Collections.Generic;
+using System.Text.Json.Nodes;
+using System.Threading;
+using System.Threading.Tasks;
+using Cthangover.Core.Mods.HotReload;
+
+/// <summary>Would publish a development command if its source compiled.</summary>
+public sealed class BrokenBridge : IModDevelopmentCommand
+{
+    public IReadOnlyCollection<string> Commands { get; } = new[] { "compilation" };
+    public string Description => "Intentionally broken development command";
+
+    public Task<JsonNode> ExecuteAsync(ModDevelopmentContext context, string command, CancellationToken token)
+    {
+        return Task.FromResult<JsonNode>(MissingBridgeSymbol);
+    }
+}

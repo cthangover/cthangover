@@ -5,7 +5,7 @@ namespace Cthangover.Core.Settings
 
     /// <summary>
     /// Puts the saved display settings (<see cref="SettingsData"/>) on the game
-    /// window: monitor, window mode, window size, V-Sync and the frame rate cap.
+    /// window: monitor, window mode, window size, V-Sync, frame rate cap, and the optional 3D scale.
     /// The launcher calls <see cref="Apply"/> at start, the settings menu calls
     /// <see cref="ApplyWindow"/> / <see cref="ApplyRendering"/> on every change,
     /// so what the player sees is always what the next start restores.
@@ -27,13 +27,14 @@ namespace Cthangover.Core.Settings
         public static int ClampScreen(int screen) =>
             screen >= 0 && screen < ScreenCount ? screen : DisplayServer.GetPrimaryScreen();
 
-        /// <summary>Applies everything: window first, then V-Sync and the frame rate cap.</summary>
+        /// <summary>Applies the full display profile, including the project 3D scale when no override is saved.</summary>
         public static void Apply(SettingsData settings)
         {
             if (settings == null)
                 return;
             ApplyWindow(settings);
             ApplyRendering(settings);
+            ApplyProfileScale(settings);
         }
 
         /// <summary>Monitor, window mode and (in windowed mode) the centred window size.</summary>
@@ -69,8 +70,33 @@ namespace Cthangover.Core.Settings
         /// <summary>V-Sync and the frame rate cap; no window changes.</summary>
         public static void ApplyRendering(SettingsData settings)
         {
-            DisplayServer.WindowSetVsyncMode(settings.VsyncEnabled ? DisplayServer.VSyncMode.Enabled : DisplayServer.VSyncMode.Disabled);
-            Engine.MaxFps = Mathf.Max(0, settings.MaxFps);
+            ApplyRendering(settings.MaxFps,
+                settings.VsyncEnabled ? DisplayServer.VSyncMode.Enabled : DisplayServer.VSyncMode.Disabled,
+                null, null);
+        }
+
+        private static void ApplyProfileScale(SettingsData settings)
+        {
+            if (!GameEnvironment.IsRuntime || Engine.GetMainLoop() is not SceneTree tree)
+                return;
+
+            var configured = ProjectSettings.GetSettingWithOverride("rendering/scaling_3d/scale");
+            var scale = settings.RenderScale3D ?? (configured.VariantType == Variant.Type.Nil ? 1f : configured.AsSingle());
+            ApplyRendering(null, null, tree.Root, scale);
+        }
+
+        /// <summary>Applies specified live render values without moving the window or writing user preferences.</summary>
+        internal static void ApplyRendering(int? maxFps, DisplayServer.VSyncMode? vsyncMode, Viewport viewport, float? scale)
+        {
+            if (!GameEnvironment.IsRuntime)
+                return;
+
+            if (vsyncMode.HasValue && DisplayServer.GetName() != "headless")
+                DisplayServer.WindowSetVsyncMode(vsyncMode.Value);
+            if (maxFps.HasValue)
+                Engine.MaxFps = Mathf.Max(0, maxFps.Value);
+            if (viewport != null && scale.HasValue && float.IsFinite(scale.Value))
+                viewport.Scaling3DScale = scale.Value;
         }
     }
 }

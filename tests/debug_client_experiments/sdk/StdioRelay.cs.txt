@@ -1,0 +1,47 @@
+using System.Diagnostics;
+using System.IO.Pipes;
+using System.Reflection;
+using System.Text;
+
+namespace Cthangover.DebugClientExperiment;
+
+/// <summary>Forwards byte streams between the MCP client's redirected console and the local pipe.</summary>
+internal static class StdioRelay
+{
+    internal static Process Start(string pipeName)
+    {
+        var executable = Environment.ProcessPath ?? throw new InvalidOperationException("Missing relay executable.");
+        var start = new ProcessStartInfo(executable)
+        {
+            UseShellExecute = false,
+            RedirectStandardInput = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            StandardInputEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false),
+            StandardOutputEncoding = Encoding.UTF8
+        };
+        if (string.Equals(Path.GetFileNameWithoutExtension(executable), "dotnet", StringComparison.OrdinalIgnoreCase))
+        {
+            start.ArgumentList.Add(Assembly.GetExecutingAssembly().Location);
+        }
+        start.ArgumentList.Add("--relay");
+        start.ArgumentList.Add(pipeName);
+        return Process.Start(start) ?? throw new InvalidOperationException("Could not start relay.");
+    }
+
+    internal static async Task RunAsync(string pipeName)
+    {
+        using var pipe = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut,
+            PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
+        await pipe.ConnectAsync(3_000);
+        using var stop = new CancellationTokenSource();
+        using var input = Console.OpenStandardInput();
+        using var output = Console.OpenStandardOutput();
+        var send = input.CopyToAsync(pipe, stop.Token);
+        var receive = pipe.CopyToAsync(output, stop.Token);
+        var finished = await Task.WhenAny(send, receive);
+        await finished;
+        await output.FlushAsync();
+        stop.Cancel();
+    }
+}

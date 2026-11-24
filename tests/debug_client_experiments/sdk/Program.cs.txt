@@ -1,0 +1,203 @@
+using System.Diagnostics;
+using System.IO.Pipes;
+using System.Runtime.CompilerServices;
+using System.Text.Json;
+
+namespace Cthangover.DebugClientExperiment;
+
+/// <summary>Runs a real MCP exchange against a collectible adapter and a minimal persistent host.</summary>
+internal sealed class Program
+{
+    private readonly string pipeName = "cthangover-mcp-probe-" + Guid.NewGuid().ToString("N");
+    private readonly TaskCompletionSource blockedStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private readonly TaskCompletionSource<bool> blockedFinished = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private int commandCount;
+
+    private static async Task<int> Main(string[] args)
+    {
+        if (args is ["--relay", var name])
+        {
+            await StdioRelay.RunAsync(name);
+            return 0;
+        }
+
+        var probe = new Program();
+        Require(probe.Dispatch("before") == "before БитыйМод.cs:17 CS1002 #1", "Host unavailable before enable.");
+        EnsureCollected(probe.EnableAndDisable(expectedCount: 2, stopDuringCall: false));
+        await probe.AssertDisconnectedAsync();
+        Require(probe.Dispatch("after") == "after БитыйМод.cs:17 CS1002 #3", "Disabling adapter interrupted host.");
+        EnsureCollected(probe.EnableAndDisable(expectedCount: 4, stopDuringCall: true));
+        await probe.AssertDisconnectedAsync();
+        Require(probe.Dispatch("after_busy") == "after_busy БитыйМод.cs:17 CS1002 #5",
+            "Stopping the in-flight call interrupted other host operations.");
+        Console.WriteLine("PASS MCP 1.4.1 initialize, tools/list, tools/call and UTF-8 over stdio and named pipe");
+        Console.WriteLine("PASS active session ended, connection refused, host callable, bridge re-enabled");
+        Console.WriteLine("PASS in-flight diagnose entered host dispatch, observed cancellation and exited");
+        Console.WriteLine("PASS both adapter load contexts collected");
+        return 0;
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private WeakReference EnableAndDisable(int expectedCount, bool stopDuringCall)
+    {
+        var adapterDirectory = Path.Combine(AppContext.BaseDirectory, "adapter");
+        var context = new AdapterLoadContext(adapterDirectory);
+        var collected = new WeakReference(context);
+        try
+        {
+            var assembly = context.LoadFromAssemblyPath(Path.Combine(adapterDirectory, "Adapter.dll"));
+            var adapter = assembly.GetType("Cthangover.DebugClientExperiment.PipeAdapter", throwOnError: true)!;
+            var start = adapter.GetMethod("RunAsync")!
+                .CreateDelegate<Func<string, Func<string, CancellationToken, Task<string>>, TaskCompletionSource,
+                    CancellationToken, Task>>();
+            ExerciseAsync(start, expectedCount, stopDuringCall).GetAwaiter().GetResult();
+        }
+        finally
+        {
+            context.Unload();
+        }
+        return collected;
+    }
+
+    private async Task ExerciseAsync(
+        Func<string, Func<string, CancellationToken, Task<string>>, TaskCompletionSource, CancellationToken, Task> start,
+        int expectedCount, bool stopDuringCall)
+    {
+        using var stop = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        var ready = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var server = start(pipeName, DispatchAsync, ready, stop.Token);
+        await ready.Task.WaitAsync(stop.Token);
+        using var relay = StdioRelay.Start(pipeName);
+        try
+        {
+            await ExchangeAsync(relay, expectedCount, stop.Token);
+            if (stopDuringCall)
+            {
+                await relay.StandardInput.WriteLineAsync("""
+                    {"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"diagnose","arguments":{"mod":"ожидание"}}}
+                    """);
+                await blockedStarted.Task.WaitAsync(TimeSpan.FromSeconds(3));
+                Require(!blockedFinished.Task.IsCompleted, "The second diagnose must still be running at disable.");
+            }
+
+            var watch = Stopwatch.StartNew();
+            await stop.CancelAsync();
+            await server.WaitAsync(TimeSpan.FromSeconds(3));
+            if (stopDuringCall)
+            {
+                Require(await blockedFinished.Task.WaitAsync(TimeSpan.FromSeconds(3)),
+                    "The in-flight diagnose did not observe cancellation before exiting.");
+            }
+            var afterStop = await relay.StandardOutput.ReadLineAsync().WaitAsync(TimeSpan.FromSeconds(3));
+            Require(afterStop == null, "The active MCP session stayed open after disable.");
+            await relay.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(3));
+            Require(relay.ExitCode == 0, await relay.StandardError.ReadToEndAsync());
+            var sessionState = stopDuringCall ? "an in-flight call" : "an idle connection";
+            Console.WriteLine($"Closing an MCP session with {sessionState} took {watch.ElapsedMilliseconds} ms.");
+        }
+        finally
+        {
+            await stop.CancelAsync();
+            if (!relay.HasExited)
+            {
+                relay.Kill();
+                await relay.WaitForExitAsync();
+            }
+            await server.WaitAsync(TimeSpan.FromSeconds(3));
+        }
+    }
+
+    private static async Task ExchangeAsync(Process relay, int expectedCount, CancellationToken cancellation)
+    {
+        await relay.StandardInput.WriteLineAsync("""
+            {"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"probe","version":"1"}}}
+            """);
+        using var initialized = await ReadReplyAsync(relay, 1, cancellation);
+        Require(initialized.RootElement.GetProperty("serverInfo").GetProperty("name").GetString() == "debug_client_probe",
+            "Wrong MCP server identity.");
+        await relay.StandardInput.WriteLineAsync("""{"jsonrpc":"2.0","method":"notifications/initialized"}""");
+        await relay.StandardInput.WriteLineAsync("""{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}""");
+        using var listed = await ReadReplyAsync(relay, 2, cancellation);
+        var tools = listed.RootElement.GetProperty("tools");
+        Require(tools.GetArrayLength() == 1 && tools[0].GetProperty("name").GetString() == "diagnose",
+            "The adapter did not expose diagnose.");
+        Require(tools[0].GetProperty("inputSchema").GetProperty("required")[0].GetString() == "mod",
+            "The diagnose schema did not expose the required mod parameter.");
+        await relay.StandardInput.WriteLineAsync("""
+            {"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"diagnose","arguments":{"mod":"полевой_мод"}}}
+            """);
+        using var called = await ReadReplyAsync(relay, 3, cancellation);
+        var answer = called.RootElement.GetProperty("content")[0].GetProperty("text").GetString();
+        Require(answer == $"полевой_мод БитыйМод.cs:17 CS1002 #{expectedCount}", $"Unexpected diagnostic: {answer}");
+    }
+
+    private static async Task<JsonDocument> ReadReplyAsync(Process relay, int id, CancellationToken cancellation)
+    {
+        var line = await relay.StandardOutput.ReadLineAsync(cancellation)
+            ?? throw new IOException("Relay closed before the MCP reply.");
+        using var reply = JsonDocument.Parse(line);
+        Require(reply.RootElement.GetProperty("id").GetInt32() == id, "Unexpected MCP response ID.");
+        if (!reply.RootElement.TryGetProperty("result", out var result))
+        {
+            throw new InvalidOperationException(line);
+        }
+        return JsonDocument.Parse(result.GetRawText());
+    }
+
+    private async Task AssertDisconnectedAsync()
+    {
+        using var client = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut,
+            PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
+        try
+        {
+            await client.ConnectAsync(200);
+            throw new InvalidOperationException("A new client connected with the adapter disabled.");
+        }
+        catch (TimeoutException)
+        {
+        }
+    }
+
+    private string Dispatch(string mod)
+    {
+        return $"{mod} БитыйМод.cs:17 CS1002 #{Interlocked.Increment(ref commandCount)}";
+    }
+
+    private Task<string> DispatchAsync(string mod, CancellationToken cancellation)
+    {
+        return mod == "ожидание" ? RunBlockedAsync(cancellation) : Task.FromResult(Dispatch(mod));
+    }
+
+    private async Task<string> RunBlockedAsync(CancellationToken cancellation)
+    {
+        blockedStarted.SetResult();
+        try
+        {
+            await Task.Delay(Timeout.InfiniteTimeSpan, cancellation);
+            throw new InvalidOperationException("The blocking probe returned without cancellation.");
+        }
+        finally
+        {
+            blockedFinished.SetResult(cancellation.IsCancellationRequested);
+        }
+    }
+
+    private static void EnsureCollected(WeakReference adapter)
+    {
+        for (var attempt = 0; adapter.IsAlive && attempt < 10; attempt++)
+        {
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+        }
+        Require(!adapter.IsAlive, "Adapter's collectible context stayed alive.");
+    }
+
+    private static void Require(bool condition, string message)
+    {
+        if (!condition)
+        {
+            throw new InvalidOperationException(message);
+        }
+    }
+}

@@ -1,0 +1,14 @@
+using System.Reflection;
+using System.Runtime.Loader;
+
+namespace Cthangover.DebugClientExperiment;
+
+/// <summary>Loads adapter dependencies from its own directory and shares CLR framework assemblies.</summary>
+internal sealed class AdapterLoadContext(string directory) : AssemblyLoadContext(isCollectible: true)
+{
+    protected override Assembly? Load(AssemblyName name)
+    {
+        var path = Path.Combine(directory, name.Name + ".dll");
+        return File.Exists(path) ? LoadFromAssemblyPath(path) : null;
+    }
+}

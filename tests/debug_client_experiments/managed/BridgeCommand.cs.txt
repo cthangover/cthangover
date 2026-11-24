@@ -1,0 +1,30 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Runtime.Loader;
+using System.Text.Json.Nodes;
+using System.Threading;
+using System.Threading.Tasks;
+using Cthangover.Core.Mods.HotReload;
+using ModelContextProtocol.Server;
+
+/// <summary>Exercises an SDK-owned transport from a command compiled by the game's own mod compiler.</summary>
+public sealed class BridgeCommand : IModDevelopmentCommand
+{
+    public IReadOnlyCollection<string> Commands { get; } = new[] { "mcp.probe" };
+    public string Description => "Create and dispose the SDK transport within the mod context.";
+
+    public async Task<JsonNode> ExecuteAsync(ModDevelopmentContext context, string command, CancellationToken token)
+    {
+        using var input = new MemoryStream();
+        using var output = new MemoryStream();
+        await using var transport = new StreamServerTransport(input, output);
+        var sdk = transport.GetType().Assembly;
+        return new JsonObject
+        {
+            ["sdk"] = sdk.GetName().Name,
+            ["collectible"] = sdk.IsCollectible,
+            ["context"] = AssemblyLoadContext.GetLoadContext(sdk)?.Name
+        };
+    }
+}

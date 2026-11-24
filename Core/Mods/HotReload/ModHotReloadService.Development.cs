@@ -13,6 +13,20 @@ namespace Cthangover.Core.Mods.HotReload
     using Cthangover.Core.Settings;
     using Godot;
 
+    /// <summary>
+    /// Development-driven reload path: unlike the file watchers in the other part, this one is invoked
+    /// explicitly by the debug host's <c>mod.attach</c>/<c>mod.reload</c> commands, so an agent (or a
+    /// developer) can bring one mod — or one changed engine dependency — into the already running process.
+    /// <para>
+    /// Mechanism and its traps: the target mod is staged with the ordinary pipeline
+    /// (<c>PrepareDevelopment</c>), the plan diffs against the live set (load/unload/keep), and unchanged
+    /// dependents are kept. A scene that owns nodes of an unloaded assembly cannot be hot-swapped in place,
+    /// so the caller asks for a checkpoint: the game saves a hidden slot, shows the transition screen,
+    /// applies the plan and reloads the save. That is why an engine-level edit requires
+    /// <c>checkpoint=true</c> while attaching a fresh, self-contained mod does not — and why the command
+    /// refuses to run while any other transition is in progress.
+    /// </para>
+    /// </summary>
     public partial class ModHotReloadService
     {
         internal static async Task<ModReloadResult> ReloadDevelopmentAsync(SceneTree tree, string id, bool attach,

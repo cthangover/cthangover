@@ -1,4 +1,4 @@
-namespace Cthangover.Core.Mods.HotReload
+namespace Cthangover.Core.Mods.HotReload.Impls
 {
     using System;
     using System.Collections.Generic;
@@ -12,6 +12,9 @@ namespace Cthangover.Core.Mods.HotReload
     {
         /// <inheritdoc />
         public IReadOnlyCollection<string> Commands { get; } = new[] { "assets.refresh" };
+
+        /// <inheritdoc />
+        public string Description { get; } = "assets.refresh: refreshes resource lookup after asset file changes and lets owners refresh their live representations; path is mod-relative.";
 
         /// <inheritdoc />
         public Task<JsonNode> ExecuteAsync(ModDevelopmentContext context, string command, CancellationToken token)

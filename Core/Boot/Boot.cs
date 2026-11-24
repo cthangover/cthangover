@@ -104,6 +104,7 @@ namespace Cthangover.Core.Bootstrap
             if (!Begin(BootMode.HeadlessSync))
                 return;
 
+            Mods.Host.ModErrorFeed.Initialize();
             try
             {
                 Phase = BootPhase.PreparingPaths;
@@ -124,7 +125,7 @@ namespace Cthangover.Core.Bootstrap
 
                 Phase = BootPhase.Ready;
                 Mods.HotReload.ModHotReloadService.InstallIfEnabled(sceneManager?.GetTree());
-                Mods.HotReload.ModDevelopmentControl.InstallIfEnabled(sceneManager?.GetTree());
+                Mods.Host.DebugHost.Install(sceneManager?.GetTree());
                 GameLogger.Log("BOOT", "Boot (sync) complete");
                 Mods.Testing.ItestCompileGuard.FailIfBroken(sceneManager?.GetTree());
             }
@@ -155,6 +156,7 @@ namespace Cthangover.Core.Bootstrap
             if (!Begin(BootMode.LauncherAsync))
                 return;
 
+            Mods.Host.ModErrorFeed.Initialize();
             // Let the boot overlay render one frame before the heavy phases,
             // mirroring the previous launcher-driven timing.
             await context.ToSignal(context.GetTree(), SceneTree.SignalName.ProcessFrame);
@@ -190,7 +192,7 @@ namespace Cthangover.Core.Bootstrap
                 Phase = BootPhase.Ready;
                 BootProgress.EnterPhase(BootPhase.Ready);
                 Mods.HotReload.ModHotReloadService.InstallIfEnabled(context.GetTree());
-                Mods.HotReload.ModDevelopmentControl.InstallIfEnabled(context.GetTree());
+                Mods.Host.DebugHost.Install(context.GetTree());
                 GameLogger.Log("BOOT", "Boot (launcher) complete");
                 Mods.Testing.ItestCompileGuard.FailIfBroken(context.GetTree());
             }

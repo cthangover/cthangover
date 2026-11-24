@@ -1,5 +1,7 @@
+using System;
 using System.IO;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Cthangover.Core.Utils;
 
 namespace Cthangover.Core.Settings
@@ -44,6 +46,9 @@ namespace Cthangover.Core.Settings
         public bool   VsyncEnabled    { get; set; }
         /// <summary>Frame rate cap (<c>Engine.MaxFps</c>); 0 = unlimited.</summary>
         public int    MaxFps          { get; set; }
+        /// <summary>Optional 3D viewport scale override; null lets the project select its usual render scale.</summary>
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public float? RenderScale3D   { get; set; }
         /// <summary><c>true</c> if the launcher window has been shown at least once,
         /// suppressing it on subsequent launches.</summary>
         public bool   LauncherShown   { get; set; }
@@ -80,6 +85,7 @@ namespace Cthangover.Core.Settings
             CurrentScreen   = cfg.Display.CurrentScreen;
             VsyncEnabled    = cfg.Display.VsyncEnabled;
             MaxFps          = cfg.Display.MaxFps;
+            RenderScale3D   = null;
         }
 
         /// <summary>Resolves the settings file path for the current environment.</summary>
@@ -117,8 +123,8 @@ namespace Cthangover.Core.Settings
 
         /// <summary>
         /// Serialises all current property values as indented JSON to
-        /// <c>user://settings.json</c>, truncating and rewriting the file on
-        /// each call. <see cref="LauncherShown"/> is persisted with the rest.
+        /// <c>user://settings.json</c>. Replaces the file only after the entire new profile
+        /// is written. <see cref="LauncherShown"/> is persisted with the rest.
         /// </summary>
         public void Save()
         {
@@ -129,7 +135,16 @@ namespace Cthangover.Core.Settings
 
             var json = JsonSerializer.Serialize(this,
                 JsonOptionsProvider.WriteIndentedOptions);
-            File.WriteAllText(path, json);
+            var temporary = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
+            try
+            {
+                File.WriteAllText(temporary, json);
+                File.Move(temporary, path, overwrite: true);
+            }
+            finally
+            {
+                File.Delete(temporary);
+            }
         }
 
         /// <summary>
@@ -154,6 +169,7 @@ namespace Cthangover.Core.Settings
             CurrentScreen   = other.CurrentScreen;
             VsyncEnabled    = other.VsyncEnabled;
             MaxFps          = other.MaxFps;
+            RenderScale3D   = other.RenderScale3D;
         }
     }
 }

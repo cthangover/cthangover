@@ -1,4 +1,4 @@
-namespace Cthangover.Core.Mods.HotReload
+namespace Cthangover.Core.Mods.HotReload.Impls
 {
     using System;
     using System.Collections.Generic;
@@ -12,6 +12,9 @@ namespace Cthangover.Core.Mods.HotReload
     {
         /// <inheritdoc />
         public IReadOnlyCollection<string> Commands { get; } = new[] { "scene.switch" };
+
+        /// <inheritdoc />
+        public string Description { get; } = "scene.switch: requests a normal logical scene transition from the live process; scene is a mod-registered logical scene name.";
 
         /// <inheritdoc />
         public Task<JsonNode> ExecuteAsync(ModDevelopmentContext context, string command, CancellationToken token)

@@ -1,4 +1,4 @@
-namespace Cthangover.Core.Mods.HotReload
+namespace Cthangover.Core.Mods.HotReload.Impls
 {
     using System;
     using System.Collections.Generic;
@@ -7,26 +7,35 @@ namespace Cthangover.Core.Mods.HotReload
     using System.Text.Json.Nodes;
     using System.Threading;
     using System.Threading.Tasks;
+    using Cthangover.Core.Bootstrap;
     using Cthangover.Core.Games;
     using Cthangover.Core.Scenes;
     using Cthangover.Core.Settings;
+    using Cthangover.Core.Utils;
     using Godot;
 
     /// <summary>Reads the current process identity and optionally one detached save slot.</summary>
     public sealed class ModDevelopmentRuntimeQuery : IModDevelopmentCommand
     {
-        /// <inheritdoc />
+        /// <summary>Exposes process status and detached runtime state under separate command names.</summary>
         public IReadOnlyCollection<string> Commands { get; } = new[] { "status", "runtime.inspect" };
 
-        /// <inheritdoc />
+        /// <summary>Distinguishes process identity from a game runtime or save slot snapshot.</summary>
+        public string Description { get; } = "status: process identity, boot phase and active legacy-pipe connection count. runtime.inspect: reads live game state and an optional detached save slot.";
+
+        /// <summary>Reads runtime objects only while the kernel dispatcher is on the game thread.</summary>
         public Task<JsonNode> ExecuteAsync(ModDevelopmentContext context, string command, CancellationToken token)
             => Task.FromResult<JsonNode>(command == "status" ? Status(context.Tree)
                 : InspectRuntime(context.Tree, context.Request["mod"]?.GetValue<string>()));
 
-        private static JsonObject Status(SceneTree tree) => new()
+        internal static JsonObject Status(SceneTree tree) => new()
         {
             ["protocol"] = 1,
+            ["instance"] = Cthangover.Core.Mods.Host.DebugHostInstance.Id.ToString(),
             ["pid"] = System.Environment.ProcessId,
+            ["phase"] = Boot.Phase.ToString(),
+            ["project_root"] = GamePaths.Globalize("res://"),
+            ["connections"] = Cthangover.Core.Mods.Host.DebugHost.ActiveConnections,
             ["game"] = ActiveGame.Id,
             ["scene"] = SceneManager.GetCurrentSceneName(),
             ["paused"] = tree.Paused,
@@ -34,7 +43,7 @@ namespace Cthangover.Core.Mods.HotReload
             ["mods"] = JsonSerializer.SerializeToNode(ModRegistry.Instance.Mods.Keys.Order(StringComparer.Ordinal))
         };
 
-        private static JsonObject InspectRuntime(SceneTree tree, string slot)
+        internal static JsonObject InspectRuntime(SceneTree tree, string slot)
         {
             var result = Status(tree);
             var runtime = GameData.Instance.Runtime;

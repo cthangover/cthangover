@@ -44,13 +44,13 @@ def verify_content(root):
     if len(packs) != 1:
         raise ValueError(f"expected one standalone game PCK, found {len(packs)}")
     paths = pck_paths(packs[0])
-    forbidden = {"jobs", "site_github", "comfy", "node_modules", "authoring3d", "docs", "tests", "sdk",
+    forbidden = {"jobs", "site_github", "comfy", "node_modules", "authoring3d", "docs", "tests", "sdk", "DebugClient",
                  "site", "mockups", "gen", "undefined", "releases", "mods_private", "collections", "config"}
     unwanted = []
     for path in paths:
         parts = path.split("/")
         if (parts[0] in forbidden or any(part in {"bin", "obj", "__pycache__"} for part in parts)
-                or path == "global.json" or path.startswith("scenes/test/")):
+                or path in {"global.json", "dev_host.json", "dev_host_probe.json"} or path.startswith("scenes/test/")):
             unwanted.append(path)
         elif parts[0] == "mods" and (parts[1].startswith("test_") or "test_suites" in parts or "source_code" in parts):
             unwanted.append(path)
@@ -62,6 +62,11 @@ def verify_content(root):
     actual = {path.parent.name for path in (root / "mods").glob("*/manifest.json")}
     if actual != expected:
         raise ValueError(f"release mod set differs: missing={sorted(expected - actual)}, extra={sorted(actual - expected)}")
+    libraries = ("DebugClient.Mcp.dll", "ModelContextProtocol.Core.dll", "Microsoft.Extensions.AI.Abstractions.dll",
+                 "Microsoft.Extensions.DependencyInjection.Abstractions.dll", "Microsoft.Extensions.Logging.Abstractions.dll")
+    for path in ("DebugClient/mcp_stdio.py", *(f"mods/debug_client/lib/{library}" for library in libraries)):
+        if not (root / path).is_file():
+            raise ValueError(f"release debug client is missing {path}")
     print(f"release content: {len(paths)} PCK files; {len(actual)} runtime mods; no development trees or fixtures")
 
 
@@ -75,16 +80,22 @@ def verify(root, rid, packages, expected_release=None):
     if len(configs) != 1:
         raise ValueError(f"expected one game runtimeconfig, found {len(configs)}")
     folder = configs[0].parent
-    if not (folder / "Cthangover.dll").is_file():
-        raise ValueError("exported game assembly is missing")
+    core = folder / "Cthangover.dll"
+    core_reference = Path("mod_reference_assemblies/core/Cthangover.dll")
+    core_receipt = Path("mod_reference_assemblies/core/contract.sha256")
+    core_hash = hashlib.sha256(core.read_bytes()).hexdigest()
+    reference_hash = hashlib.sha256((folder / core_reference).read_bytes()).hexdigest()
+    receipt_hashes = (folder / core_receipt).read_text(encoding="utf-8-sig").lower().splitlines()
+    if core_hash == reference_hash or receipt_hashes != [core_hash, reference_hash]:
+        raise ValueError("exported core mod contract does not match its assemblies")
     if expected_release is not None:
         built = list(expected_release.rglob("Cthangover.runtimeconfig.json"))
         if len(built) != 1:
             raise ValueError("cannot identify the current build's managed payload")
-        for name in ("Cthangover.dll", "Cthangover.deps.json", "Cthangover.runtimeconfig.json"):
+        for name in (core.name, "Cthangover.deps.json", "Cthangover.runtimeconfig.json", core_reference, core_receipt):
             if (folder / name).read_bytes() != (built[0].parent / name).read_bytes():
                 raise ValueError(f"verify payload {name} differs from the release just built")
-    print(f"release core: sha256={hashlib.sha256((folder / 'Cthangover.dll').read_bytes()).hexdigest()}")
+    print(f"release core: sha256={core_hash}; reference sha256={reference_hash}")
     if not (folder / "Godot.SourceGenerators.dll").is_file():
         raise ValueError("runtime mod compiler requires exported Godot.SourceGenerators.dll")
     config = json.loads(configs[0].read_text(encoding="utf-8"))["runtimeOptions"]
@@ -131,7 +142,7 @@ def main():
     parser.add_argument("root", type=Path)
     parser.add_argument("rid", choices=["linux-x64", "win-x64"])
     parser.add_argument("--packages", type=Path, default=Path(os.environ.get("NUGET_PACKAGES", Path.home() / ".nuget" / "packages")))
-    parser.add_argument("--expected-release", type=Path, help="require the same core/deps/config as the release just built")
+    parser.add_argument("--expected-release", type=Path, help="require the same core, mod contract, deps and config as the release just built")
     args = parser.parse_args()
     try:
         verify(args.root, args.rid, args.packages, args.expected_release)

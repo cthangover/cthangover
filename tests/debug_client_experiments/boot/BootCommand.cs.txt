@@ -1,0 +1,42 @@
+using System;
+using System.Collections.Generic;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Threading;
+using System.Threading.Tasks;
+using Cthangover.Core.Bootstrap;
+using Cthangover.Core.Mods.HotReload;
+using Cthangover.Core.Utils;
+using Godot;
+
+/// <summary>Reports compiler diagnostics retained by the kernel and marks a warning after DebugHost starts.</summary>
+public sealed class BootCommand : IModDevelopmentCommand
+{
+    public IReadOnlyCollection<string> Commands { get; } = new[] { "compilation", "finish" };
+    public string Description => "Observe boot compiler diagnostics and stop the isolated game";
+
+    public Task<JsonNode> ExecuteAsync(ModDevelopmentContext context, string command, CancellationToken token)
+    {
+        if (!GameEnvironment.IsRuntime)
+        {
+            throw new InvalidOperationException("The boot probe needs a running game.");
+        }
+
+        if (command == "finish")
+        {
+            context.Tree.CreateTimer(0.25).Timeout += Quit;
+            return Task.FromResult<JsonNode>(JsonValue.Create(true));
+        }
+
+        GameLogger.Log("MCP_BOOT_PROBE", "warning after DebugHost startup", LogLevel.Warning);
+        return Task.FromResult<JsonNode>(JsonSerializer.SerializeToNode(GameLogger.CompilationErrors.ToArray()));
+    }
+
+    private static void Quit()
+    {
+        if (GameEnvironment.IsRuntime && Engine.GetMainLoop() is SceneTree tree)
+        {
+            ApplicationExit.Quit(tree);
+        }
+    }
+}

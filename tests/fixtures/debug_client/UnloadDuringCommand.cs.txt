@@ -1,0 +1,48 @@
+using System;
+using System.Collections.Generic;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Threading;
+using System.Threading.Tasks;
+using Cthangover.Core.Mods.HotReload;
+using Cthangover.Core.Mods.Unload;
+using Cthangover.Core.Utils;
+using Godot;
+
+/// <summary>Triggers the real mod unloader on a separate frame while the MCP caller waits.</summary>
+public sealed class UnloadDuringCommand : IModDevelopmentCommand
+{
+    private SceneTree tree;
+    private JsonObject report;
+
+    /// <summary>Exposes the test trigger and the independently observable completion result.</summary>
+    public IReadOnlyCollection<string> Commands { get; } = new[] { "test.debug.unload_during_call", "test.debug.unload_result" };
+
+    /// <summary>Explains how the fixture separates the outstanding call from its unload observation.</summary>
+    public string Description => "Schedules a bridge unload during a cancellable call. Query test.debug.unload_result independently afterward.";
+
+    /// <summary>Waits for cancellation without blocking the game thread that performs the unload.</summary>
+    public async Task<JsonNode> ExecuteAsync(ModDevelopmentContext context, string command, CancellationToken token)
+    {
+        if (command == "test.debug.unload_result")
+            return report;
+        if (!GameEnvironment.IsRuntime)
+            throw new InvalidOperationException("This fixture needs a running scene tree.");
+
+        tree = context.Tree;
+        tree.CreateTimer(0.1).Timeout += UnloadBridge;
+        await Task.Delay(TimeSpan.FromSeconds(15), token);
+        return JsonValue.Create(false);
+    }
+
+    private async void UnloadBridge()
+    {
+        var ticket = ModUnloader.Unload(new[] { "debug_client" }, tree);
+        var alive = await ticket.CollectAsync(tree);
+        report = new JsonObject
+        {
+            ["released"] = JsonSerializer.SerializeToNode(ticket.ModIds),
+            ["alive"] = JsonSerializer.SerializeToNode(alive)
+        };
+    }
+}
