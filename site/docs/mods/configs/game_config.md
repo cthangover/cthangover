@@ -27,8 +27,8 @@ config/
   // Display settings
   "display": {
     "window_mode": 3,             // 0=Windowed, 1=Min, 2=Max, 3=Fullscreen, 4=Exclusive
-    "resolution_width": 1920,     // Width in pixels
-    "resolution_height": 1024,    // Height in pixels
+    "resolution_width": 2560,     // Width in pixels
+    "resolution_height": 1440,    // Height in pixels
     "current_screen": 0,          // Monitor index (0-based)
     "vsync_enabled": false,       // Vertical sync
     "max_fps": 0                  // Frame cap; 0 is unlimited
@@ -65,7 +65,7 @@ config/
 | `vsync_enabled` | bool | true/false | Vertical sync |
 | `max_fps` | int | 0 or frame cap | 0 means unlimited |
 
-The shipped config uses a 1920×1024 window size; `DisplaySection` code defaults are 1920×1080. The base viewport is 1920×1024 with `canvas_items` stretch. The Display tab exposes window mode, monitor, window size, V-Sync and frame cap; `scale` is not a current field. Windowed sizes are centred on the selected monitor.
+The shipped config uses 2560×1440 for windowed mode. `DisplaySection` falls back to 1920×1080. The Godot base viewport is 1920×1024 with `canvas_items` stretch. The 3D render scale is a user-profile override described under [Display settings](/docs/core/display-settings).
 
 ## `language` section
 
@@ -80,7 +80,8 @@ The shipped config uses a 1920×1024 window size; `DisplaySection` code defaults
 | `enabled` | bool | Master logging toggle |
 | `console_enabled` | bool | Write logs to console output |
 | `minimum_level` | string | Minimum log level: `"Debug"`, `"Message"`, `"Warning"`, `"Error"` |
-| `enabled_categories` | string[] | Active log channels (see below) |
+| `enabled_categories` | string[] | Category list read by the logger. The runtime category filter is currently disabled |
+| `max_file_size_mb`, `max_files` | int | File size and retained-file limits for log rotation |
 
 ### Available log categories
 
@@ -131,7 +132,7 @@ Categories are plain strings passed to `GameLogger.Log(category, ...)` — **no 
 | `UNINSTALLER` | Mod uninstall/cleanup |
 | `UI` | UI events |
 
-> **Warning**: the `enabled_categories` whitelist filter is currently **commented out** inside `GameLogger.Log` — category filtering is inert, and all categories are logged regardless of this setting. Note also that the `config/game_config.json` shipped with the game still lists legacy `LOG_`-prefixed strings (e.g. `"LOG_MODS"`); since categories are plain unprefixed strings, those entries never match a real category.
+The logger currently filters by level. The shipped `enabled_categories` list contains historical `LOG_`-prefixed names.
 
 ### Log output files
 

@@ -32,6 +32,7 @@
   var defaultTitle = document.title;
 
   var docsIndex = null;     /* slug -> markdown; null, пока индекс не загружен */
+  var russianDocs = {};     /* slug -> {title, markdown} для страниц с переводом */
   var docsTree = [];
   var flat = [];            /* [{slug,title}] в порядке дерева — для prev/next */
   var currentPage = null;
@@ -49,9 +50,23 @@
     })(nodes);
   }
 
+  function translationOf(slug) {
+    return lang === "ru" && russianDocs[slug];
+  }
+
+  function nodeTitle(node) {
+    var translation = translationOf(node.slug);
+    return translation ? translation.title : node.title;
+  }
+
+  function pageMarkdown(slug) {
+    var translation = translationOf(slug);
+    return translation ? translation.markdown : docsIndex[slug];
+  }
+
   function titleOf(slug) {
     for (var i = 0; i < flat.length; i++) {
-      if (flat[i].slug === slug) return flat[i].title;
+      if (flat[i].slug === slug) return nodeTitle(flat[i]);
     }
     var parts = slug.split("/");
     return parts[parts.length - 1];
@@ -70,7 +85,7 @@
     var result = [];
     for (var i = 0; i < nodes.length; i++) {
       var n = nodes[i];
-      var self = n.slug ? matchText(docsIndex[n.slug] || "", query) : false;
+      var self = n.slug ? matchText(pageMarkdown(n.slug) || "", query) : false;
       var kids = n.children ? filterTree(n.children, query) : [];
       if (self || kids.length) {
         var copy = { title: n.title, slug: n.slug };
@@ -104,7 +119,7 @@
         }
         var cls = (n.slug === currentPage ? "on" : "") + (depth ? " sub" : "");
         html += '<a href="#/docs/' + n.slug + '" class="' + cls.trim() +
-                '" style="--d:' + depth + '" data-slug="' + n.slug + '">' + esc(n.title) + "</a>";
+                '" style="--d:' + depth + '" data-slug="' + n.slug + '">' + esc(nodeTitle(n)) + "</a>";
         if (n.children) walk(n.children, depth + 1);
       }
     })(nodes, 0);
@@ -155,14 +170,16 @@
     if (fIdx !== -1) { frag = slug.slice(fIdx + 1); slug = slug.slice(0, fIdx); }
     slug = normalizeSlug(slug);
 
-    var md = docsIndex[slug];
-    if (!md) {
+    var md = pageMarkdown(slug);
+    if (typeof md !== "string") {
       container.innerHTML =
         '<div class="docs-error">' + esc(t("not_found")) + ': <code>' + esc(slug) + "</code></div>";
       return;
     }
 
     currentPage = slug;
+    var contentLang = translationOf(slug) ? "ru" : "en";
+    container.lang = contentLang;
     container.innerHTML = marked.parse(md);
     var heads = CTRender.addHeadingIds(container);
     CTRender.renderMermaid();
@@ -179,7 +196,7 @@
     if (canonicalLink) {
       canonicalLink.setAttribute("href", "https://cthangover.ru/docs/" + slug);
     }
-    if (gitEl) gitEl.href = GIT_BASE + slug + ".md";
+    if (gitEl) gitEl.href = GIT_BASE + slug + (contentLang === "ru" ? ".ru.md" : ".md");
     setSideOpen(false);
     window.scrollTo(0, 0);
     if (frag) {
@@ -208,11 +225,13 @@
     for (var i = 0; i < parts.length; i++) crumbs += " / <b>" + esc(parts[i]) + "</b>";
     crumbsEl.innerHTML = crumbs;
 
-    var note = lang === "en" ? "" : t("not_translated");
+    var contentLang = container.lang;
+    var suffix = contentLang === "ru" ? ".ru.md" : ".md";
+    var note = contentLang === lang ? "" : t("not_translated");
     metaEl.innerHTML =
-      '<span class="f">▣ docs/' + slug + ".md</span>" +
+      '<span class="f">▣ docs/' + slug + suffix + "</span>" +
       '<span class="g">' + esc(t("built_from")) + " build-docs-index.py</span>" +
-      "<span>EN</span>" +
+      "<span>" + contentLang.toUpperCase() + "</span>" +
       (note ? '<span class="r">' + esc(note) + "</span>" : "");
 
     var idx = -1;
@@ -220,12 +239,12 @@
     if (idx > 0) {
       pagerPrev.classList.remove("invisible");
       pagerPrev.onclick = function (e) { e.preventDefault(); loadPage(flat[idx - 1].slug); };
-      pagerPrevT.textContent = flat[idx - 1].title;
+      pagerPrevT.textContent = nodeTitle(flat[idx - 1]);
     } else pagerPrev.classList.add("invisible");
     if (idx >= 0 && idx < flat.length - 1) {
       pagerNext.classList.remove("invisible");
       pagerNext.onclick = function (e) { e.preventDefault(); loadPage(flat[idx + 1].slug); };
-      pagerNextT.textContent = flat[idx + 1].title;
+      pagerNextT.textContent = nodeTitle(flat[idx + 1]);
     } else pagerNext.classList.add("invisible");
 
     renderTree(currentFilter());
@@ -337,7 +356,9 @@
     });
     window.addEventListener("hashchange", function () { loadPage(parseRoute()); });
     document.addEventListener("langchange", function () {
-      if (currentPage) updateChrome(currentPage);
+      if (!currentPage) return;
+      if (container.lang !== (translationOf(currentPage) ? "ru" : "en")) loadPage(currentPage);
+      else updateChrome(currentPage);
     });
     window.addEventListener("load", function () {
       if (currentPage) CTRender.renderMermaid();
@@ -345,6 +366,7 @@
     container.innerHTML = '<div class="docs-error">…</div>';
     CTRender.loadJson(INDEX_URL, function (data) {
       docsIndex = data;
+      russianDocs = data._ru || {};
       docsTree = data._tree || [];
       buildFlat(docsTree);
       renderTree(currentFilter());

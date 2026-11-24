@@ -3,6 +3,7 @@
 Output:
     {
       "_tree": [ ... ],    // nested tree mirroring filesystem
+      "_ru": { ... },      // optional Russian titles and Markdown by canonical slug
       "slug": "...",       // flat slug -> content map
       ...
     }
@@ -32,7 +33,7 @@ def read_md(path):
     return title, content
 
 
-def walk_dir(dir_path, rel_prefix):
+def walk_dir(dir_path, rel_prefix, translations):
     """Walk directory recursively, return (child_nodes, flat_docs)."""
     nodes = []
     docs = {}
@@ -49,7 +50,7 @@ def walk_dir(dir_path, rel_prefix):
         full = os.path.join(dir_path, name)
 
         if os.path.isdir(full):
-            children, sub_docs = walk_dir(full, f"{rel_prefix}{name}/")
+            children, sub_docs = walk_dir(full, f"{rel_prefix}{name}/", translations)
             docs.update(sub_docs)
 
             # Check for index.md in this directory
@@ -62,6 +63,11 @@ def walk_dir(dir_path, rel_prefix):
                 nodes.append({"title": title, "slug": slug, "children": children})
             elif children:
                 nodes.append({"title": name, "slug": "", "children": children})
+
+        elif name.endswith(".ru.md"):
+            slug = f"{rel_prefix}{name[:-len('.ru.md')]}"
+            title, content = read_md(full)
+            translations[slug] = {"title": title, "markdown": content}
 
         elif name.endswith(".md"):
             title, content = read_md(full)
@@ -77,15 +83,19 @@ def main():
         print(f"Error: {DOCS_DIR} not found", file=sys.stderr)
         sys.exit(1)
 
-    tree, docs = walk_dir(DOCS_DIR, "")
-    output = {"_tree": tree, **docs}
+    translations = {}
+    tree, docs = walk_dir(DOCS_DIR, "", translations)
+    missing = translations.keys() - docs.keys()
+    if missing:
+        sys.exit("Russian translations without an English page: " + ", ".join(sorted(missing)))
+    output = {"_tree": tree, "_ru": translations, **docs}
 
     with open(OUT_FILE, "w", encoding="utf-8") as f:
         json.dump(output, f, ensure_ascii=False)
 
-    file_count = len(docs)
+    file_count = len(docs) + len(translations)
     update_html(os.path.join(SITE_DIR, "docs.html"), {"builtFileCount": file_count})
-    total_bytes = sum(len(v) for v in docs.values())
+    total_bytes = sum(len(v) for v in docs.values()) + sum(len(v["markdown"]) for v in translations.values())
     print(f"OK  {OUT_FILE}  ({file_count} files, {total_bytes} bytes, tree depth built)")
 
 

@@ -4,11 +4,20 @@
 
 Welcome to the cthangover documentation. Here you'll find guides, code examples, and configuration references for mod and core development.
 
-## Kernel, engine mods and games
+## Kernel
 
-cthangover is a game engine, not a game of one genre. The C# kernel (`Core/`) is a **mod player**: it loads, compiles and
-registers mods, resolves their data, keeps saves, runs the event bus and hosts the UI. It ships no game, no scene and no
-genre — a visual novel and a top-down RPG are both just sets of mods.
+The C# kernel (`Core/`) boots the game, compiles assemblies at runtime, resolves resources, and provides scenes, saves, events, and UI hosting. It targets .NET 10 on Godot 4.6.3 .NET. Collections provide the selected gameplay systems and their entry scenes.
+
+| Topic | Description |
+|---|---|
+| [Kernel overview](core/) | Build, boot, reload, and compilation cache |
+| [Launch arguments](core/launch-arguments.md) | Typed launch arguments and effective runtime values |
+| [DebugHost](core/debug-host.md) | Local transport, diagnostics, and command results |
+| [Memory and caches](core/memory.md) | Observable stores and heap metrics |
+| [Display settings](core/display-settings.md) | Display profiles and 3D render scale |
+| [Resource discovery](resources/) | Scanners, loaders, and providers |
+
+## Engine mods and games
 
 **Engine mods** (`*_base`) are the building blocks a game picks: the 2D shell (`shell2d_base`), dialogues with the
 scenario DSL (`dialog_base`), characters, items, quests, skills, the world map, time and lighting, the turn-based battle
@@ -119,5 +128,5 @@ The kernel never depends on a game or a genre. A mod that needs another one decl
 | [Resources Overview](resources/) | Scanner → Loader → Provider pipeline |
 | [Providers](resources/providers/) | `IModFileProvider` — folder, zip, and custom backends |
 | [Scanners](resources/scanners/) | `IModScanner` — local dirs, HTTP catalogs, custom sources |
-| [Loaders](resources/loaders/) | `IModLoader` — folder, zip, remote download, archive formats |
-| [Discovery Registry](resources/discovery-registry/) | `ModDiscoveryRegistry` — auto-discovery and LIFO lookup |
+| [Loaders](resources/loaders/) | `IModLoader` — directories, ZIP and 7z |
+| [Discovery Registry](resources/discovery-registry/) | `ModDiscoveryRegistry` — registration and reverse-order lookup |

@@ -15,6 +15,10 @@ config/
 {
   // Cache compiled assemblies to disk after first compilation (code default: true)
   "use_assembly_cache": true,
+  // Local same-user DebugHost pipe
+  "development_control": false,
+  // Optional path for the kernel discovery document
+  "development_discovery": null,
   // File/directory patterns excluded from catalog export checksum
   "catalog_ignore_patterns": [".*","bin","obj"],
   // Catalog JSON URLs (multiple are merged)
@@ -60,7 +64,9 @@ config/
 
 | Field | Type | Description |
 |---|---|---|
-| `use_assembly_cache` | bool | Cache compiled mod assemblies to disk (`true` by default in code). Set to `false` to delete cached DLLs and recompile on every launch — useful during mod development |
+| `use_assembly_cache` | bool | Reuse matching compiled assemblies across processes (`true` by default). Disabling it still allows reuse of an artifact already loaded by the current process |
+| `development_control` | bool | Enable the local same-user DebugHost pipe. [Launch arguments](/docs/core/launch-arguments) can enable or explicitly disable it |
+| `development_discovery` | string or null | Optional path for the kernel pipe discovery document. A blank value skips publishing it. See [DebugHost](/docs/core/debug-host) |
 | `catalog_ignore_patterns` | string[] | File/directory patterns excluded when computing `install_sha256` for catalog export. Default: `[".*"]` excludes all dot-prefixed entries (`.godot/`, `.import/`, `.gitignore`, etc.) |
 | `catalog_urls` | string[] | URLs of catalog JSON files to fetch for the online mod browser. Multiple URLs are merged — metadata from highest version wins, `downloads` arrays are combined |
 | `catalog_token_files` | object | Exact catalog URL to token-file path; [private sources](../catalog/) are fetched without redirects |
@@ -116,7 +122,4 @@ The first user edit of the catalog source list creates `user://catalog_servers.j
 
 ## How textures are discovered
 
-1. `ModManager` scans each mod's directory
-2. For each `texture_groups` entry (e.g. `"avatars"`), it looks in `mods/{mod}/avatars/`
-3. Files matching `texture_extensions` (`.png`, `.jpg`, `.jpeg`) are registered in `ModRegistry`
-4. Factories (`AvatarFactory`, `BackgroundFactory`, etc.) resolve paths through the registry with caching
+`TextureResolver` gathers paths from each file provider using the configured `texture_groups` and `texture_extensions`. Factories use the resolved resource paths and their own caches. See [Providers](/docs/resources/providers/) for storage and stream access.

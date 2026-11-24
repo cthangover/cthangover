@@ -35,7 +35,7 @@ def collect_docs():
     for root, dirs, files in os.walk(DOCS_DIR):
         dirs[:] = sorted(d for d in dirs if not d.startswith("."))
         for name in sorted(files):
-            if not name.endswith(".md"):
+            if not name.endswith(".md") or name.endswith(".ru.md"):
                 continue
             full = os.path.join(root, name)
             slug = os.path.relpath(full, DOCS_DIR).replace("\\", "/")[:-3]
