@@ -40,6 +40,15 @@ For future Ogneshchanin rendering, physics, vegetation, and effects work, consul
 [technical debt register](../art_sources/cthangover/ogneshchanin/TECH_DEBT_RU.md).
 It links the GPU Gems 3 research to the current modules, existing measurements, and acceptance criteria.
 
+### Graphics quality and hardware budgets
+
+Every new or revised rendering algorithm must expose player-selectable quality tiers through the owning
+module's settings. For 3D, integrate those settings with the existing `graphics3d_base` presets. Give the
+low, medium and high tiers distinct cost or quality budgets where the feature supports them. Use an off or
+simpler path for features that only fit higher budgets or require specific renderer capabilities. Apply tier
+changes to presentation while preserving simulation and saved state. Verify the effective settings and
+compare frame time and visual quality on the same scene and route across the affected tiers.
+
 For RPG art generation or changes to RPG pictures, **read `comfy/rpg_life/ART_GUIDE.md` first**.
 For creating, repairing or extending animated charsets, also **read
 [`CHARSET_GUIDE.md`](CHARSET_GUIDE.md)**. It records the
