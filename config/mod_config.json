@@ -1,6 +1,8 @@
 {
   "use_assembly_cache": true,
   "development_control": false,
+  
+  
   "catalog_ignore_patterns": [".*","bin","obj"],
   "catalog_urls": [
     "https://git.cthangover.ru/cthangover/catalog/raw/branch/main/catalog.json",
@@ -27,3 +29,4 @@
     }
   }
 }
+
