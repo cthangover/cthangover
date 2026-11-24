@@ -9,6 +9,7 @@
     {
       "name": "cthangover_story_references",
       "scene": "res://scenes/menu/launcher.tscn",
+      "windowed": true,
       "args": [
         "--", "--game=cthangover", "--new", "--itest=cthangover_story_routes",
         "--run-tests", "--mod=cthangover_game__story_routes"
