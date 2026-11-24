@@ -10,8 +10,8 @@
   "language": "en-en",
   "display": {
     "window_mode": 3,
-    "resolution_width": 1920,
-    "resolution_height": 1024,
+    "resolution_width": 2560,
+    "resolution_height": 1440,
     "current_screen": 0,
     "vsync_enabled": false,
     "max_fps": 0
