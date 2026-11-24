@@ -6,6 +6,7 @@ namespace Cthangover.Core.Mods.HotReload
     using System.IO;
     using System.Threading;
     using System.Threading.Tasks;
+    using Cthangover.Core.Bootstrap;
     using Cthangover.Core.Games;
     using Cthangover.Core.Mods.Pipeline;
     using Cthangover.Core.Scenes;
@@ -124,12 +125,15 @@ namespace Cthangover.Core.Mods.HotReload
                 return null;
 
             IsReloadRunning = true;
+            ModReloadPreparation prep = null;
+            var transitionStarted = false;
             try
             {
-                var prep = await manager.PrepareReloadAsync(GameLaunchArgs.Current, force);
+                prep = await manager.PrepareReloadAsync(GameLaunchArgs.Current, force);
                 if (!prep.Succeeded)
                 {
                     var rejected = manager.ApplyReload(prep, tree);
+                    prep = null;
                     foreach (var error in rejected.Errors)
                         GameLogger.Log("MODS_RELOAD", "Hot reload rejected: " + error, LogLevel.Error);
                     return await manager.VerifyReloadAsync(rejected, tree);
@@ -138,32 +142,43 @@ namespace Cthangover.Core.Mods.HotReload
                 var scene = tree.CurrentScene;
                 var inGame = (scene?.HasMeta("shell_kind") == true || scene?.IsInGroup("main_event_chain") == true)
                     && SceneManager.GetCurrentSceneName() != null;
-                if (inGame)
-                    SaveService.Save(SaveService.HotReloadSlot, rememberSession: false);
+                var slot = inGame ? SaveService.SaveHotReloadCheckpoint() : null;
 
                 ModSetTransitionScreen.Show(tree);
+                transitionStarted = true;
                 // Let the engine free the previous scene before its mods go.
                 await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
 
-                var result = manager.ApplyReload(prep, tree);
+                var prepared = prep;
+                prep = null;
+                var result = manager.ApplyReload(prepared, tree);
                 await manager.VerifyReloadAsync(result, tree);
 
-                if (inGame && GameSession.LoadAndEnter(tree.Root.GetNode("SceneManager"), SaveService.HotReloadSlot))
-                    GameLogger.Log("MODS_RELOAD", $"Hot reload: session restored in scene '{SaveService.LastLoadedSceneName}'");
-                else
+                if (ApplicationExit.IsQuitting)
+                    return result;
+
+                if (slot == null)
                     GameSession.OpenMainMenu(tree);
-                if (inGame)
-                    SaveService.DeleteSave(SaveService.HotReloadSlot);
+                else if (GameSession.LoadAndEnter(tree.Root.GetNode("SceneManager"), slot))
+                {
+                    SaveService.DeleteSave(slot);
+                    GameLogger.Log("MODS_RELOAD", $"Hot reload: session restored in scene '{SaveService.LastLoadedSceneName}'");
+                }
+                else
+                    throw new InvalidOperationException($"Could not restore hot reload checkpoint '{slot}'. The save remains available.");
                 return result;
             }
             catch (Exception ex)
             {
                 GameLogger.Log("MODS_RELOAD", $"Hot reload FAILED: {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}", LogLevel.Error);
-                GameSession.OpenMainMenu(tree);
+                if (transitionStarted && !ApplicationExit.IsQuitting)
+                    GameSession.OpenMainMenu(tree);
                 return null;
             }
             finally
             {
+                if (prep != null)
+                    ModRegistry.Instance.Reloader.Discard(prep);
                 IsReloadRunning = false;
             }
         }

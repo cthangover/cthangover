@@ -11,26 +11,57 @@ import tempfile
 import time
 import zlib
 
-CLIENT = Path(__file__).resolve().parents[1] / "sdk" / "dev_control.py"
+CLIENT = Path(__file__).resolve().parents[1] / "DebugClient" / "dev_control.py"
 sys.path.insert(0, str(CLIENT.parent))
 from dev_control import PipeUnavailable, request
 
 MOD = "test_development_control"
-SOURCE = """using System.Collections.Generic;
+SOURCE = """using System;
+using System.Collections.Generic;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using Cthangover.Core.Bootstrap;
+using Cthangover.Core.Mods;
 using Cthangover.Core.Mods.HotReload;
 using Cthangover.Core.Mods.Resolvers;
+using Cthangover.Core.Settings;
 using Godot;
 
-public sealed class ProbeCommand : IModDevelopmentCommand
+public sealed class ProbeCommand : IModDevelopmentCommand, IModSaveable
 {
-    public IReadOnlyCollection<string> Commands { get; } = new[] { "probe", "texture", "finish", EXTRA };
+    public IReadOnlyCollection<string> Commands { get; } =
+        new[] { "probe", "texture", "finish", "save-player-slot", "fail-save", "read-state", EXTRA };
+    private static int state;
+    private static bool failSave;
     private Texture2D texture;
+    public void OnSave(ModSlot slot)
+    {
+        if (failSave)
+            throw new InvalidOperationException("checkpoint probe save failure");
+        var data = new DataBlob();
+        data.WriteJson(state);
+        slot.Data["state"] = data;
+    }
+
+    public void OnLoadVoid(ModSlot slot) => state = slot.Data["state"].ReadJson<int>();
+
     public Task<JsonNode> ExecuteAsync(ModDevelopmentContext context, string command, CancellationToken token)
     {
+        if (command == "save-player-slot")
+        {
+            state = 1;
+            SaveService.Save("manual");
+            state = 42;
+            return Task.FromResult<JsonNode>(null);
+        }
+        if (command == "fail-save")
+        {
+            failSave = context.Request["enabled"].GetValue<bool>();
+            return Task.FromResult<JsonNode>(null);
+        }
+        if (command == "read-state")
+            return Task.FromResult<JsonNode>(JsonValue.Create(state));
         if (command == "finish")
         {
             context.Tree.CreateTimer(0.5).Timeout += Stop;
@@ -95,7 +126,7 @@ def cli(process, *args, stdin=None, legacy=False, exit_code=0):
     return json.loads(run.stdout).get("result") if run.stdout else None
 
 
-def run(project, output, godot):
+def run(project, output, godot, checkpoint_only=False):
     manifest = project / "config" / "mod_config.json"
     config = json.loads(manifest.read_text(encoding="utf-8"))
     assert config.get("development_control") is True, "Use an isolated copy with development_control enabled."
@@ -131,8 +162,14 @@ def run(project, output, godot):
             attached = cli(process, "mod.attach", f"--mod={MOD}", "--checkpoint=false")
             assert attached["loaded"] == [MOD] and attached["unloaded"] == [] and attached["kept"], attached
             assert command(process, "old-routine", provider=MOD) == "first"
-            assert "old-routine" in cli(process, "commands", f"--mod={MOD}")
 
+            if checkpoint_only:
+                verify_checkpoint(process, before, code, Path(home))
+                assert process.wait(timeout=15) == 0
+                print("PASS development checkpoint", flush=True)
+                return
+
+            assert "old-routine" in cli(process, "commands", f"--mod={MOD}")
             node = cli(process, "node.inspect", "--path=/root/SceneManager", "--field=currentSceneName",
                        "--field=isInitialized", "--property=name")
             assert node["fields"]["currentSceneName"] == "my_novel_town" and node["properties"]["name"] == "SceneManager", node
@@ -181,11 +218,58 @@ def run(project, output, godot):
                 process.wait(timeout=10)
 
 
+def verify_checkpoint(process, before, code, home):
+    command(process, "save-player-slot", provider=MOD)
+    session = next(home.rglob("last_session.json"))
+    continue_entry = session.read_bytes()
+    saves = next(home.rglob("manual.json")).parent
+    assert json.loads(continue_entry)["FileName"] == "manual"
+
+    write_probe(code, "checkpoint", "checkpoint-routine")
+    command(process, "fail-save", provider=MOD, enabled=True)
+    rejected = request(process.pid, {"command": "mod.reload", "mod": MOD, "checkpoint": True})
+    assert not rejected["ok"] and "checkpoint probe save failure" in json.dumps(rejected), rejected
+    assert command(process, "old-routine", provider=MOD) == "first"
+    assert command(process, "status")["scene_instance"] == before["scene_instance"]
+    assert command(process, "read-state", provider=MOD) == 42
+    assert not list(saves.glob("__hot_reload*"))
+
+    command(process, "fail-save", provider=MOD, enabled=False)
+    parked_saves = saves.with_name("parked-saves")
+    saves.rename(parked_saves)
+    try:
+        saves.touch()
+        rejected = request(process.pid, {"command": "mod.reload", "mod": MOD, "checkpoint": True})
+        assert not rejected["ok"] and "Could not create hot reload checkpoint" in json.dumps(rejected), rejected
+        assert command(process, "status")["scene_instance"] == before["scene_instance"]
+    finally:
+        saves.unlink(missing_ok=True)
+        parked_saves.rename(saves)
+
+    saved = cli(process, "mod.reload", f"--mod={MOD}", "--checkpoint")
+    assert saved["applied"] and saved["leaked"] == [] and saved["loaded"] == [MOD], saved
+    deadline = time.monotonic() + 15
+    while time.monotonic() < deadline:
+        status = command(process, "status")
+        if status["scene_instance"] != before["scene_instance"] and status["scene"] == before["scene"]:
+            break
+        time.sleep(0.1)
+    else:
+        raise RuntimeError("The reloaded gameplay scene did not become active.")
+    assert status["pid"] == before["pid"]
+    assert command(process, "checkpoint-routine", provider=MOD) == "checkpoint"
+    assert command(process, "read-state", provider=MOD) == 42
+    assert session.read_bytes() == continue_entry
+    assert not list(saves.glob("__hot_reload*"))
+    command(process, "finish", provider=MOD)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--project", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--godot", default=os.environ.get("GODOT_BIN", "godot"))
+    parser.add_argument("--checkpoint-only", action="store_true")
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
-    run(args.project.resolve(), args.output.resolve(), args.godot)
+    run(args.project.resolve(), args.output.resolve(), args.godot, args.checkpoint_only)

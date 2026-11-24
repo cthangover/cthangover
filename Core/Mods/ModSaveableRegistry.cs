@@ -73,7 +73,9 @@ namespace Cthangover.Core.Mods
         /// <see cref="IModSaveable.OnSave"/> and stores the slot keyed
         /// by ModId.
         /// </summary>
-        public static Dictionary<string, ModSlot> CollectSaveData()
+        public static Dictionary<string, ModSlot> CollectSaveData() => CollectSaveData(requireComplete: false);
+
+        internal static Dictionary<string, ModSlot> CollectSaveData(bool requireComplete)
         {
             var result = new Dictionary<string, ModSlot>();
 
@@ -98,6 +100,8 @@ namespace Cthangover.Core.Mods
                 }
                 catch (Exception ex)
                 {
+                    if (requireComplete)
+                        throw new InvalidOperationException($"Cannot save checkpoint state for mod '{entry.ModId}': {ex.Message}", ex);
                     GameLogger.Log("MODS_SAVE", $"OnSave failed for mod '{entry.ModId}': {ex.Message}", LogLevel.Error);
                 }
             }

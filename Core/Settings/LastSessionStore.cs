@@ -25,10 +25,12 @@ namespace Cthangover.Core.Settings
             public DateTime Time { get; set; }
         }
 
-        /// <summary>Remembers the save; ignored for saves made without a game collection.</summary>
+        /// <summary>Remembers player-facing saves of a game collection.</summary>
         public static void Record(string gameId, string fileName)
         {
-            if (string.IsNullOrEmpty(gameId) || string.IsNullOrEmpty(fileName) || !GameEnvironment.IsRuntime)
+            if (string.IsNullOrEmpty(gameId) || string.IsNullOrEmpty(fileName)
+                || fileName.StartsWith(SaveService.HiddenSlotPrefix, StringComparison.Ordinal)
+                || !GameEnvironment.IsRuntime)
                 return;
 
             try

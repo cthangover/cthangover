@@ -42,9 +42,10 @@ namespace Cthangover.Core.Mods.HotReload
                 if (!checkpoint && SceneUses(current, plan.Unload))
                     throw new InvalidOperationException("The current scene owns nodes of affected mods. Retry with checkpoint=true.");
 
+                string slot = null;
                 if (checkpoint)
                 {
-                    SaveService.Save(SaveService.HotReloadSlot, rememberSession: false);
+                    slot = SaveService.SaveHotReloadCheckpoint();
                     Cthangover.Core.UI.Menu.ModSetTransitionScreen.Show(tree);
                     await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
                 }
@@ -53,11 +54,11 @@ namespace Cthangover.Core.Mods.HotReload
                 prep = null;
                 var result = manager.ApplyReload(prepared, tree);
                 await manager.VerifyReloadAsync(result, tree);
-                if (checkpoint && !ApplicationExit.IsQuitting)
+                if (slot != null && !ApplicationExit.IsQuitting)
                 {
-                    if (!GameSession.LoadAndEnter(tree.Root.GetNode("SceneManager"), SaveService.HotReloadSlot))
-                        throw new InvalidOperationException("Checkpoint restore failed. The hidden checkpoint remains available.");
-                    SaveService.DeleteSave(SaveService.HotReloadSlot);
+                    if (!GameSession.LoadAndEnter(tree.Root.GetNode("SceneManager"), slot))
+                        throw new InvalidOperationException($"Could not restore hot reload checkpoint '{slot}'. The save remains available.");
+                    SaveService.DeleteSave(slot);
                 }
                 return result;
             }

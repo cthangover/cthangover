@@ -246,8 +246,39 @@ namespace Cthangover.Core.Settings
         /// </summary>
         public const string HiddenSlotPrefix = "__";
 
-        /// <summary>The slot a hot reload parks the running session in while the mod set is replaced.</summary>
+        /// <summary>Prefix for per-reload checkpoint slots and the label used by runtime inspection.</summary>
         public const string HotReloadSlot = HiddenSlotPrefix + "hot_reload";
+
+        /// <summary>Publishes a complete checkpoint before a reload can leave the current scene.</summary>
+        internal static string SaveHotReloadCheckpoint()
+        {
+            var slot = $"{HotReloadSlot}_{System.Environment.ProcessId}_{Guid.NewGuid():N}";
+            var path = ProjectSettings.GlobalizePath(GetSavePath(slot));
+            var temporary = path + ".tmp";
+            try
+            {
+                var package = BuildPackage(slot, requireComplete: true);
+                Directory.CreateDirectory(Path);
+                using (var stream = new FileStream(temporary, FileMode.CreateNew, System.IO.FileAccess.Write))
+                    JsonSerializer.Serialize(stream, package, JsonOptionsProvider.WriteCompactOptions);
+                File.Move(temporary, path);
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    if (File.Exists(temporary))
+                        File.Delete(temporary);
+                }
+                catch (Exception cleanupError)
+                {
+                    GameLogger.Log("SAVE", $"Error removing incomplete checkpoint '{temporary}': {cleanupError.Message}", LogLevel.Warning);
+                }
+                throw new InvalidOperationException($"Could not create hot reload checkpoint '{slot}': {ex.Message}", ex);
+            }
+            GameLogger.Log("SAVE", $"Saved hot reload checkpoint '{slot}'");
+            return slot;
+        }
 
         /// <summary>
         /// <see cref="Save(string)"/> with control over the "Continue" record:
@@ -290,7 +321,9 @@ namespace Cthangover.Core.Settings
         /// with <see cref="ApplyPackage"/> (the scenario studio rolls a scenario
         /// back to its start this way).
         /// </summary>
-        public static SavePackage BuildPackage(string saveId)
+        public static SavePackage BuildPackage(string saveId) => BuildPackage(saveId, requireComplete: false);
+
+        private static SavePackage BuildPackage(string saveId, bool requireComplete)
         {
             if (Volatile.Read(ref applyingPackage) != 0)
             {
@@ -311,7 +344,7 @@ namespace Cthangover.Core.Settings
                 GetCurrentSceneName(),
                 MergeCompletedScenarioIds(CollectLiveChainOneRunIds(), gameData.Runtime));
 
-            var modSlots = ModSaveableRegistry.CollectSaveData();
+            var modSlots = ModSaveableRegistry.CollectSaveData(requireComplete);
             foreach (var kvp in modSlots)
             {
                 if (kvp.Key == SavePackage.CoreSlotKey)
