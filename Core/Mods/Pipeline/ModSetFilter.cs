@@ -1,5 +1,7 @@
 namespace Cthangover.Core.Mods.Pipeline
 {
+    using Cthangover.Core.Games.LaunchParameters;
+
     using System.Collections.Generic;
     using Cthangover.Core.Utils;
     using Godot;
@@ -32,7 +34,7 @@ namespace Cthangover.Core.Mods.Pipeline
         /// new mod is marked, so chains of arbitrary depth collapse.
         /// </summary>
         public static void FilterDisabledMods(IDictionary<string, IModInfo> mods)
-            => FilterDisabledMods(mods, Games.GameLaunchArgs.Current.WithMods);
+            => FilterDisabledMods(mods, Games.GameLaunchArgs.Current.Get<WithModsParameter>().Value);
 
         /// <summary>
         /// <see cref="FilterDisabledMods(IDictionary{string, IModInfo})"/> where the mods named
@@ -237,14 +239,16 @@ namespace Cthangover.Core.Mods.Pipeline
         /// </summary>
         public static Games.ActiveGameChoice SelectActiveGame(IDictionary<string, IModInfo> mods, Games.GameLaunchArgs args)
         {
-            if (args.Mode == Games.GameLaunchMode.AllMods)
+            var withMods = args.Get<WithModsParameter>().Value;
+            var mode = args.Mode;
+            if (mode == Games.GameLaunchMode.AllMods)
             {
-                RemoveFixtures(mods, args.WithMods);
+                RemoveFixtures(mods, withMods);
                 return Games.ActiveGameChoice.None;
             }
 
             // Mounted test suites ride along like --with-mods (with their depends).
-            var extras = new List<string>(args.WithMods);
+            var extras = new List<string>(withMods);
             extras.AddRange(ModTestSuites.ActiveIds);
 
             var discovered = new Dictionary<string, IModInfo>(mods, System.StringComparer.OrdinalIgnoreCase);
@@ -252,9 +256,9 @@ namespace Cthangover.Core.Mods.Pipeline
             foreach (var collection in ModCollectionStore.LoadAll())
                 collections[collection.Id] = collection;
 
-            if (args.Mode == Games.GameLaunchMode.Frontend)
+            if (mode == Games.GameLaunchMode.Frontend)
             {
-                var frontend = Games.GameModSet.ComputeFrontend(collections, discovered, DisabledFor(mods, args.WithMods), extras);
+                var frontend = Games.GameModSet.ComputeFrontend(collections, discovered, DisabledFor(mods, withMods), extras);
                 if (frontend == null)
                 {
                     GameLogger.Log("MODS_REGISTRY", "No front-end collection installed; loading every mod", LogLevel.Error);
@@ -265,19 +269,20 @@ namespace Cthangover.Core.Mods.Pipeline
                 return new Games.ActiveGameChoice(frontend, frontend: true);
             }
 
-            var set = Games.GameModSet.Compute(args.GameId, collections, discovered, DisabledFor(mods, args.WithMods), extras);
+            var gameId = args.Get<GameParameter>().Value;
+            var set = Games.GameModSet.Compute(gameId, collections, discovered, DisabledFor(mods, withMods), extras);
             if (set == null)
             {
-                GameLogger.Log("MODS_REGISTRY", $"Game '{args.GameId}' is not a known game collection; loading every mod", LogLevel.Error);
+                GameLogger.Log("MODS_REGISTRY", $"Game '{gameId}' is not a known game collection; loading every mod", LogLevel.Error);
                 return Games.ActiveGameChoice.None;
             }
 
             foreach (var missing in set.MissingMods)
-                GameLogger.Log("MODS_REGISTRY", $"Game '{args.GameId}' needs mod '{missing}', which is not installed", LogLevel.Error);
+                GameLogger.Log("MODS_REGISTRY", $"Game '{gameId}' needs mod '{missing}', which is not installed", LogLevel.Error);
             foreach (var problem in set.Problems)
-                GameLogger.Log("MODS_REGISTRY", $"Game '{args.GameId}': {problem.Title}", LogLevel.Warning);
+                GameLogger.Log("MODS_REGISTRY", $"Game '{gameId}': {problem.Title}", LogLevel.Warning);
 
-            RemoveOutside(mods, set.ModIds, args.GameId);
+            RemoveOutside(mods, set.ModIds, gameId);
             return new Games.ActiveGameChoice(set, frontend: false);
         }
 

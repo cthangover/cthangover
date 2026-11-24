@@ -10,6 +10,9 @@ using Godot;
 
 namespace Cthangover.Core.Mods.Testing
 {
+    using Cthangover.Core.Games;
+    using Cthangover.Core.Games.LaunchParameters;
+
     /// <summary>
     /// Facade of the mod unit-test system (plan §5). Owns the gate
     /// (<c>--run-tests</c> / <c>run_mod_tests</c>), the separate compilation
@@ -43,7 +46,7 @@ namespace Cthangover.Core.Mods.Testing
         {
             if (!GameEnvironment.IsRuntime)
                 return false;
-            return OS.GetCmdlineUserArgs().Any(a => a == "--run-tests" || a.StartsWith("--run-tests=", StringComparison.Ordinal));
+            return GameLaunchArgs.Current.Contains<RunTestsParameter>();
         }
 
         /// <summary>Mod filter from <c>--mod=&lt;id&gt;</c> user args, or null when absent.</summary>
@@ -51,10 +54,7 @@ namespace Cthangover.Core.Mods.Testing
         {
             if (!GameEnvironment.IsRuntime)
                 return null;
-            return OS.GetCmdlineUserArgs()
-                .Where(a => a.StartsWith("--mod=", StringComparison.Ordinal))
-                .Select(a => a.Substring("--mod=".Length).Trim())
-                .FirstOrDefault(id => !string.IsNullOrEmpty(id));
+            return GameLaunchArgs.Current.Get<ModTestOwnerParameter>().Value;
         }
 
         /// <summary>True when the test mode is active: explicit CLI flag, or run_mod_tests in mod_config.json.</summary>
@@ -243,8 +243,7 @@ namespace Cthangover.Core.Mods.Testing
         public static async Task<bool> RunAllAsync(string modFilter, CancellationToken cancellationToken)
         {
             ledger.Clear();
-            var testFilter = GameEnvironment.IsRuntime ? OS.GetCmdlineUserArgs()
-                .FirstOrDefault(arg => arg.StartsWith("--test-filter=", StringComparison.Ordinal))?.Substring("--test-filter=".Length) : null;
+            var testFilter = GameLaunchArgs.Current.Get<ModTestFilterParameter>().Value;
             var excluded = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             try
             {

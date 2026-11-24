@@ -54,19 +54,8 @@ namespace Cthangover.Core.Mods
                 if (!GameEnvironment.IsRuntime)
                     return;
 
-                var args = OS.GetCmdlineArgs();
-                string scene = null;
-                for (var i = 0; i < args.Length; i++)
-                {
-                    var arg = args[i];
-                    if (arg.StartsWith("--"))
-                        continue;
-                    if (arg.EndsWith(".tscn") || arg.EndsWith(".scn") || arg.EndsWith(".escn"))
-                        scene = arg;
-                }
-
-                if (scene == null)
-                    scene = ProjectSettings.GetSetting("application/run/main_scene").AsString();
+                var scene = Games.GameLaunchArgs.Startup.EngineScenePath
+                    ?? ProjectSettings.GetSetting("application/run/main_scene").AsString();
 
                 _isLauncherBoot = scene != null &&
                     scene.Replace('\\', '/').EndsWith("scenes/menu/launcher.tscn", System.StringComparison.OrdinalIgnoreCase);

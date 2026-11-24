@@ -54,7 +54,7 @@ namespace Cthangover.Core.Mods.HotReload
         {
             if (Instance != null || tree?.Root == null)
                 return;
-            if (!HotReloadSettings.IsEnabled(OS.HasFeature("editor"), OS.GetCmdlineUserArgs()))
+            if (!HotReloadSettings.IsEnabled(OS.HasFeature("editor"), GameLaunchArgs.Current))
                 return;
             var service = new ModHotReloadService { Name = "ModHotReload" };
             ModRoot.AddDeferred(service);

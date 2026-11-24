@@ -1,126 +1,172 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Cthangover.Core.Utils;
-using Godot;
-
 namespace Cthangover.Core.Games
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Threading;
+    using Cthangover.Core.Games.LaunchParameters;
+    using Cthangover.Core.Utils;
+    using Godot;
+
     /// <summary>
-    /// User args (after <c>--</c>) that pick what the boot loads and where the
-    /// launcher goes next:
-    /// <list type="bullet">
-    /// <item><c>--game=&lt;collection id&gt;</c> — load only that game's mods
-    /// (plus the front-end) and enter it;</item>
-    /// <item><c>--new</c> — start a new game (default when no save is given);</item>
-    /// <item><c>--load=&lt;save&gt;</c> — load a save of that game instead;</item>
-    /// <item><c>--with-mods=a,b</c> — extra mods on top of the game (tests, debugging);</item>
-    /// <item><c>--all-mods</c> — ignore <c>--game</c> and load every installed mod.</item>
-    /// </list>
-    /// Without <c>--game</c> the boot loads only the front-end (main menu, mod
-    /// manager) and the player picks a game; development launches
-    /// (<c>--scene=</c>, <c>--run-tests</c>, <c>--itest=</c>, test drivers) keep
-    /// loading every mod, see <see cref="Mode"/>.
-    /// The parse of the command line happens once per process and is cached on
-    /// the main thread by <see cref="WarmUp"/>; switching games in-process
-    /// replaces the cached value with <see cref="WithSelection"/> and
-    /// <see cref="SetCurrent"/> (<see cref="GameSession.SwitchToAsync"/>), so
-    /// every later reader (the mod-set filter, the launcher) sees the game the
-    /// process runs now, not the one it was started with.
+    /// Central source of launch arguments. The native startup snapshot is captured once on the game thread.
+    /// Current is a separate immutable snapshot replaced by game selection or the development host.
     /// </summary>
     public sealed class GameLaunchArgs
     {
-        public const string GamePrefix = "--game=";
-        public const string LoadPrefix = "--load=";
-        public const string WithModsPrefix = "--with-mods=";
-        public const string NewFlag = "--new";
-        public const string AllModsFlag = "--all-mods";
-        public const string FrontendFlag = "--frontend";
+        public const string GamePrefix = "--" + GameParameter.Name + "=";
+        public const string LoadPrefix = "--" + LoadParameter.Name + "=";
+        public const string WithModsPrefix = "--" + WithModsParameter.Name + "=";
+        public const string NewFlag = "--" + NewGameParameter.Name;
+        public const string AllModsFlag = "--" + AllModsParameter.Name;
+        public const string FrontendFlag = "--" + FrontendParameter.Name;
 
-        /// <summary>Development/test switches that need the whole mod set when no game is named.</summary>
-        private static readonly string[] DevPrefixes =
+        private static readonly object StartupGate = new();
+        private static readonly LaunchParameter[] CoreDefinitions =
+            Reflections.FindAndCreate<LaunchParameter>(typeof(GameLaunchArgs).Assembly).ToArray();
+        private static readonly GameLaunchArgs Empty = Parse(Array.Empty<string>());
+        private static GameLaunchArgs startup;
+        private static GameLaunchArgs current;
+
+        private readonly Dictionary<Type, LaunchParameter> parameters;
+
+        private GameLaunchArgs(IEnumerable<string> userArgs, IReadOnlyList<string> engineArgs)
         {
-            "--scene=", "--run-tests", "--itest=", "--choices=", "--timeout=", "--resource-atlas", "--locale-atlas", "--wait-for-debugger",
-        };
+            UserArgs = Array.AsReadOnly((userArgs ?? Array.Empty<string>()).ToArray());
+            EngineArgs = engineArgs;
 
-        private static GameLaunchArgs _current;
-
-        public string GameId { get; private init; }
-
-        public string LoadSave { get; private init; }
-
-        public bool NewGame { get; private init; }
-
-        public bool AllMods { get; private init; }
-
-        /// <summary>Forces the front-end even with development switches (menu tests).</summary>
-        public bool ForceFrontend { get; private init; }
-
-        public IReadOnlyList<string> WithMods { get; private init; } = Array.Empty<string>();
-
-        /// <summary>A development or test switch is present.</summary>
-        public bool HasDevFlag { get; private init; }
-
-        /// <summary>The raw user args (after <c>--</c>), for gates parsed off the main thread (test suites).</summary>
-        public IReadOnlyList<string> UserArgs { get; private init; } = Array.Empty<string>();
-
-        /// <summary>
-        /// What the boot loads: <c>--all-mods</c> wins, then <c>--game</c>, then a
-        /// development switch (all mods), otherwise the front-end alone.
-        /// </summary>
-        public GameLaunchMode Mode => AllMods ? GameLaunchMode.AllMods
-            : !string.IsNullOrEmpty(GameId) ? GameLaunchMode.Game
-            : ForceFrontend ? GameLaunchMode.Frontend
-            : HasDevFlag ? GameLaunchMode.AllMods
-            : GameLaunchMode.Frontend;
-
-        /// <summary>True when the boot should load a single game.</summary>
-        public bool SelectsGame => Mode == GameLaunchMode.Game;
-
-        /// <summary>Process-wide args; parsed lazily, or eagerly on the main thread by <see cref="WarmUp"/>.</summary>
-        public static GameLaunchArgs Current => _current ??= GameEnvironment.IsRuntime
-            ? Parse(OS.GetCmdlineUserArgs())
-            : new GameLaunchArgs();
-
-        /// <summary>Parses on the main thread before the background boot phases read <see cref="Current"/>.</summary>
-        public static void WarmUp() => _ = Current;
-
-        public static GameLaunchArgs Parse(IEnumerable<string> userArgs)
-        {
-            var args = (userArgs ?? Array.Empty<string>()).ToList();
-            string Value(string prefix) => args
-                .Where(a => a.StartsWith(prefix, StringComparison.Ordinal))
-                .Select(a => a.Substring(prefix.Length).Trim())
-                .FirstOrDefault(v => v.Length > 0);
-
-            return new GameLaunchArgs
+            // Long-lived snapshots retain only core types. Mod parameters are resolved on demand.
+            parameters = new Dictionary<Type, LaunchParameter>(CoreDefinitions.Length);
+            foreach (var definition in CoreDefinitions)
             {
-                GameId = Value(GamePrefix),
-                LoadSave = Value(LoadPrefix),
-                NewGame = args.Contains(NewFlag),
-                AllMods = args.Contains(AllModsFlag),
-                ForceFrontend = args.Contains(FrontendFlag),
-                HasDevFlag = args.Any(a => DevPrefixes.Any(p => a.StartsWith(p, StringComparison.Ordinal))),
-                UserArgs = args,
-                WithMods = (Value(WithModsPrefix) ?? string.Empty)
-                    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries),
-            };
+                var parsed = Bind(definition);
+                if (parsed.IsSpecified)
+                    parameters.Add(definition.GetType(), parsed);
+            }
         }
 
-        /// <summary>Process-wide override for tests that need a specific mode without a command line.</summary>
-        public static void OverrideForTests(GameLaunchArgs args) => _current = args;
+        /// <summary>Original startup arguments, unaffected by game switches and debug edits.</summary>
+        public static GameLaunchArgs Startup
+        {
+            get
+            {
+                var snapshot = Volatile.Read(ref startup);
+                if (snapshot != null || !GameEnvironment.IsRuntime)
+                    return snapshot ?? Empty;
 
-        /// <summary>Makes <paramref name="args"/> the selection of this process (an in-process game switch).</summary>
-        public static void SetCurrent(GameLaunchArgs args) => _current = args;
+                lock (StartupGate)
+                {
+                    snapshot = startup;
+                    if (snapshot == null)
+                    {
+                        snapshot = new GameLaunchArgs(OS.GetCmdlineUserArgs(), Array.AsReadOnly(OS.GetCmdlineArgs()));
+                        Volatile.Write(ref startup, snapshot);
+                    }
+                    return snapshot;
+                }
+            }
+        }
 
-        /// <summary>
-        /// The same launch with another selection: <paramref name="gameId"/>
-        /// started fresh or from <paramref name="loadSave"/>, or the front-end
-        /// when <paramref name="gameId"/> is null. Development and test switches
-        /// (<c>--itest=</c>, <c>--with-mods=</c>, …) are kept, the previous
-        /// selection (<c>--game</c>, <c>--new</c>, <c>--load</c>, <c>--all-mods</c>,
-        /// <c>--frontend</c>) is replaced.
-        /// </summary>
+        /// <summary>The effective argument snapshot for current and subsequent consumers.</summary>
+        public static GameLaunchArgs Current => Volatile.Read(ref current) ?? Startup;
+
+        /// <summary>Captures startup arguments before background boot readers begin.</summary>
+        public static void WarmUp() => _ = Startup;
+
+        /// <summary>Parses detached user arguments without invoking native APIs.</summary>
+        public static GameLaunchArgs Parse(IEnumerable<string> userArgs) => new(userArgs, Array.Empty<string>());
+
+        /// <summary>User arguments following Godot's argument separator.</summary>
+        public IReadOnlyList<string> UserArgs { get; }
+
+        /// <summary>Original Godot engine arguments preceding the separator.</summary>
+        public IReadOnlyList<string> EngineArgs { get; }
+
+        /// <summary>Reads a built-in parameter or binds a mod's parameter class without retaining its assembly.</summary>
+        public T Get<T>() where T : LaunchParameter, new()
+        {
+            if (parameters.TryGetValue(typeof(T), out var parameter))
+                return (T)parameter;
+            var definition = new T();
+            return typeof(T).Assembly == typeof(GameLaunchArgs).Assembly ? definition : (T)Bind(definition);
+        }
+
+        /// <summary>Whether the argument collection contains a valid occurrence of the specified parameter.</summary>
+        public bool Contains<T>() where T : LaunchParameter, new()
+            => parameters.ContainsKey(typeof(T)) || (typeof(T).Assembly != typeof(GameLaunchArgs).Assembly && Get<T>().IsSpecified);
+
+        /// <summary>Enumerates valid user occurrences in command-line order for repeatable parameters.</summary>
+        public IEnumerable<T> GetAll<T>() where T : LaunchParameter, new()
+        {
+            var definition = new T();
+            foreach (var argument in UserArgs)
+                if (definition.ParseOccurrence(argument) is T { IsSpecified: true } value)
+                    yield return value;
+        }
+
+        /// <summary>Checks whether any integration-test occurrence names the requested suite.</summary>
+        public bool HasIntegrationTest(string name)
+        {
+            foreach (var parameter in GetAll<IntegrationTestParameter>())
+                if (parameter.Value.Contains(name, StringComparer.Ordinal))
+                    return true;
+            return false;
+        }
+
+        internal LaunchParameter Bind(LaunchParameter parameter)
+        {
+            return FirstValidOccurrence(parameter, UserArgs)
+                ?? (parameter.IncludeEngineArguments ? FirstValidOccurrence(parameter, EngineArgs) : null)
+                ?? parameter;
+        }
+
+        private static LaunchParameter FirstValidOccurrence(LaunchParameter parameter, IReadOnlyList<string> arguments)
+        {
+            foreach (var argument in arguments)
+            {
+                var parsed = parameter.ParseOccurrence(argument);
+                if (parsed?.IsSpecified == true)
+                    return parsed;
+            }
+            return null;
+        }
+
+        internal bool IsAutomatedRun => parameters.Values.Any(p => p.ExcludesAutomaticHotReload);
+
+        /// <summary>Actual boot scene named positionally in Godot's native arguments, if one was provided.</summary>
+        public string EngineScenePath
+        {
+            get
+            {
+                string scene = null;
+                foreach (var argument in EngineArgs)
+                {
+                    if (!argument.StartsWith("--", StringComparison.Ordinal)
+                        && (argument.EndsWith(".tscn", StringComparison.Ordinal) || argument.EndsWith(".scn", StringComparison.Ordinal)
+                            || argument.EndsWith(".escn", StringComparison.Ordinal)))
+                        scene = argument;
+                }
+                return scene;
+            }
+        }
+
+        /// <summary>All-mods wins, then a selected game, then automatic development mode or the frontend.</summary>
+        public GameLaunchMode Mode => Contains<AllModsParameter>() ? GameLaunchMode.AllMods
+            : Contains<GameParameter>() ? GameLaunchMode.Game
+            : Contains<FrontendParameter>() ? GameLaunchMode.Frontend
+            : parameters.Values.Any(p => p.RequestsDevelopmentMode && UserArgs.Any(p.MatchesKey)) ? GameLaunchMode.AllMods
+            : GameLaunchMode.Frontend;
+
+        /// <summary>Process-wide test override. Pass null to use the startup snapshot.</summary>
+        public static void OverrideForTests(GameLaunchArgs args) => SetCurrent(args);
+
+        /// <summary>Publishes the effective snapshot atomically for other readers.</summary>
+        public static void SetCurrent(GameLaunchArgs args) => Volatile.Write(ref current, args);
+
+        /// <summary>Reparses a replacement user argument list while preserving immutable native startup arguments.</summary>
+        public GameLaunchArgs WithArguments(IEnumerable<string> userArgs) => new(userArgs, EngineArgs);
+
+        /// <summary>Changes the selected game while keeping unrelated arguments and native startup data.</summary>
         public GameLaunchArgs WithSelection(string gameId, string loadSave = null)
         {
             var args = new List<string>();
@@ -133,23 +179,23 @@ namespace Cthangover.Core.Games
                 args.Add(FrontendFlag);
             else
                 args.AddRange(Build(gameId, loadSave));
-            return Parse(args);
+            return WithArguments(args);
         }
 
         private static bool IsSelectionArg(string arg)
-            => arg.StartsWith(GamePrefix, StringComparison.Ordinal)
+            => arg != null && (arg.StartsWith(GamePrefix, StringComparison.Ordinal)
                || arg.StartsWith(LoadPrefix, StringComparison.Ordinal)
-               || arg == NewFlag || arg == AllModsFlag || arg == FrontendFlag;
+               || arg == NewFlag || arg == AllModsFlag || arg == FrontendFlag);
 
         /// <summary>Adds a mod to this process's selection without changing the saved collection.</summary>
         internal GameLaunchArgs WithAdditionalMod(string id)
         {
-            var args = new List<string>(UserArgs.Where(arg => !arg.StartsWith(WithModsPrefix, StringComparison.Ordinal)));
-            args.Add(WithModsPrefix + string.Join(",", WithMods.Append(id).Distinct(StringComparer.OrdinalIgnoreCase)));
-            return Parse(args);
+            var args = new List<string>(UserArgs.Where(arg => arg == null || !arg.StartsWith(WithModsPrefix, StringComparison.Ordinal)));
+            args.Add(WithModsPrefix + string.Join(",", Get<WithModsParameter>().Value.Append(id).Distinct(StringComparer.OrdinalIgnoreCase)));
+            return WithArguments(args);
         }
 
-        /// <summary>User args that start <paramref name="gameId"/> fresh or from <paramref name="loadSave"/>.</summary>
+        /// <summary>User arguments to enter a specified game or save.</summary>
         public static List<string> Build(string gameId, string loadSave)
         {
             var args = new List<string> { GamePrefix + gameId };

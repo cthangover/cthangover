@@ -5,6 +5,7 @@ namespace Cthangover.Core.Mods.Pipeline
     using System.Reflection;
     using System.Threading;
     using Cthangover.Core.Games;
+    using Cthangover.Core.Games.LaunchParameters;
     using Cthangover.Core.Mods.Compilation;
     using Cthangover.Core.Mods.Unload;
     using Cthangover.Core.Utils;
@@ -122,7 +123,7 @@ namespace Cthangover.Core.Mods.Pipeline
             foreach (var kvp in prep.Mods)
                 prep.AllDiscovered[kvp.Key] = kvp.Value;
 
-            ModSetFilter.FilterDisabledMods(prep.Mods, prep.Selection.WithMods);
+            ModSetFilter.FilterDisabledMods(prep.Mods, prep.Selection.Get<WithModsParameter>().Value);
             prep.Choice = ModSetFilter.SelectActiveGame(prep.Mods, prep.Selection);
             ModIntegrations.Mount(prep.Mods);
             ModSetFilter.ValidateDependencies(prep.Mods);

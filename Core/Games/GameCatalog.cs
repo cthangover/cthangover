@@ -10,6 +10,8 @@ using Godot;
 
 namespace Cthangover.Core.Games
 {
+    using Cthangover.Core.Games.LaunchParameters;
+
     /// <summary>
     /// What the menus know about games, computed against every installed mod
     /// (not only the loaded ones — the front-end loads almost nothing): the
@@ -83,7 +85,7 @@ namespace Cthangover.Core.Games
             if (!collections.TryGetValue(ActiveGame.Id, out var current))
                 return true;
 
-            var extras = new List<string>(GameLaunchArgs.Current.WithMods);
+            var extras = new List<string>(GameLaunchArgs.Current.Get<WithModsParameter>().Value);
             extras.AddRange(ModTestSuites.ActiveIds);
             var set = GameModSet.Compute(ActiveGame.Id, collections, ModRegistry.Instance.AllDiscoveredMods, DisabledModsStore.Load(), extras);
             if (set == null || !set.ModIds.SetEquals(ActiveGame.ModIds))

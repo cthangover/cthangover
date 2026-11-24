@@ -5,6 +5,7 @@ using Cthangover.Core.Utils;
 
 namespace Cthangover.Core.Mods
 {
+    using Cthangover.Core.Games.LaunchParameters;
     /// <summary>
     /// Mounts the integration test suites of discovered mods
     /// (<see cref="ModManifest.TestSuites"/>). A suite is a folder inside its
@@ -27,7 +28,7 @@ namespace Cthangover.Core.Mods
         public const string FolderName = "test_suites";
 
         /// <summary>Mounts every suite (used by the resource and locale atlases).</summary>
-        public const string AllFlag = "--with-test-suites";
+        public const string AllFlag = "--" + AllTestSuitesParameter.Name;
 
         private const string Separator = "__";
 
@@ -41,15 +42,34 @@ namespace Cthangover.Core.Mods
 
         /// <summary>True when <paramref name="userArgs"/> mount the suite. Pure.</summary>
         public static bool IsActive(ModTestSuite suite, IEnumerable<string> userArgs)
+            => MatchesActivation(suite, ExpandIntegrationTests(userArgs));
+
+        private static bool MatchesActivation(ModTestSuite suite, IReadOnlyList<string> args)
         {
             if (suite == null || string.IsNullOrWhiteSpace(suite.Id))
                 return false;
-            var args = userArgs as ICollection<string> ?? (userArgs ?? Array.Empty<string>()).ToList();
             if (args.Contains(AllFlag))
                 return true;
             return (suite.Activate ?? new List<string>())
                 .Where(p => !string.IsNullOrWhiteSpace(p))
-                .Any(prefix => args.Any(a => a.StartsWith(prefix, StringComparison.Ordinal)));
+                .Any(prefix => args.Any(a => a?.StartsWith(prefix, StringComparison.Ordinal) == true));
+        }
+
+        private static IReadOnlyList<string> ExpandIntegrationTests(IEnumerable<string> arguments)
+        {
+            var result = new List<string>();
+            var parameter = new IntegrationTestParameter();
+            foreach (var argument in arguments ?? Array.Empty<string>())
+            {
+                if (parameter.ParseOccurrence(argument) is IntegrationTestParameter { IsSpecified: true } parsed)
+                {
+                    foreach (var suite in parsed.Value)
+                        result.Add("--" + IntegrationTestParameter.Name + "=" + suite);
+                }
+                else
+                    result.Add(argument);
+            }
+            return result;
         }
 
         /// <summary>
@@ -59,11 +79,12 @@ namespace Cthangover.Core.Mods
         public static void Mount(IDictionary<string, IModInfo> mods, IReadOnlyCollection<string> userArgs)
         {
             activeIds.Clear();
+            var arguments = ExpandIntegrationTests(userArgs);
             foreach (var host in mods.Values.OfType<ModInfo>().ToList())
             {
                 foreach (var suite in host.Manifest?.TestSuites ?? new List<ModTestSuite>())
                 {
-                    if (!IsActive(suite, userArgs))
+                    if (!MatchesActivation(suite, arguments))
                         continue;
 
                     var info = CreateSuiteMod(host, suite);

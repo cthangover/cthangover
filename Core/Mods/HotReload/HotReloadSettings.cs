@@ -2,6 +2,8 @@ namespace Cthangover.Core.Mods.HotReload
 {
     using System;
     using System.Collections.Generic;
+    using Cthangover.Core.Games;
+    using Cthangover.Core.Games.LaunchParameters;
 
     /// <summary>
     /// When the mod hot reload watches files, and which file changes count.
@@ -15,15 +17,10 @@ namespace Cthangover.Core.Mods.HotReload
     public static class HotReloadSettings
     {
         /// <summary>User arg forcing the watcher on (any build, any run).</summary>
-        public const string EnableFlag = "--hot-reload";
+        public const string EnableFlag = "--" + HotReloadParameter.Name;
 
         /// <summary>User arg forcing the watcher off.</summary>
-        public const string DisableFlag = "--no-hot-reload";
-
-        private static readonly string[] AutomatedRunPrefixes =
-        {
-            "--itest=", "--run-tests", "--timeout=", "--choices=", "--resource-atlas", "--locale-atlas",
-        };
+        public const string DisableFlag = "--" + NoHotReloadParameter.Name;
 
         private static readonly string[] IgnoredExtensions =
         {
@@ -37,23 +34,15 @@ namespace Cthangover.Core.Mods.HotReload
 
         /// <summary>Decides whether the watcher runs for this process.</summary>
         public static bool IsEnabled(bool runFromEditor, IEnumerable<string> userArgs)
+            => IsEnabled(runFromEditor, GameLaunchArgs.Parse(userArgs));
+
+        internal static bool IsEnabled(bool runFromEditor, GameLaunchArgs args)
         {
-            var args = new List<string>(userArgs ?? Array.Empty<string>());
-            if (args.Contains(DisableFlag))
+            if (args.Contains<NoHotReloadParameter>())
                 return false;
-            if (args.Contains(EnableFlag))
+            if (args.Contains<HotReloadParameter>())
                 return true;
-            if (!runFromEditor)
-                return false;
-            foreach (var arg in args)
-            {
-                foreach (var prefix in AutomatedRunPrefixes)
-                {
-                    if (arg.StartsWith(prefix, StringComparison.Ordinal))
-                        return false;
-                }
-            }
-            return true;
+            return runFromEditor && !args.IsAutomatedRun;
         }
 
         /// <summary>

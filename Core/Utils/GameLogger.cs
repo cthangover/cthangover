@@ -1,5 +1,7 @@
 namespace Cthangover.Core.Utils
 {
+    using Cthangover.Core.Games;
+    using Cthangover.Core.Games.LaunchParameters;
     using Cthangover.Core.Settings;
     using Cthangover.Core.Mods.Testing;
     using Godot;
@@ -150,23 +152,7 @@ namespace Cthangover.Core.Utils
                         var logsDir = Path.Combine(OS.GetUserDataDir(), "logs");
                         _logPath = Path.Combine(logsDir, "cthangover.log");
                         _errorLogPath = Path.Combine(logsDir, "cthangover_errors.log");
-                        foreach (var arg in OS.GetCmdlineArgs())
-                        {
-                            if (arg.StartsWith("--log-file=", StringComparison.Ordinal))
-                            {
-                                _logPath = arg["--log-file=".Length..];
-                                break;
-                            }
-                        }
-
-                        foreach (var arg in OS.GetCmdlineUserArgs())
-                        {
-                            if (arg.StartsWith("--log-file=", StringComparison.Ordinal))
-                            {
-                                _logPath = arg["--log-file=".Length..];
-                                break;
-                            }
-                        }
+                        _logPath = GameLaunchArgs.Startup.Get<LogFileParameter>().Value ?? _logPath;
                     }
 
                     if (_enabled || context != null)

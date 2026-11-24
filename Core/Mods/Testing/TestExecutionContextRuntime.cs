@@ -5,6 +5,7 @@ namespace Cthangover.Core.Mods.Testing
     using System.IO;
     using System.Text;
     using System.Threading;
+    using Cthangover.Core.Games;
     using Cthangover.Core.Utils;
     using Godot;
 
@@ -58,7 +59,8 @@ namespace Cthangover.Core.Mods.Testing
                     variables[(string)variable.Key] = (string)variable.Value;
                 }
 
-                var context = TestExecutionContext.Parse(variables, OS.GetCmdlineUserArgs());
+                var launch = GameLaunchArgs.Startup;
+                var context = TestExecutionContext.Parse(variables, launch.UserArgs);
                 if (context == null)
                 {
                     VerifyLegacy(variables);
@@ -72,7 +74,7 @@ namespace Cthangover.Core.Mods.Testing
                 var receiptPath = Path.Combine(context.ArtifactRoot, "launch.json");
                 var receipt = File.Exists(receiptPath) ? File.ReadAllText(receiptPath) : null;
                 nativeEvidence = context.ValidateRuntimePaths(actualProject, actualData, actualTemporary,
-                    OS.GetCmdlineArgs(), receipt);
+                    launch.EngineArgs, receipt);
                 Directory.CreateDirectory(context.ArtifactRoot);
                 owner = new FileStream(Path.Combine(context.ArtifactRoot, "core-context.owner"), FileMode.CreateNew,
                     System.IO.FileAccess.Write, FileShare.Read);

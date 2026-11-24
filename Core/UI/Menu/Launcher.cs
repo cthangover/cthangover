@@ -13,6 +13,8 @@ using Godot;
 
 namespace Cthangover.Core.UI.Menu
 {
+    using Cthangover.Core.Games.LaunchParameters;
+
     /// <summary>
     /// Pre-game launcher that lets the player configure display settings
     /// (window mode, monitor, window size, V-Sync) on the first start before
@@ -232,14 +234,14 @@ namespace Cthangover.Core.UI.Menu
         /// </summary>
         private bool EnterActiveGame()
         {
-            var args = Games.GameLaunchArgs.Current;
+            var save = Games.GameLaunchArgs.Current.Get<LoadParameter>().Value;
             HideBootOverlay();
-            if (!string.IsNullOrEmpty(args.LoadSave))
+            if (!string.IsNullOrEmpty(save))
             {
-                if (Games.GameSession.LoadAndEnter(this, args.LoadSave))
+                if (Games.GameSession.LoadAndEnter(this, save))
                     return true;
 
-                GameLogger.Log("GAME", $"Save '{args.LoadSave}' of game '{Games.ActiveGame.Id}' could not be loaded", LogLevel.Error);
+                GameLogger.Log("GAME", $"Save '{save}' of game '{Games.ActiveGame.Id}' could not be loaded", LogLevel.Error);
                 return false;
             }
 

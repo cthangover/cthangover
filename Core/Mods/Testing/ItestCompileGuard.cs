@@ -4,6 +4,8 @@ using Godot;
 
 namespace Cthangover.Core.Mods.Testing
 {
+    using Cthangover.Core.Games.LaunchParameters;
+
     /// <summary>
     /// Fails an <c>--itest=</c> run at once when a mod of its set did not compile.
     /// Without it the suite's driver (or the mod it checks) is simply missing, nothing
@@ -15,17 +17,14 @@ namespace Cthangover.Core.Mods.Testing
     /// </summary>
     public static class ItestCompileGuard
     {
-        private const string ItestPrefix = "--itest=";
-
         /// <summary>True when the run was failed and the tree is quitting.</summary>
         public static bool FailIfBroken(SceneTree tree)
         {
             if (tree == null || ModTestSuites.ActiveIds.Count == 0 || GameLogger.CompilationErrors.Count == 0)
                 return false;
 
-            var name = Games.GameLaunchArgs.Current.UserArgs
-                .FirstOrDefault(a => a.StartsWith(ItestPrefix, System.StringComparison.Ordinal))
-                ?.Substring(ItestPrefix.Length) ?? ModTestSuites.ActiveIds[0];
+            var name = Games.GameLaunchArgs.Current.Get<IntegrationTestParameter>().Value.FirstOrDefault()
+                ?? ModTestSuites.ActiveIds[0];
 
             foreach (var error in GameLogger.CompilationErrors)
                 GameLogger.Log("TEST", $"Mod compilation failed: {error}", LogLevel.Error);

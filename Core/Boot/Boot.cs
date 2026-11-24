@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Cthangover.Core.Localization;
@@ -11,6 +10,9 @@ using Godot;
 
 namespace Cthangover.Core.Bootstrap
 {
+    using Cthangover.Core.Games;
+    using Cthangover.Core.Games.LaunchParameters;
+
     /// <summary>
     /// Phases of the unified boot pipeline, in execution order. Comparison by
     /// value is meaningful: a later phase implies that all earlier ones finished.
@@ -279,9 +281,7 @@ namespace Cthangover.Core.Bootstrap
             if (!GameEnvironment.IsRuntime)
                 return;
 
-            var requested = OS.GetCmdlineArgs().Any(a => a == "--wait-for-debugger")
-                || OS.GetCmdlineUserArgs().Any(a => a == "--wait-for-debugger");
-            if (!requested)
+            if (!GameLaunchArgs.Startup.Contains<WaitForDebuggerParameter>())
                 return;
 
             if (System.Diagnostics.Debugger.IsAttached)
