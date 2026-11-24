@@ -32,7 +32,13 @@ namespace Cthangover.Core.Mods.Compilation
     {
         private static string _resRoot;
         private static string _buildOutputDir;
-        private static bool _pathsWarmed;
+        private static volatile bool _pathsWarmed;
+
+        /// <summary>Godot editor output configurations searched when the core has no assembly location.</summary>
+        internal static IReadOnlyList<string> BuildConfigurations { get; } = Array.AsReadOnly(new[] { "Debug", "Release" });
+
+        /// <summary>Indicates that main-thread path resolution has completed.</summary>
+        internal static bool PathsWarmed => _pathsWarmed;
 
         /// <summary>
         /// Absolute path to the Godot project root (<c>res://</c> globalized),
@@ -44,7 +50,9 @@ namespace Cthangover.Core.Mods.Compilation
         public static string ProjectRoot => _resRoot;
 
         /// <summary>Physical core output resolved on the main thread when Godot byte-loads its assembly.</summary>
-        public static string BuildOutputDirectory => _buildOutputDir;
+        public static string BuildOutputDirectory => _pathsWarmed && GameEnvironment.IsRuntime
+            ? CoreAssemblyContract.ImplementationDirectory ?? _buildOutputDir
+            : _buildOutputDir;
 
         /// <summary>
         /// Resolves the Godot project root and Mono build output directory once
@@ -56,17 +64,19 @@ namespace Cthangover.Core.Mods.Compilation
         {
             if (_pathsWarmed)
                 return;
-            _pathsWarmed = true;
 
             _ = ModAssemblyCache.CacheRoot;
 
             if (!GameEnvironment.IsRuntime)
+            {
+                _pathsWarmed = true;
                 return;
+            }
 
             try
             {
                 _resRoot = GamePaths.Globalize("res://");
-                foreach (var config in new[] { "Debug", "Release" })
+                foreach (var config in BuildConfigurations)
                 {
                     var buildDir = Path.Combine(_resRoot, ".godot", "mono", "temp", "bin", config);
                     if (Directory.Exists(buildDir))
@@ -77,6 +87,7 @@ namespace Cthangover.Core.Mods.Compilation
                 }
             }
             catch { }
+            _pathsWarmed = true;
         }
 
         /// <summary>
@@ -96,6 +107,8 @@ namespace Cthangover.Core.Mods.Compilation
             foreach (var path in FrameworkReferencePack.AssemblyPaths)
                 references.Add(MetadataReference.CreateFromFile(path));
 
+            if (CoreAssemblyContract.Reference is { } coreReference)
+                references.Add(coreReference);
             AddAssemblyReference(references, typeof(Godot.Node).Assembly);
 
             GameLogger.Log("MODS_COMPILE", "AddCoreReferences: scanning assembly directories for DLLs...");
@@ -315,18 +328,13 @@ namespace Cthangover.Core.Mods.Compilation
             if (!GameEnvironment.IsRuntime)
                 return null;
 
-            if (_resRoot == null)
-                return null;
-
-            if (_buildOutputDir == null)
-                return null;
-
-            return _buildOutputDir;
+            return BuildOutputDirectory;
         }
 
         private static void TryAddReference(List<MetadataReference> references, string dllPath)
         {
-            if (FrameworkReferencePack.IsFrameworkAssembly(Path.GetFileNameWithoutExtension(dllPath)) || !File.Exists(dllPath))
+            var fileName = Path.GetFileNameWithoutExtension(dllPath);
+            if (FrameworkReferencePack.IsFrameworkAssembly(fileName) || CoreAssemblyContract.IsPinnedAssembly(fileName) || !File.Exists(dllPath))
                 return;
             try
             {
@@ -345,8 +353,10 @@ namespace Cthangover.Core.Mods.Compilation
 
         private static void AddAssemblyReference(List<MetadataReference> references, Assembly assembly)
         {
-            if (assembly == null || assembly.IsDynamic || string.IsNullOrEmpty(assembly.Location)
-                || FrameworkReferencePack.IsFrameworkAssembly(assembly.GetName().Name))
+            if (assembly == null || assembly.IsDynamic || string.IsNullOrEmpty(assembly.Location))
+                return;
+            var name = assembly.GetName().Name;
+            if (FrameworkReferencePack.IsFrameworkAssembly(name) || CoreAssemblyContract.IsPinnedAssembly(name))
                 return;
             try
             {

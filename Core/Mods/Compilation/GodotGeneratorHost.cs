@@ -65,6 +65,25 @@ namespace Cthangover.Core.Mods.Compilation
         /// </summary>
         public static Microsoft.CodeAnalysis.ISourceGenerator[] GetGodotGenerators()
         {
+            var types = GetGeneratorTypes();
+            var generators = new Microsoft.CodeAnalysis.ISourceGenerator[types.Length];
+            for (var index = 0; index < types.Length; index++)
+                generators[index] = (Microsoft.CodeAnalysis.ISourceGenerator)Activator.CreateInstance(types[index], nonPublic: true);
+            return generators;
+        }
+
+        /// <summary>Identifies the loaded generator binary whose bindings become part of each cached mod.</summary>
+        internal static string CacheSignature
+        {
+            get
+            {
+                var types = GetGeneratorTypes();
+                return types.Length == 0 ? "unavailable" : types[0].Assembly.ManifestModule.ModuleVersionId.ToString("N");
+            }
+        }
+
+        private static Type[] GetGeneratorTypes()
+        {
             lock (_generatorLock)
             {
                 if (_godotGeneratorTypes == null)
@@ -77,7 +96,7 @@ namespace Cthangover.Core.Mods.Compilation
                         {
                             GameLogger.Log("MODS_COMPILE", "ModCompiler: Godot.SourceGenerators.dll not found, mod scripts will lack lifecycle binding", LogLevel.Warning);
                             _godotGeneratorTypes = Array.Empty<Type>();
-                            return Array.Empty<Microsoft.CodeAnalysis.ISourceGenerator>();
+                            return _godotGeneratorTypes;
                         }
 
                         var generatorAssembly = GeneratorContext.LoadFromAssemblyPath(dllPath);
@@ -101,9 +120,7 @@ namespace Cthangover.Core.Mods.Compilation
                     }
                 }
 
-                return _godotGeneratorTypes
-                    .Select(t => (Microsoft.CodeAnalysis.ISourceGenerator)Activator.CreateInstance(t, nonPublic: true))
-                    .ToArray();
+                return _godotGeneratorTypes;
             }
         }
 
@@ -131,7 +148,7 @@ namespace Cthangover.Core.Mods.Compilation
                 : base(nameof(GeneratorLoadContext))
             { }
 
-            /// <inheritdoc />
+            /// <summary>Resolves generator dependencies against the Roslyn assemblies already used by the game.</summary>
             protected override Assembly Load(AssemblyName assemblyName)
             {
                 var name = assemblyName.Name;

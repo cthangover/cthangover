@@ -4,6 +4,8 @@
         <EnableDynamicLoading>true</EnableDynamicLoading>
         <RootNamespace>Cthangover</RootNamespace>
         <AssemblyName>Cthangover</AssemblyName>
+        <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+        <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
         <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
         <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
         <Nullable>disable</Nullable>
@@ -23,26 +25,15 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Compile Remove="tests\Cthangover.Tests\**\*.cs" />
-        <Compile Remove="tests\Cthangover.TestRunner\**\*.cs" />
-        <Compile Remove="tests\Cthangover.Terrain.Tests\**\*.cs" />
-        <Compile Remove="tests\fixtures\**\*.cs" />
-        <Compile Remove="sdk\**\*.cs" />
-
+        <!-- Mods compile at runtime. Limit the core to its sources even when
+             exports or development tools create new C# source trees. -->
+        <Compile Include="Core/**/*.cs" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
         <None Include="tests\Cthangover.Tests\**\*.cs" />
         <None Include="tests\Cthangover.TestRunner\**\*.cs" />
         <None Include="tests\fixtures\**\*.cs" />
         <None Include="sdk\**\*.cs" />
-        <Compile Remove="mods\**\*" />
         <None Include="mods\**\*" />
-        <!-- Every mods folder of Core/Mods/ModRootFolders.cs is excluded the
-             same way: mods compile at game start, never into the core. -->
-        <Compile Remove="mods_private\**\*" />
         <None Include="mods_private\**\*" />
-        <!-- The release packaging copies the whole mods/ tree next to the
-             exported binaries; those loose copies must never re-enter the
-             core compilation through the default source glob. -->
-        <Compile Remove="releases\**\*" />
         <None Include="releases\**\*" />
     </ItemGroup>
 

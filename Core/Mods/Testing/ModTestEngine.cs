@@ -128,7 +128,7 @@ namespace Cthangover.Core.Mods.Testing
             var productionRoot = ModCompiler.CacheRoot;
             var testRoot = Path.Combine(Path.GetDirectoryName(productionRoot) ?? productionRoot, "test_assemblies");
             Directory.CreateDirectory(testRoot);
-            var coreSignature = typeof(ModTestEngine).Assembly.ManifestModule.ModuleVersionId.ToString("N");
+            var coreSignature = Compilation.CoreAssemblyContract.CacheSignature;
             // The production assemblies the tests link against are part of the
             // key: a changed mod API must recompile the tests (a compile error
             // with file:line) instead of reusing a stale DLL that fails at run

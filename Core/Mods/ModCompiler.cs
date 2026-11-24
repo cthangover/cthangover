@@ -8,6 +8,7 @@ namespace Cthangover.Core.Mods
     using System.Threading;
     using Cthangover.Core.Bootstrap;
     using Cthangover.Core.Utils;
+    using Cthangover.Core.Mods.Host;
     using Cthangover.Core.Mods.Compilation;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
@@ -103,7 +104,8 @@ namespace Cthangover.Core.Mods
 
                 result.Add((compiled.ModId, assembly, compiled.Sources));
                 GameLogger.Log("MODS_COMPILE",
-                     $"ModCompiler.CompileAll: Compiled mod '{compiled.ModId}', {compiled.Sources.Count} source file(s)");
+                     $"ModCompiler.CompileAll: loaded prepared assembly for '{compiled.ModId}', {compiled.Sources.Count} source file(s)",
+                     LogLevel.Debug);
             }
 
             return result;
@@ -180,7 +182,8 @@ namespace Cthangover.Core.Mods
                     }
 
                     GameLogger.Log("MODS_COMPILE",
-                         $"ModCompiler.CompileAll: compiling mod '{modInfo.Id}' with {sourceFiles.Count} source file(s):");
+                         $"ModCompiler.CompileAll: checking cache for '{modInfo.Id}' with {sourceFiles.Count} source file(s)",
+                         LogLevel.Debug);
                     foreach (var(path, _)in sourceFiles)
                         GameLogger.Log("MODS_COMPILE", $"  {path}", LogLevel.Debug);
                     var dependencySignature = ModAssemblyCache.BuildDependencySignature(modInfo, mods);
@@ -195,7 +198,10 @@ namespace Cthangover.Core.Mods
                     var failedDependency = FailedDependency(modInfo, mods, result);
                     if (failedDependency != null)
                     {
-                        GameLogger.CompilationErrors.Add($"Mod '{modInfo.Id}': dependency '{failedDependency}' did not compile");
+                        var diagnostic = $"Mod '{modInfo.Id}': dependency '{failedDependency}' did not compile";
+                        GameLogger.CompilationErrors.Add(diagnostic);
+                        ModErrorFeed.RecordCompilation(modInfo.Id, diagnostic);
+                        ModAssemblyCache.RecordDecision(modInfo.Id, "skipped", null, "dependency_failed");
                         GameLogger.Log("MODS_COMPILE",
                              $"ModCompiler.CompileAll: skipped '{modInfo.Id}': dependency '{failedDependency}' did not compile",
                              LogLevel.Error);
@@ -216,7 +222,10 @@ namespace Cthangover.Core.Mods
                 }
                 catch (Exception ex)
                 {
-                    GameLogger.CompilationErrors.Add($"Mod '{modInfo.Id}': {ex.Message}");
+                    var diagnostic = $"Mod '{modInfo.Id}': {ex.Message}";
+                    GameLogger.CompilationErrors.Add(diagnostic);
+                    ModErrorFeed.RecordCompilation(modInfo.Id, diagnostic);
+                    ModAssemblyCache.RecordDecision(modInfo.Id, "prepare_failed", null, "preparation_error");
                     GameLogger.Log("MODS_COMPILE",
                          $"ModCompiler.CompileAll: Failed to compile mod '{modInfo.Id}': {ex.Message}\n{ex.StackTrace}", LogLevel.Error);
                 }
@@ -370,12 +379,17 @@ namespace Cthangover.Core.Mods
             var cachedPath = ModAssemblyCache.BuildCachePath(modId, sourceList, bindingSignature, generators != null 
                 && generators.Length > 0);
             using var cacheEntry = AssemblyCacheEntry.Acquire(cachedPath, cancellationToken);
+            var hadArtifacts = cacheEntry.HasArtifacts;
             if (ModAssemblyCache.IsUsableHit(cacheEntry, cachedPath))
             {
                 GameLogger.Log("MODS_COMPILE", $"ModCompiler: cache hit '{modId}' -> {cachedPath}", LogLevel.Debug);
                 ModAssemblyCache.CurrentArtifacts[modId] = cachedPath;
+                ModAssemblyCache.RecordDecision(modId, "hit", cachedPath,
+                    ModConfig.Instance.UseAssemblyCache ? "matching_artifact" : "artifact_is_loaded");
                 return cachedPath;
             }
+
+            var reason = hadArtifacts ? "cache_disabled" : "missing_or_incomplete_artifact";
 
             var parseOptions = new CSharpParseOptions();
             // Encoding is mandatory for PDB emission: source strings read from
@@ -413,17 +427,30 @@ namespace Cthangover.Core.Mods
             cancellationToken.ThrowIfCancellationRequested();
             if (!result.Success)
             {
-                var errors = result.Diagnostics.Where(IsError).Take(20).Select(FormatDiagnostic).ToList();
+                var diagnostics = result.Diagnostics.Where(IsError).Take(20).ToArray();
+                var errors = diagnostics.Select(FormatDiagnostic).ToList();
                 GameLogger.CompilationErrors.Add($"Mod '{modId}' failed with {result.Diagnostics.Count(IsError)} error(s):\n  " 
                     + string.Join("\n  ", errors));
                 var errCount = 0;
-                foreach (var d in result.Diagnostics.Where(IsError).Take(20))
+                foreach (var d in diagnostics)
                 {
-                    GameLogger.Log("MODS_COMPILE", $"  ERR{++errCount}: {FormatDiagnostic(d)}", LogLevel.Debug);
+                    var formatted = errors[errCount++];
+                    GameLogger.Log("MODS_COMPILE", $"  ERR{errCount}: {formatted}", LogLevel.Debug);
+                    if (d.Location.IsInSource)
+                    {
+                        var location = d.Location.GetLineSpan();
+                        ModErrorFeed.RecordCompilation(modId, formatted, d.Id, location.Path,
+                            location.StartLinePosition.Line + 1, location.StartLinePosition.Character + 1);
+                    }
+                    else
+                    {
+                        ModErrorFeed.RecordCompilation(modId, formatted, d.Id);
+                    }
                 }
 
                 GameLogger.Log("MODS_COMPILE",
                      $"ModCompiler.Compile: '{modId}' FAILED with {result.Diagnostics.Count(IsError)} error(s)", LogLevel.Error);
+                ModAssemblyCache.RecordDecision(modId, "compile_failed", cachedPath, reason);
                 return null;
             }
 
@@ -431,6 +458,7 @@ namespace Cthangover.Core.Mods
             GameLogger.Log("MODS_COMPILE",
                  $"ModCompiler.Compile: Compilation of mod '{modId}' with {sourceList.Count} source files - success -> {cachedPath}");
             ModAssemblyCache.CurrentArtifacts[modId] = cachedPath;
+            ModAssemblyCache.RecordDecision(modId, "compiled", cachedPath, reason);
             return cachedPath;
         }
 

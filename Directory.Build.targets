@@ -28,4 +28,38 @@
                                    CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
         </ItemGroup>
     </Target>
+
+    <!-- Bind the SDK's reference assembly to the implementation produced by the
+         same compile. A consumer can reject stale or partially copied contracts. -->
+    <Target Name="ShipCoreModContract"
+            Condition="'$(MSBuildProjectName)' == 'Cthangover' and '$(DesignTimeBuild)' != 'true' and '$(ProduceReferenceAssembly)' == 'true'
+                       and Exists('@(IntermediateAssembly)') and Exists('@(IntermediateRefAssembly)')"
+            BeforeTargets="GetCopyToOutputDirectoryItems;GetCopyToPublishDirectoryItems">
+        <PropertyGroup>
+            <_CoreModContractReceipt>$(IntermediateOutputPath)core-mod-contract.sha256</_CoreModContractReceipt>
+        </PropertyGroup>
+        <!-- Content collection precedes the SDK's normal copy to TargetRefPath.
+             CopyRefAssembly keeps that file in place when its metadata is unchanged. -->
+        <CopyRefAssembly SourcePath="@(IntermediateRefAssembly)" DestinationPath="$(TargetRefPath)" />
+        <GetFileHash Files="@(IntermediateAssembly)" Algorithm="SHA256">
+            <Output TaskParameter="Hash" PropertyName="_CoreImplementationHash" />
+        </GetFileHash>
+        <GetFileHash Files="@(IntermediateRefAssembly)" Algorithm="SHA256">
+            <Output TaskParameter="Hash" PropertyName="_CoreReferenceHash" />
+        </GetFileHash>
+        <WriteLinesToFile File="$(_CoreModContractReceipt)"
+                          Lines="$(_CoreImplementationHash);$(_CoreReferenceHash)"
+                          Overwrite="true" WriteOnlyWhenDifferent="true" />
+        <ItemGroup>
+            <ContentWithTargetPath Include="$(TargetRefPath)"
+                                   TargetPath="mod_reference_assemblies/core/Cthangover.dll"
+                                   CopyToOutputDirectory="IfDifferent" CopyToPublishDirectory="IfDifferent"
+                                   ExcludeFromSingleFile="true" />
+            <ContentWithTargetPath Include="$(_CoreModContractReceipt)"
+                                   TargetPath="mod_reference_assemblies/core/contract.sha256"
+                                   CopyToOutputDirectory="IfDifferent" CopyToPublishDirectory="IfDifferent"
+                                   ExcludeFromSingleFile="true" />
+            <FileWrites Include="$(_CoreModContractReceipt)" />
+        </ItemGroup>
+    </Target>
 </Project>

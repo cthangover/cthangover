@@ -571,13 +571,14 @@ namespace Cthangover.Tests.Testing
             Assert.Empty(repaired.VerifyUnchanged());
         }
 
-        /// <summary>Executes rebuilt values after same-metadata edits; changed receipts cannot authorize stale binaries.</summary>
+        /// <summary>Mod edits preserve the core build, while even same-metadata core edits invalidate its receipt.</summary>
         [Fact]
         public void SameMetadataSourceEditRebuildsActualExecutableAndWarmNoBuildRunsNewValue()
         {
             File.WriteAllText(Path.Combine(fixture.Source, "Cthangover.csproj"),
                 "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><TargetFramework>net10.0</TargetFramework>"
-                + "<OutputType>Exe</OutputType></PropertyGroup></Project>");
+                + "<OutputType>Exe</OutputType><EnableDefaultCompileItems>false</EnableDefaultCompileItems></PropertyGroup>"
+                + "<ItemGroup><Compile Include=\"Core/**/*.cs\" /></ItemGroup></Project>");
             Directory.CreateDirectory(Path.Combine(fixture.Source, "Core"));
             var program = Path.Combine(fixture.Source, "Core", "Program.cs");
             var original = "namespace ExecutionFixture\n{\n    using System;\n"
@@ -597,6 +598,21 @@ namespace Cthangover.Tests.Testing
                 firstRevision = first.SourceFingerprint;
                 firstBuild = first.Metrics.BuildIdentity;
                 Assert.Empty(first.VerifyUnchanged());
+            }
+
+            var modFile = Path.Combine("mods", "probe", "Runtime.cs");
+            const string modSource = "// Runtime source from the next revision.\n";
+            File.WriteAllText(Path.Combine(fixture.Source, modFile), modSource);
+            fixture.Build.NoBuild = true;
+            fixture.Build.ArtifactsDirectory = Path.Combine(fixture.Root, "mod-only");
+            using (var modOnly = fixture.Acquire())
+            {
+                Assert.NotEqual(firstRevision, modOnly.SourceFingerprint);
+                Assert.Equal(firstBuild, modOnly.Metrics.BuildIdentity);
+                Assert.True(modOnly.Metrics.BuildCacheHit);
+                Assert.Equal(modSource, File.ReadAllText(Path.Combine(modOnly.Root, modFile)));
+                Assert.Equal("revision-one", ExecutePrepared(modOnly));
+                Assert.Empty(modOnly.VerifyUnchanged());
             }
 
             var changed = original.Replace("revision-one", "revision-two", StringComparison.Ordinal);

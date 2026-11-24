@@ -5,7 +5,7 @@ namespace Cthangover.TestRunner
     /// <summary>Builds only unpublished exclusively owned inputs and verifies complete output hashes before later reuse.</summary>
     internal static class PreparedBuildCache
     {
-        private const string Policy = "content_build_v3_hashed_ide_outputs";
+        private const string Policy = "content_build_v4_core_sources";
 
         internal static string Toolchain(PreparedBuildRequest request, CancellationToken cancellation)
         {
@@ -31,7 +31,7 @@ namespace Cthangover.TestRunner
                 return true;
             }
 
-            var identity = Identity(manifest.Files, toolchain);
+            var identity = Identity(manifest.Files, toolchain, manifest.Build?.IncludesUnit ?? request.IncludeUnit);
             metrics.BuildIdentity = identity;
             var reason = manifest.Build == null ? "build-receipt-missing"
                 : manifest.Build.Identity != identity || request.IncludeUnit && !manifest.Build.IncludesUnit
@@ -138,14 +138,14 @@ namespace Cthangover.TestRunner
 
             manifest.Build = new PreparedBuildReceipt
             {
-                Identity = Identity(manifest.Files, toolchain),
+                Identity = Identity(manifest.Files, toolchain, request.IncludeUnit),
                 IncludesUnit = request.IncludeUnit,
                 Outputs = outputs
             };
             metrics.BuildIdentity = manifest.Build.Identity;
         }
 
-        private static string Identity(IEnumerable<PreparedInputFile> files, string toolchain)
+        private static string Identity(IEnumerable<PreparedInputFile> files, string toolchain, bool includesUnit)
         {
             var inputs = new List<PreparedInputFile>();
             foreach (var file in files)
@@ -156,13 +156,28 @@ namespace Cthangover.TestRunner
                     || file.Path.EndsWith(".targets", StringComparison.OrdinalIgnoreCase)
                     || file.Path.EndsWith(".config", StringComparison.OrdinalIgnoreCase)
                     || file.Path.EndsWith(".globalconfig", StringComparison.OrdinalIgnoreCase)
-                    || file.Path == "global.json" || file.Path == ".editorconfig"))
+                    || file.Path == "global.json" || file.Path == ".editorconfig" || file.Path == "project.godot")
+                    && (includesUnit || !IsModInput(file.Path)))
                 {
                     inputs.Add(file);
                 }
             }
 
-            return PreparedInputFiles.Fingerprint(inputs, toolchain + "\n" + Policy);
+            return PreparedInputFiles.Fingerprint(inputs, toolchain + "\n" + Policy + "\n" + includesUnit);
+        }
+
+        private static bool IsModInput(string path)
+        {
+            // The core project compiles Core/**/*.cs. The unit project can also link mod sources.
+            foreach (var folder in ModFolders.Names)
+            {
+                if (path.StartsWith(folder + "/", StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static bool IsOutput(string relative)

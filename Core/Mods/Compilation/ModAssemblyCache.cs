@@ -15,8 +15,8 @@ namespace Cthangover.Core.Mods.Compilation
     ///
     /// Cache entries are named <c>&lt;modId&gt;_&lt;hash&gt;.dll</c> plus a
     /// paired portable PDB. The hash mixes the mod's own sources with its
-    /// dependency signature, the kernel assembly MVID and a codegen marker,
-    /// so any of those changing forces a recompile instead of a stale load.
+    /// dependency signature, the verified core contract and the code generator.
+    /// The loaded core's MVID is used when the contract cannot be verified.
     /// Every DLL is stored together with its PDB and loaded from disk
     /// (file-backed) so a debugger binds line-level breakpoints in mod code.
     /// </summary>
@@ -69,6 +69,17 @@ namespace Cthangover.Core.Mods.Compilation
         /// </summary>
         public static readonly System.Collections.Concurrent.ConcurrentDictionary<string, string> CurrentArtifacts = new(StringComparer.OrdinalIgnoreCase);
 
+        // A failed preparation can leave the previous loaded artifact intact. Keep the latest
+        // decision separate from CurrentArtifacts so an inspector can show both facts.
+        internal static readonly System.Collections.Concurrent.ConcurrentDictionary<string,
+            (string Outcome, string Path, string Reason, DateTimeOffset Time)> Decisions = new(StringComparer.OrdinalIgnoreCase);
+
+        internal static void RecordDecision(string modId, string outcome, string path, string reason)
+        {
+            if (GameEnvironment.IsRuntime)
+                Decisions[modId] = (outcome, path, reason, DateTimeOffset.UtcNow);
+        }
+
         /// <summary>
         /// Builds a deterministic signature of a mod's dependencies for the
         /// compilation cache key: every dependency id together with the version that
@@ -101,26 +112,20 @@ namespace Cthangover.Core.Mods.Compilation
         /// <summary>
         /// Computes the cache path for one compilation:
         /// <c>&lt;CacheRoot&gt;/&lt;modId&gt;_&lt;hash&gt;.dll</c>. The hash
-        /// covers the source list plus three extra factors: the dependency
-        /// signature, the kernel assembly identity and the codegen marker.
+        /// covers sources, mod dependencies, compiler inputs and the current
+        /// invalidation generation. Body-only kernel edits keep the core
+        /// contract stable, while API edits change the path.
         /// </summary>
         /// <param name="generatorsAvailable">Whether Godot source generators
         /// were resolved for this compilation — decides the codegen marker.</param>
         public static string BuildCachePath(string modId, List<(string FilePath, string Source)> sourceList, string dependencySignature, bool generatorsAvailable)
         {
             // Generated Godot script bindings change the assembly layout; the
-            // marker keeps cached DLLs without them from being reused. The marker
-            // also records whether generators were available: a cache entry built
-            // without them must never be reused once they become available.
+            // marker distinguishes both the selected generator binary and cache
+            // entries compiled before the generators were available.
             var codegenMarker = generatorsAvailable
-                ? "godot-scriptpath"
+                ? "godot-scriptpath:" + GodotGeneratorHost.CacheSignature
                 : "legacy-no-generators";
-            // Mix the core assembly identity into the cache key: when the kernel
-            // itself changes (e.g. a subsystem type moved out of Core), mods compiled
-            // against the previous core keep stale IL references to removed types and
-            // would fail at runtime with TypeLoadException. A new core MVID forces
-            // every mod to recompile against the updated kernel.
-            var coreSignature = typeof(ModRegistry).Assembly.ManifestModule.ModuleVersionId.ToString("N");
             // "pdb=named": the DLL's debug directory names its cache-file PDB
             // (<id>_<hash>.pdb); entries naming "<id>.pdb" never bind symbols.
             // "refs=depends": mods compile against their dependency closure only
@@ -128,7 +133,7 @@ namespace Cthangover.Core.Mods.Compilation
             // could hide an undeclared dependency and must not be reused.
             var generationPath = Path.Combine(CacheRoot, modId + ".generation");
             var generation = ReadGeneration(generationPath);
-            var hash = ModHasher.ComputeHash(sourceList, (dependencySignature ?? string.Empty) + ";core=" + coreSignature + ";codegen=" + codegenMarker + ";pdb=named;refs=depends;framework=" + FrameworkReferencePack.CacheSignature + ";generation=" + generation,
+            var hash = ModHasher.ComputeHash(sourceList, (dependencySignature ?? string.Empty) + ";core=" + CoreAssemblyContract.CacheSignature + ";codegen=" + codegenMarker + ";pdb=named;refs=depends;framework=" + FrameworkReferencePack.CacheSignature + ";generation=" + generation,
                 System.Environment.GetEnvironmentVariable("CTHANGOVER_TEST_PROJECT"));
             return Path.Combine(CacheRoot, $"{modId}_{hash}.dll");
         }
