@@ -8,6 +8,8 @@ using Godot;
 
 namespace Cthangover.Core.Factories
 {
+    using Cthangover.Core.Mods.Memory;
+
     /// <summary>
     /// Core binary-asset factory with LRU-bounded caching and multi-extension
     /// mod file scanning. Implements <c>ICacheLoader</c> so that cache misses
@@ -40,6 +42,12 @@ namespace Cthangover.Core.Factories
         {
             var size = ModConfig.Instance.Cache.GetCacheSize(factoryKey, fallbackCacheSize);
             _cache = new BoundedCache<string, T>(size, this, ReleaseResource);
+            var scope = ModMemoryService.Shared.TryFor(GetType().Assembly);
+            if (scope != null)
+            {
+                var name = "factory." + factoryKey;
+                scope.TrackInstance(name.Length > 108 ? name[..108] : name, _cache);
+            }
         }
 
         /// <summary>Mod asset group this factory scans (e.g. <c>"music"</c>, <c>"backgrounds"</c>); ids are relative to it.</summary>

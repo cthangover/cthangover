@@ -37,10 +37,15 @@ namespace Cthangover.Core.Mods.Memory
         /// </summary>
         public ModMemoryScope For(Assembly assembly)
         {
+            return TryFor(assembly)
+                ?? throw new ArgumentException("The assembly does not belong to a mod load context.", nameof(assembly));
+        }
+
+        /// <summary>Finds the mod scope when present. Standalone tools and tests may use their stores without a scope.</summary>
+        public ModMemoryScope TryFor(Assembly assembly)
+        {
             ArgumentNullException.ThrowIfNull(assembly);
-            return AssemblyLoadContext.GetLoadContext(assembly) is ModLoadContext context
-                ? context.Memory
-                : throw new ArgumentException("The assembly does not belong to a mod load context.", nameof(assembly));
+            return (AssemblyLoadContext.GetLoadContext(assembly) as ModLoadContext)?.Memory;
         }
 
         /// <summary>

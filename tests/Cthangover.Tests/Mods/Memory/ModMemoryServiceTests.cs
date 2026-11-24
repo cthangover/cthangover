@@ -146,6 +146,34 @@ namespace Cthangover.Tests.Mods.Memory
         }
 
         [Fact]
+        public void SharedPrefixTracksIndependentInstancesAndStandaloneLookupIsOptional()
+        {
+            Assert.Null(Service.TryFor(typeof(ModMemoryServiceTests).Assembly));
+            var id = TestMods.NewId("test_memory_instances");
+            var assembly = TestMods.Compile(id, MarkerSource);
+            try
+            {
+                var scope = Service.TryFor(assembly);
+                var left = new DictionaryCache<string, int>();
+                var right = new DictionaryCache<string, int>();
+                var first = scope.TrackInstance("window", left);
+                var second = scope.TrackInstance("window", right);
+                left["left"] = 1;
+
+                Assert.NotEqual(first, second);
+                Assert.Equal(1, Service.Inspect(id, first).Storage.Value.Metrics.Value.Count);
+                Assert.Equal(0, Service.Inspect(id, second).Storage.Value.Metrics.Value.Count);
+                Assert.True(scope.Untrack(first, left));
+                Assert.Equal(second, Assert.Single(Service.GetStatistics(id).Storages).Name);
+                GC.KeepAlive(right);
+            }
+            finally
+            {
+                ModAssemblyLoader.UnloadMod(id);
+            }
+        }
+
+        [Fact]
         public void ArchiveMetricsReflectBufferedBytesAndProviderDisposal()
         {
             const string name = "mods.archive_content";

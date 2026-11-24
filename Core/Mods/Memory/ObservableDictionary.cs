@@ -9,8 +9,10 @@ namespace Cthangover.Core.Mods.Memory
     {
         private readonly Dictionary<TKey, TValue> items;
         private readonly Func<TKey, TValue, MemoryPreviewEntry> preview;
+        private long generation;
 
-        internal ObservableDictionary(IEqualityComparer<TKey> comparer, Func<TKey, TValue, MemoryPreviewEntry> preview)
+        /// <summary>Creates a dictionary that can be used on its own and registered later.</summary>
+        public ObservableDictionary(IEqualityComparer<TKey> comparer = null, Func<TKey, TValue, MemoryPreviewEntry> preview = null)
         {
             items = new Dictionary<TKey, TValue>(comparer);
             this.preview = preview;
@@ -48,6 +50,59 @@ namespace Cthangover.Core.Mods.Memory
             }
         }
 
+        /// <summary>
+        /// Looks up an entry whose current stamp or revision matches the request. The predicate runs
+        /// under the storage lock and should compare data already available to the caller.
+        /// </summary>
+        public bool TryGetValue<TStamp>(TKey key, TStamp stamp, Func<TValue, TStamp, bool> isCurrent, out TValue value)
+        {
+            ArgumentNullException.ThrowIfNull(isCurrent);
+            lock (items)
+            {
+                if (items.TryGetValue(key, out value) && isCurrent(value, stamp))
+                {
+                    RecordLookup(true);
+                    return true;
+                }
+
+                value = default;
+                RecordLookup(false);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Looks up or publishes a value. The factory runs outside the lock and concurrent callers
+        /// may compute the same key. The first publication wins. A clear lets already running calls
+        /// finish with their computed result and prevents those calls from refilling the cache.
+        /// </summary>
+        public TValue GetOrAdd(TKey key, Func<TKey, TValue> factory)
+        {
+            ArgumentNullException.ThrowIfNull(factory);
+            long observedGeneration;
+            lock (items)
+            {
+                if (items.TryGetValue(key, out var existing))
+                {
+                    RecordLookup(true);
+                    return existing;
+                }
+                RecordLookup(false);
+                observedGeneration = generation;
+            }
+
+            var value = factory(key);
+            lock (items)
+            {
+                if (items.TryGetValue(key, out var existing))
+                    return existing;
+
+                if (observedGeneration == generation)
+                    items.Add(key, value);
+                return value;
+            }
+        }
+
         /// <summary>Removes an entry explicitly.</summary>
         public bool Remove(TKey key)
         {
@@ -59,7 +114,10 @@ namespace Cthangover.Core.Mods.Memory
         public void Clear()
         {
             lock (items)
+            {
+                generation++;
                 items.Clear();
+            }
         }
 
         /// <summary>Releases excess reserved entry capacity.</summary>

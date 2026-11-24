@@ -182,5 +182,27 @@ namespace Engine.Tests.Utils
             Assert.Equal(3, cache.Count);
             Assert.Empty(evicted);
         }
+
+        [Fact]
+        public void MetricsCountPolicyEvictionsSeparatelyFromInvalidation()
+        {
+            var released = new List<string>();
+            var cache = new BoundedCache<string, string>(1, new KeyedLoader(), released.Add);
+            Assert.False(cache.TryGet("first", out _));
+            Assert.Equal("v-first", cache.Get("first"));
+            Assert.True(cache.TryGet("first", out _));
+            Assert.Equal("v-second", cache.Get("second"));
+
+            var metrics = cache.GetMetrics();
+            Assert.Equal(1, metrics.Count);
+            Assert.Equal(1, metrics.Cache.Value.EntryLimit);
+            Assert.Equal(1L, metrics.Cache.Value.Hits);
+            Assert.Equal(3L, metrics.Cache.Value.Misses);
+            Assert.Equal(1L, metrics.Cache.Value.Evictions);
+
+            cache.Clear();
+            Assert.Equal(1L, cache.GetMetrics().Cache.Value.Evictions);
+            Assert.Equal(new[] { "v-first", "v-second" }, released);
+        }
     }
 }

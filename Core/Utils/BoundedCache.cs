@@ -3,6 +3,8 @@ using System.Collections.Generic;
 
 namespace Cthangover.Core.Utils
 {
+    using Cthangover.Core.Mods.Memory;
+
     /// <summary>
     /// A thread-safe, fixed-capacity cache with least-recently-used (LRU)
     /// eviction. Used to avoid redundant I/O and computation when the same
@@ -23,7 +25,7 @@ namespace Cthangover.Core.Utils
     /// The loader's <see cref="ICacheLoader{TKey, TValue}.Load"/> method is
     /// called <em>outside</em> the internal lock so that slow I/O does not
     /// block concurrent reads of already-cached entries. A double-check inside
-    /// the lock ensures no duplicate loads occur for the same key.
+    /// the lock makes concurrent loaders share the first published value.
     /// </para>
     /// <para>
     /// Every value that leaves the cache without being handed to a caller is
@@ -40,13 +42,16 @@ namespace Cthangover.Core.Utils
     /// memory leak during long sessions or frequent location changes.
     /// </para>
     /// </remarks>
-    public class BoundedCache<TKey, TValue>
+    public class BoundedCache<TKey, TValue> : ICache
     {
         private readonly int _maxSize;
         private readonly ICacheLoader<TKey, TValue> _loader;
         private readonly Dictionary<TKey, LinkedListNode<Entry>> _dict;
         private readonly LinkedList<Entry> _lru;
         private readonly object _lock;
+        private long hits;
+        private long misses;
+        private long evictions;
 
         /// <summary>
         /// Optional sink for values leaving the cache (see class remarks);
@@ -118,6 +123,14 @@ namespace Cthangover.Core.Utils
             }
         }
 
+        /// <summary>Samples lookups and policy evictions without touching the LRU order or invoking the loader.</summary>
+        public StorageMetrics GetMetrics()
+        {
+            lock (_lock)
+                return new StorageMetrics(_dict.Count, _dict.Capacity,
+                    cache: new CacheMetrics(hits, misses, evictions, null, _maxSize > 0 ? _maxSize : null, null));
+        }
+
         /// <summary>
         /// Retrieves the value for <paramref name="key"/>, either from the LRU
         /// in-memory store or by calling <see cref="ICacheLoader{TKey, TValue}.Load"/>
@@ -132,10 +145,12 @@ namespace Cthangover.Core.Utils
             {
                 if (_dict.TryGetValue(key, out var node))
                 {
+                    hits++;
                     _lru.Remove(node);
                     _lru.AddLast(node);
                     return node.Value.Value;
                 }
+                misses++;
             }
 
             var value = _loader.Load(key);
@@ -173,6 +188,7 @@ namespace Cthangover.Core.Utils
                             var first = _lru.First;
                             _lru.RemoveFirst();
                             _dict.Remove(first.Value.Key);
+                            evictions++;
                             if (dropped == null)
                                 dropped = new List<TValue>();
                             dropped.Add(first.Value.Value);
@@ -209,11 +225,13 @@ namespace Cthangover.Core.Utils
             {
                 if (_dict.TryGetValue(key, out var node))
                 {
+                    hits++;
                     _lru.Remove(node);
                     _lru.AddLast(node);
                     value = node.Value.Value;
                     return true;
                 }
+                misses++;
             }
             value = default;
             return false;

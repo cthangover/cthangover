@@ -107,6 +107,7 @@ namespace Cthangover.Core.Mods.HotReload.Impls
             result["count"] = metrics.Count;
             result["capacity"] = JsonValue.Create(metrics.Capacity);
             result["estimated_payload_bytes"] = JsonValue.Create(metrics.EstimatedPayloadBytes);
+            result["estimated_resource_bytes"] = JsonValue.Create(metrics.EstimatedResourceBytes);
             if (metrics.Cache is CacheMetrics cache)
             {
                 result["cache"] = new JsonObject
@@ -114,7 +115,9 @@ namespace Cthangover.Core.Mods.HotReload.Impls
                     ["hits"] = JsonValue.Create(cache.Hits),
                     ["misses"] = JsonValue.Create(cache.Misses),
                     ["evictions"] = JsonValue.Create(cache.Evictions),
-                    ["budget_bytes"] = JsonValue.Create(cache.BudgetBytes)
+                    ["budget_bytes"] = JsonValue.Create(cache.BudgetBytes),
+                    ["entry_limit"] = JsonValue.Create(cache.EntryLimit),
+                    ["resource_budget_bytes"] = JsonValue.Create(cache.ResourceBudgetBytes)
                 };
             }
             return result;

@@ -12,16 +12,24 @@ namespace Cthangover.Core.Mods.Memory
         /// <summary>Owner-reported payload bytes. May exclude collection overhead and shared objects.</summary>
         public long? EstimatedPayloadBytes { get; }
 
+        /// <summary>Owner-reported estimate for engine resources, which may include both managed and native buffers.</summary>
+        public long? EstimatedResourceBytes { get; }
+
         /// <summary>Cumulative cache counters and the optional payload budget.</summary>
         public CacheMetrics? Cache { get; }
 
         /// <summary>Captures the measures available from this storage implementation.</summary>
         public StorageMetrics(int count, int? capacity = null, long? estimatedPayloadBytes = null, CacheMetrics? cache = null)
+            : this(count, capacity, estimatedPayloadBytes, cache, null) { }
+
+        /// <summary>Captures a resource estimate separately from accounted managed payload.</summary>
+        public StorageMetrics(int count, int? capacity, long? estimatedPayloadBytes, CacheMetrics? cache, long? estimatedResourceBytes)
         {
             Count = count;
             Capacity = capacity;
             EstimatedPayloadBytes = estimatedPayloadBytes;
             Cache = cache;
+            EstimatedResourceBytes = estimatedResourceBytes;
         }
     }
 }

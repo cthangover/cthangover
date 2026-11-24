@@ -9,7 +9,8 @@ namespace Cthangover.Core.Mods.Memory
         private long hits;
         private long misses;
 
-        internal DictionaryCache(IEqualityComparer<TKey> comparer, Func<TKey, TValue, MemoryPreviewEntry> preview)
+        /// <summary>Creates a cache that can also be used outside the mod pipeline and registered later.</summary>
+        public DictionaryCache(IEqualityComparer<TKey> comparer = null, Func<TKey, TValue, MemoryPreviewEntry> preview = null)
             : base(comparer, preview) { }
 
         private protected override void RecordLookup(bool found)

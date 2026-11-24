@@ -8,6 +8,7 @@ namespace Cthangover.Core.Mods.Memory
     public sealed class ModMemoryScope
     {
         private readonly SortedDictionary<string, WeakReference<IStorageMetrics>> stores = new(StringComparer.Ordinal);
+        private long instanceSequence;
         private bool released;
 
         internal ModMemoryScope(string modId, long generation)
@@ -75,6 +76,29 @@ namespace Cthangover.Core.Mods.Memory
                     throw new ArgumentException("A live storage already uses this name: " + name, nameof(name));
 
                 stores[name] = new WeakReference<IStorageMetrics>(storage);
+            }
+        }
+
+        /// <summary>
+        /// Registers one of several concurrent instances of a store. Use the returned name with
+        /// <see cref="Untrack"/> when the instance stops owning memory.
+        /// </summary>
+        public string TrackInstance(string prefix, IStorageMetrics storage)
+        {
+            if (string.IsNullOrWhiteSpace(prefix) || prefix.Length > 108)
+                throw new ArgumentException("A storage prefix must contain 1 to 108 characters.", nameof(prefix));
+            ArgumentNullException.ThrowIfNull(storage);
+
+            lock (stores)
+            {
+                string name;
+                do
+                {
+                    name = prefix + "/" + (++instanceSequence).ToString(System.Globalization.CultureInfo.InvariantCulture);
+                } while (stores.ContainsKey(name));
+
+                Track(name, storage);
+                return name;
             }
         }
 
