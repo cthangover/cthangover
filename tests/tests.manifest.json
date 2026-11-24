@@ -7,6 +7,27 @@
   },
   "integration": [
     {
+      "name": "cthangover_story_references",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": [
+        "--", "--game=cthangover", "--new", "--itest=cthangover_story_routes",
+        "--run-tests", "--mod=cthangover_game__story_routes"
+      ],
+      "timeoutSeconds": 240,
+      "requiresExplicitSelection": true,
+      "owners": ["cthangover_game", "cthangover_murakami", "validator"],
+      "profiles": ["review"],
+      "tags": ["cthangover", "story", "validator"],
+      "source": "mods/cthangover_game/test_suites/story_routes/manifest.json",
+      "result": {
+        "name": "mod_units",
+        "childPrefix": "mod_units:",
+        "expectedErrors": []
+      },
+      "kind": "mod-unit",
+      "project": "read"
+    },
+    {
       "scene": "res://scenes/menu/launcher.tscn",
       "timeoutSeconds": 360,
       "owners": ["vegetation3d_base", "terrain_base", "water3d_base"],
