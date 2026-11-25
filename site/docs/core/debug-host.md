@@ -19,6 +19,7 @@ python DebugClient/dev_control.py 12345 '{"command":"args.catalog","key":"game"}
 | `status`, `commands`, `describe` | Get process status or discover registered commands and their descriptions |
 | `diagnose`, `errors.pull` | Read boot and compiler diagnostics. Use `next` from `errors.pull` as the next `since` cursor |
 | `inspect` | Inspect live nodes, resources, caches, or registered game data. Use `describe` for current selectors |
+| `node.inspect`, `node.set`, `node.tween`, `node.sine`, `node.motion.stop` | Discover, set, or animate properties of a live node |
 | `args.read`, `args.catalog`, `args.set` | Read or change the [effective launch arguments](launch-arguments.md) |
 | `memory.stats`, `memory.inspect` | Read only [registered memory metrics and previews](memory.md) |
 | `settings.read`, `settings.apply`, `settings.restore` | Inspect or change [display settings](display-settings.md) |
@@ -26,6 +27,21 @@ python DebugClient/dev_control.py 12345 '{"command":"args.catalog","key":"game"}
 | `operation.status` | Query a tracked operation by `operation_id` |
 
 For a mutation, send an `operation_id` UUID. If the connection closes, query `operation.status` with the same UUID before retrying. The host retains a bounded history for the current process.
+
+### Live scene controls
+
+Find a node path with `inspect` using `area=node` and a `query` or `type` filter. Use `node.inspect` with that `path` and `list_properties=true` to discover Godot property names and types. All motion commands take a `path` and a `property`. Pass vectors in `[x, y, z]` order for 3D.
+
+| Command | Example fields |
+|---|---|
+| `node.set` | `property="scale"`, `value=[1.5,1.5,1.5]` |
+| `node.tween` | `property="rotation_degrees"`, `value=[-15,40,0]`, `duration_s=6` |
+| `node.sine` | `property="position"`, `amplitude=[0,0.2,0]`, `period_s=4` |
+| `node.motion.stop` | `property="position"` |
+
+A new motion on the same property replaces the previous one. Sine motion uses the property's current value as its midpoint. Stopping holds the current value. The scene owns each motion's lifetime. After scheduling a tween, use `node.inspect` to verify the final value. For a node whose own controller writes the same property each frame, use a camera or node specifically prepared for manual control.
+
+In a 3D location with development control enabled, **F7** takes over the active view with a free camera. Use the mouse to look, **WASD** to fly, **Space/Ctrl** to rise or descend and **Shift** for faster travel. Hold **Alt** to release the pointer. Press **F7** again or **Esc** to return to the previous camera.
 
 ## Repeat tests in one game process
 

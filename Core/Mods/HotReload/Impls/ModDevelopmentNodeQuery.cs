@@ -25,26 +25,39 @@ namespace Cthangover.Core.Mods.HotReload.Impls
 
         internal static JsonObject InspectNode(ModDevelopmentContext context)
         {
-            using var path = new NodePath(context.Require("path"));
+            var node = Resolve(context);
             var request = context.Request;
-            var node = context.Tree.Root.GetNodeOrNull(path) ?? throw new ArgumentException("Node does not exist: " + path);
             var wanted = request["properties"]?.Deserialize<string[]>();
             if (wanted?.Length > 64)
                 throw new ArgumentException("Request at most 64 properties.");
             var properties = new JsonObject();
-            if (wanted != null)
+            var listProperties = request["list_properties"]?.GetValue<bool>() == true;
+            JsonArray propertyList = null;
+            if (wanted != null || listProperties)
             {
                 var available = new HashSet<string>(StringComparer.Ordinal);
-                foreach (var property in node.GetPropertyList())
+                var descriptors = node.GetPropertyList();
+                if (listProperties)
+                    propertyList = new JsonArray();
+                foreach (var property in descriptors)
+                {
                     available.Add(property["name"].AsString());
-                foreach (var name in wanted)
+                    if (listProperties)
+                        propertyList.Add(new JsonObject
+                        {
+                            ["name"] = property["name"].AsString(),
+                            ["type"] = ((Variant.Type)property["type"].AsInt32()).ToString(),
+                            ["usage"] = property["usage"].AsInt32()
+                        });
+                }
+                foreach (var name in wanted ?? Array.Empty<string>())
                 {
                     if (!available.Contains(name))
                         throw new ArgumentException("Node has no property '" + name + "'.");
                     properties[name] = InspectValue(node.Get(name));
                 }
             }
-            return new JsonObject
+            var result = new JsonObject
             {
                 ["path"] = node.GetPath().ToString(),
                 ["id"] = node.GetInstanceId(),
@@ -53,6 +66,15 @@ namespace Cthangover.Core.Mods.HotReload.Impls
                 ["properties"] = properties,
                 ["fields"] = InspectFields(node, request["fields"])
             };
+            if (listProperties)
+                result["property_list"] = propertyList;
+            return result;
+        }
+
+        internal static Node Resolve(ModDevelopmentContext context)
+        {
+            using var path = new NodePath(context.Require("path"));
+            return context.Tree.Root.GetNodeOrNull(path) ?? throw new ArgumentException("Node does not exist: " + path);
         }
 
         private static JsonObject InspectFields(Node node, JsonNode request)
@@ -95,7 +117,7 @@ namespace Cthangover.Core.Mods.HotReload.Impls
             };
         }
 
-        private static JsonNode InspectValue(Variant value)
+        internal static JsonNode InspectValue(Variant value)
         {
             switch (value.VariantType)
             {
