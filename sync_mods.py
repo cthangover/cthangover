@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Full sync of the mods with Gitea and GitHub: repositories, code, releases, catalogs.
+"""Sync mods with Gitea and GitHub: commits, repositories, releases and catalogs.
 
-One run compares mods/ with both hosts, prints every difference, asks once and
-then brings both hosts in line with the local mods:
+Choose operations at startup or pass the corresponding flags. The full sync
+(`all` in the menu, or `--yes` without operation flags) does the following:
 
   1. builds every mod's release archive and catalog entry into releases/
      (build_mod_releases.py);
@@ -49,8 +49,13 @@ commit it first. A catalog keeps its collections and the older-version downloads
 of every entry; entries of mods that have no local folder are dropped, and a mod
 that could not be released keeps its previous entry.
 
-    python sync_mods.py                    report, ask, apply (no input = report only)
-    python sync_mods.py --yes              apply without asking
+    python sync_mods.py                    choose operations, report, confirm
+    python sync_mods.py --push             create missing mod repos and push existing commits
+    python sync_mods.py --upload           publish releases from code already on the host
+    python sync_mods.py --catalog          publish catalog entries for available releases
+    python sync_mods.py --push --upload    push code and publish releases
+    python sync_mods.py --commit -m "Fix inventory" --only=items_base
+    python sync_mods.py --yes              full sync without asking, no local commits
     python sync_mods.py --only=rpg,trading only these mods (others keep their catalog entries)
     python sync_mods.py --delete           also delete online mod_* repositories without a
                                            local mod (asks per mod, like sync_mod_repos.py)
@@ -83,6 +88,14 @@ CATALOG_BRANCH = "main"
 CATALOG_FILE = "catalog.json"
 UPLOAD_TIMEOUT = 1800
 PROXY_WAIT = 300
+PROXY_ERRORS = (502, 503, 504)
+SYNC_OPERATIONS = ("push", "upload", "catalog")
+OPERATION_HELP = {
+    "push": "create missing mod repositories and push existing commits",
+    "upload": "publish mod and game releases from code already on the hosts",
+    "catalog": "publish the catalogs for available mod releases",
+    "commit": "commit all changes in the selected local mod repositories",
+}
 
 
 class Pending(Exception):
@@ -109,8 +122,12 @@ def raw_request(host, method, url, data=None, content_type=None, timeout=UPLOAD_
         body = exc.read().decode("utf-8", "replace").strip()
         raise repos.ApiError("%s: %s %s -> HTTP %d%s" % (host.name, method, url.split("?")[0], exc.code,
                                                        (": " + body[:300]) if body else ""), exc.code, body) from None
-    except urllib.error.URLError as exc:
-        raise repos.ScriptError("%s: cannot reach %s: %s" % (host.name, url.split("?")[0], exc.reason)) from None
+    except (urllib.error.URLError, TimeoutError) as exc:
+        reason = exc.reason if isinstance(exc, urllib.error.URLError) else exc
+        endpoint = url.split("?")[0]
+        if isinstance(reason, TimeoutError):
+            raise repos.RequestTimeout("%s: %s %s timed out: %s" % (host.name, method, endpoint, reason)) from None
+        raise repos.ScriptError("%s: cannot reach %s: %s" % (host.name, endpoint, reason)) from None
 
 
 def is_rate_limit(error):
@@ -229,25 +246,36 @@ def upload_asset(host, repo, release, path):
     return raw_request(host, "POST", url, body, "multipart/form-data; boundary=" + boundary)
 
 
-def upload_checked(host, repo, release, path):
-    """upload_asset that survives a proxy timeout: nginx may give up (502/503/504) while the
-    host is still storing a large file, so the release is watched for the asset to appear."""
+def upload_checked(host, repo, release, path, expected_sha256):
+    """Check the release after an ambiguous upload response before assuming the upload failed."""
+    size = path.stat().st_size
+    print("  %s: uploading %s %s <- %s (%d bytes) ..." % (host.name, repo, release.get("tag_name", ""),
+                                                        path.name, size), flush=True)
     try:
         return upload_asset(host, repo, release, path)
-    except repos.ApiError as exc:
-        if exc.status not in (502, 503, 504):
+    except (repos.RequestTimeout, repos.ApiError) as exc:
+        if isinstance(exc, repos.ApiError) and exc.status not in PROXY_ERRORS:
             raise
-        size = path.stat().st_size
-        print("  %s: %s answered HTTP %d for %s, checking whether it arrived ..." % (host.name, repo, exc.status, path.name))
-        deadline = time.time() + PROXY_WAIT
-        while time.time() < deadline:
-            time.sleep(15)
-            current = host.api("GET", "%s/releases/%s" % (owner_path(host, repo), release["id"]))
-            if any(a.get("name") == path.name and a.get("size") == size for a in current.get("assets") or []):
+        detail = sanitize(host, str(exc))
+    print("  %s. Checking whether %s arrived ..." % (detail, path.name), flush=True)
+    release_path = "%s/releases/%s" % (owner_path(host, repo), release["id"])
+    deadline = time.monotonic() + PROXY_WAIT
+    while time.monotonic() < deadline:
+        try:
+            current = host.api("GET", release_path)
+        except (repos.RequestTimeout, repos.ApiError) as exc:
+            if isinstance(exc, repos.ApiError) and exc.status not in PROXY_ERRORS:
+                raise
+        else:
+            if any(a.get("name") == path.name and a.get("size") == size
+                   and a.get("state") in (None, "uploaded")
+                   and a.get("digest") in (None, "", "sha256:" + expected_sha256)
+                   for a in current.get("assets") or []):
                 print("  %s: %s arrived after all" % (host.name, path.name))
                 return current
-        raise repos.ScriptError("%s: %s did not arrive (HTTP %d; the proxy in front of the host may limit "
-                                "upload time or size)" % (host.name, path.name, exc.status)) from None
+        time.sleep(max(0, min(15, deadline - time.monotonic())))
+    raise repos.ScriptError("could not confirm upload of %s within %d seconds after %s. Run again to recheck the release."
+                            % (path.name, PROXY_WAIT, detail))
 
 
 def remote_head(host, mod, branch):
@@ -345,18 +373,18 @@ def publish_catalog(host, path, document, summary):
 
 
 class ModState:
-    def __init__(self, folder, entry, archive):
+    def __init__(self, folder, entry=None, archive=None):
         self.mod = repos.Mod(folder.name, folder)
         self.entry = entry
         self.archive = archive
-        self.version = entry["version"]
-        self.tag = "v" + self.version
-        self.download = entry["downloads"][0]
-        self.branch = repos.git_branch(self.mod)
+        self.version = entry["version"] if entry else "-"
+        self.tag = "v" + self.version if entry else None
+        self.download = entry["downloads"][0] if entry else None
+        self.branch = repos.git_branch(self.mod) if (folder / ".git").exists() else None
         self.head = None
         if self.branch and repos.git_has_commits(self.mod):
             self.head = repos.run_git(folder, "rev-parse", "HEAD").stdout.strip()
-        self.dirty = repos.git_uncommitted(self.mod)
+        self.dirty = repos.git_uncommitted(self.mod) if self.branch else 0
         self.hosts = {}       # host name -> {"repo", "push", "release", "catalog"} states
         self.releases = {}    # host name -> release JSON (or None)
         self.published = {}   # host name -> True once the host serves this archive
@@ -385,44 +413,70 @@ def asset_state(host, state, release, catalog_entry):
     digest = asset.get("digest")
     if digest:
         return "ok" if digest == "sha256:" + state.download["archive_sha256"] else "replace"
-    # Gitea gives no digest: trust the archive this host's catalog says it serves.
+    # Release notes also record hashes when upload and catalog are run separately.
+    noted = listed_hashes(release).get(state.archive.name)
+    if noted:
+        return "ok" if noted == state.download["archive_sha256"] else "replace"
+    # Older Gitea releases may only have their hash in the catalog.
     listed = next((d for d in (catalog_entry or {}).get("downloads") or [] if d.get("version") == state.version), None)
     return "ok" if listed and listed.get("archive_sha256") == state.download["archive_sha256"] else "replace"
 
 
-def survey(hosts, states, online, catalogs):
+def survey(hosts, states, online, catalogs, operations):
+    push = "push" in operations
+    upload = "upload" in operations
+    catalog = "catalog" in operations
     for state in states:
         for host in hosts:
-            names = online[host.name]
-            cells = {"repo": "ok" if state.mod.repo in names else "repo", "push": "-", "release": "-"}
-            remote_entry = next((m for m in catalogs[host.name].get("mods") or [] if m.get("id") == state.mod.mod_id), None)
-            listed = next((d for d in (remote_entry or {}).get("downloads") or [] if d.get("version") == state.version), None)
-            cells["catalog"] = "ok" if same_archive(listed, state.download) else "catalog"
-            if cells["repo"] == "ok" and state.head:
-                cells["push"] = push_state(host, state.mod, state.branch, state.head)
-                releases = list_releases(host, state.mod.repo)
-                release = release_of(releases, state.version)
-                state.releases[host.name] = release
-                newest = max([r.get("tag_name") for r in releases] + [(remote_entry or {}).get("version")],
-                             key=version_key)
-                if version_key(newest) > version_key(state.version):
-                    # The host already serves a later version: never publish an older one over it.
-                    cells["release"] = "older!"
-                    cells["catalog"] = "-"
-                    state.newer[host.name] = newest.lstrip("vV")
-                else:
-                    cells["release"] = asset_state(host, state, release, remote_entry)
-                    if cells["release"] == "ok" and not same_notes(release, mod_notes(state)):
-                        cells["release"] = "notes"
-            elif cells["repo"] != "ok":
-                cells["push"] = "push" if state.head else "-"
-                cells["release"] = "release"
+            exists = state.mod.repo in online[host.name]
+            cells = {"repo": "ok", "push": "-", "release": "-", "catalog": "-"}
             state.hosts[host.name] = cells
-            state.published[host.name] = cells["release"] in ("ok", "notes")
+            state.published[host.name] = False
+            if state.blocked:
+                continue
+            if not exists:
+                cells["repo"] = "repo" if push else "missing repo!"
+                if push:
+                    cells["push"] = "push"
+                else:
+                    continue
+            elif push or upload:
+                status = push_state(host, state.mod, state.branch, state.head)
+                cells["push"] = "push required!" if status == "push" and not push else status
+            if not (upload or catalog):
+                continue
+
+            remote_entry = next((m for m in catalogs[host.name].get("mods") or [] if m.get("id") == state.mod.mod_id), None)
+            releases = list_releases(host, state.mod.repo) if exists else []
+            release = release_of(releases, state.version)
+            state.releases[host.name] = release
+            newest = max([r.get("tag_name") for r in releases] + [(remote_entry or {}).get("version")], key=version_key)
+            if version_key(newest) > version_key(state.version):
+                cells["release"] = "older!"
+                state.newer[host.name] = newest.lstrip("vV")
+                continue
+
+            release_status = asset_state(host, state, release, remote_entry)
+            state.published[host.name] = release_status == "ok"
+            if upload:
+                cells["release"] = release_status
+                if release_status == "ok" and not same_notes(release, mod_notes(state)):
+                    cells["release"] = "notes"
+            elif not state.published[host.name]:
+                cells["release"] = "release required!"
+            if catalog:
+                listed = next((d for d in (remote_entry or {}).get("downloads") or []
+                               if d.get("version") == state.version), None)
+                cells["catalog"] = "ok" if same_archive(listed, state.download) else "catalog"
 
 
 def needs(cells):
-    return [v for k, v in cells.items() if v not in ("ok", "-")]
+    return [v for v in cells.values() if v not in ("ok", "-")]
+
+
+def mod_todo(cells):
+    return cells["push"] == "push" or (
+        cells["push"] == "ok" and cells["release"] in ("release", "replace", "notes"))
 
 
 def report(hosts, states, catalogs, local_ids):
@@ -433,16 +487,22 @@ def report(hosts, states, catalogs, local_ids):
         print("Differences (%d of %d mods):" % (len(rows), len(states)))
         print("  %-*s  %-8s  %s" % (width, "mod", "version", "  ".join("%-30s" % h.name for h in hosts)))
         for state in rows:
-            cells = ["%-30s" % (", ".join(needs(state.hosts[h.name])) or "ok") for h in hosts]
+            cells = []
+            for host in hosts:
+                issues = needs(state.hosts[host.name])
+                if "older!" in issues:
+                    issues[issues.index("older!")] = "older! (%s online)" % state.newer[host.name]
+                cells.append("%-30s" % (", ".join(issues) or "ok"))
             line = "  %-*s  %-8s  %s" % (width, state.mod.mod_id, state.version, "  ".join(cells))
             if state.blocked:
                 line += "  [%s]" % state.blocked
             print(line.rstrip())
     else:
-        print("All %d mods are in sync on %s." % (len(states), " and ".join(h.name for h in hosts)))
+        print("No differences for the selected operations on %s (%d mods)."
+              % (" and ".join(h.name for h in hosts), len(states)))
 
     for host in hosts:
-        ids = [m.get("id") for m in catalogs[host.name].get("mods") or []]
+        ids = [m.get("id") for m in catalogs.get(host.name, {}).get("mods") or []]
         extra = sorted(i for i in ids if i not in local_ids)
         if extra:
             print("%s catalog lists mods without a local folder (dropped on update): %s" % (host.name, ", ".join(extra)))
@@ -498,31 +558,35 @@ def apply_mod(host, state, pacer):
         repos.push_mod(host, state.mod, state.branch)
         print("  %s: pushed %s %s" % (host.name, state.mod.repo, state.branch))
         cells["push"] = "ok"
-    if cells["push"] in ("ahead!", "diverged!"):
-        print("  %s: %s is %s - not pushed, not released" % (host.name, state.mod.repo, cells["push"].rstrip("!")))
-        return
     if cells["release"] == "older!":
         print("  %s: %s has %s, newer than local %s - not released" % (host.name, state.mod.repo,
                                                                      state.newer[host.name], state.version))
         return
+    if cells["push"] != "ok" or cells["release"] == "-":
+        return
     if cells["release"] in ("release", "replace"):
         # One release per version: an existing one gets its archive replaced, never a second release.
+        title, notes = mod_title(state), mod_notes(state)
         release = state.releases.get(host.name)
         if release is None:
             release = release_of(list_releases(host, state.mod.repo), state.version)
         if release is None:
-            release = create_release(host, state.mod.repo, state.tag, state.branch, mod_title(state), mod_notes(state))
+            release = create_release(host, state.mod.repo, state.tag, state.branch, title, notes)
             print("  %s: release %s %s created" % (host.name, state.mod.repo, state.tag))
-        else:
-            release = update_notes(host, state.mod.repo, release, mod_title(state), mod_notes(state))
-        for asset in mod_assets(release, state.mod.repo):
-            delete_asset(host, state.mod.repo, release, asset)
+        assets = mod_assets(release, state.mod.repo)
+        for asset in assets:
+            if asset.get("name") == state.archive.name:
+                delete_asset(host, state.mod.repo, release, asset)
+        upload_checked(host, state.mod.repo, release, state.archive, state.download["archive_sha256"])
+        for asset in assets:
             if asset.get("name") != state.archive.name:
+                delete_asset(host, state.mod.repo, release, asset)
                 print("  %s: %s %s: removed the copy %s" % (host.name, state.mod.repo, state.tag, asset.get("name")))
-        upload_checked(host, state.mod.repo, release, state.archive)
         print("  %s: %s %s <- %s (%d bytes)" % (host.name, state.mod.repo, state.tag, state.archive.name,
                                                 state.download["size_bytes"]))
-        cells["release"] = "ok"
+        state.releases[host.name] = release
+        needs_notes = release.get("draft") or release.get("name") != title or not same_notes(release, notes)
+        cells["release"] = "notes" if needs_notes else "ok"
     if cells["release"] == "notes":
         update_notes(host, state.mod.repo, state.releases[host.name], mod_title(state), mod_notes(state))
         print("  %s: %s %s: release text updated" % (host.name, state.mod.repo, state.tag))
@@ -534,7 +598,7 @@ def apply_all(hosts, states, pacer):
     failed = 0
     for state in states:
         for host in hosts:
-            if not needs(state.hosts[host.name]) or state.blocked:
+            if state.blocked or not mod_todo(state.hosts[host.name]):
                 continue
             try:
                 try:
@@ -551,7 +615,7 @@ def apply_all(hosts, states, pacer):
 
 
 def update_catalogs(hosts, states, catalogs, clones, local_ids, apply):
-    """Write the merged catalog to every host whose catalog differs; returns the failures."""
+    """Count differing catalogs in the preview and failed writes in the apply pass."""
     by_id = {s.mod.mod_id: s for s in states}
     remote_entries = {h.name: {m.get("id"): m for m in catalogs[h.name].get("mods") or []} for h in hosts}
     entries = {}
@@ -567,7 +631,7 @@ def update_catalogs(hosts, states, catalogs, clones, local_ids, apply):
     collections = next((catalogs[h.name].get("collections") for h in hosts if catalogs[h.name].get("collections")), None)
     document = builder.catalog_document([entries[i] for i in sorted(entries)], collections)
 
-    failed = 0
+    count = 0
     for host in hosts:
         current = catalogs[host.name]
         if current.get("mods") == document["mods"] and current.get("collections") == document.get("collections"):
@@ -575,14 +639,15 @@ def update_catalogs(hosts, states, catalogs, clones, local_ids, apply):
             continue
         if not apply:
             print("  %s catalog: would be updated (%d mods)" % (host.name, len(document["mods"])))
+            count += 1
             continue
         try:
             publish_catalog(host, clones[host.name], document, "Update catalog: %d mods" % len(document["mods"]))
             print("  %s catalog: pushed (%d mods)" % (host.name, len(document["mods"])))
         except repos.ScriptError as exc:
             print("  %s catalog: error: %s" % (host.name, exc))
-            failed += 1
-    return failed
+            count += 1
+    return count
 
 
 def confirm(question):
@@ -591,6 +656,85 @@ def confirm(question):
     except EOFError:
         answer = ""
     return answer.strip().lower() in ("y", "yes", "д", "да")
+
+
+def choose_operations(args):
+    selected = {operation for operation in OPERATION_HELP if getattr(args, operation)}
+    if selected:
+        return selected
+    if args.yes:
+        return set(SYNC_OPERATIONS)
+
+    print("Choose operations (separate names with commas or spaces):")
+    for operation, description in OPERATION_HELP.items():
+        print("  %-8s %s" % (operation, description))
+    print("  all      push, upload and catalog")
+    while True:
+        try:
+            selection = input("Operations [Enter = all, q = quit]: ").strip().lower()
+        except EOFError:
+            return set()
+        if selection in ("q", "quit"):
+            return set()
+        if selection in ("", "all"):
+            return set(SYNC_OPERATIONS)
+        selected = set(selection.replace(",", " ").split())
+        if selected and selected <= OPERATION_HELP.keys():
+            return selected
+        print("Choose from %s, all or q." % ", ".join(OPERATION_HELP))
+
+
+def commit_mods(folders, message, yes):
+    """Commit selected mod working trees. Return None if the user cancels."""
+    pending = []
+    failed = 0
+    for folder in folders:
+        root = repos.run_git(folder, "rev-parse", "--show-toplevel")
+        if root.returncode != 0 or Path(root.stdout.strip()).resolve() != folder.resolve():
+            print("  %s: an independent mod repository is required" % folder.name)
+            failed += 1
+            continue
+        mod = repos.Mod(folder.name, folder)
+        if not repos.git_branch(mod):
+            print("  %s: a checked-out branch is required" % folder.name)
+            failed += 1
+            continue
+        status = repos.run_git(folder, "status", "--porcelain", "--untracked-files=normal")
+        if status.returncode != 0:
+            print("  %s: git status failed: %s" % (folder.name, status.stderr.strip()))
+            failed += 1
+        elif any(line[:2] in ("DD", "AU", "UD", "UA", "DU", "AA", "UU") for line in status.stdout.splitlines()):
+            print("  %s: resolve merge conflicts before committing" % folder.name)
+            failed += 1
+        elif status.stdout.strip():
+            pending.append(folder)
+
+    if not pending:
+        if not failed:
+            print("All selected mod repositories are clean.")
+        return failed
+
+    print("Commit all changes, including untracked files Git does not ignore, in these mods:")
+    for folder in pending:
+        print("  %s" % folder.name)
+    if message is None:
+        try:
+            message = input("Commit message (empty cancels): ")
+        except EOFError:
+            return None
+    if not message.strip() or not (yes or confirm("Create local commits with message '%s'?" % message)):
+        return None
+
+    for folder in pending:
+        for command in (("add", "-A", "--", "."), ("commit", "-m", message)):
+            result = repos.run_git(folder, *command)
+            if result.returncode != 0:
+                print("  %s: git %s failed: %s" % (folder.name, command[0], (result.stderr or result.stdout).strip()))
+                failed += 1
+                break
+        else:
+            print("  %s: committed" % folder.name)
+    return failed
 
 
 # ------------------------------------------------------------------------- game
@@ -712,12 +856,17 @@ def game_apply(host, game):
     if release is None:
         release = create_release(host, game.repo, game.tag, game.branch, game.title, game.body())
         print("  %s: release %s %s created" % (host.name, game.repo, game.tag))
-    for asset in release.get("assets") or []:
-        if GAME_PACKAGE.match(asset.get("name", "")):
-            delete_asset(host, game.repo, release, asset)
+    assets = [a for a in release.get("assets") or [] if GAME_PACKAGE.match(a.get("name", ""))]
+    package_names = {p.name for p in game.packages}
     for path in game.packages:
-        upload_checked(host, game.repo, release, path)
+        for asset in assets:
+            if asset["name"] == path.name:
+                delete_asset(host, game.repo, release, asset)
+        upload_checked(host, game.repo, release, path, game.hashes[path.name])
         print("  %s: %s %s <- %s (%d bytes)" % (host.name, game.repo, game.tag, path.name, path.stat().st_size))
+    for asset in assets:
+        if asset["name"] not in package_names:
+            delete_asset(host, game.repo, release, asset)
     update_notes(host, game.repo, release, game.title, game.body())
     cells["release"] = "ok"
 
@@ -729,6 +878,9 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description="Sync the mods with Gitea and GitHub: repositories, code, "
                                                  "releases and catalogs.")
     parser.add_argument("--yes", "-y", action="store_true", help="apply without asking")
+    for operation, description in OPERATION_HELP.items():
+        parser.add_argument("--" + operation, action="store_true", help=description)
+    parser.add_argument("--message", "-m", help="message for --commit")
     parser.add_argument("--only", help="comma-separated mod ids to sync")
     parser.add_argument("--skip", help="comma-separated mod ids to leave out")
     parser.add_argument("--delete", action="store_true",
@@ -745,49 +897,83 @@ def main(argv=None):
     parser.add_argument("--github-token")
     args = parser.parse_args(argv)
 
-    hosts = repos.discover_hosts(ROOT, args)
-    out = Path(args.out).resolve()
+    operations = choose_operations(args)
+    if not operations:
+        print("Cancelled.")
+        return 0
+    if args.message is not None and "commit" not in operations:
+        parser.error("--message requires commit mode")
+    if "commit" in operations and args.yes and not (args.message or "").strip():
+        parser.error("--commit with --yes requires a non-empty --message")
+    remote_operations = operations.intersection(SYNC_OPERATIONS)
+
     folders = builder.select_mods(set(builder.split_list(args.only)), set(builder.split_list(args.skip)))
     if not folders:
         raise repos.ScriptError("no mods to sync")
-    local_ids = {p.name for p in (ROOT / "mods").iterdir() if p.is_dir() and (p / "manifest.json").is_file()}
+    code = 0
+    if "commit" in operations:
+        commit_failures = commit_mods(folders, args.message, args.yes)
+        if commit_failures is None:
+            print("Cancelled.")
+            return 1
+        code = int(bool(commit_failures))
+    if not remote_operations and not args.delete:
+        return code
 
-    entries = builder.build_all(out, folders, [h.name for h in hosts])
-    states = [ModState(folder, entry, builder.archive_path(out, entry)) for folder, entry in zip(folders, entries)]
+    hosts = repos.discover_hosts(ROOT, args)
+    out = Path(args.out).resolve()
+    catalog = "catalog" in remote_operations
+    upload = "upload" in remote_operations
+    if upload or catalog:
+        entries = builder.build_all(out, folders, [h.name for h in hosts])
+        states = [ModState(folder, entry, builder.archive_path(out, entry)) for folder, entry in zip(folders, entries)]
+    elif "push" in remote_operations:
+        states = [ModState(folder) for folder in folders]
+    else:
+        states = []
+    local_ids = set()
+    if catalog:
+        local_ids = {p.name for p in (ROOT / "mods").iterdir() if p.is_dir() and (p / "manifest.json").is_file()}
 
     print()
     print("Reading the hosts ...")
     online = {}
     for host in hosts:
         online[host.name] = {n for n in host.list_repos() if n.startswith(repos.REPO_PREFIX)}
-    clones = {h.name: catalog_clone(h, out) for h in hosts}
+    clones = {h.name: catalog_clone(h, out) for h in hosts} if upload or catalog else {}
     catalogs = {name: read_catalog(path) for name, path in clones.items()}
-    survey(hosts, states, online, catalogs)
-    rows = report(hosts, states, catalogs, local_ids)
-    stale = repos.stale_by_host(hosts, online, repos.local_names(ROOT, [s.mod for s in states]))
-    stale_names = sorted({n for h in hosts for n in stale.get(h.name) or []})
+    rows = []
+    if remote_operations:
+        survey(hosts, states, online, catalogs, remote_operations)
+        rows = report(hosts, states, catalogs if catalog else {}, local_ids)
+    stale = {}
+    if "push" in operations or args.delete:
+        stale = repos.stale_by_host(hosts, online, repos.local_names(ROOT, [s.mod for s in states]))
+    stale_names = sorted({n for names in stale.values() for n in names})
     if stale_names:
         print("Online repositories without a local mod: %s%s" % (", ".join(stale_names),
                                                                  "" if args.delete else " (--delete removes them)"))
 
-    game = None if args.no_game else GameState(out)
+    game = GameState(out) if upload and not args.no_game else None
     game_todo = False
     if game:
         game_survey(hosts, game)
         game_todo = game_report(hosts, game)
 
-    todo = [s for s in rows if not s.blocked]
-    print()
-    print("Catalogs:")
-    update_catalogs(hosts, states, catalogs, clones, local_ids, apply=False)
-    catalog_diff = any(s.hosts[h.name]["catalog"] != "ok" for s in states for h in hosts) or \
-        any(m.get("id") not in local_ids for h in hosts for m in catalogs[h.name].get("mods") or [])
+    todo = any(not s.blocked and any(mod_todo(cells) for cells in s.hosts.values()) for s in rows)
+    catalog_todo = False
+    if catalog:
+        print("\nCatalogs:")
+        catalog_todo = bool(update_catalogs(hosts, states, catalogs, clones, local_ids, apply=False))
 
-    code = 1 if any(s.blocked for s in rows) else 0
-    if todo or catalog_diff or game_todo:
+    blocked = sum(s.blocked is not None or any(issue.endswith("!")
+                  for cells in s.hosts.values() for issue in needs(cells)) for s in rows)
+    code = max(code, int(bool(blocked)))
+    if todo or catalog_todo or game_todo:
         print()
-        if not (args.yes or confirm("Apply: create, push, release and update the catalogs?")):
-            print("Nothing changed.")
+        names = ", ".join(operation for operation in SYNC_OPERATIONS if operation in remote_operations)
+        if not (args.yes or confirm("Apply selected remote operations (%s)?" % names)):
+            print("Remote operations cancelled.")
             return 1
         print()
         failed = apply_all(hosts, states, GitHubPacer(args.github_batch, args.github_pause))
@@ -798,12 +984,13 @@ def main(argv=None):
                 except repos.ScriptError as exc:
                     print("  %s: error %s: %s" % (host.name, game.repo, sanitize(host, str(exc))))
                     failed += 1
+        if catalog:
+            print("\nCatalogs:")
+            failed += update_catalogs(hosts, states, catalogs, clones, local_ids, apply=True)
+        code = max(code, int(bool(failed)))
         print()
-        print("Catalogs:")
-        failed += update_catalogs(hosts, states, catalogs, clones, local_ids, apply=True)
-        code = max(code, 1 if failed else 0)
-        print()
-        print("Done%s." % (", %d error(s)" % failed if failed else ""))
+        print("Done%s%s." % (", %d error(s)" % failed if failed else "",
+                              ", %d mod(s) still blocked" % blocked if blocked else ""))
 
     if args.delete and stale_names:
         print()
