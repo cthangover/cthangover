@@ -34,8 +34,15 @@ namespace Cthangover.Core.Settings
 
             var before = saved.Where(m => m?.Id != null).GroupBy(m => m.Id, StringComparer.OrdinalIgnoreCase)
                 .ToDictionary(g => g.Key, g => g.First().Version, StringComparer.OrdinalIgnoreCase);
-            var now = current.Where(m => m?.Id != null).GroupBy(m => m.Id, StringComparer.OrdinalIgnoreCase)
-                .ToDictionary(g => g.Key, g => g.First().Version, StringComparer.OrdinalIgnoreCase);
+            var canonical = current.Where(m => m?.Id != null).GroupBy(m => m.Id, StringComparer.OrdinalIgnoreCase)
+                .Select(g => g.First()).ToList();
+            var now = canonical
+                .ToDictionary(m => m.Id, m => m.Version, StringComparer.OrdinalIgnoreCase);
+            foreach (var (oldId, newId) in SaveSlotAliases.Build(canonical))
+            {
+                if (before.Remove(oldId, out var version))
+                    before.TryAdd(newId, version);
+            }
 
             foreach (var pair in now.OrderBy(p => p.Key, StringComparer.Ordinal))
             {

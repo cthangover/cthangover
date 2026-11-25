@@ -36,5 +36,12 @@ namespace Cthangover.Core.Settings
 
         /// <summary>When the slot first became dormant.</summary>
         public System.DateTime? DormantSince { get; set; }
+
+        internal ModMetadata WithId(string id)
+        {
+            var copy = (ModMetadata)MemberwiseClone();
+            copy.ModId = id;
+            return copy;
+        }
     }
 }

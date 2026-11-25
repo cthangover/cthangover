@@ -57,10 +57,23 @@ namespace Cthangover.Core.Settings
             Func<string, string> installedVersion,
             string coreVersion,
             DateTime now)
+            => Classify(modData, dormant, installedVersion, coreVersion, now, null);
+
+        /// <summary>
+        /// Applies the same version checks after routing former save IDs to their current owners.
+        /// An existing canonical slot takes precedence across both shelves.
+        /// </summary>
+        public static Result Classify(
+            IReadOnlyDictionary<string, ModSlot> modData,
+            IReadOnlyDictionary<string, ModSlot> dormant,
+            Func<string, string> installedVersion,
+            string coreVersion,
+            DateTime now,
+            IReadOnlyDictionary<string, string> legacyIds)
         {
             var result = new Result();
 
-            foreach (var pair in modData ?? new Dictionary<string, ModSlot>())
+            foreach (var pair in RenameSlots(modData, dormant, legacyIds))
             {
                 if (pair.Key == SavePackage.CoreSlotKey || pair.Value == null)
                     continue;
@@ -76,7 +89,7 @@ namespace Cthangover.Core.Settings
                 result.NewlyDormant.Add((pair.Key, reason.Value));
             }
 
-            foreach (var pair in dormant ?? new Dictionary<string, ModSlot>())
+            foreach (var pair in RenameSlots(dormant, modData, legacyIds))
             {
                 if (pair.Value == null || result.Dormant.ContainsKey(pair.Key))
                     continue;
@@ -95,6 +108,36 @@ namespace Cthangover.Core.Settings
             }
 
             return result;
+        }
+
+        private static IReadOnlyDictionary<string, ModSlot> RenameSlots(
+            IReadOnlyDictionary<string, ModSlot> shelf,
+            IReadOnlyDictionary<string, ModSlot> other,
+            IReadOnlyDictionary<string, string> legacyIds)
+        {
+            if (shelf == null)
+                return new Dictionary<string, ModSlot>();
+
+            if (legacyIds == null || legacyIds.Count == 0)
+                return shelf;
+
+            Dictionary<string, ModSlot> renamed = null;
+            foreach (var pair in shelf)
+            {
+                if (pair.Value == null || pair.Key == SavePackage.CoreSlotKey || !legacyIds.TryGetValue(pair.Key, out var id)
+                    || id == SavePackage.CoreSlotKey || (renamed ?? shelf).ContainsKey(id) || other?.ContainsKey(id) == true)
+                    continue;
+
+                renamed ??= new Dictionary<string, ModSlot>(shelf, StringComparer.Ordinal);
+                renamed.Remove(pair.Key);
+                renamed.Add(id, new ModSlot
+                {
+                    Metadata = pair.Value.Metadata?.WithId(id) ?? new ModMetadata { ModId = id },
+                    Data = pair.Value.Data
+                });
+            }
+
+            return renamed ?? shelf;
         }
 
         /// <summary>Flags a slot as dormant, keeping the first dormancy date.</summary>

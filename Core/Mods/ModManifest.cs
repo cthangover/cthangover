@@ -33,6 +33,11 @@ namespace Cthangover.Core.Mods
         [JsonPropertyName("id")]
         public string Id { get; set; }
 
+        /// <summary>Former owner ID for save slots and composition snapshots created before a mod rename.</summary>
+        [JsonPropertyName("legacy_save_id")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string LegacySaveId { get; set; }
+
         /// <summary>Human-readable mod name (shown in UI).</summary>
         [JsonPropertyName("name")]
         public string Name { get; set; }

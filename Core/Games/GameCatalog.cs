@@ -61,11 +61,9 @@ namespace Cthangover.Core.Games
                 ids = set.ModIds.OrderBy(id => id, StringComparer.Ordinal);
             }
 
-            return ids.Select(id => new SaveGameMod
-            {
-                Id = id,
-                Version = discovered.TryGetValue(id, out var info) ? info.Version : null,
-            }).ToList();
+            return ids.Select(id => discovered.TryGetValue(id, out var info)
+                ? SaveGameMod.FromMod(info)
+                : new SaveGameMod { Id = id }).ToList();
         }
 
         /// <summary>

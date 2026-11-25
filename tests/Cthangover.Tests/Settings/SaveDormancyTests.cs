@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using Cthangover.Core.Settings;
 
 namespace Engine.Tests.Settings
@@ -98,6 +99,73 @@ namespace Engine.Tests.Settings
 
             Assert.Equal(nameof(SaveDormancy.Reason.CoreTooOld), result.Dormant["cards"].Metadata.DormantReason);
         }
+
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public void LegacySlotRestoresAsCanonicalOwnerAfterJsonRoundTrip(bool wasDormant)
+        {
+            var package = LegacyPackage(wasDormant);
+            var roundTripped = JsonSerializer.Deserialize<SavePackage>(JsonSerializer.Serialize(package));
+            var legacy = wasDormant ? roundTripped.Dormant["old_content"] : roundTripped.ModData["old_content"];
+
+            var result = SaveDormancy.Classify(roundTripped.ModData, roundTripped.Dormant,
+                Installed(("game_content", "1.1.0")), "0.1.0", Now, LegacyIds());
+
+            var live = Assert.Single(result.Live);
+            Assert.Equal("game_content", live.Key);
+            Assert.Equal(live.Key, live.Value.Metadata.ModId);
+            Assert.Equal("old_content", legacy.Metadata.ModId);
+            Assert.Equal(7, live.Value.Data["number"].ReadJson<int>());
+            Assert.False(live.Value.Metadata.Dormant);
+            Assert.Equal(wasDormant, result.Revived.Contains(live.Key));
+            Assert.Empty(result.Dormant);
+        }
+
+        [Theory]
+        [InlineData(false, true)]
+        [InlineData(true, false)]
+        [InlineData(false, false)]
+        [InlineData(true, true)]
+        public void CanonicalSlotWinsAndKeepsFormerPayloadInDormancy(bool legacyWasDormant, bool canonicalWasDormant)
+        {
+            var package = LegacyPackage(legacyWasDormant);
+            var canonicalShelf = canonicalWasDormant ? package.Dormant ??= new() : package.ModData;
+            canonicalShelf["game_content"] = Slot("1.1.0");
+            canonicalShelf["game_content"].Data["number"] = new DataBlob(1, 8);
+
+            var result = SaveDormancy.Classify(package.ModData, package.Dormant,
+                Installed(("game_content", "1.1.0")), "0.1.0", Now, LegacyIds());
+
+            Assert.Equal(8, result.Live["game_content"].Data["number"].ReadJson<int>());
+            Assert.Equal(7, result.Dormant["old_content"].Data["number"].ReadJson<int>());
+        }
+
+        [Fact]
+        public void LegacySlotFromNewerVersionStaysDormant()
+        {
+            var package = LegacyPackage(false);
+
+            var result = SaveDormancy.Classify(package.ModData, package.Dormant,
+                Installed(("game_content", "0.9.0")), "0.1.0", Now, LegacyIds());
+
+            Assert.Empty(result.Live);
+            Assert.Equal(nameof(SaveDormancy.Reason.Downgrade), result.Dormant["game_content"].Metadata.DormantReason);
+            Assert.Equal(7, result.Dormant["game_content"].Data["number"].ReadJson<int>());
+        }
+
+        private static SavePackage LegacyPackage(bool wasDormant)
+        {
+            var package = new SavePackage();
+            var shelf = wasDormant ? package.Dormant ??= new() : package.ModData;
+            var legacy = Slot("1.0.0");
+            legacy.Metadata.ModId = "old_content";
+            legacy.Data["number"] = new DataBlob(1, 7);
+            shelf["old_content"] = wasDormant ? SaveDormancy.MarkDormant(legacy, SaveDormancy.Reason.NotLoaded, Now) : legacy;
+            return package;
+        }
+
+        private static Dictionary<string, string> LegacyIds() => new() { ["old_content"] = "game_content" };
 
         private static ModSlot Slot(string version) => new() { Metadata = new ModMetadata { ModVersion = version } };
 

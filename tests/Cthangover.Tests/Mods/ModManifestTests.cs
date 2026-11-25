@@ -11,6 +11,7 @@ namespace Engine.Tests.Mods
         {
             var json = @"{
                 ""id"": ""test_mod"",
+                ""legacy_save_id"": ""old_test_mod"",
                 ""name"": ""Test Mod"",
                 ""author"": ""Tester"",
                 ""description"": ""A test mod"",
@@ -24,6 +25,7 @@ namespace Engine.Tests.Mods
 
             Assert.NotNull(manifest);
             Assert.Equal("test_mod", manifest.Id);
+            Assert.Equal("old_test_mod", manifest.LegacySaveId);
             Assert.Equal("Test Mod", manifest.Name);
             Assert.Equal("Tester", manifest.Author);
             Assert.Equal("A test mod", manifest.Description);
@@ -35,6 +37,8 @@ namespace Engine.Tests.Mods
             Assert.True(manifest.Depends[0].IsValid);
             Assert.Single(manifest.DependencyIds);
             Assert.Equal("core", manifest.DependencyIds[0]);
+            Assert.Equal(manifest.LegacySaveId,
+                JsonSerializer.Deserialize<ModManifest>(JsonSerializer.Serialize(manifest)).LegacySaveId);
         }
 
         [Fact]

@@ -468,7 +468,8 @@ namespace Cthangover.Core.Settings
                 pkg.Dormant,
                 id => ModManager.Instance.GetMod(id) is { } mod ? mod.Version ?? "0.0.0" : null,
                 CoreVersion,
-                DateTime.UtcNow);
+                DateTime.UtcNow,
+                SaveSlotAliases.Build(ModManager.Instance.Mods.Values.Select(SaveGameMod.FromMod)));
 
             foreach (var (modId, reason) in dormancy.NewlyDormant)
                 GameLogger.Log("SAVE", $"Mod '{modId}' data kept dormant ({reason}) — it returns when the mod is back", LogLevel.Warning);

@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
+using Cthangover.Core.Mods;
 
 namespace Cthangover.Core.Settings
 {
@@ -29,5 +31,12 @@ namespace Cthangover.Core.Settings
         public string Id { get; set; }
 
         public string Version { get; set; }
+
+        /// <summary>Former save owner from the current manifest. Saved snapshots carry only canonical IDs.</summary>
+        [JsonIgnore]
+        public string LegacySaveId { get; set; }
+
+        internal static SaveGameMod FromMod(IModInfo info)
+            => new() { Id = info.Id, Version = info.Version, LegacySaveId = (info as ModInfo)?.Manifest?.LegacySaveId };
     }
 }

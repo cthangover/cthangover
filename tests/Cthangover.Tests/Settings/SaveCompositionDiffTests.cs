@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Cthangover.Core.Settings;
 
 namespace Engine.Tests.Settings
@@ -32,6 +33,35 @@ namespace Engine.Tests.Settings
         {
             Assert.True(SaveCompositionDiff.Compute(new[] { Mod("a", "1") }, new[] { Mod("a", "1") }).IsEmpty);
             Assert.True(SaveCompositionDiff.Compute(null, new[] { Mod("a", "1") }).IsEmpty);
+        }
+
+        [Fact]
+        public void RenamedModKeepsItsSavedVersionAndSerializesOnlyTheCanonicalId()
+        {
+            var current = Mod("game_content", "1.1.0");
+            current.LegacySaveId = "old_content";
+            var diff = SaveCompositionDiff.Compute(new[] { Mod("old_content", "1.0.0") }, new[] { current });
+
+            Assert.Empty(diff.Added);
+            Assert.Empty(diff.Removed);
+            Assert.Equal(("game_content", "1.0.0", "1.1.0", false), Assert.Single(diff.Updated));
+            var saved = JsonSerializer.Deserialize<SaveGameMod>(JsonSerializer.Serialize(current));
+            Assert.Equal(current.Id, saved.Id);
+            Assert.Equal(current.Version, saved.Version);
+            Assert.Null(saved.LegacySaveId);
+        }
+
+        [Fact]
+        public void ALoadedFormerOwnerCannotBeClaimedByAnotherMod()
+        {
+            var old = Mod("old_content", "1.0.0");
+            var current = Mod("game_content", "1.0.0");
+            current.LegacySaveId = "old_content";
+
+            var diff = SaveCompositionDiff.Compute(new[] { old }, new[] { old, current });
+
+            Assert.Equal("game_content", Assert.Single(diff.Added));
+            Assert.Empty(diff.Removed);
         }
 
         private static SaveGameMod Mod(string id, string version) => new() { Id = id, Version = version };
