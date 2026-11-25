@@ -125,3 +125,23 @@ To update one species, first save its PNG/recipe in the mod, then send the `terr
 ## One-shot C# scripts
 
 `script.run` requires `--allow-debug-scripts` in both startup and effective arguments. `--no-development-control` blocks it. Provide an entry class implementing `IDebugRuntimeScript` in `source`, up to 32 KiB. `timeout_ms` accepts 100–30,000 ms and defaults to 5,000 ms. The compiler accepts optional references to active assemblies by ID in `mods`. The reply reports the detached JSON result, compiler diagnostics, and the unload status of the temporary context. Scripts run with the game process's permissions and cancel cooperatively. A blocked call can hold the game thread past the timeout, so run trusted source that checks the cancellation token.
+
+## Replace a tool window with its draft intact
+
+Use the stable `ui_base` provider to replace an authoring window without restarting the game or rebuilding a location. The editor being replaced must not own the cache. Send these requests with `--pid <PID> raw -`, each with a fresh `operation_id`:
+
+```json
+{"provider":"ui_base","command":"tool.draft.suspend","path":"<current window path>","tool":"vegetation3d_editor","operation_id":"<UUID>"}
+{"command":"mod.reload","mod":"vegetation3d_editor","checkpoint":false,"operation_id":"<UUID>"}
+{"provider":"ui_base","command":"tool.draft.reopen","capture_id":"<returned capture_id>","operation_id":"<UUID>"}
+```
+
+Read each result before the next step. `suspend` writes a neutral JSON snapshot and asset bytes under the process account's temporary `cthangover-tool-drafts/<capture_id>` directory, covers the old frame and frees the old window. `reopen` resolves a fresh tool factory, restores the draft, then removes the cover. Keep `ui_base` loaded throughout. To change generator code, reload `vegetation3d_base`; its editor dependent is replaced too. Refresh changed locale data with `LocaleLoader.LoadLocale(TranslationServer.GetLocale())` before constructing the replacement window; `ui_base` tool-open/reopen commands perform this refresh in current source.
+
+`tool.draft.capture` caches without closing the window. `tool.draft.restore` maps into an existing `path`; `tool.draft.inspect` returns a capture. Canonical document adapters preserve full precision, source identity and unsaved picture bytes, while named controls supply supplementary presentation state. Restore returns `unmapped` entries with `id`, original `value` and `reason` (and `replacement_value` when applicable), plus `mapping_complete` and `preview_succeeded`. Missing controls, removed document members and incompatible values must be reported, not silently discarded. Inspect the result even when `applied` is true. A temporary snapshot is not a persistent source-mod save.
+
+### Verified flowering-editor replacement, 25 November 2026
+
+PID 4340 retained root instance 33034339767 and current scene 51757713016. The editor assembly MVID changed from `124d0fe3-5622-4b28-ad98-54d00069b00b` to `dcdd81a1-a482-4ba8-bbd8-a4820cc0403c`; frame counters continued. Action `d1f3d79084e14e1ca00ce7095bccbcef` reloaded the editor in 567 ms, with empty reload `leaked` and `errors` arrays, and regenerated the restored draft successfully. A deliberately retired probe field returned `RetiredRuntimeProbe`, original value `7.25`, reason `missing_control`. That intentional diagnostic made `mapping_complete` false without losing actual recipe fields.
+
+A subsequent generator/editor replacement (`539f12bf7c3744a79245b11bda6a06b0`) applied crossed stalks, shared stalk wind and triangle edges in the same PID. Restore returned `unmapped: []`, `mapping_complete: true`; root and scene IDs remained unchanged. Action `8687e34269bc4f01afcb2a97c81386c1` then applied basal-leaf counts per stalk through the same protocol, again without unmapped fields. Raw requests, responses, summaries and HDR-correct captures are retained outside Git under `art_sources/cthangover/ogneshchanin/flower_ranges_20261125/` in the workspace. These receipts demonstrate a real editor and generator replacement; they do not substitute for a terrain-species refresh when changing already placed plants in a location.
