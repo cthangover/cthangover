@@ -74,9 +74,9 @@ The CLI timeout applies to connecting. The Windows PowerShell example in the Rus
 The collision experiment replaced a Godot restart per variant with one windowed `ognishchanin_battle_field` TestRunner launch. The launch used an isolated, verified test context, `--itest=ognishchanin_battle_profile`, inherited `CTHANGOVER_BATTLE_DEBUG_MATRIX=1`, and `--development-control` in Godot's user arguments. A temporary runner copy forwarded the game flag and kept a stable prepared-input cache. We used native `--fixed-fps 60` before `--` for fixed-step comparison and omitted it for the separate window check.
 
 ```powershell
-$provider = 'proto_land_pack__battle_profile'
+$provider = 'ognishchanin_game__battle_profile'
 py -3 -B DebugClient/dev_control.py --pid $gamePid commands --mod $provider
-'{"provider":"proto_land_pack__battle_profile","command":"battle.status"}' |
+'{"provider":"ognishchanin_game__battle_profile","command":"battle.status"}' |
     py -3 -B DebugClient/dev_control.py $gamePid '-'
 $operation = [guid]::NewGuid().ToString()
 @{

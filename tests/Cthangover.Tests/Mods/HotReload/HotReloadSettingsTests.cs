@@ -44,8 +44,8 @@ namespace Cthangover.Tests.Mods.HotReload
         [InlineData("/game/mods/cthangover_game/scenarios/start.scenario")]
         [InlineData("/game/mods/menu_base/locale/ru.properties")]
         [InlineData("/game/mods/scenario_editor/scenes/scenario_info_panel.tscn")]
-        [InlineData("/game/mods_private/proto_land_pack/terrains/worlds/terrain_1.json")]
-        [InlineData("/game/mods_private/proto_land_pack/terrain/edited/height.r32")]
+        [InlineData("/game/mods_private/ognishchanin_game/terrains/worlds/terrain_1.json")]
+        [InlineData("/game/mods_private/ognishchanin_game/terrain/edited/height.r32")]
         public void IsRelevantChange_ModContent(string path)
         {
             Assert.True(HotReloadSettings.IsRelevantChange(path));
@@ -59,8 +59,8 @@ namespace Cthangover.Tests.Mods.HotReload
         [InlineData("/game/mods/cooking/.git/index")]
         [InlineData("/game/mods/live2d_base/source_code/obj/Live2D.dll")]
         [InlineData("/game/mods/x/save.tmp")]
-        [InlineData("/game/mods_private/proto_land_pack/.terrain_editor/write.lease")]
-        [InlineData(@"C:\game\mods_private\proto_land_pack\.terrain_editor\write.lease")]
+        [InlineData("/game/mods_private/ognishchanin_game/.terrain_editor/write.lease")]
+        [InlineData(@"C:\game\mods_private\ognishchanin_game\.terrain_editor\write.lease")]
         [InlineData("/game/mods/terrain_work/.terrain_editor/transaction/journal.json")]
         [InlineData("/game/mods/terrain_work/.terrain_editor/transaction/0.before")]
         [InlineData("/game/mods/terrain_work/.terrain_editor/transaction/0.after")]

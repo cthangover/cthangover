@@ -142,7 +142,7 @@ def main():
         fixture = profile / "cthangover/mods" / FIXTURE
         source = (PROJECT / "tests/fixtures/ognishchanin_reload/ReloadProbeCommand.cs.txt").read_text(encoding="utf-8")
         write_json(fixture / "manifest.json", {"id": FIXTURE, "name": "Ognishchanin reload probe", "version": "0.1.0",
-                   "depends": ["proto_land_pack", "actor3d_base", "navigation3d_base"], "sources": ["src/*.cs"]})
+                   "depends": ["ognishchanin_game", "actor3d_base", "navigation3d_base"], "sources": ["src/*.cs"]})
         write_json(fixture / "definitions/shore.json", {"Kind": "traversal3d", "Items": [{"Id": "p0/shore_grab",
                    "Location": "proto_land/yard", "Capability": 4, "Start": {"Position": [-4.57659, -.67, -30.648985]},
                    "End": {"Position": [-4.57659, .16, -30.648985]}}]})

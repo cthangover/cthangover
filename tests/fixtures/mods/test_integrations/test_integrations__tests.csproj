@@ -689,11 +689,11 @@
       <HintPath>$(CthangoverRoot).ide/bin/perf_overlay/$(Configuration)/net10.0/perf_overlay.dll</HintPath>
       <Private>false</Private>
     </Reference>
-    <ProjectReference Include="$(CthangoverRoot)mods_private/proto_land_pack/proto_land_pack.csproj" Condition="Exists('$(CthangoverRoot)mods_private/proto_land_pack/proto_land_pack.csproj')">
+    <ProjectReference Include="$(CthangoverRoot)mods_private/ognishchanin_game/ognishchanin_game.csproj" Condition="Exists('$(CthangoverRoot)mods_private/ognishchanin_game/ognishchanin_game.csproj')">
       <Private>false</Private>
     </ProjectReference>
-    <Reference Include="proto_land_pack" Condition="!Exists('$(CthangoverRoot)mods_private/proto_land_pack/proto_land_pack.csproj') And Exists('$(CthangoverRoot).ide/bin/proto_land_pack/$(Configuration)/net10.0/proto_land_pack.dll')">
-      <HintPath>$(CthangoverRoot).ide/bin/proto_land_pack/$(Configuration)/net10.0/proto_land_pack.dll</HintPath>
+    <Reference Include="ognishchanin_game" Condition="!Exists('$(CthangoverRoot)mods_private/ognishchanin_game/ognishchanin_game.csproj') And Exists('$(CthangoverRoot).ide/bin/ognishchanin_game/$(Configuration)/net10.0/ognishchanin_game.dll')">
+      <HintPath>$(CthangoverRoot).ide/bin/ognishchanin_game/$(Configuration)/net10.0/ognishchanin_game.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <ProjectReference Include="$(CthangoverRoot)mods_private/proto_sea_pack/proto_sea_pack.csproj" Condition="Exists('$(CthangoverRoot)mods_private/proto_sea_pack/proto_sea_pack.csproj')">
@@ -1527,7 +1527,7 @@
     <Reference Include="../perf_overlay/dll/**/*.dll" Exclude="$(CthangoverSourceBinaryExcludes)">
       <Private>false</Private>
     </Reference>
-    <Reference Include="../../mods_private/proto_land_pack/dll/**/*.dll" Exclude="$(CthangoverSourceBinaryExcludes)">
+    <Reference Include="../../mods_private/ognishchanin_game/dll/**/*.dll" Exclude="$(CthangoverSourceBinaryExcludes)">
       <Private>false</Private>
     </Reference>
     <Reference Include="../../mods_private/proto_sea_pack/dll/**/*.dll" Exclude="$(CthangoverSourceBinaryExcludes)">

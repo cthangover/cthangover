@@ -562,15 +562,17 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "perf_overlay__contracts__te
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "perf_overlay__test_monitor", "..\mods\perf_overlay\test_suites\test_monitor\perf_overlay__test_monitor.csproj", "{FE04B6AA-4D16-57C2-9C51-901D5055E44A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "proto_land_pack", "..\mods_private\proto_land_pack\proto_land_pack.csproj", "{D9AA436D-D8E3-595D-8FBB-E479DE9C44B5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ognishchanin_game", "..\mods_private\ognishchanin_game\ognishchanin_game.csproj", "{286132ED-D40A-5EF5-9EEE-69806934AA2D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "proto_land_pack__contracts", "..\mods_private\proto_land_pack\test_suites\contracts\proto_land_pack__contracts.csproj", "{F9749ACA-53FD-5151-B2A2-4A5628E4CADF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ognishchanin_game__battle_profile", "..\mods_private\ognishchanin_game\test_suites\battle_profile\ognishchanin_game__battle_profile.csproj", "{EF49CD10-B07A-5BCC-A285-F092DC3CD5B4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "proto_land_pack__contracts__tests", "..\mods_private\proto_land_pack\test_suites\contracts\proto_land_pack__contracts__tests.csproj", "{0450A7CF-24DF-5761-8E75-F84B805A8C5C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ognishchanin_game__contracts", "..\mods_private\ognishchanin_game\test_suites\contracts\ognishchanin_game__contracts.csproj", "{3AF6CD67-E323-58C2-982D-C7E202F46F39}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "proto_land_pack__open_world", "..\mods_private\proto_land_pack\test_suites\open_world\proto_land_pack__open_world.csproj", "{5EF1FF39-46CA-5EDE-B6D9-3BABD1E276D6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ognishchanin_game__contracts__tests", "..\mods_private\ognishchanin_game\test_suites\contracts\ognishchanin_game__contracts__tests.csproj", "{53F28944-0804-5B04-ADE6-A07572C0E03F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "proto_land_pack__open_world__tests", "..\mods_private\proto_land_pack\test_suites\open_world\proto_land_pack__open_world__tests.csproj", "{B43B3571-F7B8-508C-8291-4B1F2AC8DDBC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ognishchanin_game__open_world", "..\mods_private\ognishchanin_game\test_suites\open_world\ognishchanin_game__open_world.csproj", "{93727165-D63C-51E2-91CA-3E6D8979043A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ognishchanin_game__open_world__tests", "..\mods_private\ognishchanin_game\test_suites\open_world\ognishchanin_game__open_world__tests.csproj", "{CB0B9AAA-8C75-539C-9788-C12A2B4C4046}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "proto_sea_pack", "..\mods_private\proto_sea_pack\proto_sea_pack.csproj", "{E2948111-4824-538A-9618-8AE163CEABD6}"
 EndProject
@@ -2120,26 +2122,26 @@ Global
 		{FE04B6AA-4D16-57C2-9C51-901D5055E44A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FE04B6AA-4D16-57C2-9C51-901D5055E44A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FE04B6AA-4D16-57C2-9C51-901D5055E44A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D9AA436D-D8E3-595D-8FBB-E479DE9C44B5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D9AA436D-D8E3-595D-8FBB-E479DE9C44B5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D9AA436D-D8E3-595D-8FBB-E479DE9C44B5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D9AA436D-D8E3-595D-8FBB-E479DE9C44B5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F9749ACA-53FD-5151-B2A2-4A5628E4CADF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F9749ACA-53FD-5151-B2A2-4A5628E4CADF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F9749ACA-53FD-5151-B2A2-4A5628E4CADF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F9749ACA-53FD-5151-B2A2-4A5628E4CADF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0450A7CF-24DF-5761-8E75-F84B805A8C5C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0450A7CF-24DF-5761-8E75-F84B805A8C5C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0450A7CF-24DF-5761-8E75-F84B805A8C5C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0450A7CF-24DF-5761-8E75-F84B805A8C5C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5EF1FF39-46CA-5EDE-B6D9-3BABD1E276D6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5EF1FF39-46CA-5EDE-B6D9-3BABD1E276D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5EF1FF39-46CA-5EDE-B6D9-3BABD1E276D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5EF1FF39-46CA-5EDE-B6D9-3BABD1E276D6}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B43B3571-F7B8-508C-8291-4B1F2AC8DDBC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B43B3571-F7B8-508C-8291-4B1F2AC8DDBC}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B43B3571-F7B8-508C-8291-4B1F2AC8DDBC}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B43B3571-F7B8-508C-8291-4B1F2AC8DDBC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{286132ED-D40A-5EF5-9EEE-69806934AA2D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{286132ED-D40A-5EF5-9EEE-69806934AA2D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{286132ED-D40A-5EF5-9EEE-69806934AA2D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{286132ED-D40A-5EF5-9EEE-69806934AA2D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3AF6CD67-E323-58C2-982D-C7E202F46F39}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3AF6CD67-E323-58C2-982D-C7E202F46F39}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3AF6CD67-E323-58C2-982D-C7E202F46F39}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3AF6CD67-E323-58C2-982D-C7E202F46F39}.Release|Any CPU.Build.0 = Release|Any CPU
+		{53F28944-0804-5B04-ADE6-A07572C0E03F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{53F28944-0804-5B04-ADE6-A07572C0E03F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{53F28944-0804-5B04-ADE6-A07572C0E03F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{53F28944-0804-5B04-ADE6-A07572C0E03F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{93727165-D63C-51E2-91CA-3E6D8979043A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{93727165-D63C-51E2-91CA-3E6D8979043A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{93727165-D63C-51E2-91CA-3E6D8979043A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{93727165-D63C-51E2-91CA-3E6D8979043A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CB0B9AAA-8C75-539C-9788-C12A2B4C4046}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CB0B9AAA-8C75-539C-9788-C12A2B4C4046}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CB0B9AAA-8C75-539C-9788-C12A2B4C4046}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CB0B9AAA-8C75-539C-9788-C12A2B4C4046}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E2948111-4824-538A-9618-8AE163CEABD6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E2948111-4824-538A-9618-8AE163CEABD6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E2948111-4824-538A-9618-8AE163CEABD6}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -3016,6 +3018,10 @@ Global
 		{64396613-DB9E-537D-8348-E79AE44E6BE3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{64396613-DB9E-537D-8348-E79AE44E6BE3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{64396613-DB9E-537D-8348-E79AE44E6BE3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EF49CD10-B07A-5BCC-A285-F092DC3CD5B4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EF49CD10-B07A-5BCC-A285-F092DC3CD5B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EF49CD10-B07A-5BCC-A285-F092DC3CD5B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EF49CD10-B07A-5BCC-A285-F092DC3CD5B4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{D1D12B19-5BF0-5BEC-902B-5D5364D764AD} = {C292431E-7696-524E-ACF6-952CBF248106}
@@ -3294,11 +3300,11 @@ Global
 		{46C50DEA-18E1-5248-8E4C-BC3894381D9E} = {719D36B9-05F8-5789-821D-90B10EDC33EF}
 		{3DB90598-E116-5A90-8EED-09A7BE9C0B35} = {719D36B9-05F8-5789-821D-90B10EDC33EF}
 		{FE04B6AA-4D16-57C2-9C51-901D5055E44A} = {719D36B9-05F8-5789-821D-90B10EDC33EF}
-		{D9AA436D-D8E3-595D-8FBB-E479DE9C44B5} = {F8509398-37F9-567A-9F07-1D24F7F3C15B}
-		{F9749ACA-53FD-5151-B2A2-4A5628E4CADF} = {F8509398-37F9-567A-9F07-1D24F7F3C15B}
-		{0450A7CF-24DF-5761-8E75-F84B805A8C5C} = {F8509398-37F9-567A-9F07-1D24F7F3C15B}
-		{5EF1FF39-46CA-5EDE-B6D9-3BABD1E276D6} = {F8509398-37F9-567A-9F07-1D24F7F3C15B}
-		{B43B3571-F7B8-508C-8291-4B1F2AC8DDBC} = {F8509398-37F9-567A-9F07-1D24F7F3C15B}
+		{286132ED-D40A-5EF5-9EEE-69806934AA2D} = {F8509398-37F9-567A-9F07-1D24F7F3C15B}
+		{3AF6CD67-E323-58C2-982D-C7E202F46F39} = {F8509398-37F9-567A-9F07-1D24F7F3C15B}
+		{53F28944-0804-5B04-ADE6-A07572C0E03F} = {F8509398-37F9-567A-9F07-1D24F7F3C15B}
+		{93727165-D63C-51E2-91CA-3E6D8979043A} = {F8509398-37F9-567A-9F07-1D24F7F3C15B}
+		{CB0B9AAA-8C75-539C-9788-C12A2B4C4046} = {F8509398-37F9-567A-9F07-1D24F7F3C15B}
 		{E2948111-4824-538A-9618-8AE163CEABD6} = {F8509398-37F9-567A-9F07-1D24F7F3C15B}
 		{5E79E6DD-486F-57BD-BB29-21C7672968BA} = {F8509398-37F9-567A-9F07-1D24F7F3C15B}
 		{08AFC1F7-AD5E-599C-A3FE-8D7344A9B921} = {719D36B9-05F8-5789-821D-90B10EDC33EF}
@@ -3518,5 +3524,6 @@ Global
 		{B82B24D6-035A-5023-A049-3887BAD445DD} = {F8509398-37F9-567A-9F07-1D24F7F3C15B}
 		{36253E0C-4BCC-58CE-A2BC-53D8EC15C1C5} = {676FCD69-0930-55B0-B611-CAD88B2F9367}
 		{64396613-DB9E-537D-8348-E79AE44E6BE3} = {676FCD69-0930-55B0-B611-CAD88B2F9367}
+		{EF49CD10-B07A-5BCC-A285-F092DC3CD5B4} = {F8509398-37F9-567A-9F07-1D24F7F3C15B}
 	EndGlobalSection
 EndGlobal

@@ -105,7 +105,7 @@ finally { $pipe.Dispose() }
 
 ```powershell
 $gamePid = 12345  # PID того же Godot из ответа status
-$provider = 'proto_land_pack__battle_profile'
+$provider = 'ognishchanin_game__battle_profile'
 py -3 -B DebugClient/dev_control.py --pid $gamePid commands --mod $provider
 @{ provider = $provider; command = 'battle.status' } |
     ConvertTo-Json -Compress | py -3 -B DebugClient/dev_control.py $gamePid '-'
