@@ -23,6 +23,34 @@ namespace Cthangover.TerrainPureTests
             var material=new TerrainMaterial{ID="m",TextureSize=128,UvScale=.23f,TriplanarSlope=.7f,FarDistance=63,Layers=new(){new(){Id="rock",Albedo="a.png",Normal="n.png",Orm="o.png"}}};material.Layers[0].Extra["future"]=JsonSerializer.SerializeToElement(true);Assert.Equal(JsonSerializer.Serialize(material),JsonSerializer.Serialize(RoundTrip(material)));
             var scatter=new TerrainScatter{ID="s",Model="m.glb",Seed=4,Density=.4f,MaxInstances=30,MinSlope=.2f,MaxSlope=.9f,ScaleMin=.3f,ScaleMax=2,MeshDistance=10,EndDistance=40,Wind=.3f,ImpostorSize=64,GroundCover=true,Flexibility=.7f,CollisionRadius=.28f,CollisionHeight=4,MinHeight=-3,MaxHeight=8,MaterialLayers=new[]{1,3}};Assert.Equal(JsonSerializer.Serialize(scatter),JsonSerializer.Serialize(RoundTrip(scatter)));
         }
+
+        [Fact]
+        public void LocalSurfaceCoverageRoundTripsOutsideTheTilePalette()
+        {
+            var material = new TerrainMaterial
+            {
+                ID = "test/material",
+                Layers = new() { new() { Id = "grass" } },
+                LocalDetail = new()
+                {
+                    Mask = "test/mask.png",
+                    Bounds = new[] { -12f, -40f, 32f, 64f },
+                    Scales = new[] { .35f, .45f, .55f },
+                    Layers = new()
+                    {
+                        new() { Id = "damp_soil", Albedo = "test/soil.png" },
+                        new() { Id = "peat", Albedo = "test/peat.png", Normal = "test/peat_normal.png" },
+                        new() { Id = "moss", Albedo = "test/moss.png", Orm = "test/moss_orm.png" }
+                    }
+                }
+            };
+
+            var restored = RoundTrip(material);
+            TerrainValidation.Material(restored);
+            Assert.Equal(JsonSerializer.Serialize(material), JsonSerializer.Serialize(restored));
+            Assert.Equal("grass", Assert.Single(restored.Layers).Id);
+        }
+
         private TerrainScatter collisionDefinition;
         [Theory]
         [InlineData(-1,4)]
