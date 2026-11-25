@@ -15,12 +15,13 @@ namespace Cthangover.TestRunner
 
         /// <summary>
         /// Acquires checked immutable inputs. A null build is for tiny preparation fixtures; production supplies a
-        /// build request. Observer phases are synchronous and caller-owned; cancellation never publishes a ready receipt.
+        /// build request. Lazy source hashing trusts unchanged source metadata and keeps prepared byte verification.
+        /// Observer phases are synchronous and caller-owned; cancellation never publishes a ready receipt.
         /// </summary>
         public static PreparedInputLease Acquire(string source, string cacheRoot, PreparedBuildRequest build = null,
-            CancellationToken cancellationToken = default, IPreparedInputObserver observer = null)
+            CancellationToken cancellationToken = default, IPreparedInputObserver observer = null, bool lazySourceHashes = false)
         {
-            return AcquireCore(source, cacheRoot, build, cancellationToken, observer, false);
+            return AcquireCore(source, cacheRoot, build, cancellationToken, observer, false, lazySourceHashes);
         }
 
         /// <summary>
@@ -30,11 +31,11 @@ namespace Cthangover.TestRunner
         public static PreparedInputLease Repair(string source, string cacheRoot, PreparedBuildRequest build = null,
             CancellationToken cancellationToken = default, IPreparedInputObserver observer = null)
         {
-            return AcquireCore(source, cacheRoot, build, cancellationToken, observer, true);
+            return AcquireCore(source, cacheRoot, build, cancellationToken, observer, true, false);
         }
 
         private static PreparedInputLease AcquireCore(string source, string cacheRoot, PreparedBuildRequest build,
-            CancellationToken cancellationToken, IPreparedInputObserver observer, bool repair)
+            CancellationToken cancellationToken, IPreparedInputObserver observer, bool repair, bool lazySourceHashes)
         {
             var started = Stopwatch.GetTimestamp();
             var metrics = new InputPreparationMetrics();
@@ -65,16 +66,27 @@ namespace Cthangover.TestRunner
                 RefuseRetiring(store, metrics);
                 RefuseProcesses(root, metrics, mutation: repair);
                 var toolchain = build == null ? null : PreparedBuildCache.Toolchain(build, cancellationToken);
-                var sourceFiles = PreparedInputFiles.Scan(source, cancellationToken);
+                if (lazySourceHashes)
+                {
+                    gate = TryRead(gatePath);
+                }
+
+                var ready = gate == null ? null : PreparedInputJson.Read<PreparedInputManifest>(metrics.ManifestPath);
+                var sourceHashes = new PreparedSourceHashes(lazySourceHashes ? Path.Combine(store, "source-hashes-v1.json") : null,
+                    ready?.SourceFingerprint, metrics);
+                var sourceFiles = PreparedInputFiles.Scan(source, sourceHashes, cancellationToken);
                 metrics.Sample();
                 var fingerprint = PreparedInputFiles.Fingerprint(sourceFiles, toolchain);
                 metrics.SourceFingerprint = fingerprint;
                 metrics.PreparedInputId = "inputs-v1-" + fingerprint;
                 Notify(observer, "scanned", root, fingerprint, cancellationToken);
-                gate = TryRead(gatePath);
+                if (gate == null)
+                {
+                    gate = TryRead(gatePath);
+                    ready = gate == null ? null : PreparedInputJson.Read<PreparedInputManifest>(metrics.ManifestPath);
+                }
                 RefuseRetiring(store, metrics);
                 RefuseProcesses(root, metrics, mutation: repair);
-                var ready = gate == null ? null : PreparedInputJson.Read<PreparedInputManifest>(metrics.ManifestPath);
                 var quarantined = File.Exists(Path.Combine(store, "quarantined.json"));
                 if (quarantined)
                 {
@@ -98,7 +110,8 @@ namespace Cthangover.TestRunner
                         }
 
                         Notify(observer, "before-seal", root, fingerprint, cancellationToken);
-                        Fence(source, sourceFiles, toolchain, metrics, cancellationToken);
+                        Fence(source, sourceFiles, toolchain, sourceHashes, metrics, cancellationToken);
+                        sourceHashes.Save(fingerprint);
                         metrics.CacheHit = true;
                         metrics.ReusedInputs = CountFiles(ready.Files);
                         metrics.PrepareSeconds = Stopwatch.GetElapsedTime(started).TotalSeconds;
@@ -139,7 +152,7 @@ namespace Cthangover.TestRunner
                     RemoveExtraneous(root, desired, ready?.Build, metrics);
                     metrics.FullProjectCopies = initialPopulation ? 1 : 0;
                     Notify(observer, "materialized", root, fingerprint, cancellationToken);
-                    Fence(source, sourceFiles, toolchain, metrics, cancellationToken);
+                    Fence(source, sourceFiles, toolchain, sourceHashes, metrics, cancellationToken);
                     var candidate = new PreparedInputManifest
                     {
                         Source = source,
@@ -150,7 +163,7 @@ namespace Cthangover.TestRunner
                     PreparedBuildCache.Ensure(root, candidate, build, toolchain, metrics, cancellationToken);
                     metrics.Sample();
                     Notify(observer, "before-seal", root, fingerprint, cancellationToken);
-                    Fence(source, sourceFiles, toolchain, metrics, cancellationToken);
+                    Fence(source, sourceFiles, toolchain, sourceHashes, metrics, cancellationToken);
                     foreach (var file in All(candidate))
                     {
                         if (!file.IsDirectory)
@@ -174,6 +187,7 @@ namespace Cthangover.TestRunner
                     throw new PreparedInputRefusal("source-revision-changed", metrics);
                 }
 
+                sourceHashes.Save(fingerprint);
                 metrics.PrepareSeconds = Stopwatch.GetElapsedTime(started).TotalSeconds;
                 process.Refresh();
                 metrics.CpuSeconds = Math.Max(0, process.TotalProcessorTime.TotalSeconds - initialCpu);
@@ -392,9 +406,9 @@ namespace Cthangover.TestRunner
         }
 
         private static void Fence(string source, List<PreparedInputFile> expected, string toolchain,
-            InputPreparationMetrics metrics, CancellationToken token)
+            PreparedSourceHashes sourceHashes, InputPreparationMetrics metrics, CancellationToken token)
         {
-            if (PreparedInputFiles.Fingerprint(PreparedInputFiles.Scan(source, token), toolchain)
+            if (PreparedInputFiles.Fingerprint(PreparedInputFiles.Scan(source, sourceHashes, token), toolchain)
                 != PreparedInputFiles.Fingerprint(expected, toolchain))
             {
                 throw new PreparedInputRefusal("source-revision-changed", metrics);

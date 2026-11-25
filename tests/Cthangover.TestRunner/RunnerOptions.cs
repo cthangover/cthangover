@@ -77,6 +77,8 @@ namespace Cthangover.TestRunner
         }
         /// <summary>Persistent content-fenced input store; warm invocations reuse it without materializing input files.</summary>
         public string InputCache { get; private set; } = TestWorkspace.DefaultInputCache;
+        /// <summary>Opts in to reusing live source hashes by path, length and last write time.</summary>
+        public bool LazySourceHashes { get; private set; }
         /// <summary>Explicit bounded repair admission for quarantined prepared inputs; never enabled as an automatic fallback.</summary>
         public bool RepairInputs
         {
@@ -196,6 +198,9 @@ namespace Cthangover.TestRunner
                     case "--input-cache":
                         options.InputCache = Path.GetFullPath(Next(args, ref i));
                         break;
+                    case "--lazy-source-hashes":
+                        options.LazySourceHashes = true;
+                        break;
                     case "--repair-inputs":
                         options.RepairInputs = true;
                         break;
@@ -314,6 +319,7 @@ namespace Cthangover.TestRunner
   --godot <path>       Godot .NET (иначе GODOT_BIN или PATH)
   --no-build           проверить receipt и хеши готовой сборки; при несовпадении — отказ
   --input-cache <dir>  кеш неизменяемых входов; повтор той же версии не копирует входы
+  --lazy-source-hashes  переиспользовать SHA-256 исходников по пути, размеру и дате записи
   --repair-inputs     явно восстановить quarantined-входы; обычный запуск отказывает
   --fresh-cache        отдельный пустой кеш компиляции / private cold compilation cache
   --jobs <N>           число процессов (по умолчанию половина ядер, 2..8); 1 — последовательный режим

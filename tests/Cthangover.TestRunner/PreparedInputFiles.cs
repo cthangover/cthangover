@@ -24,15 +24,16 @@ namespace Cthangover.TestRunner
             "Core", "scenes", "collections", "config", "tests", "docs", ".opencode", "sdk/fixtures"
         }.Concat(ModFolders.Names).ToArray();
 
-        internal static List<PreparedInputFile> Scan(string root, CancellationToken cancellation)
+        internal static List<PreparedInputFile> Scan(string root, PreparedSourceHashes hashes, CancellationToken cancellation)
         {
+            hashes.BeginScan();
             var result = new List<PreparedInputFile>();
             foreach (var file in Directory.EnumerateFiles(root).Order(StringComparer.Ordinal))
             {
                 if (Path.GetExtension(file) is ".godot" or ".csproj" or ".props" or ".targets" or ".sln" or ".cfg"
                     or ".config" or ".globalconfig" or ".json" or ".md" || Path.GetFileName(file) == ".editorconfig")
                 {
-                    result.Add(Read(root, file, cancellation));
+                    result.Add(hashes.Read(root, file, cancellation));
                 }
             }
 
@@ -41,14 +42,14 @@ namespace Cthangover.TestRunner
                 var directory = System.IO.Path.Combine(root, tree);
                 if (Directory.Exists(directory))
                 {
-                    Visit(root, directory, result, cancellation);
+                    Visit(root, directory, result, hashes, cancellation);
                 }
             }
 
             var imported = System.IO.Path.Combine(root, ".godot", "imported");
             if (Directory.Exists(imported))
             {
-                Visit(root, imported, result, cancellation);
+                Visit(root, imported, result, hashes, cancellation);
             }
 
             foreach (var name in new[] { "uid_cache.bin", "global_script_class_cache.cfg", "scene_groups_cache.cfg", "extension_list.cfg" })
@@ -56,11 +57,12 @@ namespace Cthangover.TestRunner
                 var file = System.IO.Path.Combine(root, ".godot", name);
                 if (File.Exists(file))
                 {
-                    result.Add(Read(root, file, cancellation));
+                    result.Add(hashes.Read(root, file, cancellation));
                 }
             }
 
             result.Sort(Compare);
+            hashes.EndScan();
             return result;
         }
 
@@ -171,7 +173,8 @@ namespace Cthangover.TestRunner
                 || relative.StartsWith(".godot/mono/temp/obj/", StringComparison.Ordinal);
         }
 
-        private static void Visit(string root, string directory, List<PreparedInputFile> files, CancellationToken cancellation)
+        private static void Visit(string root, string directory, List<PreparedInputFile> files,
+            PreparedSourceHashes hashes, CancellationToken cancellation)
         {
             RejectLink(directory);
             files.Add(new PreparedInputFile
@@ -182,7 +185,7 @@ namespace Cthangover.TestRunner
             });
             foreach (var file in Directory.EnumerateFiles(directory).Order(StringComparer.Ordinal))
             {
-                files.Add(Read(root, file, cancellation));
+                files.Add(hashes.Read(root, file, cancellation));
             }
 
             foreach (var child in Directory.EnumerateDirectories(directory).Order(StringComparer.Ordinal))
@@ -196,7 +199,7 @@ namespace Cthangover.TestRunner
                     continue;
                 }
 
-                Visit(root, child, files, cancellation);
+                Visit(root, child, files, hashes, cancellation);
             }
         }
 

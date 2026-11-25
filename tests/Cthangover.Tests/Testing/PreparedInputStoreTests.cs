@@ -372,6 +372,59 @@ namespace Cthangover.Tests.Testing
             Assert.Empty(changed.VerifyUnchanged());
         }
 
+        /// <summary>Persistent metadata reuse finds edits below the newest timestamp and invalidates after a strict refresh.</summary>
+        [Fact]
+        public void LazySourceHashesReuseUnchangedFilesAcrossAcquisitions()
+        {
+            var old = DateTime.UtcNow.AddHours(-2);
+            var payload = Path.Combine(fixture.Source, fixture.Payload);
+            var project = Path.Combine(fixture.Source, "project.godot");
+            File.SetLastWriteTimeUtc(payload, old);
+            File.SetLastWriteTimeUtc(project, old.AddMinutes(10));
+            File.SetLastWriteTimeUtc(Path.Combine(fixture.Source, "mods", "probe", "manifest.json"), old);
+
+            string firstFingerprint;
+            using (var first = PreparedInputStore.Acquire(fixture.Source, fixture.Cache, lazySourceHashes: true))
+            {
+                firstFingerprint = first.SourceFingerprint;
+                Assert.Equal(3, first.Metrics.SourceFilesHashed);
+            }
+
+            using (var warm = PreparedInputStore.Acquire(fixture.Source, fixture.Cache, lazySourceHashes: true))
+            {
+                Assert.Equal(firstFingerprint, warm.SourceFingerprint);
+                Assert.Equal(0, warm.Metrics.SourceBytesHashed);
+                Assert.Equal(6, warm.Metrics.SourceHashesReused);
+                Assert.Equal(0, warm.Metrics.FilesCopied);
+            }
+
+            File.WriteAllText(payload, "{\"value\":9}");
+            File.SetLastWriteTimeUtc(payload, old.AddMinutes(1));
+            string changedFingerprint;
+            using (var changed = PreparedInputStore.Acquire(fixture.Source, fixture.Cache, lazySourceHashes: true))
+            {
+                changedFingerprint = changed.SourceFingerprint;
+                Assert.NotEqual(firstFingerprint, changedFingerprint);
+                Assert.Equal(1, changed.Metrics.SourceFilesHashed);
+                Assert.Equal(1, changed.Metrics.FilesCopied);
+                Assert.Equal("{\"value\":9}", File.ReadAllText(Path.Combine(changed.Root, fixture.Payload)));
+            }
+
+            fixture.ChangeSource();
+            string strictFingerprint;
+            using (var strict = fixture.Acquire())
+            {
+                strictFingerprint = strict.SourceFingerprint;
+                Assert.NotEqual(changedFingerprint, strictFingerprint);
+                Assert.Equal("{\"value\":2}", File.ReadAllText(Path.Combine(strict.Root, fixture.Payload)));
+            }
+
+            using var refreshed = PreparedInputStore.Acquire(fixture.Source, fixture.Cache, lazySourceHashes: true);
+            Assert.Equal(strictFingerprint, refreshed.SourceFingerprint);
+            Assert.Equal(0, refreshed.Metrics.FilesCopied);
+            Assert.Equal("{\"value\":2}", File.ReadAllText(Path.Combine(refreshed.Root, fixture.Payload)));
+        }
+
         /// <summary>Edits at an observed publication boundary refuse the mixed revision, then a clean retry can recover.</summary>
         [Theory]
         [InlineData("materialized")]
@@ -443,10 +496,12 @@ namespace Cthangover.Tests.Testing
         }
 
         /// <summary>Bypassing file protection in this owned fixture cannot make altered prepared bytes a valid warm input.</summary>
-        [Fact]
-        public void MutatedPreparedInputIsDetectedAndRefusedInsteadOfReused()
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public void MutatedPreparedInputIsDetectedAndRefusedInsteadOfReused(bool lazySourceHashes)
         {
-            using (var lease = fixture.Acquire())
+            using (var lease = PreparedInputStore.Acquire(fixture.Source, fixture.Cache, lazySourceHashes: lazySourceHashes))
             {
                 var path = Path.Combine(lease.Root, fixture.Payload);
                 var timestamp = File.GetLastWriteTimeUtc(path);
@@ -456,7 +511,8 @@ namespace Cthangover.Tests.Testing
                 Assert.Equal(new[] { fixture.Payload.Replace(Path.DirectorySeparatorChar, '/') }, lease.VerifyUnchanged());
             }
 
-            var refusal = Assert.Throws<PreparedInputRefusal>(fixture.AcquireAndRelease);
+            var refusal = Assert.Throws<PreparedInputRefusal>(() =>
+                PreparedInputStore.Acquire(fixture.Source, fixture.Cache, lazySourceHashes: lazySourceHashes));
             Assert.Equal("prepared-input-mutated", refusal.Reason);
             Assert.Contains(refusal.Reason, refusal.Metrics.ConflictReasons);
             Assert.False(refusal.Metrics.CacheHit);

@@ -76,6 +76,12 @@ dotnet tests/Cthangover.TestRunner/bin/Debug/net10.0/Cthangover.TestRunner.dll -
 исходного проекта; по умолчанию это `<temp>/cthangover-tests/cache`. Он хранит проверенные
 входы отдельно от per-launch результатов. English: invoke the built runner from the designated
 source root with a stable input cache; do not add a full-project copy in the host wrapper.
+`--lazy-source-hashes` включает пофайловый кеш SHA-256 исходников по относительному пути,
+размеру и времени записи. Свежие файлы тоже хешируются из-за грубой точности времени
+на некоторых файловых системах. Для изменений с сохранёнными размером и временем записи
+запускайте строгую проверку без флага. Подготовленная копия и выходы сборки по-прежнему
+проверяются по содержимому. English: this flag opts into metadata-based source hash
+reuse. Run without it to detect edits that preserve length and last-write time.
 `--fresh-cache` даёт запуску отдельный пустой кеш компиляции; без него используется
 постоянный `<temp>/cthangover-tests/cache/assemblies` и соседний `test_assemblies`.
 Кеш сохраняется после очистки окружения; при старте удаляются пары, не использованные 14 дней.
@@ -356,6 +362,7 @@ interrupted runs retain a partial JSON, and HTML/JUnit are complete-run exports.
 | `inputPreparation.sourceFingerprint`, `preparedInputId`, `buildIdentity` | Проверенная source/preparation/build версия / checked input and compilation identities |
 | `inputPreparation.filesCopied/bytesCopied/reusedInputs/fullProjectCopies` | Реальные input transfers; warm той же версии0/0 / actual transfers, same-revision warm0/0 |
 | `inputPreparation.prepareSeconds/cpuSeconds/peakMemoryMb` | Подготовка и root-process ресурсы / preparation and sampled root resources |
+| `inputPreparation.sourceFilesHashed/sourceBytesHashed/sourceHashesReused` | Чтения содержимого и попадания в кеш на всех проходах по исходникам / content reads and cache hits across source scans |
 | `workspaceMetrics[]` | Действительные transfer/removal/restore counters каждого prepared-read/write workspace |
 | `results[].execution.inputsCopied` | Input transfers конкретного launch, отдельно от baseline/restore / per-launch transfers |
 | `results[].execution` | Run/test/attempt/launch/lease IDs и реальные output/log/data/temp roots |

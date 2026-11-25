@@ -54,6 +54,15 @@ namespace Cthangover.TestRunner
             get; set;
         }
 
+        /// <summary>Live source files read for content hashing across all source scans, including fences.</summary>
+        public long SourceFilesHashed { get; set; }
+
+        /// <summary>Logical source bytes read for those hashes, independent of the OS file cache.</summary>
+        public long SourceBytesHashed { get; set; }
+
+        /// <summary>Live source entries whose hash was reused after metadata comparison.</summary>
+        public long SourceHashesReused { get; set; }
+
         /// <summary>Preparation wall time, including integrity work and waiting/refusal boundaries.</summary>
         public double PrepareSeconds
         {

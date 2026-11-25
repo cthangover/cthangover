@@ -101,7 +101,8 @@ namespace Cthangover.TestRunner
                 };
                 prepared = options.RepairInputs
                     ? PreparedInputStore.Repair(root, options.InputCache, build, RunnerLifetime.Token)
-                    : PreparedInputStore.Acquire(root, options.InputCache, build, RunnerLifetime.Token);
+                    : PreparedInputStore.Acquire(root, options.InputCache, build, RunnerLifetime.Token,
+                        lazySourceHashes: options.LazySourceHashes);
                 report.InputPreparation = prepared.Metrics;
                 prepared.SetRunId(runId);
                 report.Phases.BuildSeconds = prepared.Metrics.BuildSeconds;
