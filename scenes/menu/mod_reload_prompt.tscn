@@ -14,3 +14,30 @@ offset_bottom = -16.0
 grow_vertical = 0
 focus_mode = 0
 mouse_filter = 0
+
+[node name="Failure" type="VBoxContainer" parent="."]
+visible = false
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_right = 516.0
+offset_top = -314.0
+offset_bottom = -80.0
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="Failure"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.34, 0.25, 1)
+theme_override_font_sizes/font_size = 22
+autowrap_mode = 2
+
+[node name="Details" type="RichTextLabel" parent="Failure"]
+layout_mode = 2
+size_flags_vertical = 3
+selection_enabled = true
+scroll_active = true
+theme_override_font_sizes/normal_font_size = 16
+
+[node name="Dismiss" type="Button" parent="Failure"]
+layout_mode = 2
+size_flags_horizontal = 0

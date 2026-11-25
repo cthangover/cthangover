@@ -24,6 +24,18 @@ namespace Cthangover.Core.Localization
             _ => "Reload changes"
         };
 
+        /// <summary>Hides a reported development failure without dismissing unsaved files or retrying it.</summary>
+        public static string DismissError(string language) => LanguageCode.Normalize(language) switch
+        {
+            "ru" => "Скрыть",
+            "es" => "Ocultar",
+            "zh" => "关闭",
+            "ja" => "閉じる",
+            "ko" => "닫기",
+            "vi" => "Ẩn",
+            _ => "Dismiss"
+        };
+
         /// <summary>
         /// Hint shown while mods compile and cache on a background thread.
         /// Unknown, missing or null language codes resolve to English instead

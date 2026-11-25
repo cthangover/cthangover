@@ -46,6 +46,7 @@ namespace Cthangover.Core.Mods.HotReload
         private readonly ModReloadPromptState promptState = new();
         private CanvasLayer reloadPrompt;
         private Button reloadButton;
+        private Control reloadFailure;
 
         /// <summary>The installed service; null when hot reload is disabled for this process.</summary>
         public static ModHotReloadService Instance { get; private set; }
@@ -82,6 +83,10 @@ namespace Cthangover.Core.Mods.HotReload
             reloadButton.Text = BootMessages.ReloadChanges(GameData.Instance?.Settings?.Language);
             CthangoverTheme.ApplyPrimary(reloadButton);
             reloadButton.Pressed += ConfirmReload;
+            reloadFailure = reloadPrompt.GetNode<Control>("Failure");
+            var dismiss = reloadFailure.GetNode<Button>("Dismiss");
+            dismiss.Text = BootMessages.DismissError(GameData.Instance?.Settings?.Language);
+            dismiss.Pressed += DismissFailure;
             GameLogger.Log("MODS_RELOAD", $"Hot reload: watching {watchers.Count} mod root(s); changes require the reload button or Ctrl+Shift+R");
         }
 
@@ -89,6 +94,7 @@ namespace Cthangover.Core.Mods.HotReload
         public override void _ExitTree()
         {
             if (GodotObject.IsInstanceValid(reloadButton)) reloadButton.Pressed -= ConfirmReload;
+            if (GodotObject.IsInstanceValid(reloadFailure)) reloadFailure.GetNode<Button>("Dismiss").Pressed -= DismissFailure;
             foreach (var watcher in watchers)
                 watcher.Dispose();
             watchers.Clear();
@@ -106,7 +112,8 @@ namespace Cthangover.Core.Mods.HotReload
                 promptState.Offer(now);
                 GameLogger.Log("MODS_RELOAD", $"Hot reload: mod files changed ({lastChangedPath}); waiting for user confirmation");
             }
-            reloadPrompt.Visible = promptState.IsVisible(now);
+            reloadButton.Visible = promptState.IsVisible(now);
+            reloadPrompt.Visible = reloadButton.Visible || reloadFailure.Visible;
             reloadButton.Disabled = GameSession.IsSwitching || ModManager.Instance.IsReloading || IsReloadRunning;
         }
 
@@ -115,7 +122,19 @@ namespace Cthangover.Core.Mods.HotReload
             if (GameSession.IsSwitching || ModManager.Instance.IsReloading || IsReloadRunning
                 || !promptState.TryConsume(Time.GetTicksMsec() / 1000.0)) return;
             reloadPrompt.Hide();
+            reloadFailure.Hide();
             _ = ReloadNowAsync();
+        }
+
+        private void DismissFailure() => reloadFailure.Hide();
+
+        private void ShowFailure(IEnumerable<string> errors)
+        {
+            if (!GodotObject.IsInstanceValid(reloadFailure)) return;
+            reloadFailure.GetNode<Label>("Title").Text = BootMessages.LoadingModsFailed(GameData.Instance?.Settings?.Language);
+            reloadFailure.GetNode<RichTextLabel>("Details").Text = string.Join("\n", errors);
+            reloadFailure.Show();
+            reloadPrompt.Show();
         }
 
         /// <summary>Ctrl+Shift+R: reload by hand.</summary>
@@ -159,6 +178,7 @@ namespace Cthangover.Core.Mods.HotReload
                     prep = null;
                     foreach (var error in rejected.Errors)
                         GameLogger.Log("MODS_RELOAD", "Hot reload rejected: " + error, LogLevel.Error);
+                    Instance?.ShowFailure(rejected.Errors);
                     return await manager.VerifyReloadAsync(rejected, tree);
                 }
 
@@ -194,6 +214,7 @@ namespace Cthangover.Core.Mods.HotReload
             catch (Exception ex)
             {
                 GameLogger.Log("MODS_RELOAD", $"Hot reload FAILED: {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}", LogLevel.Error);
+                Instance?.ShowFailure(new[] { ex.Message });
                 if (transitionStarted && !ApplicationExit.IsQuitting)
                     GameSession.OpenMainMenu(tree);
                 return null;

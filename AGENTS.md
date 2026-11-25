@@ -38,6 +38,13 @@ Wait for `status` on the Godot PID, verify world readiness and frame progress, a
 Use an operation UUID for mutations and recover their status after a lost reply. A scheduling receipt covers admission only.
 The guide includes the battle experiment and the separate window/render check. Measure cold startup in separate processes.
 
+File watchers offer a manual reload button and never reload on a file event. If a running review repeatedly
+re-enters a location, compare `MODS_RELOAD` events and scene/terrain identities as well as `errors.pull`.
+A texture edit can cause an unwanted normal reload without an error. Use `--pid <PID> raw -` for JSON on stdin;
+read back any containment change and verify world readiness and frame progress in the same process.
+The [repeated terrain preparation case](site/docs/core/debug-host.md#repeated-location-preparation-after-editing-textures)
+records the diagnosis and the failed invocation pitfalls.
+
 For future cthangover / Ogneshchanin optimization requests, read the
 [battle optimization research note](../art_sources/cthangover/ogneshchanin/concept_20261122/OPTIMIZATION_RESEARCH_RU.md).
 The author requires mass battles and defines **50 enemies as the reference large battle**, not merely an
