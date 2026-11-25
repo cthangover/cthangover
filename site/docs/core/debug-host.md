@@ -93,6 +93,33 @@ For window problems, take two `battle.status` snapshots 2–3 seconds apart in t
 
 In the separate run without combat, the window was responsive and in the background. World preparation advanced from 3% to 100% in about 50 seconds. After that, three seconds produced 309 drawn frames and 185 physics ticks. The original disappearance was not reproduced. Godot counters show engine activity. For frames actually displayed by Windows, use an independent PID-scoped [PresentMon](https://github.com/GameTechDev/PresentMon) trace.
 
+## Repeated location preparation after editing textures
+
+In the terrain review on 25 November 2026, the location repeatedly returned to its loading screen while new flower PNGs were being saved. The live error feed did not report a preparation failure. The native log instead showed `MODS_RELOAD` naming each changed PNG, followed by a checkpoint restore and another `SceneEnteredEvent`. The legacy file watcher treated every relevant file change as permission to reload the mod set, including a texture-only change with no assembly changes.
+
+Read both the error channel and reload events. A quiet error feed does not establish that the scene instance remained unchanged. Kernel `status.phase = Ready` describes the command host; inspect the owning scene's readiness as well.
+
+```powershell
+py -3 -B DebugClient/dev_control.py --pid $gamePid errors.pull --since 0 --level error --max 40
+# Temporary containment for a legacy automatic watcher, without restarting the game:
+$pauseWatcher = @{
+    command = 'node.set'
+    path = '/root/ModHotReload'
+    property = 'process_mode'
+    value = 4
+    operation_id = [guid]::NewGuid().ToString()
+}
+$pauseWatcher | ConvertTo-Json -Compress |
+    py -3 -B DebugClient/dev_control.py --pid $gamePid raw -
+py -3 -B DebugClient/dev_control.py --pid $gamePid node.inspect --path /root/ModHotReload --property process_mode
+```
+
+Use `raw -` with the `--pid` command syntax. The separate legacy form is `dev_control.py <PID> -`. Mixing `--pid <PID> -` is a CLI parse error and sends no command. Send structured JSON through stdin instead of embedding it in nested shell quotes.
+
+Verify containment with two samples from the same process. The captured review kept the same scene host and terrain instance, `world_ready = true`, terrain readiness and progress 1. Between samples, process frames advanced by 120, drawn frames by 119 and physics frames by 105; the watcher read back `process_mode = 4`. The viewport was captured with `ViewportCapture.SavePng`, preserving the display pipeline. Those observations established a running world without another location rebuild.
+
+Keep the original failed bridge results alongside the successful probes. A bridge `helper_failed` result is not proof that its child game never started: recover the launch artifact and confirm the PID before issuing another launch. The original missing scatter-recipe failure and the subsequent normal watcher reloads were different causes and must not be combined into one error diagnosis.
+
 ## One-shot C# scripts
 
 `script.run` requires `--allow-debug-scripts` in both startup and effective arguments. `--no-development-control` blocks it. Provide an entry class implementing `IDebugRuntimeScript` in `source`, up to 32 KiB. `timeout_ms` accepts 100–30,000 ms and defaults to 5,000 ms. The compiler accepts optional references to active assemblies by ID in `mods`. The reply reports the detached JSON result, compiler diagnostics, and the unload status of the temporary context. Scripts run with the game process's permissions and cancel cooperatively. A blocked call can hold the game thread past the timeout, so run trusted source that checks the cancellation token.

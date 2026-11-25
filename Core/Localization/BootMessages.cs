@@ -12,6 +12,18 @@ namespace Cthangover.Core.Localization
     /// </summary>
     public static class BootMessages
     {
+        /// <summary>Manual development reload action; it also remains available while mod locale changes.</summary>
+        public static string ReloadChanges(string language) => LanguageCode.Normalize(language) switch
+        {
+            "ru" => "Перезагрузить изменения",
+            "es" => "Recargar cambios",
+            "zh" => "重新加载更改",
+            "ja" => "変更を再読み込み",
+            "ko" => "변경 사항 다시 불러오기",
+            "vi" => "Tải lại thay đổi",
+            _ => "Reload changes"
+        };
+
         /// <summary>
         /// Hint shown while mods compile and cache on a background thread.
         /// Unknown, missing or null language codes resolve to English instead

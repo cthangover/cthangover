@@ -1,0 +1,16 @@
+[gd_scene format=3]
+
+[node name="ModReloadPrompt" type="CanvasLayer"]
+layer = 210
+visible = false
+
+[node name="Reload" type="Button" parent="."]
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = -64.0
+offset_right = 306.0
+offset_bottom = -16.0
+grow_vertical = 0
+focus_mode = 0
+mouse_filter = 0

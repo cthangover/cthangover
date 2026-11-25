@@ -8,10 +8,12 @@ namespace Cthangover.Core.Mods.HotReload
     using System.Threading.Tasks;
     using Cthangover.Core.Bootstrap;
     using Cthangover.Core.Games;
+    using Cthangover.Core.Localization;
     using Cthangover.Core.Mods.Pipeline;
     using Cthangover.Core.Scenes;
     using Cthangover.Core.Settings;
     using Cthangover.Core.UI.Menu;
+    using Cthangover.Core.UI.Theming;
     using Cthangover.Core.Utils;
     using Godot;
 
@@ -20,9 +22,8 @@ namespace Cthangover.Core.Mods.HotReload
     /// scenes, locale) and the game picks it up without a restart. File
     /// system watchers on the mod roots mark the set dirty; once the files
     /// have been quiet for <see cref="DebounceSeconds"/> (editors save in
-    /// bursts), <see cref="ReloadNowAsync"/> runs. <c>Ctrl+Shift+R</c> triggers
-    /// the same reload by hand (watchers may miss events on network or WSL
-    /// mounts).
+    /// bursts), a corner button offers a reload for two minutes. Watching never
+    /// starts a reload. The button and <c>Ctrl+Shift+R</c> are explicit user actions.
     ///
     /// A reload compiles the new set in the background first: on a compile
     /// error the game keeps running untouched and the errors are logged. On
@@ -42,6 +43,9 @@ namespace Cthangover.Core.Mods.HotReload
         private readonly Stopwatch sinceLastChange = new();
         private int dirty;
         private string lastChangedPath;
+        private readonly ModReloadPromptState promptState = new();
+        private CanvasLayer reloadPrompt;
+        private Button reloadButton;
 
         /// <summary>The installed service; null when hot reload is disabled for this process.</summary>
         public static ModHotReloadService Instance { get; private set; }
@@ -72,12 +76,19 @@ namespace Cthangover.Core.Mods.HotReload
                 Directory.CreateDirectory(root);
                 Watch(root);
             }
-            GameLogger.Log("MODS_RELOAD", $"Hot reload: watching {watchers.Count} mod root(s); Ctrl+Shift+R reloads by hand");
+            reloadPrompt = GD.Load<PackedScene>("res://scenes/menu/mod_reload_prompt.tscn").Instantiate<CanvasLayer>();
+            AddChild(reloadPrompt);
+            reloadButton = reloadPrompt.GetNode<Button>("Reload");
+            reloadButton.Text = BootMessages.ReloadChanges(GameData.Instance?.Settings?.Language);
+            CthangoverTheme.ApplyPrimary(reloadButton);
+            reloadButton.Pressed += ConfirmReload;
+            GameLogger.Log("MODS_RELOAD", $"Hot reload: watching {watchers.Count} mod root(s); changes require the reload button or Ctrl+Shift+R");
         }
 
         /// <summary>Stops the watchers.</summary>
         public override void _ExitTree()
         {
+            if (GodotObject.IsInstanceValid(reloadButton)) reloadButton.Pressed -= ConfirmReload;
             foreach (var watcher in watchers)
                 watcher.Dispose();
             watchers.Clear();
@@ -85,15 +96,25 @@ namespace Cthangover.Core.Mods.HotReload
                 Instance = null;
         }
 
-        /// <summary>Starts the reload on the main thread once the files have been quiet for <see cref="DebounceSeconds"/> and no other switch runs.</summary>
+        /// <summary>Offers quiet file changes and expires the button; never reloads from a file event.</summary>
         public override void _Process(double delta)
         {
-            if (Volatile.Read(ref dirty) == 0 || sinceLastChange.Elapsed.TotalSeconds < DebounceSeconds)
-                return;
-            if (GameSession.IsSwitching || ModManager.Instance.IsReloading || IsReloadRunning)
-                return;
-            Interlocked.Exchange(ref dirty, 0);
-            GameLogger.Log("MODS_RELOAD", $"Hot reload: mod files changed ({lastChangedPath}), reloading");
+            var now = Time.GetTicksMsec() / 1000.0;
+            if (Volatile.Read(ref dirty) != 0 && sinceLastChange.Elapsed.TotalSeconds >= DebounceSeconds)
+            {
+                Interlocked.Exchange(ref dirty, 0);
+                promptState.Offer(now);
+                GameLogger.Log("MODS_RELOAD", $"Hot reload: mod files changed ({lastChangedPath}); waiting for user confirmation");
+            }
+            reloadPrompt.Visible = promptState.IsVisible(now);
+            reloadButton.Disabled = GameSession.IsSwitching || ModManager.Instance.IsReloading || IsReloadRunning;
+        }
+
+        private void ConfirmReload()
+        {
+            if (GameSession.IsSwitching || ModManager.Instance.IsReloading || IsReloadRunning
+                || !promptState.TryConsume(Time.GetTicksMsec() / 1000.0)) return;
+            reloadPrompt.Hide();
             _ = ReloadNowAsync();
         }
 
@@ -103,6 +124,8 @@ namespace Cthangover.Core.Mods.HotReload
             if (@event is InputEventKey { Pressed: true, Echo: false, Keycode: Key.R, CtrlPressed: true, ShiftPressed: true })
             {
                 GetViewport().SetInputAsHandled();
+                promptState.Dismiss();
+                reloadPrompt.Hide();
                 _ = ReloadNowAsync();
             }
         }
