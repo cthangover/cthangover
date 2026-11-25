@@ -31,6 +31,13 @@ Godot reference: https://docs.godotengine.org/en/4.6/classes/class_viewporttextu
 System concepts (how each engine system works, its invariants and traps) are in `docs/concepts/` — read the one
 for the system you change; larger rewrite proposals are in `docs/analysis/rewrite-proposals.md`.
 
+For repeated runtime experiments, prefer the same windowed Godot process and use
+[DebugHost](site/docs/core/debug-host.md) to inspect state, reset the scenario and rerun each variant.
+On Windows use short `hostserver` actions for launch and live checks so a long test does not monopolize the bridge.
+Wait for `status` on the Godot PID, verify world readiness and frame progress, and save a baseline at both ends of a series.
+Use an operation UUID for mutations and recover their status after a lost reply. A scheduling receipt covers admission only.
+The guide includes the battle experiment and the separate window/render check. Measure cold startup in separate processes.
+
 For future cthangover / Ogneshchanin optimization requests, read the
 [battle optimization research note](../art_sources/cthangover/ogneshchanin/concept_20261122/OPTIMIZATION_RESEARCH_RU.md).
 The author requires mass battles and defines **50 enemies as the reference large battle**, not merely an

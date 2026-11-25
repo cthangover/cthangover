@@ -27,6 +27,56 @@ python DebugClient/dev_control.py 12345 '{"command":"args.catalog","key":"game"}
 
 For a mutation, send an `operation_id` UUID. If the connection closes, query `operation.status` with the same UUID before retrying. The host retains a bounded history for the current process.
 
+## Repeat tests in one game process
+
+Keep one windowed Godot process running while you change settings, reset the scenario state, and measure successive variants through DebugHost. The process, kernel, and mods start once for the series. Allow time to rebuild and warm up each scene. Use separate processes when the metric is cold startup itself.
+
+1. Start the appropriate game or focused TestRunner case. From `/workspace`, run Windows work through a `hostserver` action as described in `/workspace/hostserver/README.md`. The bridge runs the Windows wrapper, and DebugHost dispatches the game's commands. Use the child Godot PID from the launch or `debug host ready` log line. TestRunner has its own `dotnet` PID.
+2. Wait for `status` and confirm the `pid`, `instance`, game and scene. Discover available commands with `commands` or `describe`. The pipe opens during startup. `dev_control.py --connect-timeout 45` waits up to 45 seconds for a connection before sending the request. `command not sent` means connection failed. If the reply to a mutation is lost, query `operation.status` before retrying.
+3. Restore a known state before each case. Keep the seed, route, participants, graphics, warmup and sample window constant. Repeat the baseline last to check for warmup drift. Give each case its own output directory and record its PID, scene instance and checks.
+4. Have long-running test commands return an acceptance receipt and yield to the main loop. Use separate short Windows actions to start and inspect a long scenario so the bridge can accept diagnostics. The receipt covers scheduling. Verify completion from the case artifacts and final result.
+
+### Sample current frame performance
+
+Start a game with `perf_overlay` active, for example with the user argument `--with-mods=perf_overlay`. In a PowerShell session on the same system and user as the game, substitute its PID.
+
+```powershell
+$gamePid = 12345
+py -3 -B DebugClient/dev_control.py --pid $gamePid --connect-timeout 45 status
+$start = @{ provider = 'perf_overlay'; command = 'perf.configure'; enabled = $true; overlay = $false; reset = $true; operation_id = [guid]::NewGuid().ToString() }
+$start | ConvertTo-Json -Compress | py -3 -B DebugClient/dev_control.py $gamePid '-'
+# Run the same route for the same interval before reading each variant.
+'{"provider":"perf_overlay","command":"perf.read"}' | py -3 -B DebugClient/dev_control.py $gamePid '-'
+```
+
+To test a temporary display change, read `settings.read`, send `settings.apply`, and save its `result.restore_id`. Open a fresh `perf.configure` window with `reset=true`, measure, and restore the previous values with `settings.restore`. Keep `persist` disabled for a temporary experiment.
+
+The CLI timeout applies to connecting. The Windows PowerShell example in the Russian guide uses a separate reply deadline with `NamedPipeClientStream`. A reply timeout leaves the mutation outcome unknown. Keep the original UUID and check `operation.status` if the connection returns. [Russian guide](debug-host.ru.md)
+
+### Ognishchanin battle and window checks
+
+The collision experiment replaced a Godot restart per variant with one windowed `ognishchanin_battle_field` TestRunner launch. The launch used an isolated, verified test context, `--itest=ognishchanin_battle_profile`, inherited `CTHANGOVER_BATTLE_DEBUG_MATRIX=1`, and `--development-control` in Godot's user arguments. A temporary runner copy forwarded the game flag and kept a stable prepared-input cache. We used native `--fixed-fps 60` before `--` for fixed-step comparison and omitted it for the separate window check.
+
+```powershell
+$provider = 'proto_land_pack__battle_profile'
+py -3 -B DebugClient/dev_control.py --pid $gamePid commands --mod $provider
+'{"provider":"proto_land_pack__battle_profile","command":"battle.status"}' |
+    py -3 -B DebugClient/dev_control.py $gamePid '-'
+$operation = [guid]::NewGuid().ToString()
+@{
+    provider = $provider
+    command = 'battle.profile'
+    modes = @('baseline', 'filter', 'support', 'late', 'filtered-support', 'combined', 'baseline')
+    operation_id = $operation
+} | ConvertTo-Json -Compress | py -3 -B DebugClient/dev_control.py $gamePid '-'
+```
+
+The first connection attempt reached the host before the pipe opened. We verified the same Godot PID and reconnected to `cthangover-dev-28608` with Windows `NamedPipeClientStream` using newline-delimited UTF-8 JSON. `result.scheduled = 7` confirmed acceptance. The driver uses `GameSession.StartNew` and verifies a new combat state for each case. It then waits for a replacement `Scene3dHost` and the four original fighters before staging the same fight with 50 opponents. Compare `process_id` and `scene_host_id` in the per-case `report.json` files and read `frames.json` and `matrix.json`. The first run demonstrated process reuse. Opening-strike failures and uncertainty about the visible window made that run unsuitable for comparing collision performance.
+
+For window problems, take two `battle.status` snapshots 2–3 seconds apart in the same process. Compare `world_ready`, `world_progress`, `graphics_apply`, input and pause state, and the changes in `process_frames`, `drawn_frames`, `physics_frames`, and `combat_tick`. Check the process and HWND independently in Windows, including the desktop session, visibility, minimized state, monitor intersection and foreground state. If the debug channel stops replying, inspect the child PID and native log. The dispatcher itself runs on the game thread.
+
+In the separate run without combat, the window was responsive and in the background. World preparation advanced from 3% to 100% in about 50 seconds. After that, three seconds produced 309 drawn frames and 185 physics ticks. The original disappearance was not reproduced. Godot counters show engine activity. For frames actually displayed by Windows, use an independent PID-scoped [PresentMon](https://github.com/GameTechDev/PresentMon) trace.
+
 ## One-shot C# scripts
 
 `script.run` requires `--allow-debug-scripts` in both startup and effective arguments. `--no-development-control` blocks it. Provide an entry class implementing `IDebugRuntimeScript` in `source`, up to 32 KiB. `timeout_ms` accepts 100–30,000 ms and defaults to 5,000 ms. The compiler accepts optional references to active assemblies by ID in `mods`. The reply reports the detached JSON result, compiler diagnostics, and the unload status of the temporary context. Scripts run with the game process's permissions and cancel cooperatively. A blocked call can hold the game thread past the timeout, so run trusted source that checks the cancellation token.

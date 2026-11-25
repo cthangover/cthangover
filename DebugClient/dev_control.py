@@ -64,36 +64,45 @@ def pipe_name(pid, discovery=None):
     return legacy
 
 
-def open_windows_pipe(name):
-    path = r"\\.\pipe" + "\\" + name
-    deadline = time.monotonic() + 2.0
+def open_pipe(name, timeout):
+    deadline = time.monotonic() + timeout
     while True:
+        remaining = deadline - time.monotonic()
         try:
-            return open(path, "r+b", buffering=0)
+            if os.name == "nt":
+                return open(r"\\.\pipe" + "\\" + name, "r+b", buffering=0)
+
+            endpoint = socket.socket(socket.AF_UNIX)
+            try:
+                endpoint.settimeout(max(0.01, min(remaining, 0.25)))
+                endpoint.connect(str(Path(tempfile.gettempdir()) / ("CoreFxPipe_" + name)))
+                endpoint.settimeout(None)
+                return endpoint
+            except BaseException:
+                endpoint.close()
+                raise
         except OSError as error:
             # Windows can report EINVAL while the last instance is disconnecting.
-            if error.errno not in (errno.ENOENT, errno.EBUSY, errno.EINVAL) or time.monotonic() >= deadline:
+            retryable = (errno.ENOENT, errno.EBUSY, errno.EINVAL) if os.name == "nt" else (
+                errno.ENOENT, errno.ECONNREFUSED, errno.EAGAIN)
+            remaining = deadline - time.monotonic()
+            if remaining <= 0 or (error.errno not in retryable and not isinstance(error, TimeoutError)):
                 raise PipeUnavailable(str(error)) from error
-            time.sleep(0.05)
+            time.sleep(min(0.05, remaining))
 
 
-def request(pid, payload, discovery=None):
+def request(pid, payload, discovery=None, *, connect_timeout=2.0):
     name = pipe_name(pid, discovery)
     message = json.dumps(payload, ensure_ascii=False, allow_nan=False).encode("utf-8") + b"\n"
     if len(message) > 64 * 1024:
         raise ValueError("Command exceeds 64 KiB.")
-    if os.name == "nt":
-        with open_windows_pipe(name) as pipe:
+    with open_pipe(name, connect_timeout) as pipe:
+        if os.name == "nt":
             if pipe.write(message) != len(message):
                 raise OSError("The command was only partially written.")
             with io.BufferedReader(pipe) as response:
                 line = response.readline(LIMIT)
-    else:
-        with socket.socket(socket.AF_UNIX) as pipe:
-            try:
-                pipe.connect(str(Path(tempfile.gettempdir()) / ("CoreFxPipe_" + name)))
-            except OSError as error:
-                raise PipeUnavailable(str(error)) from error
+        else:
             pipe.sendall(message)
             with pipe.makefile("rb") as response:
                 line = response.readline(LIMIT)
@@ -106,6 +115,7 @@ def build_parser(strategies=BUILTIN_STRATEGIES):
     """Construct a client with the supplied command strategies."""
     parser = argparse.ArgumentParser(description=__doc__, allow_abbrev=False)
     parser.add_argument("--pid", type=positive_pid, required=True, help="PID of the running game.")
+    add_connect_timeout(parser)
     parser.add_argument(
         "--discovery",
         metavar="PATH",
@@ -118,6 +128,11 @@ def build_parser(strategies=BUILTIN_STRATEGIES):
     return parser
 
 
+def add_connect_timeout(parser):
+    parser.add_argument("--connect-timeout", metavar="SECONDS", type=float, default=5.0,
+                        help="Wait for the game's local pipe before sending the command (default 5 seconds).")
+
+
 def main(argv=None, strategies=BUILTIN_STRATEGIES):
     """Parse one invocation, send it and return the command's exit status."""
     argv = sys.argv[1:] if argv is None else argv
@@ -126,6 +141,7 @@ def main(argv=None, strategies=BUILTIN_STRATEGIES):
         parser.add_argument("pid", type=positive_pid)
         parser.add_argument("json", help="JSON object, or '-' to read it from stdin.")
         parser.add_argument("--discovery", metavar="PATH", help="Discovery document to resolve the endpoint.")
+        add_connect_timeout(parser)
         args = parser.parse_args(argv)
         make_request = raw_request
     else:
@@ -133,11 +149,21 @@ def main(argv=None, strategies=BUILTIN_STRATEGIES):
         args = parser.parse_args(argv)
         make_request = args.strategy.request
 
+    timeout = args.connect_timeout
+    if not 0 <= timeout <= 120:
+        parser.error("--connect-timeout must be between 0 and 120 seconds.")
+    del args.connect_timeout
+    payload = {}
     try:
         payload = make_request(args)
-        answer = request(args.pid, payload, args.discovery)
+        answer = request(args.pid, payload, args.discovery, connect_timeout=timeout)
+    except PipeUnavailable as error:
+        parser.exit(2, f"No reachable DebugHost pipe for PID {args.pid}; command not sent. {error}\n")
     except (OSError, ValueError) as error:
-        parser.exit(2, f"{error}\n")
+        operation = payload.get("operation_id")
+        recovery = (f"\nCheck operation.status with operation_id {operation} before retrying."
+                    if operation and payload.get("command") != "operation.status" else "")
+        parser.exit(2, f"{error}{recovery}\n")
     print(json.dumps(answer, ensure_ascii=False, indent=2))
     return 0 if answer.get("ok") else 1
 
