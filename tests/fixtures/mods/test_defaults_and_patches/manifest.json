@@ -1,0 +1,19 @@
+{
+  "id": "test_defaults_and_patches",
+  "name": "Test Defaults and Patches",
+  "version": "0.1.0",
+  "author": "ct",
+  "description": "A test fixture, not content: property patches the property_patches test loads to check how patches of other mods' characters and items merge. Never part of a game.",
+  "categories": ["other"],
+  "depends": [
+    "cthangover_game>=0.1.0",
+    "cthangover_murakami>=0.1.0",
+    "cooking>=0.1.0",
+    "characters_base>=0.1.0",
+    "items_base>=0.1.0"
+  ],
+  "fixture": true,
+  "sources": [
+    "src/*.cs"
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "id": "test_execution__editor_write",
+  "name": "Editor write lifecycle fixture",
+  "version": "0.1.0",
+  "author": "ct",
+  "depends": [
+    "rpg_object_editor",
+    "rpg_plus_game"
+  ],
+  "sources": [
+    "src/*.cs"
+  ]
+}

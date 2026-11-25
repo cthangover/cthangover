@@ -29,6 +29,9 @@ namespace Cthangover.Core.Mods
         /// <summary>The public mods folder; always a scanner root, even before it exists.</summary>
         public const string Primary = "mods";
 
+        /// <summary>Project-local fixtures discovered only during a test launch.</summary>
+        public const string TestFixtures = "tests/fixtures/mods";
+
         /// <summary>Every mods folder of the game dir, <see cref="Primary"/> first.</summary>
         public static IReadOnlyList<string> Names { get; } = new[] { Primary, "mods_private" };
 
@@ -54,6 +57,13 @@ namespace Cthangover.Core.Mods
         {
             if (string.IsNullOrEmpty(path))
                 return path;
+
+            var fixturePrefix = TestFixtures + "/";
+            if (path.StartsWith(fixturePrefix, StringComparison.OrdinalIgnoreCase))
+            {
+                var separator = path.IndexOf('/', fixturePrefix.Length);
+                return separator >= 0 ? path[(separator + 1)..] : path;
+            }
 
             var segments = path.Split('/');
             if (segments.Length >= 3 && Contains(segments[0]))

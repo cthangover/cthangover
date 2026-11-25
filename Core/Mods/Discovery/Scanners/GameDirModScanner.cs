@@ -1,5 +1,8 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using Cthangover.Core.Games;
+using Cthangover.Core.Mods.Testing;
 using Cthangover.Core.Utils;
 using Godot;
 
@@ -56,6 +59,14 @@ namespace Cthangover.Core.Mods.Discovery
                     continue;
 
                 yield return new ModSourceRoot { Url = url, Priority = GameEnvironment.IsRuntime ? 1 : 0 };
+            }
+
+            if (GameEnvironment.IsRuntime && (TestExecutionContextRuntime.Current != null
+                || GameLaunchArgs.Startup.UserArgs.Contains("--test-fixtures")))
+            {
+                var fixtures = GamePaths.Globalize("res://" + ModRootFolders.TestFixtures + "/");
+                if (Directory.Exists(fixtures))
+                    yield return new ModSourceRoot { Url = fixtures, Priority = 1 };
             }
         }
 

@@ -1,0 +1,28 @@
+{
+  "id": "test_execution",
+  "name": "Execution fixture",
+  "version": "0.1.0",
+  "author": "ct",
+  "description": "Inert process isolation fixture; only its explicitly activated suite exercises test outputs.",
+  "fixture": true,
+  "test_suites": [
+    {
+      "id": "probe",
+      "activate": [
+        "--itest=test_execution_probe"
+      ]
+    },
+    {
+      "id": "bootstrap",
+      "activate": [
+        "--itest=test_execution_bootstrap"
+      ]
+    },
+    {
+      "id": "editor_write",
+      "activate": [
+        "--itest=test_execution_editor_write"
+      ]
+    }
+  ]
+}

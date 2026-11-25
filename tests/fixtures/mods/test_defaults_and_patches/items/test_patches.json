@@ -1,0 +1,36 @@
+{
+  "Kind": "item",
+  "Items": [
+    {
+      "Id": "test_patches/base",
+      "Name": "items/food/ration/name",
+      "Description": "items/food/ration/desc",
+      "Cost": 10,
+      "Sprite": "food/ration",
+      "ItemType": "Food",
+      "Shelf": {"Row": 1, "Col": 2}
+    },
+    {
+      "Id": "test_patches/child",
+      "Extends": "test_patches/base",
+      "Cost": 20,
+      "Shelf": {"Col": 5}
+    },
+    {
+      "Id": "test_patches/doomed",
+      "Name": "items/food/ration/name",
+      "Sprite": "food/ration",
+      "ItemType": "Food"
+    },
+    {
+      "Id": "test_patches/loop_a",
+      "Extends": "test_patches/loop_b",
+      "Sprite": "food/ration"
+    },
+    {
+      "Id": "test_patches/loop_b",
+      "Extends": "test_patches/loop_a",
+      "Sprite": "food/ration"
+    }
+  ]
+}

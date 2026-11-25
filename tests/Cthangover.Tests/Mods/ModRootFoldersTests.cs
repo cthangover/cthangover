@@ -41,6 +41,7 @@ namespace Engine.Tests.Mods
         {
             foreach (var name in ModRootFolders.Names)
                 Assert.Equal("scenes/ui/panel.tscn", ModRootFolders.StripModPrefix(name + "/some_mod/scenes/ui/panel.tscn"));
+            Assert.Equal("data/item.json", ModRootFolders.StripModPrefix(ModRootFolders.TestFixtures + "/sample/data/item.json"));
         }
 
         [Fact]
@@ -58,15 +59,17 @@ namespace Engine.Tests.Mods
         {
             Assert.Equal(ModRootFolders.Primary, ModFolders.Primary);
             Assert.Equal(ModRootFolders.Names, ModFolders.Names);
+            Assert.Equal(ModRootFolders.TestFixtures, ModFolders.TestFixtures);
         }
 
         [Fact]
         public void CoreProject_ExcludesEveryFolderFromCompilation()
         {
             var project = File.ReadAllText(Path.Combine(RepoPaths.FindRepoRoot(), "Cthangover.csproj"));
-
-            foreach (var name in ModRootFolders.Names)
-                Assert.Contains($"<Compile Remove=\"{name}\\**\\*\" />", project);
+            Assert.Contains("<EnableDefaultCompileItems>false</EnableDefaultCompileItems>", project);
+            Assert.Contains("<Compile Include=\"Core/**/*.cs\"", project);
+            Assert.DoesNotContain("<Compile Include=\"mods", project);
+            Assert.DoesNotContain("<Compile Include=\"tests", project);
         }
 
         [Fact]
@@ -74,7 +77,7 @@ namespace Engine.Tests.Mods
         {
             var root = RepoPaths.FindRepoRoot();
 
-            foreach (var name in ModRootFolders.Names)
+            foreach (var name in ModRootFolders.Names.Append(ModRootFolders.TestFixtures))
             {
                 var folder = Path.Combine(root, name);
                 if (Directory.Exists(folder))

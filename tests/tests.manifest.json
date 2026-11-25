@@ -80,7 +80,7 @@
         "editor",
         "test-execution"
       ],
-      "source": "mods/test_execution/test_suites/editor_write/manifest.json",
+      "source": "tests/fixtures/mods/test_execution/test_suites/editor_write/manifest.json",
       "dependsOn": [],
       "project": "write"
     },
@@ -114,7 +114,7 @@
         "windowed",
         "test-execution"
       ],
-      "source": "mods/test_execution/test_suites/probe/manifest.json",
+      "source": "tests/fixtures/mods/test_execution/test_suites/probe/manifest.json",
       "dependsOn": [],
       "project": "read"
     },
@@ -149,7 +149,7 @@
         "windowed",
         "test-execution"
       ],
-      "source": "mods/test_execution/test_suites/probe/manifest.json",
+      "source": "tests/fixtures/mods/test_execution/test_suites/probe/manifest.json",
       "dependsOn": [],
       "project": "read"
     },
@@ -183,7 +183,7 @@
         "windowed",
         "test-execution"
       ],
-      "source": "mods/test_execution/test_suites/probe/manifest.json",
+      "source": "tests/fixtures/mods/test_execution/test_suites/probe/manifest.json",
       "dependsOn": [],
       "project": "read"
     },
@@ -1850,14 +1850,18 @@
     },
     {
       "name": "mod",
-      "scene": "res://tests/Cthangover.Tests.Integration/Scenes/mod_test.tscn",
+      "scene": "res://scenes/menu/launcher.tscn",
       "timeoutSeconds": 180,
-      "args": [],
+      "args": [
+        "--", "--frontend", "--with-mods=test_mod,test_integrations", "--itest=test_mod_archive",
+        "--run-tests", "--mod=test_integrations__archive"
+      ],
       "result": {
-        "name": "mod",
+        "name": "mod_units",
+        "childPrefix": "mod_units:",
         "expectedErrors": []
       },
-      "kind": "integration",
+      "kind": "mod-unit",
       "owners": [
         "core"
       ],
@@ -1866,14 +1870,14 @@
         "headless"
       ],
       "tags": [
-        "integration",
+        "mod-unit",
         "headless"
       ],
       "game": null,
       "renderer": null,
-      "source": "tests/tests.manifest.json",
+      "source": "tests/fixtures/mods/test_integrations/test_suites/archive/manifest.json",
       "dependsOn": [],
-      "project": "write",
+      "project": "read",
       "seconds": 4.166
     },
     {
@@ -6155,6 +6159,7 @@
     }
   },
   "manualScenes": {
+    "tests/Cthangover.Tests.Integration/Scenes/mod_test.tscn": "Legacy write and hot-reload driver. The archive mount runs in the mod test suite; the core no longer compiles the old scene driver.",
     "tests/Cthangover.Tests.Integration/Scenes/manual_card_battle_scene.tscn": "Manual battle playground.",
     "tests/Cthangover.Tests.Integration/Scenes/TscnTestScene.tscn": "Scene-building fixture, not a self-terminating test."
   }

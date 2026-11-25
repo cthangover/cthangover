@@ -1,0 +1,14 @@
+{
+  "Items": [
+    {
+      "Id": "Marao",
+      "TestPatched": 42,
+      "TestDefault": 100
+    },
+    {
+      "Id": "*",
+      "TestDefault": -20,
+      "TestGlobalPatch": 1
+    }
+  ]
+}

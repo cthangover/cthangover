@@ -26,7 +26,7 @@ namespace Cthangover.TestRunner
                         Source = relative, Scene = "res://" + relative, Owners = new[] { "core" }, Tags = new[] { "manual" }, ManualReason = reason });
                 }
             var policies = new HashSet<string>(manifest.ManualSuites.Keys, StringComparer.Ordinal);
-            foreach (var dir in ModFolders.Names.Select(folder => Path.Combine(root, folder)).Where(Directory.Exists)
+            foreach (var dir in ModFolders.Names.Append(ModFolders.TestFixtures).Select(folder => Path.Combine(root, folder)).Where(Directory.Exists)
                 .SelectMany(folder => Directory.EnumerateDirectories(folder).OrderBy(p => p, StringComparer.Ordinal)))
             {
                 var path = Path.Combine(dir, "manifest.json");

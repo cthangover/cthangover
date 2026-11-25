@@ -1,0 +1,8 @@
+{
+  "Items": [
+    {
+      "Id": "test_patches/child",
+      "Description": "items/food/wolf_meat/desc"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "id": "test_execution__bootstrap",
+  "name": "Default bootstrap probe",
+  "version": "0.1.0",
+  "author": "ct",
+  "depends": [
+    "ui_base"
+  ],
+  "sources": [
+    "src/*.cs"
+  ]
+}

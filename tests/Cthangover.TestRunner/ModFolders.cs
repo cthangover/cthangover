@@ -19,6 +19,9 @@ namespace Cthangover.TestRunner
         /// <summary>The public mods folder.</summary>
         public const string Primary = "mods";
 
+        /// <summary>Test-only mods, staged through the existing tests directory.</summary>
+        public const string TestFixtures = "tests/fixtures/mods";
+
         /// <summary>Name of the tests manifest, both the project's own and a mods folder's part.</summary>
         public const string ManifestFile = "tests.manifest.json";
 

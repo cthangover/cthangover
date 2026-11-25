@@ -1,0 +1,38 @@
+# Godot 4.x
+.godot/
+.idea/
+sdk/
+bin/
+obj/
+
+#ai
+.omo/
+.opencode/
+
+gen/
+obj/
+bin/
+art_sources/
+
+*.tres~
+*.tscn~
+
+# GDScript LSP
+.godot/
+
+# Export
+*.exe
+*.dmg
+*.apk
+*.aab
+*.pck
+*.zip
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+*.import
+*.godot.uid

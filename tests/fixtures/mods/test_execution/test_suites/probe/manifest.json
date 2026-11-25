@@ -1,0 +1,15 @@
+{
+  "id": "test_execution__probe",
+  "name": "Execution isolation probe",
+  "version": "0.1.0",
+  "author": "ct",
+  "depends": [
+    "ui_base"
+  ],
+  "sources": [
+    "src/*.cs"
+  ],
+  "test_sources": [
+    "tests/*.cs"
+  ]
+}

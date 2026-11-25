@@ -1,0 +1,4 @@
+{
+  "name": "Archive fixture contracts",
+  "test_sources": ["tests/*.cs"]
+}

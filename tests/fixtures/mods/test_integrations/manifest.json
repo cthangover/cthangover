@@ -1,0 +1,16 @@
+{
+  "id": "test_integrations",
+  "name": "Test Integrations",
+  "version": "0.1.0",
+  "author": "ct",
+  "description": "Fixtures for the optional integration mounting gate and project-local ZIP mods.",
+  "categories": ["other"],
+  "fixture": true,
+  "test_sources": ["tests/*.cs"],
+  "integrations": [
+    { "id": "probe", "with": ["quests_base"] }
+  ],
+  "test_suites": [
+    { "id": "archive", "activate": ["--itest=test_mod_archive"] }
+  ]
+}

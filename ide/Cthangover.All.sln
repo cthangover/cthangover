@@ -854,23 +854,23 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "terrain_editor__contracts",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "terrain_editor__scene3d", "..\mods_private\terrain_editor\integrations\scene3d\terrain_editor__scene3d.csproj", "{A57E6F84-661B-5059-9FFC-065162DBABBD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "test_defaults_and_patches", "..\mods\test_defaults_and_patches\test_defaults_and_patches.csproj", "{411B212E-56D2-5870-9001-5415C3E6E4A4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "test_defaults_and_patches", "..\tests\fixtures\mods\test_defaults_and_patches\test_defaults_and_patches.csproj", "{411B212E-56D2-5870-9001-5415C3E6E4A4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "test_execution", "..\mods\test_execution\test_execution.csproj", "{19EEDBD2-AACB-50E4-B98A-E446B41533B0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "test_execution", "..\tests\fixtures\mods\test_execution\test_execution.csproj", "{19EEDBD2-AACB-50E4-B98A-E446B41533B0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "test_execution__bootstrap", "..\mods\test_execution\test_suites\bootstrap\test_execution__bootstrap.csproj", "{91056486-BB58-5209-A0A6-DA007116519F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "test_execution__bootstrap", "..\tests\fixtures\mods\test_execution\test_suites\bootstrap\test_execution__bootstrap.csproj", "{91056486-BB58-5209-A0A6-DA007116519F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "test_execution__editor_write", "..\mods\test_execution\test_suites\editor_write\test_execution__editor_write.csproj", "{06A360CD-B15E-5F8A-AF6B-17CA1766DD56}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "test_execution__editor_write", "..\tests\fixtures\mods\test_execution\test_suites\editor_write\test_execution__editor_write.csproj", "{06A360CD-B15E-5F8A-AF6B-17CA1766DD56}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "test_execution__probe", "..\mods\test_execution\test_suites\probe\test_execution__probe.csproj", "{4F0BF2C8-D6EA-587C-A4C0-1C5FB7CCB978}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "test_execution__probe", "..\tests\fixtures\mods\test_execution\test_suites\probe\test_execution__probe.csproj", "{4F0BF2C8-D6EA-587C-A4C0-1C5FB7CCB978}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "test_execution__probe__tests", "..\mods\test_execution\test_suites\probe\test_execution__probe__tests.csproj", "{F694DC01-24DA-560D-874B-0452D5164D91}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "test_execution__probe__tests", "..\tests\fixtures\mods\test_execution\test_suites\probe\test_execution__probe__tests.csproj", "{F694DC01-24DA-560D-874B-0452D5164D91}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "test_integrations", "..\mods\test_integrations\test_integrations.csproj", "{2642101C-B55E-5038-A2D2-5AB6E68D5120}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "test_integrations", "..\tests\fixtures\mods\test_integrations\test_integrations.csproj", "{2642101C-B55E-5038-A2D2-5AB6E68D5120}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "test_integrations__probe", "..\mods\test_integrations\integrations\probe\test_integrations__probe.csproj", "{604D3954-0212-549A-806C-A001F86E6BA3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "test_integrations__probe", "..\tests\fixtures\mods\test_integrations\integrations\probe\test_integrations__probe.csproj", "{604D3954-0212-549A-806C-A001F86E6BA3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "test_integrations__tests", "..\mods\test_integrations\test_integrations__tests.csproj", "{531187FA-1DD8-58A7-9E4E-9AE230A132F9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "test_integrations__tests", "..\tests\fixtures\mods\test_integrations\test_integrations__tests.csproj", "{531187FA-1DD8-58A7-9E4E-9AE230A132F9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "test_scene3d_lifecycle", "..\mods_private\test_scene3d_lifecycle\test_scene3d_lifecycle.csproj", "{41C6F5A2-7413-55EE-89E5-1A4B7B96F3E8}"
 EndProject

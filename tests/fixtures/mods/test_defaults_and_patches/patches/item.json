@@ -1,0 +1,34 @@
+{
+  "Items": [
+    {
+      "Id": "food/ration",
+      "Durability": 99,
+      "SpecialProp": true
+    },
+    {
+      "Id": "*",
+      "Durability": 50,
+      "GlobalItemProp": "patched"
+    },
+    {
+      "Id": "FOOD/WOLF_MEAT",
+      "Cost": 77
+    },
+    {
+      "Id": "food/wolf_meat",
+      "Cost": "many"
+    },
+    {
+      "Id": "food/wolf_meat",
+      "Name$add": ["broken"]
+    },
+    {
+      "Id": "test_patches/base",
+      "Sprite": "food/wolf_meat"
+    },
+    {
+      "Id": "test_patches/doomed",
+      "$delete": true
+    }
+  ]
+}

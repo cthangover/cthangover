@@ -1,0 +1,4 @@
+{
+  "description": "Glue of the fixture: compiled against its host and quests_base, mounted only when both are loaded.",
+  "sources": ["src/*.cs"]
+}
