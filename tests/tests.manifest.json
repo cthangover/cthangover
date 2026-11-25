@@ -639,6 +639,22 @@
       "seconds": 12.703
     },
     {
+      "name": "rpg_reward_walk",
+      "scene": "res://scenes/menu/launcher.tscn",
+      "args": ["--", "--game=rpg_plus", "--new", "--itest=rpg_walk", "--rpg-reward-review"],
+      "timeoutSeconds": 180,
+      "windowed": true,
+      "requiresExplicitSelection": true,
+      "result": { "name": "rpg_walk", "expectedErrors": [] },
+      "kind": "integration",
+      "owners": ["rpg", "items_base", "turn_battle_base"],
+      "profiles": ["gui"],
+      "tags": ["integration", "windowed", "inventory"],
+      "game": "rpg_plus",
+      "source": "mods/rpg/test_suites/walk/manifest.json",
+      "project": "read"
+    },
+    {
       "name": "rpg_plain_walk",
       "scene": "res://scenes/menu/launcher.tscn",
       "args": [
