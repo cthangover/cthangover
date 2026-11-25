@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text.Json;
 using System.Threading;
+using System.Threading.Tasks;
 using Cthangover.Core.Mods;
 using Cthangover.Core.Mods.Testing;
 using Xunit;
@@ -115,6 +116,79 @@ namespace Cthangover.Tests.Mods.Testing
             ModAssert.Equal(30f, 30.00001f);
             ModAssert.CloseTo(0.3, 0.300001, 1e-3);
             await System.Threading.Tasks.Task.CompletedTask;
+        }
+
+        [Fact]
+        public void ModAssert_ComparesValuesWithUsefulDiagnostics()
+        {
+            ModAssert.Equal(true, true, "The opt-in flag survives reading the saved settings");
+            ModAssert.Equal(DayOfWeek.Monday, DayOfWeek.Monday, "The weekly schedule starts on Monday");
+            ModAssert.NotEqual(DayOfWeek.Sunday, DayOfWeek.Monday, "Weekday tasks are excluded from the weekend slot");
+            ModAssert.Equal(.25, .26, .02, "Sampled travel uses quantized physics ticks");
+            var unequal = Assert.Throws<ModAssertException>(() => ModAssert.Equal(true, false,
+                "The opt-in flag survives reading the saved settings"));
+            Assert.True(unequal.Message.Contains("expected true, actual false", StringComparison.Ordinal),
+                "The report identifies the two states without requiring the reader to open the fixture");
+            Assert.Throws<ModAssertException>(() => ModAssert.Equal(1f, float.NaN,
+                "A corrupt height sample cannot match the authored elevation"));
+        }
+
+        [Fact]
+        public void ModAssert_ReportsTheFirstSequenceDifference()
+        {
+            ModAssert.SequenceEqual(new[] { "Alpha", "Beta" }, new List<string> { "ALPHA", "BETA" },
+                "Declared route aliases are case-insensitive and preserve ordering", StringComparer.OrdinalIgnoreCase);
+            var wrong = Assert.Throws<ModAssertException>(() => ModAssert.SequenceEqual(new[] { 2, 4 }, new[] { 2, 5 },
+                "Waypoints appear in the order prescribed by the route"));
+            Assert.True(wrong.Message.Contains("index 1: expected 4, actual 5", StringComparison.Ordinal),
+                "The mismatch gives a waypoint index and both identifiers");
+            var shortRoute = Assert.Throws<ModAssertException>(() => ModAssert.SequenceEqual(new[] { 2, 4 }, new[] { 2 },
+                "The route must retain its final waypoint"));
+            Assert.True(shortRoute.Message.Contains("sequence ended at index 1", StringComparison.Ordinal),
+                "A truncated route identifies which waypoint must be restored");
+        }
+
+        [Fact]
+        public void ModAssert_DistinguishesReferenceIdentityAndRuntimeType()
+        {
+            var first = new List<int> { 1 };
+            var second = new List<int> { 1 };
+            ModAssert.Same(first, first, "The shared owner is reused by both consumers");
+            ModAssert.NotSame(first, second, "Editing a copy must not modify the registered owner");
+            ModAssert.IsType<List<int>>(first, "The builder supplies a concrete, editable list");
+            ModAssert.IsAssignableFrom<IReadOnlyList<int>>(first, "Readers need indexed access to the registered values");
+            Assert.Throws<ModAssertException>(() => ModAssert.IsType<IReadOnlyList<int>>(first,
+                "An interface contract does not identify the underlying collection implementation"));
+        }
+
+        [Fact]
+        public async Task ModAssert_ChecksSyncAndAsyncExceptionsWithContext()
+        {
+            var original = new ArgumentNullException("path");
+            var failure = ModAssert.Throws<ArgumentException>(() => throw original,
+                "Validation rejects the missing path before accessing the filesystem");
+            ModAssert.Same(original, failure, "The caller can read the original parameter name");
+            var asyncFailure = await ModAssert.ThrowsAsync<ArgumentNullException>(() => Task.FromException(original),
+                "Validation reports a missing input through the asynchronous entry point");
+            ModAssert.Equal("path", asyncFailure.ParamName, "The diagnostic names the configuration field to correct");
+            var wrong = Assert.Throws<ModAssertException>(() => ModAssert.Throws<InvalidOperationException>(() => throw original,
+                "Wrong state and missing configuration have different remediation paths"));
+            ModAssert.Same(original, wrong.InnerException, "The diagnostic preserves the unexpected cause and stack");
+            await ModAssert.DoesNotThrowAsync(() => Task.CompletedTask, "Closing an idle operation is valid");
+            Assert.Throws<OperationCanceledException>(() => ModAssert.DoesNotThrow(() => throw new OperationCanceledException(),
+                "Cancellation must be available to the test runner"));
+        }
+
+        [Fact]
+        public void ModAssert_AllCollectsIndependentFailuresWithTheirContext()
+        {
+            var failure = Assert.Throws<ModAssertException>(() => ModAssert.All("Restored actor state",
+                () => ModAssert.True(false, "The saved actor must remain grounded after restoring the location"),
+                () => ModAssert.Fail("The restore never committed the authored support identifier")));
+            Assert.True(failure.Message.Contains("2 assertions failed", StringComparison.Ordinal)
+                && failure.Message.Contains("saved actor", StringComparison.Ordinal)
+                && failure.Message.Contains("support identifier", StringComparison.Ordinal),
+                "The grouped result surfaces both independent restore problems in one report");
         }
 
         [Fact]

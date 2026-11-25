@@ -297,6 +297,23 @@ prepared input stores have their own self-marked lease-aware retention decisions
 поэтому запуск следующего теста был бы небезопасен. Синхронное зависание
 ограничивает внешний таймаут процесса.
 
+### Проверки в модовых тестах
+
+`ModAssert` поддерживает сравнение значений C# через `Equal<T>` и `NotEqual<T>`, числовой допуск,
+`SequenceEqual` с первым несовпавшим индексом, сравнение ссылок и проверку типов. `Throws<T>` и
+`ThrowsAsync<T>` возвращают пойманное исключение. `All` собирает ошибки независимых проверок,
+а ошибки выполнения и отмена продолжают обрабатываться раннером.
+
+В новых проверках пишите содержательное пояснение на английском. Укажите, почему результат следует из сценария.
+
+```csharp
+ModAssert.True(inputEnabled, "The user opted in before reloading the profile");
+ModAssert.SequenceEqual(expectedRoute, visitedWaypoints,
+    "The route must visit the bridge before reaching the harbor");
+var error = await ModAssert.ThrowsAsync<InvalidOperationException>(LoadOccupiedSlot,
+    "Loading an occupied slot must preserve the existing actor reservation");
+```
+
 ## Отчёты и диагностика
 
 Каждый запуск имеет уникальный каталог `tests/artifacts/runs/<run-id>/`:

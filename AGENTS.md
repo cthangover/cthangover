@@ -155,6 +155,10 @@ SDK игрокам не нужен. Runtime 10.0.15 закреплён толь�
 
 ## Running tests
 
+Write meaningful English messages on new or changed assertions where the API accepts them. Explain the
+scenario invariant or why the expected result follows from the setup. A message that repeats the condition
+adds no diagnostic value. For example, use `ModAssert.True(inputEnabled, "The user opted in before reloading the profile")`.
+
 Single cross-platform entry point — `tests/Cthangover.TestRunner` (C#, net10.0 target, SDK 10 + Godot .NET).
 
 ```powershell
